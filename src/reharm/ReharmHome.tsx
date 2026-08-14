@@ -13,6 +13,11 @@ import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
+import {
+  TECHNIQUE_LABELS,
+  applySuggestions,
+  suggestPassingChords,
+} from './reharmEngine/passingChordRules'
 import type { ColorIntensity } from './reharmEngine/staticVoicingRules'
 import {
   bestUpperStructure,
@@ -91,6 +96,8 @@ export function ReharmHome() {
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(false)
+  /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
+  const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Tay nào được phát, để nghe riêng từng tay. */
   const [hand, setHand] = useState<'both' | 'left' | 'right'>('both')
 
@@ -104,29 +111,48 @@ export function ReharmHome() {
     [sequence.chords, intensity, susDominant],
   )
 
+  /** Mọi gợi ý hợp âm lướt áp dụng được cho vòng hiện tại. */
+  const passingSuggestions = useMemo(
+    () => suggestPassingChords(recolored),
+    [recolored],
+  )
+
+  /** Khoá định danh một gợi ý, để nhớ người dùng đã bật cái nào. */
+  const keyOf = (index: number, technique: string) => `${index}:${technique}`
+
+  /** Vòng hợp âm sau khi chèn các gợi ý đã chấp nhận. */
+  const withPassing = useMemo(() => {
+    const chosen = passingSuggestions.filter((suggestion) =>
+      acceptedPassing.includes(
+        keyOf(suggestion.insertBeforeIndex, suggestion.technique),
+      ),
+    )
+    return applySuggestions(recolored, chosen)
+  }, [recolored, passingSuggestions, acceptedPassing])
+
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
     () =>
-      voiceLeadTwoHands(recolored, {
+      voiceLeadTwoHands(withPassing, {
         dropRootFromRightHand: dropRoot,
       }),
-    [recolored, dropRoot],
+    [withPassing, dropRoot],
   )
 
   /** Thế bấm mộc, chỉ xếp chồng từ nốt gốc — để đối chiếu. */
-  const plain = useMemo(() => plainSequence(recolored), [recolored])
+  const plain = useMemo(() => plainSequence(withPassing), [withPassing])
 
   /** Nốt để phát, theo chế độ đang chọn. */
   const playbackNotes = useMemo(
     () =>
       smoothVoicing
         ? twoHands.map(flattenHands)
-        : recolored.map((chord, index) => [
+        : withPassing.map((chord, index) => [
             // Thế mộc vẫn có nốt bass tay trái để so sánh công bằng
             twoHands[index]?.left[0] ?? chord.root + 40,
             ...plain[index],
           ]),
-    [smoothVoicing, twoHands, plain, recolored],
+    [smoothVoicing, twoHands, plain, withPassing],
   )
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
@@ -428,6 +454,94 @@ export function ReharmHome() {
               )
             })}
           </div>
+        )}
+      </div>
+
+      {/* Hợp âm lướt */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Hợp âm lướt
+          </h3>
+          {acceptedPassing.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setAcceptedPassing([])}
+              className="font-mono text-[10px] text-dim hover:text-cream"
+            >
+              bỏ hết
+            </button>
+          )}
+        </div>
+
+        <p className="mb-3 text-xs leading-relaxed text-dim">
+          Chèn hợp âm nối vào giữa hai hợp âm chính. Tài liệu xếp đây là kỹ
+          thuật lõi, đáng học kỹ nhất của phong cách. Chọn từng chỗ, đừng chèn
+          hết — chèn dày quá thì bài mất hướng.
+        </p>
+
+        {passingSuggestions.length === 0 ? (
+          <p className="text-sm text-dim">
+            Vòng này chưa có chỗ nào chèn được.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {passingSuggestions.map((suggestion) => {
+              const key = keyOf(
+                suggestion.insertBeforeIndex,
+                suggestion.technique,
+              )
+              const isOn = acceptedPassing.includes(key)
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() =>
+                    setAcceptedPassing((current) =>
+                      isOn
+                        ? current.filter((entry) => entry !== key)
+                        : [...current, key],
+                    )
+                  }
+                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                    isOn
+                      ? 'border-amber-key bg-amber-key/15'
+                      : 'border-line bg-white/4 hover:bg-white/8'
+                  }`}
+                >
+                  <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span
+                      className={`font-mono text-[10px] ${
+                        isOn ? 'text-amber-key' : 'text-dim'
+                      }`}
+                    >
+                      {TECHNIQUE_LABELS[suggestion.technique]}
+                    </span>
+                    <span className="font-serif text-base text-cream">
+                      {suggestion.chords
+                        .map((chord) => chord.symbol)
+                        .join(' → ')}
+                    </span>
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-relaxed text-dim">
+                    {suggestion.explanation}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+
+        {acceptedPassing.length > 0 && (
+          <p className="mt-3 border-t border-line pt-3">
+            <span className="font-mono text-[10px] text-dim">
+              Vòng sau khi chèn:{' '}
+            </span>
+            <span className="font-serif text-sm text-amber-key">
+              {withPassing.map((chord) => chord.symbol).join(' · ')}
+            </span>
+          </p>
         )}
       </div>
 
