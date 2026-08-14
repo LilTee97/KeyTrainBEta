@@ -4,6 +4,7 @@ import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { MidiStatus } from '../../shared/midi/types'
+import { detectChords } from '../../shared/musicTheory/chordDetection'
 import { midiToName } from '../../shared/musicTheory/pitch'
 
 const STATUS_LABEL: Record<MidiStatus, string> = {
@@ -39,6 +40,9 @@ export function MidiDebugPanel() {
   /** Nốt gán cho phím Z — dịch lên xuống là đổi quãng tám đang gõ. */
   const [keyboardBaseNote, setKeyboardBaseNote] = useState(60)
   useComputerKeyboard(keyboardBaseNote)
+
+  const matches = detectChords(heldNotes, { maxResults: 4 })
+  const [best, ...alternatives] = matches
 
   useEffect(() => {
     void initMidi()
@@ -113,6 +117,67 @@ export function MidiDebugPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Hợp âm đang chơi
+        </h3>
+
+        <div className="rounded-xl border border-line bg-black/25 p-4">
+          {!best ? (
+            <p className="text-sm text-dim">
+              {heldNotes.length === 0
+                ? 'Bấm một hợp âm để xem tên.'
+                : 'Bấm ít nhất ba nốt khác nhau.'}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+              <span className="font-serif text-4xl font-semibold text-amber-key">
+                {best.symbol}
+              </span>
+              <span className="text-sm text-dim">{best.quality.label}</span>
+              <span className="font-mono text-xs text-teal-key">
+                {Math.round(best.confidence * 100)}% chắc
+                {best.inversion !== null && best.inversion > 0 && (
+                  <> · thế đảo {best.inversion}</>
+                )}
+              </span>
+            </div>
+          )}
+
+          {best && (best.missingNotes.length > 0 || best.extraNotes.length > 0) && (
+            <p className="mt-2 font-mono text-[11px] text-dim">
+              {best.missingNotes.length > 0 && (
+                <>thiếu {best.missingNotes.length} nốt </>
+              )}
+              {best.extraNotes.length > 0 && (
+                <span className="text-rose-300">
+                  · {best.extraNotes.length} nốt lạ
+                </span>
+              )}
+            </p>
+          )}
+
+          {alternatives.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
+              <span className="font-mono text-[10px] text-dim">
+                cách đọc khác:
+              </span>
+              {alternatives.map((match) => (
+                <span
+                  key={`${match.root}-${match.quality.id}`}
+                  className="font-mono text-[11px] text-dim"
+                >
+                  {match.symbol}
+                  <span className="ml-1 opacity-50">
+                    {Math.round(match.confidence * 100)}%
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div>
