@@ -1,6 +1,7 @@
 import * as Tone from 'tone'
 import { create } from 'zustand'
 import type { MidiNote } from '../musicTheory/types'
+import { readSetting, writeSetting } from '../persistence/localSettings'
 
 /**
  * Bộ phát tiếng của KeyTrain.
@@ -22,7 +23,7 @@ export interface AudioState {
 
 export const useAudioStore = create<AudioState>((set) => ({
   ready: false,
-  volumeDb: -6,
+  volumeDb: readSetting('volumeDb'),
   setReady: (ready) => set({ ready }),
   setVolumeDb: (volumeDb) => set({ volumeDb }),
 }))
@@ -144,6 +145,7 @@ export function releaseAllNotes(): void {
 /** Chỉnh âm lượng, tính bằng decibel. */
 export function setVolumeDb(volumeDb: number): void {
   useAudioStore.getState().setVolumeDb(volumeDb)
+  writeSetting('volumeDb', volumeDb)
   if (synth) synth.volume.value = volumeDb
 }
 

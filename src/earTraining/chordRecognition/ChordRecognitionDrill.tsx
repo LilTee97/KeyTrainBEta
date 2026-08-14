@@ -9,6 +9,7 @@ import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
+import { usePersistentState } from '../../shared/persistence/usePersistentState'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
 import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { DrillQuestion, Strictness } from './drillEngine'
@@ -35,14 +36,16 @@ export function ChordRecognitionDrill() {
   useLiveSound()
   useComputerKeyboard(60)
 
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([
-    'Hợp âm ba',
-    'Hợp âm bảy',
-  ])
-  const [strictness, setStrictness] = useState<Strictness>('pitchClass')
-  const [voicing, setVoicing] = useState<VoicingType>('close')
+  const [selectedGroups, setSelectedGroups] =
+    usePersistentState('drillGroups')
+  const [strictnessSetting, setStrictness] =
+    usePersistentState('drillStrictness')
+  const [voicingSetting, setVoicing] = usePersistentState('drillVoicing')
   /** Số giây trước khi tự lộ đáp án trên bàn phím. 0 nghĩa là không tự lộ. */
-  const [revealAfter, setRevealAfter] = useState(10)
+  const [revealAfter, setRevealAfter] = usePersistentState('drillRevealAfter')
+
+  const strictness = strictnessSetting as Strictness
+  const voicing = voicingSetting as VoicingType
 
   const [question, setQuestion] = useState<DrillQuestion | null>(null)
   const [phase, setPhase] = useState<Phase>('answering')
@@ -123,10 +126,10 @@ export function ChordRecognitionDrill() {
     : null
 
   const toggleGroup = (label: string) => {
-    setSelectedGroups((current) =>
-      current.includes(label)
-        ? current.filter((item) => item !== label)
-        : [...current, label],
+    setSelectedGroups(
+      selectedGroups.includes(label)
+        ? selectedGroups.filter((item) => item !== label)
+        : [...selectedGroups, label],
     )
   }
 

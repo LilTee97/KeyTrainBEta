@@ -23,6 +23,7 @@ import {
 } from '../../shared/musicTheory/progressionGenerator'
 import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
+import { usePersistentState } from '../../shared/persistence/usePersistentState'
 import { checkAnswer } from '../shared/chordTask'
 import type { ProgressionSession } from './progressionEngine'
 import { createSession, secondsPerChord } from './progressionEngine'
@@ -37,10 +38,17 @@ export function ProgressionTrainer() {
   useLiveSound()
   useComputerKeyboard(60)
 
-  const [templateId, setTemplateId] = useState('ii-V-I')
-  const [voicing, setVoicing] = useState<VoicingType>('close')
-  const [keyFlow, setKeyFlow] = useState<KeyFlow>('circleOfFourths')
-  const [useSevenths, setUseSevenths] = useState(true)
+  const [templateId, setTemplateId] = usePersistentState(
+    'progressionTemplateId',
+  )
+  const [voicingSetting, setVoicing] = usePersistentState('progressionVoicing')
+  const [keyFlowSetting, setKeyFlow] = usePersistentState('progressionKeyFlow')
+  const [useSevenths, setUseSevenths] = usePersistentState(
+    'progressionUseSevenths',
+  )
+
+  const voicing = voicingSetting as VoicingType
+  const keyFlow = keyFlowSetting as KeyFlow
 
   const [tonic, setTonic] = useState(0)
   const [session, setSession] = useState<ProgressionSession | null>(null)

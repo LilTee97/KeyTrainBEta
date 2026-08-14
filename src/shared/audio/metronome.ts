@@ -1,5 +1,6 @@
 import * as Tone from 'tone'
 import { create } from 'zustand'
+import { readSetting, writeSetting } from '../persistence/localSettings'
 
 /**
  * Máy đếm nhịp.
@@ -65,8 +66,8 @@ export interface MetronomeState {
 
 export const useMetronomeStore = create<MetronomeState>(() => ({
   running: false,
-  bpm: 120,
-  beatsPerMeasure: 4,
+  bpm: clampBpm(readSetting('bpm')),
+  beatsPerMeasure: readSetting('beatsPerMeasure'),
   currentBeat: -1,
   currentMeasure: 0,
 }))
@@ -152,14 +153,15 @@ export function toggleMetronome(): void {
 export function setBpm(bpm: number): void {
   const clamped = clampBpm(bpm)
   useMetronomeStore.setState({ bpm: clamped })
+  writeSetting('bpm', clamped)
   Tone.getTransport().bpm.value = clamped
 }
 
 /** Đổi số phách mỗi ô nhịp, đồng thời quay lại đầu ô nhịp. */
 export function setBeatsPerMeasure(beats: number): void {
-  useMetronomeStore.setState({
-    beatsPerMeasure: Math.max(1, Math.floor(beats)),
-  })
+  const safeBeats = Math.max(1, Math.floor(beats))
+  useMetronomeStore.setState({ beatsPerMeasure: safeBeats })
+  writeSetting('beatsPerMeasure', safeBeats)
   tickIndex = 0
 }
 
