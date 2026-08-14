@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react'
+import {
+  playChord,
+  setVolumeDb,
+  startAudio,
+  useAudioStore,
+} from '../../shared/audio/audioEngine'
+import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { initMidi, selectMidiDevice } from '../../shared/midi/midiInput'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
@@ -40,6 +47,10 @@ export function MidiDebugPanel() {
   /** Nốt gán cho phím Z — dịch lên xuống là đổi quãng tám đang gõ. */
   const [keyboardBaseNote, setKeyboardBaseNote] = useState(60)
   useComputerKeyboard(keyboardBaseNote)
+
+  const audioReady = useAudioStore((state) => state.ready)
+  const volumeDb = useAudioStore((state) => state.volumeDb)
+  useLiveSound()
 
   const matches = detectChords(heldNotes, { maxResults: 4 })
   const [best, ...alternatives] = matches
@@ -116,6 +127,54 @@ export function MidiDebugPanel() {
               </button>
             ))}
           </div>
+        )}
+      </div>
+
+      <div>
+        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Âm thanh
+        </h3>
+
+        {!audioReady ? (
+          <button
+            type="button"
+            onClick={() => void startAudio()}
+            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110"
+          >
+            Bật âm thanh
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="font-mono text-sm text-teal-key">● Đang bật</span>
+
+            <button
+              type="button"
+              onClick={() => playChord([60, 64, 67, 71])}
+              className="rounded-lg border border-line bg-white/6 px-3 py-1.5 text-xs text-cream hover:bg-white/12"
+            >
+              Nghe thử Cmaj7
+            </button>
+
+            <label className="flex items-center gap-2 text-xs text-dim">
+              Âm lượng
+              <input
+                type="range"
+                min={-40}
+                max={6}
+                step={1}
+                value={volumeDb}
+                onChange={(event) => setVolumeDb(Number(event.target.value))}
+                className="accent-amber-key"
+              />
+              <span className="w-10 font-mono text-cream">{volumeDb} dB</span>
+            </label>
+          </div>
+        )}
+
+        {!audioReady && (
+          <p className="mt-2 text-xs text-dim">
+            Trình duyệt chỉ cho phát tiếng sau khi bạn chạm vào trang.
+          </p>
         )}
       </div>
 
