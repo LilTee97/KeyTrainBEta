@@ -136,6 +136,43 @@ export function playChordSequence(
   })
 }
 
+/** Một tiếng đàn đã xếp vào dòng thời gian, đo bằng phách. */
+export interface ScheduledHit {
+  notes: readonly MidiNote[]
+  startBeat: number
+  durationBeats: number
+  velocity: number
+}
+
+/**
+ * Phát cả một dòng thời gian theo nhịp độ cho trước.
+ *
+ * Lên lịch trước toàn bộ theo đồng hồ thẻ âm thanh, nên phần đệm giữ nhịp
+ * chính xác thay vì trôi dần như khi hẹn giờ bằng JavaScript.
+ */
+export function playTimeline(
+  hits: readonly ScheduledHit[],
+  bpm: number,
+  startOffsetSeconds = 0.1,
+): void {
+  if (!isAudioReady() || hits.length === 0) return
+
+  const secondsPerBeat = 60 / Math.max(1, bpm)
+  const startAt = Tone.now() + startOffsetSeconds
+  const synthInstance = getSynth()
+
+  for (const hit of hits) {
+    if (hit.notes.length === 0) continue
+
+    synthInstance.triggerAttackRelease(
+      hit.notes.map(toFrequency),
+      Math.max(0.05, hit.durationBeats * secondsPerBeat),
+      startAt + hit.startBeat * secondsPerBeat,
+      hit.velocity / 127,
+    )
+  }
+}
+
 /** Nhả toàn bộ nốt đang vang. */
 export function releaseAllNotes(): void {
   if (!synth) return

@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import {
   playChord,
   playChordSequence,
+  playTimeline,
   startAudio,
   useAudioStore,
 } from '../shared/audio/audioEngine'
+import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { chordNotes } from '../shared/musicTheory/chordDefinitions'
 import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
@@ -15,6 +17,11 @@ import {
   plainSequence,
   totalMovement,
 } from './reharmEngine/voiceLeadingOptimizer'
+import {
+  eventsForHand,
+  renderPattern,
+} from './style/patternRenderer'
+import { BALLAD } from './style/styleLibrary/ballad'
 import type { ParsedChord } from './types'
 import { flattenHands, voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
 
@@ -74,6 +81,12 @@ export function ReharmHome() {
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
   const [smoothVoicing, setSmoothVoicing] = useState(true)
   const [dropRoot, setDropRoot] = useState(true)
+  /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
+  const [beatsPerChord, setBeatsPerChord] = useState(4)
+  /** Tay nào được phát, để nghe riêng từng tay. */
+  const [hand, setHand] = useState<'both' | 'left' | 'right'>('both')
+
+  const bpm = useMetronomeStore((state) => state.bpm)
 
   const sequence = useMemo(() => parseChordInput(input), [input])
 
@@ -103,6 +116,12 @@ export function ReharmHome() {
             ...plain[index],
           ]),
     [smoothVoicing, twoHands, plain, sequence.chords],
+  )
+
+  /** Dòng thời gian phần đệm theo điệu đang chọn. */
+  const timeline = useMemo(
+    () => renderPattern(twoHands, BALLAD, { beatsPerChord }),
+    [twoHands, beatsPerChord],
   )
 
   /** Tổng quãng đường tay phải phải đi, để thấy con số cụ thể. */
@@ -311,6 +330,87 @@ export function ReharmHome() {
             mộc.
           </p>
         )}
+      </div>
+
+      {/* Đệm theo điệu */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Đệm theo điệu · {BALLAD.name}
+          </h3>
+          <span className="font-mono text-[10px] text-teal-key">
+            {BALLAD.timeSignature} · đã xác nhận từ video
+          </span>
+        </div>
+
+        <p className="mb-3 text-xs leading-relaxed text-dim">{BALLAD.note}</p>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              playTimeline(eventsForHand(timeline, hand), bpm)
+            }
+            disabled={!audioReady || timeline.length === 0}
+            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
+          >
+            ♪ Nghe phần đệm
+          </button>
+
+          <div className="flex gap-1">
+            {(
+              [
+                ['both', 'Hai tay'],
+                ['left', 'Tay trái'],
+                ['right', 'Tay phải'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHand(value)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  hand === value
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-5">
+          <label className="flex items-center gap-3 text-xs text-dim">
+            Nhịp độ
+            <input
+              type="range"
+              min={40}
+              max={160}
+              value={bpm}
+              onChange={(event) => setBpm(Number(event.target.value))}
+              className="accent-amber-key"
+            />
+            <span className="w-16 font-mono text-cream">{bpm} BPM</span>
+          </label>
+
+          <label className="flex items-center gap-2 text-xs text-dim">
+            Mỗi hợp âm
+            <select
+              value={beatsPerChord}
+              onChange={(event) =>
+                setBeatsPerChord(Number(event.target.value))
+              }
+              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
+            >
+              <option value={8}>2 ô nhịp</option>
+              <option value={4}>1 ô nhịp</option>
+              <option value={2}>nửa ô nhịp</option>
+              <option value={1}>1 phách</option>
+            </select>
+          </label>
+        </div>
       </div>
 
       {/* Thế bấm hai tay */}
