@@ -10,22 +10,12 @@ import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
 import { usePersistentState } from '../../shared/persistence/usePersistentState'
+import { QUALITY_GROUPS, groupLabelFor, qualityIdsForGroups } from '../shared/qualityGroups'
+import { recordAnswer } from '../stats/statsStore'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
 import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { DrillQuestion, Strictness } from './drillEngine'
 import { checkAnswer, createQuestion } from './drillEngine'
-
-/** Các nhóm hợp âm người học chọn để luyện. */
-const QUALITY_GROUPS: { label: string; ids: string[] }[] = [
-  { label: 'Hợp âm ba', ids: ['maj', 'min'] },
-  { label: 'Giảm & tăng', ids: ['dim', 'aug'] },
-  { label: 'Treo', ids: ['sus2', 'sus4'] },
-  { label: 'Hợp âm bảy', ids: ['maj7', '7', 'm7'] },
-  { label: 'Nửa giảm & bảy giảm', ids: ['m7b5', 'dim7'] },
-  { label: 'Sáu & thêm nốt', ids: ['6', 'm6', 'add9'] },
-  { label: 'Mở rộng', ids: ['maj9', '9', 'm9', 'm11'] },
-  { label: 'Treo mở rộng', ids: ['7sus4', '9sus4'] },
-]
 
 type Phase = 'answering' | 'correct'
 
@@ -52,10 +42,10 @@ export function ChordRecognitionDrill() {
   const [revealed, setRevealed] = useState(false)
   const [score, setScore] = useState({ correct: 0, total: 0 })
 
-  const activeQualityIds = QUALITY_GROUPS.filter((group) =>
-    selectedGroups.includes(group.label),
-  ).flatMap((group) => group.ids)
-  const qualityKey = activeQualityIds.join(',')
+  const qualityKey = qualityIdsForGroups(selectedGroups).join(',')
+
+  /** Thời điểm ra câu hỏi, để đo thời gian trả lời. */
+  const askedAtRef = useRef(0)
 
   /**
    * Câu hiện tại, đọc qua ref để `nextQuestion` không cần phụ thuộc vào nó —
@@ -81,6 +71,7 @@ export function ChordRecognitionDrill() {
     })
     questionRef.current = created
     armedRef.current = false
+    askedAtRef.current = performance.now()
 
     setQuestion(created)
     setPhase('answering')
@@ -118,6 +109,14 @@ export function ChordRecognitionDrill() {
         correct: current.correct + 1,
         total: current.total + 1,
       }))
+
+      void recordAnswer({
+        mode: 'practice',
+        itemKind: 'chord',
+        category: groupLabelFor(question.quality.id),
+        correct: true,
+        responseMs: Math.round(performance.now() - askedAtRef.current),
+      })
     }
   }, [heldNotes, question, phase, strictness])
 
@@ -137,6 +136,16 @@ export function ChordRecognitionDrill() {
     setRevealed(true)
     setScore((current) => ({ ...current, total: current.total + 1 }))
     setPhase('correct')
+
+    if (question) {
+      void recordAnswer({
+        mode: 'practice',
+        itemKind: 'chord',
+        category: groupLabelFor(question.quality.id),
+        correct: false,
+        responseMs: Math.round(performance.now() - askedAtRef.current),
+      })
+    }
   }
 
   if (!audioReady) {

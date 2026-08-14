@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChordRecognitionDrill } from '../earTraining/chordRecognition/ChordRecognitionDrill'
 import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
 import { ProgressionTrainer } from '../earTraining/progressionTrainer/ProgressionTrainer'
+import { StatsPage } from '../earTraining/stats/StatsPage'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
 const TABS = [
@@ -57,7 +58,7 @@ export function AppShell() {
       {tab === 'progression' && <ProgressionTrainer />}
       {tab === 'metronome' && <MetronomePanel />}
       {tab === 'reharm' && <ComingSoon what="tái hòa âm" />}
-      {tab === 'stats' && <ComingSoon what="thống kê" />}
+      {tab === 'stats' && <StatsPage />}
       {tab === 'debug' && <MidiDebugPanel />}
     </div>
   )

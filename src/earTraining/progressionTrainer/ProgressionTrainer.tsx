@@ -25,6 +25,7 @@ import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
 import { usePersistentState } from '../../shared/persistence/usePersistentState'
 import { checkAnswer } from '../shared/chordTask'
+import { recordAnswer } from '../stats/statsStore'
 import type { ProgressionSession } from './progressionEngine'
 import { createSession, secondsPerChord } from './progressionEngine'
 
@@ -64,6 +65,8 @@ export function ProgressionTrainer() {
 
   /** Chỉ chấm sau khi người học nhả hết phím của hợp âm trước. */
   const armedRef = useRef(true)
+  /** Thời điểm bắt đầu hợp âm hiện tại, để đo thời gian trả lời. */
+  const stepStartedAtRef = useRef(0)
 
   const playSession = useCallback(
     (current: ProgressionSession) => {
@@ -83,6 +86,7 @@ export function ProgressionTrainer() {
       })
 
       armedRef.current = false
+      stepStartedAtRef.current = performance.now()
       setSession(created)
       setStepIndex(0)
       setFinished(false)
@@ -118,6 +122,15 @@ export function ProgressionTrainer() {
 
     if (checkAnswer(heldNotes, step).correct) {
       armedRef.current = false
+
+      void recordAnswer({
+        mode: 'practice',
+        itemKind: 'progression',
+        category: session.template.name,
+        correct: true,
+        responseMs: Math.round(performance.now() - stepStartedAtRef.current),
+      })
+      stepStartedAtRef.current = performance.now()
 
       if (stepIndex + 1 >= session.steps.length) {
         setFinished(true)
