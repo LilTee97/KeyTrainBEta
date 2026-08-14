@@ -16,6 +16,11 @@ export interface OnScreenPianoProps {
   accidentalStyle?: AccidentalStyle
   /** Ghi tên nốt lên phím trắng. */
   showNoteNames?: boolean
+  /**
+   * Nốt cần chỉ cho người học, ví dụ đáp án của một câu luyện tập.
+   * Nốt đang bấm vẫn được tô đè lên, để thấy rõ mình bấm trúng chỗ nào.
+   */
+  highlightNotes?: readonly MidiNote[]
 }
 
 /**
@@ -30,6 +35,7 @@ export function OnScreenPiano({
   highNote = 84,
   accidentalStyle = 'sharp',
   showNoteNames = true,
+  highlightNotes,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const noteOn = useMidiStore((state) => state.noteOn)
@@ -99,6 +105,14 @@ export function OnScreenPiano({
 
   const isHeld = (note: MidiNote) => heldNotes.includes(note)
 
+  // Chỉ so lớp cao độ, không so quãng tám: người học bấm đúng hợp âm ở
+  // quãng tám khác vẫn phải thấy phím của mình sáng lên.
+  const highlightClasses = new Set(
+    (highlightNotes ?? []).map((note) => pitchClassOf(note)),
+  )
+  const isHighlighted = (note: MidiNote) =>
+    highlightClasses.has(pitchClassOf(note))
+
   const keyHandlers = (note: MidiNote) => ({
     onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
       handlePointerDown(event, note),
@@ -124,7 +138,9 @@ export function OnScreenPiano({
             className={`flex flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
               isHeld(note)
                 ? 'bg-amber-key text-ink'
-                : 'bg-cream text-ink/35 hover:bg-white'
+                : isHighlighted(note)
+                  ? 'bg-teal-key text-ink'
+                  : 'bg-cream text-ink/35 hover:bg-white'
             }`}
           >
             {showNoteNames && pitchClassOf(note) === 0
@@ -146,7 +162,11 @@ export function OnScreenPiano({
             width: `${(100 / whiteKeys.length) * 0.62}%`,
           }}
           className={`absolute top-0 h-[62%] -translate-x-1/2 rounded-b-md border border-black/60 transition-colors ${
-            isHeld(note) ? 'bg-amber-key' : 'bg-neutral-900 hover:bg-neutral-800'
+            isHeld(note)
+              ? 'bg-amber-key'
+              : isHighlighted(note)
+                ? 'bg-teal-key'
+                : 'bg-neutral-900 hover:bg-neutral-800'
           }`}
         />
       ))}

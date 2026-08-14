@@ -1,8 +1,28 @@
+import { useState } from 'react'
+import { ChordRecognitionDrill } from '../earTraining/chordRecognition/ChordRecognitionDrill'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
-const SECTIONS = ['Luyện tai', 'Tái hòa âm', 'Thống kê'] as const
+const TABS = [
+  { id: 'ear', label: 'Luyện tai' },
+  { id: 'reharm', label: 'Tái hòa âm' },
+  { id: 'stats', label: 'Thống kê' },
+  { id: 'debug', label: 'Gỡ lỗi' },
+] as const
+
+type TabId = (typeof TABS)[number]['id']
+
+/** Chỗ dành sẵn cho các phần chưa xây. */
+function ComingSoon({ what }: { what: string }) {
+  return (
+    <p className="text-sm leading-relaxed text-dim">
+      Phần {what} chưa xây. Xem lộ trình trong kế hoạch dự án.
+    </p>
+  )
+}
 
 export function AppShell() {
+  const [tab, setTab] = useState<TabId>('ear')
+
   return (
     <div className="mx-auto flex h-full max-w-3xl flex-col px-4 py-8">
       <header className="mb-6">
@@ -12,18 +32,27 @@ export function AppShell() {
         <h1 className="text-3xl font-bold">KeyTrain</h1>
       </header>
 
-      <nav className="mb-8 flex gap-2">
-        {SECTIONS.map((name) => (
-          <span
-            key={name}
-            className="rounded-lg bg-white/7 px-4 py-2 text-sm font-semibold text-dim"
+      <nav className="mb-8 flex flex-wrap gap-2">
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === id
+                ? 'bg-amber-key text-ink'
+                : 'bg-white/7 text-dim hover:bg-white/12'
+            }`}
           >
-            {name}
-          </span>
+            {label}
+          </button>
         ))}
       </nav>
 
-      <MidiDebugPanel />
+      {tab === 'ear' && <ChordRecognitionDrill />}
+      {tab === 'reharm' && <ComingSoon what="tái hòa âm" />}
+      {tab === 'stats' && <ComingSoon what="thống kê" />}
+      {tab === 'debug' && <MidiDebugPanel />}
     </div>
   )
 }
