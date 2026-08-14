@@ -103,6 +103,45 @@ export type MajorChordColor =
   | 'sus2'
   | 'sus4'
 
+/**
+ * Màu dùng cho các bậc **thứ đứng yên** — bậc ii, iii, vi của giọng trưởng và
+ * bậc i, iv của giọng thứ.
+ *
+ * Bậc nửa giảm không nằm trong nhóm này vì nó có chức năng riêng, đổi màu sẽ
+ * làm mất chất.
+ */
+export type MinorChordColor = 'auto' | 'm7' | 'm9' | 'm11'
+
+export interface MinorColorOption {
+  id: MinorChordColor
+  label: string
+  description: string
+}
+
+export const MINOR_COLOR_OPTIONS: readonly MinorColorOption[] = [
+  {
+    id: 'auto',
+    label: 'Theo bậc',
+    description:
+      'Bậc hai dùng m11 đúng lối Am11 trong tài liệu, các bậc thứ khác dùng m9.',
+  },
+  {
+    id: 'm7',
+    label: 'm7',
+    description: 'Chỉ thêm bậc bảy, màu nhạt nhất.',
+  },
+  {
+    id: 'm9',
+    label: 'm9',
+    description: 'Thêm bậc chín, màu mềm và tròn.',
+  },
+  {
+    id: 'm11',
+    label: 'm11',
+    description: 'Thêm cả bậc mười một, dày và mở. Đây là màu đặc trưng nhất.',
+  },
+]
+
 export interface MajorColorOption {
   id: MajorChordColor
   label: string
@@ -163,6 +202,10 @@ export interface ColorOptions {
    * mà tài liệu dùng nhiều nhất.
    */
   majorColor?: MajorChordColor
+  /**
+   * Màu cho các bậc thứ đứng yên. Bỏ trống thì mỗi bậc dùng màu riêng của nó.
+   */
+  minorColor?: MinorChordColor
 }
 
 /**
@@ -175,6 +218,17 @@ export interface ColorOptions {
 function isRestingMajorDegree(degree: number, scale: ScaleType): boolean {
   const entry = degreesOf(scale).find((item) => item.degree === degree)
   return entry?.seventhQualityId === 'maj7'
+}
+
+/**
+ * Bậc này có phải hợp âm thứ đứng yên không.
+ *
+ * Nhận ra qua hợp âm bảy mặc định là bảy thứ. Bậc nửa giảm tự động bị loại vì
+ * hợp âm bảy của nó là m7b5, không phải m7.
+ */
+function isRestingMinorDegree(degree: number, scale: ScaleType): boolean {
+  const entry = degreesOf(scale).find((item) => item.degree === degree)
+  return entry?.seventhQualityId === 'm7'
 }
 
 /** Dựng lại một hợp âm với tính chất khác, giữ nguyên nốt gốc và nốt bass. */
@@ -239,6 +293,7 @@ export function colorAnalyzedChord(
     intensity = 'full',
     susDominant = false,
     majorColor = 'add9',
+    minorColor = 'auto',
   } = options
   if (intensity === 'off') return analyzed.chord
 
@@ -263,13 +318,17 @@ export function colorAnalyzedChord(
     return withQuality(chord, intensity === 'full' ? '9sus4' : '7sus4')
   }
 
-  // Bậc trưởng đứng yên thì dùng màu người chơi chọn, thay cho mặc định.
-  const target =
-    intensity === 'full' && isRestingMajorDegree(degree, scale)
-      ? majorColor
-      : intensity === 'full'
-        ? rule.full
-        : rule.light
+  // Bậc đứng yên thì dùng màu người chơi chọn, thay cho mặc định của bậc.
+  let target: string
+  if (intensity !== 'full') {
+    target = rule.light
+  } else if (isRestingMajorDegree(degree, scale)) {
+    target = majorColor
+  } else if (minorColor !== 'auto' && isRestingMinorDegree(degree, scale)) {
+    target = minorColor
+  } else {
+    target = rule.full
+  }
 
   // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
   // làm mỏng đi.

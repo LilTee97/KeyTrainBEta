@@ -296,6 +296,74 @@ describe('màu cho hợp âm trưởng đứng yên', () => {
   })
 })
 
+describe('màu cho hợp âm thứ', () => {
+  it('mặc định theo bậc: bậc hai dùng m11, bậc sáu dùng m9', () => {
+    // Vòng ở giọng đô trưởng: Dm là bậc ii, Am là bậc vi
+    const result = reharmonize(chords('C Dm Am G'))
+
+    expect(result.colored[1].symbol).toBe('Dm11')
+    expect(result.colored[2].symbol).toBe('Am9')
+  })
+
+  it('ép được mọi hợp âm thứ về cùng một màu', () => {
+    const cases: [string, string, string][] = [
+      ['m7', 'Dm7', 'Am7'],
+      ['m9', 'Dm9', 'Am9'],
+      ['m11', 'Dm11', 'Am11'],
+    ]
+
+    for (const [color, expectedTwo, expectedSix] of cases) {
+      const result = reharmonize(chords('C Dm Am G'), {
+        minorColor: color as never,
+      })
+      expect(result.colored[1].symbol).toBe(expectedTwo)
+      expect(result.colored[2].symbol).toBe(expectedSix)
+    }
+  })
+
+  it('không đụng tới hợp âm nửa giảm', () => {
+    // Bậc bảy của giọng trưởng có chức năng riêng, đổi màu sẽ mất chất
+    const result = reharmonize(chords('C Bdim Am G'), { minorColor: 'm11' })
+    expect(result.colored[1].symbol).toBe('Bm7b5')
+  })
+
+  it('không đụng tới hợp âm trưởng', () => {
+    const result = reharmonize(chords('C Dm Am G'), { minorColor: 'm11' })
+    expect(result.colored[0].symbol).toBe('Cadd9')
+    expect(result.colored[3].quality.intervals).toContain(10)
+  })
+
+  it('áp cho bậc một và bậc bốn của giọng thứ', () => {
+    const result = reharmonize(chords('Am Dm E7 Am'), {
+      key: { tonic: 9, scale: 'minor' },
+      minorColor: 'm11',
+    })
+
+    expect(result.colored[0].symbol).toBe('Am11')
+    expect(result.colored[1].symbol).toBe('Dm11')
+  })
+
+  it('mức nhẹ không dùng bảng màu này', () => {
+    const result = reharmonize(chords('C Dm Am G'), {
+      intensity: 'light',
+      minorColor: 'm11',
+    })
+    expect(result.colored[1].symbol).toBe('Dm7')
+  })
+})
+
+describe('hợp âm mười một của bậc năm nằm ở dạng hợp âm treo', () => {
+  it('nốt treo bậc bốn chính là nốt bậc mười một', () => {
+    const result = reharmonize(chords('C Am F G'), { susDominant: true })
+    const dominant = result.colored[3]
+
+    // G9sus4 chứa nốt Đô, vừa là bậc bốn treo vừa là bậc mười một của Sol
+    expect(dominant.symbol).toBe('G9sus4')
+    expect(dominant.quality.intervals).toContain(5)
+    expect(dominant.quality.intervals).not.toContain(4)
+  })
+})
+
 describe('đường ống', () => {
   it('giữ lại vòng gốc để đối chiếu', () => {
     const result = reharmonize(chords('C Am F G'))

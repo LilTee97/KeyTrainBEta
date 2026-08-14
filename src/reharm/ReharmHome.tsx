@@ -19,9 +19,11 @@ import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
   MajorChordColor,
+  MinorChordColor,
 } from './reharmEngine/staticVoicingRules'
 import {
   MAJOR_COLOR_OPTIONS,
+  MINOR_COLOR_OPTIONS,
   bestUpperStructure,
 } from './reharmEngine/staticVoicingRules'
 import {
@@ -107,6 +109,7 @@ export function ReharmHome() {
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(false)
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
+  const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
@@ -138,6 +141,7 @@ export function ReharmHome() {
       intensity,
       susDominant,
       majorColor,
+      minorColor,
       key: parsedKey,
     })
 
@@ -151,6 +155,7 @@ export function ReharmHome() {
       intensity,
       susDominant,
       majorColor,
+      minorColor,
       key: parsedKey,
       acceptedPassing: chosen,
     })
@@ -159,6 +164,7 @@ export function ReharmHome() {
     intensity,
     susDominant,
     majorColor,
+    minorColor,
     manualKey,
     acceptedPassing,
   ])
@@ -579,6 +585,38 @@ export function ReharmHome() {
             <p className="mt-2 text-xs leading-relaxed text-dim">
               {
                 MAJOR_COLOR_OPTIONS.find((option) => option.id === majorColor)
+                  ?.description
+              }
+            </p>
+
+            <h4
+              className="mt-4 mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+              title="Áp cho bậc ii, iii, vi của giọng trưởng và bậc i, iv của giọng thứ. Bậc nửa giảm không nằm trong nhóm này."
+            >
+              Màu cho hợp âm thứ
+            </h4>
+
+            <div className="flex flex-wrap gap-2">
+              {MINOR_COLOR_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setMinorColor(option.id)}
+                  title={option.description}
+                  className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
+                    minorColor === option.id
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-2 text-xs leading-relaxed text-dim">
+              {
+                MINOR_COLOR_OPTIONS.find((option) => option.id === minorColor)
                   ?.description
               }
             </p>
