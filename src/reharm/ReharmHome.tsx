@@ -7,11 +7,16 @@ import {
 } from '../shared/audio/audioEngine'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { chordNotes } from '../shared/musicTheory/chordDefinitions'
-import { pitchClassName } from '../shared/musicTheory/pitch'
+import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
+import {
+  plainSequence,
+  totalMovement,
+} from './reharmEngine/voiceLeadingOptimizer'
 import type { ParsedChord } from './types'
+import { flattenHands, voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
 
 /**
  * Bảng chọn nhanh: chạm tính chất rồi chạm nốt gốc để thêm hợp âm.
@@ -66,8 +71,48 @@ export function ReharmHome() {
   const [input, setInput] = useState('Am11 D9sus4 E9sus4 Em7')
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
+  const [smoothVoicing, setSmoothVoicing] = useState(true)
+  const [dropRoot, setDropRoot] = useState(true)
 
   const sequence = useMemo(() => parseChordInput(input), [input])
+
+  /** Thế bấm hai tay đã dẫn bè. */
+  const twoHands = useMemo(
+    () =>
+      voiceLeadTwoHands(sequence.chords, {
+        dropRootFromRightHand: dropRoot,
+      }),
+    [sequence.chords, dropRoot],
+  )
+
+  /** Thế bấm mộc, chỉ xếp chồng từ nốt gốc — để đối chiếu. */
+  const plain = useMemo(
+    () => plainSequence(sequence.chords),
+    [sequence.chords],
+  )
+
+  /** Nốt để phát, theo chế độ đang chọn. */
+  const playbackNotes = useMemo(
+    () =>
+      smoothVoicing
+        ? twoHands.map(flattenHands)
+        : sequence.chords.map((chord, index) => [
+            // Thế mộc vẫn có nốt bass tay trái để so sánh công bằng
+            twoHands[index]?.left[0] ?? chord.root + 40,
+            ...plain[index],
+          ]),
+    [smoothVoicing, twoHands, plain, sequence.chords],
+  )
+
+  /** Tổng quãng đường tay phải phải đi, để thấy con số cụ thể. */
+  const movement = useMemo(
+    () => ({
+      smooth: totalMovement(twoHands.map((voicing) => voicing.right)),
+      plain: totalMovement(plain),
+    }),
+    [twoHands, plain],
+  )
 
   const appendChord = (rootName: string) => {
     const next = `${rootName}${pickerQuality}`
@@ -128,7 +173,9 @@ export function ReharmHome() {
                   type="button"
                   onClick={() => {
                     setSelectedIndex(index)
-                    if (audioReady) playChord(notesForChord(chord))
+                    if (audioReady) {
+                      playChord(playbackNotes[index] ?? notesForChord(chord))
+                    }
                   }}
                   className={`rounded-lg border px-3 py-2 font-serif text-lg transition-colors ${
                     selectedIndex === index
@@ -174,9 +221,7 @@ export function ReharmHome() {
         ) : (
           <button
             type="button"
-            onClick={() =>
-              playChordSequence(sequence.chords.map(notesForChord), 1.4)
-            }
+            onClick={() => playChordSequence(playbackNotes, 1.4)}
             disabled={sequence.chords.length === 0}
             className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
           >
@@ -201,8 +246,106 @@ export function ReharmHome() {
       </div>
 
       <OnScreenPiano
-        highlightNotes={selected ? notesForChord(selected) : undefined}
+        highlightNotes={
+          selectedIndex !== null
+            ? (playbackNotes[selectedIndex] ??
+              (selected ? notesForChord(selected) : undefined))
+            : undefined
+        }
       />
+
+      {/* Dẫn bè */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Dẫn bè
+        </h3>
+        <p className="mb-3 text-xs leading-relaxed text-dim">
+          Nguyên lý gốc của phong cách: chọn thế bấm sao cho các nốt di chuyển
+          ít nhất giữa hai hợp âm. Tắt đi để nghe cách bấm mộc, luôn xếp chồng
+          từ nốt gốc.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSmoothVoicing(true)}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                smoothVoicing
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              Có dẫn bè
+            </button>
+            <button
+              type="button"
+              onClick={() => setSmoothVoicing(false)}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                !smoothVoicing
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              Thế mộc
+            </button>
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={dropRoot}
+              onChange={(event) => setDropRoot(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Bỏ nốt gốc ở tay phải
+          </label>
+        </div>
+
+        {sequence.chords.length > 1 && (
+          <p className="mt-3 border-t border-line pt-3 font-mono text-[11px] text-dim">
+            Quãng đường tay phải phải đi:{' '}
+            <span className="text-teal-key">{movement.smooth}</span> nửa cung
+            khi có dẫn bè, so với{' '}
+            <span className="text-rose-300">{movement.plain}</span> khi bấm
+            mộc.
+          </p>
+        )}
+      </div>
+
+      {/* Thế bấm hai tay */}
+      {twoHands.length > 0 && (
+        <div className="rounded-xl border border-line bg-black/25 p-4">
+          <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Chia hai tay
+          </h3>
+
+          <div className="flex flex-col gap-2">
+            {twoHands.map((voicing, index) => (
+              <div
+                key={`${voicing.symbol}-${index}`}
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line/50 pb-2 last:border-0"
+              >
+                <span className="w-20 font-serif text-base text-cream">
+                  {voicing.symbol}
+                </span>
+                <span className="font-mono text-[11px] text-dim">
+                  tay trái{' '}
+                  <span className="text-teal-key">
+                    {voicing.left.map((note) => midiToName(note)).join(' ')}
+                  </span>
+                </span>
+                <span className="font-mono text-[11px] text-dim">
+                  tay phải{' '}
+                  <span className="text-amber-key">
+                    {voicing.right.map((note) => midiToName(note)).join(' ')}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bảng chọn nhanh */}
       <div className="flex flex-col gap-3 border-t border-line pt-5">
