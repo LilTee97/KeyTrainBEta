@@ -5,6 +5,7 @@ import {
 } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
 import type { ScaleType } from '../../shared/musicTheory/scales'
+import { degreesOf } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { AnalyzedChord } from './degreeAnalysis'
@@ -81,6 +82,71 @@ const MINOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
 
 export type ColorIntensity = 'off' | 'light' | 'full'
 
+/**
+ * Màu dùng cho các bậc **trưởng đứng yên** — bậc I và IV của giọng trưởng,
+ * bậc III và VI của giọng thứ.
+ *
+ * Tài liệu liệt kê nguyên văn ở mục 6: *"luôn thêm màu bằng sus2/sus4, 9, 11,
+ * maj7/add2"*, và mục 12.2 cho thấy cùng một hợp âm C được đổi qua lại giữa
+ * `C`, `CM7` và `C6`. Tức không có **một** màu đúng cho chủ âm — đó là lựa
+ * chọn thẩm mỹ, nên để người chơi chọn.
+ *
+ * Bậc V cố ý **không** nằm trong nhóm này: nó cần nốt bậc bảy để giữ lực kéo
+ * về chủ âm, thêm màu kiểu add9 hay sus2 sẽ làm mất chức năng.
+ */
+export type MajorChordColor =
+  | 'add9'
+  | 'maj7'
+  | 'maj9'
+  | '6'
+  | '69'
+  | 'sus2'
+  | 'sus4'
+
+export interface MajorColorOption {
+  id: MajorChordColor
+  label: string
+  description: string
+}
+
+export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
+  {
+    id: 'add9',
+    label: 'add9',
+    description: 'Thêm nốt bậc chín, giữ nguyên cảm giác nghỉ. Lối Cadd2.',
+  },
+  {
+    id: 'maj7',
+    label: 'maj7',
+    description: 'Thêm bậc bảy trưởng, màu mềm và mơ.',
+  },
+  {
+    id: 'maj9',
+    label: 'maj9',
+    description: 'Bảy trưởng cộng bậc chín, dày nhất trong nhóm này.',
+  },
+  {
+    id: '6',
+    label: '6',
+    description: 'Thêm bậc sáu, nghe cổ điển và dứt khoát hơn maj7.',
+  },
+  {
+    id: '69',
+    label: '6/9',
+    description: 'Sáu cộng chín, màu jazz sáng, hay dùng ở hợp âm kết.',
+  },
+  {
+    id: 'sus2',
+    label: 'sus2',
+    description: 'Bỏ bậc ba, thay bằng bậc hai. Lơ lửng, không rõ trưởng thứ.',
+  },
+  {
+    id: 'sus4',
+    label: 'sus4',
+    description: 'Bỏ bậc ba, thay bằng bậc bốn. Căng nhẹ, muốn giải quyết.',
+  },
+]
+
 export interface ColorOptions {
   intensity?: ColorIntensity
   /**
@@ -92,6 +158,23 @@ export interface ColorOptions {
    * dùng tự bật.
    */
   susDominant?: boolean
+  /**
+   * Màu cho các bậc trưởng đứng yên. Bỏ trống thì dùng add9, đúng lối Cadd2
+   * mà tài liệu dùng nhiều nhất.
+   */
+  majorColor?: MajorChordColor
+}
+
+/**
+ * Bậc này có phải hợp âm trưởng đứng yên không.
+ *
+ * Nhận ra bằng cách xem hợp âm bảy mặc định của bậc đó có phải bảy trưởng —
+ * chỉ các bậc nghỉ mới vậy. Bậc năm có hợp âm bảy át nên tự động bị loại, đúng
+ * ý: nó cần bậc bảy để kéo về chủ âm, không được thay bằng màu đứng yên.
+ */
+function isRestingMajorDegree(degree: number, scale: ScaleType): boolean {
+  const entry = degreesOf(scale).find((item) => item.degree === degree)
+  return entry?.seventhQualityId === 'maj7'
 }
 
 /** Dựng lại một hợp âm với tính chất khác, giữ nguyên nốt gốc và nốt bass. */
@@ -152,7 +235,11 @@ export function colorAnalyzedChord(
   scale: ScaleType,
   options: ColorOptions = {},
 ): ParsedChord {
-  const { intensity = 'full', susDominant = false } = options
+  const {
+    intensity = 'full',
+    susDominant = false,
+    majorColor = 'add9',
+  } = options
   if (intensity === 'off') return analyzed.chord
 
   const { chord, degree } = analyzed
@@ -176,7 +263,13 @@ export function colorAnalyzedChord(
     return withQuality(chord, intensity === 'full' ? '9sus4' : '7sus4')
   }
 
-  const target = intensity === 'full' ? rule.full : rule.light
+  // Bậc trưởng đứng yên thì dùng màu người chơi chọn, thay cho mặc định.
+  const target =
+    intensity === 'full' && isRestingMajorDegree(degree, scale)
+      ? majorColor
+      : intensity === 'full'
+        ? rule.full
+        : rule.light
 
   // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
   // làm mỏng đi.

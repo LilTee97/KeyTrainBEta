@@ -16,8 +16,14 @@ import { parseChordInput } from './input/chordInputParser'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
 import { reharmonize } from './reharmEngine/reharmPipeline'
-import type { ColorIntensity } from './reharmEngine/staticVoicingRules'
-import { bestUpperStructure } from './reharmEngine/staticVoicingRules'
+import type {
+  ColorIntensity,
+  MajorChordColor,
+} from './reharmEngine/staticVoicingRules'
+import {
+  MAJOR_COLOR_OPTIONS,
+  bestUpperStructure,
+} from './reharmEngine/staticVoicingRules'
 import {
   plainSequence,
   totalMovement,
@@ -100,6 +106,7 @@ export function ReharmHome() {
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(false)
+  const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
@@ -130,6 +137,7 @@ export function ReharmHome() {
     const firstPass = reharmonize(sequence.chords, {
       intensity,
       susDominant,
+      majorColor,
       key: parsedKey,
     })
 
@@ -142,10 +150,18 @@ export function ReharmHome() {
     return reharmonize(sequence.chords, {
       intensity,
       susDominant,
+      majorColor,
       key: parsedKey,
       acceptedPassing: chosen,
     })
-  }, [sequence.chords, intensity, susDominant, manualKey, acceptedPassing])
+  }, [
+    sequence.chords,
+    intensity,
+    susDominant,
+    majorColor,
+    manualKey,
+    acceptedPassing,
+  ])
 
   const recolored = reharm.colored
   const passingSuggestions = reharm.passingSuggestions
@@ -531,6 +547,43 @@ export function ReharmHome() {
             Hợp âm át thành treo
           </label>
         </div>
+
+        {/* Màu cho các bậc trưởng đứng yên */}
+        {intensity === 'full' && (
+          <div className="mt-4">
+            <h4
+              className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+              title="Áp cho bậc I và IV của giọng trưởng, bậc III và VI của giọng thứ. Bậc V không nằm trong nhóm này vì cần bậc bảy để kéo về chủ âm."
+            >
+              Màu cho hợp âm trưởng đứng yên
+            </h4>
+
+            <div className="flex flex-wrap gap-2">
+              {MAJOR_COLOR_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setMajorColor(option.id)}
+                  title={option.description}
+                  className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
+                    majorColor === option.id
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <p className="mt-2 text-xs leading-relaxed text-dim">
+              {
+                MAJOR_COLOR_OPTIONS.find((option) => option.id === majorColor)
+                  ?.description
+              }
+            </p>
+          </div>
+        )}
 
         {/* Đối chiếu trước và sau */}
         {sequence.chords.length > 0 && (

@@ -220,6 +220,82 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
   })
 })
 
+describe('màu cho hợp âm trưởng đứng yên', () => {
+  it('mặc định dùng add9', () => {
+    expect(reharmonize(chords('C Am F G')).colored[0].symbol).toBe('Cadd9')
+  })
+
+  it('đổi được sang các màu khác trong bảng', () => {
+    const cases: [string, string][] = [
+      ['maj7', 'Cmaj7'],
+      ['maj9', 'Cmaj9'],
+      ['6', 'C6'],
+      ['69', 'C6/9'],
+      ['sus2', 'Csus2'],
+      ['sus4', 'Csus4'],
+    ]
+
+    for (const [color, expected] of cases) {
+      const result = reharmonize(chords('C Am F G'), {
+        majorColor: color as never,
+      })
+      expect(result.colored[0].symbol).toBe(expected)
+    }
+  })
+
+  it('áp cho cả bậc bốn, không chỉ chủ âm', () => {
+    const result = reharmonize(chords('C Am F G'), { majorColor: '6' })
+    expect(result.colored[2].symbol).toBe('F6')
+  })
+
+  it('không bao giờ áp cho bậc năm', () => {
+    // Bậc năm cần bậc bảy để kéo về chủ âm, không được thay bằng màu đứng yên
+    for (const color of ['add9', '6', 'sus2', 'sus4', 'maj7'] as const) {
+      const result = reharmonize(chords('C Am F G'), { majorColor: color })
+      expect(result.colored[3].quality.intervals).toContain(10)
+    }
+  })
+
+  it('không áp cho hợp âm thứ', () => {
+    const result = reharmonize(chords('C Am F G'), { majorColor: 'sus2' })
+    // Bậc sáu vẫn là hợp âm thứ, không bị biến thành treo
+    expect(result.colored[1].quality.intervals).toContain(3)
+  })
+
+  it('áp cho bậc ba và bậc sáu của giọng thứ', () => {
+    const result = reharmonize(chords('Am C E7 F'), {
+      key: { tonic: 9, scale: 'minor' },
+      majorColor: '6',
+    })
+
+    // C là bậc III, F là bậc VI của giọng La thứ
+    expect(result.colored[1].symbol).toBe('C6')
+    expect(result.colored[3].symbol).toBe('F6')
+  })
+
+  it('hợp âm treo bỏ bậc ba nhưng vẫn giữ nốt gốc', () => {
+    const result = reharmonize(chords('C Am F G'), { majorColor: 'sus2' })
+    const tonic = result.colored[0]
+
+    expect(tonic.quality.intervals).not.toContain(4)
+    expect(tonic.root).toBe(0)
+  })
+
+  it('không làm mỏng hợp âm người dùng đã nhập dày hơn', () => {
+    // Người dùng nhập Cmaj9 mà chọn màu sus2 thì giữ nguyên Cmaj9
+    const result = reharmonize(chords('Cmaj9 Am F G'), { majorColor: 'sus2' })
+    expect(result.colored[0].symbol).toBe('Cmaj9')
+  })
+
+  it('mức nhẹ không dùng bảng màu này', () => {
+    const result = reharmonize(chords('C Am F G'), {
+      intensity: 'light',
+      majorColor: '6',
+    })
+    expect(result.colored[0].symbol).toBe('Cmaj7')
+  })
+})
+
 describe('đường ống', () => {
   it('giữ lại vòng gốc để đối chiếu', () => {
     const result = reharmonize(chords('C Am F G'))
