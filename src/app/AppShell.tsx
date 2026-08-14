@@ -4,6 +4,7 @@ import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
 import { ProgressionTrainer } from '../earTraining/progressionTrainer/ProgressionTrainer'
 import { ReviewSessionPage } from '../earTraining/srs/ReviewSessionPage'
 import { StatsPage } from '../earTraining/stats/StatsPage'
+import { ReharmHome } from '../reharm/ReharmHome'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
 const TABS = [
@@ -17,15 +18,6 @@ const TABS = [
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
-
-/** Chỗ dành sẵn cho các phần chưa xây. */
-function ComingSoon({ what }: { what: string }) {
-  return (
-    <p className="text-sm leading-relaxed text-dim">
-      Phần {what} chưa xây. Xem lộ trình trong kế hoạch dự án.
-    </p>
-  )
-}
 
 export function AppShell() {
   const [tab, setTab] = useState<TabId>('ear')
@@ -60,7 +52,7 @@ export function AppShell() {
       {tab === 'progression' && <ProgressionTrainer />}
       {tab === 'review' && <ReviewSessionPage />}
       {tab === 'metronome' && <MetronomePanel />}
-      {tab === 'reharm' && <ComingSoon what="tái hòa âm" />}
+      {tab === 'reharm' && <ReharmHome />}
       {tab === 'stats' && <StatsPage />}
       {tab === 'debug' && <MidiDebugPanel />}
     </div>
