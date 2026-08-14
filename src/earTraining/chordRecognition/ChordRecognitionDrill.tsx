@@ -9,6 +9,8 @@ import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
+import type { VoicingType } from '../../shared/musicTheory/voicing'
+import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { DrillQuestion, Strictness } from './drillEngine'
 import { checkAnswer, createQuestion } from './drillEngine'
 
@@ -38,6 +40,7 @@ export function ChordRecognitionDrill() {
     'Hợp âm bảy',
   ])
   const [strictness, setStrictness] = useState<Strictness>('pitchClass')
+  const [voicing, setVoicing] = useState<VoicingType>('close')
   /** Số giây trước khi tự lộ đáp án trên bàn phím. 0 nghĩa là không tự lộ. */
   const [revealAfter, setRevealAfter] = useState(10)
 
@@ -71,6 +74,7 @@ export function ChordRecognitionDrill() {
   const nextQuestion = useCallback(() => {
     const created = createQuestion(qualityKey ? qualityKey.split(',') : [], {
       avoid: questionRef.current,
+      voicing,
     })
     questionRef.current = created
     armedRef.current = false
@@ -79,7 +83,7 @@ export function ChordRecognitionDrill() {
     setPhase('answering')
     setRevealed(false)
     if (created) playChord(created.notes)
-  }, [qualityKey])
+  }, [qualityKey, voicing])
 
   /** Ra câu đầu tiên ngay khi âm thanh sẵn sàng. */
   useEffect(() => {
@@ -245,6 +249,7 @@ export function ChordRecognitionDrill() {
         highlightNotes={
           revealed || phase === 'correct' ? question?.notes : undefined
         }
+        chordTones={question?.chordTones}
       />
 
       {/* Cài đặt */}
@@ -269,6 +274,33 @@ export function ChordRecognitionDrill() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Thế bấm
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {VOICING_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setVoicing(option.id)}
+                title={option.description}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  voicing === option.id
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-dim">
+            {VOICING_OPTIONS.find((option) => option.id === voicing)
+              ?.description}
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-6">

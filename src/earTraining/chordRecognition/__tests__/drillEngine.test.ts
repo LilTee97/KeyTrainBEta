@@ -22,7 +22,15 @@ function notes(...names: string[]): number[] {
 function question(root: number, qualityId: string): DrillQuestion {
   const quality = getChordQuality(qualityId)
   if (!quality) throw new Error(`Không có tính chất '${qualityId}'`)
-  return { root, quality, notes: [], symbol: '' }
+
+  return {
+    root,
+    quality,
+    notes: [],
+    voicing: 'close',
+    chordTones: quality.intervals.map((interval) => (root + interval) % 12),
+    symbol: '',
+  }
 }
 
 describe('createQuestion', () => {
@@ -54,6 +62,33 @@ describe('createQuestion', () => {
     // random = 0 nên chọn tính chất đầu tiên và nốt gốc thấp nhất (C3)
     expect(result.notes).toEqual([48, 52, 55, 59])
     expect(result.symbol).toBe('Cmaj7')
+  })
+
+  it('chỉ trả về một thế bấm cụ thể, không phải mọi cách bấm', () => {
+    // Bốn nốt cho hợp âm bảy, không phải bốn lớp cao độ trải khắp bàn phím
+    const result = createQuestion(['maj7'], { random: fakeRandom([0]) })!
+    expect(result.notes).toHaveLength(4)
+    expect(new Set(result.notes).size).toBe(4)
+  })
+
+  it('dựng thế bấm theo đúng kiểu được chọn', () => {
+    const shell = createQuestion(['maj7'], {
+      random: fakeRandom([0]),
+      voicing: 'shell',
+    })!
+    // Shell bỏ bậc năm nên chỉ còn ba nốt
+    expect(shell.notes).toHaveLength(3)
+    expect(shell.voicing).toBe('shell')
+  })
+
+  it('ghi lại đủ các lớp cao độ của hợp âm dù thế bấm có bỏ bớt nốt', () => {
+    const shell = createQuestion(['maj7'], {
+      random: fakeRandom([0]),
+      voicing: 'shell',
+    })!
+    // Thế bấm chỉ ba nốt, nhưng hợp âm vẫn có đủ bốn nốt để chấm bài
+    expect(shell.chordTones).toHaveLength(4)
+    expect(shell.chordTones.sort((a, b) => a - b)).toEqual([0, 4, 7, 11])
   })
 
   it('không hỏi trùng ngay câu vừa hỏi', () => {

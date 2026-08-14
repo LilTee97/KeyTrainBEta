@@ -1,4 +1,4 @@
-import { chordNotes, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
+import { getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { formatChordSymbol } from '../../shared/musicTheory/chordDetection'
 import { normalizePitchClass, pitchClassOf } from '../../shared/musicTheory/pitch'
 import type {
@@ -6,6 +6,8 @@ import type {
   MidiNote,
   PitchClass,
 } from '../../shared/musicTheory/types'
+import type { VoicingType } from '../../shared/musicTheory/voicing'
+import { buildVoicing } from '../../shared/musicTheory/voicing'
 
 /**
  * Logic thuần của bài luyện nhận diện hợp âm: ra đề và chấm bài.
@@ -19,8 +21,15 @@ const ROOT_RANGE_HIGH: MidiNote = 59
 export interface DrillQuestion {
   root: PitchClass
   quality: ChordQuality
-  /** Nốt cụ thể để phát mẫu, ở thế nguyên vị. */
+  /**
+   * Một thế bấm cụ thể — dùng cho cả phát mẫu lẫn chỉ đáp án trên bàn phím.
+   * Luôn là một cách bấm duy nhất, không phải mọi cách bấm có thể.
+   */
   notes: MidiNote[]
+  /** Kiểu thế bấm đã dùng để dựng `notes`. */
+  voicing: VoicingType
+  /** Các lớp cao độ thuộc hợp âm, dùng để xác nhận người học bấm trúng. */
+  chordTones: PitchClass[]
   /** Tên hợp âm để hiển thị khi lộ đáp án. */
   symbol: string
 }
@@ -56,9 +65,13 @@ function pick<T>(items: readonly T[], random: RandomFn): T {
  */
 export function createQuestion(
   qualityIds: readonly string[],
-  options: { avoid?: DrillQuestion | null; random?: RandomFn } = {},
+  options: {
+    avoid?: DrillQuestion | null
+    random?: RandomFn
+    voicing?: VoicingType
+  } = {},
 ): DrillQuestion | null {
-  const { avoid = null, random = Math.random } = options
+  const { avoid = null, random = Math.random, voicing = 'close' } = options
 
   const qualities = qualityIds
     .map((id) => getChordQuality(id))
@@ -66,38 +79,43 @@ export function createQuestion(
 
   if (qualities.length === 0) return null
 
-  // Thử vài lần để tránh trùng câu trước; hết lượt thì chấp nhận trùng,
-  // vì có thể phạm vi luyện chỉ còn đúng một khả năng.
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const quality = pick(qualities, random)
-    const rootNote =
-      ROOT_RANGE_LOW +
-      Math.floor(random() * (ROOT_RANGE_HIGH - ROOT_RANGE_LOW + 1))
+  function build(quality: ChordQuality, rootNote: MidiNote): DrillQuestion {
     const root = pitchClassOf(rootNote)
-
-    const isSameAsPrevious =
-      avoid !== null && avoid.root === root && avoid.quality.id === quality.id
-    if (isSameAsPrevious) continue
-
     return {
       root,
       quality,
-      notes: chordNotes(rootNote, quality),
+      notes: buildVoicing(rootNote, quality, voicing, { random }),
+      voicing,
+      chordTones: quality.intervals.map((interval) =>
+        normalizePitchClass(root + interval),
+      ),
       symbol: formatChordSymbol(root, quality),
     }
   }
 
-  const quality = pick(qualities, random)
-  const rootNote =
-    ROOT_RANGE_LOW +
-    Math.floor(random() * (ROOT_RANGE_HIGH - ROOT_RANGE_LOW + 1))
-
-  return {
-    root: pitchClassOf(rootNote),
-    quality,
-    notes: chordNotes(rootNote, quality),
-    symbol: formatChordSymbol(pitchClassOf(rootNote), quality),
+  function randomRootNote(): MidiNote {
+    return (
+      ROOT_RANGE_LOW +
+      Math.floor(random() * (ROOT_RANGE_HIGH - ROOT_RANGE_LOW + 1))
+    )
   }
+
+  // Thử vài lần để tránh trùng câu trước; hết lượt thì chấp nhận trùng,
+  // vì có thể phạm vi luyện chỉ còn đúng một khả năng.
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const quality = pick(qualities, random)
+    const rootNote = randomRootNote()
+
+    const isSameAsPrevious =
+      avoid !== null &&
+      avoid.root === pitchClassOf(rootNote) &&
+      avoid.quality.id === quality.id
+    if (isSameAsPrevious) continue
+
+    return build(quality, rootNote)
+  }
+
+  return build(pick(qualities, random), randomRootNote())
 }
 
 /**

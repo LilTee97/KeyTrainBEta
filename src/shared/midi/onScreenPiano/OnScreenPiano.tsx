@@ -1,11 +1,34 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { midiToName, pitchClassOf } from '../../musicTheory/pitch'
-import type { AccidentalStyle, MidiNote } from '../../musicTheory/types'
+import type {
+  AccidentalStyle,
+  MidiNote,
+  PitchClass,
+} from '../../musicTheory/types'
 import { useMidiStore } from '../midiStore'
 import { buildKeyboardLayout } from './layout'
 
 /** Lực nhấn cố định cho nốt bấm bằng chuột hoặc cảm ứng. */
 const POINTER_VELOCITY = 90
+
+/**
+ * Màu phím theo trạng thái. Nốt gợi ý và nốt bấm trúng dùng **cùng một màu**
+ * (xanh ngọc), chỉ khác độ đậm — gợi ý thì nhạt, bấm trúng thì đậm — để
+ * người học vừa thấy chỗ cần đặt tay vừa thấy mình đã bấm được tới đâu.
+ */
+const WHITE_KEY_STYLES = {
+  correct: 'bg-teal-key text-ink',
+  pressed: 'bg-amber-key text-ink',
+  suggested: 'bg-teal-key/45 text-ink/60',
+  idle: 'bg-cream text-ink/35 hover:bg-white',
+} as const
+
+const BLACK_KEY_STYLES = {
+  correct: 'bg-teal-key',
+  pressed: 'bg-amber-key',
+  suggested: 'bg-teal-key/60',
+  idle: 'bg-neutral-900 hover:bg-neutral-800',
+} as const
 
 export interface OnScreenPianoProps {
   /** Nốt thấp nhất hiển thị. Mặc định C3. */
@@ -17,10 +40,21 @@ export interface OnScreenPianoProps {
   /** Ghi tên nốt lên phím trắng. */
   showNoteNames?: boolean
   /**
-   * Nốt cần chỉ cho người học, ví dụ đáp án của một câu luyện tập.
-   * Nốt đang bấm vẫn được tô đè lên, để thấy rõ mình bấm trúng chỗ nào.
+   * Thế bấm cần chỉ cho người học, theo **nốt tuyệt đối**.
+   *
+   * Cố tình không so theo lớp cao độ: so lớp cao độ sẽ thắp sáng nốt đó ở
+   * mọi quãng tám, khiến một hợp âm bảy sáng mười hai phím thay vì bốn và
+   * người học không biết đặt tay ở đâu.
    */
   highlightNotes?: readonly MidiNote[]
+  /**
+   * Các lớp cao độ thuộc hợp âm đang học.
+   *
+   * Phím **đang bấm** mà trúng một trong các lớp này sẽ tô cùng màu với đáp
+   * án, để xác nhận bấm đúng — kể cả khi bấm ở quãng tám khác với thế bấm
+   * đang gợi ý.
+   */
+  chordTones?: readonly PitchClass[]
 }
 
 /**
@@ -36,6 +70,7 @@ export function OnScreenPiano({
   accidentalStyle = 'sharp',
   showNoteNames = true,
   highlightNotes,
+  chordTones,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const noteOn = useMidiStore((state) => state.noteOn)
@@ -105,13 +140,27 @@ export function OnScreenPiano({
 
   const isHeld = (note: MidiNote) => heldNotes.includes(note)
 
-  // Chỉ so lớp cao độ, không so quãng tám: người học bấm đúng hợp âm ở
-  // quãng tám khác vẫn phải thấy phím của mình sáng lên.
-  const highlightClasses = new Set(
-    (highlightNotes ?? []).map((note) => pitchClassOf(note)),
-  )
-  const isHighlighted = (note: MidiNote) =>
-    highlightClasses.has(pitchClassOf(note))
+  /** Thế bấm gợi ý — so nốt tuyệt đối, chỉ đúng những phím này. */
+  const suggested = new Set(highlightNotes ?? [])
+
+  /** Nốt thuộc hợp âm — so lớp cao độ, dùng để xác nhận bấm đúng. */
+  const chordToneClasses = new Set(chordTones ?? [])
+  const isChordTone = (note: MidiNote) =>
+    chordToneClasses.has(pitchClassOf(note))
+
+  /**
+   * Ba trạng thái hiển thị của một phím:
+   * - 'correct': đang bấm và trúng nốt của hợp âm
+   * - 'pressed': đang bấm nhưng không thuộc hợp âm (hoặc chưa có hợp âm nào)
+   * - 'suggested': chưa bấm, nhưng thuộc thế bấm đang được gợi ý
+   */
+  const keyStateOf = (
+    note: MidiNote,
+  ): 'correct' | 'pressed' | 'suggested' | 'idle' => {
+    if (isHeld(note)) return isChordTone(note) ? 'correct' : 'pressed'
+    if (suggested.has(note)) return 'suggested'
+    return 'idle'
+  }
 
   const keyHandlers = (note: MidiNote) => ({
     onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
@@ -136,11 +185,7 @@ export function OnScreenPiano({
             aria-label={midiToName(note, accidentalStyle)}
             {...keyHandlers(note)}
             className={`flex flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
-              isHeld(note)
-                ? 'bg-amber-key text-ink'
-                : isHighlighted(note)
-                  ? 'bg-teal-key text-ink'
-                  : 'bg-cream text-ink/35 hover:bg-white'
+              WHITE_KEY_STYLES[keyStateOf(note)]
             }`}
           >
             {showNoteNames && pitchClassOf(note) === 0
@@ -162,11 +207,7 @@ export function OnScreenPiano({
             width: `${(100 / whiteKeys.length) * 0.62}%`,
           }}
           className={`absolute top-0 h-[62%] -translate-x-1/2 rounded-b-md border border-black/60 transition-colors ${
-            isHeld(note)
-              ? 'bg-amber-key'
-              : isHighlighted(note)
-                ? 'bg-teal-key'
-                : 'bg-neutral-900 hover:bg-neutral-800'
+            BLACK_KEY_STYLES[keyStateOf(note)]
           }`}
         />
       ))}
