@@ -18,10 +18,13 @@ import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
+  ColorOptionBase,
+  DominantChordColor,
   MajorChordColor,
   MinorChordColor,
 } from './reharmEngine/staticVoicingRules'
 import {
+  DOMINANT_COLOR_OPTIONS,
   MAJOR_COLOR_OPTIONS,
   MINOR_COLOR_OPTIONS,
   bestUpperStructure,
@@ -72,6 +75,81 @@ const ROOT_NAMES = Array.from({ length: 12 }, (_, pitchClass) =>
 /** Quãng tám đặt hợp âm khi nghe thử. */
 const BASE_OCTAVE_NOTE: MidiNote = 60
 
+interface ColorPickerProps<T extends string> {
+  title: string
+  hint: string
+  options: readonly (ColorOptionBase & { id: T })[]
+  value: T
+  onChange: (value: T) => void
+  /** Có hiện cả những màu không thấy trong tài liệu không. */
+  allowJazz: boolean
+}
+
+/**
+ * Hàng nút chọn màu hợp âm.
+ *
+ * Màu ngoài tài liệu được viền khác hẳn và có dấu chấm, để người học luôn biết
+ * mình đang nghe phong cách anh Khá hay đang nghe gu jazz nói chung.
+ */
+function ColorPicker<T extends string>({
+  title,
+  hint,
+  options,
+  value,
+  onChange,
+  allowJazz,
+}: ColorPickerProps<T>) {
+  const visible = options.filter(
+    (option) => allowJazz || option.source === 'khaBu',
+  )
+  const active = options.find((option) => option.id === value)
+
+  return (
+    <div>
+      <h4
+        className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+        title={hint}
+      >
+        {title}
+      </h4>
+
+      <div className="flex flex-wrap gap-2">
+        {visible.map((option) => {
+          const isJazz = option.source === 'jazz'
+          const isActive = value === option.id
+
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onChange(option.id)}
+              title={option.description}
+              className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
+                isActive
+                  ? isJazz
+                    ? 'border-teal-key bg-teal-key/15 text-teal-key'
+                    : 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : isJazz
+                    ? 'border-teal-key/40 border-dashed bg-white/4 text-dim hover:bg-white/8'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              {option.label}
+              {isJazz && <span className="ml-1 opacity-60">·</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      {active && (
+        <p className="mt-2 text-xs leading-relaxed text-dim">
+          {active.description}
+        </p>
+      )}
+    </div>
+  )
+}
+
 /**
  * Nốt để phát một hợp âm đã đọc được.
  *
@@ -110,8 +188,12 @@ export function ReharmHome() {
   const [susDominant, setSusDominant] = useState(false)
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
+  const [dominantColor, setDominantColor] =
+    useState<DominantChordColor>('auto')
   /** Bấm theo lối hợp âm chồng trên bass cho dễ. */
   const [useSlashChords, setUseSlashChords] = useState(false)
+  /** Cho phép dùng cả những màu jazz không thấy trong tài liệu. */
+  const [allowJazzColors, setAllowJazzColors] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
@@ -144,6 +226,7 @@ export function ReharmHome() {
       susDominant,
       majorColor,
       minorColor,
+      dominantColor,
       useSlashChords,
       key: parsedKey,
     })
@@ -159,6 +242,7 @@ export function ReharmHome() {
       susDominant,
       majorColor,
       minorColor,
+      dominantColor,
       useSlashChords,
       key: parsedKey,
       acceptedPassing: chosen,
@@ -169,6 +253,7 @@ export function ReharmHome() {
     susDominant,
     majorColor,
     minorColor,
+    dominantColor,
     useSlashChords,
     manualKey,
     acceptedPassing,
@@ -599,72 +684,51 @@ export function ReharmHome() {
           </p>
         )}
 
-        {/* Màu cho các bậc trưởng đứng yên */}
+        {/* Màu cho từng nhóm bậc */}
         {intensity === 'full' && (
-          <div className="mt-4">
-            <h4
-              className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
-              title="Áp cho bậc I và IV của giọng trưởng, bậc III và VI của giọng thứ. Bậc V không nằm trong nhóm này vì cần bậc bảy để kéo về chủ âm."
+          <div className="mt-4 flex flex-col gap-4">
+            <label
+              className="flex items-center gap-2 text-xs text-dim"
+              title="Các màu jazz hợp lệ nhưng không thấy trong tài liệu phân tích phong cách anh Khá"
             >
-              Màu cho hợp âm trưởng đứng yên
-            </h4>
+              <input
+                type="checkbox"
+                checked={allowJazzColors}
+                onChange={(event) => setAllowJazzColors(event.target.checked)}
+                className="accent-teal-key"
+              />
+              Cho dùng màu jazz ngoài tài liệu
+              <span className="font-mono text-[10px] text-teal-key">
+                (viền nét đứt)
+              </span>
+            </label>
 
-            <div className="flex flex-wrap gap-2">
-              {MAJOR_COLOR_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setMajorColor(option.id)}
-                  title={option.description}
-                  className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
-                    majorColor === option.id
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <ColorPicker
+              title="Màu cho hợp âm trưởng đứng yên"
+              hint="Áp cho bậc I và IV của giọng trưởng, bậc III và VI của giọng thứ. Bậc V không nằm trong nhóm này vì cần bậc bảy để kéo về chủ âm."
+              options={MAJOR_COLOR_OPTIONS}
+              value={majorColor}
+              onChange={setMajorColor}
+              allowJazz={allowJazzColors}
+            />
 
-            <p className="mt-2 text-xs leading-relaxed text-dim">
-              {
-                MAJOR_COLOR_OPTIONS.find((option) => option.id === majorColor)
-                  ?.description
-              }
-            </p>
+            <ColorPicker
+              title="Màu cho hợp âm thứ"
+              hint="Áp cho bậc ii, iii, vi của giọng trưởng và bậc i, iv của giọng thứ. Bậc nửa giảm không nằm trong nhóm này."
+              options={MINOR_COLOR_OPTIONS}
+              value={minorColor}
+              onChange={setMinorColor}
+              allowJazz={allowJazzColors}
+            />
 
-            <h4
-              className="mt-4 mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
-              title="Áp cho bậc ii, iii, vi của giọng trưởng và bậc i, iv của giọng thứ. Bậc nửa giảm không nằm trong nhóm này."
-            >
-              Màu cho hợp âm thứ
-            </h4>
-
-            <div className="flex flex-wrap gap-2">
-              {MINOR_COLOR_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setMinorColor(option.id)}
-                  title={option.description}
-                  className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
-                    minorColor === option.id
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-2 text-xs leading-relaxed text-dim">
-              {
-                MINOR_COLOR_OPTIONS.find((option) => option.id === minorColor)
-                  ?.description
-              }
-            </p>
+            <ColorPicker
+              title="Màu cho bậc năm"
+              hint="Mọi lựa chọn đều giữ nốt bậc bảy để không mất lực kéo về chủ âm."
+              options={DOMINANT_COLOR_OPTIONS}
+              value={dominantColor}
+              onChange={setDominantColor}
+              allowJazz={allowJazzColors}
+            />
           </div>
         )}
 

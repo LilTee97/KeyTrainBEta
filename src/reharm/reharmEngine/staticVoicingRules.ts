@@ -102,6 +102,8 @@ export type MajorChordColor =
   | '69'
   | 'sus2'
   | 'sus4'
+  /** Màu lydian, không thấy trong tài liệu. */
+  | 'maj7#11'
 
 /**
  * Màu dùng cho các bậc **thứ đứng yên** — bậc ii, iii, vi của giọng trưởng và
@@ -110,12 +112,38 @@ export type MajorChordColor =
  * Bậc nửa giảm không nằm trong nhóm này vì nó có chức năng riêng, đổi màu sẽ
  * làm mất chất.
  */
-export type MinorChordColor = 'auto' | 'm7' | 'm9' | 'm11'
+export type MinorChordColor =
+  | 'auto'
+  | 'm7'
+  | 'm9'
+  | 'm11'
+  /** Màu dorian, không thấy trong tài liệu. */
+  | 'm6'
+  /** Màu thứ hoà thanh, không thấy trong tài liệu. */
+  | 'mMaj7'
 
-export interface MinorColorOption {
-  id: MinorChordColor
+/**
+ * Màu này lấy từ đâu.
+ *
+ * Phân biệt rõ để người học biết mình đang nghe phong cách anh Khá hay đang
+ * nghe gu jazz nói chung — giống cách cờ `verified` phân biệt điệu đã xác thực
+ * với điệu chưa. Mục tiêu của app là học **một phong cách cụ thể**, nên trộn
+ * lẫn hai nguồn mà không nói rõ là làm hỏng mục tiêu đó.
+ */
+export type ColorSource =
+  /** Có mặt trong các bài mà tài liệu phân tích. */
+  | 'khaBu'
+  /** Màu jazz hợp lệ nhưng không thấy trong tài liệu. */
+  | 'jazz'
+
+export interface ColorOptionBase {
   label: string
   description: string
+  source: ColorSource
+}
+
+export interface MinorColorOption extends ColorOptionBase {
+  id: MinorChordColor
 }
 
 export const MINOR_COLOR_OPTIONS: readonly MinorColorOption[] = [
@@ -124,65 +152,192 @@ export const MINOR_COLOR_OPTIONS: readonly MinorColorOption[] = [
     label: 'Theo bậc',
     description:
       'Bậc hai dùng m11 đúng lối Am11 trong tài liệu, các bậc thứ khác dùng m9.',
+    source: 'khaBu',
   },
   {
     id: 'm7',
     label: 'm7',
     description: 'Chỉ thêm bậc bảy, màu nhạt nhất.',
+    source: 'khaBu',
   },
   {
     id: 'm9',
     label: 'm9',
     description: 'Thêm bậc chín, màu mềm và tròn.',
+    source: 'khaBu',
   },
   {
     id: 'm11',
     label: 'm11',
     description: 'Thêm cả bậc mười một, dày và mở. Đây là màu đặc trưng nhất.',
+    source: 'khaBu',
+  },
+  {
+    id: 'm6',
+    label: 'm6',
+    description:
+      'Màu dorian, sáng hơn hợp âm thứ thường. Thêm nốt nằm ngoài giọng.',
+    source: 'jazz',
+  },
+  {
+    id: 'mMaj7',
+    label: 'm(maj7)',
+    description:
+      'Thứ với bậc bảy trưởng, màu căng và bí ẩn. Thêm nốt nằm ngoài giọng.',
+    source: 'jazz',
   },
 ]
 
-export interface MajorColorOption {
+export interface MajorColorOption extends ColorOptionBase {
   id: MajorChordColor
-  label: string
-  description: string
 }
+
+/**
+ * Màu cho **bậc năm**.
+ *
+ * Tài liệu dùng khá nhiều hợp âm át biến âm mà bản đầu của app bỏ sót:
+ * `E7#5` ở bài Cứ Chill Thôi, `C13b9` ở Nàng Thơ, `A7b13/E` ở Em Dạo Này.
+ * Mọi lựa chọn ở đây đều giữ nốt bậc bảy để không mất lực kéo về chủ âm.
+ */
+export type DominantChordColor =
+  | 'auto'
+  | '7'
+  | '9'
+  | '13'
+  | '7b9'
+  | '13b9'
+  | '7#5'
+  | '7b13'
+  /** Màu lydian át, không thấy trong tài liệu. */
+  | '7#11'
+  /** Màu blues, không thấy trong tài liệu. */
+  | '7#9'
+  | '7b5'
+
+export interface DominantColorOption extends ColorOptionBase {
+  id: DominantChordColor
+}
+
+export const DOMINANT_COLOR_OPTIONS: readonly DominantColorOption[] = [
+  {
+    id: 'auto',
+    label: 'Theo bậc',
+    description:
+      'Giọng trưởng dùng 13, giọng thứ dùng 7b9 cho lực kéo mạnh hơn.',
+    source: 'khaBu',
+  },
+  {
+    id: '7',
+    label: '7',
+    description: 'Bảy át trơn, màu cơ bản nhất.',
+    source: 'khaBu',
+  },
+  {
+    id: '9',
+    label: '9',
+    description: 'Thêm bậc chín, mềm hơn bảy trơn.',
+    source: 'khaBu',
+  },
+  {
+    id: '13',
+    label: '13',
+    description: 'Thêm bậc mười ba, màu rộng và sang.',
+    source: 'khaBu',
+  },
+  {
+    id: '7b9',
+    label: '7b9',
+    description: 'Giáng chín tạo lực kéo mạnh, hay dùng khi về hợp âm thứ.',
+    source: 'khaBu',
+  },
+  {
+    id: '13b9',
+    label: '13b9',
+    description: 'Vừa rộng vừa căng. Tài liệu dùng ở bài Nàng Thơ.',
+    source: 'khaBu',
+  },
+  {
+    id: '7#5',
+    label: '7#5',
+    description:
+      'Thăng năm, màu chông chênh. Tài liệu dùng trong chuỗi giải quyết hợp âm treo.',
+    source: 'khaBu',
+  },
+  {
+    id: '7b13',
+    label: '7b13',
+    description: 'Giáng mười ba, tối và nặng. Tài liệu dùng ở bài Em Dạo Này.',
+    source: 'khaBu',
+  },
+  {
+    id: '7#11',
+    label: '7#11',
+    description: 'Màu lydian át, sáng và lơ lửng.',
+    source: 'jazz',
+  },
+  {
+    id: '7#9',
+    label: '7#9',
+    description: 'Màu blues gắt, va chạm giữa bậc ba trưởng và thứ.',
+    source: 'jazz',
+  },
+  {
+    id: '7b5',
+    label: '7b5',
+    description: 'Giáng năm, màu mờ ảo.',
+    source: 'jazz',
+  },
+]
 
 export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
   {
     id: 'add9',
     label: 'add9',
     description: 'Thêm nốt bậc chín, giữ nguyên cảm giác nghỉ. Lối Cadd2.',
+    source: 'khaBu',
   },
   {
     id: 'maj7',
     label: 'maj7',
     description: 'Thêm bậc bảy trưởng, màu mềm và mơ.',
+    source: 'khaBu',
   },
   {
     id: 'maj9',
     label: 'maj9',
     description: 'Bảy trưởng cộng bậc chín, dày nhất trong nhóm này.',
+    source: 'khaBu',
   },
   {
     id: '6',
     label: '6',
     description: 'Thêm bậc sáu, nghe cổ điển và dứt khoát hơn maj7.',
+    source: 'khaBu',
   },
   {
     id: '69',
     label: '6/9',
     description: 'Sáu cộng chín, màu jazz sáng, hay dùng ở hợp âm kết.',
+    source: 'khaBu',
   },
   {
     id: 'sus2',
     label: 'sus2',
     description: 'Bỏ bậc ba, thay bằng bậc hai. Lơ lửng, không rõ trưởng thứ.',
+    source: 'khaBu',
   },
   {
     id: 'sus4',
     label: 'sus4',
     description: 'Bỏ bậc ba, thay bằng bậc bốn. Căng nhẹ, muốn giải quyết.',
+    source: 'khaBu',
+  },
+  {
+    id: 'maj7#11',
+    label: 'maj7#11',
+    description:
+      'Màu lydian, sáng và mơ màng. Ở bậc bốn thì nốt thăng mười một vẫn nằm trong giọng, ở chủ âm thì nằm ngoài.',
+    source: 'jazz',
   },
 ]
 
@@ -206,6 +361,8 @@ export interface ColorOptions {
    * Màu cho các bậc thứ đứng yên. Bỏ trống thì mỗi bậc dùng màu riêng của nó.
    */
   minorColor?: MinorChordColor
+  /** Màu cho bậc năm. Bỏ trống thì theo bậc và theo giọng. */
+  dominantColor?: DominantChordColor
 }
 
 /**
@@ -294,6 +451,7 @@ export function colorAnalyzedChord(
     susDominant = false,
     majorColor = 'add9',
     minorColor = 'auto',
+    dominantColor = 'auto',
   } = options
   if (intensity === 'off') return analyzed.chord
 
@@ -322,6 +480,8 @@ export function colorAnalyzedChord(
   let target: string
   if (intensity !== 'full') {
     target = rule.light
+  } else if (degree === 5 && dominantColor !== 'auto') {
+    target = dominantColor
   } else if (isRestingMajorDegree(degree, scale)) {
     target = majorColor
   } else if (minorColor !== 'auto' && isRestingMinorDegree(degree, scale)) {

@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest'
+import { getChordQuality } from '../../../shared/musicTheory/chordDefinitions'
 import { parseChordInput } from '../../input/chordInputParser'
 import type { ParsedChord } from '../../types'
 import { analyzeInKey, degreeOf } from '../degreeAnalysis'
 import { bestKey, detectKey, isAmbiguous, scaleTones } from '../keyDetection'
 import { reharmonize } from '../reharmPipeline'
+import {
+  DOMINANT_COLOR_OPTIONS,
+  MAJOR_COLOR_OPTIONS,
+  MINOR_COLOR_OPTIONS,
+} from '../staticVoicingRules'
 
 function chords(input: string): ParsedChord[] {
   return parseChordInput(input).chords
@@ -361,6 +367,112 @@ describe('hợp âm mười một của bậc năm nằm ở dạng hợp âm tr
     expect(dominant.symbol).toBe('G9sus4')
     expect(dominant.quality.intervals).toContain(5)
     expect(dominant.quality.intervals).not.toContain(4)
+  })
+})
+
+describe('màu cho bậc năm', () => {
+  it('mặc định giọng trưởng dùng 13, giọng thứ dùng 7b9', () => {
+    expect(reharmonize(chords('C Am F G')).colored[3].symbol).toBe('G13')
+
+    const minor = reharmonize(chords('Am Dm E Am'), {
+      key: { tonic: 9, scale: 'minor' },
+    })
+    expect(minor.colored[2].symbol).toBe('E7b9')
+  })
+
+  it('chọn được các màu át biến âm mà tài liệu dùng', () => {
+    const cases: [string, string][] = [
+      ['7', 'G7'],
+      ['9', 'G9'],
+      ['13b9', 'G13b9'],
+      ['7#5', 'G7#5'],
+      ['7b13', 'G7b13'],
+    ]
+
+    for (const [color, expected] of cases) {
+      const result = reharmonize(chords('C Am F G'), {
+        dominantColor: color as never,
+      })
+      expect(result.colored[3].symbol).toBe(expected)
+    }
+  })
+
+  it('chọn được cả các màu jazz ngoài tài liệu', () => {
+    for (const [color, expected] of [
+      ['7#11', 'G7#11'],
+      ['7#9', 'G7#9'],
+      ['7b5', 'G7b5'],
+    ] as const) {
+      const result = reharmonize(chords('C Am F G'), {
+        dominantColor: color,
+      })
+      expect(result.colored[3].symbol).toBe(expected)
+    }
+  })
+
+  it('mọi màu bậc năm đều giữ nốt bậc bảy', () => {
+    const colors = DOMINANT_COLOR_OPTIONS.map((option) => option.id)
+
+    for (const color of colors) {
+      const result = reharmonize(chords('C Am F G'), { dominantColor: color })
+      expect(result.colored[3].quality.intervals).toContain(10)
+    }
+  })
+
+  it('không đụng tới các bậc khác', () => {
+    const result = reharmonize(chords('C Am F G'), { dominantColor: '7#9' })
+    expect(result.colored[0].symbol).toBe('Cadd9')
+    expect(result.colored[1].symbol).toBe('Am9')
+  })
+})
+
+describe('phân nguồn màu', () => {
+  it('mọi màu đều ghi rõ lấy từ đâu', () => {
+    const all = [
+      ...MAJOR_COLOR_OPTIONS,
+      ...MINOR_COLOR_OPTIONS,
+      ...DOMINANT_COLOR_OPTIONS,
+    ]
+
+    for (const option of all) {
+      expect(['khaBu', 'jazz']).toContain(option.source)
+    }
+  })
+
+  it('mỗi nhóm đều có ít nhất một màu ngoài tài liệu', () => {
+    for (const group of [
+      MAJOR_COLOR_OPTIONS,
+      MINOR_COLOR_OPTIONS,
+      DOMINANT_COLOR_OPTIONS,
+    ]) {
+      expect(group.some((option) => option.source === 'jazz')).toBe(true)
+    }
+  })
+
+  it('lựa chọn mặc định luôn thuộc nhóm trong tài liệu', () => {
+    // Người dùng không bật màu jazz thì không bao giờ vô tình dùng phải
+    expect(
+      MAJOR_COLOR_OPTIONS.find((option) => option.id === 'add9')?.source,
+    ).toBe('khaBu')
+    expect(
+      MINOR_COLOR_OPTIONS.find((option) => option.id === 'auto')?.source,
+    ).toBe('khaBu')
+    expect(
+      DOMINANT_COLOR_OPTIONS.find((option) => option.id === 'auto')?.source,
+    ).toBe('khaBu')
+  })
+
+  it('mọi tính chất hợp âm trong bảng màu đều có thật trong từ vựng', () => {
+    const all = [
+      ...MAJOR_COLOR_OPTIONS,
+      ...MINOR_COLOR_OPTIONS,
+      ...DOMINANT_COLOR_OPTIONS,
+    ]
+
+    for (const option of all) {
+      if (option.id === 'auto') continue
+      expect(getChordQuality(option.id)).toBeDefined()
+    }
   })
 })
 

@@ -23,13 +23,11 @@ Tài liệu `phongcachdemhatkhabu.md` mô tả ở hai cấp độ:
 
 ---
 
-## 2. Các màu jazz ngoài tài liệu
+## 2. ~~Các màu jazz ngoài tài liệu~~ — ĐÃ LÀM
 
-Ví dụ `Fm6` (hợp âm sáu thứ, bậc bốn mượn từ giọng thứ), `maj7#11` (bậc bốn kiểu lydian), `7#11`, `7alt`.
+Đã thêm `m6`, `m(maj7)`, `maj7#11`, `7#11`, `7#9`, `7b5`, kèm công tắc bật/tắt và trường `source` phân biệt `khaBu` với `jazz`. Xem `src/reharm/reharmEngine/staticVoicingRules.ts`.
 
-**Đây là màu jazz hợp lệ, nhưng tra kỹ tài liệu thì không thấy anh Khá dùng.** Thêm vào là mở rộng sang một phong cách khác, không còn là mô phỏng phong cách đang nhắm tới.
-
-**Nếu làm:** phải đánh dấu rõ đâu là màu từ tài liệu, đâu là mở rộng — giống cách cờ `verified` đang phân biệt điệu đã xác thực với điệu chưa. Người học cần biết mình đang học phong cách anh Khá hay đang nghe gu của app.
+Làm cùng lúc còn phát hiện mấy màu **vốn có trong tài liệu** mà app bỏ sót: `7#5`, `13b9`, `7b13`. Đã bổ sung vào bảng màu bậc năm.
 
 ---
 
