@@ -198,6 +198,10 @@ export function ReharmHome() {
   const [useSlashChords, setUseSlashChords] = useState(false)
   /** Cho phép dùng cả những màu jazz không thấy trong tài liệu. */
   const [allowJazzColors, setAllowJazzColors] = useState(false)
+  /** Cho hợp âm trưởng bắt đầu bằng nốt treo bậc bốn rồi giải quyết. */
+  const [suspendMajor, setSuspendMajor] = useState<
+    'off' | 'tonic' | 'allMajor'
+  >('off')
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
@@ -232,6 +236,7 @@ export function ReharmHome() {
       majorColor,
       minorColor,
       dominantColor,
+      suspendMajor,
       useSlashChords,
       key: parsedKey,
     })
@@ -249,6 +254,7 @@ export function ReharmHome() {
       majorColor,
       minorColor,
       dominantColor,
+      suspendMajor,
       useSlashChords,
       key: parsedKey,
       acceptedPassing: chosen,
@@ -261,6 +267,7 @@ export function ReharmHome() {
     majorColor,
     minorColor,
     dominantColor,
+    suspendMajor,
     useSlashChords,
     manualKey,
     acceptedPassing,
@@ -742,7 +749,49 @@ export function ReharmHome() {
                 allowJazz={allowJazzColors}
               />
 
-              <p className="mt-2 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+              {/* Nốt treo — cách trình bày, không phải màu */}
+              <div className="mt-3">
+                <h4
+                  className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+                  title="Hợp âm vang ở dạng sus4 trước rồi hạ nốt bậc bốn xuống bậc ba. Tài liệu dùng lối này ở Esus4 rồi E."
+                >
+                  Nốt treo bậc bốn
+                </h4>
+
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      ['off', 'Không dùng'],
+                      ['tonic', 'Chỉ chủ âm'],
+                      ['allMajor', 'Mọi hợp âm trưởng'],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSuspendMajor(value)}
+                      className={`rounded-lg border px-3 py-1.5 text-xs ${
+                        suspendMajor === value
+                          ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                          : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="mt-2 text-xs leading-relaxed text-dim">
+                  sus4 không phải một màu mà là{' '}
+                  <span className="text-cream">nốt treo cần giải quyết</span>:
+                  hợp âm vang ở dạng sus4 rồi hạ bậc bốn xuống bậc ba ngay
+                  trong cùng ô nhịp. Tài liệu dùng đúng lối này ở{' '}
+                  <span className="font-mono text-cream">Esus4 → E</span> và{' '}
+                  <span className="font-mono text-cream">G7sus4 → G7</span>.
+                </p>
+              </div>
+
+              <p className="mt-3 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
                 Gu hiện tại:{' '}
                 <span className="text-teal-key">
                   {PALETTE_BY_TONIC_COLOR[tonicColor].styleName}

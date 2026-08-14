@@ -70,8 +70,11 @@ function renderBlockChords(
   voicings.forEach((voicing, index) => {
     const chordStart = index * beatsPerChord
 
-    // Hợp âm ngân từ một ô nhịp trở lên thì chia đôi để đánh lại.
-    const strikeCount = beatsPerChord >= beatsPerMeasure ? 2 : 1
+    // Hợp âm ngân từ một ô nhịp trở lên thì chia đôi để đánh lại. Hợp âm có
+    // nốt treo cũng phải chia đôi, để nốt treo còn chỗ mà giải quyết.
+    const needsTwoStrikes =
+      beatsPerChord >= beatsPerMeasure || voicing.suspendedRight !== undefined
+    const strikeCount = needsTwoStrikes ? 2 : 1
     const strikeLength = beatsPerChord / strikeCount
 
     for (let strike = 0; strike < strikeCount; strike += 1) {
@@ -81,8 +84,14 @@ function renderBlockChords(
       // Lần đánh lại nhẹ hơn lần đầu, để nghe ra đâu là chỗ đổi hợp âm.
       const emphasis = strike === 0 ? 1 : 0.8
 
+      // Nốt treo vang ở lần đánh đầu, rồi giải quyết ở lần sau.
+      const rightNotes =
+        strike === 0 && voicing.suspendedRight
+          ? voicing.suspendedRight
+          : voicing.right
+
       events.push({
-        notes: voicing.right,
+        notes: rightNotes,
         startBeat,
         durationBeats,
         hand: 'right',
@@ -118,7 +127,11 @@ function renderWithCell(
   const totalBeats = voicings.length * beatsPerChord
   const events: TimelineEvent[] = []
 
+  /** Hợp âm nào đã phát tiếng tay phải đầu tiên, dùng cho phần nốt treo. */
+  const chordsWithFirstHit = new Set<number>()
+
   for (let offset = 0; offset < totalBeats; offset += cell.lengthBeats) {
+    // Duyệt tay phải trước để việc đánh dấu tiếng đầu tiên chạy đúng thứ tự.
     for (const hand of ['right', 'left'] as const) {
       const hits = hand === 'right' ? cell.right : cell.left
 
@@ -130,7 +143,25 @@ function renderWithCell(
         const voicing = voicings[Math.floor(startBeat / beatsPerChord)]
         if (!voicing) continue
 
-        const source = hand === 'right' ? voicing.right : voicing.left
+        /*
+          Nốt treo chỉ vang ở **tiếng đầu tiên** của hợp âm, các tiếng sau đã
+          giải quyết — nếu không thì nốt treo lặp mãi mà không bao giờ xuống.
+
+          Không dùng được cách so vị trí với đầu ô nhịp, vì có điệu tay phải
+          nghỉ hẳn phách một (valse) nên không tiếng nào rơi đúng đầu ô. Phải
+          nhớ xem hợp âm này đã phát tiếng tay phải nào chưa.
+        */
+        const chordIndex = Math.floor(startBeat / beatsPerChord)
+        const isFirstRightHit =
+          hand === 'right' && !chordsWithFirstHit.has(chordIndex)
+        if (isFirstRightHit) chordsWithFirstHit.add(chordIndex)
+
+        const source =
+          hand === 'right'
+            ? isFirstRightHit && voicing.suspendedRight
+              ? voicing.suspendedRight
+              : voicing.right
+            : voicing.left
         const notes = notesForVoice(source, hit.voice)
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
