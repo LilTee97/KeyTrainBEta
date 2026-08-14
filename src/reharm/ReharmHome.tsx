@@ -310,6 +310,17 @@ export function ReharmHome() {
     [twoHands, style, chordBeats],
   )
 
+  /**
+   * Người dùng chọn màu biến âm cho bậc năm trong khi bài ở giọng trưởng.
+   *
+   * Không phải lỗi, nhưng theo lối đệm hát thường gặp thì màu biến âm hợp khi
+   * bậc năm kéo về hợp âm thứ hơn là về chủ âm trưởng — nên nhắc một câu.
+   */
+  const alteredDominantInMajorKey = useMemo(() => {
+    const altered = ['7b9', '13b9', '7#5', '7b13', '7#9', '7b5']
+    return reharm.key?.scale === 'major' && altered.includes(dominantColor)
+  }, [reharm.key, dominantColor])
+
   /** Vòng hợp âm không đổi gì sau khi tái hòa âm — cần báo cho người dùng biết. */
   const isUnchanged = useMemo(() => {
     if (withPassing.length !== sequence.chords.length) return false
@@ -721,14 +732,26 @@ export function ReharmHome() {
               allowJazz={allowJazzColors}
             />
 
-            <ColorPicker
-              title="Màu cho bậc năm"
-              hint="Mọi lựa chọn đều giữ nốt bậc bảy để không mất lực kéo về chủ âm."
-              options={DOMINANT_COLOR_OPTIONS}
-              value={dominantColor}
-              onChange={setDominantColor}
-              allowJazz={allowJazzColors}
-            />
+            <div>
+              <ColorPicker
+                title="Màu cho bậc năm"
+                hint="Mọi lựa chọn đều giữ nốt bậc bảy để không mất lực kéo về chủ âm."
+                options={DOMINANT_COLOR_OPTIONS}
+                value={dominantColor}
+                onChange={setDominantColor}
+                allowJazz={allowJazzColors}
+              />
+
+              {alteredDominantInMajorKey && (
+                <p className="mt-2 rounded-lg border border-amber-key/30 bg-amber-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+                  Bài đang ở giọng trưởng. Theo lối đệm hát thường gặp, các màu
+                  biến âm như 7b9, 7#5, 7b13 hợp khi bậc năm kéo về{' '}
+                  <span className="text-cream">hợp âm thứ</span>; kéo về chủ âm
+                  trưởng thì 9 hoặc 13 nghe thuận hơn. Tài liệu cũng dùng đúng
+                  vậy: E7b9 về Am, còn C7 về FM7.
+                </p>
+              )}
+            </div>
           </div>
         )}
 

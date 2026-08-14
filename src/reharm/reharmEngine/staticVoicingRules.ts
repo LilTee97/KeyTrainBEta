@@ -91,8 +91,16 @@ export type ColorIntensity = 'off' | 'light' | 'full'
  * `C`, `CM7` và `C6`. Tức không có **một** màu đúng cho chủ âm — đó là lựa
  * chọn thẩm mỹ, nên để người chơi chọn.
  *
- * Bậc V cố ý **không** nằm trong nhóm này: nó cần nốt bậc bảy để giữ lực kéo
- * về chủ âm, thêm màu kiểu add9 hay sus2 sẽ làm mất chức năng.
+ * Hai thứ cố ý **không** nằm trong nhóm này:
+ *
+ * - **Bậc V**, vì nó cần nốt bậc bảy để giữ lực kéo về chủ âm.
+ * - **sus4**, dù tài liệu có nhắc tên. Nốt bậc bốn treo luôn đòi giải quyết
+ *   xuống bậc ba nên nó là **nốt treo cần giải quyết**, không phải màu đứng
+ *   yên — không ai chơi chủ âm ở màu sus4. Tra lại thì mọi ví dụ sus cụ thể
+ *   trong tài liệu đều nằm ở hợp âm bậc năm (`D9sus4`, `G7b9sus4`) hoặc ở
+ *   dạng giải quyết (`Esus4 → E`, `G7sus4 → G7`).
+ *
+ * `sus2` thì giữ lại: nó không có nốt đòi giải quyết nên đứng yên được.
  */
 export type MajorChordColor =
   | 'add9'
@@ -101,7 +109,6 @@ export type MajorChordColor =
   | '6'
   | '69'
   | 'sus2'
-  | 'sus4'
   /** Màu lydian, không thấy trong tài liệu. */
   | 'maj7#11'
 
@@ -323,13 +330,8 @@ export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
   {
     id: 'sus2',
     label: 'sus2',
-    description: 'Bỏ bậc ba, thay bằng bậc hai. Lơ lửng, không rõ trưởng thứ.',
-    source: 'khaBu',
-  },
-  {
-    id: 'sus4',
-    label: 'sus4',
-    description: 'Bỏ bậc ba, thay bằng bậc bốn. Căng nhẹ, muốn giải quyết.',
+    description:
+      'Bỏ bậc ba, thay bằng bậc hai. Lơ lửng nhưng vẫn đứng yên được, không đòi giải quyết như sus4.',
     source: 'khaBu',
   },
   {

@@ -238,7 +238,6 @@ describe('màu cho hợp âm trưởng đứng yên', () => {
       ['6', 'C6'],
       ['69', 'C6/9'],
       ['sus2', 'Csus2'],
-      ['sus4', 'Csus4'],
     ]
 
     for (const [color, expected] of cases) {
@@ -256,9 +255,26 @@ describe('màu cho hợp âm trưởng đứng yên', () => {
 
   it('không bao giờ áp cho bậc năm', () => {
     // Bậc năm cần bậc bảy để kéo về chủ âm, không được thay bằng màu đứng yên
-    for (const color of ['add9', '6', 'sus2', 'sus4', 'maj7'] as const) {
+    for (const color of ['add9', '6', 'sus2', 'maj7'] as const) {
       const result = reharmonize(chords('C Am F G'), { majorColor: color })
       expect(result.colored[3].quality.intervals).toContain(10)
+    }
+  })
+
+  it('sus2 vẫn còn vì nó không có nốt đòi giải quyết', () => {
+    expect(
+      MAJOR_COLOR_OPTIONS.some((option) => option.id === 'sus2'),
+    ).toBe(true)
+  })
+
+  it('không màu nào chứa nốt treo bậc bốn', () => {
+    // Nốt bậc bốn đúng luôn đòi giải quyết xuống bậc ba, nên nó là nốt treo
+    // chứ không phải màu đứng yên — không ai chơi chủ âm ở màu sus4. Mọi ví dụ
+    // sus trong tài liệu đều ở bậc năm hoặc ở dạng giải quyết.
+    for (const option of MAJOR_COLOR_OPTIONS) {
+      const quality = getChordQuality(option.id)!
+      // Bậc bốn đúng là 5 nửa cung; bậc bốn tăng (6) thì không phải nốt treo
+      expect(quality.intervals).not.toContain(5)
     }
   })
 
