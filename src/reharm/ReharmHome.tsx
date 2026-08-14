@@ -13,6 +13,11 @@ import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
+import type { ColorIntensity } from './reharmEngine/staticVoicingRules'
+import {
+  bestUpperStructure,
+  colorSequence,
+} from './reharmEngine/staticVoicingRules'
 import {
   plainSequence,
   totalMovement,
@@ -83,6 +88,9 @@ export function ReharmHome() {
   const [dropRoot, setDropRoot] = useState(true)
   /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
   const [beatsPerChord, setBeatsPerChord] = useState(4)
+  /** Mức thêm màu cho hợp âm. */
+  const [intensity, setIntensity] = useState<ColorIntensity>('full')
+  const [susDominant, setSusDominant] = useState(false)
   /** Tay nào được phát, để nghe riêng từng tay. */
   const [hand, setHand] = useState<'both' | 'left' | 'right'>('both')
 
@@ -90,32 +98,35 @@ export function ReharmHome() {
 
   const sequence = useMemo(() => parseChordInput(input), [input])
 
+  /** Vòng hợp âm sau khi thêm màu theo phong cách. */
+  const recolored = useMemo(
+    () => colorSequence(sequence.chords, { intensity, susDominant }),
+    [sequence.chords, intensity, susDominant],
+  )
+
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
     () =>
-      voiceLeadTwoHands(sequence.chords, {
+      voiceLeadTwoHands(recolored, {
         dropRootFromRightHand: dropRoot,
       }),
-    [sequence.chords, dropRoot],
+    [recolored, dropRoot],
   )
 
   /** Thế bấm mộc, chỉ xếp chồng từ nốt gốc — để đối chiếu. */
-  const plain = useMemo(
-    () => plainSequence(sequence.chords),
-    [sequence.chords],
-  )
+  const plain = useMemo(() => plainSequence(recolored), [recolored])
 
   /** Nốt để phát, theo chế độ đang chọn. */
   const playbackNotes = useMemo(
     () =>
       smoothVoicing
         ? twoHands.map(flattenHands)
-        : sequence.chords.map((chord, index) => [
+        : recolored.map((chord, index) => [
             // Thế mộc vẫn có nốt bass tay trái để so sánh công bằng
             twoHands[index]?.left[0] ?? chord.root + 40,
             ...plain[index],
           ]),
-    [smoothVoicing, twoHands, plain, sequence.chords],
+    [smoothVoicing, twoHands, plain, recolored],
   )
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
@@ -329,6 +340,94 @@ export function ReharmHome() {
             <span className="text-rose-300">{movement.plain}</span> khi bấm
             mộc.
           </p>
+        )}
+      </div>
+
+      {/* Thêm màu hợp âm */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Thêm màu hợp âm
+        </h3>
+        <p className="mb-3 text-xs leading-relaxed text-dim">
+          Chữ ký số một của phong cách: không dùng hợp âm ba trơn, luôn thêm
+          màu bằng sus, add9, 9, 11.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex gap-1">
+            {(
+              [
+                ['off', 'Giữ nguyên'],
+                ['light', 'Nhẹ'],
+                ['full', 'Đậm'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setIntensity(value)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  intensity === value
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <label
+            className="flex items-center gap-2 text-xs text-dim"
+            title="Bỏ bậc ba của hợp âm bảy át, đổi thành hợp âm treo — lối D9sus4, E9sus4 rất hay gặp trong phong cách này"
+          >
+            <input
+              type="checkbox"
+              checked={susDominant}
+              onChange={(event) => setSusDominant(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Hợp âm át thành treo
+          </label>
+        </div>
+
+        {/* Đối chiếu trước và sau */}
+        {sequence.chords.length > 0 && (
+          <div className="mt-4 flex flex-col gap-2 border-t border-line pt-4">
+            {sequence.chords.map((original, index) => {
+              const after = recolored[index]
+              const changed = after && after.symbol !== original.symbol
+              const upper = after ? bestUpperStructure(after) : null
+
+              return (
+                <div
+                  key={`${original.symbol}-${index}`}
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1"
+                >
+                  <span className="w-20 font-mono text-xs text-dim">
+                    {original.symbol}
+                  </span>
+                  <span className="text-dim">→</span>
+                  <span
+                    className={`w-24 font-serif text-base ${
+                      changed ? 'text-amber-key' : 'text-dim'
+                    }`}
+                  >
+                    {after?.symbol ?? original.symbol}
+                  </span>
+
+                  {upper && (
+                    <span
+                      className="font-mono text-[11px] text-teal-key"
+                      title="Cách bấm dễ hơn: tay phải bấm hợp âm đơn giản này, tay trái giữ nốt bass"
+                    >
+                      = {upper.label}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
 
