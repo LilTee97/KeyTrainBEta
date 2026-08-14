@@ -1,3 +1,5 @@
+import { MidiDebugPanel } from './debug/MidiDebugPanel'
+
 const SECTIONS = ['Luyện tai', 'Tái hòa âm', 'Thống kê'] as const
 
 export function AppShell() {
@@ -21,10 +23,7 @@ export function AppShell() {
         ))}
       </nav>
 
-      <p className="text-sm leading-relaxed text-dim">
-        Scaffold đã chạy. Các mục ở trên là chỗ dành sẵn — chưa nối vào tính
-        năng nào.
-      </p>
+      <MidiDebugPanel />
     </div>
   )
 }
