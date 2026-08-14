@@ -1,6 +1,8 @@
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import type { ColorConflict } from './colorConflicts'
+import { analyzeColorConflicts } from './colorConflicts'
 import type { AnalyzedChord } from './degreeAnalysis'
 import { analyzeInKey } from './degreeAnalysis'
 import type { KeyCandidate } from './keyDetection'
@@ -70,6 +72,11 @@ export interface ReharmResult {
    */
   harmonic: ParsedChord[]
   /**
+   * Các chỗ lựa chọn màu phạm quy luật nhạc lý.
+   * Chỉ để cảnh báo, không chặn — có chỗ phá luật lại hay.
+   */
+  conflicts: ColorConflict[]
+  /**
    * Vòng hợp âm về mặt **cách bấm** — thứ tay thật sự chơi.
    *
    * Bằng `harmonic` khi không bật lối chồng trên bass; bật lên thì thành
@@ -103,6 +110,7 @@ export function reharmonize(
       colored: [],
       passingSuggestions: [],
       harmonic: [],
+      conflicts: [],
       final: [],
     }
   }
@@ -157,6 +165,14 @@ export function reharmonize(
     colored,
     passingSuggestions,
     harmonic,
+    // Dò xung đột trên vòng đã tô màu, trước khi chèn hợp âm lướt — để cảnh
+    // báo nói về lựa chọn màu của người dùng chứ không về hợp âm app tự chèn.
+    conflicts: activeKey
+      ? analyzeColorConflicts(colored, analyzed, {
+          tonic: activeKey.tonic,
+          scale: activeKey.scale,
+        })
+      : [],
     final,
   }
 }

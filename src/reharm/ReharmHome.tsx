@@ -23,10 +23,12 @@ import type {
   MajorChordColor,
   MinorChordColor,
 } from './reharmEngine/staticVoicingRules'
+import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
   MAJOR_COLOR_OPTIONS,
   MINOR_COLOR_OPTIONS,
+  PALETTE_BY_TONIC_COLOR,
   bestUpperStructure,
 } from './reharmEngine/staticVoicingRules'
 import {
@@ -186,6 +188,8 @@ export function ReharmHome() {
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(false)
+  /** Màu của chủ âm — quyết định gu chung của cả vòng. */
+  const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
   const [dominantColor, setDominantColor] =
@@ -224,6 +228,7 @@ export function ReharmHome() {
     const firstPass = reharmonize(sequence.chords, {
       intensity,
       susDominant,
+      tonicColor,
       majorColor,
       minorColor,
       dominantColor,
@@ -240,6 +245,7 @@ export function ReharmHome() {
     return reharmonize(sequence.chords, {
       intensity,
       susDominant,
+      tonicColor,
       majorColor,
       minorColor,
       dominantColor,
@@ -251,6 +257,7 @@ export function ReharmHome() {
     sequence.chords,
     intensity,
     susDominant,
+    tonicColor,
     majorColor,
     minorColor,
     dominantColor,
@@ -311,15 +318,26 @@ export function ReharmHome() {
   )
 
   /**
-   * Người dùng chọn màu biến âm cho bậc năm trong khi bài ở giọng trưởng.
+   * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
    *
-   * Không phải lỗi, nhưng theo lối đệm hát thường gặp thì màu biến âm hợp khi
-   * bậc năm kéo về hợp âm thứ hơn là về chủ âm trưởng — nên nhắc một câu.
+   * Chủ âm quyết định gu chung, nên để nó lệch pha với các bậc còn lại sẽ ra
+   * một mớ chắp vá. Sau khi đặt lại, người dùng vẫn chỉnh riêng từng hàng được.
    */
-  const alteredDominantInMajorKey = useMemo(() => {
-    const altered = ['7b9', '13b9', '7#5', '7b13', '7#9', '7b5']
-    return reharm.key?.scale === 'major' && altered.includes(dominantColor)
-  }, [reharm.key, dominantColor])
+  const applyTonicColor = (color: MajorChordColor) => {
+    const palette = PALETTE_BY_TONIC_COLOR[color]
+
+    setTonicColor(color)
+    setMajorColor(palette.major)
+    setMinorColor(palette.minor)
+    setDominantColor(palette.dominant)
+    setSusDominant(palette.susDominant)
+  }
+
+  /** Xung đột nhạc lý, gom theo vị trí hợp âm để hiện ngay cạnh nó. */
+  const conflictMap = useMemo(
+    () => conflictsByIndex(reharm.conflicts),
+    [reharm.conflicts],
+  )
 
   /** Vòng hợp âm không đổi gì sau khi tái hòa âm — cần báo cho người dùng biết. */
   const isUnchanged = useMemo(() => {
@@ -714,8 +732,28 @@ export function ReharmHome() {
               </span>
             </label>
 
+            <div>
+              <ColorPicker
+                title="Màu cho chủ âm"
+                hint="Chủ âm là chỗ nghỉ của cả bài. Đổi màu chủ âm sẽ kéo theo các bậc khác đổi cho ăn khớp."
+                options={MAJOR_COLOR_OPTIONS}
+                value={tonicColor}
+                onChange={applyTonicColor}
+                allowJazz={allowJazzColors}
+              />
+
+              <p className="mt-2 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+                Gu hiện tại:{' '}
+                <span className="text-teal-key">
+                  {PALETTE_BY_TONIC_COLOR[tonicColor].styleName}
+                </span>
+                . Đổi màu chủ âm sẽ đặt lại các hàng bên dưới cho ăn khớp, sau
+                đó bạn vẫn chỉnh riêng từng hàng được.
+              </p>
+            </div>
+
             <ColorPicker
-              title="Màu cho hợp âm trưởng đứng yên"
+              title="Màu cho các bậc trưởng khác"
               hint="Áp cho bậc I và IV của giọng trưởng, bậc III và VI của giọng thứ. Bậc V không nằm trong nhóm này vì cần bậc bảy để kéo về chủ âm."
               options={MAJOR_COLOR_OPTIONS}
               value={majorColor}
@@ -742,15 +780,6 @@ export function ReharmHome() {
                 allowJazz={allowJazzColors}
               />
 
-              {alteredDominantInMajorKey && (
-                <p className="mt-2 rounded-lg border border-amber-key/30 bg-amber-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
-                  Bài đang ở giọng trưởng. Theo lối đệm hát thường gặp, các màu
-                  biến âm như 7b9, 7#5, 7b13 hợp khi bậc năm kéo về{' '}
-                  <span className="text-cream">hợp âm thứ</span>; kéo về chủ âm
-                  trưởng thì 9 hoặc 13 nghe thuận hơn. Tài liệu cũng dùng đúng
-                  vậy: E7b9 về Am, còn C7 về FM7.
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -798,6 +827,21 @@ export function ReharmHome() {
                       = {upper.label}
                     </span>
                   )}
+
+                  {/* Cảnh báo xung đột nhạc lý cho đúng hợp âm này */}
+                  {(conflictMap.get(index) ?? []).map((conflict) => (
+                    <span
+                      key={conflict.kind}
+                      className={`w-full text-[11px] leading-relaxed ${
+                        conflict.severity === 'warning'
+                          ? 'text-rose-300'
+                          : 'text-dim'
+                      }`}
+                    >
+                      {conflict.severity === 'warning' ? '⚠ ' : '· '}
+                      {conflict.message}
+                    </span>
+                  ))}
                 </div>
               )
             })}

@@ -296,6 +296,83 @@ export const DOMINANT_COLOR_OPTIONS: readonly DominantColorOption[] = [
   },
 ]
 
+/**
+ * Bộ màu cho cả vòng, chọn theo màu của **chủ âm**.
+ *
+ * Chủ âm quyết định gu của cả bài: chọn hợp âm sáu là đang nghiêng về lối cổ
+ * điển và bossa, chọn add9 là lối pop ballad, chọn maj9 hay 6/9 là lối jazz.
+ * Nên đổi màu chủ âm thì các bậc khác cũng nên đổi theo cho ăn khớp.
+ *
+ * Cơ sở của từng bộ:
+ * - **6 và 6/9**: nhạc lý jazz coi hợp âm sáu là màu chủ âm kinh điển vì nghe
+ *   đứng yên và đã giải quyết hơn maj7, lại tránh được việc bậc bảy trưởng
+ *   cọ vào nốt hát khi giai điệu rơi đúng nốt chủ âm. Tài liệu cũng dùng C6.
+ * - **add9**: tài liệu dùng nhiều nhất, ghi là Cadd2.
+ * - **maj7 và maj9**: màu jazz tiêu chuẩn, mềm và mơ.
+ * - **sus2**: lối pop mở, không rõ trưởng thứ.
+ */
+export interface ColorPalette {
+  major: MajorChordColor
+  minor: MinorChordColor
+  dominant: DominantChordColor
+  /** Có nên đổi hợp âm át thành hợp âm treo không. */
+  susDominant: boolean
+  /** Tên gu để hiển thị. */
+  styleName: string
+}
+
+export const PALETTE_BY_TONIC_COLOR: Record<MajorChordColor, ColorPalette> = {
+  add9: {
+    major: 'add9',
+    minor: 'auto',
+    dominant: 'auto',
+    susDominant: false,
+    styleName: 'Pop ballad',
+  },
+  maj7: {
+    major: 'maj7',
+    minor: 'm9',
+    dominant: '9',
+    susDominant: false,
+    styleName: 'Jazz nhẹ',
+  },
+  maj9: {
+    major: 'maj9',
+    minor: 'm9',
+    dominant: '13',
+    susDominant: false,
+    styleName: 'Jazz',
+  },
+  '6': {
+    major: '6',
+    minor: 'm7',
+    dominant: '7',
+    susDominant: false,
+    styleName: 'Cổ điển, bossa',
+  },
+  '69': {
+    major: 'maj7',
+    minor: 'm9',
+    dominant: '13',
+    susDominant: false,
+    styleName: 'Jazz sáng',
+  },
+  sus2: {
+    major: 'sus2',
+    minor: 'm11',
+    dominant: 'auto',
+    susDominant: true,
+    styleName: 'Pop mở, lơ lửng',
+  },
+  'maj7#11': {
+    major: 'maj7#11',
+    minor: 'm9',
+    dominant: '7#11',
+    susDominant: false,
+    styleName: 'Lydian, ngoài tài liệu',
+  },
+}
+
 export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
   {
     id: 'add9',
@@ -365,6 +442,13 @@ export interface ColorOptions {
   minorColor?: MinorChordColor
   /** Màu cho bậc năm. Bỏ trống thì theo bậc và theo giọng. */
   dominantColor?: DominantChordColor
+  /**
+   * Màu riêng cho **chủ âm**, tách khỏi các bậc trưởng đứng yên khác.
+   *
+   * Chủ âm quan trọng hơn hẳn: nó là chỗ nghỉ của cả bài, và màu của nó quyết
+   * định gu chung. Bỏ trống thì dùng chung màu với các bậc trưởng khác.
+   */
+  tonicColor?: MajorChordColor
 }
 
 /**
@@ -454,6 +538,7 @@ export function colorAnalyzedChord(
     majorColor = 'add9',
     minorColor = 'auto',
     dominantColor = 'auto',
+    tonicColor,
   } = options
   if (intensity === 'off') return analyzed.chord
 
@@ -484,6 +569,9 @@ export function colorAnalyzedChord(
     target = rule.light
   } else if (degree === 5 && dominantColor !== 'auto') {
     target = dominantColor
+  } else if (degree === 1 && isRestingMajorDegree(degree, scale)) {
+    // Chủ âm có màu riêng nếu được chỉ định, vì nó là chỗ nghỉ của cả bài.
+    target = tonicColor ?? majorColor
   } else if (isRestingMajorDegree(degree, scale)) {
     target = majorColor
   } else if (minorColor !== 'auto' && isRestingMinorDegree(degree, scale)) {
