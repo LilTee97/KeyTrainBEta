@@ -47,17 +47,6 @@ Khi có xung đột: **đúng phong cách anh Khá** trước, **đúng nhạc l
 
 Hệ quả: không được thêm một màu hợp âm vào bảng chọn chỉ vì bảng đó trông sẽ đầy đủ hơn. Mỗi lựa chọn phải hoặc có mặt trong tài liệu, hoặc đúng về chức năng hòa âm **ở đúng vị trí được áp dụng**.
 
-### sus4 dùng được cho chủ âm — nhưng là nốt treo có giải quyết, không phải màu tĩnh
-
-Câu hỏi "sus4 có làm màu chủ âm được không" có câu trả lời là **có**, và tài liệu có sẵn ví dụ: video nốt láy dạy vòng `Esus4 → E → AM7 → G#m7 → C#7` ở giọng Mi trưởng, tức `Esus4` chính là chủ âm ở dạng sus4. Nhưng nó **giải quyết ngay** về `E`, không đứng yên. Tương tự `G7sus4 → G7`.
-
-Nên sus4 được cài vào app như một **cách trình bày** (`suspension` trên `ParsedChord`) chứ không phải một mục trong bảng màu: hợp âm giữ nguyên màu đã chọn, và vang ở dạng sus4 ở tiếng đầu rồi hạ bậc bốn xuống bậc ba ở tiếng sau, trong cùng ô nhịp.
-
-Hai chỗ dễ sai khi cài đặt:
-
-- Hợp âm ngắn (nửa ô nhịp) bình thường chỉ đánh **một** tiếng, nhưng có nốt treo thì phải chia đôi, nếu không nốt treo không có chỗ mà giải quyết.
-- Điệu có mẫu tiết tấu cố định phải nhớ hợp âm nào **đã phát tiếng tay phải đầu tiên** chứ không so vị trí với đầu ô nhịp — vì điệu valse tay phải nghỉ hẳn phách một, không tiếng nào rơi đúng đầu ô.
-
 ### sus4 không phải màu đứng yên, nó là nốt treo cần giải quyết
 
 Tôi từng đưa `sus4` vào bảng màu cho **chủ âm** chỉ vì tài liệu có liệt kê chữ "sus4" ở một câu tổng kết (mục 6). Sai: nốt bậc bốn treo luôn đòi giải quyết xuống bậc ba, nên không ai chơi chủ âm ở màu sus4.

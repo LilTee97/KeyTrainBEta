@@ -16,14 +16,6 @@ export interface ParsedChord {
   source: string
   /** Tên hợp âm sau khi chuẩn hoá, ví dụ 'Am7' hoặc 'C/E'. */
   symbol: string
-  /**
-   * Nốt treo vang **trước** rồi mới giải quyết về hợp âm này.
-   *
-   * Đây là cách duy nhất đúng để dùng sus4: tài liệu ghi `Esus4 → E` và
-   * `G7sus4 → G7`, tức hợp âm treo luôn giải quyết chứ không đứng yên. Nốt bậc
-   * bốn treo đòi xuống bậc ba, giữ nguyên nó thì câu nhạc không bao giờ nghỉ.
-   */
-  suspension?: ChordQuality
 }
 
 /** Một cụm chữ không đọc được thành hợp âm. */

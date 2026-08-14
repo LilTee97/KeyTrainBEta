@@ -1,10 +1,7 @@
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { ChooseVoicingOptions } from '../reharmEngine/voiceLeadingOptimizer'
-import {
-  chooseVoicing,
-  voiceLeadSequence,
-} from '../reharmEngine/voiceLeadingOptimizer'
+import { voiceLeadSequence } from '../reharmEngine/voiceLeadingOptimizer'
 
 /**
  * Chia thế bấm cho hai tay theo lối đệm hát piano.
@@ -28,11 +25,6 @@ export interface TwoHandVoicing {
   left: MidiNote[]
   /** Nốt tay phải, phần hợp âm. */
   right: MidiNote[]
-  /**
-   * Thế bấm tay phải của **nốt treo**, vang trước rồi giải quyết về `right`.
-   * Chỉ có khi hợp âm được đánh dấu là có nốt treo.
-   */
-  suspendedRight?: MidiNote[]
   /** Tên hợp âm để hiển thị. */
   symbol: string
 }
@@ -86,18 +78,9 @@ export function voiceLeadTwoHands(
       if (withoutRoot.length >= 3) right = withoutRoot
     }
 
-    // Thế bấm của nốt treo: dựng ngay cạnh thế bấm đã giải quyết để hai bên
-    // chỉ khác nhau đúng một nốt, nghe ra rõ chuyển động bậc bốn xuống bậc ba.
-    let suspendedRight: MidiNote[] | undefined
-    if (chord.suspension) {
-      const susChord: ParsedChord = { ...chord, quality: chord.suspension }
-      suspendedRight = chooseVoicing(susChord, right, voicingOptions)
-    }
-
     return {
       left: [bassNoteFor(chord)],
       right,
-      suspendedRight,
       symbol: chord.symbol,
     }
   })

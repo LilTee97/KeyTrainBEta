@@ -443,18 +443,6 @@ export interface ColorOptions {
   /** Màu cho bậc năm. Bỏ trống thì theo bậc và theo giọng. */
   dominantColor?: DominantChordColor
   /**
-   * Cho hợp âm trưởng bắt đầu bằng nốt treo bậc bốn rồi giải quyết.
-   *
-   * Không phải một màu mà là một **cách trình bày**: hợp âm vang ở dạng sus4
-   * trước, rồi hạ nốt bậc bốn xuống bậc ba. Tài liệu dùng đúng lối này ở
-   * `Esus4 → E` và `G7sus4 → G7`.
-   *
-   * - `'off'`: không dùng
-   * - `'tonic'`: chỉ chủ âm, chỗ nghe rõ nhất
-   * - `'allMajor'`: mọi hợp âm trưởng đứng yên
-   */
-  suspendMajor?: 'off' | 'tonic' | 'allMajor'
-  /**
    * Màu riêng cho **chủ âm**, tách khỏi các bậc trưởng đứng yên khác.
    *
    * Chủ âm quan trọng hơn hẳn: nó là chỗ nghỉ của cả bài, và màu của nó quyết
@@ -551,7 +539,6 @@ export function colorAnalyzedChord(
     minorColor = 'auto',
     dominantColor = 'auto',
     tonicColor,
-    suspendMajor = 'off',
   } = options
   if (intensity === 'off') return analyzed.chord
 
@@ -593,19 +580,6 @@ export function colorAnalyzedChord(
     target = rule.full
   }
 
-  // Hợp âm trưởng đứng yên có thể được gắn nốt treo, nếu người chơi bật.
-  // Tính trước để mọi đường thoát bên dưới đều nhớ gắn — quên một chỗ là nốt
-  // treo im lặng biến mất mà không ai biết.
-  const susQuality =
-    isRestingMajorDegree(degree, scale) &&
-    (suspendMajor === 'allMajor' ||
-      (suspendMajor === 'tonic' && degree === 1))
-      ? getChordQuality('sus4')
-      : undefined
-
-  const withSuspension = (result: ParsedChord): ParsedChord =>
-    susQuality ? { ...result, suspension: susQuality } : result
-
   // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
   // làm mỏng đi.
   const targetQuality = getChordQuality(target)
@@ -613,10 +587,10 @@ export function colorAnalyzedChord(
     targetQuality &&
     targetQuality.intervals.length < chord.quality.intervals.length
   ) {
-    return withSuspension(chord)
+    return chord
   }
 
-  return withSuspension(withQuality(chord, target))
+  return withQuality(chord, target)
 }
 
 /** Thêm màu cho cả vòng hợp âm đã phân tích bậc. */
