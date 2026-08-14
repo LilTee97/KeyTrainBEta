@@ -22,3 +22,22 @@ body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/*
+  Danh sách xổ xuống của thẻ select do hệ điều hành vẽ, không thừa hưởng màu
+  chữ của phần tử cha. Trên nền tối, mặc định ra chữ xám trên nền tối và gần
+  như không đọc được — nên phải chỉ định màu tường minh cho từng dòng.
+*/
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #241f1b;
+  color: var(--color-cream);
+}
+
+select option:checked {
+  background-color: var(--color-amber-key);
+  color: var(--color-ink);
+}
