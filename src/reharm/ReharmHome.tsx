@@ -13,6 +13,7 @@ import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
+import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import {
   TECHNIQUE_LABELS,
   applySuggestions,
@@ -677,6 +678,14 @@ export function ReharmHome() {
           </label>
         </div>
       </div>
+
+      {audioReady && (
+        <NoteGatedPractice
+          timeline={timeline}
+          voicings={twoHands}
+          beatsPerChord={chordBeats}
+        />
+      )}
 
       {/* Thế bấm hai tay */}
       {twoHands.length > 0 && (
