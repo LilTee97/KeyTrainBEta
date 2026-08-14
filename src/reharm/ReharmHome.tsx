@@ -14,16 +14,10 @@ import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
-import {
-  TECHNIQUE_LABELS,
-  applySuggestions,
-  suggestPassingChords,
-} from './reharmEngine/passingChordRules'
+import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
+import { reharmonize } from './reharmEngine/reharmPipeline'
 import type { ColorIntensity } from './reharmEngine/staticVoicingRules'
-import {
-  bestUpperStructure,
-  colorSequence,
-} from './reharmEngine/staticVoicingRules'
+import { bestUpperStructure } from './reharmEngine/staticVoicingRules'
 import {
   plainSequence,
   totalMovement,
@@ -108,6 +102,8 @@ export function ReharmHome() {
   const [susDominant, setSusDominant] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
+  /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
+  const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
   const [hand, setHand] = useState<'both' | 'left' | 'right'>('both')
 
@@ -115,30 +111,45 @@ export function ReharmHome() {
 
   const sequence = useMemo(() => parseChordInput(input), [input])
 
-  /** Vòng hợp âm sau khi thêm màu theo phong cách. */
-  const recolored = useMemo(
-    () => colorSequence(sequence.chords, { intensity, susDominant }),
-    [sequence.chords, intensity, susDominant],
-  )
-
-  /** Mọi gợi ý hợp âm lướt áp dụng được cho vòng hiện tại. */
-  const passingSuggestions = useMemo(
-    () => suggestPassingChords(recolored),
-    [recolored],
-  )
-
   /** Khoá định danh một gợi ý, để nhớ người dùng đã bật cái nào. */
   const keyOf = (index: number, technique: string) => `${index}:${technique}`
 
-  /** Vòng hợp âm sau khi chèn các gợi ý đã chấp nhận. */
-  const withPassing = useMemo(() => {
-    const chosen = passingSuggestions.filter((suggestion) =>
+  /**
+   * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
+   * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
+   */
+  const reharm = useMemo(() => {
+    const parsedKey = manualKey
+      ? {
+          tonic: Number(manualKey.split(':')[0]),
+          scale: manualKey.split(':')[1] as 'major' | 'minor',
+        }
+      : null
+
+    // Chạy vòng đầu để lấy danh sách gợi ý, rồi lọc ra những cái đã chấp nhận.
+    const firstPass = reharmonize(sequence.chords, {
+      intensity,
+      susDominant,
+      key: parsedKey,
+    })
+
+    const chosen = firstPass.passingSuggestions.filter((suggestion) =>
       acceptedPassing.includes(
         keyOf(suggestion.insertBeforeIndex, suggestion.technique),
       ),
     )
-    return applySuggestions(recolored, chosen)
-  }, [recolored, passingSuggestions, acceptedPassing])
+
+    return reharmonize(sequence.chords, {
+      intensity,
+      susDominant,
+      key: parsedKey,
+      acceptedPassing: chosen,
+    })
+  }, [sequence.chords, intensity, susDominant, manualKey, acceptedPassing])
+
+  const recolored = reharm.colored
+  const passingSuggestions = reharm.passingSuggestions
+  const withPassing = reharm.final
 
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
@@ -298,9 +309,41 @@ export function ReharmHome() {
       {/* Kết quả tái hòa âm — đặt ngay đây để thấy tác dụng mà không phải kéo xuống */}
       {sequence.chords.length > 0 && (
         <div className="rounded-xl border border-amber-key/40 bg-amber-key/5 p-4">
-          <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
-            Sau khi tái hòa âm
-          </h3>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
+              Sau khi tái hòa âm
+            </h3>
+
+            <label className="flex items-center gap-2 text-xs text-dim">
+              Giọng
+              <select
+                value={manualKey}
+                onChange={(event) => setManualKey(event.target.value)}
+                className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
+              >
+                <option value="">
+                  Tự dò
+                  {reharm.key && ` (${reharm.key.label})`}
+                </option>
+                {reharm.keyCandidates.map((candidate) => (
+                  <option
+                    key={`${candidate.tonic}:${candidate.scale}`}
+                    value={`${candidate.tonic}:${candidate.scale}`}
+                  >
+                    {candidate.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {reharm.keyAmbiguous && reharm.keySource === 'detected' && (
+            <p className="mb-3 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+              App chưa chắc chắn về giọng — {reharm.keyCandidates[0]?.label} và{' '}
+              {reharm.keyCandidates[1]?.label} đều khớp gần như nhau. Nếu tô màu
+              nghe chưa đúng thì chọn giọng bằng tay.
+            </p>
+          )}
 
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-baseline gap-2">
@@ -504,6 +547,16 @@ export function ReharmHome() {
                 >
                   <span className="w-20 font-mono text-xs text-dim">
                     {original.symbol}
+                  </span>
+                  <span
+                    className="w-16 font-mono text-[10px] text-teal-key"
+                    title="Bậc trong giọng — quyết định hợp âm được tô màu thế nào"
+                  >
+                    {reharm.analyzed[index]?.degree
+                      ? reharm.analyzed[index].roman
+                      : reharm.analyzed[index]?.actsAsDominant
+                        ? 'V phụ'
+                        : 'ngoài giọng'}
                   </span>
                   <span className="text-dim">→</span>
                   <span

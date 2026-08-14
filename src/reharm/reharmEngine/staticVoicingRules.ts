@@ -4,8 +4,10 @@ import {
   getChordQuality,
 } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
+import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import type { AnalyzedChord } from './degreeAnalysis'
 
 /**
  * Kỹ thuật 1 của phong cách: làm dày hợp âm và tư duy hợp âm chồng trên bass.
@@ -42,6 +44,39 @@ const COLOR_RULES: Record<string, { light?: string; full?: string }> = {
   sus4: { light: '7sus4', full: '9sus4' },
   sus2: { light: 'add9' },
   '7sus4': { full: '9sus4' },
+}
+
+/**
+ * Bảng đổi màu **theo bậc trong giọng** — bảng chính khi đã biết giọng.
+ *
+ * Đây là chỗ sửa một lỗi nghiêm trọng của bản đầu: bảng theo tính chất ở trên
+ * mù chức năng, nên biến bậc năm thành add9 và làm mất hết lực kéo về chủ âm.
+ * Đối chiếu tài liệu, **mọi hợp âm bậc năm trong các bài anh Khá dạy đều có
+ * nốt bậc bảy** (D9sus4, C7, A7b13, E7b9) — không có chỗ nào dùng add9 cho bậc
+ * năm. Ngược lại add9 và maj7 lại đúng cho chủ âm (Cadd2, CM7, C6).
+ */
+const MAJOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
+  // Chủ âm: thêm màu nhưng phải giữ cảm giác nghỉ, nên không thêm bậc bảy át.
+  1: { light: 'maj7', full: 'add9' },
+  // Bậc hai: tài liệu dùng Am11 ở đúng vai trò này.
+  2: { light: 'm7', full: 'm11' },
+  3: { light: 'm7', full: 'm9' },
+  4: { light: 'maj7', full: 'maj9' },
+  // Bậc năm: bắt buộc có bậc bảy, nếu không thì mất lực kéo về chủ âm.
+  5: { light: '7', full: '13' },
+  6: { light: 'm7', full: 'm9' },
+  7: { light: 'm7b5', full: 'm7b5' },
+}
+
+const MINOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
+  1: { light: 'm7', full: 'm9' },
+  2: { light: 'm7b5', full: 'm7b5' },
+  3: { light: 'maj7', full: 'maj9' },
+  4: { light: 'm7', full: 'm9' },
+  // Bậc năm giọng thứ dùng nốt giáng chín, đúng lối A7b9 kéo về Dm9.
+  5: { light: '7', full: '7b9' },
+  6: { light: 'maj7', full: 'maj9' },
+  7: { light: '7', full: '9' },
 }
 
 export type ColorIntensity = 'off' | 'light' | 'full'
@@ -97,12 +132,72 @@ export function colorChord(
   return target ? withQuality(chord, target) : chord
 }
 
-/** Thêm màu cho cả một chuỗi hợp âm. */
+/** Thêm màu cho cả một chuỗi hợp âm, khi chưa biết giọng. */
 export function colorSequence(
   chords: readonly ParsedChord[],
   options: ColorOptions = {},
 ): ParsedChord[] {
   return chords.map((chord) => colorChord(chord, options))
+}
+
+/**
+ * Thêm màu cho một hợp âm đã biết bậc trong giọng.
+ *
+ * Hợp âm nằm ngoài giọng thì rơi về bảng theo tính chất, trừ khi ngữ cảnh cho
+ * thấy nó đang đóng vai bậc năm phụ — lúc đó phải cho nó bậc bảy như một hợp
+ * âm bậc năm thật, chứ không tô như hợp âm nghỉ.
+ */
+export function colorAnalyzedChord(
+  analyzed: AnalyzedChord,
+  scale: ScaleType,
+  options: ColorOptions = {},
+): ParsedChord {
+  const { intensity = 'full', susDominant = false } = options
+  if (intensity === 'off') return analyzed.chord
+
+  const { chord, degree } = analyzed
+
+  // Hợp âm ngoài giọng nhưng đang giải quyết như bậc năm.
+  if (degree === null && analyzed.actsAsDominant) {
+    if (susDominant) {
+      return withQuality(chord, intensity === 'full' ? '9sus4' : '7sus4')
+    }
+    return withQuality(chord, intensity === 'full' ? '13' : '7')
+  }
+
+  if (degree === null) return colorChord(chord, options)
+
+  const rules = scale === 'minor' ? MINOR_DEGREE_RULES : MAJOR_DEGREE_RULES
+  const rule = rules[degree]
+  if (!rule) return colorChord(chord, options)
+
+  // Chỉ đổi bậc năm sang hợp âm treo; các bậc khác giữ nguyên luật của mình.
+  if (susDominant && degree === 5) {
+    return withQuality(chord, intensity === 'full' ? '9sus4' : '7sus4')
+  }
+
+  const target = intensity === 'full' ? rule.full : rule.light
+
+  // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
+  // làm mỏng đi.
+  const targetQuality = getChordQuality(target)
+  if (
+    targetQuality &&
+    targetQuality.intervals.length < chord.quality.intervals.length
+  ) {
+    return chord
+  }
+
+  return withQuality(chord, target)
+}
+
+/** Thêm màu cho cả vòng hợp âm đã phân tích bậc. */
+export function colorAnalyzedSequence(
+  analyzed: readonly AnalyzedChord[],
+  scale: ScaleType,
+  options: ColorOptions = {},
+): ParsedChord[] {
+  return analyzed.map((entry) => colorAnalyzedChord(entry, scale, options))
 }
 
 /** Một cách đọc hợp âm theo lối chồng trên bass. */
