@@ -1,6 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { initMidi, selectMidiDevice } from '../../shared/midi/midiInput'
 import { useMidiStore } from '../../shared/midi/midiStore'
+import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
+import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { MidiStatus } from '../../shared/midi/types'
 import { midiToName } from '../../shared/musicTheory/pitch'
 
@@ -33,6 +35,10 @@ export function MidiDebugPanel() {
   const selectedDeviceId = useMidiStore((state) => state.selectedDeviceId)
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const velocities = useMidiStore((state) => state.velocities)
+
+  /** Nốt gán cho phím Z — dịch lên xuống là đổi quãng tám đang gõ. */
+  const [keyboardBaseNote, setKeyboardBaseNote] = useState(60)
+  useComputerKeyboard(keyboardBaseNote)
 
   useEffect(() => {
     void initMidi()
@@ -107,6 +113,50 @@ export function MidiDebugPanel() {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Bàn phím ảo
+          </h3>
+
+          <div className="flex items-center gap-2 text-xs text-dim">
+            <span>Phím Z =</span>
+            <button
+              type="button"
+              onClick={() =>
+                setKeyboardBaseNote((note) => Math.max(24, note - 12))
+              }
+              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream hover:bg-white/12"
+            >
+              −
+            </button>
+            <span className="w-8 text-center font-mono text-cream">
+              {midiToName(keyboardBaseNote)}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setKeyboardBaseNote((note) => Math.min(96, note + 12))
+              }
+              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream hover:bg-white/12"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <OnScreenPiano />
+
+        <p className="mt-3 text-xs leading-relaxed text-dim">
+          Bấm chuột lên phím, hoặc rê tay qua nhiều phím. Muốn bấm cả hợp âm
+          thì gõ bàn phím máy tính: hàng{' '}
+          <span className="font-mono text-cream">Z S X D C V G B H N J M</span>{' '}
+          là một quãng tám, hàng{' '}
+          <span className="font-mono text-cream">Q 2 W 3 E R 5 T 6 Y 7 U</span>{' '}
+          là quãng tám trên.
+        </p>
       </div>
 
       <div>
