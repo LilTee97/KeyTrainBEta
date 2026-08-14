@@ -25,6 +25,7 @@ import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
 import { usePersistentState } from '../../shared/persistence/usePersistentState'
 import { checkAnswer } from '../shared/chordTask'
+import { recordProgressionResult } from '../srs/reviewQueue'
 import { recordAnswer } from '../stats/statsStore'
 import type { ProgressionSession } from './progressionEngine'
 import { createSession, secondsPerChord } from './progressionEngine'
@@ -135,6 +136,12 @@ export function ProgressionTrainer() {
       if (stepIndex + 1 >= session.steps.length) {
         setFinished(true)
         setRounds((count) => count + 1)
+        // Cả vòng chơi trọn mới tính là một lần ôn cho vòng hợp âm này.
+        void recordProgressionResult(
+          session.template.id,
+          session.template.name,
+          true,
+        )
       } else {
         setStepIndex(stepIndex + 1)
       }

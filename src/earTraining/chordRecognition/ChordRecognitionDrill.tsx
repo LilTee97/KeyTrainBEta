@@ -11,6 +11,7 @@ import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputer
 import { pitchClassName } from '../../shared/musicTheory/pitch'
 import { usePersistentState } from '../../shared/persistence/usePersistentState'
 import { QUALITY_GROUPS, groupLabelFor, qualityIdsForGroups } from '../shared/qualityGroups'
+import { recordChordResult } from '../srs/reviewQueue'
 import { recordAnswer } from '../stats/statsStore'
 import type { VoicingType } from '../../shared/musicTheory/voicing'
 import { VOICING_OPTIONS } from '../../shared/musicTheory/voicing'
@@ -110,13 +111,17 @@ export function ChordRecognitionDrill() {
         total: current.total + 1,
       }))
 
+      const category = groupLabelFor(question.quality.id)
       void recordAnswer({
         mode: 'practice',
         itemKind: 'chord',
-        category: groupLabelFor(question.quality.id),
+        category,
         correct: true,
         responseMs: Math.round(performance.now() - askedAtRef.current),
       })
+      // Luyện bình thường cũng nuôi hàng đợi ôn tập, người học không phải
+      // khai báo gì thêm.
+      void recordChordResult(question.quality.id, category, true)
     }
   }, [heldNotes, question, phase, strictness])
 
@@ -138,13 +143,15 @@ export function ChordRecognitionDrill() {
     setPhase('correct')
 
     if (question) {
+      const category = groupLabelFor(question.quality.id)
       void recordAnswer({
         mode: 'practice',
         itemKind: 'chord',
-        category: groupLabelFor(question.quality.id),
+        category,
         correct: false,
         responseMs: Math.round(performance.now() - askedAtRef.current),
       })
+      void recordChordResult(question.quality.id, category, false)
     }
   }
 
