@@ -8,7 +8,11 @@ import { bestKey, detectKey, isAmbiguous, keyLabel } from './keyDetection'
 import type { PassingSuggestion } from './passingChordRules'
 import { applySuggestions, suggestPassingChords } from './passingChordRules'
 import type { ColorOptions } from './staticVoicingRules'
-import { colorAnalyzedSequence, colorSequence } from './staticVoicingRules'
+import {
+  colorAnalyzedSequence,
+  colorSequence,
+  toSlashSequence,
+} from './staticVoicingRules'
 
 /**
  * Đường ống tái hòa âm.
@@ -32,6 +36,13 @@ export interface ReharmOptions extends ColorOptions {
   key?: { tonic: PitchClass; scale: ScaleType } | null
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận. */
   acceptedPassing?: readonly PassingSuggestion[]
+  /**
+   * Bấm theo lối hợp âm chồng trên bass.
+   *
+   * Đặt ở cuối đường ống vì đây là quyết định về **cách bấm**, không phải về
+   * hòa âm: hợp âm đã chọn xong rồi, giờ mới chọn cách đặt tay cho dễ.
+   */
+  useSlashChords?: boolean
 }
 
 export interface ReharmResult {
@@ -60,7 +71,12 @@ export function reharmonize(
   chords: readonly ParsedChord[],
   options: ReharmOptions = {},
 ): ReharmResult {
-  const { key: manualKey = null, acceptedPassing = [], ...colorOptions } = options
+  const {
+    key: manualKey = null,
+    acceptedPassing = [],
+    useSlashChords = false,
+    ...colorOptions
+  } = options
 
   const original = [...chords]
 
@@ -107,7 +123,10 @@ export function reharmonize(
 
   // Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
   const passingSuggestions = suggestPassingChords(colored)
-  const final = applySuggestions(colored, acceptedPassing)
+  const withPassing = applySuggestions(colored, acceptedPassing)
+
+  // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.
+  const final = useSlashChords ? toSlashSequence(withPassing) : withPassing
 
   return {
     original,

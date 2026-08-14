@@ -431,6 +431,48 @@ export function bestUpperStructure(
   return findUpperStructures(chord)[0] ?? null
 }
 
+/**
+ * Đổi một hợp âm sang dạng chồng trên bass thật sự.
+ *
+ * Khác với `bestUpperStructure` vốn chỉ *gợi ý cách đọc*, hàm này trả về một
+ * hợp âm mới để **bấm theo cách đó**: tay phải chơi hợp âm ba đơn giản, tay
+ * trái giữ nốt bass gốc. Đây chính là điều tài liệu mô tả ở kỹ thuật 1 —
+ * *"giúp người mới dễ bấm mà không cần thuộc công thức jazz phức tạp"*.
+ *
+ * Lưu ý về mặt âm thanh: cách bấm này **bỏ bớt nốt**. Am11 đầy đủ có sáu nốt,
+ * còn G/A chỉ có bốn. Đó là chủ ý của kỹ thuật, không phải mất mát — người
+ * chơi thật cũng chỉ bấm bấy nhiêu nốt.
+ *
+ * Trả về null khi hợp âm đã đủ đơn giản, không quy đổi được.
+ */
+export function toSlashChord(chord: ParsedChord): ParsedChord | null {
+  const structure = bestUpperStructure(chord)
+  if (!structure) return null
+
+  const quality = getChordQuality(structure.upperQualityId)
+  if (!quality) return null
+
+  const upperName = `${pitchClassName(structure.upperRoot)}${quality.symbol}`
+
+  return {
+    root: structure.upperRoot,
+    quality,
+    bass: structure.bass,
+    source: chord.source,
+    symbol: `${upperName}/${pitchClassName(structure.bass)}`,
+  }
+}
+
+/**
+ * Đổi cả vòng sang dạng chồng trên bass.
+ * Hợp âm nào không quy đổi được thì giữ nguyên, vì bản thân nó đã dễ bấm.
+ */
+export function toSlashSequence(
+  chords: readonly ParsedChord[],
+): ParsedChord[] {
+  return chords.map((chord) => toSlashChord(chord) ?? chord)
+}
+
 /** Danh sách tính chất mà bảng đổi màu có đụng tới, dùng cho tài liệu và test. */
 export function coloredQualityIds(): string[] {
   return CHORD_QUALITIES.filter((quality) => quality.id in COLOR_RULES).map(

@@ -110,6 +110,8 @@ export function ReharmHome() {
   const [susDominant, setSusDominant] = useState(false)
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
+  /** Bấm theo lối hợp âm chồng trên bass cho dễ. */
+  const [useSlashChords, setUseSlashChords] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
@@ -142,6 +144,7 @@ export function ReharmHome() {
       susDominant,
       majorColor,
       minorColor,
+      useSlashChords,
       key: parsedKey,
     })
 
@@ -156,6 +159,7 @@ export function ReharmHome() {
       susDominant,
       majorColor,
       minorColor,
+      useSlashChords,
       key: parsedKey,
       acceptedPassing: chosen,
     })
@@ -165,6 +169,7 @@ export function ReharmHome() {
     susDominant,
     majorColor,
     minorColor,
+    useSlashChords,
     manualKey,
     acceptedPassing,
   ])
@@ -552,7 +557,29 @@ export function ReharmHome() {
             />
             Hợp âm át thành treo
           </label>
+
+          <label
+            className="flex items-center gap-2 text-xs text-dim"
+            title="Tay phải bấm một hợp âm ba quen thuộc, tay trái giữ nốt bass khác — cách bấm hòa âm phức tạp mà không cần thuộc công thức"
+          >
+            <input
+              type="checkbox"
+              checked={useSlashChords}
+              onChange={(event) => setUseSlashChords(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Bấm kiểu chồng trên bass
+          </label>
         </div>
+
+        {useSlashChords && (
+          <p className="mt-3 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+            Tay phải bấm hợp âm ba đơn giản, tay trái giữ nốt bass. Cách bấm
+            này <span className="text-cream">bỏ bớt nốt</span> so với hợp âm
+            đầy đủ — đó là chủ ý của kỹ thuật, người chơi thật cũng chỉ bấm
+            bấy nhiêu.
+          </p>
+        )}
 
         {/* Màu cho các bậc trưởng đứng yên */}
         {intensity === 'full' && (
