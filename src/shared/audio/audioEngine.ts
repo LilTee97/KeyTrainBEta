@@ -106,6 +106,35 @@ export function playChord(
   )
 }
 
+/**
+ * Phát lần lượt một chuỗi hợp âm, mỗi hợp âm kéo dài `secondsEach` giây.
+ *
+ * Lên lịch trước toàn bộ chuỗi theo đồng hồ của thẻ âm thanh, thay vì hẹn
+ * giờ bằng JavaScript — nếu không thì các hợp âm sau sẽ lệch nhịp dần.
+ */
+export function playChordSequence(
+  chords: readonly (readonly MidiNote[])[],
+  secondsEach: number,
+  velocity = 90,
+): void {
+  if (!isAudioReady()) return
+
+  const startAt = Tone.now()
+  const synthInstance = getSynth()
+
+  chords.forEach((notes, index) => {
+    if (notes.length === 0) return
+
+    synthInstance.triggerAttackRelease(
+      notes.map(toFrequency),
+      // Ngắt sớm một chút để hai hợp âm liền nhau không chồng tiếng.
+      Math.max(0.05, secondsEach * 0.9),
+      startAt + index * secondsEach,
+      velocity / 127,
+    )
+  })
+}
+
 /** Nhả toàn bộ nốt đang vang. */
 export function releaseAllNotes(): void {
   if (!synth) return

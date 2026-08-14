@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { ChordRecognitionDrill } from '../earTraining/chordRecognition/ChordRecognitionDrill'
 import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
+import { ProgressionTrainer } from '../earTraining/progressionTrainer/ProgressionTrainer'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
 const TABS = [
   { id: 'ear', label: 'Luyện tai' },
+  { id: 'progression', label: 'Vòng hợp âm' },
   { id: 'metronome', label: 'Nhịp' },
   { id: 'reharm', label: 'Tái hòa âm' },
   { id: 'stats', label: 'Thống kê' },
@@ -52,6 +54,7 @@ export function AppShell() {
       </nav>
 
       {tab === 'ear' && <ChordRecognitionDrill />}
+      {tab === 'progression' && <ProgressionTrainer />}
       {tab === 'metronome' && <MetronomePanel />}
       {tab === 'reharm' && <ComingSoon what="tái hòa âm" />}
       {tab === 'stats' && <ComingSoon what="thống kê" />}
