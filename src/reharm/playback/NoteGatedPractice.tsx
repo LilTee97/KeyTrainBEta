@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { playChord } from '../../shared/audio/audioEngine'
+import {
+  playChord,
+  startAudio,
+  useAudioStore,
+} from '../../shared/audio/audioEngine'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
@@ -45,6 +49,7 @@ export function NoteGatedPractice({
   beatsPerChord,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
+  const audioReady = useAudioStore((state) => state.ready)
 
   useLiveSound()
   useComputerKeyboard(60)
@@ -165,7 +170,20 @@ export function NoteGatedPractice({
         />
       </div>
 
-      {!active ? (
+      {!audioReady ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void startAudio()}
+            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110"
+          >
+            Bật âm thanh để luyện
+          </button>
+          <span className="text-xs text-dim">
+            Trình duyệt chỉ cho phát tiếng sau khi bạn chạm vào trang.
+          </span>
+        </div>
+      ) : !active ? (
         <button
           type="button"
           onClick={() => {

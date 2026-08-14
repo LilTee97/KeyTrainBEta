@@ -91,7 +91,10 @@ function notesForChord(chord: ParsedChord): MidiNote[] {
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
 
-  const [input, setInput] = useState('Am11 D9sus4 E9sus4 Em7')
+  // Cố ý để một vòng pop trơn, chưa có màu gì — như vậy tác dụng của phần tái
+  // hòa âm nhìn ra ngay. Để sẵn một vòng đã đầy màu thì trông như app không
+  // làm gì cả.
+  const [input, setInput] = useState('C Am F G')
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -180,6 +183,14 @@ export function ReharmHome() {
     () => renderPattern(twoHands, style, { beatsPerChord: chordBeats }),
     [twoHands, style, chordBeats],
   )
+
+  /** Vòng hợp âm không đổi gì sau khi tái hòa âm — cần báo cho người dùng biết. */
+  const isUnchanged = useMemo(() => {
+    if (withPassing.length !== sequence.chords.length) return false
+    return withPassing.every(
+      (chord, index) => chord.symbol === sequence.chords[index]?.symbol,
+    )
+  }, [withPassing, sequence.chords])
 
   /** Tổng quãng đường tay phải phải đi, để thấy con số cụ thể. */
   const movement = useMemo(
@@ -283,6 +294,47 @@ export function ReharmHome() {
           </>
         )}
       </div>
+
+      {/* Kết quả tái hòa âm — đặt ngay đây để thấy tác dụng mà không phải kéo xuống */}
+      {sequence.chords.length > 0 && (
+        <div className="rounded-xl border border-amber-key/40 bg-amber-key/5 p-4">
+          <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
+            Sau khi tái hòa âm
+          </h3>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span className="w-16 font-mono text-[10px] text-dim">gốc</span>
+              <span className="font-mono text-sm text-dim">
+                {sequence.chords.map((chord) => chord.symbol).join('  ')}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-baseline gap-2">
+              <span className="w-16 font-mono text-[10px] text-amber-key">
+                đã đổi
+              </span>
+              <span className="font-serif text-lg text-amber-key">
+                {withPassing.map((chord) => chord.symbol).join('  ')}
+              </span>
+            </div>
+          </div>
+
+          {isUnchanged && (
+            <p className="mt-3 border-t border-amber-key/20 pt-3 text-xs leading-relaxed text-dim">
+              Vòng này vốn đã đủ màu nên không có gì để thêm. Thử gõ một vòng
+              trơn như <span className="font-mono text-cream">C Am F G</span> để
+              thấy rõ tác dụng.
+            </p>
+          )}
+
+          <p className="mt-3 border-t border-amber-key/20 pt-3 text-xs leading-relaxed text-dim">
+            Tái hòa âm chạy tự động. Chỉnh mức độ ở mục{' '}
+            <span className="text-cream">Thêm màu hợp âm</span>, chèn hợp âm nối
+            ở mục <span className="text-cream">Hợp âm lướt</span> phía dưới.
+          </p>
+        </div>
+      )}
 
       {/* Nghe thử */}
       <div className="flex flex-wrap items-center gap-3">
@@ -679,13 +731,11 @@ export function ReharmHome() {
         </div>
       </div>
 
-      {audioReady && (
-        <NoteGatedPractice
-          timeline={timeline}
-          voicings={twoHands}
-          beatsPerChord={chordBeats}
-        />
-      )}
+      <NoteGatedPractice
+        timeline={timeline}
+        voicings={twoHands}
+        beatsPerChord={chordBeats}
+      />
 
       {/* Thế bấm hai tay */}
       {twoHands.length > 0 && (
