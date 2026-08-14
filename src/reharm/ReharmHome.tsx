@@ -31,7 +31,12 @@ import {
   eventsForHand,
   renderPattern,
 } from './style/patternRenderer'
-import { BALLAD } from './style/styleLibrary/ballad'
+import {
+  ALL_STYLES,
+  BALLAD,
+  getStyle,
+  isPlayable,
+} from './style/styleLibrary'
 import type { ParsedChord } from './types'
 import { flattenHands, voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
 
@@ -93,6 +98,7 @@ export function ReharmHome() {
   const [dropRoot, setDropRoot] = useState(true)
   /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
   const [beatsPerChord, setBeatsPerChord] = useState(4)
+  const [styleId, setStyleId] = useState('ballad')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(false)
@@ -155,10 +161,23 @@ export function ReharmHome() {
     [smoothVoicing, twoHands, plain, withPassing],
   )
 
+  const style = getStyle(styleId) ?? BALLAD
+
+  /**
+   * Số phách mỗi hợp âm chiếm.
+   *
+   * Điệu nhịp ba bốn thì một ô nhịp chỉ có ba phách, nên phải quy đổi lựa chọn
+   * của người dùng theo nhịp của điệu chứ không giữ nguyên con số.
+   */
+  const chordBeats = useMemo(() => {
+    const measures = beatsPerChord / 4
+    return Math.max(1, measures * style.beatsPerMeasure)
+  }, [beatsPerChord, style.beatsPerMeasure])
+
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
   const timeline = useMemo(
-    () => renderPattern(twoHands, BALLAD, { beatsPerChord }),
-    [twoHands, beatsPerChord],
+    () => renderPattern(twoHands, style, { beatsPerChord: chordBeats }),
+    [twoHands, style, chordBeats],
   )
 
   /** Tổng quãng đường tay phải phải đi, để thấy con số cụ thể. */
@@ -549,14 +568,47 @@ export function ReharmHome() {
       <div className="rounded-xl border border-line bg-black/25 p-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Đệm theo điệu · {BALLAD.name}
+            Đệm theo điệu
           </h3>
           <span className="font-mono text-[10px] text-teal-key">
-            {BALLAD.timeSignature} · đã xác nhận từ video
+            {style.timeSignature} · đã xác nhận từ video
           </span>
         </div>
 
-        <p className="mb-3 text-xs leading-relaxed text-dim">{BALLAD.note}</p>
+        {/* Chọn điệu */}
+        <div className="mb-3 flex flex-wrap gap-2">
+          {ALL_STYLES.map((entry) => {
+            const playable = isPlayable(entry)
+
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                disabled={!playable}
+                onClick={() => setStyleId(entry.id)}
+                title={
+                  playable
+                    ? entry.note
+                    : 'Chưa có mẫu tiết tấu xác thực từ nguồn, nên KeyTrain không đoán bừa.'
+                }
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  !playable
+                    ? 'cursor-not-allowed border-line/50 bg-white/2 text-dim/40'
+                    : styleId === entry.id
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {entry.name}
+                <span className="ml-1.5 font-mono text-[9px] opacity-60">
+                  {entry.timeSignature}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
 
         <div className="flex flex-wrap items-center gap-3">
           <button

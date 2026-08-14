@@ -17,6 +17,14 @@ export type Feel =
   /** Bùm chát chát của điệu valse. */
   | 'waltz-oom-pah-pah'
 
+/**
+ * Chơi cả hợp âm hay chỉ một nốt trong đó.
+ *
+ * Điệu swing cần cái này: tay phải đánh xen kẽ hợp âm rơi vào phách và một nốt
+ * đơn ở chỗ nảy ngay sau.
+ */
+export type HitVoice = 'chord' | 'top' | 'bottom'
+
 /** Một tiếng đàn trong mẫu tiết tấu. */
 export interface RhythmHit {
   /** Vị trí trong mẫu, tính bằng phách từ 0. */
@@ -27,6 +35,8 @@ export interface RhythmHit {
    * Phách mạnh để cao hơn để mẫu tiết tấu nghe có sức nặng.
    */
   velocityScale?: number
+  /** Mặc định đánh cả hợp âm. */
+  voice?: HitVoice
 }
 
 /** Mẫu tiết tấu lặp lại của một điệu. */

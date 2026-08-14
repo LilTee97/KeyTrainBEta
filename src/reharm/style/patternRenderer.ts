@@ -1,5 +1,6 @@
+import type { MidiNote } from '../../shared/musicTheory/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
-import type { StylePattern, TimelineEvent } from './types'
+import type { HitVoice, StylePattern, TimelineEvent } from './types'
 
 /**
  * Biến chuỗi thế bấm hai tay thành dòng thời gian các tiếng đàn.
@@ -27,6 +28,28 @@ export interface RenderOptions {
 
 function clampVelocity(value: number): number {
   return Math.max(1, Math.min(127, Math.round(value)))
+}
+
+/**
+ * Chọn nốt cho một tiếng đàn: cả hợp âm, hay chỉ nốt trên cùng hoặc dưới cùng.
+ *
+ * Điệu swing cần lấy riêng nốt trên cùng cho những tiếng ở chỗ nảy — đó chính
+ * là phần "nốt đơn" xen kẽ giữa các hợp âm.
+ */
+function notesForVoice(
+  notes: readonly MidiNote[],
+  voice: HitVoice = 'chord',
+): MidiNote[] {
+  if (notes.length === 0) return []
+
+  switch (voice) {
+    case 'top':
+      return [notes[notes.length - 1]]
+    case 'bottom':
+      return [notes[0]]
+    default:
+      return [...notes]
+  }
 }
 
 /**
@@ -107,7 +130,8 @@ function renderWithCell(
         const voicing = voicings[Math.floor(startBeat / beatsPerChord)]
         if (!voicing) continue
 
-        const notes = hand === 'right' ? voicing.right : voicing.left
+        const source = hand === 'right' ? voicing.right : voicing.left
+        const notes = notesForVoice(source, hit.voice)
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
         events.push({
