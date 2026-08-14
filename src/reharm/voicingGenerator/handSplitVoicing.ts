@@ -1,3 +1,4 @@
+import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { ChooseVoicingOptions } from '../reharmEngine/voiceLeadingOptimizer'
@@ -50,7 +51,66 @@ export function bassNoteFor(
   return note
 }
 
+/**
+ * Số nốt nhiều nhất một tay bấm được.
+ *
+ * Bàn tay có năm ngón nhưng bấm năm nốt cùng lúc đã rất chật, sáu nốt thì
+ * không thể. Bốn nốt là mức tay người chơi thoải mái, và cũng đúng lối bấm
+ * jazz tiêu chuẩn: tay phải chơi bốn nốt, tay trái giữ bass.
+ */
+export const DEFAULT_MAX_HAND_NOTES = 4
+
+/**
+ * Thứ tự bỏ nốt khi hợp âm quá dày, tính bằng quãng so với nốt gốc.
+ *
+ * Theo đúng thứ tự ưu tiên của lối bấm jazz:
+ * 1. **Quãng năm đúng** — nốt ít thông tin nhất, bỏ đi hợp âm vẫn nguyên chất.
+ * 2. **Nốt gốc** — tay trái đã giữ rồi, giữ thêm ở tay phải chỉ làm đục tiếng.
+ * 3. **Bậc chín**, rồi **bậc mười một** — các nốt màu, bỏ sau cùng.
+ *
+ * Bậc ba và bậc bảy không bao giờ bị bỏ: hai nốt đó quyết định tính chất hợp
+ * âm, mất chúng là mất luôn hợp âm.
+ */
+const OMISSION_ORDER = [7, 0, 2, 5] as const
+
+/**
+ * Bỏ bớt nốt cho vừa tay.
+ *
+ * Hợp âm treo được bảo vệ riêng: với hợp âm không có bậc ba, nốt treo chính là
+ * thứ thay thế bậc ba nên bỏ đi là hỏng hợp âm.
+ */
+export function limitHandSize(
+  notes: readonly MidiNote[],
+  chord: ParsedChord,
+  maxNotes: number = DEFAULT_MAX_HAND_NOTES,
+): MidiNote[] {
+  if (notes.length <= maxNotes) return [...notes]
+
+  const intervals = new Set(chord.quality.intervals.map((i) => i % 12))
+  const hasThird = intervals.has(3) || intervals.has(4)
+
+  const result = [...notes]
+
+  for (const interval of OMISSION_ORDER) {
+    if (result.length <= maxNotes) break
+
+    // Hợp âm treo giữ nguyên nốt treo, vì nó đứng thay bậc ba.
+    if (!hasThird && (interval === 2 || interval === 5)) continue
+
+    const target = normalizePitchClass(chord.root + interval)
+    const index = result.findIndex((note) => note % 12 === target)
+    if (index >= 0) result.splice(index, 1)
+  }
+
+  // Vẫn thừa thì bỏ từ dưới lên, vì nốt cao mang màu rõ hơn.
+  while (result.length > maxNotes) result.shift()
+
+  return result
+}
+
 export interface TwoHandOptions extends ChooseVoicingOptions {
+  /** Số nốt nhiều nhất tay phải bấm. Mặc định bốn. */
+  maxRightHandNotes?: number
   /**
    * Bỏ nốt gốc ở tay phải khi tay trái đã giữ nó.
    *
@@ -65,7 +125,11 @@ export function voiceLeadTwoHands(
   chords: readonly ParsedChord[],
   options: TwoHandOptions = {},
 ): TwoHandVoicing[] {
-  const { dropRootFromRightHand = false, ...voicingOptions } = options
+  const {
+    dropRootFromRightHand = false,
+    maxRightHandNotes = DEFAULT_MAX_HAND_NOTES,
+    ...voicingOptions
+  } = options
 
   const rightVoicings = voiceLeadSequence(chords, voicingOptions)
 
@@ -77,6 +141,9 @@ export function voiceLeadTwoHands(
       // Giữ lại nốt gốc nếu bỏ đi thì hợp âm mỏng quá.
       if (withoutRoot.length >= 3) right = withoutRoot
     }
+
+    // Bỏ bớt nốt cho vừa tay — bước cuối, sau mọi lựa chọn khác.
+    right = limitHandSize(right, chord, maxRightHandNotes)
 
     return {
       left: [bassNoteFor(chord)],

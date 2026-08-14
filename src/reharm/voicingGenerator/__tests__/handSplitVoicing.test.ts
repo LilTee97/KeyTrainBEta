@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import type { ParsedChord } from '../../types'
 import {
+  DEFAULT_MAX_HAND_NOTES,
   LEFT_HAND_HIGH,
   LEFT_HAND_LOW,
   bassNoteFor,
   flattenHands,
+  limitHandSize,
   voiceLeadTwoHands,
 } from '../handSplitVoicing'
 
@@ -108,6 +110,112 @@ describe('voiceLeadTwoHands', () => {
     expect(new Set(voicing.right.map((note) => note % 12))).toEqual(
       new Set([0, 4, 7]),
     )
+  })
+})
+
+describe('giới hạn số nốt mỗi tay', () => {
+  it('tay phải không bao giờ quá bốn nốt', () => {
+    // Bàn tay bấm năm nốt đã rất chật, sáu nốt thì không thể
+    const dense = 'Am11 G13 Cmaj13 D13sus4 C13b9 Fm13'
+
+    for (const voicing of voiceLeadTwoHands(chords(dense))) {
+      expect(voicing.right.length).toBeLessThanOrEqual(DEFAULT_MAX_HAND_NOTES)
+    }
+  })
+
+  it('hợp âm sáu nốt bị rút xuống còn bốn', () => {
+    const [voicing] = voiceLeadTwoHands(chords('G13'))
+    expect(voicing.right).toHaveLength(4)
+  })
+
+  it('hợp âm vốn ít nốt thì giữ nguyên', () => {
+    const [triad] = voiceLeadTwoHands(chords('C'))
+    expect(triad.right).toHaveLength(3)
+
+    const [seventh] = voiceLeadTwoHands(chords('Cmaj7'))
+    expect(seventh.right).toHaveLength(4)
+  })
+
+  it('đặt được giới hạn khác', () => {
+    for (const voicing of voiceLeadTwoHands(chords('Am11 G13'), {
+      maxRightHandNotes: 3,
+    })) {
+      expect(voicing.right.length).toBeLessThanOrEqual(3)
+    }
+  })
+})
+
+describe('limitHandSize — thứ tự bỏ nốt', () => {
+  it('bỏ quãng năm trước tiên', () => {
+    const [chord] = chords('G13')
+    // G13 đầy đủ: G B D F A E, quãng năm là nốt Rê
+    const full = [55, 59, 62, 65, 69, 76]
+    const limited = limitHandSize(full, chord, 5)
+
+    expect(limited.map((note) => note % 12)).not.toContain(2)
+  })
+
+  it('bỏ tiếp nốt gốc, vì tay trái đã giữ rồi', () => {
+    const [chord] = chords('G13')
+    const full = [55, 59, 62, 65, 69, 76]
+    const limited = limitHandSize(full, chord, 4)
+
+    expect(limited.map((note) => note % 12)).not.toContain(7)
+  })
+
+  it('không bao giờ bỏ bậc ba và bậc bảy', () => {
+    // Hai nốt này quyết định tính chất hợp âm
+    for (const input of ['G13', 'Am11', 'Cmaj13', 'C13b9']) {
+      const [chord] = chords(input)
+      const full = chord.quality.intervals.map(
+        (interval) => 48 + chord.root + interval,
+      )
+      const limited = limitHandSize(full, chord, 4)
+      const classes = new Set(limited.map((note) => note % 12))
+
+      const third = chord.quality.intervals.find((i) => i === 3 || i === 4)
+      const seventh = chord.quality.intervals.find(
+        (i) => i === 9 || i === 10 || i === 11,
+      )
+
+      if (third !== undefined) {
+        expect(classes.has((chord.root + third) % 12)).toBe(true)
+      }
+      if (seventh !== undefined) {
+        expect(classes.has((chord.root + seventh) % 12)).toBe(true)
+      }
+    }
+  })
+
+  it('hợp âm treo giữ nguyên nốt treo, vì nó đứng thay bậc ba', () => {
+    const [chord] = chords('D13sus4')
+    const full = chord.quality.intervals.map(
+      (interval) => 48 + chord.root + interval,
+    )
+    const limited = limitHandSize(full, chord, 4)
+
+    // Nốt treo bậc bốn của Rê là nốt Sol
+    expect(limited.map((note) => note % 12)).toContain((chord.root + 5) % 12)
+  })
+
+  it('không thêm nốt nào vào', () => {
+    const [chord] = chords('Cmaj7')
+    const notes = [60, 64, 67, 71]
+    const limited = limitHandSize(notes, chord, 4)
+
+    expect(limited).toEqual(notes)
+  })
+
+  it('mọi nốt còn lại đều nằm trong danh sách ban đầu', () => {
+    const [chord] = chords('Am11')
+    const full = chord.quality.intervals.map(
+      (interval) => 48 + chord.root + interval,
+    )
+    const limited = limitHandSize(full, chord, 4)
+
+    for (const note of limited) {
+      expect(full).toContain(note)
+    }
   })
 })
 

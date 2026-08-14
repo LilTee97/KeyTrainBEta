@@ -271,8 +271,24 @@ export function NoteGatedPractice({
 
       <div className="mt-4">
         <OnScreenPiano
-          highlightNotes={active && step ? step.notes : undefined}
+          leftHandNotes={active && step ? step.leftNotes : undefined}
+          rightHandNotes={active && step ? step.rightNotes : undefined}
         />
+
+        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" />
+            tay trái
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-right-hand" />
+            tay phải
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-key" />
+            đang bấm
+          </span>
+        </div>
       </div>
     </div>
   )

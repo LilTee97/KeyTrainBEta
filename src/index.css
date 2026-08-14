@@ -7,6 +7,9 @@
   --color-teal-key: #5aa39e;
   --color-dim: #a8998a;
   --color-line: #3a322c;
+  /* Màu riêng cho hai tay trên bàn phím đàn */
+  --color-left-hand: #5aa39e;
+  --color-right-hand: #c47a92;
 }
 
 html,

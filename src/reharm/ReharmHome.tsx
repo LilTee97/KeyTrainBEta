@@ -575,14 +575,36 @@ export function ReharmHome() {
         </button>
       </div>
 
-      <OnScreenPiano
-        highlightNotes={
-          selectedIndex !== null
-            ? (playbackNotes[selectedIndex] ??
-              (selected ? notesForChord(selected) : undefined))
-            : undefined
-        }
-      />
+      <div>
+        <OnScreenPiano
+          leftHandNotes={
+            selectedIndex !== null ? twoHands[selectedIndex]?.left : undefined
+          }
+          rightHandNotes={
+            selectedIndex !== null ? twoHands[selectedIndex]?.right : undefined
+          }
+          highlightNotes={
+            selectedIndex !== null && !twoHands[selectedIndex]
+              ? (selected ? notesForChord(selected) : undefined)
+              : undefined
+          }
+        />
+
+        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" />
+            tay trái
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-right-hand" />
+            tay phải
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-key" />
+            đang bấm
+          </span>
+        </div>
+      </div>
 
       {/* Dẫn bè */}
       <div className="rounded-xl border border-line bg-black/25 p-4">

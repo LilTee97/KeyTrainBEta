@@ -20,6 +20,8 @@ const WHITE_KEY_STYLES = {
   correct: 'bg-teal-key text-ink',
   pressed: 'bg-amber-key text-ink',
   suggested: 'bg-teal-key/45 text-ink/60',
+  leftHand: 'bg-left-hand/70 text-ink/70',
+  rightHand: 'bg-right-hand/70 text-ink/70',
   idle: 'bg-cream text-ink/35 hover:bg-white',
 } as const
 
@@ -27,6 +29,8 @@ const BLACK_KEY_STYLES = {
   correct: 'bg-teal-key',
   pressed: 'bg-amber-key',
   suggested: 'bg-teal-key/60',
+  leftHand: 'bg-left-hand',
+  rightHand: 'bg-right-hand',
   idle: 'bg-neutral-900 hover:bg-neutral-800',
 } as const
 
@@ -55,6 +59,15 @@ export interface OnScreenPianoProps {
    * đang gợi ý.
    */
   chordTones?: readonly PitchClass[]
+  /**
+   * Nốt của tay trái và tay phải, tô hai màu khác nhau.
+   *
+   * Dùng khi cần chỉ rõ tay nào bấm nốt nào — với hợp âm trải rộng thì nhìn
+   * một màu duy nhất không biết chia tay ra sao. Có hai prop này thì
+   * `highlightNotes` không cần nữa.
+   */
+  leftHandNotes?: readonly MidiNote[]
+  rightHandNotes?: readonly MidiNote[]
 }
 
 /**
@@ -71,6 +84,8 @@ export function OnScreenPiano({
   showNoteNames = true,
   highlightNotes,
   chordTones,
+  leftHandNotes,
+  rightHandNotes,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const noteOn = useMidiStore((state) => state.noteOn)
@@ -142,6 +157,8 @@ export function OnScreenPiano({
 
   /** Thế bấm gợi ý — so nốt tuyệt đối, chỉ đúng những phím này. */
   const suggested = new Set(highlightNotes ?? [])
+  const leftHand = new Set(leftHandNotes ?? [])
+  const rightHand = new Set(rightHandNotes ?? [])
 
   /** Nốt thuộc hợp âm — so lớp cao độ, dùng để xác nhận bấm đúng. */
   const chordToneClasses = new Set(chordTones ?? [])
@@ -156,8 +173,11 @@ export function OnScreenPiano({
    */
   const keyStateOf = (
     note: MidiNote,
-  ): 'correct' | 'pressed' | 'suggested' | 'idle' => {
+  ): keyof typeof WHITE_KEY_STYLES => {
     if (isHeld(note)) return isChordTone(note) ? 'correct' : 'pressed'
+    // Chỉ rõ tay nào bấm nốt nào, ưu tiên hơn cách tô một màu chung.
+    if (leftHand.has(note)) return 'leftHand'
+    if (rightHand.has(note)) return 'rightHand'
     if (suggested.has(note)) return 'suggested'
     return 'idle'
   }
