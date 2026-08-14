@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #1c1917;
+  --color-cream: #f4ead9;
+  --color-amber-key: #d4923d;
+  --color-teal-key: #5aa39e;
+  --color-dim: #a8998a;
+  --color-line: #3a322c;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-ink);
+  color: var(--color-cream);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
