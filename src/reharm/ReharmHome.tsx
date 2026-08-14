@@ -176,6 +176,9 @@ export function ReharmHome() {
 
   const recolored = reharm.colored
   const passingSuggestions = reharm.passingSuggestions
+  /** Vòng về mặt hòa âm — thứ ghi lên bản nhạc. */
+  const harmonic = reharm.harmonic
+  /** Vòng về mặt cách bấm — thứ tay thật sự chơi. */
   const withPassing = reharm.final
 
   /** Thế bấm hai tay đã dẫn bè. */
@@ -385,9 +388,24 @@ export function ReharmHome() {
                 đã đổi
               </span>
               <span className="font-serif text-lg text-amber-key">
-                {withPassing.map((chord) => chord.symbol).join('  ')}
+                {harmonic.map((chord) => chord.symbol).join('  ')}
               </span>
             </div>
+
+            {/* Cách bấm chỉ hiện khi nó khác với tên hợp âm */}
+            {useSlashChords && (
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span
+                  className="w-16 font-mono text-[10px] text-teal-key"
+                  title="Bản nhạc ghi tên hợp âm ở dòng trên, còn đây là cách đặt tay để bấm nó"
+                >
+                  bấm thành
+                </span>
+                <span className="font-serif text-lg text-teal-key">
+                  {withPassing.map((chord) => chord.symbol).join('  ')}
+                </span>
+              </div>
+            )}
           </div>
 
           {isUnchanged && (

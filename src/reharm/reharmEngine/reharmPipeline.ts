@@ -62,7 +62,19 @@ export interface ReharmResult {
   colored: ParsedChord[]
   /** Mọi gợi ý hợp âm lướt áp dụng được cho vòng đã thêm màu. */
   passingSuggestions: PassingSuggestion[]
-  /** Vòng cuối cùng, đã thêm màu và chèn các gợi ý được chấp nhận. */
+  /**
+   * Vòng hợp âm về mặt **hòa âm** — đã thêm màu và chèn hợp âm lướt.
+   *
+   * Đây là thứ nên ghi lên bản nhạc: `Am11`. Cách bấm nó ra sao là chuyện
+   * khác, xem `final`.
+   */
+  harmonic: ParsedChord[]
+  /**
+   * Vòng hợp âm về mặt **cách bấm** — thứ tay thật sự chơi.
+   *
+   * Bằng `harmonic` khi không bật lối chồng trên bass; bật lên thì thành
+   * `G/A`. Tách bạch hai thứ vì bản nhạc ghi một đằng, tay bấm một nẻo.
+   */
   final: ParsedChord[]
 }
 
@@ -90,6 +102,7 @@ export function reharmonize(
       analyzed: [],
       colored: [],
       passingSuggestions: [],
+      harmonic: [],
       final: [],
     }
   }
@@ -123,10 +136,10 @@ export function reharmonize(
 
   // Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
   const passingSuggestions = suggestPassingChords(colored)
-  const withPassing = applySuggestions(colored, acceptedPassing)
+  const harmonic = applySuggestions(colored, acceptedPassing)
 
   // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.
-  const final = useSlashChords ? toSlashSequence(withPassing) : withPassing
+  const final = useSlashChords ? toSlashSequence(harmonic) : harmonic
 
   return {
     original,
@@ -143,6 +156,7 @@ export function reharmonize(
     analyzed,
     colored,
     passingSuggestions,
+    harmonic,
     final,
   }
 }
