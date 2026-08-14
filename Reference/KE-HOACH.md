@@ -1,6 +1,6 @@
 # KeyTrain — Kế hoạch xây dựng
 
-> Bản chép vào repo để ai làm việc với dự án cũng đọc được. Bản gốc do Claude Code giữ tại `~/.claude/plans/`, chỉ có trên máy đã lập kế hoạch. Khi kế hoạch đổi, nhớ cập nhật cả file này.
+> **File này là bản chính thức của kế hoạch.** Bản đầu tiên do Claude Code sinh ra ở `~/.claude/plans/` nay đã cũ và không còn được cập nhật — đừng đọc bản đó.
 >
 > Tiến độ hiện tại được ghi theo từng bước trong lịch sử commit và trong `Reference/SO-TAY.md`.
 
@@ -9,7 +9,7 @@
 Repo `D:\Coding Piano app` khi lập kế hoạch còn trống hoàn toàn (chỉ có thư mục `Reference\`). Mục tiêu là xây **KeyTrain** — một web app luyện piano gồm **hai hệ thống con** dùng chung một lõi:
 
 - **Hệ A — Luyện tai nghe hợp âm** (lấy cảm hứng từ mikebwilliams.com/chords/): nhận diện hợp âm đơn, luyện progression, metronome, spaced repetition + thống kê. Điểm khác biệt: phần **ôn tập ghi nhớ được game hóa**.
-- **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → sinh câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B cũng được **game hóa (sao/combo/huy hiệu, không có level)**, tiến trình lưu **tách riêng** khỏi hệ A.
+- **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → sinh câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B **không game hoá** — không điểm, không sao, không huy hiệu.
 
 Phạm vi nội dung nhạc: **chỉ Jazz + Pop**, không có nội dung cổ điển.
 
@@ -88,9 +88,6 @@ Chia 3 tầng: `src/shared/` (xây một lần, cả 2 hệ dùng chung) — `sr
 - `playback/backingTrackRenderer.ts` — timeline phát thụ động hoàn chỉnh.
 - `playback/noteGatedPlaybackEngine.ts` — **chờ đánh đúng nốt**: đi theo timeline nhưng chặn không cho qua cho tới khi `midiStore` báo đúng nhóm nốt mong đợi. So khớp với **đúng tập nốt của voicing đã sinh ra** (không phải khớp theo tên hợp âm mơ hồ) vì hệ B luôn biết chính xác nó đã sinh nốt nào.
 - `playback/practiceModeController.ts` — chế độ chỉ tay trái / chỉ tay phải / hai tay, bằng cách lọc track nào đang bị gate.
-- `scoring/sessionScorer.ts` — theo dõi lượt chơi note-gated: đếm nốt trúng ngay lần đầu vs phải thử lại, combo hiện tại/dài nhất, quy ra sao khi hết đoạn.
-- `scoring/compProgressStore.ts` — IndexedDB, lưu `SectionScore` + `CompProgress` (streak, badge) của hệ B, **tách hoàn toàn** khỏi store gamification hệ A.
-- `scoring/` (UI) — `StarRow`, `ComboCounter`, `SectionScoreboard` (bảng 3 hàng sao theo chế độ tay), màn tổng kết cuối lượt.
 
 ### Luồng dữ liệu xuyên hệ
 Cả 2 hệ đứng trên cùng `midiStore` (MIDI hoặc phím ảo), cùng `audioEngine`, cùng `chordDefinitions`/`romanNumeral`.
@@ -102,9 +99,11 @@ Cả 2 hệ đứng trên cùng `midiStore` (MIDI hoặc phím ảo), cùng `aud
 
 ## Thiết kế gamification
 
-Hai hệ **game hóa riêng biệt, lưu tiến trình tách rời nhau** — xem "Tai nghe" và "Đệm hát" là 2 track tiến bộ độc lập, để thấy rõ mình mạnh/yếu ở mảng nào. Điểm khác biệt then chốt: **hệ A có XP/level, hệ B không có level** (theo yêu cầu người dùng) — hệ B đo tiến bộ bằng sao/độ chính xác/huy hiệu thay vì bậc số.
+**Chỉ luồng ôn tập ghi nhớ của hệ A được game hoá.** Bài luyện tự do của hệ A (bước 6, 10) và **toàn bộ hệ B** đều không game hoá — không điểm, không sao, không huy hiệu.
 
-### Hệ A — luồng ôn tập ghi nhớ (có XP + level)
+Lý do: game hoá phục vụ việc quay lại đều đặn với việc ghi nhớ. Phần đệm hát thì người học đã có động lực tự thân là chơi được bài mình thích, thêm điểm số vào đó chỉ làm nhiễu.
+
+### Luồng ôn tập ghi nhớ (hệ A)
 
 - **XP**: 10 XP/câu đúng, nhân theo độ khó hợp âm (triad 1.0x, 7th 1.2x, mở rộng/jazz 1.5x), +5 XP nếu trả lời <2s (đúng mà chậm thì **không bị trừ**).
 - **Combo trong buổi**: đúng liên tiếp → nhân XP: x1 (0-2), x1.5 (3-5), x2 (6-9), x3 (10+); sai một câu là về x1.
@@ -116,16 +115,11 @@ Hai hệ **game hóa riêng biệt, lưu tiến trình tách rời nhau** — xe
 
 Luyện chord/progression thô (bước 6, 10) **không** game hóa — chỉ luồng ôn tập mới có.
 
-### Hệ B — luyện đệm với backing track (không có level)
+### Hệ B — không game hoá
 
-Áp cho chế độ **chờ đánh đúng nốt** (bước 27-28), nơi KeyTrain biết chính xác từng nốt đúng/sai nên chấm điểm được khách quan. Chế độ nghe backing track thụ động không chấm điểm.
+Phần tái hòa âm và đệm hát **không có bất kỳ yếu tố game hoá nào**: không điểm, không sao, không combo, không huy hiệu, không bảng xếp hạng, không streak riêng.
 
-- **Sao mỗi đoạn (1-3 sao)**: chấm khi chơi hết một đoạn (Verse/Chorus) ở chế độ note-gated. Ngưỡng theo **độ chính xác lần bấm đầu** — tức tỷ lệ nốt đánh trúng ngay lần đầu, không tính các lần thử lại khi bị gate chặn: ≥70% = 1 sao, ≥85% = 2 sao, ≥95% = 3 sao. Lưu sao cao nhất từng đạt cho mỗi (bài, đoạn, chế độ tay).
-- **Ba chế độ tay chấm riêng**: tay trái / tay phải / hai tay mỗi cái có bộ sao riêng, nên bảng tiến trình của một đoạn là 3 hàng sao. Không khóa lẫn nhau — người dùng tự chọn tập gì trước, KeyTrain chỉ gợi ý thứ tự (tay phải → tay trái → hai tay).
-- **Combo chuỗi nốt đúng**: đếm số nốt liên tiếp đánh trúng ngay lần đầu trong một lượt chơi, hiển thị realtime; sai một nốt là về 0. Lưu **combo dài nhất** của mỗi đoạn làm kỷ lục cá nhân để phá.
-- **Huy hiệu riêng của hệ B**, gắn với các mốc kỹ năng thật của phong cách Khá Bự thay vì mốc số trừu tượng — ví dụ: chơi trọn một đoạn ở điệu Bossa Nova 3 sao, chơi đúng một câu fill dim7 nối V-I, đạt 3 sao tay trái ở 5 bài khác nhau, chơi được một đoạn có nốt láy ở mật độ cao nhất.
-- **Streak riêng cho hệ B**: chuỗi ngày có ít nhất một lượt chơi note-gated hoàn chỉnh, đếm độc lập với streak ôn tập của hệ A.
-- **Không có XP, không có level, không có bậc khóa/mở** cho hệ B — theo yêu cầu người dùng. Tiến bộ thể hiện qua sao, combo kỷ lục và huy hiệu.
+Chế độ chờ đánh đúng nốt (bước 27-28) vẫn cho phản hồi đúng/sai tức thì để người học biết mình bấm trúng chưa — nhưng đó là **phản hồi kỹ thuật**, không phải chấm điểm, và không có gì được tích luỹ hay lưu lại thành thành tích.
 
 ---
 
@@ -140,11 +134,8 @@ ReviewItem       { id, kind: 'chord'|'progression', refId, category, boxLevel,
 StatsEvent       { id, timestamp, mode: 'practice'|'review', itemKind, category,
                    correct, responseMs }
 EarProgress      { xp, level, currentStreakDays, longestStreakDays, lastActiveDate,
-                   badges: {id, tier, unlockedAt}[] }   // hệ A; combo là state trong buổi, không lưu
-CompProgress     { currentStreakDays, longestStreakDays, lastActiveDate,
-                   badges: {id, unlockedAt}[] }         // hệ B — KHÔNG có xp/level
-SectionScore     { id, songId, sectionName, hand: 'LH'|'RH'|'both',
-                   bestStars: 0|1|2|3, bestAccuracy, bestCombo, attempts, lastPlayedAt }
+                   badges: {id, tier, unlockedAt}[] }   // chỉ hệ A; combo là state
+                                                        // trong buổi, không lưu
 Preset           { id, name, type, config }
 Song             { id, title, key, sections: [{ name, lines: [{ lyric,
                    chordAnchors: [{chordSymbol, charOffset}] }] }] }
@@ -186,7 +177,7 @@ KeyTrain/
       srs/  stats/  gamification/  EarTrainingHome.tsx
     reharm/
       input/  reharmEngine/  style/styleLibrary/  voicingGenerator/
-      fillSoloGenerator/  playback/  scoring/  ReharmHome.tsx
+      fillSoloGenerator/  playback/  ReharmHome.tsx
   Reference/   (giữ nguyên)
 ```
 
@@ -232,7 +223,6 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 26. **Backing track hoàn chỉnh** — gộp điệu + tái hòa âm + fill/solo vào một nút "Phát backing track".
 27. **Chờ đánh đúng nốt (hai tay)** — `noteGatedPlaybackEngine.ts` gate timeline bước 26 theo `midiStore`. **Làm prototype quyết định transport tại đây** (rủi ro #2) trước khi xây tiếp lên trên.
 28. **Chế độ tay trái / tay phải riêng** — `practiceModeController.ts` lọc track theo tay.
-28b. **Game hóa hệ B** — `sessionScorer.ts` (combo + độ chính xác lần đầu → sao) + `compProgressStore.ts` + UI sao/combo/tổng kết + huy hiệu + streak riêng. Demo: chơi hết một đoạn → nhận sao, phá kỷ lục combo.
 29. **Biến tấu khi lặp + đổi vòng cả bài sang ii-V-I-vi** — luật mang tính "gợi ý sáng tạo", để cuối.
 30. **Hoàn thiện** — lưu preset/bài hát (mở rộng schema bước 11), làm mờ điệu chưa xác thực, trang cài đặt, responsive cho bàn phím ảo, rà accessibility.
 

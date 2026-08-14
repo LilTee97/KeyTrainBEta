@@ -12,12 +12,31 @@ import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputer
 import { getProgressionTemplate } from '../../shared/musicTheory/progressionGenerator'
 import type { ReviewItem } from '../../shared/persistence/db'
 import { createQuestion } from '../chordRecognition/drillEngine'
+import {
+  BadgeCase,
+  ComboMeter,
+  StreakFlame,
+  XpBar,
+} from '../gamification/GamificationWidgets'
+import {
+  difficultyMultiplier,
+  evaluateBadges,
+  xpForAnswer,
+} from '../gamification/gamificationEngine'
+import {
+  awardAnswer,
+  beginSession,
+  loadProgress,
+  markActiveToday,
+  useGamificationStore,
+} from '../gamification/gamificationStore'
 import { createSession } from '../progressionTrainer/progressionEngine'
 import type { ProgressionSession } from '../progressionTrainer/progressionEngine'
 import { checkAnswer } from '../shared/chordTask'
 import type { ChordTask } from '../shared/chordTask'
 import { recordAnswer } from '../stats/statsStore'
 import {
+  allReviewItems,
   buildReviewSession,
   qualityIdFromItemId,
   recordReviewResult,
@@ -72,6 +91,13 @@ export function ReviewSessionPage() {
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [stepIndex, setStepIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
+  /** Điểm vừa nhận, hiện thoáng qua rồi biến mất. */
+  const [xpFlash, setXpFlash] = useState<number | null>(null)
+  const [badges, setBadges] = useState(() => evaluateBadges([]))
+
+  const progress = useGamificationStore((store) => store.progress)
+  const comboStreak = useGamificationStore((store) => store.comboStreak)
+  const sessionXp = useGamificationStore((store) => store.sessionXp)
 
   const armedRef = useRef(true)
   const askedAtRef = useRef(0)
@@ -79,7 +105,10 @@ export function ReviewSessionPage() {
   const loadSession = useCallback(async () => {
     setLoading(true)
     try {
+      await loadProgress()
+      beginSession()
       setState(startSession(await buildReviewSession()))
+      setBadges(evaluateBadges(await allReviewItems()))
     } catch {
       setState(startSession([]))
     } finally {
@@ -118,19 +147,53 @@ export function ReviewSessionPage() {
     (correct: boolean) => {
       if (!state || !item) return
 
+      const responseMs = Math.round(performance.now() - askedAtRef.current)
+
       void recordReviewResult(item.id, item.kind, item.category, correct)
       void recordAnswer({
         mode: 'review',
         itemKind: item.kind,
         category: item.category,
         correct,
-        responseMs: Math.round(performance.now() - askedAtRef.current),
+        responseMs,
       })
+
+      // Vòng hợp âm khó hơn hợp âm rời nên tính hệ số cao nhất.
+      const difficulty =
+        challenge?.kind === 'chord'
+          ? difficultyMultiplier(challenge.task.quality)
+          : 1.5
+
+      const gained = xpForAnswer({
+        correct,
+        difficulty,
+        comboStreak: useGamificationStore.getState().comboStreak,
+        responseMs,
+      })
+
+      void awardAnswer(gained, correct)
+      setXpFlash(gained > 0 ? gained : null)
 
       setState(answerCurrent(state, correct))
     },
-    [state, item],
+    [state, item, challenge],
   )
+
+  /** Xoá hiệu ứng điểm sau một lúc. */
+  useEffect(() => {
+    if (xpFlash === null) return
+    const timer = setTimeout(() => setXpFlash(null), 1200)
+    return () => clearTimeout(timer)
+  }, [xpFlash])
+
+  /** Xong buổi thì ghi nhận hôm nay có hoạt động và cập nhật huy hiệu. */
+  const finishedSession = state !== null && !loading && isFinished(state)
+  useEffect(() => {
+    if (!finishedSession || state?.totalItems === 0) return
+
+    void markActiveToday()
+    void allReviewItems().then((items) => setBadges(evaluateBadges(items)))
+  }, [finishedSession, state?.totalItems])
 
   /** Chấm bài theo các nốt đang bấm. */
   useEffect(() => {
@@ -209,25 +272,51 @@ export function ReviewSessionPage() {
     const accuracy = Math.round(sessionAccuracy(state) * 100)
 
     return (
-      <section className="flex flex-col items-start gap-4">
+      <section className="flex flex-col items-start gap-5">
         <h2 className="text-lg font-semibold">Xong buổi ôn</h2>
 
-        <div className="rounded-xl border border-line bg-black/25 p-5">
-          <p className="mb-2">
-            <span className="font-serif text-3xl font-semibold text-teal-key">
-              {state.totalItems}
+        <div className="w-full rounded-xl border border-line bg-black/25 p-5">
+          <div className="mb-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+            <span>
+              <span className="font-serif text-3xl font-semibold text-amber-key">
+                +{sessionXp}
+              </span>
+              <span className="ml-2 text-sm text-dim">điểm</span>
             </span>
-            <span className="ml-2 text-sm text-dim">mục đã ôn</span>
-          </p>
-          <p className="font-mono text-xs text-dim">
-            {state.correct}/{state.answered} lần đúng · {accuracy}%
-          </p>
+            <span>
+              <span className="font-serif text-2xl font-semibold text-teal-key">
+                {state.totalItems}
+              </span>
+              <span className="ml-2 text-sm text-dim">mục đã ôn</span>
+            </span>
+            <span className="font-mono text-xs text-dim">
+              {state.correct}/{state.answered} lần đúng · {accuracy}%
+            </span>
+          </div>
+
+          <XpBar xp={progress.xp} />
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+            <StreakFlame days={progress.currentStreakDays} />
+            {progress.longestStreakDays > progress.currentStreakDays && (
+              <span className="font-mono text-[10px] text-dim">
+                kỷ lục {progress.longestStreakDays} ngày
+              </span>
+            )}
+          </div>
 
           {state.missed.length > 0 && (
-            <p className="mt-3 border-t border-line pt-3 text-xs text-dim">
+            <p className="mt-3 text-xs text-dim">
               Còn vấp ở {state.missed.length} mục — chúng sẽ quay lại sớm.
             </p>
           )}
+        </div>
+
+        <div className="w-full">
+          <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Huy hiệu
+          </h3>
+          <BadgeCase badges={badges} />
         </div>
 
         <button
@@ -241,7 +330,7 @@ export function ReviewSessionPage() {
     )
   }
 
-  const progress = progressOf(state)
+  const sessionProgress = progressOf(state)
   const currentStep =
     challenge?.kind === 'progression'
       ? challenge.session.steps[stepIndex]
@@ -262,16 +351,28 @@ export function ReviewSessionPage() {
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h2 className="text-lg font-semibold">Ôn tập</h2>
         <span className="font-mono text-xs text-dim">
-          {progress.done}/{progress.total} mục
+          {sessionProgress.done}/{sessionProgress.total} mục
         </span>
       </div>
 
-      {/* Thanh tiến độ */}
+      <XpBar xp={progress.xp} />
+
+      {/* Thanh tiến độ của buổi */}
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full bg-teal-key transition-all"
-          style={{ width: `${progress.ratio * 100}%` }}
+          style={{ width: `${sessionProgress.ratio * 100}%` }}
         />
+      </div>
+
+      <div className="flex min-h-[34px] flex-wrap items-center gap-3">
+        <StreakFlame days={progress.currentStreakDays} />
+        <ComboMeter streak={comboStreak} />
+        {xpFlash !== null && (
+          <span className="font-serif text-lg font-semibold text-amber-key">
+            +{xpFlash}
+          </span>
+        )}
       </div>
 
       <div className="rounded-xl border border-line bg-black/25 p-5">
