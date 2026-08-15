@@ -59,6 +59,56 @@ export function totalBeatsOf(
   return chords.reduce((sum, chord) => sum + beatsOf(chord, fallback), 0)
 }
 
+/** Một hợp âm chính cùng khoảng thời gian nó chiếm trên dòng thời gian. */
+export interface ChordSpan {
+  chord: ParsedChord
+  start: number
+  beats: number
+}
+
+/**
+ * Khung thời gian của **vòng hợp âm chính**, bỏ qua hợp âm lướt.
+ *
+ * Phần giai điệu dùng khung này chứ không dùng cả mảng: hợp âm lướt là việc
+ * của tay đệm, còn câu solo vẫn bám vòng hợp âm chính. Chạy theo từng hợp âm
+ * lướt dài một phách thì câu nhạc bị băm vụn, và đó không phải cách người ta
+ * ngẫu hứng trên một vòng có hợp âm nối.
+ *
+ * Mỗi hợp âm chính vì vậy **lấy lại trọn** khoảng thời gian của mình, kể cả
+ * phần đã nhường cho hợp âm lướt đứng sau nó.
+ */
+export function mainChordSpans(
+  chords: readonly ParsedChord[],
+  fallback: number,
+): ChordSpan[] {
+  const starts = chordStarts(chords, fallback)
+  const total = totalBeatsOf(chords, fallback)
+
+  const main = chords
+    .map((chord, index) => ({ chord, index }))
+    .filter((entry) => !entry.chord.passing)
+
+  // Toàn hợp âm lướt là chuyện không xảy ra, nhưng đừng trả về khung rỗng.
+  if (main.length === 0) {
+    return chords.map((chord, index) => ({
+      chord,
+      start: starts[index],
+      beats: beatsOf(chord, fallback),
+    }))
+  }
+
+  return main.map((entry, position) => {
+    const next = main[position + 1]
+    const end = next ? starts[next.index] : total
+
+    return {
+      chord: entry.chord,
+      start: starts[entry.index],
+      beats: end - starts[entry.index],
+    }
+  })
+}
+
 /** Hợp âm nào đang vang tại một thời điểm. */
 export function chordIndexAt(
   chords: readonly ParsedChord[],

@@ -20,6 +20,13 @@ export interface ParsedChord {
    * `chordTiming.ts`.
    */
   beats?: number
+  /**
+   * Đây là hợp âm **lướt** được chèn vào, không thuộc vòng hợp âm gốc.
+   *
+   * Phần giai điệu dựa vào cờ này để bỏ qua chúng: hợp âm lướt là việc của
+   * tay đệm, còn câu solo vẫn bám vòng hợp âm chính.
+   */
+  passing?: boolean
   /** Đúng chuỗi người dùng đã gõ, giữ lại để hiện lỗi và để hiển thị. */
   source: string
   /** Tên hợp âm sau khi chuẩn hoá, ví dụ 'Am7' hoặc 'C/E'. */

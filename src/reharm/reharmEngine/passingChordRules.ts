@@ -335,7 +335,11 @@ export function applySuggestions(
     result.splice(
       position,
       0,
-      ...inserted.map((chord, index) => ({ ...chord, beats: passing[index] })),
+      ...inserted.map((chord, index) => ({
+        ...chord,
+        beats: passing[index],
+        passing: true,
+      })),
     )
   }
 

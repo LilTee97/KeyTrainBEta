@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { beatsOf, chordStarts } from '../chordTiming'
+import { mainChordSpans } from '../chordTiming'
 import { generateSolo } from '../fillSoloGenerator/soloGenerator'
 import { chordMaterial } from '../fillSoloGenerator/soloVocabulary'
 import { parseChordInput } from '../input/chordInputParser'
@@ -12,8 +12,8 @@ import {
  * Ba bất biến nghe được của đoạn giang tấu, kiểm trên vòng **đã chèn hợp âm
  * lướt** — vì đó là lúc chúng từng hỏng:
  *
- * - Không nốt nào xung đột với hợp âm đang vang.
- * - Không nốt nào ngân tràn sang hợp âm sau.
+ * - Nốt solo bám **hợp âm chính**, không bám hợp âm lướt.
+ * - Không nốt nào ngân tràn sang hợp âm chính kế tiếp.
  * - Mọi nốt rơi đúng lưới móc kép.
  *
  * Lần đo đầu tiên cho 0 xung đột, 0 tràn, nhưng **36 trên 47 nốt lệch lưới** —
@@ -39,56 +39,65 @@ const PROGRESSIONS = [
 const sources = ['chordTone', 'chordPentatonic', 'blues'] as const
 const densities = ['sparse', 'medium', 'dense'] as const
 
+const soloOf = (chords: ReturnType<typeof withPassing>) =>
+  generateSolo(chords, {
+    beatsPerChord: 4,
+    key: { tonic: 0, scale: 'major' },
+    chordsPerPhrase: 2,
+  })
+
 describe('giang tấu trên vòng có hợp âm lướt', () => {
-  it('không nốt chính nào xung đột với hợp âm đang vang', () => {
+  it('nốt solo bám hợp âm chính, không bám hợp âm lướt', () => {
+    /*
+      Luật do người dùng đặt: hợp âm lướt là việc của tay đệm, còn câu solo vẫn
+      lấy nốt trong vòng hợp âm chính. Chạy theo từng hợp âm lướt dài một phách
+      thì câu nhạc bị băm vụn và chất liệu đổi liên tục theo những hợp âm chỉ
+      thoáng qua.
+    */
     for (const text of PROGRESSIONS) {
       const chords = withPassing(text)
-      const starts = chordStarts(chords, 4)
-      const solo = generateSolo(chords, {
-        beatsPerChord: 4,
-        key: { tonic: 0, scale: 'major' },
-        chordsPerPhrase: 2,
-      })
+      const spans = mainChordSpans(chords, 4)
 
-      for (const note of solo.filter((entry) => !entry.isGrace)) {
-        let index = 0
-        for (let position = starts.length - 1; position >= 0; position -= 1) {
-          if (note.startBeat >= starts[position] - 1e-6) {
-            index = position
+      for (const note of soloOf(chords).filter((entry) => !entry.isGrace)) {
+        let span = spans[0]
+        for (let index = spans.length - 1; index >= 0; index -= 1) {
+          if (note.startBeat >= spans[index].start - 1e-6) {
+            span = spans[index]
             break
           }
         }
 
         expect(
-          chordMaterial(chords[index]),
-          `${chords[index].symbol} ở phách ${note.startBeat}`,
+          chordMaterial(span.chord),
+          `${span.chord.symbol} ở phách ${note.startBeat}`,
         ).toContain(note.note % 12)
       }
     }
   })
 
-  it('không nốt nào ngân tràn sang hợp âm sau', () => {
+  it('không mẫu câu nào lấy hợp âm lướt làm chất liệu', () => {
+    const chords = withPassing('C Am F G Em Dm G7 C')
+    const spans = mainChordSpans(chords, 4)
+
+    const mainTones = new Set(
+      spans.flatMap((span) => chordMaterial(span.chord)),
+    )
+    for (const note of soloOf(chords).filter((entry) => !entry.isGrace)) {
+      expect(mainTones).toContain(note.note % 12)
+    }
+  })
+
+  it('không nốt nào ngân tràn sang hợp âm chính kế tiếp', () => {
     for (const text of PROGRESSIONS) {
       const chords = withPassing(text)
-      const starts = chordStarts(chords, 4)
-      const solo = generateSolo(chords, {
-        beatsPerChord: 4,
-        key: { tonic: 0, scale: 'major' },
-        chordsPerPhrase: 2,
-      })
+      const spans = mainChordSpans(chords, 4)
 
-      for (const note of solo) {
-        let index = 0
-        for (let position = starts.length - 1; position >= 0; position -= 1) {
-          if (note.startBeat >= starts[position] - 1e-6) {
-            index = position
-            break
-          }
-        }
+      for (const note of soloOf(chords)) {
+        const next = spans.find((span) => span.start > note.startBeat + 1e-6)
+        if (!next) continue
 
-        const end = starts[index] + beatsOf(chords[index], 4)
         expect(note.startBeat + note.durationBeats).toBeLessThanOrEqual(
-          end + 0.01,
+          next.start + 0.01,
         )
       }
     }

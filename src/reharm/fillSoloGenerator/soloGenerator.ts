@@ -3,7 +3,7 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import type { TimelineEvent } from '../style/types'
-import { beatsOf, chordStarts, totalBeatsOf } from '../chordTiming'
+import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, stepInScale } from './graceNoteOrnamenter'
@@ -300,8 +300,15 @@ export function generateSolo(
   const notesPerBeat =
     density === 'sparse' ? 0.8 : density === 'dense' ? 2.2 : 1.4
 
-  // Hợp âm lướt ngắn hơn hợp âm chính, nên phải lấy mốc và thời lượng riêng.
-  const starts = chordStarts(chords, beatsPerChord)
+  /*
+    Câu solo chạy trên **vòng hợp âm chính**, bỏ qua hợp âm lướt.
+
+    Hợp âm lướt là việc của tay đệm. Cho giai điệu chạy theo từng hợp âm lướt
+    dài một phách thì câu nhạc bị băm vụn, và chất liệu bị đổi liên tục theo
+    những hợp âm chỉ thoáng qua. Mỗi hợp âm chính vì vậy lấy lại trọn khoảng
+    thời gian của mình, kể cả phần đã nhường cho hợp âm lướt.
+  */
+  const spans = mainChordSpans(chords, beatsPerChord)
   const totalBeats = totalBeatsOf(chords, beatsPerChord)
 
   /*
@@ -321,20 +328,19 @@ export function generateSolo(
   let positionInPhrase = 0
   let currentPhrase = -1
 
-  for (let index = 0; index < chords.length; index += 1) {
-    const chord = chords[index]
-    const chordBeats = beatsOf(chord, beatsPerChord)
+  for (let index = 0; index < spans.length; index += 1) {
+    const { chord, start, beats: chordBeats } = spans[index]
 
-    const phrase = phraseAt(starts[index])
+    const phrase = phraseAt(start)
     if (phrase !== currentPhrase) {
       currentPhrase = phrase
       positionInPhrase = 0
     }
 
     // Cuối câu là hợp âm cuối cùng còn nằm trong câu này.
-    const nextStart = starts[index + 1] ?? totalBeats
+    const nextStart = spans[index + 1]?.start ?? totalBeats
     const isPhraseEnd =
-      index === chords.length - 1 || phraseAt(nextStart) !== phrase
+      index === spans.length - 1 || phraseAt(nextStart) !== phrase
 
     /*
       Đổi quãng âm giữa các câu để tạo kịch tính — `pianoimprovnotes.md` mục 4:
@@ -362,13 +368,13 @@ export function generateSolo(
       hasMotif: previousShape.length > 0,
       density,
       take: round,
-      resolving: resolvesUpFourth(chord, chords[index + 1] ?? null),
+      resolving: resolvesUpFourth(chord, spans[index + 1]?.chord ?? null),
     })
 
     const built = lick.build({
       chord,
-      next: chords[index + 1] ?? null,
-      startBeat: starts[index],
+      next: spans[index + 1]?.chord ?? null,
+      startBeat: start,
       beats: playBeats,
       from,
       low,
