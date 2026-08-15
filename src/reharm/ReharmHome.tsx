@@ -48,7 +48,11 @@ import {
 import { LICKS } from './fillSoloGenerator/soloVocabulary'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import type { PassingTechnique } from './reharmEngine/passingChordRules'
-import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
+import {
+  TECHNIQUE_LABELS,
+  groupPassingSuggestions,
+  groupsAtSlot,
+} from './reharmEngine/passingChordRules'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
@@ -337,6 +341,7 @@ export function ReharmHome() {
   /** Khoá định danh một gợi ý, để nhớ người dùng đã bật cái nào. */
   const keyOf = (index: number, technique: string) => `${index}:${technique}`
 
+
   /**
    * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
@@ -416,6 +421,43 @@ export function ReharmHome() {
 
   const recolored = reharm.colored
   const passingSuggestions = reharm.passingSuggestions
+
+  /**
+   * Bật tắt một hợp âm lướt, **áp cho mọi chỗ có cùng hợp âm đích**.
+   *
+   * Một bài lặp đi lặp lại vài hợp âm; đã quyết định dẫn vào `Am7` bằng vòng
+   * hai-năm thì thường muốn làm vậy ở mọi chỗ có `Am7`, chứ không đi chèn thủ
+   * công từng chỗ rồi bỏ sót.
+   *
+   * Dùng chung cho cả menu chuột phải trên bản nhạc lẫn khung Hợp âm lướt bên
+   * dưới, để hai chỗ không bao giờ cư xử khác nhau.
+   */
+  /** Các hợp âm lướt đặt được, mỗi loại một mục thay vì mỗi khe một mục. */
+  const passingGroups = useMemo(
+    () => groupPassingSuggestions(passingSuggestions, recolored),
+    [passingSuggestions, recolored],
+  )
+
+  /** Khoá từng khe của một nhóm, để lưu vào danh sách đã chấp nhận. */
+  const keysOfGroup = (group: { technique: string; slots: number[] }) =>
+    group.slots.map((slot) => keyOf(slot, group.technique))
+
+  /** Nhóm này đã được chèn chưa. */
+  const isGroupOn = (group: { technique: string; slots: number[] }) =>
+    keysOfGroup(group).some((key) => acceptedPassing.includes(key))
+
+  const togglePassingGroup = (groupId: string) =>
+    setAcceptedPassing((current) => {
+      const group = passingGroups.find((entry) => entry.id === groupId)
+      if (!group) return current
+
+      const keys = keysOfGroup(group)
+      const on = keys.some((key) => current.includes(key))
+
+      return on
+        ? current.filter((entry) => !keys.includes(entry))
+        : [...current, ...keys.filter((key) => !current.includes(key))]
+    })
   /** Vòng về mặt hòa âm — thứ ghi lên bản nhạc. */
   const harmonic = reharm.harmonic
   /** Vòng về mặt cách bấm — thứ tay thật sự chơi. */
@@ -708,23 +750,18 @@ export function ReharmHome() {
   /** Số gợi ý của từng kỹ thuật, để hiện trên nút lọc. */
   const techniqueCounts = useMemo(() => {
     const counts = new Map<PassingTechnique, number>()
-    for (const suggestion of passingSuggestions) {
-      counts.set(
-        suggestion.technique,
-        (counts.get(suggestion.technique) ?? 0) + 1,
-      )
+    for (const group of passingGroups) {
+      counts.set(group.technique, (counts.get(group.technique) ?? 0) + 1)
     }
     return [...counts.entries()]
-  }, [passingSuggestions])
+  }, [passingGroups])
 
-  const visibleSuggestions = useMemo(
+  const visibleGroups = useMemo(
     () =>
       techniqueFilter === null
-        ? passingSuggestions
-        : passingSuggestions.filter(
-            (suggestion) => suggestion.technique === techniqueFilter,
-          ),
-    [passingSuggestions, techniqueFilter],
+        ? passingGroups
+        : passingGroups.filter((group) => group.technique === techniqueFilter),
+    [passingGroups, techniqueFilter],
   )
 
   /** Xung đột nhạc lý, gom theo vị trí hợp âm để hiện ngay cạnh nó. */
@@ -813,30 +850,25 @@ export function ReharmHome() {
             activeIndex={activeChordIndex}
             pairedChords={pairedChords}
             passingOptionsFor={(chordIndex) =>
-              passingSuggestions
-                .filter(
-                  (suggestion) => suggestion.insertBeforeIndex === chordIndex,
-                )
-                .map((suggestion) => {
-                  const id = keyOf(
-                    suggestion.insertBeforeIndex,
-                    suggestion.technique,
-                  )
-                  return {
-                    id,
-                    technique: TECHNIQUE_LABELS[suggestion.technique],
-                    chords: suggestion.chords
-                      .map((chord) => chord.symbol)
-                      .join(' → '),
-                    applied: acceptedPassing.includes(id),
-                  }
-                })
+              groupsAtSlot(passingGroups, chordIndex).map((group) => {
+                const slotId = keyOf(chordIndex, group.technique)
+
+                return {
+                  id: group.id,
+                  slotId,
+                  technique: TECHNIQUE_LABELS[group.technique],
+                  chords: group.chords.map((chord) => chord.symbol).join(' → '),
+                  // Chọn một chỗ là áp cho mọi chỗ có cùng hợp âm đích.
+                  places: group.slots.length,
+                  applied: isGroupOn(group),
+                  appliedHere: acceptedPassing.includes(slotId),
+                }
+              })
             }
-            onTogglePassing={(id) =>
+            onTogglePassing={togglePassingGroup}
+            onRemovePassingHere={(slotId) =>
               setAcceptedPassing((current) =>
-                current.includes(id)
-                  ? current.filter((entry) => entry !== id)
-                  : [...current, id],
+                current.filter((entry) => entry !== slotId),
               )
             }
             onSetChordSpan={(chordIndex, span) =>
@@ -1384,7 +1416,7 @@ export function ReharmHome() {
           hết — chèn dày quá thì bài mất hướng.
         </p>
 
-        {passingSuggestions.length === 0 ? (
+        {passingGroups.length === 0 ? (
           <p className="text-sm text-dim">
             Vòng này chưa có chỗ nào chèn được.
           </p>
@@ -1424,24 +1456,15 @@ export function ReharmHome() {
               ))}
             </div>
 
-            {visibleSuggestions.map((suggestion) => {
-              const key = keyOf(
-                suggestion.insertBeforeIndex,
-                suggestion.technique,
-              )
-              const isOn = acceptedPassing.includes(key)
+            {visibleGroups.map((group) => {
+              const isOn = isGroupOn(group)
+              const places = group.slots.length
 
               return (
                 <button
-                  key={key}
+                  key={group.id}
                   type="button"
-                  onClick={() =>
-                    setAcceptedPassing((current) =>
-                      isOn
-                        ? current.filter((entry) => entry !== key)
-                        : [...current, key],
-                    )
-                  }
+                  onClick={() => togglePassingGroup(group.id)}
                   className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                     isOn
                       ? 'border-amber-key bg-amber-key/15'
@@ -1454,16 +1477,19 @@ export function ReharmHome() {
                         isOn ? 'text-amber-key' : 'text-dim'
                       }`}
                     >
-                      {TECHNIQUE_LABELS[suggestion.technique]}
+                      {TECHNIQUE_LABELS[group.technique]}
                     </span>
                     <span className="font-serif text-base text-cream">
-                      {suggestion.chords
-                        .map((chord) => chord.symbol)
-                        .join(' → ')}
+                      {group.chords.map((chord) => chord.symbol).join(' → ')}
                     </span>
+                    {places > 1 && (
+                      <span className="font-mono text-[10px] text-teal-key">
+                        áp cho {places} chỗ
+                      </span>
+                    )}
                   </span>
                   <span className="mt-1 block text-[11px] leading-relaxed text-dim">
-                    {suggestion.explanation}
+                    {group.explanation}
                   </span>
                 </button>
               )

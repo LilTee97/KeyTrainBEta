@@ -226,6 +226,10 @@ export function suggestSecondaryIiV(
  *    âm ở giữa vừa bị cắt còn nửa ô vừa bị kẹp giữa hai cụm hợp âm lướt — nghe
  *    thành một dải hợp âm chạy liên miên, không còn ra vòng hợp âm nữa. Chèn
  *    thưa mới nghe ra chỗ nhấn.
+ *
+ * Riêng khe **đã chèn** thì vẫn giữ lại đúng gợi ý đang dùng — bỏ nó đi thì
+ * người dùng không còn đường nào để gỡ ra. Chỉ các kỹ thuật *khác* ở cùng khe
+ * mới bị ẩn, vì một khe chỉ chèn được một thứ.
  */
 export function compatibleSuggestions(
   suggestions: readonly PassingSuggestion[],
@@ -235,22 +239,106 @@ export function compatibleSuggestions(
 ): PassingSuggestion[] {
   const tones = key ? scaleTones(key.tonic, key.scale) : null
 
-  // Khe đã chèn, và hai khe sát bên nó.
+  // Hai khe sát bên khe đã chèn.
   const blocked = new Set<number>()
+  /** Khe đã chèn rồi, và chèn bằng kỹ thuật nào. */
+  const taken = new Map<number, PassingTechnique>()
+
   for (const item of accepted) {
     blocked.add(item.insertBeforeIndex - 1)
-    blocked.add(item.insertBeforeIndex)
     blocked.add(item.insertBeforeIndex + 1)
+    taken.set(item.insertBeforeIndex, item.technique)
   }
 
   return suggestions.filter((suggestion) => {
-    if (blocked.has(suggestion.insertBeforeIndex)) return false
+    const slot = suggestion.insertBeforeIndex
 
-    const target = chords[suggestion.insertBeforeIndex]
+    // Khe đã chèn: chỉ giữ đúng gợi ý đang dùng, để còn gỡ ra được.
+    const used = taken.get(slot)
+    if (used !== undefined) return used === suggestion.technique
+
+    if (blocked.has(slot)) return false
+
+    const target = chords[slot]
     if (!target) return false
 
     return tones === null || tones.has(target.root)
   })
+}
+
+/**
+ * Một hợp âm lướt và **mọi chỗ trong bài đặt được nó**.
+ *
+ * Đây mới là đơn vị thao tác đúng, không phải từng khe một. Một bài lặp đi lặp
+ * lại vài hợp âm, nên cùng một hợp âm lướt đặt được ở nhiều chỗ; bày ra thành
+ * nhiều thẻ giống hệt nhau vừa rối vừa vô nghĩa, vì bấm thẻ nào cũng ra cùng
+ * một kết quả.
+ */
+export interface PassingGroup {
+  /** Khoá ổn định: kỹ thuật cộng hợp âm đích. */
+  id: string
+  technique: PassingTechnique
+  /** Các hợp âm sẽ chèn — giống nhau ở mọi chỗ trong nhóm. */
+  chords: ParsedChord[]
+  explanation: string
+  /** Các khe sẽ chèn, đã bỏ những khe sát nhau. */
+  slots: number[]
+}
+
+/**
+ * Gom gợi ý thành nhóm theo **kỹ thuật và hợp âm đích**.
+ *
+ * Cùng nhóm nghĩa là cùng hợp âm lướt: hợp âm lướt được dựng từ chính tính chất
+ * của hợp âm đích, nên dẫn vào `Am7` và dẫn vào `Am9` cho ra hai hợp âm lướt
+ * khác nhau dù cùng nốt gốc.
+ *
+ * Trong mỗi nhóm, khe nào **sát ngay** một khe đã chọn thì bỏ: hai khe liền
+ * nhau cùng chèn sẽ làm hợp âm ở giữa vừa bị cắt còn nửa ô vừa bị kẹp giữa hai
+ * cụm hợp âm lướt.
+ *
+ * Nhóm không còn khe nào thì biến mất — đó chính là những hợp âm lướt đã xung
+ * đột với chỗ vừa chèn, không còn đặt được nữa.
+ */
+export function groupPassingSuggestions(
+  suggestions: readonly PassingSuggestion[],
+  chords: readonly ParsedChord[],
+): PassingGroup[] {
+  const groups = new Map<string, PassingGroup>()
+
+  for (const suggestion of [...suggestions].sort(
+    (a, b) => a.insertBeforeIndex - b.insertBeforeIndex,
+  )) {
+    const target = chords[suggestion.insertBeforeIndex]
+    if (!target) continue
+
+    const id = `${suggestion.technique}:${target.root}:${target.quality.id}`
+    const existing = groups.get(id)
+
+    if (!existing) {
+      groups.set(id, {
+        id,
+        technique: suggestion.technique,
+        chords: suggestion.chords,
+        explanation: suggestion.explanation,
+        slots: [suggestion.insertBeforeIndex],
+      })
+      continue
+    }
+
+    const last = existing.slots[existing.slots.length - 1]
+    if (suggestion.insertBeforeIndex - last <= 1) continue
+    existing.slots.push(suggestion.insertBeforeIndex)
+  }
+
+  return [...groups.values()].filter((group) => group.slots.length > 0)
+}
+
+/** Nhóm nào đặt được ngay trước hợp âm thứ `index`. */
+export function groupsAtSlot(
+  groups: readonly PassingGroup[],
+  index: number,
+): PassingGroup[] {
+  return groups.filter((group) => group.slots.includes(index))
 }
 
 export interface SuggestOptions {

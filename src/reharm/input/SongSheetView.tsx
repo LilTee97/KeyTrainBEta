@@ -60,18 +60,28 @@ interface SongSheetViewProps {
    * thay vì bày cả danh sách rồi để người dùng tự đoán.
    */
   passingOptionsFor?: (chordIndex: number) => PassingOption[]
+  /** Bật tắt cả loạt: mọi chỗ trong bài có cùng hợp âm lướt này. */
   onTogglePassing?: (id: string) => void
+  /** Gỡ đúng chỗ vừa bấm, giữ nguyên những chỗ khác cùng loại. */
+  onRemovePassingHere?: (slotId: string) => void
 }
 
 /** Một hợp âm lướt có thể chèn vào trước một hợp âm. */
 export interface PassingOption {
-  /** Khoá dùng để bật tắt, do bên gọi tự đặt. */
+  /** Khoá của cả loạt, do bên gọi tự đặt. */
   id: string
+  /** Khoá của riêng chỗ đang bấm. */
+  slotId: string
   /** Tên kỹ thuật, ví dụ `Vòng 2-5-1 lướt`. */
   technique: string
   /** Các hợp âm sẽ được chèn, ví dụ `Bm7b5 → E7b9`. */
   chords: string
+  /** Chèn một lần là áp cho bao nhiêu chỗ trong bài. */
+  places: number
+  /** Cả loạt đang bật, dù có thể vài chỗ đã bị gỡ lẻ. */
   applied: boolean
+  /** Riêng chỗ đang bấm có đang chèn không. */
+  appliedHere: boolean
 }
 
 /** Menu chuột phải đang mở trên hợp âm nào, ở đâu trên màn hình. */
@@ -92,6 +102,7 @@ export function SongSheetView({
   pairedChords,
   passingOptionsFor,
   onTogglePassing,
+  onRemovePassingHere,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
   /** Khoảng dòng đang được bôi đen, chờ chọn loại đoạn. */
@@ -289,6 +300,14 @@ export function SongSheetView({
                 }
               : undefined
           }
+          onRemoveHere={
+            onRemovePassingHere
+              ? (slotId) => {
+                  onRemovePassingHere(slotId)
+                  setMenu(null)
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -308,6 +327,7 @@ function ChordContextMenu({
   passing,
   onPick,
   onTogglePassing,
+  onRemoveHere,
 }: {
   menu: ChordMenu
   paired: boolean
@@ -316,7 +336,11 @@ function ChordContextMenu({
   passing: readonly PassingOption[]
   onPick?: (span: 'full' | 'half') => void
   onTogglePassing?: (id: string) => void
+  onRemoveHere?: (slotId: string) => void
 }) {
+  const applied = passing.filter((option) => option.appliedHere)
+  const available = passing.filter((option) => !option.appliedHere)
+
   const options: {
     span: 'full' | 'half'
     label: string
@@ -363,28 +387,76 @@ function ChordContextMenu({
       {onTogglePassing && passing.length > 0 && (
         <>
           <div className="my-1 border-t border-line" />
-          <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-            Chèn hợp âm lướt vào trước
-          </p>
 
-          {passing.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => onTogglePassing(option.id)}
-              className={`flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs ${
-                option.applied
-                  ? 'text-teal-key'
-                  : 'text-cream hover:bg-white/8'
-              }`}
-            >
-              <span className="flex items-center justify-between gap-3">
-                <span>{option.chords}</span>
-                {option.applied && <span className="text-[10px]">✓ bỏ ra</span>}
-              </span>
-              <span className="text-[10px] text-dim">{option.technique}</span>
-            </button>
-          ))}
+          {/*
+            Chỗ đã chèn thì việc cần làm là **gỡ ra**, nên tách thành mục riêng
+            với chữ nói thẳng, thay vì bắt người dùng đoán rằng bấm lại cái đang
+            bật là để tắt.
+          */}
+          {applied.length > 0 && (
+            <>
+              <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Đang có hợp âm lướt
+              </p>
+
+              {applied.map((option) => (
+                <div key={option.id}>
+                  {onRemoveHere && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveHere(option.slotId)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-teal-key">
+                        Bỏ {option.chords} ở đây
+                      </span>
+                      <span className="text-[10px] text-dim">
+                        Chỉ chỗ này, các chỗ khác giữ nguyên
+                      </span>
+                    </button>
+                  )}
+
+                  {option.places > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onTogglePassing(option.id)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-teal-key">
+                        Bỏ {option.chords} ở cả {option.places} chỗ
+                      </span>
+                      <span className="text-[10px] text-dim">
+                        Trả lại hoà âm như trước khi chèn
+                      </span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+
+          {available.length > 0 && (
+            <>
+              <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Chèn hợp âm lướt vào trước
+              </p>
+
+              {available.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onTogglePassing(option.id)}
+                  className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs text-cream hover:bg-white/8"
+                >
+                  <span>{option.chords}</span>
+                  <span className="text-[10px] text-dim">
+                    {option.technique}
+                    {option.places > 1 && ` · áp cho ${option.places} chỗ`}
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
         </>
       )}
     </div>
