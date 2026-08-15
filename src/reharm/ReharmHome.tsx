@@ -625,9 +625,10 @@ export function ReharmHome() {
             type="button"
             onClick={() => playChordSequence(playbackNotes, 1.4)}
             disabled={sequence.chords.length === 0}
-            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
+            title="Chỉ nghe hợp âm khối để kiểm tra hoà âm — không có điệu, không có câu fill hay solo. Muốn nghe đầy đủ thì dùng nút ở mục Đệm theo điệu."
+            className="rounded-lg border border-line bg-white/6 px-4 py-2 text-sm text-cream hover:bg-white/12 disabled:opacity-40"
           >
-            ♪ Nghe cả vòng
+            ♪ Nghe hợp âm trơn
           </button>
         )}
 
@@ -1120,7 +1121,7 @@ export function ReharmHome() {
             disabled={!audioReady || timeline.length === 0}
             className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
           >
-            ♪ Nghe phần đệm
+            ♪ Nghe bản đệm đầy đủ
           </button>
 
           <div className="flex gap-1">
@@ -1303,11 +1304,31 @@ export function ReharmHome() {
               </p>
             </div>
 
-            <p className="font-mono text-[11px] text-dim">
-              {melodyMode === 'fill'
-                ? `${solo.length} nốt trong ${Math.round(solo.length / 3)} câu fill`
-                : `${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => playTimeline(eventsForHand(timeline, 'both'), bpm)}
+                disabled={!audioReady || timeline.length === 0}
+                className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
+              >
+                ♪ Nghe kèm phần đệm
+              </button>
+
+              <span className="font-mono text-[11px] text-dim">
+                {melodyMode === 'fill'
+                  ? `${solo.length} nốt trong ${Math.round(solo.length / 3)} câu fill`
+                  : `${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
+              </span>
+            </div>
+
+            {hand === 'left' && (
+              <p className="rounded-lg border border-amber-key/30 bg-amber-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+                Mục Đệm theo điệu đang để{' '}
+                <span className="text-cream">Tay trái</span>. Giai điệu do tay
+                phải chơi nên sẽ không nghe thấy — đổi sang Hai tay hoặc Tay
+                phải.
+              </p>
+            )}
           </div>
         )}
       </div>
