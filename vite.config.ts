@@ -7,13 +7,19 @@ export default defineConfig({
   server: {
     watch: {
       /*
-        Bỏ qua file tải dở của trình duyệt.
+        Không theo dõi thư mục tài liệu tham khảo.
 
-        Chrome tạo file `.crdownload` trong lúc tải, và Windows khoá file đó
-        lại. Vite cố theo dõi nó thì nhận lỗi EBUSY và **sập cả máy chủ** —
-        chuyện đã xảy ra khi có người lưu tài liệu vào thẳng thư mục dự án.
+        Đó là chỗ để tài liệu và bản nhạc, không phải mã nguồn, nên Vite không
+        cần biết tới. Quan trọng hơn: file đang tải về bị Windows khoá lại, mà
+        Vite cố theo dõi file bị khoá thì nhận lỗi EBUSY và **sập cả máy chủ**.
+        Chuyện này đã xảy ra hai lần khi có người lưu tài liệu vào thẳng đây.
       */
-      ignored: ['**/*.crdownload', '**/*.part', '**/*.tmp'],
+      ignored: [
+        '**/Reference/**',
+        '**/*.crdownload',
+        '**/*.part',
+        '**/*.tmp',
+      ],
     },
   },
 })
