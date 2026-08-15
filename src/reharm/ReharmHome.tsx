@@ -812,6 +812,33 @@ export function ReharmHome() {
             sheet={sheet}
             activeIndex={activeChordIndex}
             pairedChords={pairedChords}
+            passingOptionsFor={(chordIndex) =>
+              passingSuggestions
+                .filter(
+                  (suggestion) => suggestion.insertBeforeIndex === chordIndex,
+                )
+                .map((suggestion) => {
+                  const id = keyOf(
+                    suggestion.insertBeforeIndex,
+                    suggestion.technique,
+                  )
+                  return {
+                    id,
+                    technique: TECHNIQUE_LABELS[suggestion.technique],
+                    chords: suggestion.chords
+                      .map((chord) => chord.symbol)
+                      .join(' → '),
+                    applied: acceptedPassing.includes(id),
+                  }
+                })
+            }
+            onTogglePassing={(id) =>
+              setAcceptedPassing((current) =>
+                current.includes(id)
+                  ? current.filter((entry) => entry !== id)
+                  : [...current, id],
+              )
+            }
             onSetChordSpan={(chordIndex, span) =>
               setPairedChords((current) =>
                 span === 'half'

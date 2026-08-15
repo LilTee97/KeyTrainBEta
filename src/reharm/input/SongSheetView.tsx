@@ -51,6 +51,27 @@ interface SongSheetViewProps {
   onSetChordSpan?: (chordIndex: number, span: 'full' | 'half') => void
   /** Các hợp âm mở đầu một ô nhịp dùng chung với hợp âm sau nó. */
   pairedChords?: ReadonlySet<number>
+  /**
+   * Các hợp âm lướt đặt được ngay **trước** một hợp âm.
+   *
+   * Không phải chỗ nào cũng chèn được: hợp âm lướt chỉ có nghĩa ở những vị trí
+   * hoà âm nhất định — dẫn về bậc năm, khe nửa cung giữa hai hợp âm, chỗ mượn
+   * được vòng hai-năm. Menu chỉ hiện những gì thật sự đặt được ở đúng chỗ đó,
+   * thay vì bày cả danh sách rồi để người dùng tự đoán.
+   */
+  passingOptionsFor?: (chordIndex: number) => PassingOption[]
+  onTogglePassing?: (id: string) => void
+}
+
+/** Một hợp âm lướt có thể chèn vào trước một hợp âm. */
+export interface PassingOption {
+  /** Khoá dùng để bật tắt, do bên gọi tự đặt. */
+  id: string
+  /** Tên kỹ thuật, ví dụ `Vòng 2-5-1 lướt`. */
+  technique: string
+  /** Các hợp âm sẽ được chèn, ví dụ `Bm7b5 → E7b9`. */
+  chords: string
+  applied: boolean
 }
 
 /** Menu chuột phải đang mở trên hợp âm nào, ở đâu trên màn hình. */
@@ -69,6 +90,8 @@ export function SongSheetView({
   hasMarks = false,
   onSetChordSpan,
   pairedChords,
+  passingOptionsFor,
+  onTogglePassing,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
   /** Khoảng dòng đang được bôi đen, chờ chọn loại đoạn. */
@@ -242,17 +265,30 @@ export function SongSheetView({
         ))}
       </div>
 
-      {menu && onSetChordSpan && (
+      {menu && (
         <ChordContextMenu
           menu={menu}
           paired={
             pairedChords ? isPaired(pairedChords, menu.chordIndex) : false
           }
           isLast={menu.chordIndex >= sheet.chordCount - 1}
-          onPick={(span) => {
-            onSetChordSpan(menu.chordIndex, span)
-            setMenu(null)
-          }}
+          passing={passingOptionsFor?.(menu.chordIndex) ?? []}
+          onPick={
+            onSetChordSpan
+              ? (span) => {
+                  onSetChordSpan(menu.chordIndex, span)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          onTogglePassing={
+            onTogglePassing
+              ? (id) => {
+                  onTogglePassing(id)
+                  setMenu(null)
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -269,13 +305,17 @@ function ChordContextMenu({
   menu,
   paired,
   isLast,
+  passing,
   onPick,
+  onTogglePassing,
 }: {
   menu: ChordMenu
   paired: boolean
   /** Hợp âm cuối bài thì không có hợp âm nào phía sau để chia đôi cùng. */
   isLast: boolean
-  onPick: (span: 'full' | 'half') => void
+  passing: readonly PassingOption[]
+  onPick?: (span: 'full' | 'half') => void
+  onTogglePassing?: (id: string) => void
 }) {
   const options: {
     span: 'full' | 'half'
@@ -298,7 +338,8 @@ function ChordContextMenu({
       onPointerDown={(event) => event.stopPropagation()}
       className="fixed z-50 min-w-44 rounded-lg border border-line bg-ink p-1 shadow-xl"
     >
-      {options.map((option) => {
+      {onPick &&
+        options.map((option) => {
         const active = option.span === (paired ? 'half' : 'full')
 
         return (
@@ -318,6 +359,34 @@ function ChordContextMenu({
           </button>
         )
       })}
+
+      {onTogglePassing && passing.length > 0 && (
+        <>
+          <div className="my-1 border-t border-line" />
+          <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+            Chèn hợp âm lướt vào trước
+          </p>
+
+          {passing.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onTogglePassing(option.id)}
+              className={`flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs ${
+                option.applied
+                  ? 'text-teal-key'
+                  : 'text-cream hover:bg-white/8'
+              }`}
+            >
+              <span className="flex items-center justify-between gap-3">
+                <span>{option.chords}</span>
+                {option.applied && <span className="text-[10px]">✓ bỏ ra</span>}
+              </span>
+              <span className="text-[10px] text-dim">{option.technique}</span>
+            </button>
+          ))}
+        </>
+      )}
     </div>
   )
 }
