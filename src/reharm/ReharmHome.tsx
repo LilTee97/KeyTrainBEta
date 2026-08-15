@@ -14,6 +14,7 @@ import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
+import type { PassingTechnique } from './reharmEngine/passingChordRules'
 import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
@@ -200,6 +201,8 @@ export function ReharmHome() {
   const [allowJazzColors, setAllowJazzColors] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
+  /** Chỉ hiện gợi ý thuộc kỹ thuật này. Rỗng nghĩa là hiện hết. */
+  const [techniqueFilter, setTechniqueFilter] = useState<string | null>(null)
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
   const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
@@ -332,6 +335,28 @@ export function ReharmHome() {
     setDominantColor(palette.dominant)
     setSusDominant(palette.susDominant)
   }
+
+  /** Số gợi ý của từng kỹ thuật, để hiện trên nút lọc. */
+  const techniqueCounts = useMemo(() => {
+    const counts = new Map<PassingTechnique, number>()
+    for (const suggestion of passingSuggestions) {
+      counts.set(
+        suggestion.technique,
+        (counts.get(suggestion.technique) ?? 0) + 1,
+      )
+    }
+    return [...counts.entries()]
+  }, [passingSuggestions])
+
+  const visibleSuggestions = useMemo(
+    () =>
+      techniqueFilter === null
+        ? passingSuggestions
+        : passingSuggestions.filter(
+            (suggestion) => suggestion.technique === techniqueFilter,
+          ),
+    [passingSuggestions, techniqueFilter],
+  )
 
   /** Xung đột nhạc lý, gom theo vị trí hợp âm để hiện ngay cạnh nó. */
   const conflictMap = useMemo(
@@ -900,7 +925,41 @@ export function ReharmHome() {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {passingSuggestions.map((suggestion) => {
+            {/* Lọc theo kỹ thuật — danh sách dài thì khó tìm đúng loại cần */}
+            <div className="mb-1 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setTechniqueFilter(null)}
+                className={`rounded-lg border px-3 py-1 text-[11px] ${
+                  techniqueFilter === null
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                Tất cả ({passingSuggestions.length})
+              </button>
+
+              {techniqueCounts.map(([technique, count]) => (
+                <button
+                  key={technique}
+                  type="button"
+                  onClick={() =>
+                    setTechniqueFilter(
+                      techniqueFilter === technique ? null : technique,
+                    )
+                  }
+                  className={`rounded-lg border px-3 py-1 text-[11px] ${
+                    techniqueFilter === technique
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {TECHNIQUE_LABELS[technique]} ({count})
+                </button>
+              ))}
+            </div>
+
+            {visibleSuggestions.map((suggestion) => {
               const key = keyOf(
                 suggestion.insertBeforeIndex,
                 suggestion.technique,
