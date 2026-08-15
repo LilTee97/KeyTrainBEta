@@ -30,8 +30,13 @@ const SAMPLE = [
 ].join('\n')
 
 interface SongTextInputProps {
-  /** Nạp vòng hợp âm đã đọc được vào phần tái hoà âm. */
-  onUseChords: (chords: string) => void
+  /**
+   * Nạp bài hát đã đọc được vào phần tái hoà âm.
+   *
+   * Truyền cả `ParsedSong` chứ không chỉ chuỗi hợp âm, vì trang chính còn cần
+   * lời và vị trí neo để dựng bản nhạc có hợp âm đã tái hoà âm.
+   */
+  onUseSong: (song: ParsedSong) => void
 }
 
 /**
@@ -64,7 +69,7 @@ function PreviewLine({ line }: { line: SongLine }) {
   )
 }
 
-export function SongTextInput({ onUseChords }: SongTextInputProps) {
+export function SongTextInput({ onUseSong }: SongTextInputProps) {
   const [text, setText] = useState('')
   const song = useMemo(() => parseSongText(text), [text])
 
@@ -103,12 +108,10 @@ export function SongTextInput({ onUseChords }: SongTextInputProps) {
         <button
           type="button"
           disabled={song.chords.length === 0}
-          onClick={() =>
-            onUseChords(song.chords.map((chord) => chord.symbol).join(' '))
-          }
+          onClick={() => onUseSong(song)}
           className="rounded-lg bg-amber-key px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
         >
-          Nạp {song.chords.length} hợp âm vào phần tái hoà âm
+          Tái hoà âm {song.chords.length} hợp âm này
         </button>
 
         {hasContent && (

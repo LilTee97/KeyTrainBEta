@@ -204,11 +204,24 @@ export function releaseTransport(userId: string): void {
 export interface PlaybackState {
   /** Vòng lặp phần đệm có đang chạy không. */
   looping: boolean
+  /**
+   * Vị trí đang phát, tính bằng phách kể từ lúc bắt đầu vòng lặp.
+   *
+   * Có để giao diện tô sáng đúng hợp âm đang vang. Cập nhật qua
+   * `Tone.getDraw()` chứ không qua đồng hồ JavaScript: `getDraw` xếp lịch vẽ
+   * theo đúng đồng hồ thẻ âm thanh, nên chữ sáng lên khớp với tiếng đàn thay
+   * vì trôi dần.
+   */
+  positionBeats: number
 }
 
 export const usePlaybackStore = create<PlaybackState>(() => ({
   looping: false,
+  positionBeats: 0,
 }))
+
+/** Đồng hồ báo vị trí cho giao diện, chạy song song với vòng lặp phần đệm. */
+let positionTicker: Tone.Loop | null = null
 
 /** Một sự kiện đã xếp lịch cho vòng lặp. */
 interface LoopEvent {
@@ -302,8 +315,24 @@ export function startTimelineLoop(
   part.start(0)
   loopPart = part
 
+  /*
+    Báo vị trí cho giao diện ở độ phân giải móc kép. Dày hơn nữa cũng không
+    thấy được bằng mắt, mà lại bắt React vẽ lại liên tục.
+  */
+  const ticker = new Tone.Loop((time) => {
+    const transport = Tone.getTransport()
+    const beats = transport.ticks / transport.PPQ
+
+    Tone.getDraw().schedule(() => {
+      usePlaybackStore.setState({ positionBeats: beats })
+    }, time)
+  }, '16n')
+
+  ticker.start(0)
+  positionTicker = ticker
+
   acquireTransport('timeline-loop')
-  usePlaybackStore.setState({ looping: true })
+  usePlaybackStore.setState({ looping: true, positionBeats: 0 })
 }
 
 /** Dừng vòng lặp phần đệm. */
@@ -317,9 +346,13 @@ export function stopTimelineLoop(): void {
   loopPart?.dispose()
   loopPart = null
 
+  positionTicker?.stop()
+  positionTicker?.dispose()
+  positionTicker = null
+
   releaseTransport('timeline-loop')
   releaseAllNotes()
-  usePlaybackStore.setState({ looping: false })
+  usePlaybackStore.setState({ looping: false, positionBeats: 0 })
 }
 
 /** Nhả toàn bộ nốt đang vang. */

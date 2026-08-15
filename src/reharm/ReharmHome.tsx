@@ -16,11 +16,15 @@ import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import {
   chordDurations,
+  chordIndexAt,
   mainChordSpans,
   totalBeatsOf,
 } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
 import { SongTextInput } from './input/SongTextInput'
+import { SongSheetView } from './input/SongSheetView'
+import { buildSongSheet } from './input/songSheet'
+import type { ParsedSong } from './input/songTextParser'
 import type {
   ApproachDirection,
   OrnamentDensity,
@@ -201,11 +205,14 @@ function notesForChord(chord: ParsedChord): MidiNote[] {
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
   const looping = usePlaybackStore((state) => state.looping)
+  const positionBeats = usePlaybackStore((state) => state.positionBeats)
 
   // Cố ý để một vòng pop trơn, chưa có màu gì — như vậy tác dụng của phần tái
   // hòa âm nhìn ra ngay. Để sẵn một vòng đã đầy màu thì trông như app không
   // làm gì cả.
   const [input, setInput] = useState('C Am F G')
+  /** Bài hát đã dán vào, giữ lại để dựng bản nhạc có hợp âm tái hoà âm. */
+  const [pastedSong, setPastedSong] = useState<ParsedSong | null>(null)
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -462,6 +469,34 @@ export function ReharmHome() {
     [withPassing, chordBeats],
   )
 
+  /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
+  const sheet = useMemo(
+    () => (pastedSong ? buildSongSheet(pastedSong, reharm.colored) : null),
+    [pastedSong, reharm.colored],
+  )
+
+  /**
+   * Hợp âm đang vang, quy về số thứ tự trên bản nhạc.
+   *
+   * Hai lần quy đổi: vị trí phát tính bằng phách nên phải tra ra hợp âm thứ
+   * mấy trong vòng **đã chèn hợp âm lướt**, rồi từ đó đếm ngược ra hợp âm thứ
+   * mấy trong vòng **chính** — vì chỉ hợp âm chính mới có chữ để neo vào.
+   * Đang chơi hợp âm lướt thì giữ sáng hợp âm chính đứng trước nó.
+   */
+  const activeChordIndex = useMemo(() => {
+    if (!looping || !sheet) return null
+
+    const inLoop = positionBeats % oneLoopBeats
+    const index = chordIndexAt(withPassing, chordBeats, inLoop)
+
+    let mainIndex = -1
+    for (let position = 0; position <= index; position += 1) {
+      if (!withPassing[position]?.passing) mainIndex += 1
+    }
+
+    return mainIndex >= 0 ? mainIndex : null
+  }, [looping, sheet, positionBeats, oneLoopBeats, withPassing, chordBeats])
+
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
    *
@@ -581,12 +616,27 @@ export function ReharmHome() {
       </div>
 
       <SongTextInput
-        onUseChords={(chords) => {
-          setInput(chords)
+        onUseSong={(parsed) => {
+          setPastedSong(parsed)
+          setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
         }}
       />
+
+      {sheet && (
+        <div>
+          <h3 className="mb-1 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Bản nhạc đã tái hoà âm
+          </h3>
+          <p className="mb-3 text-xs leading-relaxed text-dim">
+            Hợp âm ghi trên đầu là hợp âm{' '}
+            <span className="text-cream">sau khi tái hoà âm</span> theo các lựa
+            chọn màu bên dưới. Bấm phát thì hợp âm đang vang sẽ sáng lên.
+          </p>
+          <SongSheetView sheet={sheet} activeIndex={activeChordIndex} />
+        </div>
+      )}
 
       {/* Ô nhập */}
       <div>
