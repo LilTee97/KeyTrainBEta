@@ -360,9 +360,11 @@ describe('nguồn nốt cho câu solo', () => {
       density: 'dense',
     })
 
-    const allowed = new Set(
-      list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
-    )
+    // Bậc chín nằm trong danh sách 1-3-5-7-9 của `pianoimprovnotes.md` mục 3.1
+    const allowed = new Set([
+      ...list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
+      (list[0].root + 2) % 12,
+    ])
     for (const note of solo.filter((entry) => !entry.isGrace)) {
       expect(allowed.has(note.note % 12)).toBe(true)
     }

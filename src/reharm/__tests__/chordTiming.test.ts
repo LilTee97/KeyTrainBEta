@@ -9,6 +9,10 @@ import {
 } from '../chordTiming'
 import { parseChordInput } from '../input/chordInputParser'
 import {
+  generateFillLine,
+  generateSolo,
+} from '../fillSoloGenerator/soloGenerator'
+import {
   applySuggestions,
   suggestPassingChords,
 } from '../reharmEngine/passingChordRules'
@@ -120,5 +124,75 @@ describe('chèn hợp âm lướt không làm dài thêm vòng', () => {
 
   it('không chấp nhận gợi ý nào thì vòng y nguyên', () => {
     expect(applySuggestions(list, [], 4)).toEqual(list)
+  })
+})
+
+describe('chia đôi ô nhịp không làm lệch nhịp giai điệu', () => {
+  const plain = chords('C Am F G Em Dm G7 C')
+  const iiV = suggestPassingChords(plain, {}).filter(
+    (suggestion) => suggestion.technique === 'secondary-ii-V',
+  )
+  const split = applySuggestions(plain, [iiV[0]], 4)
+
+  const soloOptions = {
+    beatsPerChord: 4,
+    key: { tonic: 0 as const, scale: 'major' as const },
+    chordsPerPhrase: 2,
+  }
+
+  it('câu solo chia câu theo phách, không theo số hợp âm', () => {
+    /*
+      Chia theo số hợp âm thì một câu gồm hai hợp âm lướt chỉ còn hai phách
+      thay vì tám, nên chỗ nghỉ lấy hơi rơi lung tung — nghe ra là lệch nhịp.
+    */
+    const solo = generateSolo(split, soloOptions)
+    const phraseBeats = 8
+
+    // Mỗi câu tám phách phải có đúng một khoảng nghỉ đáng kể ở cuối
+    const gaps: number[] = []
+    for (let index = 1; index < solo.length; index += 1) {
+      const previous = solo[index - 1]
+      const gap = solo[index].startBeat - (previous.startBeat + previous.durationBeats)
+      if (gap > 0.5) gaps.push(previous.startBeat + previous.durationBeats)
+    }
+
+    expect(gaps.length).toBeGreaterThan(0)
+    // Chỗ nghỉ phải nằm gần cuối một câu, không rơi vào giữa câu
+    for (const at of gaps) {
+      const intoPhrase = at % phraseBeats
+      expect(intoPhrase).toBeGreaterThan(phraseBeats / 2)
+    }
+  })
+
+  it('mọi nốt solo nằm trong độ dài thật của vòng', () => {
+    const solo = generateSolo(split, soloOptions)
+    const total = totalBeatsOf(split, 4)
+
+    for (const note of solo) {
+      expect(note.startBeat + note.durationBeats).toBeLessThanOrEqual(
+        total + 0.001,
+      )
+    }
+  })
+
+  it('câu fill chỉ chêm vào ô nhịp chưa bị chia đôi', () => {
+    // Nửa sau ô nhịp đã chia là chỗ của hợp âm lướt, không còn trống cho fill
+    const fills = generateFillLine(split, { ...soloOptions, density: 'dense' })
+    const starts = chordStarts(split, 4)
+
+    for (const note of fills) {
+      const index = split.findIndex(
+        (_, position) =>
+          note.startBeat >= starts[position] &&
+          note.startBeat <
+            starts[position] + beatsOf(split[position], 4) + 0.001,
+      )
+      expect(split[index].beats).toBeUndefined()
+    }
+  })
+
+  it('vòng chưa chia thì câu fill vẫn chêm như cũ', () => {
+    const fills = generateFillLine(plain, { ...soloOptions, density: 'dense' })
+    expect(fills.length).toBeGreaterThan(0)
   })
 })

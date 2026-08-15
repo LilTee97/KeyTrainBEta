@@ -3,7 +3,7 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import type { TimelineEvent } from '../style/types'
-import { chordStarts, beatsOf } from '../chordTiming'
+import { beatsOf, chordStarts, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, stepInScale } from './graceNoteOrnamenter'
@@ -30,6 +30,9 @@ import {
  * và khi chọn nguồn ngũ cung thì nó dùng ngũ cung của *giọng bài hát* cố định
  * suốt đoạn, không bám hợp âm chút nào.
  */
+
+/** Sai số cho phép khi so mốc phách, tránh lỗi làm tròn số thực. */
+const EPSILON = 1e-6
 
 /** Tầm giai điệu của đoạn giang tấu, và các mức nâng. */
 const SOLO_LOW: MidiNote = 62
@@ -206,6 +209,20 @@ export function generateFillLine(
   for (let index = 0; index < chords.length; index += 1) {
     if (index % everyNth !== 0) continue
 
+    /*
+      **Chỉ chêm fill vào ô nhịp chưa bị chia đôi.**
+
+      Câu fill sinh ra để lấp chỗ trống ở cuối một hợp âm. Nhưng chỗ trống đó
+      chính là chỗ hợp âm lướt đã chiếm: khi một ô nhịp bị chia đôi cho vòng
+      hai-năm lướt, nửa sau không còn trống nữa. Nhét fill vào đó thì hai thứ
+      chồng lên nhau và cùng bị bóp ngắn lại — nghe ra là lệch nhịp.
+
+      `applySuggestions` ghi trường `beats` cho **cả** hợp âm chủ bị cắt lẫn
+      các hợp âm lướt chèn vào, nên chỉ cần bỏ qua mọi hợp âm có ghi thời
+      lượng riêng là đủ.
+    */
+    if (chords[index].beats !== undefined) continue
+
     // Hợp âm cuối dẫn về hợp âm đầu, vì vòng được chơi lặp lại.
     const next = chords[(index + 1) % chords.length]
     if (next === chords[index]) continue
@@ -285,17 +302,39 @@ export function generateSolo(
 
   // Hợp âm lướt ngắn hơn hợp âm chính, nên phải lấy mốc và thời lượng riêng.
   const starts = chordStarts(chords, beatsPerChord)
+  const totalBeats = totalBeatsOf(chords, beatsPerChord)
+
+  /*
+    Câu nhạc chia theo **phách**, không theo số hợp âm.
+
+    Đây là chỗ hỏng khi hợp âm lướt biết chia đôi ô nhịp: chia theo số hợp âm
+    thì một câu gồm hai hợp âm lướt chỉ còn hai phách thay vì tám, nên chỗ nghỉ
+    lấy hơi và chỗ đổi quãng âm rơi lung tung — nghe ra là lệch nhịp. Độ dài
+    một câu phải là một đại lượng **thời gian**, không phải số món.
+  */
+  const phraseBeats = Math.max(1, phraseChords * beatsPerChord)
+  const phraseAt = (beat: number) => Math.floor((beat + EPSILON) / phraseBeats)
 
   const result: SoloNote[] = []
   let from: MidiNote = SOLO_LOW + 12
   let previousShape: number[] = []
+  let positionInPhrase = 0
+  let currentPhrase = -1
 
   for (let index = 0; index < chords.length; index += 1) {
     const chord = chords[index]
     const chordBeats = beatsOf(chord, beatsPerChord)
-    const phrase = Math.floor(index / phraseChords)
-    const positionInPhrase = index % phraseChords
-    const isPhraseEnd = positionInPhrase === phraseChords - 1
+
+    const phrase = phraseAt(starts[index])
+    if (phrase !== currentPhrase) {
+      currentPhrase = phrase
+      positionInPhrase = 0
+    }
+
+    // Cuối câu là hợp âm cuối cùng còn nằm trong câu này.
+    const nextStart = starts[index + 1] ?? totalBeats
+    const isPhraseEnd =
+      index === chords.length - 1 || phraseAt(nextStart) !== phrase
 
     /*
       Đổi quãng âm giữa các câu để tạo kịch tính — `pianoimprovnotes.md` mục 4:
@@ -354,6 +393,7 @@ export function generateSolo(
     // Nối câu sau vào đúng chỗ câu trước dừng, cho liền mạch.
     from = built.notes[built.notes.length - 1].note
     if (built.shape.length > 0) previousShape = built.shape
+    positionInPhrase += 1
   }
 
   return result.sort((a, b) => a.startBeat - b.startBeat)
