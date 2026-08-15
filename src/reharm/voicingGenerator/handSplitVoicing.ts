@@ -1,8 +1,10 @@
-import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { ChooseVoicingOptions } from '../reharmEngine/voiceLeadingOptimizer'
-import { voiceLeadSequence } from '../reharmEngine/voiceLeadingOptimizer'
+import {
+  RIGHT_HAND_HIGH,
+  voiceLeadSequence,
+} from '../reharmEngine/voiceLeadingOptimizer'
 
 /**
  * Chia thế bấm cho hai tay theo lối đệm hát piano.
@@ -18,8 +20,13 @@ import { voiceLeadSequence } from '../reharmEngine/voiceLeadingOptimizer'
 export const LEFT_HAND_LOW: MidiNote = 36
 export const LEFT_HAND_HIGH: MidiNote = 55
 
-/** Quãng tám neo của nốt bass. */
-const BASS_ANCHOR: MidiNote = 40
+/**
+ * Quãng tám neo của nốt bass.
+ *
+ * Đặt cao hơn đáy tầm tay trái một chút để hai tay nằm sát nhau — bass quá
+ * thấp thì phần giữa bị hụt và hợp âm nghe rỗng.
+ */
+const BASS_ANCHOR: MidiNote = 43
 
 export interface TwoHandVoicing {
   /** Nốt tay trái, thường là một nốt bass. */
@@ -61,56 +68,22 @@ export function bassNoteFor(
 export const DEFAULT_MAX_HAND_NOTES = 4
 
 /**
- * Thứ tự bỏ nốt khi hợp âm quá dày, tính bằng quãng so với nốt gốc.
+ * Số nốt tay trái giữ, tuỳ theo hợp âm có mấy nốt.
  *
- * Theo đúng thứ tự ưu tiên của lối bấm jazz:
- * 1. **Quãng năm đúng** — nốt ít thông tin nhất, bỏ đi hợp âm vẫn nguyên chất.
- * 2. **Nốt gốc** — tay trái đã giữ rồi, giữ thêm ở tay phải chỉ làm đục tiếng.
- * 3. **Bậc chín**, rồi **bậc mười một** — các nốt màu, bỏ sau cùng.
+ * Hợp âm dày thì **chia cho cả hai tay** chứ không bỏ bớt nốt — bỏ nốt là làm
+ * mất màu hợp âm, mà nhiều hợp âm phải vang đủ nốt mới đúng chất. Hợp âm năm
+ * nốt chia hai–ba, sáu nốt chia ba–ba.
  *
- * Bậc ba và bậc bảy không bao giờ bị bỏ: hai nốt đó quyết định tính chất hợp
- * âm, mất chúng là mất luôn hợp âm.
+ * Hợp âm từ bốn nốt trở xuống thì tay trái chỉ giữ nốt bass, tay phải bấm trọn
+ * hợp âm — đây là lối đệm quen thuộc nhất, và nốt gốc nhân đôi ở hai tay nghe
+ * bình thường.
  */
-const OMISSION_ORDER = [7, 0, 2, 5] as const
-
-/**
- * Bỏ bớt nốt cho vừa tay.
- *
- * Hợp âm treo được bảo vệ riêng: với hợp âm không có bậc ba, nốt treo chính là
- * thứ thay thế bậc ba nên bỏ đi là hỏng hợp âm.
- */
-export function limitHandSize(
-  notes: readonly MidiNote[],
-  chord: ParsedChord,
-  maxNotes: number = DEFAULT_MAX_HAND_NOTES,
-): MidiNote[] {
-  if (notes.length <= maxNotes) return [...notes]
-
-  const intervals = new Set(chord.quality.intervals.map((i) => i % 12))
-  const hasThird = intervals.has(3) || intervals.has(4)
-
-  const result = [...notes]
-
-  for (const interval of OMISSION_ORDER) {
-    if (result.length <= maxNotes) break
-
-    // Hợp âm treo giữ nguyên nốt treo, vì nó đứng thay bậc ba.
-    if (!hasThird && (interval === 2 || interval === 5)) continue
-
-    const target = normalizePitchClass(chord.root + interval)
-    const index = result.findIndex((note) => note % 12 === target)
-    if (index >= 0) result.splice(index, 1)
-  }
-
-  // Vẫn thừa thì bỏ từ dưới lên, vì nốt cao mang màu rõ hơn.
-  while (result.length > maxNotes) result.shift()
-
-  return result
+export function leftHandNoteCount(chordSize: number): number {
+  if (chordSize <= 4) return 1
+  return Math.floor(chordSize / 2)
 }
 
 export interface TwoHandOptions extends ChooseVoicingOptions {
-  /** Số nốt nhiều nhất tay phải bấm. Mặc định bốn. */
-  maxRightHandNotes?: number
   /**
    * Bỏ nốt gốc ở tay phải khi tay trái đã giữ nó.
    *
@@ -125,15 +98,27 @@ export function voiceLeadTwoHands(
   chords: readonly ParsedChord[],
   options: TwoHandOptions = {},
 ): TwoHandVoicing[] {
-  const {
-    dropRootFromRightHand = false,
-    maxRightHandNotes = DEFAULT_MAX_HAND_NOTES,
-    ...voicingOptions
-  } = options
+  const { dropRootFromRightHand = false, ...voicingOptions } = options
 
+  // Hợp âm ít nốt thì tay phải bấm trọn, nên vẫn dẫn bè được như cũ.
   const rightVoicings = voiceLeadSequence(chords, voicingOptions)
 
   return chords.map((chord, index) => {
+    const chordSize = chord.quality.intervals.length
+    const bassNote = bassNoteFor(chord)
+
+    // Hợp âm dày: xếp chồng từ nốt bass rồi cắt đôi cho hai tay.
+    if (leftHandNoteCount(chordSize) > 1) {
+      const stacked = fitStackedChord(bassNote, chord)
+      const leftCount = leftHandNoteCount(chordSize)
+
+      return {
+        left: stacked.slice(0, leftCount),
+        right: stacked.slice(leftCount),
+        symbol: chord.symbol,
+      }
+    }
+
     let right = rightVoicings[index] ?? []
 
     if (dropRootFromRightHand) {
@@ -142,15 +127,34 @@ export function voiceLeadTwoHands(
       if (withoutRoot.length >= 3) right = withoutRoot
     }
 
-    // Bỏ bớt nốt cho vừa tay — bước cuối, sau mọi lựa chọn khác.
-    right = limitHandSize(right, chord, maxRightHandNotes)
-
     return {
-      left: [bassNoteFor(chord)],
+      left: [bassNote],
       right,
       symbol: chord.symbol,
     }
   })
+}
+
+/**
+ * Xếp chồng trọn hợp âm từ nốt bass, rồi dịch cho lọt vào tầm hai tay.
+ *
+ * Dùng cho hợp âm dày. Ở đây chấp nhận **không đảo hợp âm** — hợp âm năm sáu
+ * nốt thì thế nguyên vị vốn là cách xếp chuẩn, và việc giữ nốt bass đúng chỗ
+ * quan trọng hơn việc dẫn bè mượt giữa các hợp âm.
+ */
+function fitStackedChord(
+  bassNote: MidiNote,
+  chord: ParsedChord,
+): MidiNote[] {
+  const stacked = chord.quality.intervals.map(
+    (interval) => bassNote + interval,
+  )
+
+  // Trôi lên quá cao thì hạ cả cụm xuống một quãng tám.
+  const highest = stacked[stacked.length - 1]
+  return highest > RIGHT_HAND_HIGH
+    ? stacked.map((note) => note - 12)
+    : stacked
 }
 
 /** Gộp hai tay thành một danh sách nốt, dùng khi phát tiếng. */

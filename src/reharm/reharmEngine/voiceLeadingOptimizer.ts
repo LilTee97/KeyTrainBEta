@@ -14,9 +14,15 @@ import type { ParsedChord } from '../types'
  * âm, đều phải gọi lại nó để chọn thế bấm.
  */
 
-/** Dải nốt hợp lý cho tay phải khi đệm hát. */
-export const RIGHT_HAND_LOW: MidiNote = 55
-export const RIGHT_HAND_HIGH: MidiNote = 84
+/**
+ * Dải nốt hợp lý cho tay phải khi đệm hát.
+ *
+ * Đặt thấp vừa phải để tay phải nằm sát ngay trên tay trái. Người chơi thật
+ * xếp hai tay trong hai quãng tám kề nhau chứ không dang rộng ra — dang rộng
+ * thì phần giữa bị hụt và nghe rỗng.
+ */
+export const RIGHT_HAND_LOW: MidiNote = 52
+export const RIGHT_HAND_HIGH: MidiNote = 79
 
 /**
  * Trọng tâm mong muốn của thế bấm tay phải.
@@ -24,8 +30,12 @@ export const RIGHT_HAND_HIGH: MidiNote = 84
  * Không có ràng buộc này thì chuỗi hợp âm dễ trôi dần lên cao hoặc xuống thấp:
  * mỗi bước đều chọn thế gần nhất với bước trước, nhưng cộng dồn lại thì cả
  * đoạn lệch hẳn khỏi vùng dễ chơi.
+ *
+ * Đặt trọng tâm ở đây thay vì kéo từng hợp âm xuống sau khi đã dẫn bè: kéo
+ * từng hợp âm riêng lẻ làm mỗi hợp âm dịch quãng tám một kiểu, và thế là phá
+ * luôn việc dẫn bè vừa tính công phu.
  */
-const TARGET_CENTER: MidiNote = 67
+export const TARGET_CENTER: MidiNote = 62
 
 /** Mức phạt cho mỗi nửa cung lệch khỏi trọng tâm. Nhẹ hơn hẳn chi phí di chuyển. */
 const CENTER_PENALTY = 0.15
