@@ -8,7 +8,11 @@ import { analyzeInKey } from './degreeAnalysis'
 import type { KeyCandidate } from './keyDetection'
 import { bestKey, detectKey, isAmbiguous, keyLabel } from './keyDetection'
 import type { PassingSuggestion } from './passingChordRules'
-import { applySuggestions, suggestPassingChords } from './passingChordRules'
+import {
+  applySuggestions,
+  compatibleSuggestions,
+  suggestPassingChords,
+} from './passingChordRules'
 import type { ColorOptions } from './staticVoicingRules'
 import {
   colorAnalyzedSequence,
@@ -150,8 +154,19 @@ export function reharmonize(
     ? colorAnalyzedSequence(analyzed, activeKey.scale, colorOptions)
     : colorSequence(original, colorOptions)
 
-  // Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
-  const passingSuggestions = suggestPassingChords(colored)
+  /*
+    Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
+
+    Lọc lại theo giọng của bài và theo những gợi ý đã chấp nhận, nên danh sách
+    **co lại dần** khi người dùng chèn thêm: chèn một chỗ rồi thì hai khe sát
+    bên không còn hiện nữa. Xem `compatibleSuggestions`.
+  */
+  const passingSuggestions = compatibleSuggestions(
+    suggestPassingChords(colored),
+    colored,
+    acceptedPassing,
+    activeKey,
+  )
   const harmonic = applySuggestions(colored, acceptedPassing, beatsPerChord)
 
   // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.

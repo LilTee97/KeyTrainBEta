@@ -1,7 +1,9 @@
 import { suggestDim7ChainFills } from '../fillSoloGenerator/fillGenerator'
 import { getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
+import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
+import { scaleTones } from './keyDetection'
 import { beatsOf, splitBeats } from '../chordTiming'
 import type { ParsedChord } from '../types'
 
@@ -206,6 +208,49 @@ export function suggestSecondaryIiV(
   }
 
   return suggestions
+}
+
+/**
+ * Lọc bớt gợi ý cho hợp giọng của bài và hợp với những gì đã chèn.
+ *
+ * Hai luật, và cả hai đều là luật **nhạc** chứ không phải luật kỹ thuật:
+ *
+ * 1. **Hợp âm đích phải nằm trong giọng của bài.** Vòng hai-năm phụ và bậc năm
+ *    phụ là để *"mượn"* sức hút của một bậc **có sẵn trong giọng**; mượn vào
+ *    một hợp âm vốn đã ngoài giọng thì nghe như lạc sang bài khác. Bản thân
+ *    hợp âm lướt được phép ngoài giọng — đó chính là chỗ hay của nó — nhưng
+ *    hợp âm nó dẫn tới thì không.
+ *
+ * 2. **Chèn một chỗ rồi thì hai chỗ sát bên không chèn nữa.** Hợp âm lướt mượn
+ *    nửa ô nhịp của hợp âm đứng trước, nên chèn ở hai khe liền nhau sẽ làm hợp
+ *    âm ở giữa vừa bị cắt còn nửa ô vừa bị kẹp giữa hai cụm hợp âm lướt — nghe
+ *    thành một dải hợp âm chạy liên miên, không còn ra vòng hợp âm nữa. Chèn
+ *    thưa mới nghe ra chỗ nhấn.
+ */
+export function compatibleSuggestions(
+  suggestions: readonly PassingSuggestion[],
+  chords: readonly ParsedChord[],
+  accepted: readonly PassingSuggestion[],
+  key: { tonic: PitchClass; scale: ScaleType } | null,
+): PassingSuggestion[] {
+  const tones = key ? scaleTones(key.tonic, key.scale) : null
+
+  // Khe đã chèn, và hai khe sát bên nó.
+  const blocked = new Set<number>()
+  for (const item of accepted) {
+    blocked.add(item.insertBeforeIndex - 1)
+    blocked.add(item.insertBeforeIndex)
+    blocked.add(item.insertBeforeIndex + 1)
+  }
+
+  return suggestions.filter((suggestion) => {
+    if (blocked.has(suggestion.insertBeforeIndex)) return false
+
+    const target = chords[suggestion.insertBeforeIndex]
+    if (!target) return false
+
+    return tones === null || tones.has(target.root)
+  })
 }
 
 export interface SuggestOptions {
