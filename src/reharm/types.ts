@@ -12,6 +12,14 @@ export interface ParsedChord {
    * được giữ tách bạch chứ không gộp vào tính chất hợp âm.
    */
   bass?: PitchClass
+  /**
+   * Số phách hợp âm này chiếm. Bỏ trống thì lấy nhịp đổi hợp âm chung của vòng.
+   *
+   * Chỉ hợp âm **lướt** mới ghi trường này: chúng mượn thời gian của hợp âm
+   * đứng trước chứ không thêm ô nhịp mới, nên độ dài vòng giữ nguyên. Xem
+   * `chordTiming.ts`.
+   */
+  beats?: number
   /** Đúng chuỗi người dùng đã gõ, giữ lại để hiện lỗi và để hiển thị. */
   source: string
   /** Tên hợp âm sau khi chuẩn hoá, ví dụ 'Am7' hoặc 'C/E'. */

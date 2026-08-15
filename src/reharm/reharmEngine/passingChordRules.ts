@@ -2,6 +2,7 @@ import { suggestDim7ChainFills } from '../fillSoloGenerator/fillGenerator'
 import { getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
 import type { PitchClass } from '../../shared/musicTheory/types'
+import { beatsOf, splitBeats } from '../chordTiming'
 import type { ParsedChord } from '../types'
 
 /**
@@ -254,6 +255,8 @@ export function suggestPassingChords(
 export function applySuggestions(
   chords: readonly ParsedChord[],
   suggestions: readonly PassingSuggestion[],
+  /** Nhịp đổi hợp âm của vòng, để chia thời gian cho hợp âm lướt. */
+  beatsPerChord = 4,
 ): ParsedChord[] {
   const chosen = new Map<number, PassingSuggestion>()
   for (const suggestion of suggestions) {
@@ -266,7 +269,29 @@ export function applySuggestions(
   const positions = [...chosen.keys()].sort((a, b) => b - a)
 
   for (const position of positions) {
-    result.splice(position, 0, ...chosen.get(position)!.chords)
+    const inserted = chosen.get(position)!.chords
+
+    /*
+      Hợp âm lướt **mượn thời gian của hợp âm đứng trước**, không thêm ô nhịp
+      mới — xem `chordTiming.ts` và mục 14.2 của tài liệu phong cách. Vị trí 0
+      thì mượn của hợp âm cuối, vì vòng được chơi lặp lại nên hợp âm cuối chính
+      là hợp âm đứng trước nó.
+    */
+    const hostIndex = position === 0 ? result.length - 1 : position - 1
+    const host = result[hostIndex]
+    if (!host) continue
+
+    const { host: hostBeats, passing } = splitBeats(
+      beatsOf(host, beatsPerChord),
+      inserted.length,
+    )
+
+    result[hostIndex] = { ...host, beats: hostBeats }
+    result.splice(
+      position,
+      0,
+      ...inserted.map((chord, index) => ({ ...chord, beats: passing[index] })),
+    )
   }
 
   return result

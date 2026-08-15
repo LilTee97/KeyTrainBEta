@@ -14,6 +14,7 @@ import { chordNotes } from '../shared/musicTheory/chordDefinitions'
 import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
+import { chordDurations, totalBeatsOf } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
 import type {
   ApproachDirection,
@@ -259,6 +260,17 @@ export function ReharmHome() {
    * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
+  /**
+   * Số phách mỗi hợp âm chiếm.
+   *
+   * Điệu nhịp ba bốn thì một ô nhịp chỉ có ba phách, nên phải quy đổi lựa chọn
+   * của người dùng theo nhịp của điệu chứ không giữ nguyên con số.
+   */
+  const chordBeats = useMemo(() => {
+    const measures = beatsPerChord / 4
+    return Math.max(1, measures * style.beatsPerMeasure)
+  }, [beatsPerChord, style.beatsPerMeasure])
+
   const reharm = useMemo(() => {
     const parsedKey = manualKey
       ? {
@@ -295,6 +307,7 @@ export function ReharmHome() {
       useSlashChords,
       key: parsedKey,
       acceptedPassing: chosen,
+      beatsPerChord: chordBeats,
     })
   }, [
     sequence.chords,
@@ -307,6 +320,7 @@ export function ReharmHome() {
     useSlashChords,
     manualKey,
     acceptedPassing,
+    chordBeats,
   ])
 
   const recolored = reharm.colored
@@ -343,21 +357,14 @@ export function ReharmHome() {
 
   const style = getStyle(styleId) ?? BALLAD
 
-  /**
-   * Số phách mỗi hợp âm chiếm.
-   *
-   * Điệu nhịp ba bốn thì một ô nhịp chỉ có ba phách, nên phải quy đổi lựa chọn
-   * của người dùng theo nhịp của điệu chứ không giữ nguyên con số.
-   */
-  const chordBeats = useMemo(() => {
-    const measures = beatsPerChord / 4
-    return Math.max(1, measures * style.beatsPerMeasure)
-  }, [beatsPerChord, style.beatsPerMeasure])
-
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
   const accompaniment = useMemo(
-    () => renderPattern(twoHands, style, { beatsPerChord: chordBeats }),
-    [twoHands, style, chordBeats],
+    () =>
+      renderPattern(twoHands, style, {
+        beatsPerChord: chordBeats,
+        beatsEach: chordDurations(withPassing, chordBeats),
+      }),
+    [twoHands, style, chordBeats, withPassing],
   )
 
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
@@ -414,8 +421,8 @@ export function ReharmHome() {
    * việc nốt cuối ngân bao lâu, và vòng lặp nghe lệch nhịp.
    */
   const oneLoopBeats = useMemo(
-    () => Math.max(1, withPassing.length * chordBeats),
-    [withPassing.length, chordBeats],
+    () => Math.max(1, totalBeatsOf(withPassing, chordBeats)),
+    [withPassing, chordBeats],
   )
 
   /**

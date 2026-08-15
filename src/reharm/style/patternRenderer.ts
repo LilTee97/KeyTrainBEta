@@ -22,6 +22,14 @@ const LEFT_HAND_SCALE = 0.85
 export interface RenderOptions {
   /** Số phách mỗi hợp âm chiếm. Mặc định trọn một ô nhịp. */
   beatsPerChord?: number
+  /**
+   * Số phách của **từng** hợp âm, khi chúng không dài bằng nhau.
+   *
+   * Cần cho hợp âm lướt: chúng mượn nửa sau ô nhịp của hợp âm đứng trước chứ
+   * không chiếm trọn một ô như hợp âm chính. Bỏ trống thì mọi hợp âm dài bằng
+   * `beatsPerChord`.
+   */
+  beatsEach?: readonly number[]
   /** Cắt bớt độ ngân để hai hợp âm liền nhau không chồng tiếng. */
   releaseRatio?: number
 }
@@ -61,18 +69,20 @@ function notesForVoice(
  */
 function renderBlockChords(
   voicings: readonly TwoHandVoicing[],
-  beatsPerChord: number,
+  durations: readonly number[],
+  starts: readonly number[],
   beatsPerMeasure: number,
   releaseRatio: number,
 ): TimelineEvent[] {
   const events: TimelineEvent[] = []
 
   voicings.forEach((voicing, index) => {
-    const chordStart = index * beatsPerChord
+    const chordStart = starts[index]
+    const chordBeats = durations[index]
 
     // Hợp âm ngân từ một ô nhịp trở lên thì chia đôi để đánh lại.
-    const strikeCount = beatsPerChord >= beatsPerMeasure ? 2 : 1
-    const strikeLength = beatsPerChord / strikeCount
+    const strikeCount = chordBeats >= beatsPerMeasure ? 2 : 1
+    const strikeLength = chordBeats / strikeCount
 
     for (let strike = 0; strike < strikeCount; strike += 1) {
       const startBeat = chordStart + strike * strikeLength
@@ -109,14 +119,23 @@ function renderBlockChords(
 function renderWithCell(
   voicings: readonly TwoHandVoicing[],
   pattern: StylePattern,
-  beatsPerChord: number,
+  durations: readonly number[],
+  starts: readonly number[],
   releaseRatio: number,
 ): TimelineEvent[] {
   const cell = pattern.cell
   if (!cell) return []
 
-  const totalBeats = voicings.length * beatsPerChord
+  const totalBeats = starts[starts.length - 1] + durations[durations.length - 1]
   const events: TimelineEvent[] = []
+
+  /** Hợp âm nào đang vang tại một thời điểm, khi chúng dài ngắn khác nhau. */
+  const voicingAt = (beat: number) => {
+    for (let index = starts.length - 1; index >= 0; index -= 1) {
+      if (beat >= starts[index] - 0.0001) return voicings[index]
+    }
+    return voicings[0]
+  }
 
   for (let offset = 0; offset < totalBeats; offset += cell.lengthBeats) {
     for (const hand of ['right', 'left'] as const) {
@@ -126,8 +145,7 @@ function renderWithCell(
         const startBeat = offset + hit.beat
         if (startBeat >= totalBeats) continue
 
-        // Hợp âm nào đang vang tại thời điểm này.
-        const voicing = voicings[Math.floor(startBeat / beatsPerChord)]
+        const voicing = voicingAt(startBeat)
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
@@ -158,16 +176,29 @@ export function renderPattern(
 ): TimelineEvent[] {
   const {
     beatsPerChord = pattern.beatsPerMeasure,
+    beatsEach,
     releaseRatio = 0.92,
   } = options
 
   if (voicings.length === 0) return []
 
+  // Thời lượng từng hợp âm, và phách bắt đầu tính dồn từ đó.
+  const durations = voicings.map(
+    (_, index) => beatsEach?.[index] ?? beatsPerChord,
+  )
+  const starts: number[] = []
+  let cursor = 0
+  for (const beats of durations) {
+    starts.push(cursor)
+    cursor += beats
+  }
+
   const events = pattern.cell
-    ? renderWithCell(voicings, pattern, beatsPerChord, releaseRatio)
+    ? renderWithCell(voicings, pattern, durations, starts, releaseRatio)
     : renderBlockChords(
         voicings,
-        beatsPerChord,
+        durations,
+        starts,
         pattern.beatsPerMeasure,
         releaseRatio,
       )

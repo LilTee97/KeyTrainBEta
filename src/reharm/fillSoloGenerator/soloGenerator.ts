@@ -3,6 +3,7 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import type { TimelineEvent } from '../style/types'
+import { chordStarts, beatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, stepInScale } from './graceNoteOrnamenter'
@@ -187,6 +188,7 @@ export function generateFillLine(
   const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
   // Mật độ ở đây quyết định **bao lâu chêm một câu**, không phải bao nhiêu nốt láy.
   const { everyNth } = densityOption(density)
+  const fillStarts = chordStarts(chords, beatsPerChord)
 
   const result: SoloNote[] = []
 
@@ -211,8 +213,8 @@ export function generateFillLine(
       line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
     }
 
-    const chordEnd = (index + 1) * beatsPerChord
-    const start = chordEnd - fillBeats
+    const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
+    const start = chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
     const noteLength = fillBeats / line.length
 
     line.forEach((note, position) => {
@@ -270,12 +272,16 @@ export function generateSolo(
   const notesPerBeat =
     density === 'sparse' ? 0.8 : density === 'dense' ? 2.2 : 1.4
 
+  // Hợp âm lướt ngắn hơn hợp âm chính, nên phải lấy mốc và thời lượng riêng.
+  const starts = chordStarts(chords, beatsPerChord)
+
   const result: SoloNote[] = []
   let from: MidiNote = SOLO_LOW + 12
   let previousShape: number[] = []
 
   for (let index = 0; index < chords.length; index += 1) {
     const chord = chords[index]
+    const chordBeats = beatsOf(chord, beatsPerChord)
     const phrase = Math.floor(index / phraseChords)
     const positionInPhrase = index % phraseChords
     const isPhraseEnd = positionInPhrase === phraseChords - 1
@@ -295,8 +301,8 @@ export function generateSolo(
       khoảng nghỉ để lấy hơi giữa các câu.
     */
     const playBeats = isPhraseEnd
-      ? Math.max(1, beatsPerChord - REST_BEATS)
-      : beatsPerChord
+      ? Math.max(chordBeats / 2, chordBeats - REST_BEATS)
+      : chordBeats
 
     const lick = chooseLick({
       phrase,
@@ -312,7 +318,7 @@ export function generateSolo(
     const built = lick.build({
       chord,
       next: chords[index + 1] ?? null,
-      startBeat: index * beatsPerChord,
+      startBeat: starts[index],
       beats: playBeats,
       from,
       low,

@@ -39,6 +39,13 @@ export interface ReharmOptions extends ColorOptions {
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận. */
   acceptedPassing?: readonly PassingSuggestion[]
   /**
+   * Nhịp đổi hợp âm của vòng, tính bằng phách.
+   *
+   * Cần ở đây vì hợp âm lướt **mượn thời gian của hợp âm đứng trước** thay vì
+   * thêm ô nhịp mới — không biết một hợp âm dài bao nhiêu thì không chia được.
+   */
+  beatsPerChord?: number
+  /**
    * Bấm theo lối hợp âm chồng trên bass.
    *
    * Đặt ở cuối đường ống vì đây là quyết định về **cách bấm**, không phải về
@@ -93,6 +100,7 @@ export function reharmonize(
   const {
     key: manualKey = null,
     acceptedPassing = [],
+    beatsPerChord = 4,
     useSlashChords = false,
     ...colorOptions
   } = options
@@ -144,7 +152,7 @@ export function reharmonize(
 
   // Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
   const passingSuggestions = suggestPassingChords(colored)
-  const harmonic = applySuggestions(colored, acceptedPassing)
+  const harmonic = applySuggestions(colored, acceptedPassing, beatsPerChord)
 
   // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.
   const final = useSlashChords ? toSlashSequence(harmonic) : harmonic
