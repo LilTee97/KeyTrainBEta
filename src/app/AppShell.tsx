@@ -23,7 +23,7 @@ export function AppShell() {
   const [tab, setTab] = useState<TabId>('ear')
 
   return (
-    <div className="mx-auto flex h-full max-w-3xl flex-col px-4 py-8">
+    <div className="mx-auto flex min-h-full max-w-3xl flex-col px-4 py-8">
       <header className="mb-6">
         <p className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-amber-key uppercase">
           Luyện piano · Jazz &amp; Pop

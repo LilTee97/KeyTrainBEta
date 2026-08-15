@@ -204,6 +204,47 @@ export function resectionSheet(
   return { sections, chordCount: sheet.chordCount }
 }
 
+/** Khoảng hợp âm mà một đoạn chiếm, tính theo số thứ tự hợp âm chính. */
+export interface SectionChordRange {
+  kind: SongSectionKind
+  name: string
+  /** Hợp âm đầu và hợp âm cuối của đoạn, đếm từ 0. */
+  from: number
+  to: number
+}
+
+/**
+ * Mỗi đoạn chiếm những hợp âm nào.
+ *
+ * Đây là cầu nối giữa **lời bài hát** và **dòng thời gian**: đoạn được chia
+ * theo dòng lời, còn nhạc thì chạy theo hợp âm. Nối được hai thứ nhờ mỗi neo
+ * hợp âm đã mang sẵn số thứ tự của nó trong cả bài.
+ *
+ * Đoạn không có hợp âm nào bị bỏ qua — thường là dòng tiêu đề hoặc lời không
+ * kèm hợp âm, không có gì để chơi.
+ */
+export function sectionChordRanges(sheet: SongSheet): SectionChordRange[] {
+  const ranges: SectionChordRange[] = []
+
+  for (const section of sheet.sections) {
+    const indices = section.lines
+      .flatMap((line) => line.anchors)
+      .map((anchor) => anchor.chordIndex)
+      .filter((index): index is number => index !== null)
+
+    if (indices.length === 0) continue
+
+    ranges.push({
+      kind: section.kind,
+      name: section.name,
+      from: Math.min(...indices),
+      to: Math.max(...indices),
+    })
+  }
+
+  return ranges
+}
+
 /**
  * Xếp các ký hiệu hợp âm thành một dòng chữ canh cột trên dòng lời.
  *

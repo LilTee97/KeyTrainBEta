@@ -24,7 +24,11 @@ import { parseChordInput } from './input/chordInputParser'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
-import { buildSongSheet, resectionSheet } from './input/songSheet'
+import {
+  buildSongSheet,
+  resectionSheet,
+  sectionChordRanges,
+} from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
 import type {
   ApproachDirection,
@@ -72,6 +76,9 @@ import {
   buildSongTimeline,
   getSongForm,
 } from './style/songStructure'
+import type { ArrangementStep, SourceSection } from './style/arrangement'
+import { buildArrangedSong, defaultArrangement } from './style/arrangement'
+import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
   BALLAD,
@@ -256,6 +263,13 @@ export function ReharmHome() {
   const [pastedSong, setPastedSong] = useState<ParsedSong | null>(null)
   /** Cách chia đoạn do người dùng tự quét, đè lên cách bộ đọc tự nhận. */
   const [sectionMarks, setSectionMarks] = useState<SectionMark[]>([])
+  /**
+   * Thứ tự chơi do người dùng sắp.
+   *
+   * Rỗng nghĩa là chưa sắp gì, lúc đó lấy thứ tự mặc định — mỗi đoạn một lượt
+   * theo đúng thứ tự trên lời.
+   */
+  const [arrangement, setArrangement] = useState<ArrangementStep[] | null>(null)
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -556,6 +570,49 @@ export function ReharmHome() {
   }, [looping, sheet, positionBeats, oneLoopBeats, withPassing, chordBeats])
 
   /**
+   * Cấu trúc thật của bài, suy ra từ cách chia đoạn trên bản nhạc.
+   *
+   * Có cấu trúc thật thì không phải đoán bằng mẫu dựng sẵn nữa, và đoạn giang
+   * tấu rơi đúng chỗ người dùng đánh dấu. Rỗng nghĩa là chưa dán lời, lúc đó
+   * vẫn dùng mẫu dựng sẵn như cũ.
+   */
+  const songSources = useMemo((): SourceSection[] | null => {
+    if (!sheet) return null
+
+    const spans = mainChordSpans(withPassing, chordBeats)
+    const ranges = sectionChordRanges(sheet)
+    if (ranges.length === 0) return null
+
+    const sources = ranges.map((range, index) => {
+      const first = spans[range.from]
+      const last = spans[range.to]
+      if (!first || !last) return null
+
+      return {
+        name: range.name || `Đoạn ${index + 1}`,
+        // Chỉ giang tấu mới khác; các đoạn còn lại đều là đoạn có lời.
+        kind:
+          range.kind === 'interlude'
+            ? ('interlude' as const)
+            : ('verse' as const),
+        startBeat: first.start,
+        lengthBeats: last.start + last.beats - first.start,
+      }
+    })
+
+    const clean = sources.filter(
+      (source): source is SourceSection => source !== null,
+    )
+    return clean.length > 0 ? clean : null
+  }, [sheet, withPassing, chordBeats])
+
+  /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
+  const steps = useMemo(
+    () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
+    [arrangement, songSources],
+  )
+
+  /**
    * Dựng cả bài cho **lần phát thứ mấy**.
    *
    * Là hàm chứ không phải một dòng thời gian cố định, vì mỗi lần phát lại phải
@@ -563,8 +620,20 @@ export function ReharmHome() {
    * không quay về đúng câu của lần thứ nhất.
    */
   const buildPass = useCallback(
-    (pass: number, takesPerPass: number) =>
-      buildSongTimeline({
+    (pass: number, takesPerPass: number) => {
+      // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
+      if (songSources && steps.length > 0) {
+        return buildArrangedSong({
+          accompaniment,
+          interlude: interludeBacking,
+          fills,
+          solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
+          sources: songSources,
+          steps,
+        })
+      }
+
+      return buildSongTimeline({
         accompaniment,
         interlude: interludeBacking,
         fills,
@@ -572,8 +641,18 @@ export function ReharmHome() {
         loopLengthBeats: oneLoopBeats,
         form: getSongForm(songFormId) ?? SONG_FORMS[0],
         takeOffset: pass * takesPerPass,
-      }),
-    [accompaniment, interludeBacking, fills, soloTake, oneLoopBeats, songFormId],
+      })
+    },
+    [
+      accompaniment,
+      interludeBacking,
+      fills,
+      soloTake,
+      oneLoopBeats,
+      songFormId,
+      songSources,
+      steps,
+    ],
   )
 
   /** Lần phát đầu — dùng cho hiển thị và cho các nút phát một lượt. */
@@ -677,6 +756,7 @@ export function ReharmHome() {
         onUseSong={(parsed) => {
           setPastedSong(parsed)
           setSectionMarks([])
+          setArrangement(null)
           setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
@@ -732,6 +812,14 @@ export function ReharmHome() {
             {!audioReady && ' Bật âm thanh trước đã.'}
           </p>
         </div>
+      )}
+
+      {songSources && (
+        <ArrangementEditor
+          sources={songSources}
+          steps={steps}
+          onChange={setArrangement}
+        />
       )}
 
       {/* Ô nhập */}

@@ -186,7 +186,7 @@ const OCTAVE_BASS_FLOOR = 28
  * bề rộng tay trái ở đoạn giang tấu rộng hơn hẳn đoạn hát (bài *Mơ*: 15.9 lên
  * 20.6 nửa cung), và ô nhịp 41 của bài đó bass đúng là chồng quãng tám `A1+A2`.
  */
-function interludeAccompaniment(
+export function interludeAccompaniment(
   events: readonly TimelineEvent[],
 ): TimelineEvent[] {
   return events

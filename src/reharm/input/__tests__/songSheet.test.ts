@@ -6,6 +6,7 @@ import {
   flattenLines,
   layoutAnchors,
   resectionSheet,
+  sectionChordRanges,
 } from '../songSheet'
 import { parseSongText } from '../songTextParser'
 
@@ -164,6 +165,50 @@ describe('tự chia đoạn bằng đánh dấu của người dùng', () => {
     for (const label of Object.values(SECTION_KIND_LABELS)) {
       expect(label.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('mỗi đoạn chiếm những hợp âm nào', () => {
+  /*
+    Đây là cầu nối giữa lời bài hát và dòng thời gian: đoạn chia theo dòng lời,
+    còn nhạc chạy theo hợp âm.
+  */
+  const song = parseSongText(
+    [
+      '[Phiên khúc]',
+      'Am7  D7',
+      'Dòng một',
+      '[Giang tấu]',
+      'G7  C',
+      'Dòng hai',
+    ].join('\n'),
+  )
+  const sheet = buildSongSheet(song, reharmonize(song.chords, {}).colored)
+
+  it('cho đúng khoảng hợp âm của từng đoạn', () => {
+    expect(sectionChordRanges(sheet)).toEqual([
+      { kind: 'verse', name: 'Phiên khúc', from: 0, to: 1 },
+      { kind: 'interlude', name: 'Giang tấu', from: 2, to: 3 },
+    ])
+  })
+
+  it('theo được cách chia đoạn do người dùng đánh dấu', () => {
+    const marked = resectionSheet(sheet, [{ from: 0, to: 1, kind: 'chorus' }])
+    const ranges = sectionChordRanges(marked)
+
+    expect(ranges).toHaveLength(1)
+    expect(ranges[0].kind).toBe('chorus')
+    expect(ranges[0].from).toBe(0)
+    expect(ranges[0].to).toBe(3)
+  })
+
+  it('đoạn không có hợp âm nào thì bỏ qua', () => {
+    const plain = parseSongText('[Dạo đầu]\nChỉ có lời\n[Phiên khúc]\nAm7\nLời')
+    const built = buildSongSheet(plain, reharmonize(plain.chords, {}).colored)
+
+    expect(sectionChordRanges(built).map((range) => range.name)).toEqual([
+      'Phiên khúc',
+    ])
   })
 })
 

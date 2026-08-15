@@ -12,10 +12,18 @@
   --color-right-hand: #c47a92;
 }
 
+/*
+  Dùng `min-height` chứ không phải `height`.
+
+  Đặt `height: 100%` thì trang cao đúng bằng màn hình và **không giãn ra được**,
+  nên bài hát dài hơn một màn hình bị cắt mất phần dưới, kéo xuống cũng không
+  thấy. `min-height` cho trang phủ hết màn hình khi nội dung ngắn, mà vẫn dài
+  ra được khi nội dung dài.
+*/
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
