@@ -202,6 +202,46 @@ function notesForChord(chord: ParsedChord): MidiNote[] {
   return fitToKeyboard([bassNote, ...notes])
 }
 
+/**
+ * Ô chọn giọng của bài.
+ *
+ * Tách riêng vì nó xuất hiện ở hai chỗ tuỳ luồng đang dùng: gắn vào khung bản
+ * nhạc khi có lời bài hát, còn khi chỉ gõ vòng hợp âm trơn thì nằm ở khung kết
+ * quả tái hoà âm.
+ */
+function KeySelect({
+  value,
+  onChange,
+  detectedLabel,
+  candidates,
+}: {
+  value: string
+  onChange: (value: string) => void
+  detectedLabel: string | undefined
+  candidates: readonly { tonic: number; scale: string; label: string }[]
+}) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-dim">
+      Giọng
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
+      >
+        <option value="">Tự dò{detectedLabel ? ` (${detectedLabel})` : ''}</option>
+        {candidates.map((candidate) => (
+          <option
+            key={`${candidate.tonic}:${candidate.scale}`}
+            value={`${candidate.tonic}:${candidate.scale}`}
+          >
+            {candidate.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
   const looping = usePlaybackStore((state) => state.looping)
@@ -626,14 +666,27 @@ export function ReharmHome() {
 
       {sheet && (
         <div>
-          <h3 className="mb-1 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Bản nhạc đã tái hoà âm
-          </h3>
-          <p className="mb-3 text-xs leading-relaxed text-dim">
-            Hợp âm ghi trên đầu là hợp âm{' '}
-            <span className="text-cream">sau khi tái hoà âm</span> theo các lựa
-            chọn màu bên dưới. Bấm phát thì hợp âm đang vang sẽ sáng lên.
-          </p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
+              Bản nhạc đã tái hoà âm
+            </h3>
+
+            <KeySelect
+              value={manualKey}
+              onChange={setManualKey}
+              detectedLabel={reharm.key?.label}
+              candidates={reharm.keyCandidates}
+            />
+          </div>
+
+          {reharm.keyAmbiguous && reharm.keySource === 'detected' && (
+            <p className="mb-2 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
+              App chưa chắc chắn về giọng — {reharm.keyCandidates[0]?.label} và{' '}
+              {reharm.keyCandidates[1]?.label} đều khớp gần như nhau. Nếu tô màu
+              nghe chưa đúng thì chọn giọng bằng tay.
+            </p>
+          )}
+
           <SongSheetView sheet={sheet} activeIndex={activeChordIndex} />
         </div>
       )}
@@ -709,35 +762,24 @@ export function ReharmHome() {
         )}
       </div>
 
-      {/* Kết quả tái hòa âm — đặt ngay đây để thấy tác dụng mà không phải kéo xuống */}
-      {sequence.chords.length > 0 && (
+      {/*
+        Khung này chỉ còn dùng cho luồng gõ vòng hợp âm trơn. Có lời bài hát thì
+        bản nhạc bên trên đã bày đủ hợp âm đã đổi ngay trên đầu từng chữ, giữ
+        thêm một dãy hợp âm rời ở đây là thừa.
+      */}
+      {!sheet && sequence.chords.length > 0 && (
         <div className="rounded-xl border border-amber-key/40 bg-amber-key/5 p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
               Sau khi tái hòa âm
             </h3>
 
-            <label className="flex items-center gap-2 text-xs text-dim">
-              Giọng
-              <select
-                value={manualKey}
-                onChange={(event) => setManualKey(event.target.value)}
-                className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
-              >
-                <option value="">
-                  Tự dò
-                  {reharm.key && ` (${reharm.key.label})`}
-                </option>
-                {reharm.keyCandidates.map((candidate) => (
-                  <option
-                    key={`${candidate.tonic}:${candidate.scale}`}
-                    value={`${candidate.tonic}:${candidate.scale}`}
-                  >
-                    {candidate.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <KeySelect
+              value={manualKey}
+              onChange={setManualKey}
+              detectedLabel={reharm.key?.label}
+              candidates={reharm.keyCandidates}
+            />
           </div>
 
           {reharm.keyAmbiguous && reharm.keySource === 'detected' && (
