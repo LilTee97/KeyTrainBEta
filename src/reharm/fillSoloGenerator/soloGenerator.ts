@@ -5,7 +5,11 @@ import { scaleTones } from '../reharmEngine/keyDetection'
 import type { TimelineEvent } from '../style/types'
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
-import { densityOption, ornamentLine } from './graceNoteOrnamenter'
+import {
+  densityOption,
+  ornamentLine,
+  stepInScale,
+} from './graceNoteOrnamenter'
 
 /**
  * Sinh câu solo hoặc câu dạo theo phong cách.
@@ -86,7 +90,86 @@ export interface SoloNote {
   isGrace: boolean
 }
 
-/** Sinh câu solo cho cả vòng hợp âm. */
+/**
+ * Câu fill — đoạn ngắn chêm vào **cuối một hợp âm để dẫn sang hợp âm sau**.
+ *
+ * Đây mới đúng nghĩa chữ "fill": nó lấp chỗ trống giữa hai hợp âm và kéo tai
+ * người nghe sang hợp âm kế tiếp, chứ không chạy suốt bài. Tài liệu mô tả
+ * điệu ballad chính là "hợp âm khối bám nhịp hoà âm, **chèn fill vào chỗ
+ * trống**" — tức fill chỉ xuất hiện ở khe hở, không phải ở mọi lúc.
+ *
+ * Ba điểm làm nên một câu fill đúng:
+ *
+ * 1. Nằm ở **cuối** quãng thời gian của hợp âm, không phải trải đều.
+ * 2. **Kết thúc ngay cạnh** nốt đích của hợp âm kế tiếp, cách một bậc — nhờ
+ *    vậy tai nghe được kéo sang hợp âm mới.
+ * 3. **Thỉnh thoảng mới có**, không phải hợp âm nào cũng chêm.
+ */
+export function generateFillLine(
+  chords: readonly ParsedChord[],
+  options: SoloOptions & { fillBeats?: number },
+): SoloNote[] {
+  const {
+    beatsPerChord,
+    fillBeats = Math.min(1.5, beatsPerChord / 2),
+    direction = 'mixed',
+    density = 'medium',
+    key = null,
+  } = options
+
+  if (chords.length < 2) return []
+
+  const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
+  // Mật độ ở đây quyết định **bao lâu chêm một câu**, không phải bao nhiêu nốt láy.
+  const { everyNth } = densityOption(density)
+
+  const result: SoloNote[] = []
+
+  for (let index = 0; index < chords.length; index += 1) {
+    if (index % everyNth !== 0) continue
+
+    // Hợp âm cuối dẫn về hợp âm đầu, vì vòng được chơi lặp lại.
+    const next = chords[(index + 1) % chords.length]
+    if (next === chords[index]) continue
+
+    // Nốt đích: nốt đặc trưng nhất của hợp âm kế tiếp.
+    const [targetClass] = targetPitchClasses(next, 1)
+    const landing = nearestNote(targetClass, MELODY_LOW + 7)
+
+    /*
+      Dựng câu fill đi liền bậc **kết thúc ngay cạnh** nốt đích. Ba nốt là đủ
+      để nghe ra hướng đi mà không lấn sang phần hát.
+    */
+    const approachFrom = direction === 'above' ? 'down' : 'up'
+    const line: MidiNote[] = [landing]
+    for (let step = 0; step < 2; step += 1) {
+      line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
+    }
+
+    const chordEnd = (index + 1) * beatsPerChord
+    const start = chordEnd - fillBeats
+    const noteLength = fillBeats / line.length
+
+    line.forEach((note, position) => {
+      result.push({
+        note,
+        startBeat: start + position * noteLength,
+        durationBeats: noteLength * 0.9,
+        isGrace: false,
+      })
+    })
+  }
+
+  return result
+}
+
+/**
+ * Đoạn solo — chơi liên tục suốt cả vòng, dùng cho **đoạn giang tấu**.
+ *
+ * Khác hẳn câu fill: đây là đoạn nhạc cụ chơi thay cho giọng hát, thường nằm
+ * giữa bài, nên giai điệu chạy suốt chứ không chỉ chêm vào khe hở. Chỉ nên bật
+ * ở đoạn không có lời — bật suốt bài thì nó đè lên phần hát.
+ */
 export function generateSolo(
   chords: readonly ParsedChord[],
   options: SoloOptions,

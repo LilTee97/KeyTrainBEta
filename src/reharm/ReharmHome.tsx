@@ -19,6 +19,7 @@ import type {
 } from './fillSoloGenerator/graceNoteOrnamenter'
 import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import {
+  generateFillLine,
   generateSolo,
   soloToTimeline,
 } from './fillSoloGenerator/soloGenerator'
@@ -212,8 +213,14 @@ export function ReharmHome() {
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Chỉ hiện gợi ý thuộc kỹ thuật này. Rỗng nghĩa là hiện hết. */
   const [techniqueFilter, setTechniqueFilter] = useState<string | null>(null)
-  /** Phát kèm câu solo sinh tự động. */
-  const [playSolo, setPlaySolo] = useState(false)
+  /**
+   * Chế độ giai điệu tự sinh:
+   * - `off`: không có gì
+   * - `fill`: câu ngắn chêm ở cuối hợp âm để dẫn sang hợp âm sau
+   * - `solo`: chơi liên tục suốt vòng, dùng cho đoạn giang tấu
+   */
+  const [melodyMode, setMelodyMode] = useState<'off' | 'fill' | 'solo'>('off')
+  const playSolo = melodyMode !== 'off'
   const [soloDirection, setSoloDirection] =
     useState<ApproachDirection>('mixed')
   const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
@@ -334,19 +341,21 @@ export function ReharmHome() {
     [twoHands, style, chordBeats],
   )
 
-  /** Câu solo sinh tự động, phát chồng lên phần đệm. */
-  const solo = useMemo(
-    () =>
-      playSolo
-        ? generateSolo(withPassing, {
-            beatsPerChord: chordBeats,
-            direction: soloDirection,
-            density: soloDensity,
-            key: reharm.key,
-          })
-        : [],
-    [playSolo, withPassing, chordBeats, soloDirection, soloDensity, reharm.key],
-  )
+  /** Giai điệu tự sinh, phát chồng lên phần đệm. */
+  const solo = useMemo(() => {
+    if (melodyMode === 'off') return []
+
+    const args = {
+      beatsPerChord: chordBeats,
+      direction: soloDirection,
+      density: soloDensity,
+      key: reharm.key,
+    }
+
+    return melodyMode === 'fill'
+      ? generateFillLine(withPassing, args)
+      : generateSolo(withPassing, args)
+  }, [melodyMode, withPassing, chordBeats, soloDirection, soloDensity, reharm.key])
 
   const timeline = useMemo(
     () =>
@@ -1180,7 +1189,7 @@ export function ReharmHome() {
       <div className="rounded-xl border border-line bg-black/25 p-4">
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Câu solo tự sinh
+            Câu fill và đoạn solo
           </h3>
           <span className="rounded border border-rose-400/40 bg-rose-400/10 px-2 py-0.5 font-mono text-[10px] text-rose-300">
             thử nghiệm · mô phỏng phong cách
@@ -1195,15 +1204,45 @@ export function ReharmHome() {
           chỉnh, không phải chuẩn mực.
         </p>
 
-        <label className="flex items-center gap-2 text-xs text-dim">
-          <input
-            type="checkbox"
-            checked={playSolo}
-            onChange={(event) => setPlaySolo(event.target.checked)}
-            className="accent-amber-key"
-          />
-          Phát kèm câu solo
-        </label>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              ['off', 'Không có', 'Chỉ phần đệm.'],
+              [
+                'fill',
+                'Câu fill',
+                'Đoạn ngắn chêm ở cuối hợp âm, kết thúc ngay cạnh nốt của hợp âm sau để kéo tai sang đó. Thỉnh thoảng mới có, không phải hợp âm nào cũng chêm.',
+              ],
+              [
+                'solo',
+                'Đoạn giang tấu',
+                'Giai điệu chạy liên tục thay cho giọng hát. Chỉ dùng ở đoạn không có lời, bật suốt bài thì nó đè lên phần hát.',
+              ],
+            ] as const
+          ).map(([value, label, hint]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMelodyMode(value)}
+              title={hint}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                melodyMode === value
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {melodyMode !== 'off' && (
+          <p className="mt-2 text-xs leading-relaxed text-dim">
+            {melodyMode === 'fill'
+              ? 'Đoạn ngắn chêm ở cuối hợp âm, kết thúc ngay cạnh nốt của hợp âm sau để kéo tai sang đó. Thỉnh thoảng mới có, không phải hợp âm nào cũng chêm.'
+              : 'Giai điệu chạy liên tục thay cho giọng hát. Chỉ dùng ở đoạn không có lời, bật suốt bài thì nó đè lên phần hát.'}
+          </p>
+        )}
 
         {playSolo && (
           <div className="mt-3 flex flex-col gap-3 border-t border-line pt-3">
@@ -1237,7 +1276,7 @@ export function ReharmHome() {
 
             <div>
               <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                Mật độ nốt láy
+                {melodyMode === 'fill' ? 'Bao lâu chêm một câu' : 'Mật độ nốt láy'}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {DENSITY_OPTIONS.map((option) => (
@@ -1265,8 +1304,9 @@ export function ReharmHome() {
             </div>
 
             <p className="font-mono text-[11px] text-dim">
-              {solo.filter((note) => !note.isGrace).length} nốt chính ·{' '}
-              {solo.filter((note) => note.isGrace).length} nốt láy
+              {melodyMode === 'fill'
+                ? `${solo.length} nốt trong ${Math.round(solo.length / 3)} câu fill`
+                : `${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
             </p>
           </div>
         )}

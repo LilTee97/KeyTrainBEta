@@ -8,7 +8,11 @@ import {
   ornamentLine,
   stepInScale,
 } from '../graceNoteOrnamenter'
-import { generateSolo, soloToTimeline } from '../soloGenerator'
+import {
+  generateFillLine,
+  generateSolo,
+  soloToTimeline,
+} from '../soloGenerator'
 
 function chords(input: string): ParsedChord[] {
   return parseChordInput(input).chords
@@ -222,6 +226,90 @@ describe('generateSolo', () => {
     })
 
     expect(dense.length).toBeGreaterThan(sparse.length)
+  })
+})
+
+describe('câu fill — chêm ở cuối hợp âm để dẫn sang hợp âm sau', () => {
+  const options = {
+    beatsPerChord: 4,
+    key: { tonic: 0, scale: 'major' as const },
+    density: 'dense' as const,
+  }
+
+  it('mọi nốt nằm ở nửa sau quãng thời gian của hợp âm', () => {
+    // Đây là điều phân biệt câu fill với giai điệu chạy suốt: nó lấp chỗ
+    // trống ở cuối hợp âm, không trải đều
+    const fills = generateFillLine(chords('C Am F G'), options)
+
+    for (const note of fills) {
+      const positionInChord = note.startBeat % 4
+      expect(positionInChord).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  it('câu fill kết thúc ngay cạnh nốt của hợp âm kế tiếp', () => {
+    const list = chords('C Am')
+    const fills = generateFillLine(list, { ...options, density: 'dense' })
+
+    // Nốt cuối của câu fill đầu tiên phải là nốt thuộc hợp âm Am
+    const firstFill = fills.filter((note) => note.startBeat < 4)
+    const landing = firstFill[firstFill.length - 1]
+
+    const amTones = new Set(
+      list[1].quality.intervals.map((i) => (list[1].root + i) % 12),
+    )
+    expect(amTones.has(landing.note % 12)).toBe(true)
+  })
+
+  it('câu fill đi liền bậc, không nhảy quãng', () => {
+    const fills = generateFillLine(chords('C Am F G'), options)
+
+    for (let index = 1; index < fills.length; index += 1) {
+      const gap = Math.abs(fills[index].note - fills[index - 1].note)
+      // Nốt liền nhau trong cùng câu đi từng bậc; giữa hai câu thì cho phép nhảy
+      if (fills[index].startBeat - fills[index - 1].startBeat < 1) {
+        expect(gap).toBeLessThanOrEqual(2)
+      }
+    }
+  })
+
+  it('mật độ thưa thì thỉnh thoảng mới chêm một câu', () => {
+    const dense = generateFillLine(chords('C Am F G Em Dm G7 C'), {
+      ...options,
+      density: 'dense',
+    })
+    const sparse = generateFillLine(chords('C Am F G Em Dm G7 C'), {
+      ...options,
+      density: 'sparse',
+    })
+
+    expect(sparse.length).toBeLessThan(dense.length)
+  })
+
+  it('hợp âm cuối dẫn về hợp âm đầu vì vòng được chơi lặp lại', () => {
+    const fills = generateFillLine(chords('C G7'), options)
+    // Có câu fill ở cả hai hợp âm, kể cả hợp âm cuối
+    expect(fills.some((note) => note.startBeat >= 4)).toBe(true)
+  })
+
+  it('vòng một hợp âm thì không có gì để dẫn tới', () => {
+    expect(generateFillLine(chords('C'), options)).toEqual([])
+    expect(generateFillLine([], options)).toEqual([])
+  })
+
+  it('câu fill ngắn hơn hẳn đoạn giang tấu', () => {
+    const list = chords('C Am F G')
+    const fills = generateFillLine(list, options)
+    const solo = generateSolo(list, options)
+
+    expect(fills.length).toBeLessThan(solo.length)
+  })
+
+  it('mọi nốt nằm trong tầm giai điệu', () => {
+    for (const note of generateFillLine(chords('C Am F G'), options)) {
+      expect(note.note).toBeGreaterThanOrEqual(60)
+      expect(note.note).toBeLessThanOrEqual(92)
+    }
   })
 })
 
