@@ -71,9 +71,20 @@ function PreviewLine({ line }: { line: SongLine }) {
 
 export function SongTextInput({ onUseSong }: SongTextInputProps) {
   const [text, setText] = useState('')
+  /**
+   * Đã bấm tái hoà âm cho đúng đoạn text đang có chưa.
+   *
+   * Bấm rồi thì **giấu khung xem trước đi**: lúc đó bản nhạc đã tái hoà âm
+   * hiện ngay bên dưới, để cả hai khung cạnh nhau chỉ tổ chiếm chỗ và bắt
+   * người đọc phải phân biệt khung nào là khung nào. Sửa lại text thì khung
+   * xem trước quay lại, vì lúc đó nó lại có việc để làm.
+   */
+  const [submitted, setSubmitted] = useState(false)
+
   const song = useMemo(() => parseSongText(text), [text])
 
   const hasContent = song.sections.length > 0
+  const showPreview = hasContent && !submitted
 
   return (
     <section className="rounded-xl border border-line bg-white/3 p-4">
@@ -89,7 +100,10 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
 
       <textarea
         value={text}
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => {
+          setText(event.target.value)
+          setSubmitted(false)
+        }}
         rows={8}
         spellCheck={false}
         placeholder={SAMPLE}
@@ -99,7 +113,10 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={() => setText(SAMPLE)}
+          onClick={() => {
+            setText(SAMPLE)
+            setSubmitted(false)
+          }}
           className="rounded-lg border border-line bg-white/4 px-3 py-1.5 text-xs text-dim hover:bg-white/8"
         >
           Điền thử một đoạn mẫu
@@ -108,7 +125,10 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
         <button
           type="button"
           disabled={song.chords.length === 0}
-          onClick={() => onUseSong(song)}
+          onClick={() => {
+            onUseSong(song)
+            setSubmitted(true)
+          }}
           className="rounded-lg bg-amber-key px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
         >
           Tái hoà âm {song.chords.length} hợp âm này
@@ -139,7 +159,7 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
         </div>
       )}
 
-      {hasContent && (
+      {showPreview && (
         <div className="mt-3 flex flex-col gap-4 rounded-lg border border-line bg-black/20 p-3">
           {song.sections.map((section, index) => (
             <div key={`${section.name}-${index}`}>
