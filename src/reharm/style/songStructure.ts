@@ -125,6 +125,18 @@ export interface BuildSongOptions {
   loopLengthBeats: number
   form: SongForm
   /**
+   * Phần đệm dùng riêng cho đoạn giang tấu, dựng trên **vòng hợp âm chính**.
+   *
+   * Bỏ trống thì lấy luôn `accompaniment`. Cần tách ra vì đoạn giang tấu không
+   * chơi hợp âm lướt: câu solo đã bám vòng chính, mà tay đệm lại chơi hợp âm
+   * lướt thì hai tay đánh nhau — tay trái vang `Bm7b5` trong khi tay phải chơi
+   * nốt của `Cadd9`.
+   *
+   * Nói rộng hơn: hợp âm lướt là đồ trang trí cho **đoạn hát**. Vào giang tấu
+   * thì phần đệm rút về khung hoà âm gốc để nhường chỗ cho ngẫu hứng.
+   */
+  interlude?: readonly TimelineEvent[]
+  /**
    * Số lượt giang tấu đã dùng hết trước khi dựng bài này.
    *
    * Cần cho việc **phát lặp cả bài**: lần phát lại thứ hai phải nối tiếp số
@@ -202,6 +214,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
     solo,
     loopLengthBeats,
     form,
+    interlude,
     takeOffset = 0,
   } = options
 
@@ -210,7 +223,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
   let cursor = 0
 
   // Dựng sẵn một lần, đỡ phải lọc lại ở mỗi lượt lặp.
-  const forInterlude = interludeAccompaniment(accompaniment)
+  const forInterlude = interludeAccompaniment(interlude ?? accompaniment)
 
   /*
     Đếm **liên tục qua cả bài**, không đếm lại từ đầu ở mỗi đoạn. Nhờ vậy lượt

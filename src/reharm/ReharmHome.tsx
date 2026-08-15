@@ -14,7 +14,11 @@ import { chordNotes } from '../shared/musicTheory/chordDefinitions'
 import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
-import { chordDurations, totalBeatsOf } from './chordTiming'
+import {
+  chordDurations,
+  mainChordSpans,
+  totalBeatsOf,
+} from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
 import type {
   ApproachDirection,
@@ -368,6 +372,38 @@ export function ReharmHome() {
     [twoHands, style, chordBeats, withPassing],
   )
 
+  /**
+   * Vòng hợp âm **chính**, đã gỡ hết hợp âm lướt.
+   *
+   * Mỗi hợp âm lấy lại trọn khoảng thời gian của mình, kể cả phần đã nhường
+   * cho hợp âm lướt, nên tổng độ dài vòng không đổi.
+   */
+  const mainChords = useMemo(
+    () =>
+      mainChordSpans(withPassing, chordBeats).map((span) => ({
+        ...span.chord,
+        beats: span.beats,
+      })),
+    [withPassing, chordBeats],
+  )
+
+  /**
+   * Phần đệm cho **đoạn giang tấu**, dựng trên vòng chính không hợp âm lướt.
+   *
+   * Câu solo đã bám vòng chính; nếu tay đệm vẫn chơi hợp âm lướt thì hai tay
+   * đánh nhau. Và hợp âm lướt vốn là đồ trang trí cho đoạn hát — vào giang tấu
+   * thì phần đệm rút về khung hoà âm gốc để nhường chỗ cho ngẫu hứng.
+   */
+  const interludeBacking = useMemo(() => {
+    const hands = voiceLeadTwoHands(mainChords, {
+      dropRootFromRightHand: dropRoot,
+    })
+    return renderPattern(hands, style, {
+      beatsPerChord: chordBeats,
+      beatsEach: chordDurations(mainChords, chordBeats),
+    })
+  }, [mainChords, style, chordBeats, dropRoot])
+
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useMemo(
     () =>
@@ -437,13 +473,14 @@ export function ReharmHome() {
     (pass: number, takesPerPass: number) =>
       buildSongTimeline({
         accompaniment,
+        interlude: interludeBacking,
         fills,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         form: getSongForm(songFormId) ?? SONG_FORMS[0],
         takeOffset: pass * takesPerPass,
       }),
-    [accompaniment, fills, soloTake, oneLoopBeats, songFormId],
+    [accompaniment, interludeBacking, fills, soloTake, oneLoopBeats, songFormId],
   )
 
   /** Lần phát đầu — dùng cho hiển thị và cho các nút phát một lượt. */
