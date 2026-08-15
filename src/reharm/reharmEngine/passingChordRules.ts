@@ -1,3 +1,4 @@
+import { suggestDim7ChainFills } from '../fillSoloGenerator/fillGenerator'
 import { getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
 import type { PitchClass } from '../../shared/musicTheory/types'
@@ -23,6 +24,8 @@ export type PassingTechnique =
   | 'dim7-passing'
   | 'secondary-dominant'
   | 'secondary-ii-V'
+  /** Câu nối bằng chuỗi hợp âm giảm, xem `../fillSoloGenerator/fillGenerator.ts`. */
+  | 'dim7-chain-fill'
 
 export interface PassingSuggestion {
   /** Vị trí chèn: đứng ngay trước hợp âm thứ `insertBeforeIndex`. */
@@ -208,6 +211,8 @@ export interface SuggestOptions {
   dim7Passing?: boolean
   secondaryDominant?: boolean
   secondaryIiV?: boolean
+  /** Câu nối bằng chuỗi hợp âm giảm giữa bậc năm và hợp âm đích. */
+  dim7ChainFill?: boolean
 }
 
 /**
@@ -224,10 +229,13 @@ export function suggestPassingChords(
     dim7Passing = true,
     secondaryDominant = true,
     secondaryIiV = true,
+    dim7ChainFill = true,
   } = options
 
   const suggestions: PassingSuggestion[] = []
 
+  // Câu nối xếp trước vì nó lấp trọn quãng, đáng cân nhắc hơn việc chèn lẻ.
+  if (dim7ChainFill) suggestions.push(...suggestDim7ChainFills(chords))
   if (dim7Passing) suggestions.push(...suggestDim7Passing(chords))
   if (secondaryIiV) suggestions.push(...suggestSecondaryIiV(chords))
   if (secondaryDominant) suggestions.push(...suggestSecondaryDominants(chords))
@@ -269,4 +277,5 @@ export const TECHNIQUE_LABELS: Record<PassingTechnique, string> = {
   'dim7-passing': 'Hợp âm giảm lướt',
   'secondary-dominant': 'Bậc năm phụ',
   'secondary-ii-V': 'Vòng 2-5-1 lướt',
+  'dim7-chain-fill': 'Câu nối chuỗi hợp âm giảm',
 }
