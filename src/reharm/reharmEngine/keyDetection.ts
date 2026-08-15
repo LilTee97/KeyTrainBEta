@@ -122,6 +122,36 @@ function scoreKey(
   return score
 }
 
+/**
+ * Thứ tự **vòng quãng năm** của các giọng trưởng, bắt đầu từ Đô trưởng.
+ *
+ * Mỗi bước sang phải là thêm một dấu thăng: C → G → D → A → E → B → F♯ …, và
+ * vòng lại về F trưởng ở cuối. Đây là thứ tự người học nhạc thuộc lòng, nên ô
+ * chọn giọng bày theo thứ tự này thì tìm được ngay bằng phản xạ.
+ */
+const CIRCLE_OF_FIFTHS: readonly PitchClass[] = [
+  0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5,
+]
+
+/**
+ * Cả hai mươi tư giọng, xếp theo **bộ khoá**: mỗi giọng trưởng đi liền giọng
+ * thứ song song của nó.
+ *
+ * Đô trưởng và La thứ dùng chung bộ khoá không dấu, Sol trưởng và Mi thứ dùng
+ * chung một dấu thăng, và cứ thế. Xếp cặp như vậy vì khi phân vân giữa trưởng
+ * và thứ thì hai lựa chọn nằm ngay cạnh nhau, không phải dò khắp danh sách.
+ *
+ * Cần một thứ tự cố định vì `detectKey` trả về danh sách **xếp theo điểm khớp**
+ * — hợp lý cho việc đoán, nhưng bày lên ô chọn thì nhìn như xếp lung tung.
+ */
+export function orderedKeys(): { tonic: PitchClass; scale: ScaleType }[] {
+  return CIRCLE_OF_FIFTHS.flatMap((tonic) => [
+    { tonic, scale: 'major' as ScaleType },
+    // Giọng thứ song song nằm dưới ba nửa cung.
+    { tonic: normalizePitchClass(tonic - 3), scale: 'minor' as ScaleType },
+  ])
+}
+
 export function keyLabel(tonic: PitchClass, scale: ScaleType): string {
   return `${pitchClassName(tonic)} ${scale === 'minor' ? 'thứ' : 'trưởng'}`
 }

@@ -111,17 +111,10 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
       />
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setText(SAMPLE)
-            setSubmitted(false)
-          }}
-          className="rounded-lg border border-line bg-white/4 px-3 py-1.5 text-xs text-dim hover:bg-white/8"
-        >
-          Điền thử một đoạn mẫu
-        </button>
-
+        {/*
+          Nút "Điền thử một đoạn mẫu" đã bỏ: đoạn mẫu vẫn nằm ở chữ mờ trong ô
+          nhập, đủ để thấy định dạng cần gõ mà không tốn thêm một nút.
+        */}
         <button
           type="button"
           disabled={song.chords.length === 0}

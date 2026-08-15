@@ -1,8 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
-  playChord,
-  playChordSequence,
-  startAudio,
   startTimelineLoop,
   stopTimelineLoop,
   useAudioStore,
@@ -11,7 +8,6 @@ import {
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { chordNotes } from '../shared/musicTheory/chordDefinitions'
-import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote, PitchClass } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import {
@@ -55,13 +51,12 @@ import {
   soloToTimeline,
 } from './fillSoloGenerator/soloGenerator'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
-import type { PassingTechnique } from './reharmEngine/passingChordRules'
 import {
   TECHNIQUE_LABELS,
   groupPassingSuggestions,
   groupsAtSlot,
 } from './reharmEngine/passingChordRules'
-import { scaleTones } from './reharmEngine/keyDetection'
+import { keyLabel, orderedKeys, scaleTones } from './reharmEngine/keyDetection'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
@@ -120,33 +115,7 @@ import {
   isPlayable,
 } from './style/styleLibrary'
 import type { ParsedChord } from './types'
-import { flattenHands, voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
-
-/**
- * Bảng chọn nhanh: chạm tính chất rồi chạm nốt gốc để thêm hợp âm.
- * Các tính chất ở đây chọn theo mức hay dùng trong phong cách đang mô hình hoá.
- */
-const PICKER_QUALITIES = [
-  { suffix: '', label: 'trưởng' },
-  { suffix: 'm', label: 'thứ' },
-  { suffix: 'maj7', label: 'maj7' },
-  { suffix: '7', label: '7' },
-  { suffix: 'm7', label: 'm7' },
-  { suffix: 'm7b5', label: 'ø' },
-  { suffix: 'dim7', label: 'dim7' },
-  { suffix: 'sus4', label: 'sus4' },
-  { suffix: '9', label: '9' },
-  { suffix: 'm9', label: 'm9' },
-  { suffix: 'm11', label: 'm11' },
-  { suffix: '9sus4', label: '9sus4' },
-  { suffix: 'add9', label: 'add9' },
-  { suffix: '6', label: '6' },
-  { suffix: '7b9', label: '7b9' },
-]
-
-const ROOT_NAMES = Array.from({ length: 12 }, (_, pitchClass) =>
-  pitchClassName(pitchClass),
-)
+import { voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
 
 /** Quãng tám đặt hợp âm khi nghe thử. */
 const BASE_OCTAVE_NOTE: MidiNote = 60
@@ -255,12 +224,11 @@ function KeySelect({
   value,
   onChange,
   detectedLabel,
-  candidates,
 }: {
   value: string
   onChange: (value: string) => void
+  /** Giọng **app tự dò ra**, không phải giọng đang chọn. */
   detectedLabel: string | undefined
-  candidates: readonly { tonic: number; scale: string; label: string }[]
 }) {
   return (
     <label className="flex items-center gap-2 text-xs text-dim">
@@ -268,15 +236,20 @@ function KeySelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        title="Cho app biết bài đang ở giọng nào, để nó tô màu hợp âm theo đúng bậc. Đây không phải nút đổi tone — muốn dịch cả bài sang giọng khác thì dùng nút TONE."
         className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
       >
-        <option value="">Tự dò{detectedLabel ? ` (${detectedLabel})` : ''}</option>
-        {candidates.map((candidate) => (
-          <option
-            key={`${candidate.tonic}:${candidate.scale}`}
-            value={`${candidate.tonic}:${candidate.scale}`}
-          >
-            {candidate.label}
+        <option value="">
+          Tự dò{detectedLabel ? ` (${detectedLabel})` : ''}
+        </option>
+        {/*
+          Bày theo vòng quãng năm, ghép cặp trưởng với thứ song song. Trước đây
+          bày theo thứ tự `detectKey` trả về — tức xếp theo điểm khớp — nhìn
+          như xếp lung tung và không tìm được giọng mình muốn.
+        */}
+        {orderedKeys().map(({ tonic, scale }) => (
+          <option key={`${tonic}:${scale}`} value={`${tonic}:${scale}`}>
+            {keyLabel(tonic, scale)}
           </option>
         ))}
       </select>
@@ -338,7 +311,6 @@ export function ReharmHome() {
    * chung. Ghi kiểu này thì đổi mật độ vẫn giữ được lựa chọn của người dùng.
    */
   const [mutedFills, setMutedFills] = useState<ReadonlySet<number>>(new Set())
-  const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
   const [smoothVoicing, setSmoothVoicing] = useState(true)
@@ -361,10 +333,13 @@ export function ReharmHome() {
   const [allowJazzColors, setAllowJazzColors] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
-  /** Chỉ hiện gợi ý thuộc kỹ thuật này. Rỗng nghĩa là hiện hết. */
-  const [techniqueFilter, setTechniqueFilter] = useState<string | null>(null)
-  const [soloDirection, setSoloDirection] =
-    useState<ApproachDirection>('mixed')
+  /**
+   * Chiều nốt láy cố định là **xen kẽ**.
+   *
+   * Ô chọn đã bỏ: láy toàn từ dưới lên hay toàn từ trên xuống nghe ra ngay là
+   * máy đánh, nên không ai đổi khỏi xen kẽ.
+   */
+  const soloDirection: ApproachDirection = 'mixed'
   const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
   const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
@@ -568,9 +543,8 @@ export function ReharmHome() {
         ? current.filter((entry) => !keys.includes(entry))
         : [...current, ...keys.filter((key) => !current.includes(key))]
     })
-  /** Vòng về mặt hòa âm — thứ ghi lên bản nhạc. */
-  const harmonic = reharm.harmonic
-  /** Vòng về mặt cách bấm — thứ tay thật sự chơi. */
+
+  /** Vòng hợp âm về mặt cách bấm — thứ tay thật sự chơi. */
   const withPassing = reharm.final
 
   /** Thế bấm hai tay đã dẫn bè. */
@@ -584,19 +558,6 @@ export function ReharmHome() {
 
   /** Thế bấm mộc, chỉ xếp chồng từ nốt gốc — để đối chiếu. */
   const plain = useMemo(() => plainSequence(withPassing), [withPassing])
-
-  /** Nốt để phát, theo chế độ đang chọn. */
-  const playbackNotes = useMemo(
-    () =>
-      smoothVoicing
-        ? twoHands.map(flattenHands)
-        : withPassing.map((chord, index) => [
-            // Thế mộc vẫn có nốt bass tay trái để so sánh công bằng
-            twoHands[index]?.left[0] ?? chord.root + 40,
-            ...plain[index],
-          ]),
-    [smoothVoicing, twoHands, plain, withPassing],
-  )
 
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
@@ -1049,36 +1010,11 @@ export function ReharmHome() {
     setSusDominant(palette.susDominant)
   }
 
-  /** Số gợi ý của từng kỹ thuật, để hiện trên nút lọc. */
-  const techniqueCounts = useMemo(() => {
-    const counts = new Map<PassingTechnique, number>()
-    for (const group of passingGroups) {
-      counts.set(group.technique, (counts.get(group.technique) ?? 0) + 1)
-    }
-    return [...counts.entries()]
-  }, [passingGroups])
-
-  const visibleGroups = useMemo(
-    () =>
-      techniqueFilter === null
-        ? passingGroups
-        : passingGroups.filter((group) => group.technique === techniqueFilter),
-    [passingGroups, techniqueFilter],
-  )
-
   /** Xung đột nhạc lý, gom theo vị trí hợp âm để hiện ngay cạnh nó. */
   const conflictMap = useMemo(
     () => conflictsByIndex(reharm.conflicts),
     [reharm.conflicts],
   )
-
-  /** Vòng hợp âm không đổi gì sau khi tái hòa âm — cần báo cho người dùng biết. */
-  const isUnchanged = useMemo(() => {
-    if (withPassing.length !== sequence.chords.length) return false
-    return withPassing.every(
-      (chord, index) => chord.symbol === sequence.chords[index]?.symbol,
-    )
-  }, [withPassing, sequence.chords])
 
   /** Tổng quãng đường tay phải phải đi, để thấy con số cụ thể. */
   const movement = useMemo(
@@ -1088,16 +1024,6 @@ export function ReharmHome() {
     }),
     [twoHands, plain],
   )
-
-  const appendChord = (rootName: string) => {
-    const next = `${rootName}${pickerQuality}`
-    setInput((current) => (current.trim() ? `${current.trim()} ${next}` : next))
-  }
-
-  const removeLast = () => {
-    const tokens = input.trim().split(/\s+/).filter(Boolean)
-    setInput(tokens.slice(0, -1).join(' '))
-  }
 
   const selected =
     selectedIndex !== null ? sequence.chords[selectedIndex] : undefined
@@ -1177,8 +1103,7 @@ export function ReharmHome() {
             <KeySelect
               value={manualKey}
               onChange={setManualKey}
-              detectedLabel={reharm.key?.label}
-              candidates={reharm.keyCandidates}
+              detectedLabel={reharm.keyCandidates[0]?.label}
             />
           </div>
 
@@ -1264,6 +1189,8 @@ export function ReharmHome() {
             onClearMarks={() => setSectionMarks([])}
             hasMarks={sectionMarks.length > 0}
             onSeek={(chordIndex) => {
+              // Bàn phím đàn phía dưới chỉ thế bấm của đúng hợp âm vừa bấm.
+              setSelectedIndex(chordIndex)
               if (!audioReady) return
 
               // Đang phát thì dừng hẳn rồi phát lại, cho khỏi chồng hai vòng.
@@ -1381,33 +1308,12 @@ export function ReharmHome() {
             </div>
           </div>
 
-          <div>
-            <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-              Chiều nốt láy
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  ['below', 'Từ dưới lên'],
-                  ['above', 'Từ trên xuống'],
-                  ['mixed', 'Xen kẽ'],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setSoloDirection(value)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    soloDirection === value
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/*
+            Bỏ ô chọn "Chiều nốt láy". Xen kẽ là mặc định và cũng là lựa chọn
+            đúng gần như mọi lúc — láy toàn từ dưới lên hay toàn từ trên xuống
+            nghe ra ngay là máy đánh. Giữ lại một ô mà ai cũng để nguyên chỉ
+            làm khung điều khiển dài thêm.
+          */}
 
           <div>
             <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
@@ -1474,284 +1380,14 @@ export function ReharmHome() {
           </div>
       </div>
 
-
-      {/* Ô nhập */}
-      <div>
-        <label
-          htmlFor="chord-input"
-          className="mb-2 block font-mono text-[11px] tracking-[0.08em] text-dim uppercase"
-        >
-          Vòng hợp âm
-        </label>
-        <input
-          id="chord-input"
-          type="text"
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value)
-            setSelectedIndex(null)
-          }}
-          placeholder="Ví dụ: Dm7 G7 Cmaj7"
-          autoComplete="off"
-          spellCheck={false}
-          className="w-full rounded-lg border border-line bg-white/6 px-4 py-3 font-mono text-base text-cream outline-none focus:border-amber-key"
-        />
-      </div>
-
-      {/* Kết quả đọc được */}
-      <div className="rounded-xl border border-line bg-black/25 p-4">
-        {sequence.chords.length === 0 && sequence.errors.length === 0 ? (
-          <p className="text-sm text-dim">Chưa có hợp âm nào.</p>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-2">
-              {sequence.chords.map((chord, index) => (
-                <button
-                  key={`${chord.symbol}-${index}`}
-                  type="button"
-                  onClick={() => {
-                    setSelectedIndex(index)
-                    if (audioReady) {
-                      playChord(playbackNotes[index] ?? notesForChord(chord))
-                    }
-                  }}
-                  className={`rounded-lg border px-3 py-2 font-serif text-lg transition-colors ${
-                    selectedIndex === index
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-cream hover:bg-white/8'
-                  }`}
-                >
-                  {chord.symbol}
-                </button>
-              ))}
-            </div>
-
-            {sequence.errors.length > 0 && (
-              <p className="mt-3 border-t border-line pt-3 text-xs text-rose-300">
-                Không đọc được:{' '}
-                {sequence.errors.map((error) => error.source).join(', ')}
-              </p>
-            )}
-
-            {selected && (
-              <p className="mt-3 border-t border-line pt-3 text-xs text-dim">
-                <span className="text-cream">{selected.symbol}</span> ·{' '}
-                {selected.quality.label}
-                {selected.bass !== undefined && (
-                  <> · bass {pitchClassName(selected.bass)}</>
-                )}
-              </p>
-            )}
-          </>
-        )}
-      </div>
-
       {/*
-        Khung này chỉ còn dùng cho luồng gõ vòng hợp âm trơn. Có lời bài hát thì
-        bản nhạc bên trên đã bày đủ hợp âm đã đổi ngay trên đầu từng chữ, giữ
-        thêm một dãy hợp âm rời ở đây là thừa.
+        Thêm màu hợp âm — đặt ngay dưới khung câu fill và giang tấu.
+
+        Ba khung này cùng nói về **thứ sẽ nghe thấy khi bấm phát**: hoà âm nghe
+        ra sao, chêm câu ở đâu, chơi theo thứ tự nào. Để chúng cạnh nhau ngay
+        dưới bản nhạc thì chỉnh xong là nghe được luôn, không phải cuộn qua
+        mấy khung nói về chuyện khác rồi cuộn ngược lên bấm phát.
       */}
-      {!sheet && sequence.chords.length > 0 && (
-        <div className="rounded-xl border border-amber-key/40 bg-amber-key/5 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
-              Sau khi tái hòa âm
-            </h3>
-
-            <KeySelect
-              value={manualKey}
-              onChange={setManualKey}
-              detectedLabel={reharm.key?.label}
-              candidates={reharm.keyCandidates}
-            />
-          </div>
-
-          {reharm.keyAmbiguous && reharm.keySource === 'detected' && (
-            <p className="mb-3 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
-              App chưa chắc chắn về giọng — {reharm.keyCandidates[0]?.label} và{' '}
-              {reharm.keyCandidates[1]?.label} đều khớp gần như nhau. Nếu tô màu
-              nghe chưa đúng thì chọn giọng bằng tay.
-            </p>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-baseline gap-2">
-              <span className="w-16 font-mono text-[10px] text-dim">gốc</span>
-              <span className="font-mono text-sm text-dim">
-                {sequence.chords.map((chord) => chord.symbol).join('  ')}
-              </span>
-            </div>
-
-            <div className="flex flex-wrap items-baseline gap-2">
-              <span className="w-16 font-mono text-[10px] text-amber-key">
-                đã đổi
-              </span>
-              <span className="font-serif text-lg text-amber-key">
-                {harmonic.map((chord) => chord.symbol).join('  ')}
-              </span>
-            </div>
-
-            {/* Cách bấm chỉ hiện khi nó khác với tên hợp âm */}
-            {useSlashChords && (
-              <div className="flex flex-wrap items-baseline gap-2">
-                <span
-                  className="w-16 font-mono text-[10px] text-teal-key"
-                  title="Bản nhạc ghi tên hợp âm ở dòng trên, còn đây là cách đặt tay để bấm nó"
-                >
-                  bấm thành
-                </span>
-                <span className="font-serif text-lg text-teal-key">
-                  {withPassing.map((chord) => chord.symbol).join('  ')}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {isUnchanged && (
-            <p className="mt-3 border-t border-amber-key/20 pt-3 text-xs leading-relaxed text-dim">
-              Vòng này vốn đã đủ màu nên không có gì để thêm. Thử gõ một vòng
-              trơn như <span className="font-mono text-cream">C Am F G</span> để
-              thấy rõ tác dụng.
-            </p>
-          )}
-
-          <p className="mt-3 border-t border-amber-key/20 pt-3 text-xs leading-relaxed text-dim">
-            Tái hòa âm chạy tự động. Chỉnh mức độ ở mục{' '}
-            <span className="text-cream">Thêm màu hợp âm</span>, chèn hợp âm nối
-            ở mục <span className="text-cream">Hợp âm lướt</span> phía dưới.
-          </p>
-        </div>
-      )}
-
-      {/* Nghe thử */}
-      <div className="flex flex-wrap items-center gap-3">
-        {!audioReady ? (
-          <button
-            type="button"
-            onClick={() => void startAudio()}
-            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110"
-          >
-            Bật âm thanh
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => playChordSequence(playbackNotes, 1.4)}
-            disabled={sequence.chords.length === 0}
-            title="Chỉ nghe hợp âm khối để kiểm tra hoà âm — không có điệu, không có câu fill hay solo. Muốn nghe đầy đủ thì dùng nút ở mục Đệm theo điệu."
-            className="rounded-lg border border-line bg-white/6 px-4 py-2 text-sm text-cream hover:bg-white/12 disabled:opacity-40"
-          >
-            ♪ Nghe hợp âm trơn
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={removeLast}
-          className="rounded-lg border border-line px-3 py-2 text-xs text-dim hover:bg-white/6"
-        >
-          ← Xoá hợp âm cuối
-        </button>
-        <button
-          type="button"
-          onClick={() => setInput('')}
-          className="rounded-lg border border-line px-3 py-2 text-xs text-dim hover:bg-white/6"
-        >
-          Xoá hết
-        </button>
-      </div>
-
-      <div>
-        <OnScreenPiano
-          leftHandNotes={
-            selectedIndex !== null ? twoHands[selectedIndex]?.left : undefined
-          }
-          rightHandNotes={
-            selectedIndex !== null ? twoHands[selectedIndex]?.right : undefined
-          }
-          highlightNotes={
-            selectedIndex !== null && !twoHands[selectedIndex]
-              ? (selected ? notesForChord(selected) : undefined)
-              : undefined
-          }
-        />
-
-        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" />
-            tay trái
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-right-hand" />
-            tay phải
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-key" />
-            đang bấm
-          </span>
-        </div>
-      </div>
-
-      {/* Dẫn bè */}
-      <div className="rounded-xl border border-line bg-black/25 p-4">
-        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-          Dẫn bè
-        </h3>
-        <p className="mb-3 text-xs leading-relaxed text-dim">
-          Nguyên lý gốc của phong cách: chọn thế bấm sao cho các nốt di chuyển
-          ít nhất giữa hai hợp âm. Tắt đi để nghe cách bấm mộc, luôn xếp chồng
-          từ nốt gốc.
-        </p>
-
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setSmoothVoicing(true)}
-              className={`rounded-lg border px-3 py-1.5 text-xs ${
-                smoothVoicing
-                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
-              }`}
-            >
-              Có dẫn bè
-            </button>
-            <button
-              type="button"
-              onClick={() => setSmoothVoicing(false)}
-              className={`rounded-lg border px-3 py-1.5 text-xs ${
-                !smoothVoicing
-                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
-              }`}
-            >
-              Thế mộc
-            </button>
-          </div>
-
-          <label className="flex items-center gap-2 text-xs text-dim">
-            <input
-              type="checkbox"
-              checked={dropRoot}
-              onChange={(event) => setDropRoot(event.target.checked)}
-              className="accent-amber-key"
-            />
-            Bỏ nốt gốc ở tay phải
-          </label>
-        </div>
-
-        {sequence.chords.length > 1 && (
-          <p className="mt-3 border-t border-line pt-3 font-mono text-[11px] text-dim">
-            Quãng đường tay phải phải đi:{' '}
-            <span className="text-teal-key">{movement.smooth}</span> nửa cung
-            khi có dẫn bè, so với{' '}
-            <span className="text-rose-300">{movement.plain}</span> khi bấm
-            mộc.
-          </p>
-        )}
-      </div>
-
-      {/* Thêm màu hợp âm */}
       <div className="rounded-xl border border-line bg-black/25 p-4">
         <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
           Thêm màu hợp âm
@@ -1957,121 +1593,117 @@ export function ReharmHome() {
         )}
       </div>
 
-      {/* Hợp âm lướt */}
-      <div className="rounded-xl border border-line bg-black/25 p-4">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Hợp âm lướt
-          </h3>
-          {acceptedPassing.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAcceptedPassing([])}
-              className="font-mono text-[10px] text-dim hover:text-cream"
-            >
-              bỏ hết
-            </button>
-          )}
-        </div>
+      {/*
+        Đã bỏ: ô gõ vòng hợp âm, dãy thẻ hợp âm đọc được, và ba nút nghe thử.
 
+        Cả ba đều là di sản của luồng cũ — gõ một vòng hợp âm rời rồi nghe. Từ
+        khi dán được lời bài hát thì bản nhạc bên trên đã bày đủ hợp âm ngay
+        trên đầu từng chữ, bấm vào là phát từ đó, và nút Phát cả bài nghe được
+        trọn vẹn cả điệu lẫn câu fill.
+
+        Ô nhập biến mất nhưng **trạng thái `input` thì không**: nó vẫn là nguồn
+        vòng hợp âm cho cả trang, và được nạp từ bài hát vừa dán vào.
+      */}
+
+      <div>
+        <OnScreenPiano
+          leftHandNotes={
+            selectedIndex !== null ? twoHands[selectedIndex]?.left : undefined
+          }
+          rightHandNotes={
+            selectedIndex !== null ? twoHands[selectedIndex]?.right : undefined
+          }
+          highlightNotes={
+            selectedIndex !== null && !twoHands[selectedIndex]
+              ? (selected ? notesForChord(selected) : undefined)
+              : undefined
+          }
+        />
+
+        <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" />
+            tay trái
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-right-hand" />
+            tay phải
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-key" />
+            đang bấm
+          </span>
+        </div>
+      </div>
+
+      {/* Dẫn bè */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Dẫn bè
+        </h3>
         <p className="mb-3 text-xs leading-relaxed text-dim">
-          Chèn hợp âm nối vào giữa hai hợp âm chính. Tài liệu xếp đây là kỹ
-          thuật lõi, đáng học kỹ nhất của phong cách. Chọn từng chỗ, đừng chèn
-          hết — chèn dày quá thì bài mất hướng.
+          Nguyên lý gốc của phong cách: chọn thế bấm sao cho các nốt di chuyển
+          ít nhất giữa hai hợp âm. Tắt đi để nghe cách bấm mộc, luôn xếp chồng
+          từ nốt gốc.
         </p>
 
-        {passingGroups.length === 0 ? (
-          <p className="text-sm text-dim">
-            Vòng này chưa có chỗ nào chèn được.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {/* Lọc theo kỹ thuật — danh sách dài thì khó tìm đúng loại cần */}
-            <div className="mb-1 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setTechniqueFilter(null)}
-                className={`rounded-lg border px-3 py-1 text-[11px] ${
-                  techniqueFilter === null
-                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                Tất cả ({passingSuggestions.length})
-              </button>
-
-              {techniqueCounts.map(([technique, count]) => (
-                <button
-                  key={technique}
-                  type="button"
-                  onClick={() =>
-                    setTechniqueFilter(
-                      techniqueFilter === technique ? null : technique,
-                    )
-                  }
-                  className={`rounded-lg border px-3 py-1 text-[11px] ${
-                    techniqueFilter === technique
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {TECHNIQUE_LABELS[technique]} ({count})
-                </button>
-              ))}
-            </div>
-
-            {visibleGroups.map((group) => {
-              const isOn = isGroupOn(group)
-              const places = group.slots.length
-
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onClick={() => togglePassingGroup(group.id)}
-                  className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                    isOn
-                      ? 'border-amber-key bg-amber-key/15'
-                      : 'border-line bg-white/4 hover:bg-white/8'
-                  }`}
-                >
-                  <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <span
-                      className={`font-mono text-[10px] ${
-                        isOn ? 'text-amber-key' : 'text-dim'
-                      }`}
-                    >
-                      {TECHNIQUE_LABELS[group.technique]}
-                    </span>
-                    <span className="font-serif text-base text-cream">
-                      {group.chords.map((chord) => chord.symbol).join(' → ')}
-                    </span>
-                    {places > 1 && (
-                      <span className="font-mono text-[10px] text-teal-key">
-                        áp cho {places} chỗ
-                      </span>
-                    )}
-                  </span>
-                  <span className="mt-1 block text-[11px] leading-relaxed text-dim">
-                    {group.explanation}
-                  </span>
-                </button>
-              )
-            })}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSmoothVoicing(true)}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                smoothVoicing
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              Có dẫn bè
+            </button>
+            <button
+              type="button"
+              onClick={() => setSmoothVoicing(false)}
+              className={`rounded-lg border px-3 py-1.5 text-xs ${
+                !smoothVoicing
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              Thế mộc
+            </button>
           </div>
-        )}
 
-        {acceptedPassing.length > 0 && (
-          <p className="mt-3 border-t border-line pt-3">
-            <span className="font-mono text-[10px] text-dim">
-              Vòng sau khi chèn:{' '}
-            </span>
-            <span className="font-serif text-sm text-amber-key">
-              {withPassing.map((chord) => chord.symbol).join(' · ')}
-            </span>
+          <label className="flex items-center gap-2 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={dropRoot}
+              onChange={(event) => setDropRoot(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Bỏ nốt gốc ở tay phải
+          </label>
+        </div>
+
+        {sequence.chords.length > 1 && (
+          <p className="mt-3 border-t border-line pt-3 font-mono text-[11px] text-dim">
+            Quãng đường tay phải phải đi:{' '}
+            <span className="text-teal-key">{movement.smooth}</span> nửa cung
+            khi có dẫn bè, so với{' '}
+            <span className="text-rose-300">{movement.plain}</span> khi bấm
+            mộc.
           </p>
         )}
       </div>
+
+      {/*
+        Khung "Hợp âm lướt" đã bỏ.
+
+        Mọi việc của nó — xem gợi ý đặt được ở đâu, chèn cả loạt hay chèn lẻ
+        một chỗ, gỡ ra — giờ nằm trong menu chuột phải ngay trên bản nhạc. Chuột
+        phải hơn hẳn ở chỗ nó **gắn với đúng hợp âm đang bàn tới**, còn khung
+        này bày một danh sách rời rồi bắt người dùng tự dò xem nó nói về chỗ
+        nào. Bày cả hai thì vừa dài vừa dễ lệch nhau.
+      */}
 
       {/* Đệm theo điệu */}
       <div className="rounded-xl border border-line bg-black/25 p-4">
@@ -2203,82 +1835,21 @@ export function ReharmHome() {
         beatsPerChord={chordBeats}
       />
 
-      {/* Thế bấm hai tay */}
-      {twoHands.length > 0 && (
-        <div className="rounded-xl border border-line bg-black/25 p-4">
-          <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Chia hai tay
-          </h3>
+      {/*
+        Khung "Chia hai tay" liệt kê nốt của từng tay cho từng hợp âm đã bỏ.
 
-          <div className="flex flex-col gap-2">
-            {twoHands.map((voicing, index) => (
-              <div
-                key={`${voicing.symbol}-${index}`}
-                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-line/50 pb-2 last:border-0"
-              >
-                <span className="w-20 font-serif text-base text-cream">
-                  {voicing.symbol}
-                </span>
-                <span className="font-mono text-[11px] text-dim">
-                  tay trái{' '}
-                  <span className="text-teal-key">
-                    {voicing.left.map((note) => midiToName(note)).join(' ')}
-                  </span>
-                </span>
-                <span className="font-mono text-[11px] text-dim">
-                  tay phải{' '}
-                  <span className="text-amber-key">
-                    {voicing.right.map((note) => midiToName(note)).join(' ')}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        Nó dài bằng cả vòng hợp âm mà không nói thêm được gì: bàn phím đàn phía
+        trên đã chỉ đúng thế bấm bằng màu riêng cho mỗi tay, và chế độ chờ đánh
+        đúng nốt cũng hiện nốt đang chờ. Đọc tên nốt dạng chữ là cách xem kém
+        nhất trong ba cách, mà lại chiếm chỗ nhiều nhất.
+      */}
 
-      {/* Bảng chọn nhanh */}
-      <div className="flex flex-col gap-3 border-t border-line pt-5">
-        <div>
-          <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Chọn tính chất
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {PICKER_QUALITIES.map((quality) => (
-              <button
-                key={quality.suffix}
-                type="button"
-                onClick={() => setPickerQuality(quality.suffix)}
-                className={`rounded-lg border px-3 py-1.5 font-mono text-xs ${
-                  pickerQuality === quality.suffix
-                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                {quality.label}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/*
+        Đã bỏ: bảng chọn tính chất và lưới chạm nốt gốc để thêm hợp âm.
 
-        <div>
-          <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Chạm nốt gốc để thêm hợp âm
-          </h3>
-          <div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
-            {ROOT_NAMES.map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => appendChord(name)}
-                className="rounded-lg border border-line bg-white/5 py-3 font-mono text-sm font-semibold text-cream hover:bg-amber-key hover:text-ink"
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+        Chúng dùng để **dựng từng hợp âm bằng cách bấm**, tức phục vụ đúng cái ô
+        nhập vừa bỏ đi. Không còn ô nhập thì chúng không ghi vào đâu được nữa.
+      */}
     </section>
   )
 }

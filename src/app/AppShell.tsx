@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { armAudioOnFirstGesture } from '../shared/audio/audioEngine'
 import { ChordRecognitionDrill } from '../earTraining/chordRecognition/ChordRecognitionDrill'
 import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
 import { ProgressionTrainer } from '../earTraining/progressionTrainer/ProgressionTrainer'
@@ -21,6 +22,9 @@ type TabId = (typeof TABS)[number]['id']
 
 export function AppShell() {
   const [tab, setTab] = useState<TabId>('ear')
+
+  // Cú bấm đầu tiên vào bất cứ đâu cũng mở khoá tiếng, khỏi cần nút riêng.
+  useEffect(armAudioOnFirstGesture, [])
 
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col px-4 py-8">

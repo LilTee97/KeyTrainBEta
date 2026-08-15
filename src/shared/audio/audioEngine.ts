@@ -71,6 +71,35 @@ export async function startAudio(): Promise<void> {
   useAudioStore.getState().setReady(true)
 }
 
+/**
+ * Tự mở khoá âm thanh ở **thao tác đầu tiên** của người dùng, dù là thao tác gì.
+ *
+ * Trình duyệt chặn phát tiếng khi trang chưa được chạm vào, nên không thể bật
+ * sẵn từ lúc tải trang. Nhưng cái chặn ấy chỉ đòi *một thao tác thật* — không
+ * đòi phải là một nút riêng. Bắt luôn cú bấm đầu tiên thì người dùng không bao
+ * giờ phải bấm "Bật âm thanh" nữa, mà vẫn đúng luật của trình duyệt.
+ *
+ * Trả về hàm gỡ, để React dọn được khi rời trang.
+ */
+export function armAudioOnFirstGesture(): () => void {
+  if (useAudioStore.getState().ready) return () => {}
+
+  function open() {
+    void startAudio()
+    remove()
+  }
+
+  function remove() {
+    window.removeEventListener('pointerdown', open)
+    window.removeEventListener('keydown', open)
+  }
+
+  window.addEventListener('pointerdown', open)
+  window.addEventListener('keydown', open)
+
+  return remove
+}
+
 export function isAudioReady(): boolean {
   return useAudioStore.getState().ready
 }
