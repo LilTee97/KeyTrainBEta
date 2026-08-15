@@ -32,6 +32,17 @@ export interface RenderOptions {
   beatsEach?: readonly number[]
   /** Cắt bớt độ ngân để hai hợp âm liền nhau không chồng tiếng. */
   releaseRatio?: number
+  /**
+   * Các hợp âm mà **ô nhịp cuối** của chúng không quạt hợp âm nữa.
+   *
+   * Dùng cho ô nối sang đoạn mới: ô đó dành trọn cho một câu chạy ngón, nên
+   * phần đệm phải im hẳn — cả hợp âm lẫn nốt bass — không thì câu chạy vừa bị
+   * lấp vừa nghe dày.
+   *
+   * Lọc sau khi dựng chứ không cài vào từng nhánh dựng, để **mọi điệu đều
+   * theo**: điệu có mẫu tiết tấu cố định cũng phải nhường ô đó như ballad.
+   */
+  barsWithoutComping?: ReadonlySet<number>
 }
 
 function clampVelocity(value: number): number {
@@ -60,12 +71,34 @@ function notesForVoice(
   }
 }
 
+/** Cú đẩy nằm cách vạch nhịp sau **nửa phách**, tức phách 4,5 của ô bốn bốn. */
+const PUSH_BEFORE_BAR = 0.5
+
 /**
- * Nhánh ballad: hợp âm khối, hai tay đánh cùng lúc theo nhịp đổi hợp âm.
+ * Nhánh ballad: **bass đơn → hợp âm → cú đẩy**, ba tiếng mỗi ô nhịp.
  *
- * Khi một hợp âm chiếm trọn từ một ô nhịp trở lên, hợp âm được đánh lại ở giữa
- * quãng đó thay vì ngân suốt — đúng với giá trị nốt trắng quan sát được trong
- * các bản notate của tài liệu, và giữ cho phần đệm khỏi chết lặng.
+ * Hình này đo thẳng từ bản ký âm `reference/nguoi ay.mxl`. Tay trái ở đó có
+ * đúng ba tiếng mỗi ô, và hình lặp ở **24 trên 28 ô nhịp** — ba ô còn lại là ô
+ * chứa hai hợp âm mà bộ đọc không đặt được mốc chắc chắn, và ô cuối bài:
+ *
+ * ```
+ * phách 1     C3          nốt bass đơn
+ * phách 3     E3 G3 C3    hợp âm đầy đủ
+ * phách 4,5   G3 C3       cú đẩy sang ô sau
+ * ```
+ *
+ * Ba điểm bản đầu làm khác, và cả ba đều làm phần đệm nghe dày mà lại hụt:
+ *
+ * 1. **Đầu ô nhịp chỉ có một nốt bass**, không phải cả hợp âm. Hoà âm mở ra ở
+ *    giữa ô mới đúng, và cũng chừa chỗ cho câu hát ở chỗ nó vào.
+ * 2. **Có tiếng thứ ba trước vạch nhịp.** Thiếu nó thì đánh xong phách 3 là im
+ *    một phách rưỡi, chỗ chuyển đoạn nghe hụt vì không gì bắc cầu sang ô sau.
+ * 3. **Đếm theo từng ô nhịp**, không chia đôi cả quãng hợp âm. Hợp âm ngân hai
+ *    ô thì được hai lượt đủ hình, chứ không phải hai tiếng cách nhau bốn phách.
+ *
+ * Ô cuối bài không đẩy — hết bài thì không còn ô nào phía trước để bắc cầu
+ * sang. Ở đây không xử lý riêng vì phần đệm không biết mình có phải ô cuối hay
+ * không; thứ tự chơi mới biết điều đó.
  */
 function renderBlockChords(
   voicings: readonly TwoHandVoicing[],
@@ -76,36 +109,76 @@ function renderBlockChords(
 ): TimelineEvent[] {
   const events: TimelineEvent[] = []
 
+  /** Một tiếng hai tay cùng lúc, dùng cho hợp âm ngắn hơn một ô nhịp. */
+  const strikeBoth = (
+    voicing: TwoHandVoicing,
+    at: number,
+    beats: number,
+    emphasis: number,
+  ) => {
+    events.push({
+      notes: voicing.right,
+      startBeat: at,
+      durationBeats: beats * releaseRatio,
+      hand: 'right',
+      velocity: clampVelocity(BASE_VELOCITY * emphasis),
+    })
+
+    events.push({
+      notes: voicing.left,
+      startBeat: at,
+      durationBeats: beats * releaseRatio,
+      hand: 'left',
+      velocity: clampVelocity(BASE_VELOCITY * emphasis * LEFT_HAND_SCALE),
+    })
+  }
+
   voicings.forEach((voicing, index) => {
     const chordStart = starts[index]
     const chordBeats = durations[index]
+    const measures = Math.floor(chordBeats / beatsPerMeasure)
 
-    // Hợp âm ngân từ một ô nhịp trở lên thì chia đôi để đánh lại.
-    const strikeCount = chordBeats >= beatsPerMeasure ? 2 : 1
-    const strikeLength = chordBeats / strikeCount
+    /*
+      Hợp âm ngắn hơn một ô nhịp — ô đã chia đôi cho hợp âm lướt chẳng hạn —
+      thì chỉ một tiếng. Chỗ đó vốn đã dày vì hợp âm đổi nhanh, nhồi đủ ba
+      tiếng vào chỉ thành rối.
+    */
+    if (measures === 0) {
+      strikeBoth(voicing, chordStart, chordBeats, 1)
+      return
+    }
 
-    for (let strike = 0; strike < strikeCount; strike += 1) {
-      const startBeat = chordStart + strike * strikeLength
-      const durationBeats = strikeLength * releaseRatio
+    const half = beatsPerMeasure / 2
 
-      // Lần đánh lại nhẹ hơn lần đầu, để nghe ra đâu là chỗ đổi hợp âm.
-      const emphasis = strike === 0 ? 1 : 0.8
+    for (let measure = 0; measure < measures; measure += 1) {
+      const barStart = chordStart + measure * beatsPerMeasure
+
+      // Nốt thấp nhất của tay trái, đánh trơ một mình ở đầu ô.
+      events.push({
+        notes: [voicing.left[0]],
+        startBeat: barStart,
+        durationBeats: half * releaseRatio,
+        hand: 'left',
+        velocity: clampVelocity(BASE_VELOCITY * LEFT_HAND_SCALE),
+      })
+
+      // Hoà âm mở ra ở giữa ô nhịp.
+      strikeBoth(voicing, barStart + half, half, 0.85)
 
       events.push({
         notes: voicing.right,
-        startBeat,
-        durationBeats,
+        startBeat: barStart + beatsPerMeasure - PUSH_BEFORE_BAR,
+        durationBeats: PUSH_BEFORE_BAR * releaseRatio,
         hand: 'right',
-        velocity: clampVelocity(BASE_VELOCITY * emphasis),
+        // Nhẹ hơn hẳn hai tiếng chính: nó bắc cầu, không phải chỗ nhấn.
+        velocity: clampVelocity(BASE_VELOCITY * 0.6),
       })
+    }
 
-      events.push({
-        notes: voicing.left,
-        startBeat,
-        durationBeats,
-        hand: 'left',
-        velocity: clampVelocity(BASE_VELOCITY * emphasis * LEFT_HAND_SCALE),
-      })
+    // Phần dư không đủ một ô nhịp thì đánh một tiếng cho khỏi trống.
+    const tail = chordBeats - measures * beatsPerMeasure
+    if (tail > 0) {
+      strikeBoth(voicing, chordStart + measures * beatsPerMeasure, tail, 0.85)
     }
   })
 
@@ -269,6 +342,7 @@ export function renderPattern(
     beatsPerChord = pattern.beatsPerMeasure,
     beatsEach,
     releaseRatio = 0.92,
+    barsWithoutComping,
   } = options
 
   if (voicings.length === 0) return []
@@ -294,8 +368,47 @@ export function renderPattern(
         releaseRatio,
       )
 
-  return clipToChords(events, starts).sort(
-    (a, b) => a.startBeat - b.startBeat,
+  const comped = barsWithoutComping?.size
+    ? dropLastMeasure(
+        events,
+        durations,
+        starts,
+        pattern.beatsPerMeasure,
+        barsWithoutComping,
+      )
+    : events
+
+  return clipToChords(comped, starts).sort((a, b) => a.startBeat - b.startBeat)
+}
+
+/** Bỏ các tiếng đàn rơi vào ô nhịp cuối của những hợp âm được chỉ định. */
+function dropLastMeasure(
+  events: readonly TimelineEvent[],
+  durations: readonly number[],
+  starts: readonly number[],
+  beatsPerMeasure: number,
+  chords: ReadonlySet<number>,
+): TimelineEvent[] {
+  const windows: { from: number; to: number }[] = []
+
+  for (const index of chords) {
+    const start = starts[index]
+    const beats = durations[index]
+    // Hợp âm ngắn hơn một ô nhịp thì không có ô nào để nhường.
+    if (start === undefined || beats < beatsPerMeasure) continue
+
+    windows.push({ from: start + beats - beatsPerMeasure, to: start + beats })
+  }
+
+  if (windows.length === 0) return [...events]
+
+  return events.filter(
+    (event) =>
+      !windows.some(
+        (window) =>
+          event.startBeat >= window.from - 0.001 &&
+          event.startBeat < window.to - 0.001,
+      ),
   )
 }
 

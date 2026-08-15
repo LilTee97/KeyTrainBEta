@@ -86,6 +86,23 @@ interface SongSheetViewProps {
    */
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  /**
+   * Hợp âm này có đang là **mốc chuyển đoạn** không, và chơi ô nối thế nào.
+   *
+   * Rỗng nghĩa là chưa đánh dấu. Mốc chuyển đoạn được cấp thêm một ô nhịp để
+   * người hát ngân cho hết câu, và ô ấy chạy ngón thay vì quạt hợp âm.
+   */
+  transitionAt?: (chordIndex: number) => TransitionOption | null
+  onToggleTransition?: (chordIndex: number) => void
+  onSetTransition?: (chordIndex: number, run: TransitionOption) => void
+}
+
+/** Cách chơi ô nối, hiện trên menu chuột phải. */
+export interface TransitionOption {
+  /** Hợp âm rải chạy mấy quãng tám. */
+  octaves: number
+  /** Im hẳn mấy phách trước vạch nhịp, cho người hát cất giọng. */
+  restBeats: number
 }
 
 /** Một hợp âm lướt có thể chèn vào trước một hợp âm. */
@@ -129,6 +146,9 @@ export function SongSheetView({
   onRemovePassingHere,
   fillAt,
   onToggleFill,
+  transitionAt,
+  onToggleTransition,
+  onSetTransition,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
   /** Khoảng dòng đang được bôi đen, chờ chọn loại đoạn. */
@@ -354,6 +374,21 @@ export function SongSheetView({
                 }
               : undefined
           }
+          transition={transitionAt?.(menu.chordIndex) ?? null}
+          canMarkTransition={onToggleTransition !== undefined}
+          onToggleTransition={
+            onToggleTransition
+              ? () => {
+                  onToggleTransition(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          onSetTransition={
+            onSetTransition
+              ? (run) => onSetTransition(menu.chordIndex, run)
+              : undefined
+          }
           fill={fillAt?.(menu.chordIndex) ?? null}
           onToggleFill={
             onToggleFill
@@ -387,6 +422,10 @@ function ChordContextMenu({
   onRemoveHere,
   fill,
   onToggleFill,
+  transition,
+  canMarkTransition,
+  onToggleTransition,
+  onSetTransition,
 }: {
   menu: ChordMenu
   paired: boolean
@@ -402,6 +441,11 @@ function ChordContextMenu({
   /** Chỗ này đang có fill không; rỗng nghĩa là không chêm được. */
   fill: boolean | null
   onToggleFill?: () => void
+  /** Đang là mốc chuyển đoạn không, và chơi ô nối thế nào. */
+  transition: TransitionOption | null
+  canMarkTransition: boolean
+  onToggleTransition?: () => void
+  onSetTransition?: (run: TransitionOption) => void
 }) {
   const applied = passing.filter((option) => option.appliedHere)
   const available = passing.filter((option) => !option.appliedHere)
@@ -493,6 +537,77 @@ function ChordContextMenu({
             </span>
           </button>
         ))}
+
+      {canMarkTransition && (
+        <>
+          <div className="my-1 border-t border-line" />
+
+          <button
+            type="button"
+            onClick={onToggleTransition}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+          >
+            <span className={transition ? 'text-amber-key' : 'text-cream'}>
+              {transition
+                ? 'Bỏ mốc chuyển đoạn ở đây'
+                : 'Đánh dấu mốc chuyển đoạn'}
+            </span>
+            <span className="text-[10px] text-dim">
+              {transition
+                ? 'Trả lại một ô nhịp, chơi liền sang đoạn sau'
+                : 'Thêm một ô nhịp chạy ngón trước khi sang đoạn sau'}
+            </span>
+          </button>
+
+          {/*
+            Hai thông số chỉ hiện khi đã đánh dấu — bày sẵn lúc chưa có mốc thì
+            người dùng chỉnh mà chẳng thấy gì đổi.
+          */}
+          {transition && onSetTransition && (
+            <>
+              <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Chạy mấy quãng tám
+              </p>
+              <div className="flex gap-1 px-2.5 py-1">
+                {[2, 3].map((octaves) => (
+                  <button
+                    key={octaves}
+                    type="button"
+                    onClick={() => onSetTransition({ ...transition, octaves })}
+                    className={`flex-1 rounded border px-2 py-1 text-xs ${
+                      transition.octaves === octaves
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {octaves}
+                  </button>
+                ))}
+              </div>
+
+              <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Nghỉ mấy phách
+              </p>
+              <div className="flex gap-1 px-2.5 py-1">
+                {[0, 1, 2, 3].map((restBeats) => (
+                  <button
+                    key={restBeats}
+                    type="button"
+                    onClick={() => onSetTransition({ ...transition, restBeats })}
+                    className={`flex-1 rounded border px-2 py-1 text-xs ${
+                      transition.restBeats === restBeats
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {restBeats}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
 
       {onToggleFill && fill !== null && (
         <>

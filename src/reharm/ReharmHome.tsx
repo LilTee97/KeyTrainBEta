@@ -43,7 +43,10 @@ import type {
   OrnamentDensity,
 } from './fillSoloGenerator/graceNoteOrnamenter'
 import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
-import type { SoloNoteSource } from './fillSoloGenerator/soloGenerator'
+import type {
+  SoloNoteSource,
+  TransitionRun,
+} from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
   fillPositions,
@@ -91,7 +94,8 @@ import {
 import type { ArrangementStep, SourceSection } from './style/arrangement'
 import { buildArrangedSong, defaultArrangement } from './style/arrangement'
 import { turnaroundInto } from './style/turnaround'
-import { chooseInterludeWindow, leadInNotes } from './style/interludeLoop'
+import { chooseInterludeWindow } from './style/interludeLoop'
+import { leadInNotes } from './fillSoloGenerator/leadIn'
 
 /**
  * Giang tấu chạy trên bốn hợp âm nhặt từ vòng của bài.
@@ -100,6 +104,14 @@ import { chooseInterludeWindow, leadInNotes } from './style/interludeLoop'
  * trọn cả đoạn thì giang tấu dài lê thê.
  */
 const INTERLUDE_CHORDS = 4
+
+/**
+ * Cách chơi ô nối mặc định: hợp âm rải hai quãng tám, im hai phách.
+ *
+ * Hai phách đo từ bản ký âm `reference/nguoi ay.mxl` — chỗ người hát cất giọng
+ * trước phách mạnh. Người dùng chỉnh lại được từng chỗ bằng chuột phải.
+ */
+const DEFAULT_TRANSITION: TransitionRun = { octaves: 2, restBeats: 2 }
 import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
@@ -306,6 +318,16 @@ export function ReharmHome() {
    * thêm một hợp âm vào ô thì hai hợp âm chia nhau thời gian của ô đó và **số
    * ô nhịp không đổi**. Cắt lẻ thì bài ngắn đi, tức đổi luôn cấu trúc bài.
    */
+  /**
+   * Người dùng tự chỉnh mốc chuyển đoạn: `null` là gỡ mốc app tự dò ra.
+   *
+   * Lưu riêng phần chỉnh tay thay vì lưu cả bảng, để mốc tự dò vẫn theo kịp
+   * khi người dùng quét lại cách chia đoạn.
+   */
+  const [transitionEdits, setTransitionEdits] = useState<
+    Record<number, TransitionRun | null>
+  >({})
+
   const [pairedChords, setPairedChords] = useState<ReadonlySet<number>>(
     new Set(),
   )
@@ -387,12 +409,71 @@ export function ReharmHome() {
   }, [beatsPerChord, style.beatsPerMeasure])
 
   /**
-   * Bảng thời lượng đưa vào đường ống: cặp chia đôi thì mỗi bên nửa ô nhịp.
+   * Hợp âm kết mỗi đoạn, trừ đoạn cuối bài.
+   *
+   * Dựng từ **bản nhạc thô** — lời đã chia đoạn ghép với vòng hợp âm chưa tái
+   * hoà âm — chứ không từ bản nhạc hoàn chỉnh. Bắt buộc phải vậy: chỗ chuyển
+   * đoạn quyết định thời lượng hợp âm, mà thời lượng lại là đầu vào của đường
+   * ống tái hoà âm dựng ra bản nhạc hoàn chỉnh. Đọc từ bản hoàn chỉnh là vòng
+   * tròn. Cách chia đoạn chỉ phụ thuộc lời và dấu người dùng quét, nên bản thô
+   * cho đúng cùng một kết quả.
+   *
+   * Đoạn cuối bài không tính: hết bài rồi thì không còn ai phải vào đâu nữa.
    */
-  const halvedBeats = useMemo(
-    () => pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
-    [pairedChords, sequence.chords.length, chordBeats],
-  )
+  const sectionEnds = useMemo(() => {
+    if (!pastedSong) return undefined
+
+    const raw = resectionSheet(
+      buildSongSheet(pastedSong, sequence.chords),
+      sectionMarks,
+    )
+    const ranges = sectionChordRanges(raw)
+
+    return new Set(ranges.slice(0, -1).map((range) => range.to))
+  }, [pastedSong, sequence.chords, sectionMarks])
+
+  /**
+   * Mốc chuyển đoạn thật sự dùng: chỗ app tự dò, sau đó áp phần người dùng chỉnh.
+   */
+  const transitions = useMemo(() => {
+    const map = new Map<number, TransitionRun>()
+    for (const index of sectionEnds ?? []) map.set(index, DEFAULT_TRANSITION)
+
+    for (const [key, value] of Object.entries(transitionEdits)) {
+      const index = Number(key)
+      if (value === null) map.delete(index)
+      else map.set(index, value)
+    }
+
+    return map
+  }, [sectionEnds, transitionEdits])
+
+  /** Chỉ các số thứ tự, cho những chỗ chỉ cần biết có mốc hay không. */
+  const transitionAt = useMemo(() => new Set(transitions.keys()), [transitions])
+
+  /**
+   * Bảng thời lượng đưa vào đường ống.
+   *
+   * Cặp chia đôi thì mỗi bên nửa ô nhịp. Hợp âm **cuối mỗi đoạn** được cấp
+   * thêm trọn một ô nhịp, để người hát ngân cho hết câu rồi mới vào đoạn sau.
+   *
+   * Vì sao cả một ô mà không phải một phách: ô nhịp là đơn vị nguyên, thêm một
+   * phách là đẻ ra ô năm phách. Đo trên `reference/nguoi ay.mxl` thì từ chữ
+   * hát cuối tới lúc đoạn mới vào, bản ký âm cho 1,5 đến 3 phách — một ô là
+   * hơi rộng, nhưng bản ký âm rộng rãi được là nhờ câu hát kết sớm trong ô,
+   * còn ở đây không ép người hát ngừng sớm được.
+   */
+  const halvedBeats = useMemo(() => {
+    const table = {
+      ...pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
+    }
+
+    for (const index of transitionAt) {
+      table[index] = (table[index] ?? chordBeats) + chordBeats
+    }
+
+    return table
+  }, [pairedChords, transitionAt, sequence.chords.length, chordBeats])
 
   const reharm = useMemo(() => {
     const parsedKey = manualKey
@@ -524,8 +605,10 @@ export function ReharmHome() {
       renderPattern(twoHands, style, {
         beatsPerChord: chordBeats,
         beatsEach: chordDurations(withPassing, chordBeats),
+        // Ô nối sang đoạn mới dành trọn cho câu chạy ngón.
+        barsWithoutComping: transitionAt,
       }),
-    [twoHands, style, chordBeats, withPassing],
+    [twoHands, style, chordBeats, withPassing, transitionAt],
   )
 
   /**
@@ -742,9 +825,11 @@ export function ReharmHome() {
         fillPositions(withPassing, {
           density: soloDensity,
           breaths,
+          beatsPerChord: chordBeats,
+          always: transitionAt,
         }).map((position) => position.mainIndex),
       ),
-    [withPassing, soloDensity, breaths],
+    [withPassing, soloDensity, breaths, transitionAt, chordBeats],
   )
 
   /**
@@ -768,6 +853,7 @@ export function ReharmHome() {
       soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
+          sectionEnds: transitions,
           beatsPerChord: chordBeats,
           direction: soloDirection,
           density: soloDensity,
@@ -783,6 +869,7 @@ export function ReharmHome() {
       reharm.key,
       mutedFills,
       breaths,
+      transitions,
     ],
   )
 
@@ -1133,6 +1220,19 @@ export function ReharmHome() {
               setAcceptedPassing((current) =>
                 current.filter((entry) => entry !== slotId),
               )
+            }
+            transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
+            onToggleTransition={(chordIndex) =>
+              setTransitionEdits((current) => ({
+                ...current,
+                // Đang có mốc thì gỡ; chưa có thì thêm với cách chơi mặc định.
+                [chordIndex]: transitions.has(chordIndex)
+                  ? null
+                  : DEFAULT_TRANSITION,
+              }))
+            }
+            onSetTransition={(chordIndex, run) =>
+              setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
             }
             fillAt={fillAt}
             onToggleFill={(chordIndex) =>

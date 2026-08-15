@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { scaleTones } from '../../reharmEngine/keyDetection'
 import type { PitchClass } from '../../../shared/musicTheory/types'
-import {
-  chooseInterludeWindow,
-  leadInNotes,
-  pullStrength,
-} from '../interludeLoop'
+import { chooseInterludeWindow, pullStrength } from '../interludeLoop'
+import { leadInNotes } from '../../fillSoloGenerator/leadIn'
 
 const chords = (text: string) => parseChordInput(text).chords
 const chord = (text: string) => chords(text)[0]

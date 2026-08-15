@@ -1,4 +1,5 @@
 import { chordPitchClasses } from '../../shared/musicTheory/chordDefinitions'
+import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
@@ -7,6 +8,7 @@ import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTimi
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, stepInScale } from './graceNoteOrnamenter'
+import { arpeggioRun } from './leadIn'
 import type { Lick } from './soloVocabulary'
 import {
   chordBlues,
@@ -168,6 +170,8 @@ export interface SoloNote {
   durationBeats: number
   /** Nốt láy hay nốt chính. */
   isGrace: boolean
+  /** Tay nào chơi; bỏ trống thì mặc định tay phải. */
+  hand?: 'left' | 'right'
 }
 
 /**
@@ -230,9 +234,26 @@ export function fillPositions(
      * Rỗng nghĩa là chưa dán lời nên chưa biết ca sĩ nghỉ ở đâu.
      */
     breaths?: ReadonlySet<number>
+    /**
+     * Các chỗ **luôn được chêm**, mật độ không gạt đi được.
+     *
+     * Dành cho chỗ chuyển đoạn: câu chạy ở đó là chuyện cấu trúc bài, không
+     * phải đồ trang trí. Đo trên chính bài người dùng đang dựng thì thấy ở mức
+     * mật độ Thưa và Vừa, bộ lọc gạt đúng chỗ cuối tiền điệp khúc — tức chỗ
+     * duy nhất bắt buộc phải có.
+     */
+    always?: ReadonlySet<number>
+    /** Độ dài mặc định một hợp âm, để biết ô nhịp nào đã bị chia ngắn. */
+    beatsPerChord?: number
   } = {},
 ): FillPosition[] {
-  const { density = 'medium', skip, breaths } = options
+  const {
+    density = 'medium',
+    skip,
+    breaths,
+    always,
+    beatsPerChord = 4,
+  } = options
   const { everyNth } = densityOption(density)
 
   const positions: FillPosition[] = []
@@ -250,18 +271,24 @@ export function fillPositions(
     if (breaths) {
       if (!breaths.has(mainIndex)) continue
       breathCount += 1
-      if (breathCount % everyNth !== 0) continue
-    } else if (index % everyNth !== 0) continue
+      if (!always?.has(mainIndex) && breathCount % everyNth !== 0) continue
+    } else if (index % everyNth !== 0 && !always?.has(mainIndex)) continue
 
     /*
-      **Chỉ chêm fill vào ô nhịp chưa bị chia đôi.**
+      **Chỉ chêm fill vào ô nhịp chưa bị chia ngắn.**
 
       Câu fill sinh ra để lấp chỗ trống ở cuối một hợp âm. Nhưng chỗ trống đó
       chính là chỗ hợp âm lướt đã chiếm: khi một ô nhịp bị chia đôi cho vòng
       hai-năm lướt, nửa sau không còn trống nữa. Nhét fill vào đó thì hai thứ
       chồng lên nhau và cùng bị bóp ngắn lại — nghe ra là lệch nhịp.
+
+      So theo **độ dài thật**, không phải theo việc hợp âm có ghi thời lượng
+      riêng hay không. Hợp âm cuối đoạn cũng ghi thời lượng riêng — nhưng là
+      ghi **dài thêm** một ô nhịp, và đó chính là ô dành cho câu chạy. Bản đầu
+      loại nó cùng một rọ với hợp âm bị chia đôi, nên câu chạy chuyển đoạn
+      không bao giờ được sinh ra.
     */
-    if (chords[index].beats !== undefined) continue
+    if (beatsOf(chords[index], beatsPerChord) < beatsPerChord) continue
 
     // Hợp âm cuối dẫn về hợp âm đầu, vì vòng được chơi lặp lại.
     const next = chords[(index + 1) % chords.length]
@@ -275,6 +302,77 @@ export function fillPositions(
   return positions
 }
 
+/**
+ * Nốt căng của hợp âm hiện tại, giải quyết xuống quãng ba của hợp âm sau.
+ *
+ * Đây là thứ tạo sức hút thật sự ở chỗ chuyển đoạn, đo được trên bản ký âm
+ * `reference/nguoi ay.mxl`: vào điệp khúc, tuyến giai điệu ngân **F** suốt hai
+ * phách cuối trên hợp âm G, rồi buông xuống **E** — quãng ba của C — ngay đầu
+ * ô nhịp sau. F là quãng bảy của G7; hai nốt cách nhau đúng nửa cung.
+ *
+ * Cặp nốt đó gọi là **nốt dẫn** (guide tone), và nó là bộ khung của mọi vòng
+ * hai-năm-một mà `phongcachdemhatkhabu.md` phần 8 gọi là công thức mẹ:
+ *
+ * - `G7 → C` — F (bảy của G7) xuống E (ba của C)
+ * - `Dm7 → G7` — C (bảy của Dm7) xuống B (ba của G7)
+ * - `F → C` — F (gốc của F) xuống E (ba của C)
+ *
+ * Nên câu fill phải kết ở **nốt của hợp âm đang chơi**, không phải ở nốt của
+ * hợp âm sắp tới. Bản đầu làm ngược: nó kết ngay trên nốt đích, tức đánh trước
+ * mất cái nốt đáng lẽ để dành cho phách mạnh của ô sau — nghe hết cả bất ngờ.
+ *
+ * Rỗng nghĩa là hai hợp âm này không có cặp nốt dẫn nào; lúc đó quay về cách
+ * cũ là đi liền bậc về phía nốt đích.
+ */
+function guideToneInto(
+  current: ParsedChord,
+  next: ParsedChord,
+): PitchClass | null {
+  const third = normalizePitchClass(
+    next.root + (next.quality.intervals.includes(3) ? 3 : 4),
+  )
+
+  const tones = current.quality.intervals.map((step) =>
+    normalizePitchClass(current.root + step),
+  )
+
+  /*
+    Ưu tiên nốt cách quãng ba ấy **đúng nửa cung phía trên**: nửa cung là bước
+    giải quyết chặt nhất, cả cung thì lỏng hơn nhưng vẫn nghe ra hướng đi
+    xuống. Xét theo thứ tự đó rồi mới tới nốt nằm dưới một nửa cung, vốn giải
+    quyết đi lên.
+  */
+  for (const gap of [1, 2, -1]) {
+    const wanted = normalizePitchClass(third + gap)
+    if (tones.includes(wanted)) return wanted
+  }
+
+  return null
+}
+
+/**
+ * Cách chơi ô nhịp nối sang đoạn mới.
+ *
+ * Hai con số này người dùng chỉnh được ở menu chuột phải, vì chúng phụ thuộc
+ * vào **bài hát** chứ không suy ra được: câu hát của mỗi bài cất giọng sớm
+ * muộn khác nhau, và người đệm mỗi người thích câu chạy dài ngắn khác nhau.
+ */
+export interface TransitionRun {
+  /** Hợp âm rải chạy mấy quãng tám. */
+  octaves: number
+  /**
+   * Im hẳn mấy phách trước vạch nhịp.
+   *
+   * Đây là chỗ người hát cất giọng. Trong rất nhiều bài, chữ đầu câu của đoạn
+   * mới **không** rơi vào phách mạnh — người ta hát trước vài chữ rồi mới rơi
+   * vào đó. Bản ký âm `reference/nguoi ay.mxl` là ví dụ: năm chữ *"Người ấy có
+   * tốt với"* nằm trên ô nhịp hợp âm G, chữ *"em"* mới rơi đúng phách mạnh của
+   * hợp âm C. Chạy sát tới vạch nhịp là đè lên đúng lúc người hát cần cất
+   * giọng, và đẩy cả đoạn hát lệch đi.
+   */
+  restBeats: number
+}
+
 export function generateFillLine(
   chords: readonly ParsedChord[],
   options: SoloOptions & {
@@ -283,6 +381,12 @@ export function generateFillLine(
     skipFills?: ReadonlySet<number>
     /** Các hợp âm mà câu hát kết thúc ở đó; xem `fillPositions`. */
     breaths?: ReadonlySet<number>
+    /**
+     * Các hợp âm là **mốc chuyển đoạn**, kèm cách chơi ô nối của từng chỗ.
+     *
+     * Chỗ này câu fill đổi hình hẳn — xem ghi chú trong thân hàm.
+     */
+    sectionEnds?: ReadonlyMap<number, TransitionRun>
   },
 ): SoloNote[] {
   const {
@@ -293,6 +397,7 @@ export function generateFillLine(
     key = null,
     skipFills,
     breaths,
+    sectionEnds,
   } = options
 
   if (chords.length < 2) return []
@@ -302,20 +407,76 @@ export function generateFillLine(
 
   const result: SoloNote[] = []
 
-  for (const { index } of fillPositions(chords, {
+  for (const { index, mainIndex } of fillPositions(chords, {
     density,
     skip: skipFills,
     breaths,
+    beatsPerChord,
+    // Chỗ chuyển đoạn luôn được chêm, mật độ không gạt đi được.
+    always: sectionEnds ? new Set(sectionEnds.keys()) : undefined,
   })) {
     const next = chords[(index + 1) % chords.length]
-
-    // Nốt đích: nốt đặc trưng nhất của hợp âm kế tiếp.
-    const [targetClass] = targetPitchClasses(next, 1)
-    const landing = nearestNote(targetClass, MELODY_LOW + 7)
+    const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
 
     /*
-      Dựng câu fill đi liền bậc **kết thúc ngay cạnh** nốt đích. Ba nốt là đủ
-      để nghe ra hướng đi mà không lấn sang phần hát.
+      Cuối một đoạn thì thay câu fill bằng một **câu chạy ngón** vào đoạn mới.
+
+      Chỗ này khác hẳn chỗ ngắt giữa đoạn, và đó là chỗ hai bản trước làm sai:
+
+      - Bản Hướng B ngân nốt dẫn suốt phách cuối — đứng yên một chỗ, không dẫn
+        ai đi đâu cả.
+      - Bản sau đó im suốt rồi hất hai nốt kép, vì tôi đọc dấu lặng trong bản
+        ký âm thành "chỗ trống phải chừa ra".
+
+      Tài liệu về đệm hát phân biệt rõ hai tình huống mà tôi đã gộp làm một:
+      chêm fill vào chỗ ca sĩ **lấy hơi**, và chêm vào chỗ ca sĩ **ngân dài**.
+      Cuối phiên khúc là trường hợp thứ hai — người hát ngân nốt cuối chờ vào
+      điệp khúc — nên chỗ đó không phải chừa trống, mà là chỗ để chạy một câu.
+      Cùng nguồn cũng ghi câu chạy giữa hai đoạn là công cụ chuyển đoạn, và
+      hợp với ballad hơn cả.
+
+      Câu chạy còn làm một việc thực dụng: **đếm nhịp hộ người hát**. Một chuỗi
+      nốt đều dẫn thẳng tới vạch nhịp thì vào đúng phách dễ hơn hẳn so với việc
+      đếm thầm trong khoảng lặng.
+    */
+    const transition = sectionEnds?.get(mainIndex)
+    if (transition) {
+      /*
+        Câu chạy chiếm ô nhịp cuối của hợp âm, và ô đó không quạt hợp âm nữa —
+        xem `renderPattern`, tham số `barsWithoutComping`.
+
+        Hợp âm cuối đoạn được cấp thêm một ô nhịp để người hát ngân cho hết
+        câu; ô thêm ấy chính là ô này.
+      */
+      const barBeats = Math.min(
+        beatsPerChord,
+        beatsOf(chords[index], beatsPerChord),
+      )
+      const rest = Math.min(transition.restBeats, barBeats - 0.5)
+
+      for (const note of arpeggioRun({
+        chord: chords[index],
+        octaves: transition.octaves,
+        endBeat: chordEnd - rest,
+        maxBeats: barBeats - rest,
+      })) {
+        result.push({ ...note, isGrace: false })
+      }
+
+      continue
+    }
+
+    /*
+      Kết ở **nốt dẫn của hợp âm đang chơi** nếu có, để nó tự giải quyết sang
+      hợp âm sau. Không có thì lùi về cách cũ: kết ngay cạnh nốt đặc trưng của
+      hợp âm kế tiếp.
+    */
+    const guide = guideToneInto(chords[index], next)
+    const [targetClass] = targetPitchClasses(next, 1)
+    const landing = nearestNote(guide ?? targetClass, MELODY_LOW + 7)
+
+    /*
+      Ba nốt là đủ để nghe ra hướng đi mà không lấn sang phần hát.
     */
     const approachFrom = direction === 'above' ? 'down' : 'up'
     const line: MidiNote[] = [landing]
@@ -323,15 +484,43 @@ export function generateFillLine(
       line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
     }
 
-    const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
-    const start = chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
-    const noteLength = fillBeats / line.length
+    const start =
+      chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
+
+    /*
+      Mấy nốt chạy đi nhanh, **nốt kết ngân dài** phần còn lại.
+
+      Bản ký âm cho thấy sức căng đến từ chỗ *giữ lâu* chứ không từ chỗ đánh
+      đúng lúc chót: nốt F được ngân suốt hai phách cuối rồi mới buông. Chia
+      đều ba nốt thì nốt dẫn trôi qua mất, không kịp căng.
+
+      Độ dài nốt chạy phải **rơi đúng lưới nốt kép**. Lấy thẳng một phần tư
+      quãng fill thì ra 0,375 phách — không phải nốt kép cũng chẳng phải nốt
+      móc, nghe lệch hẳn khỏi nhịp đệm. Nên làm tròn xuống bội của nốt kép rồi
+      dồn phần dư cho nốt kết.
+    */
+    const GRID = 0.25
+    let runLength = Math.max(
+      GRID,
+      Math.floor(fillBeats / (line.length + 1) / GRID) * GRID,
+    )
+    let holdLength = fillBeats - runLength * (line.length - 1)
+
+    // Quãng fill quá ngắn để giữ được nốt nào: chia đều, thà đều còn hơn hụt.
+    if (holdLength < runLength) {
+      runLength = fillBeats / line.length
+      holdLength = runLength
+    }
 
     line.forEach((note, position) => {
+      const last = position === line.length - 1
+      const length = last ? holdLength : runLength
+
       result.push({
         note,
-        startBeat: start + position * noteLength,
-        durationBeats: noteLength * 0.9,
+        startBeat: start + position * runLength,
+        // Nốt kết ngân trọn, để nó còn vang lúc hợp âm sau vào và giải quyết.
+        durationBeats: last ? length : length * 0.9,
         isGrace: false,
       })
     })
@@ -619,7 +808,7 @@ export function soloToTimeline(
     notes: [note.note],
     startBeat: note.startBeat,
     durationBeats: note.durationBeats,
-    hand: 'right' as const,
+    hand: note.hand ?? ('right' as const),
     // Nốt láy đánh nhẹ hơn hẳn, nó chỉ là cái vuốt vào nốt chính.
     velocity: Math.round(note.isGrace ? velocity * 0.6 : velocity),
   }))

@@ -62,17 +62,32 @@ describe('renderPattern — nhánh ballad', () => {
     expect(events.some((event) => event.hand === 'right')).toBe(true)
   })
 
-  it('hai tay đánh cùng lúc, đúng lối hợp âm khối', () => {
+  it('hoà âm mở ra ở giữa ô nhịp, hai tay cùng lúc', () => {
+    /*
+      Đầu ô nhịp cố ý chỉ có nốt bass đơn, cuối ô cố ý chỉ có cú đẩy tay phải
+      — nên hai tay không còn khớp từng cái một. Cái phải giữ là **tiếng hợp
+      âm ở giữa ô có đủ hai tay cùng lúc**.
+    */
     const events = renderPattern(voicings('Dm7 G7'), BALLAD)
 
-    const leftStarts = events
-      .filter((event) => event.hand === 'left')
-      .map((event) => event.startBeat)
-    const rightStarts = events
-      .filter((event) => event.hand === 'right')
-      .map((event) => event.startBeat)
+    for (const bar of [0, 4]) {
+      const middle = events.filter((event) => event.startBeat === bar + 2)
 
-    expect(leftStarts).toEqual(rightStarts)
+      expect(middle.map((event) => event.hand).sort()).toEqual([
+        'left',
+        'right',
+      ])
+    }
+  })
+
+  it('đầu ô nhịp chỉ có một nốt bass, chưa mở hoà âm', () => {
+    // Đo từ bản ký âm: phách 1 là nốt bass trơ, hợp âm tới phách 3 mới vào
+    const events = renderPattern(voicings('Dm7'), BALLAD)
+    const downbeat = events.filter((event) => event.startBeat === 0)
+
+    expect(downbeat).toHaveLength(1)
+    expect(downbeat[0].hand).toBe('left')
+    expect(downbeat[0].notes).toHaveLength(1)
   })
 
   it('mỗi hợp âm chiếm trọn một ô nhịp theo mặc định', () => {
@@ -81,13 +96,13 @@ describe('renderPattern — nhánh ballad', () => {
     expect(timelineLengthBeats(events)).toBeLessThanOrEqual(12)
   })
 
-  it('hợp âm ngân trọn ô nhịp thì được đánh lại ở giữa', () => {
+  it('hợp âm ngân trọn ô nhịp thì được đánh ở giữa', () => {
     const events = renderPattern(voicings('Cmaj7'), BALLAD)
     const rightHits = events.filter((event) => event.hand === 'right')
 
-    expect(rightHits).toHaveLength(2)
-    expect(rightHits[0].startBeat).toBe(0)
-    expect(rightHits[1].startBeat).toBe(2)
+    // Tiếng thứ hai ở phách 3,5 là cú đẩy sang ô sau, xem `balladPush.test.ts`
+    expect(rightHits[0].startBeat).toBe(2)
+    expect(rightHits[1].startBeat).toBe(3.5)
   })
 
   it('lần đánh lại nhẹ hơn lần đầu để nghe ra chỗ đổi hợp âm', () => {
@@ -108,10 +123,16 @@ describe('renderPattern — nhánh ballad', () => {
   })
 
   it('tay trái đánh nhẹ hơn tay phải', () => {
+    /*
+      So trong **cùng một tiếng**: hai tay đánh cùng lúc thì tay trái phải nhẹ
+      hơn để nốt bass không trùm mất hoà âm. So tiếng đầu của mỗi tay là so hai
+      chỗ khác nhau, vì đầu ô nhịp giờ chỉ có tay trái.
+    */
     const events = renderPattern(voicings('Dm7'), BALLAD)
+    const middle = events.filter((event) => event.startBeat === 2)
 
-    const left = events.find((event) => event.hand === 'left')!
-    const right = events.find((event) => event.hand === 'right')!
+    const left = middle.find((event) => event.hand === 'left')!
+    const right = middle.find((event) => event.hand === 'right')!
     expect(left.velocity).toBeLessThan(right.velocity)
   })
 
