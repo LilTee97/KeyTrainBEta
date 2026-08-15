@@ -23,6 +23,24 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+      /*
+        Dùng biến trước khi khai báo.
+
+        Bật luật này vì đúng loại lỗi đó đã làm trắng trang Tái hoà âm **hai
+        lần**, và cả hai lần `tsc` đều không bắt được: biến `const` khai báo
+        sau nhưng được tham chiếu trong một hàm hoặc trong mảng phụ thuộc của
+        `useMemo`, nên TypeScript coi là hợp lệ còn trình duyệt thì ném lỗi
+        ngay lúc chạy. Bộ kiểm tra không có chỗ nào dựng thật cây component
+        nên cũng không thấy.
+
+        `functions: false` để vẫn khai báo hàm ở cuối file được — hàm được
+        nâng lên đầu nên không có rủi ro này.
+      */
+      'no-use-before-define': 'off',
+      '@typescript-eslint/no-use-before-define': [
+        'error',
+        { functions: false, variables: true, typedefs: false },
+      ],
     },
   },
 )

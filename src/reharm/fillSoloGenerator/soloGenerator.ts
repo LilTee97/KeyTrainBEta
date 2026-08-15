@@ -31,6 +31,17 @@ import {
  * suốt đoạn, không bám hợp âm chút nào.
  */
 
+/** Tầm giai điệu của đoạn giang tấu, và các mức nâng. */
+const SOLO_LOW: MidiNote = 62
+const SOLO_HIGH: MidiNote = 90
+/** Nâng cho câu lẻ trong cùng một lượt. */
+const PHRASE_LIFT = 5
+/** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */
+const SOLO_CEILING: MidiNote = 96
+
+/** Khoảng nghỉ lấy hơi ở cuối mỗi câu nhạc, tính bằng phách. */
+const REST_BEATS = 1
+
 /** Tầm giai điệu, cao hơn hẳn phần đệm để nghe tách bạch. */
 const MELODY_LOW: MidiNote = 67
 const MELODY_HIGH: MidiNote = 88
@@ -348,13 +359,6 @@ export function generateSolo(
   return result.sort((a, b) => a.startBeat - b.startBeat)
 }
 
-/** Tầm giai điệu của đoạn giang tấu, và các mức nâng. */
-const SOLO_LOW: MidiNote = 62
-const SOLO_HIGH: MidiNote = 90
-/** Nâng cho câu lẻ trong cùng một lượt. */
-const PHRASE_LIFT = 5
-/** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */
-const SOLO_CEILING: MidiNote = 96
 
 /** Chất liệu nốt của một hợp âm theo nguồn người dùng chọn. */
 function materialFor(
@@ -458,8 +462,6 @@ function chooseLick(choice: LickChoice): Lick {
   return pick(middle === 'echo' && !hasMotif ? 'turn' : middle)
 }
 
-/** Khoảng nghỉ lấy hơi ở cuối mỗi câu nhạc, tính bằng phách. */
-const REST_BEATS = 1
 
 
 

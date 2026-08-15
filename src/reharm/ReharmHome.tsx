@@ -260,6 +260,8 @@ export function ReharmHome() {
    * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
+  const style = getStyle(styleId) ?? BALLAD
+
   /**
    * Số phách mỗi hợp âm chiếm.
    *
@@ -355,7 +357,6 @@ export function ReharmHome() {
     [smoothVoicing, twoHands, plain, withPassing],
   )
 
-  const style = getStyle(styleId) ?? BALLAD
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
   const accompaniment = useMemo(
