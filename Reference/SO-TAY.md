@@ -152,3 +152,169 @@ Mô hình Leitner có hai biến thể khi trả lời sai: lùi một hộp, ho
 KeyTrain chạy offline nên không tải mẫu tiếng từ máy chủ ngoài, mà mẫu tiếng piano thật lại nặng vài chục MB nếu đóng gói kèm. Chọn `Tone.PolySynth` với sóng tam giác và đường bao gần giống đàn phím: đủ rõ cao độ để luyện tai, nhẹ, không cần mạng. Có thể đổi sang tiếng thu sẵn về sau nếu chất lượng tiếng trở thành vấn đề.
 
 Trình duyệt chặn phát tiếng tự động, nên `startAudio()` bắt buộc phải gọi từ một thao tác thật của người dùng — mọi màn hình có âm thanh đều cần một nút bật ở lần đầu.
+
+## Đoạn giang tấu dựng từ bản ký âm thật, không từ suy đoán
+
+Bộ hình mẫu cho đoạn giang tấu được **đọc ngược từ bản ký âm piano bài *Hồng Kông 1*** (`Reference/hongkong1.mxl`, bản advanced, bản chơi của anh Cà Pháo). Đây là lần đầu một tính năng sinh nhạc của KeyTrain có nguồn cụ thể thay vì chỉ dựa trên mô tả định tính, nên phần này đáng tin hơn hẳn các phần sinh câu trước đó.
+
+### Cấu trúc bài rút ra được
+
+Bài ở giọng Đô trưởng, nhịp 4/4, 108 ô nhịp. Vòng lõi tám ô nhịp là **IV – iii – ii – V – I** (`F – Em7 – Dm7 – G7 – C`), mỗi hợp âm hai ô trừ ii và V mỗi hợp âm một ô. Đoạn giang tấu nằm ở **ô nhịp 49-64**, tức sau **năm lượt** vòng hát — không phải cứ hai lượt là chen giang tấu như phỏng đoán ban đầu.
+
+Nhận ra đoạn giang tấu bằng số liệu chứ không cần nghe: mật độ nốt tay phải tăng vọt (từ 4-8 điểm vào lên 11-15) và trần cao độ tay phải nhảy từ khoảng 76 lên 95-98, trong khi **tay trái vẫn giữ nguyên tầm bass 36-45**. Chính chỗ này xác nhận điều người dùng mô tả: giang tấu là tay trái giữ bass bám vòng hợp âm, tay phải chơi tự do bên trên.
+
+### Ba hình mẫu làm nên vốn liếng tay phải
+
+1. **Hình láy quay về** (ô nhịp 49-50). Bộ xương đi xuống từng bậc `G5 – E5 – D5 – C5`, nhưng giữa mỗi cặp có một cặp móc kép chạm trước vào nốt kế rồi quay lại nốt hiện tại mới thật sự bước sang. Đây là hình dễ học nhất mà đã nghe ra "có nghề", nên xếp làm mức trung bình.
+
+2. **Cú quét ngũ cung vắt nhiều quãng tám** (ô nhịp 51-52, lặp lại ở ô nhịp 96-97). Lấy một ô **bốn nốt** trong ngũ cung — `D G A B` ở ô 51, `C D E G` ở ô 96 — rồi lặp nguyên ô đó lên qua từng quãng tám bằng móc ba, ngân đỉnh gần trọn một ô nhịp, xong mới đổ xuống. Hai chi tiết dễ bỏ sót: ô quét **bắt đầu từ dưới đáy tầm** chứ không từ nốt đang chơi (câu trước kết quanh G4-A4 nhưng cú quét bắt từ D4), và nó **chỉ dùng bốn nốt** chứ không chạy cả thang âm.
+
+3. **Chồng quãng tám ở đỉnh câu** (ô nhịp 57, 60, 65-66): `A4+A5`, `E5+E6`. Rẻ về mặt kỹ thuật nhưng làm câu nhạc dày hẳn lên.
+
+Ngoài ra bản nhạc còn hai ngón chưa đưa vào app: **chuỗi quãng bốn đi lên song song** (ô nhịp 59: `G3+D4 → D4+G4 → G4+B4 → B4+D5`) và **giữ nốt chung khi ngoài biên đi xuống bán cung** trên hợp âm át phụ (ô nhịp 60: giữ C# trong khi `Bb → A → G → F`). Ghi lại đây để sau này còn quay lại.
+
+### Vì sao tầm quãng âm phải đổi theo mức
+
+Bản đầu giữ nguyên tầm giai điệu 67-88 cho cả ba mức thì cú quét chỉ vắt được hơn một quãng tám — nghe không ra ngón đó nữa. Bản nhạc quét từ D4 (62) lên B6 (95), nên mức cao phải được mở tầm đúng bằng vậy. Bài học chung: **hình giai điệu và tầm quãng âm là một cặp**, đổi hình mà giữ nguyên tầm thì hình bị bóp méo.
+
+### Vào giang tấu thì tay phải thôi quạt hợp âm — chỉ một tay đổi việc
+
+Bản đầu của `buildSongTimeline` cho **nguyên phần đệm hai tay** chạy tiếp ở đoạn giang tấu rồi chồng câu solo lên trên. Đó là dựng theo mô hình "ban nhạc đệm cho người solo", mà giang tấu piano thì chỉ có **một người chơi bằng hai tay**. Hệ quả nghe được ngay: tay phải vừa quạt hợp âm vừa chạy giai điệu, đục và không ai bấm nổi.
+
+Đo trên hai bản ký âm thì thấy **chỉ một tay đổi việc**:
+
+| | Tay trái vào / ô nhịp | Trần cao độ tay phải |
+|---|---|---|
+| *Mơ* — đoạn hát (ô 9-33) | 3.3 | ~76 |
+| *Mơ* — giang tấu (ô 41-58) | **3.4** | **97-100** |
+| *Hồng Kông 1* — đoạn hát (ô 9-48) | 5.1 | ~76 |
+| *Hồng Kông 1* — giang tấu (ô 49-64) | **5.5** | **95-98** |
+
+Tay trái giữ nguyên mật độ, chỉ mở rộng bề rộng (bài *Mơ*: 15.9 lên 20.6 nửa cung) do thêm bass chồng quãng tám — ô nhịp 41 bài đó bass đúng là `A1+A2`. Vậy **hoà âm không biến mất, chỉ có mẫu đệm tay phải ngừng**.
+
+Bài học rộng hơn: mỗi khi thêm một lớp nhạc mới vào dòng thời gian, phải hỏi **tay nào chơi lớp này và tay đó đang bận việc gì** — cộng lớp kiểu phần mềm thì dễ, nhưng người chơi chỉ có hai tay.
+
+### Tay phải ở giang tấu nhắc lại giai điệu bài hát
+
+Bài *Mơ* cho bằng chứng rõ: giọng trên cùng tay phải ô nhịp 41 là `E E E F# A`, gần trùng với giai điệu hát ô nhịp 25 `E E F# A F#`, chỉ **dời lên hai quãng tám** và chồng thêm quãng tám cho dày. Tức là ngẫu hứng ở đây không phải bịa nốt mới mà là **nhắc lại chất liệu đã có, đổi tầm và đổi cách trình bày**.
+
+KeyTrain chưa nhận giai điệu bài hát (người dùng chỉ nhập hợp âm), nên thứ tương đương làm được là **tự dựng một mô-típ ngắn rồi nhắc lại nó** trên các hợp âm sau. Đây cũng đúng lời khuyên *"tích luỹ mẫu câu ngắn"* ở mục 4 của `pianoimprovnotes.md`. **Chưa làm** — ghi lại đây để làm bước sau.
+
+### Bỏ hệ "ba mức khó", thay bằng vốn mẫu câu có trích nguồn
+
+Hệ ba mức (cơ bản / trung bình / như anh Cà Pháo) đã bị gỡ vì hai mức thấp nghe dở và **lệch hoà âm**. Lỗi nằm ở gốc chứ không ở mức khó:
+
+1. `generateSolo` lấy bộ nốt theo **hợp âm cuối câu** rồi dùng cho cả câu. Một câu trải hai hợp âm thì nửa đầu chơi sai hoà âm.
+2. Chọn nguồn ngũ cung thì nó dựng ngũ cung trên **chủ âm bài hát** và giữ nguyên suốt đoạn — không bám hợp âm chút nào.
+
+Bản thay thế đảo lại nguyên tắc: **mỗi hợp âm nhận một mẫu câu riêng, chất liệu lấy từ chính hợp âm đang vang**. Đó là *chord tone soloing* ở mục 3.1 của `pianoimprovnotes.md`, chỗ tài liệu nói thẳng cách này *"luôn khớp hòa âm"*. Nguồn nốt cũng đổi theo: ngũ cung và thang blues giờ dựng trên **nốt gốc hợp âm**, trưởng hay thứ tuỳ tính chất hợp âm — đúng như bản Hồng Kông 1 làm (cú quét ô 51 trên Em7 dùng `G A B D`, cú quét ô 96 trên Đô trưởng dùng `C D E G`).
+
+Bảy mẫu câu trong `soloVocabulary.ts`, mỗi mẫu ghi rõ nguồn ngay trong code: đi trên nốt hợp âm (mục 3.1), rải hợp âm (mục 3.2 và 3.3 bước 6), nốt dẫn nửa cung (mục 3.2), hình láy quay về (Hồng Kông 1 ô 49-50), quét ngũ cung (Hồng Kông 1 ô 51-52 và 96-97), nhắc lại mô-típ (Mơ ô 25 và 41), nghỉ lấy hơi (mục 4 và 3.4 giai đoạn 4). Không mẫu nào tự nghĩ ra.
+
+Cách chọn mẫu là **tất định**: cùng một vòng hợp âm luôn cho ra cùng một đoạn solo. Người học cần nghe lại đúng câu vừa nghe để tập theo; ngẫu nhiên mỗi lần phát thì không tập nổi.
+
+### Mỗi lượt giang tấu một khác, nhưng tất định theo số lượt
+
+Lặp y nguyên đoạn solo ở mọi lượt nghe ra ngay là máy phát lại băng. Nhưng sinh ngẫu nhiên mỗi lần phát cũng hỏng: người học cần nghe lại **đúng** câu vừa nghe để tập theo.
+
+Cách giải: `generateSolo` nhận thêm số **lượt** (`take`), và biến tấu là hàm tất định của số lượt đó. Phát lại bài thì lượt thứ nhất vẫn ra đúng đoạn cũ. Ba thứ đổi theo lượt:
+
+- **Trình tự mẫu câu** xoay theo `phrase + take`, nên cú quét rơi vào hợp âm khác và câu mở đầu bằng mẫu khác.
+- **Quãng âm nâng dần** bốn nửa cung mỗi lượt, có trần tuyệt đối ở nốt 96 để lượt thứ mười không leo hết bàn phím.
+- **Mật độ dày dần** hai mươi phần trăm mỗi lượt, cũng có trần.
+
+Kết quả trên vòng `Fmaj7 Em7 Dm7 G7 Cmaj7 Am7 Dm7 G7`: lượt một 46 nốt đỉnh Mi quãng 6, lượt hai 50 nốt đỉnh Đô quãng 7, lượt ba 58 nốt với hai cú quét. Đúng hình một đoạn solo dâng dần qua từng lượt.
+
+`buildSongTimeline` vì vậy nhận **hàm** sinh solo theo số lượt chứ không nhận một mảng cố định, và số lượt đếm **liên tục qua cả bài** — hai đoạn giang tấu rời nhau vẫn là hai lượt khác nhau.
+
+### `Tone.Part` với `loop = true` phát lại y nguyên — không dùng cho giang tấu
+
+Biến tấu theo lượt dựng xong rồi mà người dùng vẫn nghe lặp y nguyên. Nguyên nhân nằm ở tầng phát tiếng chứ không ở bộ sinh: `startTimelineLoop` dùng `Tone.Part` với `loop = true`, mà `Part` lặp thì **phát lại đúng bộ sự kiện cũ**. Bộ sinh có tài mấy cũng vô nghĩa nếu chỉ được gọi một lần.
+
+Sửa bằng cách bỏ vòng lặp sẵn của `Part`, thay bằng `Tone.Loop` **dựng lại lịch phát ở đầu mỗi lượt** và truyền số lượt cho bên gọi. `startTimelineLoop` vì vậy nhận `hits` **hoặc** một hàm `(pass) => hits`.
+
+Kéo theo: `buildSongTimeline` nhận thêm `takeOffset` và trả về `soloTakes` (đã tiêu hết bao nhiêu lượt). Lần phát thứ hai bắt đầu từ đúng chỗ lần thứ nhất dừng, nên không quay về câu cũ.
+
+Bài học: khi một tính năng "đã làm rồi mà không thấy tác dụng", kiểm tầng **phát lại** trước khi nghi ngờ tầng sinh.
+
+### Vòng ii-V-I và nốt dẫn hướng
+
+Tài liệu 12 giọng (nay đã gỡ) nói vòng ii-V-I là *"nền tảng quan trọng nhất để luyện lick jazz"*. Thứ làm nên sức hút của nó là **nốt dẫn hướng**: bậc bảy thứ của hợp âm át nằm ngay trên bậc ba của chủ âm đúng một nửa cung, buông xuống là giải quyết.
+
+Thêm mẫu `guide-tone`, chỉ dùng khi hợp âm sau cách một **quãng bốn đi lên**. Ở đây hai tài liệu nói khác nhau và phải chọn: `pianoimprovnotes.md` mục 4 khuyên kết câu ở nốt ổn định, còn đúng chỗ V về I thì cái tai chờ **sự giải quyết**. Chọn theo vòng V về I, vì nốt ổn định ở đó nghe như câu nhạc đứt ngang. Hợp âm ba không có bậc bảy thì không có nốt dẫn hướng, tự lùi về nốt ổn định.
+
+Phần còn lại của tài liệu — vòng quãng bốn và cách chia buổi tập qua 12 giọng — **chưa dùng**; nó thuộc về một bài luyện dịch giọng, không thuộc bộ sinh giang tấu. Tài liệu cũng ghi rõ các lick cụ thể trong nguồn tham khảo **có bản quyền**, nên KeyTrain tự sinh câu chứ không chép.
+
+### Lần lùi lại vì thêm ba thứ cùng lúc mà không cho nghe
+
+Sau khi bộ vốn mẫu câu được người dùng duyệt bằng tai, tôi thêm liên tiếp: biến tấu theo lượt, mẫu nốt dẫn hướng, mẫu kẹp nửa cung, mẫu chùm ba, mở rộng danh sách mở câu, và sửa tay trái bossa — **không cho nghe cái nào**. Kết quả: hỏng điệu đàn, hỏng giang tấu, và nút dừng không dừng được.
+
+Đã lùi về đúng trạng thái được duyệt, cộng **duy nhất** thứ người dùng yêu cầu là biến tấu theo lượt:
+
+- Tay trái bossa trả về bản theo tài liệu.
+- Ba mẫu câu mới rút khỏi vòng xoay. Code và test giữ nguyên, chỉ không nằm trong `OPENERS`/`MIDDLES` — xem hằng `ROTATION_IDS`. Bật lại thì bật **từng cái một**.
+
+Bài học không phải về nhạc mà về quy trình: quy ước của dự án là **từng bước nhỏ, người dùng xác nhận rồi mới commit**. Tôi đã bỏ qua cả hai vế — không dừng để nghe, và không commit ở chỗ được duyệt. Vì không commit nên khi hỏng cũng không lùi được bằng `git`, phải gỡ tay từng thay đổi.
+
+### Nốt đã lên lịch không tự huỷ khi dừng vòng lặp
+
+Nút dừng bấm rồi mà vòng hợp âm vẫn kêu tới hết lượt. Nguyên nhân nằm trong `startTimelineLoop`: bản dùng `Tone.Loop` gọi thẳng `triggerAttackRelease` cho cả một lượt, mà lệnh đó đẩy nốt xuống tận đồng hồ thẻ âm thanh. `loop.stop()` chỉ chặn được lượt **sau**; đám nốt của lượt **đang chạy** đã nằm trong lịch phần cứng rồi.
+
+Sửa bằng cách bọc mỗi lượt trong một `Tone.Part` riêng và giữ tham chiếu — huỷ `Part` là huỷ luôn lịch của nó. Đây cũng chính là thứ bản `Tone.Part` ban đầu làm đúng mà tôi đánh mất khi đổi sang `Tone.Loop`.
+
+Nguyên tắc rút ra: **cái gì lên lịch được thì phải huỷ lịch được.** Mỗi lần đẩy sự kiện vào tương lai, phải giữ lại tay cầm để rút về.
+
+### Bossa: đo được gì từ bản ký âm (chưa áp dụng)
+
+`bossaNova.ts` ghi nguồn là video đệm bài *Người Hãy Quên Em Đi*, và comment tự thừa nhận phần tay trái chỉ là phỏng đoán vì tài liệu không notate. Nay có `Reference/nguoihayquenemdi.mxl` — đúng bài đó — nên đo được trực tiếp trên 32 ô nhịp đệm ổn định:
+
+| | Phách 1 | 2 | 2.5 | 3 | 3.5 | 4 | 4.5 |
+|---|---|---|---|---|---|---|---|
+| Tay trái | 97% | 44% | **84%** | **94%** | 28% | 50% | 16% |
+| Tay phải | 97% | 78% | 59% | **84%** | **94%** | 47% | **94%** |
+
+Hai kết luận:
+
+- **Tay trái trong bản ký âm đi `1 — 2& — 3 — 4`**, tức cú đẩy lệch phách nằm ở phách 2 rưỡi chứ không phải 3 rưỡi như mẫu đang dùng.
+- **Trong bản ký âm, mẫu dài một ô nhịp**: tách riêng ô nhịp lẻ với ô nhịp chẵn rồi đo lại thì hai nhóm trùng khít, không có chuyện ô thứ hai thưa hơn.
+
+**Đã thử áp vào rồi lùi lại.** Sửa tay trái theo số đo nghe tệ hơn hẳn bản cũ, nên đã trả về nguyên trạng. Lý do có thể là bản ký âm này là một bản soạn nâng cao cho người chơi một mình, còn mẫu trong app phải chạy nền dưới giọng hát — dày ngang bản độc tấu thì lấn.
+
+Giữ số đo ở đây làm tư liệu. Muốn dùng thì phải **thử từng vế một và nghe**, đừng thay cả mẫu cùng lúc. Và nhớ quy tắc của dự án: *phong cách anh Khá trước*, mà tài liệu mới là nguồn Khá Bự trực tiếp.
+
+### Đo tập lick jazz thay vì chép lick
+
+`Reference/52 Piano Jazz Blues Licks.mxl` có ký âm lick thật, nhưng chép nguyên vào app là phát tán lại một tuyển tập có bản quyền. Nên cách dùng là **đo thống kê rồi rút ra đặc trưng**, còn câu nhạc vẫn tự sinh. Đo trên 637 nốt tay phải:
+
+| Chỉ số | Kết quả |
+|---|---|
+| Móc đơn | 53% |
+| **Chùm ba** | **17%** |
+| Bước đi là **nửa cung** | **35%** |
+| Đi liền bậc / nhảy quãng | 52% / 48% |
+
+Con số 35% nửa cung là thứ đáng giá nhất: đó là khác biệt lớn nhất giữa ngôn ngữ jazz thật và câu nhạc chỉ đi trong hợp âm. Chất bebop nằm ở đám nốt **ngoài** hợp âm nối giữa các nốt trong hợp âm. Thêm hai mẫu câu từ đây:
+
+- **Kẹp nửa cung hai phía** — chạm trên nửa cung, rồi dưới nửa cung, rồi mới vào nốt đích. Nốt kẹp đánh nhẹ và được phép ra ngoài hoà âm; nốt đích vẫn là nốt hợp âm.
+- **Chùm ba** — hai nguồn nói cùng một điều: `pianoimprovnotes.md` mục 4 khuyên xen chùm ba *"để tránh đều đều máy móc"*, và đo được 17% nốt đúng là chùm ba.
+
+Kéo theo một chỉnh bất biến trong test: bất biến thật không phải "mọi nốt thuộc hợp âm" mà là **"mọi nốt chính thuộc hợp âm"**. Nốt tô điểm được phép ra ngoài — nốt dẫn và nốt kẹp sống nhờ đúng điều đó.
+
+### Nửa vốn từ vựng nằm chết vì cấu hình mặc định
+
+Thêm mẫu câu xong, in ra đọc thì không thấy mẫu mới đâu. Nguyên nhân: `chooseLick` chia ba vị trí mở câu / giữa câu / kết câu, nhưng mặc định là **hai hợp âm một câu** — hợp âm đầu là mở câu, hợp âm sau đã là kết câu, **không tồn tại vị trí giữa câu**. Các mẫu hay nhất lại nằm hết ở danh sách giữa câu.
+
+Bài học lặp lại lần thứ hai trong phiên này: viết xong một bộ sinh thì phải **in kết quả ra đọc**, đừng tin test cấu trúc. Lần trước nó lộ ra câu nhạc kẹt ở đáy tầm; lần này nó lộ ra nửa vốn từ vựng không bao giờ chạy.
+
+### Hai lỗi chỉ lộ ra khi in cả đoạn solo ra đọc
+
+Các test cấu trúc đều xanh mà câu nhạc vẫn dở. In cả đoạn ra rồi đọc từng ô nhịp thì lộ ngay:
+
+- **Câu nhạc chìm dần rồi kẹt ở đáy.** Mọi mẫu đều đi xuống, chạm biên bậc thang thì bị *kẹp cứng*, nên mọi bước sau kẹp về cùng một bậc — ra một dãy `A4 A4 A4 A4 A4 A4` nghe như đàn kẹt phím. Sửa bằng cách **bật lại ở biên** thay vì kẹp, và cho hướng đi phụ thuộc chỗ câu nhạc đang đứng trong tầm (dưới giữa thì đi lên, trên giữa thì đi xuống) để nó tự kéo về giữa tầm.
+- **Nốt ngân tràn sang hợp âm sau.** Nốt cuối của vài mẫu ngân dài gấp rưỡi, cộng dồn lại vượt quá thời lượng hợp âm, nên còn vang khi hợp âm đã đổi — nghe đúng như lệch hoà âm. Sửa bằng hàm `bounded` bọc **mọi** mẫu câu, kể cả mẫu viết thêm sau này.
+
+Bài học: với code sinh nhạc, test bất biến cấu trúc là chưa đủ. Phải **in kết quả ra đọc** ít nhất một lần, rồi biến thứ đọc được thành test.
+
+### Tách bộ xương cao độ khỏi cách chơi
+
+`generateSolo` chia làm hai việc: chọn **bộ xương cao độ** (nốt nào, theo hoà âm và nốt kết câu) rồi giao cho `renderPhrase` của từng mức **đổ ra tiết tấu và hình giai điệu**. Tách vậy vì cao độ phải đúng hoà âm ở mọi trình độ — chỉ cách chơi mới thay đổi theo trình độ. Nhờ đó thêm mức mới chỉ cần viết thêm một hàm đổ, không đụng tới phần hoà âm.

@@ -221,6 +221,24 @@ interface LoopEvent {
 let loopPart: Tone.Part<LoopEvent> | null = null
 
 /**
+ * Số lượt được dựng sẵn và nối vào một vòng lặp.
+ *
+ * Đoạn giang tấu phải mỗi lượt một khác, nhưng `Tone.Part` khi lặp thì phát
+ * lại đúng bộ sự kiện cũ. Cách giải quyết: **nối sẵn nhiều lượt khác nhau
+ * thành một vòng dài** rồi cho nó lặp.
+ *
+ * Ba lượt, vì bộ sinh xoay danh sách mẫu câu theo chu kỳ ba — lượt thứ tư
+ * quay lại đúng lượt đầu, nối thêm chỉ tổ làm vòng dài ra mà không thêm gì mới.
+ *
+ * Cách này thay cho bản dùng `Tone.Loop` dựng lại lịch ở đầu mỗi lượt. Bản đó
+ * hỏng vì lẫn hai đồng hồ: callback của `Tone.Loop` nhận thời gian của
+ * **AudioContext** (để đưa thẳng cho `triggerAttackRelease`), nhưng
+ * `Part.start()` lại nhận thời gian của **Transport**. Truyền nhầm giữa hai hệ
+ * thì Part bị xếp lịch ở một chỗ vô nghĩa và không nốt nào kêu.
+ */
+const LOOP_PASSES = 3
+
+/**
  * Phát phần đệm **lặp đi lặp lại** cho tới khi bị dừng.
  *
  * Nghe một lượt rồi tắt thì không ra bài hát, và cũng không đánh giá được câu
@@ -230,25 +248,45 @@ let loopPart: Tone.Part<LoopEvent> | null = null
  * chừng thì phần đệm co giãn theo chứ không lệch.
  */
 export function startTimelineLoop(
-  hits: readonly ScheduledHit[],
+  source: readonly ScheduledHit[] | ((pass: number) => readonly ScheduledHit[]),
   bpm: number,
   loopLengthBeats?: number,
 ): void {
-  if (!isAudioReady() || hits.length === 0) return
+  if (!isAudioReady()) return
+
+  const build = typeof source === 'function' ? source : () => source
+  const first = build(0)
+  if (first.length === 0) return
 
   stopTimelineLoop()
 
   Tone.getTransport().bpm.value = Math.max(1, bpm)
   const synthInstance = getSynth()
 
-  const events: LoopEvent[] = hits
-    .filter((hit) => hit.notes.length > 0)
-    .map((hit) => ({
-      time: { '4n': hit.startBeat },
-      notes: hit.notes.map(toFrequency),
-      duration: { '4n': Math.max(0.05, hit.durationBeats) },
-      velocity: hit.velocity / 127,
-    }))
+  const passLength = Math.max(
+    1,
+    loopLengthBeats ??
+      Math.ceil(
+        Math.max(...first.map((hit) => hit.startBeat + hit.durationBeats)),
+      ),
+  )
+
+  // Dựng sẵn từng lượt rồi dời sang vị trí của nó trên vòng lặp dài.
+  const events: LoopEvent[] = []
+  for (let pass = 0; pass < LOOP_PASSES; pass += 1) {
+    const offset = pass * passLength
+    const hits = pass === 0 ? first : build(pass)
+
+    for (const hit of hits) {
+      if (hit.notes.length === 0) continue
+      events.push({
+        time: { '4n': hit.startBeat + offset },
+        notes: hit.notes.map(toFrequency),
+        duration: { '4n': Math.max(0.05, hit.durationBeats) },
+        velocity: hit.velocity / 127,
+      })
+    }
+  }
 
   const part = new Tone.Part<LoopEvent>((time, value) => {
     synthInstance.triggerAttackRelease(
@@ -259,14 +297,8 @@ export function startTimelineLoop(
     )
   }, events)
 
-  const length =
-    loopLengthBeats ??
-    Math.ceil(
-      Math.max(...hits.map((hit) => hit.startBeat + hit.durationBeats)),
-    )
-
   part.loop = true
-  part.loopEnd = { '4n': Math.max(1, length) }
+  part.loopEnd = { '4n': passLength * LOOP_PASSES }
   part.start(0)
   loopPart = part
 
@@ -276,6 +308,11 @@ export function startTimelineLoop(
 
 /** Dừng vòng lặp phần đệm. */
 export function stopTimelineLoop(): void {
+  /*
+    Huỷ `Part` là huỷ luôn lịch của nó, nên bấm dừng là im ngay. Đây là lý do
+    phải để `Part` tự giữ lịch thay vì gọi thẳng `triggerAttackRelease`: lệnh
+    đó đẩy nốt xuống tận đồng hồ thẻ âm thanh, dừng rồi vẫn kêu tới hết lượt.
+  */
   loopPart?.stop()
   loopPart?.dispose()
   loopPart = null

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   playChord,
   playChordSequence,
@@ -23,10 +23,12 @@ import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import type { SoloNoteSource } from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
+  ROTATION_IDS,
   generateFillLine,
   generateSolo,
   soloToTimeline,
 } from './fillSoloGenerator/soloGenerator'
+import { LICKS } from './fillSoloGenerator/soloVocabulary'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import type { PassingTechnique } from './reharmEngine/passingChordRules'
 import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
@@ -374,9 +376,14 @@ export function ReharmHome() {
     [useFills, withPassing, chordBeats, soloDirection, soloDensity, reharm.key],
   )
 
-  /** Giai điệu tự sinh, phát chồng lên phần đệm. */
-  const solo = useMemo(() => {
-    if (melodyMode === 'off') return []
+  /**
+   * Giai điệu tự sinh cho **một lượt giang tấu**.
+   *
+   * Là hàm theo số lượt chứ không phải một đoạn cố định, để lượt sau không lặp
+   * lại lượt trước.
+   */
+  const soloTake = useMemo(() => {
+    if (melodyMode === 'off') return () => []
 
     const args = {
       beatsPerChord: chordBeats,
@@ -387,7 +394,7 @@ export function ReharmHome() {
       chordsPerPhrase,
     }
 
-    return generateSolo(withPassing, args)
+    return (take: number) => generateSolo(withPassing, { ...args, take })
   }, [
     melodyMode,
     withPassing,
@@ -411,21 +418,38 @@ export function ReharmHome() {
     [withPassing.length, chordBeats],
   )
 
-  /** Cả bài dựng theo cấu trúc đã chọn: đoạn hát, đoạn giang tấu. */
-  const song = useMemo(
-    () =>
+  /**
+   * Dựng cả bài cho **lần phát thứ mấy**.
+   *
+   * Là hàm chứ không phải một dòng thời gian cố định, vì mỗi lần phát lại phải
+   * đổi câu giang tấu. Mốc lượt nối tiếp qua từng lần phát nên lần thứ hai
+   * không quay về đúng câu của lần thứ nhất.
+   */
+  const buildPass = useCallback(
+    (pass: number, takesPerPass: number) =>
       buildSongTimeline({
         accompaniment,
         fills,
-        solo: soloToTimeline(solo),
+        solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         form: getSongForm(songFormId) ?? SONG_FORMS[0],
+        takeOffset: pass * takesPerPass,
       }),
-    [accompaniment, fills, solo, oneLoopBeats, songFormId],
+    [accompaniment, fills, soloTake, oneLoopBeats, songFormId],
   )
+
+  /** Lần phát đầu — dùng cho hiển thị và cho các nút phát một lượt. */
+  const song = useMemo(() => buildPass(0, 0), [buildPass])
 
   const timeline = song.events
   const loopLengthBeats = song.totalBeats
+
+  /** Dòng thời gian của lần phát thứ `pass`, dùng cho nút phát lặp. */
+  const passAt = useCallback(
+    (pass: number) =>
+      pass === 0 ? timeline : buildPass(pass, song.soloTakes).events,
+    [buildPass, timeline, song.soloTakes],
+  )
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -1179,7 +1203,7 @@ export function ReharmHome() {
               looping
                 ? stopTimelineLoop()
                 : startTimelineLoop(
-                    eventsForHand(timeline, hand),
+                    (pass) => eventsForHand(passAt(pass), hand),
                     bpm,
                     loopLengthBeats,
                   )
@@ -1368,6 +1392,30 @@ export function ReharmHome() {
             {melodyMode === 'solo' && (
               <>
                 <div>
+                  <h4
+                    className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+                    title="Mỗi hợp âm được một mẫu câu, chất liệu lấy từ chính hợp âm đó nên luôn khớp hoà âm"
+                  >
+                    Vốn mẫu câu đang dùng
+                  </h4>
+                  <ul className="flex flex-col gap-1">
+                    {LICKS.filter((lick) =>
+                      ROTATION_IDS.includes(lick.id),
+                    ).map((lick) => (
+                      <li key={lick.id} className="text-xs leading-relaxed">
+                        <span className="text-cream">{lick.label}</span>
+                        <span className="text-dim"> — {lick.source}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs leading-relaxed text-dim">
+                    Mỗi hợp âm nhận một mẫu câu riêng, chất liệu lấy từ{' '}
+                    <span className="text-cream">chính hợp âm đang vang</span>{' '}
+                    nên câu nhạc luôn bám vòng hợp âm.
+                  </p>
+                </div>
+
+                <div>
                   <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                     Lấy nốt từ đâu
                   </h4>
@@ -1493,7 +1541,7 @@ export function ReharmHome() {
                   looping
                     ? stopTimelineLoop()
                     : startTimelineLoop(
-                        eventsForHand(timeline, 'both'),
+                        (pass) => eventsForHand(passAt(pass), 'both'),
                         bpm,
                         loopLengthBeats,
                       )
@@ -1510,7 +1558,7 @@ export function ReharmHome() {
 
               <span className="font-mono text-[11px] text-dim">
                 {melodyMode === 'solo' &&
-                  `giang tấu: ${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
+                  `giang tấu lượt đầu: ${soloTake(0).filter((note) => !note.isGrace).length} nốt chính · ${soloTake(0).filter((note) => note.isGrace).length} nốt tô điểm · mỗi lượt sau một khác`}
                 {melodyMode === 'solo' && useFills && ' · '}
                 {useFills && `${fills.length} nốt fill mỗi lượt`}
               </span>

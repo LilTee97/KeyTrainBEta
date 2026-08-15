@@ -176,11 +176,25 @@ describe('generateSolo — cấu trúc câu nhạc', () => {
     const solo = generateSolo(list, { ...options, chordsPerPhrase: 2 })
     const mains = solo.filter((note) => !note.isGrace)
 
-    // Nốt cuối mỗi câu là nốt ngân dài nhất trong câu đó
-    const phraseEnds = mains.filter((note, index) => {
-      const next = mains[index + 1]
-      return next === undefined || next.startBeat - note.startBeat > 1.5
-    })
+    /*
+      Cuối câu là nốt cuối cùng rơi vào **hợp âm cuối của câu** — hai hợp âm
+      một câu, nên đó là các hợp âm ở vị trí lẻ. Xác định theo cấu trúc chứ
+      không đoán theo chỗ hở, vì có mẫu câu ngân dài giữa câu cũng tạo chỗ hở.
+    */
+    const phraseEnds = list
+      .map((_, index) => index)
+      .filter((index) => index % 2 === 1)
+      .map((index) =>
+        mains
+          .filter(
+            (note) =>
+              note.startBeat >= index * 4 && note.startBeat < (index + 1) * 4,
+          )
+          .at(-1),
+      )
+      .filter((note) => note !== undefined)
+
+    expect(phraseEnds.length).toBeGreaterThan(0)
 
     for (const ending of phraseEnds) {
       const chordIndex = Math.min(
@@ -267,43 +281,75 @@ describe('generateSolo — cấu trúc câu nhạc', () => {
 describe('nguồn nốt cho câu solo', () => {
   const options = { beatsPerChord: 4, key: { tonic: 0, scale: 'major' as const } }
 
-  it('ngũ cung trưởng chỉ dùng năm nốt của thang âm', () => {
-    const solo = generateSolo(chords('C Am F G'), {
+  /*
+    Điểm mấu chốt của cả nhóm test này: thang âm phải dựng trên **nốt gốc của
+    hợp âm đang vang**, không phải trên chủ âm bài hát. Bản trước dựng trên chủ
+    âm rồi giữ nguyên suốt đoạn, nên nghe lệch hoà âm.
+  */
+  it('ngũ cung dựng trên nốt gốc từng hợp âm, không phải trên chủ âm', () => {
+    const list = chords('C Am F G')
+    const solo = generateSolo(list, {
       ...options,
-      noteSource: 'pentatonicMajor',
+      noteSource: 'chordPentatonic',
       density: 'dense',
     })
 
-    const allowed = new Set([0, 2, 4, 7, 9])
+    // Ngũ cung trưởng cho hợp âm trưởng, ngũ cung thứ cho hợp âm thứ
+    const stepsFor = (index: number) =>
+      list[index].quality.intervals.some((interval) => interval % 12 === 3)
+        ? [0, 3, 5, 7, 10]
+        : [0, 2, 4, 7, 9]
+
     for (const note of solo.filter((entry) => !entry.isGrace)) {
+      const index = Math.min(list.length - 1, Math.floor(note.startBeat / 4))
+      const chord = list[index]
+      // Mẫu rải hợp âm dùng đúng nốt hợp âm, nên chấp nhận cả hai bộ
+      const allowed = new Set([
+        ...stepsFor(index).map((step) => (chord.root + step) % 12),
+        ...chord.quality.intervals.map((i) => (chord.root + i) % 12),
+      ])
       expect(allowed.has(note.note % 12)).toBe(true)
     }
   })
 
-  it('ngũ cung thứ dùng đúng bộ nốt của nó', () => {
-    const solo = generateSolo(chords('C Am F G'), {
-      ...options,
-      noteSource: 'pentatonicMinor',
-      density: 'dense',
-    })
-
-    const allowed = new Set([0, 3, 5, 7, 10])
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
-      expect(allowed.has(note.note % 12)).toBe(true)
-    }
-  })
-
-  it('thang âm blues có thêm nốt blue ở quãng năm giảm', () => {
-    const solo = generateSolo(chords('C7 F7 G7 C7'), {
+  it('màu blues thêm nốt blue tính từ nốt gốc hợp âm', () => {
+    const list = chords('C7 F7 G7 C7')
+    const solo = generateSolo(list, {
       ...options,
       noteSource: 'blues',
       density: 'dense',
     })
 
-    const allowed = new Set([0, 3, 5, 6, 7, 10])
+    /*
+      Mẫu rải hợp âm cố ý dùng đúng nốt hợp âm chứ không theo thang âm — rải
+      hợp âm mà chen nốt blue vào thì không còn là rải hợp âm nữa. Nên nốt hợp
+      âm luôn được chấp nhận bên cạnh thang blues.
+    */
     for (const note of solo.filter((entry) => !entry.isGrace)) {
+      const index = Math.min(list.length - 1, Math.floor(note.startBeat / 4))
+      const chord = list[index]
+      const allowed = new Set([
+        ...[0, 3, 5, 6, 7, 10].map((step) => (chord.root + step) % 12),
+        ...chord.quality.intervals.map((i) => (chord.root + i) % 12),
+      ])
       expect(allowed.has(note.note % 12)).toBe(true)
     }
+  })
+
+  it('nốt blue thật sự xuất hiện trong câu', () => {
+    const list = chords('C7 F7 G7 C7')
+    const solo = generateSolo(list, {
+      ...options,
+      noteSource: 'blues',
+      density: 'dense',
+    })
+
+    const blueNotes = solo.filter((note) => {
+      const index = Math.min(list.length - 1, Math.floor(note.startBeat / 4))
+      return note.note % 12 === (list[index].root + 6) % 12
+    })
+
+    expect(blueNotes.length).toBeGreaterThan(0)
   })
 
   it('nốt hợp âm lấy từ chính hợp âm đang vang', () => {
@@ -323,9 +369,27 @@ describe('nguồn nốt cho câu solo', () => {
   })
 
   it('mọi nguồn nốt đều có mô tả cho người dùng', () => {
-    expect(NOTE_SOURCE_OPTIONS).toHaveLength(4)
+    expect(NOTE_SOURCE_OPTIONS).toHaveLength(3)
     for (const option of NOTE_SOURCE_OPTIONS) {
       expect(option.description.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('nốt hợp âm gồm cả bậc chín, đúng danh sách 1-3-5-7-9 của tài liệu', () => {
+    const list = chords('Cmaj7')
+    const solo = generateSolo(list, {
+      ...options,
+      noteSource: 'chordTone',
+      density: 'dense',
+      chordsPerPhrase: 1,
+    })
+
+    const allowed = new Set([
+      ...list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
+      (list[0].root + 2) % 12,
+    ])
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
     }
   })
 })
@@ -430,8 +494,9 @@ describe('soloToTimeline', () => {
     }
   })
 
-  it('nốt láy đánh nhẹ hơn nốt chính', () => {
-    const solo = generateSolo(chords('C'), {
+  it('nốt tô điểm đánh nhẹ hơn nốt chính', () => {
+    // Vòng đủ dài để chắc chắn có mẫu câu sinh nốt tô điểm (nốt dẫn, hình láy)
+    const solo = generateSolo(chords('C Am F G Em Dm G7 C'), {
       beatsPerChord: 4,
       density: 'dense',
       key: { tonic: 0, scale: 'major' },
@@ -441,6 +506,7 @@ describe('soloToTimeline', () => {
     const graceIndex = solo.findIndex((note) => note.isGrace)
     const mainIndex = solo.findIndex((note) => !note.isGrace)
 
+    expect(graceIndex).toBeGreaterThanOrEqual(0)
     expect(timeline[graceIndex].velocity).toBeLessThan(
       timeline[mainIndex].velocity,
     )

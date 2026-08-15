@@ -8,26 +8,45 @@ import {
 } from '../songStructure'
 
 /** Một sự kiện đánh dấu, để nhận ra nó đến từ nhóm nào. */
-function marker(label: string, startBeat: number): TimelineEvent {
+function marker(
+  label: string,
+  startBeat: number,
+  hand: TimelineEvent['hand'] = 'right',
+  notes: number[] = [60],
+): TimelineEvent {
   return {
-    notes: [60],
+    notes,
     startBeat,
     durationBeats: 1,
-    hand: 'right',
+    hand,
     // Dùng lực nhấn làm nhãn nhận dạng trong test
     velocity: label === 'accompaniment' ? 10 : label === 'fill' ? 20 : 30,
   }
 }
 
-const ACCOMPANIMENT = [marker('accompaniment', 0), marker('accompaniment', 2)]
+/*
+  Phần đệm có cả hai tay, vì điểm mấu chốt của đoạn giang tấu là **bỏ tay phải
+  và giữ tay trái** — không tách hai tay ra thì không kiểm được điều đó.
+*/
+const ACCOMPANIMENT = [
+  marker('accompaniment', 0, 'left', [48]),
+  marker('accompaniment', 2, 'right', [64, 67]),
+]
 const FILLS = [marker('fill', 3)]
 const SOLO = [marker('solo', 0), marker('solo', 1), marker('solo', 2)]
+
+/*
+  Câu solo nhận số lượt: mỗi lượt giang tấu phải khác lượt trước. Ở đây dùng
+  cao độ làm dấu để nhận ra lượt nào là lượt nào.
+*/
+const soloFor = (take: number) =>
+  SOLO.map((event) => ({ ...event, notes: [60 + take] }))
 
 const build = (formId: string) =>
   buildSongTimeline({
     accompaniment: ACCOMPANIMENT,
     fills: FILLS,
-    solo: SOLO,
+    solo: soloFor,
     loopLengthBeats: 4,
     form: getSongForm(formId)!,
   })
@@ -118,6 +137,170 @@ describe('buildSongTimeline', () => {
     }
   })
 
+  it('vào giang tấu thì tay phải thôi quạt hợp âm', () => {
+    /*
+      Không ai vừa quạt hợp âm vừa chạy giai điệu bằng cùng một tay. Đây là
+      điểm phân biệt lớn nhất giữa đoạn hát và đoạn giang tấu.
+    */
+    const song = build('two-then-interlude')
+    const interlude = song.sections.find(
+      (section) => section.kind === 'interlude',
+    )!
+
+    const inSection = song.events.filter(
+      (event) =>
+        event.startBeat >= interlude.startBeat &&
+        event.startBeat < interlude.startBeat + interlude.lengthBeats,
+    )
+
+    // Không còn sự kiện đệm nào của tay phải
+    expect(
+      inSection.some((event) => event.velocity === 10 && event.hand === 'right'),
+    ).toBe(false)
+    // Nhưng tay trái vẫn giữ nền hoà âm
+    expect(
+      inSection.some((event) => event.velocity === 10 && event.hand === 'left'),
+    ).toBe(true)
+  })
+
+  it('đoạn có lời vẫn giữ đủ phần đệm hai tay', () => {
+    const song = build('two-then-interlude')
+    const sung = song.sections.filter((section) => section.kind !== 'interlude')
+
+    for (const section of sung) {
+      const inSection = song.events.filter(
+        (event) =>
+          event.velocity === 10 &&
+          event.startBeat >= section.startBeat &&
+          event.startBeat < section.startBeat + section.lengthBeats,
+      )
+
+      expect(inSection.some((event) => event.hand === 'right')).toBe(true)
+      expect(inSection.some((event) => event.hand === 'left')).toBe(true)
+    }
+  })
+
+  it('tay trái ở giang tấu nhân đôi nốt bass xuống một quãng tám', () => {
+    const song = build('two-then-interlude')
+    const interlude = song.sections.find(
+      (section) => section.kind === 'interlude',
+    )!
+
+    const bass = song.events.find(
+      (event) =>
+        event.velocity === 10 &&
+        event.hand === 'left' &&
+        event.startBeat >= interlude.startBeat,
+    )!
+
+    expect(bass.notes).toEqual([36, 48])
+  })
+
+  it('nốt bass quá trầm thì không nhân đôi nữa cho khỏi đục', () => {
+    const song = buildSongTimeline({
+      accompaniment: [marker('accompaniment', 0, 'left', [30])],
+      fills: [],
+      solo: soloFor,
+      loopLengthBeats: 4,
+      form: getSongForm('two-then-interlude')!,
+    })
+    const interlude = song.sections.find(
+      (section) => section.kind === 'interlude',
+    )!
+
+    const bass = song.events.find(
+      (event) => event.hand === 'left' && event.startBeat >= interlude.startBeat,
+    )!
+
+    expect(bass.notes).toEqual([30])
+  })
+
+  it('mỗi lượt giang tấu chơi một đoạn khác nhau', () => {
+    /*
+      Lặp y nguyên nghe ra ngay là máy phát lại băng. Số lượt đếm liên tục qua
+      cả bài nên lượt nào cũng nhận một số riêng.
+    */
+    const song = build('long-interlude')
+    const interlude = song.sections.find(
+      (section) => section.kind === 'interlude',
+    )!
+
+    const soloNotes = song.events
+      .filter(
+        (event) =>
+          event.velocity === 30 &&
+          event.startBeat >= interlude.startBeat &&
+          event.startBeat < interlude.startBeat + interlude.lengthBeats,
+      )
+      .map((event) => event.notes[0])
+
+    // Hai lượt, mỗi lượt ba nốt, và hai lượt phải khác cao độ
+    expect(new Set(soloNotes).size).toBe(2)
+  })
+
+  it('số lượt đếm liên tục qua cả bài, không đếm lại từ đầu mỗi đoạn', () => {
+    const song = buildSongTimeline({
+      accompaniment: ACCOMPANIMENT,
+      fills: FILLS,
+      solo: soloFor,
+      loopLengthBeats: 4,
+      form: {
+        id: 'test',
+        name: 'test',
+        description: 'test',
+        sections: [
+          { kind: 'verse', loops: 1 },
+          { kind: 'interlude', loops: 1 },
+          { kind: 'chorus', loops: 1 },
+          { kind: 'interlude', loops: 1 },
+        ],
+      },
+    })
+
+    const takes = song.events
+      .filter((event) => event.velocity === 30)
+      .map((event) => event.notes[0])
+
+    // Hai đoạn giang tấu rời nhau vẫn phải là hai lượt khác nhau
+    expect(new Set(takes)).toEqual(new Set([60, 61]))
+  })
+
+  it('báo lại đã dùng hết bao nhiêu lượt giang tấu', () => {
+    expect(build('long-interlude').soloTakes).toBe(2)
+    expect(build('two-then-interlude').soloTakes).toBe(1)
+    // Không có đoạn giang tấu thì không tiêu lượt nào
+    expect(build('loop-only').soloTakes).toBe(0)
+  })
+
+  it('phát lại cả bài thì nối tiếp số lượt, không đếm lại từ đầu', () => {
+    /*
+      Đây là chỗ người dùng nghe ra lỗi: vòng hợp âm lặp lại mà câu solo y
+      nguyên. Nguyên nhân là mỗi lần phát lại đều dựng bài với lượt bắt đầu
+      từ 0.
+    */
+    const form = getSongForm('two-then-interlude')!
+    const options = {
+      accompaniment: ACCOMPANIMENT,
+      fills: FILLS,
+      solo: soloFor,
+      loopLengthBeats: 4,
+      form,
+    }
+
+    const first = buildSongTimeline(options)
+    const second = buildSongTimeline({
+      ...options,
+      takeOffset: first.soloTakes,
+    })
+
+    const soloNotesOf = (song: typeof first) =>
+      song.events
+        .filter((event) => event.velocity === 30)
+        .map((event) => event.notes[0])
+
+    expect(soloNotesOf(second)).not.toEqual(soloNotesOf(first))
+  })
+
   it('các đoạn nối tiếp nhau không hở không chồng', () => {
     const song = build('full-pop')
 
@@ -151,8 +334,8 @@ describe('buildSongTimeline', () => {
         event.startBeat < interlude.startBeat + interlude.lengthBeats,
     )
 
-    // Hai lượt, mỗi lượt hai tiếng
-    expect(accompanimentHits).toHaveLength(4)
+    // Hai lượt, mỗi lượt chỉ còn tiếng tay trái vì tay phải đã nhường cho solo
+    expect(accompanimentHits).toHaveLength(2)
   })
 
   it('sự kiện xếp theo thời gian tăng dần', () => {
@@ -178,7 +361,7 @@ describe('buildSongTimeline', () => {
     const song = buildSongTimeline({
       accompaniment: ACCOMPANIMENT,
       fills: [],
-      solo: [],
+      solo: () => [],
       loopLengthBeats: 4,
       form: getSongForm('full-pop')!,
     })

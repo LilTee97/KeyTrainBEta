@@ -12,6 +12,9 @@ import type { TimelineEvent } from './types'
  * Hệ quả cho phần sinh giai điệu: **câu solo chỉ chơi trong đoạn giang tấu**,
  * còn đoạn có lời thì chỉ chêm câu fill ngắn ở khe hở giữa các hợp âm. Chơi
  * solo suốt bài là đè lên giọng hát.
+ *
+ * Và quan trọng không kém: vào đoạn giang tấu thì **tay phải thôi quạt hợp
+ * âm** để rảnh tay chơi giai điệu — xem `interludeAccompaniment` bên dưới.
  */
 
 export type SectionKind =
@@ -109,17 +112,34 @@ export interface BuildSongOptions {
   accompaniment: readonly TimelineEvent[]
   /** Câu fill, chỉ dùng ở đoạn có lời. */
   fills: readonly TimelineEvent[]
-  /** Câu solo, chỉ dùng ở đoạn giang tấu. */
-  solo: readonly TimelineEvent[]
+  /**
+   * Câu solo cho **lượt giang tấu thứ mấy**, đếm từ 0.
+   *
+   * Là một hàm chứ không phải một mảng cố định, vì mỗi lượt giang tấu phải
+   * chơi một đoạn khác nhau — lặp y nguyên nghe ra ngay là máy phát lại băng.
+   * Nhận số lượt thay vì tự sinh ngẫu nhiên để cùng một bài phát lại vẫn ra
+   * đúng đoạn cũ, người học mới tập theo được.
+   */
+  solo: (take: number) => readonly TimelineEvent[]
   /** Độ dài một lượt vòng hợp âm, tính bằng phách. */
   loopLengthBeats: number
   form: SongForm
+  /**
+   * Số lượt giang tấu đã dùng hết trước khi dựng bài này.
+   *
+   * Cần cho việc **phát lặp cả bài**: lần phát lại thứ hai phải nối tiếp số
+   * lượt của lần thứ nhất, chứ không đếm lại từ 0 — không thì nghe lặp y
+   * nguyên đúng cái đang muốn tránh.
+   */
+  takeOffset?: number
 }
 
 export interface SongTimeline {
   events: TimelineEvent[]
   totalBeats: number
   sections: PlacedSection[]
+  /** Số lượt giang tấu bài này dùng hết, để lần phát sau nối tiếp. */
+  soloTakes: number
 }
 
 /** Dời một nhóm sự kiện sang vị trí khác trên dòng thời gian. */
@@ -133,6 +153,42 @@ function shift(
   }))
 }
 
+/** Đáy của nốt bass nhân đôi — dưới nữa thì nghe đục chứ không dày thêm. */
+const OCTAVE_BASS_FLOOR = 28
+
+/**
+ * Phần đệm dùng riêng cho đoạn giang tấu: **bỏ hẳn phần tay phải**.
+ *
+ * Đây là điểm khác biệt lớn nhất giữa đoạn hát và đoạn giang tấu, và cũng là
+ * chỗ bản đầu làm sai: nó cho nguyên phần đệm hai tay chạy tiếp rồi chồng câu
+ * solo lên trên, thành ra tay phải vừa quạt hợp âm vừa chạy giai điệu — không
+ * ai chơi vậy được, và nghe cũng đục.
+ *
+ * Đối chiếu hai bản ký âm thì thấy rõ: ở đoạn giang tấu, **tay trái vẫn làm
+ * việc y như cũ** (số lần vào mỗi ô nhịp gần như không đổi — 3.3 lên 3.4 ở
+ * bài *Mơ*, 5.1 lên 5.5 ở *Hồng Kông 1*), còn **tay phải bỏ hẳn mẫu đệm** để
+ * lên tầm cao chơi giai điệu (trần cao độ tay phải nhảy từ khoảng 76 lên
+ * 95-100). Tức là chỉ có một tay đổi việc, không phải cả hai.
+ *
+ * Bù lại, tay trái **nhân đôi nốt bass xuống một quãng tám** cho chắc nền —
+ * bề rộng tay trái ở đoạn giang tấu rộng hơn hẳn đoạn hát (bài *Mơ*: 15.9 lên
+ * 20.6 nửa cung), và ô nhịp 41 của bài đó bass đúng là chồng quãng tám `A1+A2`.
+ */
+function interludeAccompaniment(
+  events: readonly TimelineEvent[],
+): TimelineEvent[] {
+  return events
+    .filter((event) => event.hand === 'left')
+    .map((event) => {
+      const lowest = Math.min(...event.notes)
+      const doubled = lowest - 12
+
+      return doubled >= OCTAVE_BASS_FLOOR
+        ? { ...event, notes: [doubled, ...event.notes] }
+        : event
+    })
+}
+
 /**
  * Dựng dòng thời gian cho cả bài theo cấu trúc đã chọn.
  *
@@ -140,23 +196,46 @@ function shift(
  * nhận câu fill, đoạn giang tấu nhận câu solo.
  */
 export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
-  const { accompaniment, fills, solo, loopLengthBeats, form } = options
+  const {
+    accompaniment,
+    fills,
+    solo,
+    loopLengthBeats,
+    form,
+    takeOffset = 0,
+  } = options
 
   const events: TimelineEvent[] = []
   const sections: PlacedSection[] = []
   let cursor = 0
 
+  // Dựng sẵn một lần, đỡ phải lọc lại ở mỗi lượt lặp.
+  const forInterlude = interludeAccompaniment(accompaniment)
+
+  /*
+    Đếm **liên tục qua cả bài**, không đếm lại từ đầu ở mỗi đoạn. Nhờ vậy lượt
+    giang tấu thứ hai của đoạn sau vẫn khác lượt thứ hai của đoạn trước.
+  */
+  let take = takeOffset
+
   for (const section of form.sections) {
     const lengthBeats = section.loops * loopLengthBeats
+    const isInterlude = section.kind === 'interlude'
     sections.push({ kind: section.kind, startBeat: cursor, lengthBeats })
 
     for (let loop = 0; loop < section.loops; loop += 1) {
       const offset = cursor + loop * loopLengthBeats
 
-      events.push(...shift(accompaniment, offset))
       events.push(
-        ...shift(section.kind === 'interlude' ? solo : fills, offset),
+        ...shift(isInterlude ? forInterlude : accompaniment, offset),
       )
+
+      if (isInterlude) {
+        events.push(...shift(solo(take), offset))
+        take += 1
+      } else {
+        events.push(...shift(fills, offset))
+      }
     }
 
     cursor += lengthBeats
@@ -166,5 +245,6 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
     events: events.sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
+    soloTakes: take - takeOffset,
   }
 }
