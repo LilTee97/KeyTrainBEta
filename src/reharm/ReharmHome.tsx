@@ -20,6 +20,7 @@ import {
   totalBeatsOf,
 } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
+import { SongTextInput } from './input/SongTextInput'
 import type {
   ApproachDirection,
   OrnamentDensity,
@@ -578,6 +579,14 @@ export function ReharmHome() {
           những gì bạn nhập — phần tái hòa âm theo phong cách sẽ thêm dần.
         </p>
       </div>
+
+      <SongTextInput
+        onUseChords={(chords) => {
+          setInput(chords)
+          setSelectedIndex(null)
+          setAcceptedPassing([])
+        }}
+      />
 
       {/* Ô nhập */}
       <div>
