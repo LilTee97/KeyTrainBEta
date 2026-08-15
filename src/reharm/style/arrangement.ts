@@ -1,4 +1,4 @@
-import type { SectionKind, SongTimeline } from './songStructure'
+import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { interludeAccompaniment } from './songStructure'
 import type { TimelineEvent } from './types'
 
@@ -57,7 +57,24 @@ export function stepLabel(
 
   const over = sources[step.over]?.name ?? 'đoạn đầu'
   const times = step.loops > 1 ? ` ×${step.loops}` : ''
-  return `Giang tấu (vòng ${over})${times}`
+  // Ghi rõ "4 hợp âm" vì giang tấu không còn mượn trọn vòng của đoạn nữa.
+  return `Giang tấu (4 hợp âm của ${over})${times}`
+}
+
+/**
+ * Đoạn nào vang lên ngay sau bước thứ `index`.
+ *
+ * Bước sau có thể lại là một giang tấu nữa, và giang tấu mượn vòng của đoạn
+ * khác — nên cái thật sự vang lên tiếp theo là đoạn nó mượn.
+ */
+function nextSection(
+  steps: readonly ArrangementStep[],
+  index: number,
+  sources: readonly SourceSection[],
+): SourceSection | null {
+  const step = steps[index + 1]
+  if (!step) return null
+  return sources[step.type === 'section' ? step.source : step.over] ?? null
 }
 
 /** Cắt lấy các sự kiện của một khoảng rồi dời về vị trí mới. */
@@ -79,6 +96,13 @@ function slice(
     }))
 }
 
+/** Câu quay đầu đã dựng xong, các mốc tính từ phách 0. */
+export interface TurnaroundTake {
+  events: readonly TimelineEvent[]
+  /** Chiếm bao nhiêu phách **cuối** vòng giang tấu. */
+  beats: number
+}
+
 export interface BuildArrangedSongOptions {
   /** Phần đệm của cả bài, đã nằm đúng vị trí trên dòng thời gian gốc. */
   accompaniment: readonly TimelineEvent[]
@@ -88,6 +112,31 @@ export interface BuildArrangedSongOptions {
   solo: (take: number) => readonly TimelineEvent[]
   sources: readonly SourceSection[]
   steps: readonly ArrangementStep[]
+  /**
+   * Câu quay đầu ở cuối lượt giang tấu **cuối cùng**, hút về đoạn ngay sau.
+   *
+   * Chỉ lượt cuối mới đổi: các lượt trước còn phải chạy tiếp nên giữ nguyên
+   * vòng hợp âm, đổi sớm thì lượt sau vào lại nghe như bắt đầu nhầm chỗ.
+   *
+   * Trả `null` nghĩa là chỗ này không cần quay đầu — thường vì vòng đã kết sẵn
+   * ở bậc năm của đoạn sau.
+   */
+  turnaround?: (
+    over: SourceSection,
+    next: SourceSection,
+  ) => TurnaroundTake | null
+  /**
+   * Vòng ngắn mà giang tấu thật sự chạy trên đó.
+   *
+   * Mượn trọn cả đoạn thì giang tấu dài lê thê — xem `interludeLoop.ts`. Bên
+   * gọi nhặt ra một vòng ngắn hơn nằm trong đoạn rồi trả về khoảng đó.
+   *
+   * Trả `null` thì mượn trọn đoạn như cũ.
+   */
+  interludeRange?: (
+    over: SourceSection,
+    next: SourceSection | null,
+  ) => { startBeat: number; lengthBeats: number } | null
 }
 
 /**
@@ -101,16 +150,26 @@ export interface BuildArrangedSongOptions {
 export function buildArrangedSong(
   options: BuildArrangedSongOptions,
 ): SongTimeline {
-  const { accompaniment, interlude, fills, solo, sources, steps } = options
+  const {
+    accompaniment,
+    interlude,
+    fills,
+    solo,
+    sources,
+    steps,
+    turnaround,
+    interludeRange,
+  } = options
 
   const forInterlude = interludeAccompaniment(interlude ?? accompaniment)
 
   const events: TimelineEvent[] = []
   const sections: SongTimeline['sections'] = []
+  const segments: TimeSegment[] = []
   let cursor = 0
   let take = 0
 
-  for (const step of steps) {
+  for (const [index, step] of steps.entries()) {
     if (step.type === 'section') {
       const source = sources[step.source]
       if (!source) continue
@@ -119,6 +178,12 @@ export function buildArrangedSong(
         kind: source.kind,
         startBeat: cursor,
         lengthBeats: source.lengthBeats,
+      })
+
+      segments.push({
+        startBeat: cursor,
+        lengthBeats: source.lengthBeats,
+        sourceBeat: source.startBeat,
       })
 
       events.push(
@@ -133,31 +198,70 @@ export function buildArrangedSong(
     const over = sources[step.over]
     if (!over) continue
 
+    /*
+      Giang tấu là bước cuối thì không quay đầu về đâu cả — bài dừng ngay sau
+      nó, chèn một cụm hút về chỗ không tồn tại chỉ làm bài kết lửng.
+    */
+    const next = nextSection(steps, index, sources)
+
+    // Vòng ngắn nhặt từ đoạn, hoặc trọn đoạn nếu bên gọi không nhặt.
+    const range = interludeRange?.(over, next) ?? over
+    const loopBeats = range.lengthBeats
     const loops = Math.max(1, Math.floor(step.loops))
+
     sections.push({
       kind: 'interlude',
       startBeat: cursor,
-      lengthBeats: over.lengthBeats * loops,
+      lengthBeats: loopBeats * loops,
     })
 
+    const turn = next && turnaround ? turnaround(over, next) : null
+    const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
+
     for (let loop = 0; loop < loops; loop += 1) {
-      const at = cursor + loop * over.lengthBeats
+      const at = cursor + loop * loopBeats
+      const last = loop === loops - 1
+      const length = last && turn ? played : loopBeats
+
+      /*
+        Cả lượt tra về vòng ngắn đã nhặt, kể cả phần ô cuối đã đổi thành cụm
+        quay đầu: hợp âm quay đầu không có mặt trong bản nhạc nên không neo
+        vào đâu được, giữ sáng hợp âm cuối của vòng là gần đúng nhất.
+      */
+      segments.push({
+        startBeat: at,
+        lengthBeats: loopBeats,
+        sourceBeat: range.startBeat,
+      })
 
       events.push(
-        ...slice(forInterlude, over.startBeat, over.lengthBeats, at),
+        ...slice(forInterlude, range.startBeat, length, at),
         // Mỗi lượt một câu ngẫu hứng khác, không lặp lại y nguyên.
-        ...slice(solo(take), over.startBeat, over.lengthBeats, at),
+        ...slice(solo(take), range.startBeat, length, at),
       )
       take += 1
+
+      /*
+        Cụm quay đầu chơi bằng **cả hai tay**, không rút gọn như phần còn lại
+        của giang tấu. Suốt giang tấu tay phải để dành cho câu ngẫu hứng; đến
+        chỗ này cả hai tay quay lại chơi hợp âm chính là dấu hiệu nghe ra ngay
+        rằng phần ngẫu hứng đã hết và đoạn hát sắp vào.
+      */
+      if (last && turn) {
+        for (const event of turn.events) {
+          events.push({ ...event, startBeat: event.startBeat + at + played })
+        }
+      }
     }
 
-    cursor += over.lengthBeats * loops
+    cursor += loopBeats * loops
   }
 
   return {
     events: events.sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
+    segments,
     soloTakes: take,
   }
 }

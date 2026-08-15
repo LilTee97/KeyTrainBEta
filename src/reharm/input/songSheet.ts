@@ -193,6 +193,64 @@ export const SECTION_KIND_LABELS: Record<SongSectionKind, string> = {
   other: 'Đoạn khác',
 }
 
+/**
+ * Màu riêng cho từng loại đoạn.
+ *
+ * Bài hát dài thì nhìn vào toàn chữ như nhau, không biết đang ở đoạn nào. Cho
+ * mỗi loại một màu thì lướt mắt là thấy ngay bố cục — nhất là sau khi người
+ * dùng tự quét chia đoạn.
+ *
+ * Chọn màu phải né hai màu của hợp âm — **vàng gold** cho hợp âm chính và
+ * **xanh ngọc** cho hợp âm lướt — vì hai hàng nằm sát nhau, trùng màu là không
+ * phân biệt được cái nào nói về cái gì.
+ *
+ * Phiên khúc và điệp khúc lấy hai màu tách nhau xa nhất và nổi rõ nhất trên
+ * nền tối, vì đó là hai đoạn chiếm gần hết bài: **xanh trời** cho phiên khúc và
+ * **hồng tím** cho điệp khúc. Bản đầu để phiên khúc màu chữ mặc định nên không
+ * nổi gì, còn điệp khúc lại trùng đúng màu vàng của hợp âm chính.
+ */
+export const SECTION_KIND_COLORS: Record<
+  SongSectionKind,
+  { text: string; border: string; lyric: string }
+> = {
+  intro: {
+    text: 'text-slate-400',
+    border: 'border-slate-400/40',
+    lyric: 'text-slate-300',
+  },
+  verse: {
+    text: 'text-sky-300',
+    border: 'border-sky-300/50',
+    lyric: 'text-sky-200',
+  },
+  prechorus: {
+    text: 'text-lime-300',
+    border: 'border-lime-300/50',
+    lyric: 'text-lime-200',
+  },
+  chorus: {
+    text: 'text-fuchsia-300',
+    border: 'border-fuchsia-300/50',
+    lyric: 'text-fuchsia-200',
+  },
+  bridge: {
+    text: 'text-violet-300',
+    border: 'border-violet-300/40',
+    lyric: 'text-violet-200',
+  },
+  interlude: {
+    text: 'text-teal-key',
+    border: 'border-teal-key/40',
+    lyric: 'text-teal-200',
+  },
+  outro: {
+    text: 'text-rose-300',
+    border: 'border-rose-300/40',
+    lyric: 'text-rose-200',
+  },
+  other: { text: 'text-dim', border: 'border-line', lyric: 'text-cream' },
+}
+
 /** Một dòng đã tách khỏi đoạn, kèm số thứ tự toàn bài. */
 export interface FlatLine {
   line: SheetLine

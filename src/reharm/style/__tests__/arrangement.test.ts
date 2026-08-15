@@ -5,6 +5,7 @@ import {
   defaultArrangement,
   stepLabel,
 } from '../arrangement'
+import { sourceBeatAt } from '../songStructure'
 import type { TimelineEvent } from '../types'
 
 /**
@@ -223,13 +224,112 @@ describe('nhãn hiện trên giao diện', () => {
 
   it('bước giang tấu ghi rõ nó mượn vòng của đoạn nào', () => {
     expect(stepLabel({ type: 'interlude', over: 1, loops: 1 }, SOURCES)).toBe(
-      'Giang tấu (vòng Điệp khúc)',
+      'Giang tấu (4 hợp âm của Điệp khúc)',
     )
   })
 
   it('lặp nhiều lượt thì ghi thêm số lượt', () => {
     expect(stepLabel({ type: 'interlude', over: 0, loops: 2 }, SOURCES)).toBe(
-      'Giang tấu (vòng Phiên khúc) ×2',
+      'Giang tấu (4 hợp âm của Phiên khúc) ×2',
     )
+  })
+})
+
+describe('tra ngược về vòng hợp âm gốc', () => {
+  /*
+    Đây là chỗ làm chữ hợp âm sáng lên đúng ô đang chơi. Bản đầu lấy vị trí
+    phát chia dư cho độ dài vòng, nên bài đã sắp lại thứ tự thì sáng sai chỗ:
+    đang chơi giang tấu hay điệp khúc mà chữ vẫn sáng ở phiên khúc.
+  */
+  const parts: SourceSection[] = [
+    { name: 'Phiên khúc', kind: 'verse', startBeat: 0, lengthBeats: 8 },
+    { name: 'Điệp khúc', kind: 'chorus', startBeat: 8, lengthBeats: 8 },
+  ]
+
+  const arranged = (steps: ArrangementStep[]) =>
+    buildArrangedSong({
+      accompaniment: [],
+      fills: [],
+      solo: () => [],
+      sources: parts,
+      steps,
+    })
+
+  it('đoạn chơi lần thứ hai vẫn tra về đúng chỗ của nó', () => {
+    // Điệp khúc chơi hai lần: cả hai lần đều phải sáng ở điệp khúc
+    const song = arranged([
+      { type: 'section', source: 1 },
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ])
+
+    expect(sourceBeatAt(song.segments, 2)).toBe(10)
+    expect(sourceBeatAt(song.segments, 18)).toBe(10)
+  })
+
+  it('đoạn đứng sau không bị tính theo mốc của cả bài', () => {
+    const song = arranged([
+      { type: 'section', source: 1 },
+      { type: 'section', source: 0 },
+    ])
+
+    // Phách thứ 9 của bài là phách thứ 1 của phiên khúc, tức mốc gốc 1
+    expect(sourceBeatAt(song.segments, 9)).toBe(1)
+  })
+
+  it('giang tấu tra về vòng ngắn nó thật sự chạy, không về đầu đoạn', () => {
+    const song = buildArrangedSong({
+      accompaniment: [],
+      fills: [],
+      solo: () => [],
+      sources: parts,
+      steps: [
+        { type: 'interlude', over: 1, loops: 2 },
+        { type: 'section', source: 0 },
+      ],
+      // Giang tấu chỉ mượn bốn phách cuối của điệp khúc
+      interludeRange: () => ({ startBeat: 12, lengthBeats: 4 }),
+    })
+
+    expect(sourceBeatAt(song.segments, 0)).toBe(12)
+    // Lượt thứ hai quay lại đầu vòng ngắn chứ không chạy tiếp
+    expect(sourceBeatAt(song.segments, 4)).toBe(12)
+    expect(sourceBeatAt(song.segments, 6)).toBe(14)
+  })
+
+  it('đoạn sau giang tấu bắt đầu đúng chỗ', () => {
+    const song = buildArrangedSong({
+      accompaniment: [],
+      fills: [],
+      solo: () => [],
+      sources: parts,
+      steps: [
+        { type: 'interlude', over: 1, loops: 2 },
+        { type: 'section', source: 0 },
+      ],
+      interludeRange: () => ({ startBeat: 12, lengthBeats: 4 }),
+    })
+
+    // Hai lượt giang tấu chiếm 8 phách, phiên khúc vào ở phách 8
+    expect(sourceBeatAt(song.segments, 8)).toBe(0)
+  })
+
+  it('bản đồ phủ kín cả bài, không có khe hở', () => {
+    const song = arranged([
+      { type: 'section', source: 0 },
+      { type: 'interlude', over: 1, loops: 1 },
+      { type: 'section', source: 1 },
+    ])
+
+    for (let beat = 0; beat < song.totalBeats; beat += 1) {
+      expect(sourceBeatAt(song.segments, beat)).not.toBeNull()
+    }
+  })
+
+  it('ngoài phạm vi bài thì không tra được gì', () => {
+    const song = arranged([{ type: 'section', source: 0 }])
+
+    expect(sourceBeatAt(song.segments, song.totalBeats)).toBeNull()
+    expect(sourceBeatAt(song.segments, -1)).toBeNull()
   })
 })

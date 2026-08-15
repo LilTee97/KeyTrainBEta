@@ -146,12 +146,47 @@ export interface BuildSongOptions {
   takeOffset?: number
 }
 
+/**
+ * Một mảnh dòng thời gian và chỗ nó được cắt ra từ vòng hợp âm gốc.
+ *
+ * Cần cái này để **tra ngược** từ vị trí đang phát về hợp âm nào đang vang.
+ * Bài đã sắp lại thứ tự thì hai bên không còn chạy song song nữa: một đoạn có
+ * thể chơi hai lần ở hai chỗ khác nhau, giang tấu chen vào giữa và lại chỉ
+ * mượn bốn hợp âm — nên lấy vị trí phát chia dư cho độ dài vòng là ra sai chỗ.
+ */
+export interface TimeSegment {
+  /** Mốc trên dòng thời gian đã sắp. */
+  startBeat: number
+  lengthBeats: number
+  /** Mốc tương ứng trên vòng hợp âm gốc. */
+  sourceBeat: number
+}
+
 export interface SongTimeline {
   events: TimelineEvent[]
   totalBeats: number
   sections: PlacedSection[]
+  /** Bản đồ tra ngược về vòng hợp âm gốc, xếp theo thứ tự thời gian. */
+  segments: TimeSegment[]
   /** Số lượt giang tấu bài này dùng hết, để lần phát sau nối tiếp. */
   soloTakes: number
+}
+
+/** Vị trí tương ứng trên vòng hợp âm gốc của một mốc đang phát. */
+export function sourceBeatAt(
+  segments: readonly TimeSegment[],
+  beat: number,
+): number | null {
+  for (const segment of segments) {
+    if (
+      beat >= segment.startBeat &&
+      beat < segment.startBeat + segment.lengthBeats
+    ) {
+      return segment.sourceBeat + (beat - segment.startBeat)
+    }
+  }
+
+  return null
 }
 
 /** Dời một nhóm sự kiện sang vị trí khác trên dòng thời gian. */
@@ -220,6 +255,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
 
   const events: TimelineEvent[] = []
   const sections: PlacedSection[] = []
+  const segments: TimeSegment[] = []
   let cursor = 0
 
   // Dựng sẵn một lần, đỡ phải lọc lại ở mỗi lượt lặp.
@@ -238,6 +274,13 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
 
     for (let loop = 0; loop < section.loops; loop += 1) {
       const offset = cursor + loop * loopLengthBeats
+
+      // Luồng này lặp nguyên vòng nên mọi lượt đều tra về đầu vòng.
+      segments.push({
+        startBeat: offset,
+        lengthBeats: loopLengthBeats,
+        sourceBeat: 0,
+      })
 
       events.push(
         ...shift(isInterlude ? forInterlude : accompaniment, offset),
@@ -258,6 +301,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
     events: events.sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
+    segments,
     soloTakes: take - takeOffset,
   }
 }

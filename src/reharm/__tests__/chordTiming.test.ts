@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   addChordPair,
+  addSimilarChordPairs,
   beatsOf,
   chordDurations,
   chordIndexAt,
@@ -9,6 +10,8 @@ import {
   mainChordSpans,
   pairedChordBeats,
   removeChordPair,
+  removeSimilarChordPairs,
+  similarChordPairs,
   splitBeats,
   totalBeatsOf,
 } from '../chordTiming'
@@ -222,6 +225,42 @@ describe('quản lý các cặp chia đôi', () => {
   it('ghép cặp mới thì gỡ cặp chồng lên nó', () => {
     expect([...addChordPair(new Set([0]), 1)]).toEqual([1])
     expect([...addChordPair(new Set([2]), 1)]).toEqual([1])
+  })
+
+  it('gom được mọi chỗ có cùng cặp hợp âm', () => {
+    // Giống hợp âm lướt: chia một chỗ là chia mọi chỗ giống hệt
+    const repeated = chords('C Am F G C Am F G')
+    expect(similarChordPairs(repeated, 0)).toEqual([0, 4])
+  })
+
+  it('cặp khác thì không gom chung', () => {
+    const repeated = chords('C Am F G C Em F G')
+    expect(similarChordPairs(repeated, 0)).toEqual([0])
+  })
+
+  it('hai chỗ chồng nhau thì chỉ lấy chỗ đầu', () => {
+    // Một hợp âm chỉ thuộc được một ô nhịp
+    const repeated = chords('C C C C')
+    const found = similarChordPairs(repeated, 0)
+
+    for (let index = 1; index < found.length; index += 1) {
+      expect(found[index] - found[index - 1]).toBeGreaterThan(1)
+    }
+  })
+
+  it('chia một chỗ là chia cả loạt', () => {
+    const repeated = chords('C Am F G C Am F G')
+    const after = addSimilarChordPairs(new Set(), repeated, 0)
+
+    expect([...after].sort((a, b) => a - b)).toEqual([0, 4])
+  })
+
+  it('gỡ một chỗ là gỡ cả loạt, bấm vào nửa nào cũng được', () => {
+    const repeated = chords('C Am F G C Am F G')
+    const paired = addSimilarChordPairs(new Set(), repeated, 0)
+
+    expect([...removeSimilarChordPairs(paired, repeated, 0)]).toEqual([])
+    expect([...removeSimilarChordPairs(paired, repeated, 1)]).toEqual([])
   })
 
   it('cặp không chồng nhau thì giữ nguyên cả hai', () => {

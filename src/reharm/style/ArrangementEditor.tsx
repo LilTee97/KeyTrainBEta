@@ -180,7 +180,12 @@ export function ArrangementEditor({
               type: 'interlude',
               // Giang tấu hay chạy trên vòng điệp khúc, nên đoán đoạn cuối trước.
               over: Math.max(0, sources.length - 1),
-              loops: 1,
+              /*
+                Hai lượt là mặc định vì đó là độ dài thường gặp: một lượt trôi
+                qua trước khi người nghe kịp bắt được câu, ba lượt trở lên thì
+                bài đứng lại chờ phần ngẫu hứng.
+              */
+              loops: 2,
             })
           }
           className="rounded-lg border border-teal-key/50 bg-teal-key/10 px-2.5 py-1 text-xs text-teal-key hover:bg-teal-key/20"

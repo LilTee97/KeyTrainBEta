@@ -110,6 +110,73 @@ export function addChordPair(
   return next
 }
 
+/**
+ * Mọi chỗ trong bài có **cùng cặp hợp âm** như cặp bắt đầu ở `start`.
+ *
+ * Giống cách hợp âm lướt áp cả loạt: một bài lặp đi lặp lại vài cặp hợp âm,
+ * nên đã quyết định `C → Am` chung một ô nhịp thì thường muốn vậy ở mọi chỗ có
+ * `C → Am`, chứ không đi chia thủ công từng chỗ rồi bỏ sót.
+ *
+ * "Cùng cặp" so theo **ký hiệu cả hai hợp âm**, vì cái quyết định nghe ra sao
+ * là cặp hợp âm chứ không phải riêng hợp âm đầu.
+ */
+export function similarChordPairs(
+  chords: readonly ParsedChord[],
+  start: number,
+): number[] {
+  const first = chords[start]
+  const second = chords[start + 1]
+  if (!first || !second) return []
+
+  const found: number[] = []
+
+  for (let index = 0; index + 1 < chords.length; index += 1) {
+    if (
+      chords[index].symbol !== first.symbol ||
+      chords[index + 1].symbol !== second.symbol
+    ) {
+      continue
+    }
+
+    // Hai cặp chồng nhau thì bỏ cặp sau, vì một hợp âm chỉ thuộc một ô nhịp.
+    const previous = found[found.length - 1]
+    if (previous !== undefined && index - previous <= 1) continue
+
+    found.push(index)
+  }
+
+  return found
+}
+
+/** Ghép cặp ở `start` và ở mọi chỗ có cùng cặp hợp âm. */
+export function addSimilarChordPairs(
+  starts: ReadonlySet<number>,
+  chords: readonly ParsedChord[],
+  start: number,
+): Set<number> {
+  let next = new Set(starts)
+  for (const index of similarChordPairs(chords, start)) {
+    next = addChordPair(next, index)
+  }
+  return next
+}
+
+/** Gỡ cặp ở `index` và ở mọi chỗ có cùng cặp hợp âm. */
+export function removeSimilarChordPairs(
+  starts: ReadonlySet<number>,
+  chords: readonly ParsedChord[],
+  index: number,
+): Set<number> {
+  // Bấm vào nửa sau thì cặp thật bắt đầu ở hợp âm trước đó.
+  const start = starts.has(index) ? index : index - 1
+  const next = new Set(starts)
+
+  for (const other of similarChordPairs(chords, start)) next.delete(other)
+  next.delete(start)
+
+  return next
+}
+
 /** Gỡ cặp mà một hợp âm đang tham gia, dù nó là nửa đầu hay nửa sau. */
 export function removeChordPair(
   starts: ReadonlySet<number>,
