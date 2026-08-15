@@ -94,6 +94,58 @@ describe('câu nối bằng chuỗi hợp âm giảm', () => {
   })
 })
 
+describe('câu quay đầu — nối cuối vòng về đầu vòng', () => {
+  it('bắt được chỗ hợp âm cuối kéo về hợp âm đầu', () => {
+    // Vòng pop quen thuộc: G cuối vòng kéo về C đầu vòng khi lặp lại
+    const suggestions = suggestDim7ChainFills(chords('C Am F G7'))
+
+    expect(suggestions).toHaveLength(1)
+    expect(suggestions[0].insertBeforeIndex).toBe(4)
+  })
+
+  it('chèn vào cuối vòng', () => {
+    const list = chords('C Am F G7')
+    const result = applySuggestions(list, suggestDim7ChainFills(list))
+
+    expect(result.map((chord) => chord.symbol)).toEqual([
+      'C',
+      'Am',
+      'F',
+      'G7',
+      'Adim7',
+      'Bdim7',
+    ])
+  })
+
+  it('giải thích nói rõ đây là câu quay đầu', () => {
+    const [suggestion] = suggestDim7ChainFills(chords('C Am F G7'))
+    expect(suggestion.explanation).toContain('quay đầu')
+  })
+
+  it('tắt riêng được câu quay đầu', () => {
+    expect(
+      suggestDim7ChainFills(chords('C Am F G7'), {
+        includeTurnaround: false,
+      }),
+    ).toEqual([])
+  })
+
+  it('không chèn khi hợp âm cuối không kéo về hợp âm đầu', () => {
+    // F cuối vòng không phải bậc năm của C
+    expect(suggestDim7ChainFills(chords('C Am G7 F'))).toEqual([])
+  })
+
+  it('tìm được cả câu nối bên trong lẫn câu quay đầu', () => {
+    const suggestions = suggestDim7ChainFills(chords('Dm7 G7 C E7'))
+
+    // G7 về C ở giữa vòng, và E7 về Dm7 khi quay đầu... E7 lên A không phải Dm
+    expect(suggestions.length).toBeGreaterThanOrEqual(1)
+    expect(
+      suggestions.some((suggestion) => suggestion.insertBeforeIndex === 2),
+    ).toBe(true)
+  })
+})
+
 describe('nối vào bộ gợi ý chung', () => {
   it('câu nối nằm trong danh sách gợi ý', () => {
     const suggestions = suggestPassingChords(chords('G7 C'))
