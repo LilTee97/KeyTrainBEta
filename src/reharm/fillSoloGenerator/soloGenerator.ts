@@ -204,6 +204,19 @@ export interface FillPosition {
  * Tách riêng khỏi phần dựng nốt để giao diện biết **chỗ nào đang có fill** mà
  * không phải đoán từ dòng thời gian. Hai bên dùng chung đúng một luật chọn chỗ,
  * nên không thể lệch nhau.
+ *
+ * ## Chỗ ngắt của lời quyết định, không phải mật độ
+ *
+ * Bản đầu rải fill theo mật độ: cứ `n` hợp âm chêm một câu. Đối chiếu bản ký
+ * âm `reference/nguoi ay.mxl` thì thấy luật đó sai hẳn về nguyên tắc —
+ * `phongcachdemhatkhabu.md` phần 15 định nghĩa câu fill là *"những câu nhạc
+ * chơi để lấp vào khoảng trống lúc ca sĩ ngắt nghỉ lấy hơi"*, nên chỗ chêm
+ * fill do **ca sĩ** quyết định chứ không do một con số đếm đều.
+ *
+ * Đếm trên bản ký âm: 15 dấu lặng trên 28 ô nhịp, và chúng không rải đều —
+ * chúng rơi đúng vào chỗ hết một câu hát. Đưa `breaths` vào thì danh sách chỗ
+ * chêm bám theo lời; không đưa (luồng gõ vòng hợp âm trơn, không có lời) thì
+ * lùi về cách đếm đều như cũ.
  */
 export function fillPositions(
   chords: readonly ParsedChord[],
@@ -211,18 +224,34 @@ export function fillPositions(
     density?: OrnamentDensity
     /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
     skip?: ReadonlySet<number>
+    /**
+     * Các hợp âm mà câu hát kết thúc ở đó, tính theo vòng hợp âm chính.
+     *
+     * Rỗng nghĩa là chưa dán lời nên chưa biết ca sĩ nghỉ ở đâu.
+     */
+    breaths?: ReadonlySet<number>
   } = {},
 ): FillPosition[] {
-  const { density = 'medium', skip } = options
+  const { density = 'medium', skip, breaths } = options
   const { everyNth } = densityOption(density)
 
   const positions: FillPosition[] = []
   let mainIndex = -1
+  /*
+    Mật độ vẫn có việc khi đã biết chỗ ngắt, nhưng nó thưa **trên danh sách
+    chỗ ngắt** chứ không trên cả vòng hợp âm: chêm vào mọi chỗ ca sĩ lấy hơi
+    thì cây đàn nói suốt, còn đếm đều trên vòng thì lại rơi vào giữa câu hát.
+  */
+  let breathCount = -1
 
   for (let index = 0; index < chords.length; index += 1) {
     if (!chords[index].passing) mainIndex += 1
 
-    if (index % everyNth !== 0) continue
+    if (breaths) {
+      if (!breaths.has(mainIndex)) continue
+      breathCount += 1
+      if (breathCount % everyNth !== 0) continue
+    } else if (index % everyNth !== 0) continue
 
     /*
       **Chỉ chêm fill vào ô nhịp chưa bị chia đôi.**
@@ -252,6 +281,8 @@ export function generateFillLine(
     fillBeats?: number
     /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
     skipFills?: ReadonlySet<number>
+    /** Các hợp âm mà câu hát kết thúc ở đó; xem `fillPositions`. */
+    breaths?: ReadonlySet<number>
   },
 ): SoloNote[] {
   const {
@@ -261,6 +292,7 @@ export function generateFillLine(
     density = 'medium',
     key = null,
     skipFills,
+    breaths,
   } = options
 
   if (chords.length < 2) return []
@@ -273,6 +305,7 @@ export function generateFillLine(
   for (const { index } of fillPositions(chords, {
     density,
     skip: skipFills,
+    breaths,
   })) {
     const next = chords[(index + 1) % chords.length]
 

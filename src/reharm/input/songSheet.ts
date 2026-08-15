@@ -388,3 +388,40 @@ export function layoutAnchors(
 
   return placed
 }
+
+/**
+ * Các hợp âm mà một câu hát **kết thúc** ở đó — chỗ ca sĩ ngắt nghỉ lấy hơi.
+ *
+ * Đây là chỗ chêm câu fill. `phongcachdemhatkhabu.md` phần 15 định nghĩa câu
+ * fill đúng bằng chữ *"những câu nhạc chơi để lấp vào khoảng trống lúc ca sĩ
+ * ngắt nghỉ lấy hơi"*, nên chỗ chêm do lời bài hát quyết định chứ không do
+ * một con số đếm đều — xem `soloGenerator.fillPositions`.
+ *
+ * Lấy hợp âm **cuối** mỗi dòng lời, vì khoảng trống nằm ở đuôi dòng: hát hết
+ * chữ cuối rồi mới nghỉ. Dòng không có lời thì bỏ qua — đó là dòng chỉ ghi
+ * hợp âm, không có ai hát nên không có hơi nào để lấy.
+ *
+ * Hợp âm lướt cũng bỏ qua: nó không có chỗ riêng trong vòng hợp âm chính nên
+ * không đánh số cùng hệ với những chỗ khác.
+ */
+export function breathChords(sheet: SongSheet): Set<number> {
+  const found = new Set<number>()
+
+  for (const section of sheet.sections) {
+    for (const line of section.lines) {
+      if (line.lyric.trim().length === 0) continue
+
+      let last: number | null = null
+      for (const anchor of line.anchors) {
+        if (anchor.passing || anchor.broken || anchor.chordIndex === null) {
+          continue
+        }
+        if (last === null || anchor.chordIndex > last) last = anchor.chordIndex
+      }
+
+      if (last !== null) found.add(last)
+    }
+  }
+
+  return found
+}

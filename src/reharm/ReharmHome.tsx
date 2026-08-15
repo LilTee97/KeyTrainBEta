@@ -32,6 +32,7 @@ import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
 import {
+  breathChords,
   buildSongSheet,
   resectionSheet,
   sectionChordRanges,
@@ -385,7 +386,9 @@ export function ReharmHome() {
     return Math.max(1, measures * style.beatsPerMeasure)
   }, [beatsPerChord, style.beatsPerMeasure])
 
-  /** Bảng thời lượng đưa vào đường ống: cặp chia đôi thì mỗi bên nửa ô nhịp. */
+  /**
+   * Bảng thời lượng đưa vào đường ống: cặp chia đôi thì mỗi bên nửa ô nhịp.
+   */
   const halvedBeats = useMemo(
     () => pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
     [pairedChords, sequence.chords.length, chordBeats],
@@ -557,110 +560,6 @@ export function ReharmHome() {
     })
   }, [mainChords, style, chordBeats, dropRoot])
 
-  /**
-   * Những chỗ **chêm được** câu fill, chưa tính lựa chọn tắt của người dùng.
-   *
-   * Tính sẵn một lần thay vì hỏi lại cho từng hợp âm lúc vẽ: bản nhạc gọi hàm
-   * này cho mọi hợp âm, mà mỗi lần gọi lại duyệt cả vòng thì bài dài sẽ ì.
-   */
-  const fillEligible = useMemo(
-    () =>
-      new Set(
-        fillPositions(withPassing, { density: soloDensity }).map(
-          (position) => position.mainIndex,
-        ),
-      ),
-    [withPassing, soloDensity],
-  )
-
-  /**
-   * Chỗ này đang có fill không.
-   *
-   * Rỗng nghĩa là **không chêm được** — mật độ không rơi vào, hoặc ô nhịp đã bị
-   * chia đôi cho hợp âm lướt. Lúc đó giao diện không bày mục bật tắt ra, vì bày
-   * một nút không làm gì chỉ gây hiểu nhầm.
-   */
-  const fillAt = useCallback(
-    (chordIndex: number) => {
-      if (!fillEligible.has(chordIndex)) return null
-      return !mutedFills.has(chordIndex)
-    },
-    [fillEligible, mutedFills],
-  )
-
-  /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
-  const fills = useMemo(
-    () =>
-      soloToTimeline(
-        generateFillLine(withPassing, {
-          beatsPerChord: chordBeats,
-          direction: soloDirection,
-          density: soloDensity,
-          key: reharm.key,
-          skipFills: mutedFills,
-        }),
-      ),
-    [
-      withPassing,
-      chordBeats,
-      soloDirection,
-      soloDensity,
-      reharm.key,
-      mutedFills,
-    ],
-  )
-
-  /**
-   * Giai điệu tự sinh cho **một lượt giang tấu**.
-   *
-   * Là hàm theo số lượt chứ không phải một đoạn cố định, để lượt sau không lặp
-   * lại lượt trước.
-   */
-  const soloTake = useMemo(() => {
-    const args = {
-      beatsPerChord: chordBeats,
-      direction: soloDirection,
-      density: soloDensity,
-      key: reharm.key,
-      noteSource,
-      chordsPerPhrase,
-    }
-
-    return (take: number) => generateSolo(withPassing, { ...args, take })
-  }, [
-    withPassing,
-    chordBeats,
-    soloDirection,
-    soloDensity,
-    noteSource,
-    chordsPerPhrase,
-    reharm.key,
-  ])
-
-  /**
-   * Độ dài một lượt vòng hợp âm, tính theo **số hợp âm** chứ không theo nốt
-   * cuối cùng.
-   *
-   * Nếu lấy theo nốt cuối thì hợp âm cuối vòng bị cắt ngắn hoặc thừa ra tuỳ
-   * việc nốt cuối ngân bao lâu, và vòng lặp nghe lệch nhịp.
-   */
-  const oneLoopBeats = useMemo(
-    () => Math.max(1, totalBeatsOf(withPassing, chordBeats)),
-    [withPassing, chordBeats],
-  )
-
-  /**
-   * Phách bắt đầu của hợp âm chính thứ `mainIndex`.
-   *
-   * Bản nhạc đánh số theo vòng **chính**, còn dòng thời gian chạy trên vòng đã
-   * chèn hợp âm lướt — nên phải đếm qua các hợp âm lướt để tìm đúng mốc.
-   */
-  const beatOfMainChord = useCallback(
-    (mainIndex: number) =>
-      mainChordSpans(withPassing, chordBeats)[mainIndex]?.start ?? 0,
-    [withPassing, chordBeats],
-  )
-
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
   const sheet = useMemo(() => {
     if (!pastedSong) return null
@@ -818,6 +717,124 @@ export function ReharmHome() {
       return { events: [...events, ...leadIn], beats }
     },
     [withPassing, chordBeats, dropRoot, style, interludeWindow, reharm.key],
+  )
+
+  /**
+   * Chỗ ca sĩ ngắt nghỉ lấy hơi, suy ra từ chỗ kết thúc mỗi dòng lời.
+   *
+   * Chưa dán lời thì rỗng, và bộ chêm fill lùi về cách đếm đều — không có lời
+   * thì không có ai hát để mà biết họ nghỉ ở đâu.
+   */
+  const breaths = useMemo(
+    () => (sheet ? breathChords(sheet) : undefined),
+    [sheet],
+  )
+
+  /**
+   * Những chỗ **chêm được** câu fill, chưa tính lựa chọn tắt của người dùng.
+   *
+   * Tính sẵn một lần thay vì hỏi lại cho từng hợp âm lúc vẽ: bản nhạc gọi hàm
+   * này cho mọi hợp âm, mà mỗi lần gọi lại duyệt cả vòng thì bài dài sẽ ì.
+   */
+  const fillEligible = useMemo(
+    () =>
+      new Set(
+        fillPositions(withPassing, {
+          density: soloDensity,
+          breaths,
+        }).map((position) => position.mainIndex),
+      ),
+    [withPassing, soloDensity, breaths],
+  )
+
+  /**
+   * Chỗ này đang có fill không.
+   *
+   * Rỗng nghĩa là **không chêm được** — mật độ không rơi vào, hoặc ô nhịp đã bị
+   * chia đôi cho hợp âm lướt. Lúc đó giao diện không bày mục bật tắt ra, vì bày
+   * một nút không làm gì chỉ gây hiểu nhầm.
+   */
+  const fillAt = useCallback(
+    (chordIndex: number) => {
+      if (!fillEligible.has(chordIndex)) return null
+      return !mutedFills.has(chordIndex)
+    },
+    [fillEligible, mutedFills],
+  )
+
+  /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
+  const fills = useMemo(
+    () =>
+      soloToTimeline(
+        generateFillLine(withPassing, {
+          breaths,
+          beatsPerChord: chordBeats,
+          direction: soloDirection,
+          density: soloDensity,
+          key: reharm.key,
+          skipFills: mutedFills,
+        }),
+      ),
+    [
+      withPassing,
+      chordBeats,
+      soloDirection,
+      soloDensity,
+      reharm.key,
+      mutedFills,
+      breaths,
+    ],
+  )
+
+  /**
+   * Giai điệu tự sinh cho **một lượt giang tấu**.
+   *
+   * Là hàm theo số lượt chứ không phải một đoạn cố định, để lượt sau không lặp
+   * lại lượt trước.
+   */
+  const soloTake = useMemo(() => {
+    const args = {
+      beatsPerChord: chordBeats,
+      direction: soloDirection,
+      density: soloDensity,
+      key: reharm.key,
+      noteSource,
+      chordsPerPhrase,
+    }
+
+    return (take: number) => generateSolo(withPassing, { ...args, take })
+  }, [
+    withPassing,
+    chordBeats,
+    soloDirection,
+    soloDensity,
+    noteSource,
+    chordsPerPhrase,
+    reharm.key,
+  ])
+
+  /**
+   * Độ dài một lượt vòng hợp âm, tính theo **số hợp âm** chứ không theo nốt
+   * cuối cùng.
+   *
+   * Nếu lấy theo nốt cuối thì hợp âm cuối vòng bị cắt ngắn hoặc thừa ra tuỳ
+   * việc nốt cuối ngân bao lâu, và vòng lặp nghe lệch nhịp.
+   */
+  const oneLoopBeats = useMemo(
+    () => Math.max(1, totalBeatsOf(withPassing, chordBeats)),
+    [withPassing, chordBeats],
+  )
+
+  /**
+   * Phách bắt đầu của hợp âm chính thứ `mainIndex`.
+   *
+   * Bản nhạc đánh số theo vòng **chính**, còn dòng thời gian chạy trên vòng đã
+   * chèn hợp âm lướt — nên phải đếm qua các hợp âm lướt để tìm đúng mốc.
+   */
+  const beatOfMainChord = useCallback(
+    (mainIndex: number) =>
+      mainChordSpans(withPassing, chordBeats)[mainIndex]?.start ?? 0,
+    [withPassing, chordBeats],
   )
 
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
