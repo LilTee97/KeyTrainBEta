@@ -13,6 +13,15 @@ import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import { parseChordInput } from './input/chordInputParser'
+import type {
+  ApproachDirection,
+  OrnamentDensity,
+} from './fillSoloGenerator/graceNoteOrnamenter'
+import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
+import {
+  generateSolo,
+  soloToTimeline,
+} from './fillSoloGenerator/soloGenerator'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import type { PassingTechnique } from './reharmEngine/passingChordRules'
 import { TECHNIQUE_LABELS } from './reharmEngine/passingChordRules'
@@ -203,6 +212,11 @@ export function ReharmHome() {
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
   /** Chỉ hiện gợi ý thuộc kỹ thuật này. Rỗng nghĩa là hiện hết. */
   const [techniqueFilter, setTechniqueFilter] = useState<string | null>(null)
+  /** Phát kèm câu solo sinh tự động. */
+  const [playSolo, setPlaySolo] = useState(false)
+  const [soloDirection, setSoloDirection] =
+    useState<ApproachDirection>('mixed')
+  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
   const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
@@ -315,9 +329,33 @@ export function ReharmHome() {
   }, [beatsPerChord, style.beatsPerMeasure])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
-  const timeline = useMemo(
+  const accompaniment = useMemo(
     () => renderPattern(twoHands, style, { beatsPerChord: chordBeats }),
     [twoHands, style, chordBeats],
+  )
+
+  /** Câu solo sinh tự động, phát chồng lên phần đệm. */
+  const solo = useMemo(
+    () =>
+      playSolo
+        ? generateSolo(withPassing, {
+            beatsPerChord: chordBeats,
+            direction: soloDirection,
+            density: soloDensity,
+            key: reharm.key,
+          })
+        : [],
+    [playSolo, withPassing, chordBeats, soloDirection, soloDensity, reharm.key],
+  )
+
+  const timeline = useMemo(
+    () =>
+      playSolo
+        ? [...accompaniment, ...soloToTimeline(solo)].sort(
+            (a, b) => a.startBeat - b.startBeat,
+          )
+        : accompaniment,
+    [accompaniment, solo, playSolo],
   )
 
   /**
@@ -1137,6 +1175,102 @@ export function ReharmHome() {
         voicings={twoHands}
         beatsPerChord={chordBeats}
       />
+
+      {/* Câu solo tự sinh */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Câu solo tự sinh
+          </h3>
+          <span className="rounded border border-rose-400/40 bg-rose-400/10 px-2 py-0.5 font-mono text-[10px] text-rose-300">
+            thử nghiệm · mô phỏng phong cách
+          </span>
+        </div>
+
+        <p className="mb-3 text-xs leading-relaxed text-dim">
+          Tài liệu mô tả cách chơi giai điệu ở mức{' '}
+          <span className="text-cream">nguyên lý</span> — nốt láy quanh nốt
+          đích, nốt đích lấy trong hợp âm — chứ không cho thuật toán sinh câu.
+          Phần này là một cách hiện thực hoá nguyên lý đó, đáng nghe thử và
+          chỉnh, không phải chuẩn mực.
+        </p>
+
+        <label className="flex items-center gap-2 text-xs text-dim">
+          <input
+            type="checkbox"
+            checked={playSolo}
+            onChange={(event) => setPlaySolo(event.target.checked)}
+            className="accent-amber-key"
+          />
+          Phát kèm câu solo
+        </label>
+
+        {playSolo && (
+          <div className="mt-3 flex flex-col gap-3 border-t border-line pt-3">
+            <div>
+              <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Chiều nốt láy
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    ['below', 'Từ dưới lên'],
+                    ['above', 'Từ trên xuống'],
+                    ['mixed', 'Xen kẽ'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setSoloDirection(value)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs ${
+                      soloDirection === value
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Mật độ nốt láy
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {DENSITY_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setSoloDensity(option.id)}
+                    title={option.description}
+                    className={`rounded-lg border px-3 py-1.5 text-xs ${
+                      soloDensity === option.id
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-dim">
+                {
+                  DENSITY_OPTIONS.find((option) => option.id === soloDensity)
+                    ?.description
+                }
+              </p>
+            </div>
+
+            <p className="font-mono text-[11px] text-dim">
+              {solo.filter((note) => !note.isGrace).length} nốt chính ·{' '}
+              {solo.filter((note) => note.isGrace).length} nốt láy
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Thế bấm hai tay */}
       {twoHands.length > 0 && (
