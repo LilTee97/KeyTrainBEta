@@ -23,7 +23,8 @@ import {
 import { parseChordInput } from './input/chordInputParser'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
-import { buildSongSheet } from './input/songSheet'
+import type { SectionMark } from './input/songSheet'
+import { buildSongSheet, resectionSheet } from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
 import type {
   ApproachDirection,
@@ -253,6 +254,8 @@ export function ReharmHome() {
   const [input, setInput] = useState('C Am F G')
   /** Bài hát đã dán vào, giữ lại để dựng bản nhạc có hợp âm tái hoà âm. */
   const [pastedSong, setPastedSong] = useState<ParsedSong | null>(null)
+  /** Cách chia đoạn do người dùng tự quét, đè lên cách bộ đọc tự nhận. */
+  const [sectionMarks, setSectionMarks] = useState<SectionMark[]>([])
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -522,10 +525,13 @@ export function ReharmHome() {
   )
 
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
-  const sheet = useMemo(
-    () => (pastedSong ? buildSongSheet(pastedSong, reharm.colored) : null),
-    [pastedSong, reharm.colored],
-  )
+  const sheet = useMemo(() => {
+    if (!pastedSong) return null
+    return resectionSheet(
+      buildSongSheet(pastedSong, reharm.colored),
+      sectionMarks,
+    )
+  }, [pastedSong, reharm.colored, sectionMarks])
 
   /**
    * Hợp âm đang vang, quy về số thứ tự trên bản nhạc.
@@ -670,6 +676,7 @@ export function ReharmHome() {
       <SongTextInput
         onUseSong={(parsed) => {
           setPastedSong(parsed)
+          setSectionMarks([])
           setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
@@ -702,6 +709,9 @@ export function ReharmHome() {
           <SongSheetView
             sheet={sheet}
             activeIndex={activeChordIndex}
+            onMark={(mark) => setSectionMarks((marks) => [...marks, mark])}
+            onClearMarks={() => setSectionMarks([])}
+            hasMarks={sectionMarks.length > 0}
             onSeek={(chordIndex) => {
               if (!audioReady) return
 

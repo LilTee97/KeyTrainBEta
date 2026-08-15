@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { reharmonize } from '../../reharmEngine/reharmPipeline'
-import { buildSongSheet, layoutAnchors } from '../songSheet'
+import {
+  SECTION_KIND_LABELS,
+  buildSongSheet,
+  flattenLines,
+  layoutAnchors,
+  resectionSheet,
+} from '../songSheet'
 import { parseSongText } from '../songTextParser'
 
 const TEXT = [
@@ -84,6 +90,80 @@ describe('lệch số lượng thì giữ hợp âm gốc', () => {
 
     const symbols = sheet.sections[0].lines[0].anchors.map((a) => a.symbol)
     expect(symbols).toEqual(['C', 'Am'])
+  })
+})
+
+describe('tự chia đoạn bằng đánh dấu của người dùng', () => {
+  const song = parseSongText(
+    ['Am7', 'Dòng một', 'D7', 'Dòng hai', 'G7', 'Dòng ba', 'C', 'Dòng bốn'].join(
+      '\n',
+    ),
+  )
+  const base = buildSongSheet(song, reharmonize(song.chords, {}).colored)
+
+  it('trải phẳng và đánh số dòng liên tục xuyên các đoạn', () => {
+    const flat = flattenLines(base)
+    expect(flat.map((entry) => entry.index)).toEqual([0, 1, 2, 3])
+  })
+
+  it('không đánh dấu gì thì giữ nguyên cách chia của bộ đọc', () => {
+    expect(resectionSheet(base, [])).toBe(base)
+  })
+
+  it('khoảng được đánh dấu thành một đoạn riêng, đúng tên', () => {
+    const marked = resectionSheet(base, [
+      { from: 0, to: 1, kind: 'verse' },
+      { from: 2, to: 3, kind: 'chorus' },
+    ])
+
+    expect(marked.sections.map((section) => section.name)).toEqual([
+      'Phiên khúc',
+      'Điệp khúc',
+    ])
+    expect(marked.sections.map((section) => section.lines.length)).toEqual([2, 2])
+  })
+
+  it('dòng liền nhau cùng nhãn gom lại thành một đoạn', () => {
+    const marked = resectionSheet(base, [
+      { from: 0, to: 0, kind: 'verse' },
+      { from: 1, to: 1, kind: 'verse' },
+    ])
+
+    expect(marked.sections[0].name).toBe('Phiên khúc')
+    expect(marked.sections[0].lines).toHaveLength(2)
+  })
+
+  it('quét đè lên thì đánh dấu sau thắng, khỏi phải xoá trước', () => {
+    const marked = resectionSheet(base, [
+      { from: 0, to: 3, kind: 'verse' },
+      { from: 2, to: 3, kind: 'interlude' },
+    ])
+
+    expect(marked.sections.map((section) => section.kind)).toEqual([
+      'verse',
+      'interlude',
+    ])
+  })
+
+  it('không làm mất dòng nào', () => {
+    const marked = resectionSheet(base, [{ from: 1, to: 2, kind: 'chorus' }])
+    const total = marked.sections.reduce(
+      (sum, section) => sum + section.lines.length,
+      0,
+    )
+
+    expect(total).toBe(4)
+  })
+
+  it('giữ nguyên số hợp âm để phần tô sáng không lệch', () => {
+    const marked = resectionSheet(base, [{ from: 0, to: 3, kind: 'chorus' }])
+    expect(marked.chordCount).toBe(base.chordCount)
+  })
+
+  it('mọi loại đoạn đều có tên tiếng Việt', () => {
+    for (const label of Object.values(SECTION_KIND_LABELS)) {
+      expect(label.length).toBeGreaterThan(0)
+    }
   })
 })
 

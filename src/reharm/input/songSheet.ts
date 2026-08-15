@@ -1,5 +1,10 @@
 import type { ParsedChord } from '../types'
-import type { ParsedSong, SongLine, SongSection } from './songTextParser'
+import type {
+  ParsedSong,
+  SongLine,
+  SongSection,
+  SongSectionKind,
+} from './songTextParser'
 
 /**
  * Gắn hợp âm **đã tái hoà âm** trở lại đúng vị trí của nó trên lời bài hát.
@@ -96,6 +101,107 @@ export function buildSongSheet(
     })),
     chordCount: chordIndex,
   }
+}
+
+/**
+ * Người dùng tự đánh dấu một khoảng dòng là đoạn gì.
+ *
+ * Bộ đọc tự nhận tên đoạn từ text, nhưng nhiều bài dán vào **không ghi tên
+ * đoạn** hoặc ghi theo kiểu app không đoán ra. Cho người dùng quét chuột rồi
+ * chỉ định thẳng vừa chắc chắn hơn đoán, vừa là cách duy nhất để KeyTrain biết
+ * chính xác chỗ nào đặt đoạn giang tấu.
+ */
+export interface SectionMark {
+  /** Chỉ số dòng toàn bài, đếm từ 0 xuyên qua mọi đoạn. */
+  from: number
+  to: number
+  kind: SongSectionKind
+}
+
+/** Tên hiển thị mặc định cho từng loại đoạn người dùng chọn. */
+export const SECTION_KIND_LABELS: Record<SongSectionKind, string> = {
+  intro: 'Dạo đầu',
+  verse: 'Phiên khúc',
+  prechorus: 'Tiền điệp khúc',
+  chorus: 'Điệp khúc',
+  bridge: 'Cầu nối',
+  interlude: 'Giang tấu',
+  outro: 'Kết',
+  other: 'Đoạn khác',
+}
+
+/** Một dòng đã tách khỏi đoạn, kèm số thứ tự toàn bài. */
+export interface FlatLine {
+  line: SheetLine
+  index: number
+  name: string
+  kind: SongSectionKind
+}
+
+/** Trải phẳng mọi dòng của bản nhạc, đánh số liên tục xuyên các đoạn. */
+export function flattenLines(sheet: SongSheet): FlatLine[] {
+  const flat: FlatLine[] = []
+
+  for (const section of sheet.sections) {
+    for (const line of section.lines) {
+      flat.push({
+        line,
+        index: flat.length,
+        name: section.name,
+        kind: section.kind,
+      })
+    }
+  }
+
+  return flat
+}
+
+/**
+ * Chia lại đoạn theo đánh dấu của người dùng.
+ *
+ * Dòng nằm trong một khoảng đã đánh dấu thì lấy loại đoạn của khoảng đó; dòng
+ * còn lại giữ nguyên đoạn mà bộ đọc nhận ra. Sau đó các dòng liền nhau **cùng
+ * nhãn** được gom lại thành một đoạn.
+ *
+ * Đánh dấu sau đè lên đánh dấu trước ở chỗ chồng nhau, để người dùng sửa lại
+ * chỉ bằng cách quét đè lên chứ không phải xoá trước.
+ */
+export function resectionSheet(
+  sheet: SongSheet,
+  marks: readonly SectionMark[],
+): SongSheet {
+  if (marks.length === 0) return sheet
+
+  const flat = flattenLines(sheet)
+
+  const labelled = flat.map((entry) => {
+    // Duyệt xuôi nên đánh dấu đứng sau tự nhiên ghi đè cái đứng trước.
+    let kind = entry.kind
+    let name = entry.name
+
+    for (const mark of marks) {
+      if (entry.index >= mark.from && entry.index <= mark.to) {
+        kind = mark.kind
+        name = SECTION_KIND_LABELS[mark.kind]
+      }
+    }
+
+    return { ...entry, kind, name }
+  })
+
+  const sections: SheetSection[] = []
+  for (const entry of labelled) {
+    const last = sections[sections.length - 1]
+
+    if (last && last.name === entry.name && last.kind === entry.kind) {
+      last.lines.push(entry.line)
+      continue
+    }
+
+    sections.push({ name: entry.name, kind: entry.kind, lines: [entry.line] })
+  }
+
+  return { sections, chordCount: sheet.chordCount }
 }
 
 /**
