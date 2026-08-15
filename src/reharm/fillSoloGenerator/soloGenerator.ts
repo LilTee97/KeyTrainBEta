@@ -33,6 +33,64 @@ const MELODY_HIGH: MidiNote = 88
 /** Độ dài nốt láy, tính bằng phách. Rất ngắn, chỉ như một cái vuốt. */
 const GRACE_DURATION = 0.12
 
+/**
+ * Nguồn nốt để dựng câu solo.
+ *
+ * Tài liệu `pianoimprovnotes.md` mục 3.1 nêu hai lối chọn nốt, và mục 1 cho
+ * các thang âm cụ thể. Ngũ cung là nguồn an toàn nhất cho người mới vì gần như
+ * nốt nào cũng hợp tai; chord tone thì luôn khớp hoà âm.
+ */
+export type SoloNoteSource =
+  /** Nốt của chính hợp âm đang vang: 1, 3, 5, 7, 9. */
+  | 'chordTone'
+  /** Ngũ cung trưởng của giọng — sáng, êm. */
+  | 'pentatonicMajor'
+  /** Ngũ cung thứ — trầm, soulful. */
+  | 'pentatonicMinor'
+  /** Ngũ cung thứ cộng nốt blue. */
+  | 'blues'
+
+export interface NoteSourceOption {
+  id: SoloNoteSource
+  label: string
+  description: string
+}
+
+export const NOTE_SOURCE_OPTIONS: readonly NoteSourceOption[] = [
+  {
+    id: 'chordTone',
+    label: 'Nốt hợp âm',
+    description:
+      'Lấy nốt từ chính hợp âm đang vang. An toàn nhất vì luôn khớp hoà âm.',
+  },
+  {
+    id: 'pentatonicMajor',
+    label: 'Ngũ cung trưởng',
+    description: 'Sáng và êm, gần như nốt nào cũng hợp tai. Hợp đoạn êm dịu.',
+  },
+  {
+    id: 'pentatonicMinor',
+    label: 'Ngũ cung thứ',
+    description: 'Trầm, có màu soulful. Hợp đoạn nhấn cảm xúc.',
+  },
+  {
+    id: 'blues',
+    label: 'Thang âm blues',
+    description:
+      'Ngũ cung thứ cộng nốt blue ở quãng năm giảm, tạo cảm giác căng rồi giải toả.',
+  },
+]
+
+/** Quãng của từng thang âm, tính từ chủ âm. */
+const SCALE_INTERVALS: Record<
+  Exclude<SoloNoteSource, 'chordTone'>,
+  readonly number[]
+> = {
+  pentatonicMajor: [0, 2, 4, 7, 9],
+  pentatonicMinor: [0, 3, 5, 7, 10],
+  blues: [0, 3, 5, 6, 7, 10],
+}
+
 export interface SoloOptions {
   /** Số phách mỗi hợp âm chiếm. */
   beatsPerChord: number
@@ -41,6 +99,9 @@ export interface SoloOptions {
   direction?: ApproachDirection
   density?: OrnamentDensity
   key?: { tonic: PitchClass; scale: ScaleType } | null
+  noteSource?: SoloNoteSource
+  /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
+  chordsPerPhrase?: number
 }
 
 /**
@@ -176,57 +237,196 @@ export function generateSolo(
 ): SoloNote[] {
   const {
     beatsPerChord,
-    notesPerChord = 2,
     direction = 'mixed',
     density = 'medium',
     key = null,
+    noteSource = 'chordTone',
+    chordsPerPhrase = 2,
   } = options
 
   if (chords.length === 0) return []
 
   const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
+  const phraseChords = Math.max(1, chordsPerPhrase)
+  const phraseBeats = phraseChords * beatsPerChord
+  const phraseCount = Math.ceil(chords.length / phraseChords)
 
-  // Chọn nốt đích cho từng hợp âm, nối nhau theo đường ngắn nhất.
-  const targets: MidiNote[] = []
+  // Mật độ quyết định số nốt mỗi câu, không phải mật độ nốt láy.
+  const notesPerPhrase =
+    density === 'sparse' ? 3 : density === 'dense' ? 7 : 5
+
+  const result: SoloNote[] = []
   let previous: MidiNote = MELODY_LOW + 7
 
-  for (const chord of chords) {
-    for (const pitchClass of targetPitchClasses(chord, notesPerChord)) {
-      const note = nearestNote(pitchClass, previous)
-      targets.push(note)
-      previous = note
-    }
+  for (let phrase = 0; phrase < phraseCount; phrase += 1) {
+    const phraseStart = phrase * phraseBeats
+
+    /*
+      Nghỉ lấy hơi ở cuối mỗi câu. Tài liệu nói thẳng: *"cần có khoảng nghỉ để
+      lấy hơi giữa các câu"* — chơi liên tục không nghỉ là lỗi thường gặp nhất
+      của người mới, và cũng là chỗ bản đầu của hàm này sai.
+    */
+    const playBeats = phraseBeats - REST_BEATS
+    if (playBeats <= 0) continue
+
+    /*
+      Đổi quãng âm giữa các câu để tạo kịch tính — cũng theo tài liệu: *"thay
+      đổi quãng âm, lúc cao lúc thấp"*. Câu chẵn ở tầm thấp, câu lẻ cao hơn
+      một quãng tám.
+    */
+    const registerShift = phrase % 2 === 0 ? 0 : 12
+
+    // Hợp âm đang vang ở cuối câu — nốt kết phải khớp với nó.
+    const endChordIndex = Math.min(
+      chords.length - 1,
+      Math.floor((phraseStart + playBeats - 0.01) / beatsPerChord),
+    )
+    const endChord = chords[endChordIndex]
+
+    /*
+      Kết câu ở **nốt ổn định** của hợp âm — gốc, quãng ba hoặc quãng năm.
+      Tài liệu: *"tránh dừng ở nốt lơ lửng khiến câu nhạc nghe dở dang"*. Đây
+      là chỗ ngược hẳn với việc chọn nốt đích giữa câu, vốn ưu tiên nốt màu.
+    */
+    const landing =
+      nearestNote(stableToneOf(endChord), previous) + registerShift
+
+    const pool = notePool(chords[Math.min(endChordIndex, chords.length - 1)], {
+      noteSource,
+      key,
+    })
+
+    const line = walkToLanding(previous + registerShift, landing, pool, notesPerPhrase)
+    previous = landing
+
+    const ornamented = ornamentLine(line, {
+      direction,
+      density,
+      scaleTones: tones,
+    })
+
+    /*
+      Nốt cuối câu ngân dài gấp đôi các nốt trước. Vừa để câu nhạc "đậu" lại,
+      vừa tránh mọi nốt dài bằng nhau — tài liệu cảnh báo *"tránh đều đều máy
+      móc"*.
+    */
+    const step = playBeats / (ornamented.length + 1)
+
+    ornamented.forEach((entry, index) => {
+      const isLast = index === ornamented.length - 1
+      const startBeat = phraseStart + index * step
+
+      if (entry.grace !== null) {
+        result.push({
+          note: entry.grace,
+          startBeat,
+          durationBeats: GRACE_DURATION,
+          isGrace: true,
+        })
+      }
+
+      const mainStart =
+        entry.grace !== null ? startBeat + GRACE_DURATION : startBeat
+      const length = isLast ? step * 2 : step
+
+      result.push({
+        note: entry.main,
+        startBeat: mainStart,
+        durationBeats: Math.max(0.1, length - (mainStart - startBeat)) * 0.9,
+        isGrace: false,
+      })
+    })
   }
 
-  const ornamented = ornamentLine(targets, { direction, density, scaleTones: tones })
-
-  // Rải đều các nốt đích trong quãng thời gian của từng hợp âm.
-  const slot = beatsPerChord / Math.max(1, notesPerChord)
-  const result: SoloNote[] = []
-
-  ornamented.forEach((entry, index) => {
-    const startBeat = index * slot
-
-    if (entry.grace !== null) {
-      result.push({
-        note: entry.grace,
-        startBeat,
-        durationBeats: GRACE_DURATION,
-        isGrace: true,
-      })
-    }
-
-    // Nốt chính vào ngay sau nốt láy, chiếm phần còn lại của ô.
-    const mainStart = entry.grace !== null ? startBeat + GRACE_DURATION : startBeat
-    result.push({
-      note: entry.main,
-      startBeat: mainStart,
-      durationBeats: Math.max(0.1, slot - (mainStart - startBeat)) * 0.9,
-      isGrace: false,
-    })
-  })
-
   return result
+}
+
+/** Khoảng nghỉ lấy hơi ở cuối mỗi câu nhạc, tính bằng phách. */
+const REST_BEATS = 1
+
+/** Quãng của các nốt ổn định: gốc, quãng ba, quãng năm. */
+const STABLE_INTERVALS = [0, 3, 4, 7]
+
+/**
+ * Nốt ổn định của một hợp âm để kết câu.
+ * Ưu tiên quãng ba vì nó nói rõ tính chất hợp âm nhất, rồi tới gốc và quãng năm.
+ */
+function stableToneOf(chord: ParsedChord): PitchClass {
+  const available = chord.quality.intervals.filter((interval) =>
+    STABLE_INTERVALS.includes(interval % 12),
+  )
+
+  const preferred =
+    available.find((interval) => interval === 3 || interval === 4) ??
+    available[0] ??
+    0
+
+  return (chord.root + preferred) % 12
+}
+
+/** Các lớp cao độ dùng được cho câu solo. */
+function notePool(
+  chord: ParsedChord,
+  options: {
+    noteSource: SoloNoteSource
+    key: { tonic: PitchClass; scale: ScaleType } | null
+  },
+): PitchClass[] {
+  const { noteSource, key } = options
+
+  if (noteSource === 'chordTone' || !key) {
+    return chordPitchClasses(chord.root, chord.quality)
+  }
+
+  return SCALE_INTERVALS[noteSource].map(
+    (interval) => (key.tonic + interval) % 12,
+  )
+}
+
+/**
+ * Dựng một câu nhạc đi từ nốt bắt đầu tới nốt kết.
+ *
+ * Đi từng bước trong nguồn nốt, hướng dần về nốt kết. Không nhảy quãng xa vì
+ * câu nhạc phải nghe liền mạch; nốt cuối luôn đúng bằng nốt kết đã chọn.
+ */
+function walkToLanding(
+  from: MidiNote,
+  landing: MidiNote,
+  pool: readonly PitchClass[],
+  noteCount: number,
+): MidiNote[] {
+  if (noteCount <= 1 || pool.length === 0) return [landing]
+
+  // Mọi nốt dùng được trong tầm giai điệu, xếp tăng dần.
+  const available: MidiNote[] = []
+  for (let note = MELODY_LOW; note <= MELODY_HIGH; note += 1) {
+    if (pool.includes((note % 12) as PitchClass)) available.push(note)
+  }
+  if (available.length === 0) return [landing]
+
+  const indexOfNearest = (target: MidiNote) =>
+    available.reduce(
+      (best, note, index) =>
+        Math.abs(note - target) < Math.abs(available[best] - target)
+          ? index
+          : best,
+      0,
+    )
+
+  const startIndex = indexOfNearest(from)
+  const endIndex = indexOfNearest(landing)
+
+  const line: MidiNote[] = []
+  for (let step = 0; step < noteCount - 1; step += 1) {
+    // Nội suy tuyến tính từ chỗ bắt đầu tới chỗ kết, nên câu nhạc đi có hướng.
+    const position = Math.round(
+      startIndex + ((endIndex - startIndex) * step) / (noteCount - 1),
+    )
+    line.push(available[Math.max(0, Math.min(available.length - 1, position))])
+  }
+
+  line.push(available[endIndex])
+  return line
 }
 
 /** Đổi câu solo thành dòng thời gian để phát cùng phần đệm. */

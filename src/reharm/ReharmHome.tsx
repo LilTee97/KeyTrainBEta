@@ -18,7 +18,9 @@ import type {
   OrnamentDensity,
 } from './fillSoloGenerator/graceNoteOrnamenter'
 import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
+import type { SoloNoteSource } from './fillSoloGenerator/soloGenerator'
 import {
+  NOTE_SOURCE_OPTIONS,
   generateFillLine,
   generateSolo,
   soloToTimeline,
@@ -224,6 +226,9 @@ export function ReharmHome() {
   const [soloDirection, setSoloDirection] =
     useState<ApproachDirection>('mixed')
   const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
+  const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
+  /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
+  const [chordsPerPhrase, setChordsPerPhrase] = useState(2)
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
   const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
@@ -350,12 +355,23 @@ export function ReharmHome() {
       direction: soloDirection,
       density: soloDensity,
       key: reharm.key,
+      noteSource,
+      chordsPerPhrase,
     }
 
     return melodyMode === 'fill'
       ? generateFillLine(withPassing, args)
       : generateSolo(withPassing, args)
-  }, [melodyMode, withPassing, chordBeats, soloDirection, soloDensity, reharm.key])
+  }, [
+    melodyMode,
+    withPassing,
+    chordBeats,
+    soloDirection,
+    soloDensity,
+    noteSource,
+    chordsPerPhrase,
+    reharm.key,
+  ])
 
   const timeline = useMemo(
     () =>
@@ -1247,6 +1263,70 @@ export function ReharmHome() {
 
         {playSolo && (
           <div className="mt-3 flex flex-col gap-3 border-t border-line pt-3">
+            {melodyMode === 'solo' && (
+              <>
+                <div>
+                  <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                    Lấy nốt từ đâu
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {NOTE_SOURCE_OPTIONS.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setNoteSource(option.id)}
+                        title={option.description}
+                        className={`rounded-lg border px-3 py-1.5 text-xs ${
+                          noteSource === option.id
+                            ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                            : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-dim">
+                    {
+                      NOTE_SOURCE_OPTIONS.find(
+                        (option) => option.id === noteSource,
+                      )?.description
+                    }
+                  </p>
+                </div>
+
+                <div>
+                  <h4
+                    className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+                    title="Hết mỗi câu thì nghỉ một phách để lấy hơi, và đổi quãng âm cho câu sau"
+                  >
+                    Độ dài mỗi câu nhạc
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 4].map((count) => (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => setChordsPerPhrase(count)}
+                        className={`rounded-lg border px-3 py-1.5 text-xs ${
+                          chordsPerPhrase === count
+                            ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                            : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                        }`}
+                      >
+                        {count} hợp âm
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-dim">
+                    Hết mỗi câu thì nghỉ một phách để lấy hơi, và câu sau đổi
+                    quãng âm để tạo kịch tính. Câu nhạc luôn kết ở nốt ổn định
+                    của hợp âm đang vang.
+                  </p>
+                </div>
+              </>
+            )}
+
             <div>
               <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Chiều nốt láy

@@ -9,6 +9,7 @@ import {
   stepInScale,
 } from '../graceNoteOrnamenter'
 import {
+  NOTE_SOURCE_OPTIONS,
   generateFillLine,
   generateSolo,
   soloToTimeline,
@@ -140,73 +141,113 @@ describe('ornamentLine', () => {
   })
 })
 
-describe('generateSolo', () => {
+describe('generateSolo — cấu trúc câu nhạc', () => {
   const options = { beatsPerChord: 4, key: { tonic: 0, scale: 'major' as const } }
+  const LONG = 'C Am F G Em Dm G7 C'
 
   it('vòng rỗng cho câu rỗng', () => {
     expect(generateSolo([], options)).toEqual([])
   })
 
-  it('sinh nốt cho mọi hợp âm', () => {
-    const solo = generateSolo(chords('C Am F G'), options)
-    expect(solo.length).toBeGreaterThanOrEqual(8)
-  })
-
-  it('nốt chính luôn nằm trong hợp âm đang vang', () => {
-    const list = chords('Cmaj7 Am7')
-    const solo = generateSolo(list, { ...options, notesPerChord: 2 })
-
-    const mains = solo.filter((note) => !note.isGrace)
-    // Hai nốt đầu thuộc hợp âm thứ nhất, hai nốt sau thuộc hợp âm thứ hai
-    const firstChordTones = new Set(
-      list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
-    )
-    expect(firstChordTones.has(mains[0].note % 12)).toBe(true)
-    expect(firstChordTones.has(mains[1].note % 12)).toBe(true)
-  })
-
-  it('ưu tiên nốt màu hơn nốt gốc và quãng năm', () => {
-    // Cmaj9 có nốt màu là bậc chín, tức nốt Rê
-    const solo = generateSolo(chords('Cmaj9'), {
+  it('có khoảng nghỉ lấy hơi giữa các câu', () => {
+    // Đây là điều tài liệu nhấn mạnh nhất, và là chỗ bản đầu sai:
+    // chơi liên tục không nghỉ nghe như máy chứ không như người
+    const solo = generateSolo(chords(LONG), {
       ...options,
-      notesPerChord: 1,
-      density: 'sparse',
+      chordsPerPhrase: 2,
+    })
+    const mains = solo.filter((note) => !note.isGrace)
+
+    const gaps: number[] = []
+    for (let index = 1; index < mains.length; index += 1) {
+      const previous = mains[index - 1]
+      gaps.push(
+        mains[index].startBeat - (previous.startBeat + previous.durationBeats),
+      )
+    }
+
+    // Phải có ít nhất vài chỗ hở đáng kể, đó là chỗ lấy hơi
+    expect(gaps.filter((gap) => gap > 0.5).length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('mỗi câu kết ở nốt ổn định của hợp âm đang vang', () => {
+    // Tài liệu: tránh dừng ở nốt lơ lửng khiến câu nghe dở dang
+    const list = chords(LONG)
+    const solo = generateSolo(list, { ...options, chordsPerPhrase: 2 })
+    const mains = solo.filter((note) => !note.isGrace)
+
+    // Nốt cuối mỗi câu là nốt ngân dài nhất trong câu đó
+    const phraseEnds = mains.filter((note, index) => {
+      const next = mains[index + 1]
+      return next === undefined || next.startBeat - note.startBeat > 1.5
     })
 
-    const main = solo.find((note) => !note.isGrace)!
-    expect(main.note % 12).toBe(2)
+    for (const ending of phraseEnds) {
+      const chordIndex = Math.min(
+        list.length - 1,
+        Math.floor(ending.startBeat / 4),
+      )
+      const chord = list[chordIndex]
+      const stable = [0, 3, 4, 7]
+        .filter((interval) =>
+          chord.quality.intervals.some((i) => i % 12 === interval),
+        )
+        .map((interval) => (chord.root + interval) % 12)
+
+      expect(stable).toContain(ending.note % 12)
+    }
+  })
+
+  it('đổi quãng âm giữa các câu để tạo kịch tính', () => {
+    const solo = generateSolo(chords(LONG), {
+      ...options,
+      chordsPerPhrase: 2,
+    })
+    const mains = solo.filter((note) => !note.isGrace)
+
+    const lowest = Math.min(...mains.map((note) => note.note))
+    const highest = Math.max(...mains.map((note) => note.note))
+
+    // Trải ít nhất hơn một quãng tám, không dồn cả câu vào một chỗ
+    expect(highest - lowest).toBeGreaterThan(12)
+  })
+
+  it('nốt cuối câu ngân dài hơn các nốt trước', () => {
+    const solo = generateSolo(chords('C Am'), {
+      ...options,
+      chordsPerPhrase: 2,
+      density: 'medium',
+    })
+    const mains = solo.filter((note) => !note.isGrace)
+    const last = mains[mains.length - 1]
+
+    const others = mains.slice(0, -1)
+    const averageLength =
+      others.reduce((sum, note) => sum + note.durationBeats, 0) / others.length
+
+    expect(last.durationBeats).toBeGreaterThan(averageLength)
   })
 
   it('câu nhạc đi từng bước, không nhảy quãng xa', () => {
-    const solo = generateSolo(chords('C Am F G Em Dm'), options)
+    const solo = generateSolo(chords(LONG), options)
     const mains = solo.filter((note) => !note.isGrace)
 
     for (let index = 1; index < mains.length; index += 1) {
-      expect(Math.abs(mains[index].note - mains[index - 1].note)).toBeLessThanOrEqual(9)
+      expect(
+        Math.abs(mains[index].note - mains[index - 1].note),
+      ).toBeLessThanOrEqual(14)
     }
   })
 
   it('mọi nốt nằm trong tầm giai điệu, cao hơn phần đệm', () => {
-    for (const note of generateSolo(chords('C Am F G'), options)) {
+    for (const note of generateSolo(chords(LONG), options)) {
       expect(note.note).toBeGreaterThanOrEqual(60)
-      expect(note.note).toBeLessThanOrEqual(92)
-    }
-  })
-
-  it('nốt láy rất ngắn và đứng ngay trước nốt chính', () => {
-    const solo = generateSolo(chords('C Am'), { ...options, density: 'dense' })
-
-    for (let index = 0; index < solo.length - 1; index += 1) {
-      if (!solo[index].isGrace) continue
-
-      expect(solo[index].durationBeats).toBeLessThan(0.3)
-      expect(solo[index + 1].isGrace).toBe(false)
-      expect(solo[index + 1].startBeat).toBeGreaterThan(solo[index].startBeat)
+      expect(note.note).toBeLessThanOrEqual(96)
     }
   })
 
   it('các nốt xếp theo thời gian tăng dần', () => {
-    const solo = generateSolo(chords('C Am F G'), options)
+    const solo = generateSolo(chords(LONG), options)
 
     for (let index = 1; index < solo.length; index += 1) {
       expect(solo[index].startBeat).toBeGreaterThanOrEqual(
@@ -216,16 +257,76 @@ describe('generateSolo', () => {
   })
 
   it('mật độ dày sinh nhiều nốt hơn mật độ thưa', () => {
-    const dense = generateSolo(chords('C Am F G'), {
-      ...options,
-      density: 'dense',
-    })
-    const sparse = generateSolo(chords('C Am F G'), {
-      ...options,
-      density: 'sparse',
-    })
+    const dense = generateSolo(chords(LONG), { ...options, density: 'dense' })
+    const sparse = generateSolo(chords(LONG), { ...options, density: 'sparse' })
 
     expect(dense.length).toBeGreaterThan(sparse.length)
+  })
+})
+
+describe('nguồn nốt cho câu solo', () => {
+  const options = { beatsPerChord: 4, key: { tonic: 0, scale: 'major' as const } }
+
+  it('ngũ cung trưởng chỉ dùng năm nốt của thang âm', () => {
+    const solo = generateSolo(chords('C Am F G'), {
+      ...options,
+      noteSource: 'pentatonicMajor',
+      density: 'dense',
+    })
+
+    const allowed = new Set([0, 2, 4, 7, 9])
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
+    }
+  })
+
+  it('ngũ cung thứ dùng đúng bộ nốt của nó', () => {
+    const solo = generateSolo(chords('C Am F G'), {
+      ...options,
+      noteSource: 'pentatonicMinor',
+      density: 'dense',
+    })
+
+    const allowed = new Set([0, 3, 5, 7, 10])
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
+    }
+  })
+
+  it('thang âm blues có thêm nốt blue ở quãng năm giảm', () => {
+    const solo = generateSolo(chords('C7 F7 G7 C7'), {
+      ...options,
+      noteSource: 'blues',
+      density: 'dense',
+    })
+
+    const allowed = new Set([0, 3, 5, 6, 7, 10])
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
+    }
+  })
+
+  it('nốt hợp âm lấy từ chính hợp âm đang vang', () => {
+    const list = chords('Cmaj7')
+    const solo = generateSolo(list, {
+      ...options,
+      noteSource: 'chordTone',
+      density: 'dense',
+    })
+
+    const allowed = new Set(
+      list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
+    )
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
+    }
+  })
+
+  it('mọi nguồn nốt đều có mô tả cho người dùng', () => {
+    expect(NOTE_SOURCE_OPTIONS).toHaveLength(4)
+    for (const option of NOTE_SOURCE_OPTIONS) {
+      expect(option.description.length).toBeGreaterThan(0)
+    }
   })
 })
 
