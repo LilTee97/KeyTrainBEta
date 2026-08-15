@@ -41,6 +41,21 @@ Nguồn: [Sixth Chords — Jack DeSalvo](https://jackdesalvo.substack.com/p/sixt
 
 Giữ luật lại làm chốt cho tương lai, phòng khi có người thêm một loại hợp âm phạm quy. Có test duyệt toàn bộ từ vựng để khoá điều này.
 
+### Giang tấu là một đoạn riêng của bài, không phải ngẫu hứng suốt bài
+
+Tôi từng hiểu giang tấu là "chơi ngẫu hứng trên vòng hợp âm" và cho nó chạy suốt. Sai bản chất.
+
+Giang tấu là **một đoạn cụ thể trong cấu trúc bài hát**: hát xong điệp khúc thì có một khoảng trống trước khi quay lại phiên khúc, và đó là chỗ nhạc cụ chơi thay giọng hát. Tra cứu về cấu trúc bài hát xác nhận: đoạn xen kẽ *"mostly divides two choruses, or chorus and a new verse"* và *"almost always instrumental as they are used to provide breathing space for a singer"*.
+
+Hệ quả cho phần sinh giai điệu, và đây mới là điều quan trọng:
+
+- **Câu solo chỉ chơi trong đoạn giang tấu.** Chơi solo ở đoạn đang hát là đè lên giọng hát.
+- **Đoạn có lời chỉ chêm câu fill ngắn** ở khe hở giữa các hợp âm.
+
+Vì vậy `songStructure.ts` dựng cả bài thành nhiều đoạn, và phần giai điệu được chọn theo loại đoạn. Hiện cả bài dùng chung một vòng hợp âm vì app chưa nhận lời bài hát để tách phiên khúc với điệp khúc — cái phân biệt các đoạn là **cách chơi**, không phải hợp âm.
+
+Nguồn: [Song structure — Ultimate Guitar Wiki](https://www.ultimate-guitar.com/en/wiki/Song_structure) · [What Are the Parts of a Song — Careers in Music](https://www.careersinmusic.com/parts-of-a-song/) · [Song structure — Wikipedia](https://en.wikipedia.org/wiki/Song_structure)
+
 ### Đoạn giang tấu phải có phrasing, không phải chuỗi nốt đều
 
 Bản đầu của `generateSolo` rải nốt đều tăm tắp trên mọi hợp âm: không nghỉ, không câu cú, kết ở nốt màu lơ lửng. Đối chiếu `pianoimprovnotes.md` mục 4 thì đó là **đúng ba điều tài liệu bảo tránh**.

@@ -55,6 +55,12 @@ import {
   renderPattern,
 } from './style/patternRenderer'
 import {
+  SECTION_LABELS,
+  SONG_FORMS,
+  buildSongTimeline,
+  getSongForm,
+} from './style/songStructure'
+import {
   ALL_STYLES,
   BALLAD,
   getStyle,
@@ -224,8 +230,11 @@ export function ReharmHome() {
    * - `fill`: câu ngắn chêm ở cuối hợp âm để dẫn sang hợp âm sau
    * - `solo`: chơi liên tục suốt vòng, dùng cho đoạn giang tấu
    */
-  const [melodyMode, setMelodyMode] = useState<'off' | 'fill' | 'solo'>('off')
-  const playSolo = melodyMode !== 'off'
+  const [melodyMode, setMelodyMode] = useState<'off' | 'solo'>('off')
+  /** Chêm câu fill ở các đoạn có lời. */
+  const [useFills, setUseFills] = useState(false)
+  /** Cấu trúc bài hát — quyết định đoạn nào là giang tấu. */
+  const [songFormId, setSongFormId] = useState('loop-only')
   const [soloDirection, setSoloDirection] =
     useState<ApproachDirection>('mixed')
   const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
@@ -349,6 +358,22 @@ export function ReharmHome() {
     [twoHands, style, chordBeats],
   )
 
+  /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
+  const fills = useMemo(
+    () =>
+      useFills
+        ? soloToTimeline(
+            generateFillLine(withPassing, {
+              beatsPerChord: chordBeats,
+              direction: soloDirection,
+              density: soloDensity,
+              key: reharm.key,
+            }),
+          )
+        : [],
+    [useFills, withPassing, chordBeats, soloDirection, soloDensity, reharm.key],
+  )
+
   /** Giai điệu tự sinh, phát chồng lên phần đệm. */
   const solo = useMemo(() => {
     if (melodyMode === 'off') return []
@@ -362,9 +387,7 @@ export function ReharmHome() {
       chordsPerPhrase,
     }
 
-    return melodyMode === 'fill'
-      ? generateFillLine(withPassing, args)
-      : generateSolo(withPassing, args)
+    return generateSolo(withPassing, args)
   }, [
     melodyMode,
     withPassing,
@@ -376,26 +399,33 @@ export function ReharmHome() {
     reharm.key,
   ])
 
-  const timeline = useMemo(
-    () =>
-      playSolo
-        ? [...accompaniment, ...soloToTimeline(solo)].sort(
-            (a, b) => a.startBeat - b.startBeat,
-          )
-        : accompaniment,
-    [accompaniment, solo, playSolo],
-  )
-
   /**
-   * Độ dài một lượt lặp, tính theo **số hợp âm** chứ không theo nốt cuối cùng.
+   * Độ dài một lượt vòng hợp âm, tính theo **số hợp âm** chứ không theo nốt
+   * cuối cùng.
    *
    * Nếu lấy theo nốt cuối thì hợp âm cuối vòng bị cắt ngắn hoặc thừa ra tuỳ
    * việc nốt cuối ngân bao lâu, và vòng lặp nghe lệch nhịp.
    */
-  const loopLengthBeats = useMemo(
+  const oneLoopBeats = useMemo(
     () => Math.max(1, withPassing.length * chordBeats),
     [withPassing.length, chordBeats],
   )
+
+  /** Cả bài dựng theo cấu trúc đã chọn: đoạn hát, đoạn giang tấu. */
+  const song = useMemo(
+    () =>
+      buildSongTimeline({
+        accompaniment,
+        fills,
+        solo: soloToTimeline(solo),
+        loopLengthBeats: oneLoopBeats,
+        form: getSongForm(songFormId) ?? SONG_FORMS[0],
+      }),
+    [accompaniment, fills, solo, oneLoopBeats, songFormId],
+  )
+
+  const timeline = song.events
+  const loopLengthBeats = song.totalBeats
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -1245,47 +1275,95 @@ export function ReharmHome() {
           chỉnh, không phải chuẩn mực.
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              ['off', 'Không có', 'Chỉ phần đệm.'],
-              [
-                'fill',
-                'Câu fill',
-                'Đoạn ngắn chêm ở cuối hợp âm, kết thúc ngay cạnh nốt của hợp âm sau để kéo tai sang đó. Thỉnh thoảng mới có, không phải hợp âm nào cũng chêm.',
-              ],
-              [
-                'solo',
-                'Đoạn giang tấu',
-                'Giai điệu chạy liên tục thay cho giọng hát. Chỉ dùng ở đoạn không có lời, bật suốt bài thì nó đè lên phần hát.',
-              ],
-            ] as const
-          ).map(([value, label, hint]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setMelodyMode(value)}
-              title={hint}
-              className={`rounded-lg border px-3 py-1.5 text-xs ${
-                melodyMode === value
-                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Cấu trúc bài hát — quyết định đoạn nào là giang tấu */}
+        <div>
+          <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+            Cấu trúc bài hát
+          </h4>
+
+          <div className="flex flex-wrap gap-2">
+            {SONG_FORMS.map((form) => (
+              <button
+                key={form.id}
+                type="button"
+                onClick={() => setSongFormId(form.id)}
+                title={form.description}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  songFormId === form.id
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {form.name}
+              </button>
+            ))}
+          </div>
+
+          <p className="mt-2 text-xs leading-relaxed text-dim">
+            {getSongForm(songFormId)?.description}
+          </p>
+
+          {/* Bản đồ các đoạn */}
+          {song.sections.length > 1 && (
+            <div className="mt-3 flex gap-1">
+              {song.sections.map((section, index) => (
+                <span
+                  key={`${section.kind}-${index}`}
+                  style={{
+                    flexGrow: section.lengthBeats,
+                  }}
+                  className={`rounded px-2 py-1.5 text-center font-mono text-[10px] ${
+                    section.kind === 'interlude'
+                      ? 'bg-amber-key/25 text-amber-key'
+                      : 'bg-white/6 text-dim'
+                  }`}
+                >
+                  {SECTION_LABELS[section.kind]}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {melodyMode !== 'off' && (
-          <p className="mt-2 text-xs leading-relaxed text-dim">
-            {melodyMode === 'fill'
-              ? 'Đoạn ngắn chêm ở cuối hợp âm, kết thúc ngay cạnh nốt của hợp âm sau để kéo tai sang đó. Thỉnh thoảng mới có, không phải hợp âm nào cũng chêm.'
-              : 'Giai điệu chạy liên tục thay cho giọng hát. Chỉ dùng ở đoạn không có lời, bật suốt bài thì nó đè lên phần hát.'}
-          </p>
-        )}
+        {/* Giai điệu ở đoạn giang tấu và đoạn có lời */}
+        <div className="mt-4 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={melodyMode === 'solo'}
+              onChange={(event) =>
+                setMelodyMode(event.target.checked ? 'solo' : 'off')
+              }
+              className="accent-amber-key"
+            />
+            Ngẫu hứng ở đoạn giang tấu
+            {songFormId === 'loop-only' && (
+              <span className="text-rose-300">
+                — cấu trúc hiện tại không có đoạn giang tấu nào
+              </span>
+            )}
+          </label>
 
-        {playSolo && (
+          <label className="flex items-center gap-2 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={useFills}
+              onChange={(event) => setUseFills(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Chêm câu fill ở đoạn có lời
+          </label>
+
+          <p className="text-xs leading-relaxed text-dim">
+            Hai thứ này đặt ở hai chỗ khác nhau:{' '}
+            <span className="text-cream">câu fill</span> chỉ chêm vào khe hở
+            giữa các hợp âm ở đoạn đang hát, còn{' '}
+            <span className="text-cream">giang tấu</span> là đoạn nhạc cụ chơi
+            thay giọng hát, nằm sau điệp khúc trước khi quay lại phiên khúc.
+          </p>
+        </div>
+
+        {(melodyMode === 'solo' || useFills) && (
           <div className="mt-3 flex flex-col gap-3 border-t border-line pt-3">
             {melodyMode === 'solo' && (
               <>
@@ -1381,7 +1459,7 @@ export function ReharmHome() {
 
             <div>
               <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                {melodyMode === 'fill' ? 'Bao lâu chêm một câu' : 'Mật độ nốt láy'}
+                Mật độ nốt láy
               </h4>
               <div className="flex flex-wrap gap-2">
                 {DENSITY_OPTIONS.map((option) => (
@@ -1431,9 +1509,10 @@ export function ReharmHome() {
               </button>
 
               <span className="font-mono text-[11px] text-dim">
-                {melodyMode === 'fill'
-                  ? `${solo.length} nốt trong ${Math.round(solo.length / 3)} câu fill`
-                  : `${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
+                {melodyMode === 'solo' &&
+                  `giang tấu: ${solo.filter((note) => !note.isGrace).length} nốt chính · ${solo.filter((note) => note.isGrace).length} nốt láy`}
+                {melodyMode === 'solo' && useFills && ' · '}
+                {useFills && `${fills.length} nốt fill mỗi lượt`}
               </span>
             </div>
 
