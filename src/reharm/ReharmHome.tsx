@@ -563,10 +563,10 @@ export function ReharmHome() {
   const sheet = useMemo(() => {
     if (!pastedSong) return null
     return resectionSheet(
-      buildSongSheet(pastedSong, reharm.colored),
+      buildSongSheet(pastedSong, reharm.colored, withPassing),
       sectionMarks,
     )
-  }, [pastedSong, reharm.colored, sectionMarks])
+  }, [pastedSong, reharm.colored, withPassing, sectionMarks])
 
   /**
    * Hợp âm đang vang, quy về số thứ tự trên bản nhạc.

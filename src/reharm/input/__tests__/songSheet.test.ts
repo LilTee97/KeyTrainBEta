@@ -94,6 +94,62 @@ describe('lệch số lượng thì giữ hợp âm gốc', () => {
   })
 })
 
+describe('hợp âm lướt hiện trên bản nhạc', () => {
+  const song = parseSongText('   C            Am\nÁnh nắng chiều nay rơi')
+  const first = reharmonize(song.chords, {})
+  const reharm = reharmonize(song.chords, {
+    acceptedPassing: first.passingSuggestions.filter(
+      (suggestion) => suggestion.technique === 'secondary-ii-V',
+    ),
+    beatsPerChord: 4,
+  })
+
+  const sheet = buildSongSheet(song, reharm.colored, reharm.final)
+
+  it('hiện ngay trước hợp âm mà nó dẫn tới', () => {
+    /*
+      Chỗ thật của hợp âm lướt là nửa sau ô nhịp — giữa hai chữ, không có chữ
+      nào để neo — nên gắn nó vào ngay trước hợp âm đích.
+    */
+    const anchors = sheet.sections[0].lines[0].anchors
+    const symbols = anchors.map((anchor) => anchor.symbol)
+
+    // Hợp âm chính đầu tiên, rồi hợp âm lướt, rồi hợp âm chính thứ hai
+    expect(anchors[0].passing).toBeUndefined()
+    expect(anchors[anchors.length - 1].passing).toBeUndefined()
+    expect(symbols.length).toBeGreaterThan(2)
+  })
+
+  it('được đánh dấu riêng để tô màu khác', () => {
+    const passing = sheet.sections[0].lines[0].anchors.filter(
+      (anchor) => anchor.passing,
+    )
+
+    expect(passing.length).toBeGreaterThan(0)
+    for (const anchor of passing) {
+      // Không thuộc vòng chính nên không có số thứ tự để bấm phát từ đó
+      expect(anchor.chordIndex).toBeNull()
+    }
+  })
+
+  it('không chiếm mất số thứ tự của hợp âm chính', () => {
+    const indices = sheet.sections[0].lines[0].anchors
+      .filter((anchor) => !anchor.passing)
+      .map((anchor) => anchor.chordIndex)
+
+    expect(indices).toEqual([0, 1])
+    expect(sheet.chordCount).toBe(2)
+  })
+
+  it('không truyền vòng đã chèn thì bản nhạc chỉ có hợp âm chính', () => {
+    const plain = buildSongSheet(song, reharm.colored)
+    const anchors = plain.sections[0].lines[0].anchors
+
+    expect(anchors).toHaveLength(2)
+    expect(anchors.some((anchor) => anchor.passing)).toBe(false)
+  })
+})
+
 describe('tự chia đoạn bằng đánh dấu của người dùng', () => {
   const song = parseSongText(
     ['Am7', 'Dòng một', 'D7', 'Dòng hai', 'G7', 'Dòng ba', 'C', 'Dòng bốn'].join(

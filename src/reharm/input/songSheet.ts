@@ -32,6 +32,14 @@ export interface SheetAnchor {
   chordIndex: number | null
   /** Không đọc được thì vẫn hiện, nhưng đánh dấu để người dùng biết. */
   broken: boolean
+  /**
+   * Hợp âm **lướt** chèn thêm, không thuộc vòng hợp âm gốc.
+   *
+   * Nó không neo vào chữ nào — chỗ của nó là nửa sau ô nhịp, giữa hai chữ —
+   * nên hiện ngay trước hợp âm mà nó dẫn tới, và tô màu khác để phân biệt với
+   * hợp âm chính.
+   */
+  passing?: boolean
 }
 
 export interface SheetLine {
@@ -61,35 +69,59 @@ export interface SongSheet {
 export function buildSongSheet(
   song: ParsedSong,
   reharmonized: readonly ParsedChord[],
+  /**
+   * Vòng đã chèn hợp âm lướt, để hiện luôn chúng lên bản nhạc.
+   *
+   * Bỏ trống thì chỉ hiện hợp âm chính. Hợp âm lướt được gắn vào **ngay trước
+   * hợp âm mà nó dẫn tới**, vì chỗ thật của nó là nửa sau ô nhịp — giữa hai
+   * chữ, không có chữ nào để neo.
+   */
+  withPassing?: readonly ParsedChord[],
 ): SongSheet {
   const aligned = reharmonized.length === song.chords.length
+  const passingBefore = passingByTarget(withPassing)
 
   // Đếm riêng, vì chỉ neo nào đọc được mới có mặt trong vòng hợp âm.
   let chordIndex = 0
 
   const convertLine = (line: SongLine): SheetLine => ({
     lyric: line.lyric,
-    anchors: line.chords.map((anchor) => {
+    anchors: line.chords.flatMap((anchor): SheetAnchor[] => {
       if (anchor.chord === null) {
-        return {
-          symbol: anchor.source,
-          charOffset: anchor.charOffset,
-          chordIndex: null,
-          broken: true,
-        }
+        return [
+          {
+            symbol: anchor.source,
+            charOffset: anchor.charOffset,
+            chordIndex: null,
+            broken: true,
+          },
+        ]
       }
 
       const index = chordIndex
       chordIndex += 1
 
-      return {
-        symbol: aligned
-          ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
-          : anchor.chord.symbol,
-        charOffset: anchor.charOffset,
-        chordIndex: index,
-        broken: false,
-      }
+      const lead = (passingBefore[index] ?? []).map(
+        (symbol): SheetAnchor => ({
+          symbol,
+          charOffset: anchor.charOffset,
+          chordIndex: null,
+          broken: false,
+          passing: true,
+        }),
+      )
+
+      return [
+        ...lead,
+        {
+          symbol: aligned
+            ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
+            : anchor.chord.symbol,
+          charOffset: anchor.charOffset,
+          chordIndex: index,
+          broken: false,
+        },
+      ]
     }),
   })
 
@@ -101,6 +133,37 @@ export function buildSongSheet(
     })),
     chordCount: chordIndex,
   }
+}
+
+/**
+ * Gom hợp âm lướt theo **hợp âm chính mà nó dẫn tới**.
+ *
+ * Vòng đã chèn xen kẽ hợp âm chính và hợp âm lướt; đi một lượt là biết mỗi
+ * hợp âm chính có bao nhiêu hợp âm lướt đứng ngay trước nó.
+ */
+function passingByTarget(
+  withPassing: readonly ParsedChord[] | undefined,
+): Record<number, string[]> {
+  const table: Record<number, string[]> = {}
+  if (!withPassing) return table
+
+  let mainIndex = 0
+  let pending: string[] = []
+
+  for (const chord of withPassing) {
+    if (chord.passing) {
+      pending.push(chord.symbol)
+      continue
+    }
+
+    if (pending.length > 0) {
+      table[mainIndex] = pending
+      pending = []
+    }
+    mainIndex += 1
+  }
+
+  return table
 }
 
 /**

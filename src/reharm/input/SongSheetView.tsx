@@ -450,6 +450,22 @@ function ChordLabel({
     return <span className="text-red-400">{anchor.symbol}</span>
   }
 
+  /*
+    Hợp âm lướt mang màu riêng để nhìn phát ra ngay đâu là hoà âm gốc của bài,
+    đâu là phần mình vừa chèn thêm. Nó cũng không bấm được: nó không có chỗ
+    riêng trong vòng hợp âm chính nên không phát từ đó được.
+  */
+  if (anchor.passing) {
+    return (
+      <span
+        className="text-teal-key italic"
+        title="Hợp âm lướt chèn thêm"
+      >
+        {anchor.symbol}
+      </span>
+    )
+  }
+
   const style = active
     ? 'rounded bg-amber-key px-0.5 font-semibold text-black'
     : 'text-amber-key'
