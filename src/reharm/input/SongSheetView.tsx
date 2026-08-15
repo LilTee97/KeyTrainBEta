@@ -64,6 +64,14 @@ interface SongSheetViewProps {
   onTogglePassing?: (id: string) => void
   /** Gỡ đúng chỗ vừa bấm, giữ nguyên những chỗ khác cùng loại. */
   onRemovePassingHere?: (slotId: string) => void
+  /**
+   * Chỗ này đang có câu fill không.
+   *
+   * Rỗng nghĩa là chỗ đó vốn không chêm fill được — mật độ không rơi vào, hoặc
+   * ô nhịp đã bị chia đôi cho hợp âm lướt — nên menu không bày mục này ra.
+   */
+  fillAt?: (chordIndex: number) => boolean | null
+  onToggleFill?: (chordIndex: number) => void
 }
 
 /** Một hợp âm lướt có thể chèn vào trước một hợp âm. */
@@ -103,6 +111,8 @@ export function SongSheetView({
   passingOptionsFor,
   onTogglePassing,
   onRemovePassingHere,
+  fillAt,
+  onToggleFill,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
   /** Khoảng dòng đang được bôi đen, chờ chọn loại đoạn. */
@@ -253,6 +263,7 @@ export function SongSheetView({
                     <AnchorRow
                       line={line}
                       activeIndex={activeIndex}
+                      fillAt={fillAt}
                       onSeek={onSeek}
                       onContextMenu={
                         onSetChordSpan
@@ -308,6 +319,15 @@ export function SongSheetView({
                 }
               : undefined
           }
+          fill={fillAt?.(menu.chordIndex) ?? null}
+          onToggleFill={
+            onToggleFill
+              ? () => {
+                  onToggleFill(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -328,6 +348,8 @@ function ChordContextMenu({
   onPick,
   onTogglePassing,
   onRemoveHere,
+  fill,
+  onToggleFill,
 }: {
   menu: ChordMenu
   paired: boolean
@@ -337,6 +359,9 @@ function ChordContextMenu({
   onPick?: (span: 'full' | 'half') => void
   onTogglePassing?: (id: string) => void
   onRemoveHere?: (slotId: string) => void
+  /** Chỗ này đang có fill không; rỗng nghĩa là không chêm được. */
+  fill: boolean | null
+  onToggleFill?: () => void
 }) {
   const applied = passing.filter((option) => option.appliedHere)
   const available = passing.filter((option) => !option.appliedHere)
@@ -383,6 +408,26 @@ function ChordContextMenu({
           </button>
         )
       })}
+
+      {onToggleFill && fill !== null && (
+        <>
+          <div className="my-1 border-t border-line" />
+          <button
+            type="button"
+            onClick={onToggleFill}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+          >
+            <span className={fill ? 'text-cream' : 'text-amber-key'}>
+              {fill ? 'Bỏ câu fill ở đây' : 'Chêm lại câu fill ở đây'}
+            </span>
+            <span className="text-[10px] text-dim">
+              {fill
+                ? 'Để trống khe cuối hợp âm này'
+                : 'Lấp khe cuối hợp âm này bằng câu nối'}
+            </span>
+          </button>
+        </>
+      )}
 
       {onTogglePassing && passing.length > 0 && (
         <>
@@ -466,11 +511,13 @@ function ChordContextMenu({
 function AnchorRow({
   line,
   activeIndex,
+  fillAt,
   onSeek,
   onContextMenu,
 }: {
   line: SheetLine
   activeIndex: number | null
+  fillAt?: (chordIndex: number) => boolean | null
   onSeek?: (chordIndex: number) => void
   onContextMenu?: (chordIndex: number, event: React.MouseEvent) => void
 }) {
@@ -487,6 +534,10 @@ function AnchorRow({
             <ChordLabel
               anchor={anchor}
               active={anchor.chordIndex === activeIndex}
+              hasFill={
+                anchor.chordIndex !== null &&
+                (fillAt?.(anchor.chordIndex) ?? false) === true
+              }
               onSeek={onSeek}
               onContextMenu={onContextMenu}
             />
@@ -510,11 +561,14 @@ function previousEnd(
 function ChordLabel({
   anchor,
   active,
+  hasFill,
   onSeek,
   onContextMenu,
 }: {
   anchor: SheetAnchor
   active: boolean
+  /** Chỗ này đang có câu fill nối sang hợp âm sau. */
+  hasFill: boolean
   onSeek?: (chordIndex: number) => void
   onContextMenu?: (chordIndex: number, event: React.MouseEvent) => void
 }) {
@@ -542,8 +596,19 @@ function ChordLabel({
     ? 'rounded bg-amber-key px-0.5 font-semibold text-black'
     : 'text-amber-key'
 
+  /*
+    Dấu cho biết chỗ này có câu fill: gạch chân chấm chấm.
+
+    Cố ý **không đổi màu** — màu đã dùng hết cho ba việc khác: vàng là hợp âm
+    chính, xanh ngọc nghiêng là hợp âm lướt, nền vàng là hợp âm đang vang. Thêm
+    màu thứ tư nữa thì không ai nhớ nổi màu nào là gì.
+    Gạch chân cũng **không chiếm chỗ ngang**, nên cột hợp âm không bị xô lệch —
+    thêm một ký tự đánh dấu thì phần canh cột phải tính lại theo.
+  */
+  const mark = hasFill ? ' underline decoration-dotted underline-offset-4' : ''
+
   if (!onSeek || anchor.chordIndex === null) {
-    return <span className={style}>{anchor.symbol}</span>
+    return <span className={style + mark}>{anchor.symbol}</span>
   }
 
   const index = anchor.chordIndex
@@ -553,8 +618,12 @@ function ChordLabel({
       type="button"
       onClick={() => onSeek(index)}
       onContextMenu={(event) => onContextMenu?.(index, event)}
-      title="Bấm để phát từ đây, chuột phải để đổi thời lượng"
-      className={`${style} cursor-pointer hover:underline`}
+      title={
+        hasFill
+          ? 'Có câu fill · bấm để phát từ đây, chuột phải để tắt fill'
+          : 'Bấm để phát từ đây, chuột phải để đổi thời lượng'
+      }
+      className={`${style}${mark} cursor-pointer hover:decoration-solid`}
     >
       {anchor.symbol}
     </button>

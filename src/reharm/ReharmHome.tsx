@@ -41,6 +41,7 @@ import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import type { SoloNoteSource } from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
+  fillPositions,
   generateFillLine,
   generateSolo,
   soloToTimeline,
@@ -287,6 +288,13 @@ export function ReharmHome() {
   const [pairedChords, setPairedChords] = useState<ReadonlySet<number>>(
     new Set(),
   )
+  /**
+   * Các chỗ người dùng đã tắt câu fill, tính theo vòng hợp âm chính.
+   *
+   * Chỉ ghi những chỗ **bị tắt**; chỗ không có trong đây thì cứ theo mật độ
+   * chung. Ghi kiểu này thì đổi mật độ vẫn giữ được lựa chọn của người dùng.
+   */
+  const [mutedFills, setMutedFills] = useState<ReadonlySet<number>>(new Set())
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -531,6 +539,37 @@ export function ReharmHome() {
     })
   }, [mainChords, style, chordBeats, dropRoot])
 
+  /**
+   * Những chỗ **chêm được** câu fill, chưa tính lựa chọn tắt của người dùng.
+   *
+   * Tính sẵn một lần thay vì hỏi lại cho từng hợp âm lúc vẽ: bản nhạc gọi hàm
+   * này cho mọi hợp âm, mà mỗi lần gọi lại duyệt cả vòng thì bài dài sẽ ì.
+   */
+  const fillEligible = useMemo(
+    () =>
+      new Set(
+        fillPositions(withPassing, { density: soloDensity }).map(
+          (position) => position.mainIndex,
+        ),
+      ),
+    [withPassing, soloDensity],
+  )
+
+  /**
+   * Chỗ này đang có fill không.
+   *
+   * Rỗng nghĩa là **không chêm được** — mật độ không rơi vào, hoặc ô nhịp đã bị
+   * chia đôi cho hợp âm lướt. Lúc đó giao diện không bày mục bật tắt ra, vì bày
+   * một nút không làm gì chỉ gây hiểu nhầm.
+   */
+  const fillAt = useCallback(
+    (chordIndex: number) => {
+      if (!useFills || !fillEligible.has(chordIndex)) return null
+      return !mutedFills.has(chordIndex)
+    },
+    [useFills, fillEligible, mutedFills],
+  )
+
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useMemo(
     () =>
@@ -541,10 +580,19 @@ export function ReharmHome() {
               direction: soloDirection,
               density: soloDensity,
               key: reharm.key,
+              skipFills: mutedFills,
             }),
           )
         : [],
-    [useFills, withPassing, chordBeats, soloDirection, soloDensity, reharm.key],
+    [
+      useFills,
+      withPassing,
+      chordBeats,
+      soloDirection,
+      soloDensity,
+      reharm.key,
+      mutedFills,
+    ],
   )
 
   /**
@@ -816,6 +864,7 @@ export function ReharmHome() {
           setSectionMarks([])
           setArrangement(null)
           setPairedChords(new Set())
+          setMutedFills(new Set())
           setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
@@ -871,6 +920,15 @@ export function ReharmHome() {
                 current.filter((entry) => entry !== slotId),
               )
             }
+            fillAt={fillAt}
+            onToggleFill={(chordIndex) =>
+              setMutedFills((current) => {
+                const next = new Set(current)
+                if (next.has(chordIndex)) next.delete(chordIndex)
+                else next.add(chordIndex)
+                return next
+              })
+            }
             onSetChordSpan={(chordIndex, span) =>
               setPairedChords((current) =>
                 span === 'half'
@@ -897,8 +955,17 @@ export function ReharmHome() {
 
           <p className="mt-2 text-xs leading-relaxed text-dim">
             Bấm vào một hợp âm để{' '}
-            <span className="text-cream">phát lại từ đúng chỗ đó</span>.
+            <span className="text-cream">phát lại từ đúng chỗ đó</span>, chuột
+            phải để đổi nhịp, chèn hợp âm lướt hay tắt câu fill.
             {!audioReady && ' Bật âm thanh trước đã.'}
+          </p>
+
+          <p className="mt-1 font-mono text-[10px] text-dim">
+            <span className="text-amber-key">hợp âm chính</span> ·{' '}
+            <span className="text-teal-key italic">hợp âm lướt</span> ·{' '}
+            <span className="underline decoration-dotted underline-offset-4">
+              có câu fill
+            </span>
           </p>
         </div>
       )}

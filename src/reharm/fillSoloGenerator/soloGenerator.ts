@@ -185,28 +185,43 @@ export interface SoloNote {
  *    vậy tai nghe được kéo sang hợp âm mới.
  * 3. **Thỉnh thoảng mới có**, không phải hợp âm nào cũng chêm.
  */
-export function generateFillLine(
+/** Một chỗ chêm được câu fill. */
+export interface FillPosition {
+  /** Chỉ số trong mảng hợp âm đã truyền vào, kể cả hợp âm lướt. */
+  index: number
+  /**
+   * Chỉ số trong **vòng hợp âm chính**.
+   *
+   * Giao diện neo theo số này: bản nhạc đánh số hợp âm theo vòng chính, nên
+   * muốn cho người dùng bật tắt fill ở một chỗ thì phải nói cùng ngôn ngữ.
+   */
+  mainIndex: number
+}
+
+/**
+ * Những chỗ sẽ được chêm câu fill.
+ *
+ * Tách riêng khỏi phần dựng nốt để giao diện biết **chỗ nào đang có fill** mà
+ * không phải đoán từ dòng thời gian. Hai bên dùng chung đúng một luật chọn chỗ,
+ * nên không thể lệch nhau.
+ */
+export function fillPositions(
   chords: readonly ParsedChord[],
-  options: SoloOptions & { fillBeats?: number },
-): SoloNote[] {
-  const {
-    beatsPerChord,
-    fillBeats = Math.min(1.5, beatsPerChord / 2),
-    direction = 'mixed',
-    density = 'medium',
-    key = null,
-  } = options
-
-  if (chords.length < 2) return []
-
-  const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
-  // Mật độ ở đây quyết định **bao lâu chêm một câu**, không phải bao nhiêu nốt láy.
+  options: {
+    density?: OrnamentDensity
+    /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
+    skip?: ReadonlySet<number>
+  } = {},
+): FillPosition[] {
+  const { density = 'medium', skip } = options
   const { everyNth } = densityOption(density)
-  const fillStarts = chordStarts(chords, beatsPerChord)
 
-  const result: SoloNote[] = []
+  const positions: FillPosition[] = []
+  let mainIndex = -1
 
   for (let index = 0; index < chords.length; index += 1) {
+    if (!chords[index].passing) mainIndex += 1
+
     if (index % everyNth !== 0) continue
 
     /*
@@ -216,16 +231,50 @@ export function generateFillLine(
       chính là chỗ hợp âm lướt đã chiếm: khi một ô nhịp bị chia đôi cho vòng
       hai-năm lướt, nửa sau không còn trống nữa. Nhét fill vào đó thì hai thứ
       chồng lên nhau và cùng bị bóp ngắn lại — nghe ra là lệch nhịp.
-
-      `applySuggestions` ghi trường `beats` cho **cả** hợp âm chủ bị cắt lẫn
-      các hợp âm lướt chèn vào, nên chỉ cần bỏ qua mọi hợp âm có ghi thời
-      lượng riêng là đủ.
     */
     if (chords[index].beats !== undefined) continue
 
     // Hợp âm cuối dẫn về hợp âm đầu, vì vòng được chơi lặp lại.
     const next = chords[(index + 1) % chords.length]
     if (next === chords[index]) continue
+
+    if (skip?.has(mainIndex)) continue
+
+    positions.push({ index, mainIndex })
+  }
+
+  return positions
+}
+
+export function generateFillLine(
+  chords: readonly ParsedChord[],
+  options: SoloOptions & {
+    fillBeats?: number
+    /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
+    skipFills?: ReadonlySet<number>
+  },
+): SoloNote[] {
+  const {
+    beatsPerChord,
+    fillBeats = Math.min(1.5, beatsPerChord / 2),
+    direction = 'mixed',
+    density = 'medium',
+    key = null,
+    skipFills,
+  } = options
+
+  if (chords.length < 2) return []
+
+  const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
+  const fillStarts = chordStarts(chords, beatsPerChord)
+
+  const result: SoloNote[] = []
+
+  for (const { index } of fillPositions(chords, {
+    density,
+    skip: skipFills,
+  })) {
+    const next = chords[(index + 1) % chords.length]
 
     // Nốt đích: nốt đặc trưng nhất của hợp âm kế tiếp.
     const [targetClass] = targetPitchClasses(next, 1)

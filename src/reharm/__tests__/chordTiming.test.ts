@@ -14,6 +14,7 @@ import {
 } from '../chordTiming'
 import { parseChordInput } from '../input/chordInputParser'
 import {
+  fillPositions,
   generateFillLine,
   generateSolo,
 } from '../fillSoloGenerator/soloGenerator'
@@ -261,6 +262,76 @@ describe('quản lý các cặp chia đôi', () => {
     const durations = chordDurations(reharm.harmonic, 4)
     expect(durations[0]).toBeLessThanOrEqual(2)
     expect(totalBeatsOf(reharm.harmonic, 4)).toBe(14)
+  })
+})
+
+describe('bật tắt câu fill ở từng chỗ', () => {
+  const list = chords('C Am F G Em Dm G7 C')
+
+  it('cho biết những chỗ nào chêm được fill', () => {
+    const positions = fillPositions(list, { density: 'dense' })
+
+    expect(positions.length).toBeGreaterThan(0)
+    for (const position of positions) {
+      expect(position.mainIndex).toBe(position.index)
+    }
+  })
+
+  it('tắt một chỗ thì chỗ đó biến mất khỏi danh sách', () => {
+    const before = fillPositions(list, { density: 'dense' })
+    const target = before[1].mainIndex
+
+    const after = fillPositions(list, {
+      density: 'dense',
+      skip: new Set([target]),
+    })
+
+    expect(after.some((position) => position.mainIndex === target)).toBe(false)
+    expect(after).toHaveLength(before.length - 1)
+  })
+
+  it('tắt một chỗ không ảnh hưởng các chỗ khác', () => {
+    const before = fillPositions(list, { density: 'dense' })
+    const after = fillPositions(list, {
+      density: 'dense',
+      skip: new Set([before[1].mainIndex]),
+    })
+
+    const kept = before
+      .filter((position) => position.mainIndex !== before[1].mainIndex)
+      .map((position) => position.mainIndex)
+
+    expect(after.map((position) => position.mainIndex)).toEqual(kept)
+  })
+
+  it('câu fill sinh ra đúng theo danh sách đó', () => {
+    const options = {
+      beatsPerChord: 4,
+      key: { tonic: 0 as const, scale: 'major' as const },
+      density: 'dense' as const,
+    }
+
+    const before = generateFillLine(list, options)
+    const target = fillPositions(list, { density: 'dense' })[1].mainIndex
+    const after = generateFillLine(list, {
+      ...options,
+      skipFills: new Set([target]),
+    })
+
+    expect(after.length).toBeLessThan(before.length)
+  })
+
+  it('hợp âm lướt không tính vào số thứ tự vòng chính', () => {
+    const iiV = suggestPassingChords(list, {}).filter(
+      (suggestion) => suggestion.technique === 'secondary-ii-V',
+    )
+    const split = applySuggestions(list, [iiV[0]], 4)
+
+    for (const position of fillPositions(split, { density: 'dense' })) {
+      // Chỉ hợp âm chính mới chêm fill, nên số thứ tự phải nhỏ hơn số hợp âm gốc
+      expect(position.mainIndex).toBeLessThan(list.length)
+      expect(split[position.index].passing).toBeUndefined()
+    }
   })
 })
 
