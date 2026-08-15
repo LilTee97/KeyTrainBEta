@@ -60,6 +60,13 @@ export interface Lick {
   source: string
   /** Số phách tối thiểu mới chơi được mẫu này. */
   minBeats: number
+  /**
+   * Mẫu này cố ý chơi ngoài lưới móc kép.
+   *
+   * Chỉ chùm ba cần tới, vì ba nốt đều nhau trong một phách thì không nốt nào
+   * rơi vào móc kép được.
+   */
+  offGrid?: boolean
   build: (context: LickContext) => LickResult
 }
 
@@ -79,8 +86,39 @@ const STABLE_INTERVALS = [0, 3, 4, 7]
  */
 export function chordMaterial(chord: ParsedChord): PitchClass[] {
   const tones = new Set(chordPitchClasses(chord.root, chord.quality))
-  tones.add(((chord.root + 2) % 12) as PitchClass)
+  if (allowsNaturalNinth(chord)) {
+    tones.add(((chord.root + 2) % 12) as PitchClass)
+  }
   return [...tones]
+}
+
+/**
+ * Hợp âm này có nhận thêm bậc chín tự nhiên không.
+ *
+ * Bản đầu cộng bậc chín vào **mọi** hợp âm, và đó là nguồn xung đột người dùng
+ * nghe thấy khi bật hợp âm lướt — vì hai loại hợp âm bị hại nhất lại đúng là
+ * hai loại mà vòng hai-năm lướt sinh ra:
+ *
+ * - **Hợp âm át có bậc chín giáng** (`E7b9`): bản thân hợp âm đã vang nốt giáng
+ *   chín, cộng thêm bậc chín tự nhiên là hai nốt cách nhau nửa cung cùng vang —
+ *   chối tai ngay.
+ * - **Hợp âm nửa giảm** (`Bm7b5`): bậc chín tự nhiên của nó nằm **ngoài giọng**
+ *   trong vòng hai-năm về hợp âm thứ. Ví dụ `Bm7b5 → E7b9 → Am` trong giọng Đô
+ *   trưởng: bậc chín tự nhiên của Si là Đô thăng, trong khi giọng chỉ có Đô.
+ *
+ * Các hợp âm còn lại vẫn nhận bậc chín, vì đó là nốt màu rẻ nhất mà chắc chắn
+ * khớp hoà âm — đúng danh sách 1-3-5-7-9 ở mục 3.1 của `pianoimprovnotes.md`.
+ */
+function allowsNaturalNinth(chord: ParsedChord): boolean {
+  const intervals = chord.quality.intervals.map((interval) => interval % 12)
+
+  // Đã có bậc chín giáng thì thêm bậc chín tự nhiên là chồng nửa cung.
+  if (intervals.includes(1)) return false
+
+  // Hợp âm nửa giảm: quãng ba thứ cộng quãng năm giảm.
+  if (intervals.includes(3) && intervals.includes(6)) return false
+
+  return true
 }
 
 /**
@@ -269,6 +307,77 @@ function landOn(
   })
 
   steps[steps.length - 1] = landing
+}
+
+/** Lưới nhịp nhỏ nhất: nốt móc kép, tức một phần tư phách. */
+const GRID = 0.25
+
+/**
+ * Kéo mọi nốt về đúng lưới nhịp, rồi tính lại độ ngân cho khít.
+ *
+ * Đây là chỗ gây cảm giác lệch nhịp. Mỗi mẫu câu chia quãng thời gian được cấp
+ * thành `n` phần đều nhau, mà `n` thì tuỳ mật độ và tuỳ độ dài hợp âm — chia 4
+ * phách cho 7 phần ra bước 0.571 phách, chia cho 5 ra 0.8. Những giá trị đó
+ * không rơi vào phách nào cả. Đo trên một vòng có hợp âm lướt: **36 trên 47
+ * nốt nằm ngoài lưới móc kép**.
+ *
+ * Chuyện này có sẵn từ trước, nhưng chỉ lộ rõ khi hợp âm lướt làm các quãng
+ * thời gian dài ngắn khác nhau, nên cùng một mẫu câu ra những bước lẻ khác nhau
+ * ở mỗi hợp âm.
+ *
+ * Đặt ở đây, cùng chỗ với `fitWithin`, vì đây là bất biến của cả module: mẫu
+ * nào cũng phải rơi vào lưới, kể cả mẫu viết thêm sau này. Mẫu nào cố ý chơi
+ * ngoài lưới — như chùm ba — thì tự khai `offGrid`.
+ *
+ * Độ ngân tính lại theo khoảng cách tới nốt kế tiếp, nên vừa khít vừa bỏ được
+ * mấy công thức nhân chia lẻ của từng mẫu.
+ */
+function snapToGrid(
+  notes: readonly LickNote[],
+  startBeat: number,
+  beats: number,
+): LickNote[] {
+  if (notes.length === 0) return []
+
+  const end = startBeat + beats
+  const snapped: LickNote[] = []
+
+  let previousSource = Number.NaN
+  let previousPlaced = -Infinity
+
+  for (const note of notes) {
+    // Nốt chồng cùng thời điểm phải giữ nguyên chồng, đừng tách chúng ra.
+    const stacked = Math.abs(note.startBeat - previousSource) < 1e-6
+
+    let at = stacked
+      ? previousPlaced
+      : startBeat +
+        Math.round((note.startBeat - startBeat) / GRID) * GRID
+
+    // Hai nốt dồn vào cùng một ô lưới thì đẩy nốt sau sang ô kế.
+    if (!stacked && at <= previousPlaced) at = previousPlaced + GRID
+    if (at >= end - 1e-6) continue
+
+    previousSource = note.startBeat
+    previousPlaced = at
+    snapped.push({ ...note, startBeat: at })
+  }
+
+  // Độ ngân bằng khoảng cách tới nốt kế tiếp, chừa một chút cho khỏi dính tiếng.
+  return snapped.map((note, index) => {
+    let next = end
+    for (let ahead = index + 1; ahead < snapped.length; ahead += 1) {
+      if (snapped[ahead].startBeat > note.startBeat + 1e-6) {
+        next = snapped[ahead].startBeat
+        break
+      }
+    }
+
+    return {
+      ...note,
+      durationBeats: Math.max(0.05, (next - note.startBeat) * 0.9),
+    }
+  })
 }
 
 /** Đường nét: chênh lệch bậc giữa các nốt liền nhau. */
@@ -704,6 +813,8 @@ const tripletRun: Lick = {
   source:
     'pianoimprovnotes.md mục 4, và 17% nốt trong 52 Piano Jazz Blues Licks là chùm ba',
   minBeats: 2,
+  // Ba nốt đều nhau trong một phách thì không nốt nào rơi vào lưới móc kép.
+  offGrid: true,
   build: ({ startBeat, beats, from, low, high, material }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
@@ -762,9 +873,13 @@ function bounded(lick: Lick): Lick {
     ...lick,
     build: (context) => {
       const built = lick.build(context)
+      const placed = lick.offGrid
+        ? built.notes
+        : snapToGrid(built.notes, context.startBeat, context.beats)
+
       return {
         ...built,
-        notes: fitWithin(built.notes, context.startBeat, context.beats),
+        notes: fitWithin(placed, context.startBeat, context.beats),
       }
     },
   }
