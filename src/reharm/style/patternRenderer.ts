@@ -165,7 +165,98 @@ function renderWithCell(
     }
   }
 
-  return events
+  return [
+    ...events,
+    ...missingChordHits(events, voicings, starts, releaseRatio),
+  ]
+}
+
+/** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
+const EPSILON = 0.001
+
+/**
+ * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.
+ *
+ * Mẫu tiết tấu cố định đánh vào **vị trí cố định trong ô nhịp**, còn hợp âm
+ * lướt thì đổi ở giữa ô. Hai thứ không biết nhau, nên hợp âm lướt có thể trôi
+ * qua mà không được đánh tiếng nào.
+ *
+ * Đo trên vòng `C Am F G` sau khi chèn ba vòng hai-năm lướt: điệu swing đánh
+ * bass ở phách 0, 4, 8, 12 trong khi hợp âm đổi ở phách 0, 2, 3, 4, 6, 7, 8,
+ * 10, 11, 12 — **sáu trên mười hợp âm không có nốt bass nào**. Người dùng nghe
+ * ra đúng là mất tiếng bass.
+ *
+ * Bù một tiếng ngay tại chỗ đổi hợp âm cho tay nào đang bị bỏ sót. Hợp âm được
+ * chèn vào là để **nghe thấy**; không đánh tiếng nào thì chèn làm gì.
+ */
+function missingChordHits(
+  events: readonly TimelineEvent[],
+  voicings: readonly TwoHandVoicing[],
+  starts: readonly number[],
+  releaseRatio: number,
+): TimelineEvent[] {
+  const extra: TimelineEvent[] = []
+
+  voicings.forEach((voicing, index) => {
+    const chordStart = starts[index]
+    const chordEnd = starts[index + 1] ?? Number.POSITIVE_INFINITY
+
+    for (const hand of ['right', 'left'] as const) {
+      const covered = events.some(
+        (event) =>
+          event.hand === hand &&
+          event.startBeat >= chordStart - EPSILON &&
+          event.startBeat < chordEnd - EPSILON,
+      )
+      if (covered) continue
+
+      const notes = hand === 'right' ? voicing.right : voicing.left
+      if (notes.length === 0) continue
+
+      // Ngân tới hết phần thời gian của hợp âm, hoặc tới tiếng kế tiếp.
+      const nextHit = events
+        .filter((event) => event.startBeat > chordStart + EPSILON)
+        .reduce(
+          (soonest, event) => Math.min(soonest, event.startBeat),
+          Number.POSITIVE_INFINITY,
+        )
+      const until = Math.min(chordEnd, nextHit)
+
+      extra.push({
+        notes,
+        startBeat: chordStart,
+        durationBeats:
+          Math.max(0.25, until - chordStart) * releaseRatio,
+        hand,
+        velocity: clampVelocity(
+          BASE_VELOCITY * (hand === 'left' ? LEFT_HAND_SCALE : 1),
+        ),
+      })
+    }
+  })
+
+  return extra
+}
+
+/**
+ * Cắt độ ngân để không tiếng nào vang sang hợp âm sau.
+ *
+ * Cùng lý do: mẫu tiết tấu ghi độ ngân theo ô nhịp, không biết hợp âm đổi giữa
+ * chừng. Bass của hợp âm cũ ngân đè lên hợp âm mới vừa làm đục vừa sai hoà âm.
+ */
+function clipToChords(
+  events: readonly TimelineEvent[],
+  starts: readonly number[],
+): TimelineEvent[] {
+  return events.map((event) => {
+    const nextStart = starts.find((start) => start > event.startBeat + EPSILON)
+    if (nextStart === undefined) return event
+
+    const room = nextStart - event.startBeat
+    return event.durationBeats <= room
+      ? event
+      : { ...event, durationBeats: Math.max(0.05, room) }
+  })
 }
 
 /** Dựng dòng thời gian cho cả đoạn. */
@@ -203,7 +294,9 @@ export function renderPattern(
         releaseRatio,
       )
 
-  return events.sort((a, b) => a.startBeat - b.startBeat)
+  return clipToChords(events, starts).sort(
+    (a, b) => a.startBeat - b.startBeat,
+  )
 }
 
 /** Tổng độ dài của dòng thời gian, tính bằng phách. */
