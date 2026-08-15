@@ -59,6 +59,76 @@ export function totalBeatsOf(
   return chords.reduce((sum, chord) => sum + beatsOf(chord, fallback), 0)
 }
 
+/**
+ * Hai hợp âm chia nhau một ô nhịp.
+ *
+ * Chia đôi phải làm theo **cặp**, không làm lẻ một hợp âm. Ô nhịp là đơn vị cố
+ * định của bài: thêm một hợp âm vào ô thì hai hợp âm chia nhau thời gian của
+ * ô đó, **số ô nhịp của bài không đổi**. Cắt lẻ một hợp âm còn nửa ô thì bài
+ * ngắn đi nửa ô — tức là đổi luôn cấu trúc bài, không còn hát theo được.
+ *
+ * Đây là điều tra cứu về *harmonic rhythm* nói rõ: nhịp hoà âm là **tốc độ đổi
+ * hợp âm**, không phải độ dài bài. Rút ngắn giá trị mỗi hợp âm làm câu nhạc
+ * chuyển động nhiều hơn, còn số ô nhịp giữ nguyên.
+ *
+ * `starts` là các hợp âm **mở đầu** một ô nhịp dùng chung. Hợp âm đứng ngay sau
+ * nó nhận nửa còn lại. Hai cặp không được chồng nhau, vì một hợp âm không thể
+ * vừa là nửa sau của ô này vừa là nửa đầu của ô kia.
+ */
+export function pairedChordBeats(
+  starts: Iterable<number>,
+  chordCount: number,
+  fullBeats: number,
+): Record<number, number> {
+  const table: Record<number, number> = {}
+  const half = fullBeats / 2
+
+  for (const start of starts) {
+    if (start < 0 || start + 1 >= chordCount) continue
+
+    table[start] = half
+    table[start + 1] = half
+  }
+
+  return table
+}
+
+/**
+ * Thêm một cặp chia đôi, gỡ những cặp chồng lên nó.
+ *
+ * Ghép `i` với `i+1` thì phải gỡ cặp bắt đầu ở `i-1` (nó đang chiếm `i` làm
+ * nửa sau) và cặp bắt đầu ở `i+1` (nó đang chiếm `i+1` làm nửa đầu).
+ */
+export function addChordPair(
+  starts: ReadonlySet<number>,
+  start: number,
+): Set<number> {
+  const next = new Set(starts)
+  next.delete(start - 1)
+  next.delete(start + 1)
+  next.add(start)
+  return next
+}
+
+/** Gỡ cặp mà một hợp âm đang tham gia, dù nó là nửa đầu hay nửa sau. */
+export function removeChordPair(
+  starts: ReadonlySet<number>,
+  index: number,
+): Set<number> {
+  const next = new Set(starts)
+  next.delete(index)
+  next.delete(index - 1)
+  return next
+}
+
+/** Hợp âm này có đang chia đôi ô nhịp với hợp âm bên cạnh không. */
+export function isPaired(
+  starts: ReadonlySet<number>,
+  index: number,
+): boolean {
+  return starts.has(index) || starts.has(index - 1)
+}
+
 /** Một hợp âm chính cùng khoảng thời gian nó chiếm trên dòng thời gian. */
 export interface ChordSpan {
   chord: ParsedChord

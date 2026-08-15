@@ -43,6 +43,18 @@ export interface ReharmOptions extends ColorOptions {
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận. */
   acceptedPassing?: readonly PassingSuggestion[]
   /**
+   * Thời lượng do người dùng chỉ định cho từng hợp âm, tính bằng phách.
+   *
+   * Khoá là **số thứ tự trong vòng gốc**, đếm từ 0. Có để người dùng chuột
+   * phải vào một hợp âm rồi chọn cho nó chia đôi nhịp hay chơi đủ nhịp — nhiều
+   * bài có ô nhịp hai hợp âm mà bản ghi lời không thể hiện được.
+   *
+   * Áp **trước** khi chèn hợp âm lướt, vì hợp âm lướt mượn nửa thời gian của
+   * hợp âm chủ; chủ đã bị chia đôi rồi thì phần mượn phải tính trên phần còn
+   * lại chứ không phải trên cả ô.
+   */
+  chordBeats?: Readonly<Record<number, number>>
+  /**
    * Nhịp đổi hợp âm của vòng, tính bằng phách.
    *
    * Cần ở đây vì hợp âm lướt **mượn thời gian của hợp âm đứng trước** thay vì
@@ -105,6 +117,7 @@ export function reharmonize(
     key: manualKey = null,
     acceptedPassing = [],
     beatsPerChord = 4,
+    chordBeats,
     useSlashChords = false,
     ...colorOptions
   } = options
@@ -167,7 +180,19 @@ export function reharmonize(
     acceptedPassing,
     activeKey,
   )
-  const harmonic = applySuggestions(colored, acceptedPassing, beatsPerChord)
+  /*
+    Áp thời lượng người dùng chỉ định, rồi mới chèn hợp âm lướt. Thứ tự này
+    quan trọng: hợp âm lướt mượn nửa thời gian của hợp âm chủ.
+  */
+  const timed = chordBeats
+    ? colored.map((chord, index) =>
+        chordBeats[index] === undefined
+          ? chord
+          : { ...chord, beats: chordBeats[index] },
+      )
+    : colored
+
+  const harmonic = applySuggestions(timed, acceptedPassing, beatsPerChord)
 
   // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.
   const final = useSlashChords ? toSlashSequence(harmonic) : harmonic

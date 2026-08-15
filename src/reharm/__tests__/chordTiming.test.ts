@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addChordPair,
   beatsOf,
   chordDurations,
   chordIndexAt,
   chordStarts,
+  isPaired,
   mainChordSpans,
+  pairedChordBeats,
+  removeChordPair,
   splitBeats,
   totalBeatsOf,
 } from '../chordTiming'
@@ -17,6 +21,7 @@ import {
   applySuggestions,
   suggestPassingChords,
 } from '../reharmEngine/passingChordRules'
+import { reharmonize } from '../reharmEngine/reharmPipeline'
 
 const chords = (text: string) => parseChordInput(text).chords
 
@@ -125,6 +130,137 @@ describe('chèn hợp âm lướt không làm dài thêm vòng', () => {
 
   it('không chấp nhận gợi ý nào thì vòng y nguyên', () => {
     expect(applySuggestions(list, [], 4)).toEqual(list)
+  })
+})
+
+describe('hai hợp âm chia nhau một ô nhịp', () => {
+  /*
+    Chia đôi phải làm theo **cặp**. Ô nhịp là đơn vị cố định của bài: thêm một
+    hợp âm vào ô thì hai hợp âm chia nhau thời gian của ô đó, còn **số ô nhịp
+    không đổi**. Đây đúng là điều tra cứu về harmonic rhythm nói: nhịp hoà âm
+    là tốc độ đổi hợp âm, không phải độ dài bài.
+  */
+  const list = chords('C Am F G')
+
+  it('cặp chia đôi thì mỗi bên nửa ô nhịp', () => {
+    const table = pairedChordBeats([0], 4, 4)
+    expect(table).toEqual({ 0: 2, 1: 2 })
+  })
+
+  it('KHÔNG CÒN Ô NHỊP LẺ DỞ', () => {
+    /*
+      Đây là bất biến quan trọng nhất của cả tính năng, và là lý do phải chia
+      theo cặp. Cắt lẻ một hợp âm còn nửa ô thì bài dôi ra nửa ô — hát tới đó
+      là hụt nhịp. Ghép cặp thì hai hợp âm lấp trọn một ô, bài ngắn đi đúng
+      **một ô nguyên**.
+    */
+    const paired = reharmonize(list, {
+      beatsPerChord: 4,
+      chordBeats: pairedChordBeats([0], 4, 4),
+    })
+
+    const total = totalBeatsOf(paired.harmonic, 4)
+    expect(total % 4).toBe(0)
+    expect(total / 4).toBe(3)
+  })
+
+  it('cắt lẻ một hợp âm mới là thứ để lại ô nhịp dở', () => {
+    // Giữ lại để thấy rõ vì sao phải chia theo cặp
+    const lopsided = reharmonize(list, {
+      beatsPerChord: 4,
+      chordBeats: { 0: 2 },
+    })
+
+    expect(totalBeatsOf(lopsided.harmonic, 4) % 4).not.toBe(0)
+  })
+
+  it('mọi hợp âm đều bắt đầu đúng phách, không cái nào vắt qua vạch nhịp', () => {
+    const paired = reharmonize(list, {
+      beatsPerChord: 4,
+      chordBeats: pairedChordBeats([0, 2], 4, 4),
+    })
+
+    const starts = chordStarts(paired.harmonic, 4)
+    const durations = chordDurations(paired.harmonic, 4)
+
+    for (let index = 0; index < starts.length; index += 1) {
+      const from = starts[index]
+      const to = from + durations[index]
+      // Không hợp âm nào được bắt đầu ở ô này mà kết thúc ở ô sau
+      expect(Math.floor(from / 4)).toBe(Math.floor((to - 0.001) / 4))
+    }
+  })
+
+  it('chia nhiều cặp thì mỗi ô vẫn đủ hai hợp âm', () => {
+    const paired = reharmonize(list, {
+      beatsPerChord: 4,
+      chordBeats: pairedChordBeats([0, 2], 4, 4),
+    })
+
+    expect(chordDurations(paired.harmonic, 4)).toEqual([2, 2, 2, 2])
+    expect(totalBeatsOf(paired.harmonic, 4) % 4).toBe(0)
+  })
+
+  it('hợp âm cuối không ghép được vì không có hợp âm nào phía sau', () => {
+    expect(pairedChordBeats([3], 4, 4)).toEqual({})
+  })
+
+  it('không chỉ định gì thì mọi hợp âm chơi đủ nhịp', () => {
+    const reharm = reharmonize(list, { beatsPerChord: 4 })
+    expect(chordDurations(reharm.harmonic, 4)).toEqual([4, 4, 4, 4])
+  })
+})
+
+describe('quản lý các cặp chia đôi', () => {
+  /*
+    Hai cặp không được chồng nhau: một hợp âm không thể vừa là nửa sau của ô
+    này vừa là nửa đầu của ô kia.
+  */
+  const list = chords('C Am F G')
+
+  it('ghép cặp mới thì gỡ cặp chồng lên nó', () => {
+    expect([...addChordPair(new Set([0]), 1)]).toEqual([1])
+    expect([...addChordPair(new Set([2]), 1)]).toEqual([1])
+  })
+
+  it('cặp không chồng nhau thì giữ nguyên cả hai', () => {
+    expect([...addChordPair(new Set([0]), 2)].sort()).toEqual([0, 2])
+  })
+
+  it('gỡ được cặp dù bấm vào nửa đầu hay nửa sau', () => {
+    expect([...removeChordPair(new Set([0]), 0)]).toEqual([])
+    expect([...removeChordPair(new Set([0]), 1)]).toEqual([])
+  })
+
+  it('nhận ra hợp âm đang trong cặp, ở cả hai vị trí', () => {
+    const pairs = new Set([2])
+
+    expect(isPaired(pairs, 2)).toBe(true)
+    expect(isPaired(pairs, 3)).toBe(true)
+    expect(isPaired(pairs, 1)).toBe(false)
+    expect(isPaired(pairs, 4)).toBe(false)
+  })
+
+  it('hợp âm lướt mượn nửa của phần còn lại, không mượn của cả ô', () => {
+    /*
+      Thứ tự áp quan trọng: hợp âm chủ bị chia đôi rồi thì hợp âm lướt phải
+      tính trên hai phách còn lại, không phải trên bốn phách ban đầu.
+    */
+    const first = reharmonize(list, { beatsPerChord: 4 })
+    const iiV = first.passingSuggestions.filter(
+      (suggestion) => suggestion.technique === 'secondary-ii-V',
+    )
+
+    const reharm = reharmonize(list, {
+      beatsPerChord: 4,
+      chordBeats: { 0: 2 },
+      acceptedPassing: iiV.filter((s) => s.insertBeforeIndex === 1),
+    })
+
+    // Hợp âm chủ hai phách, chia đôi cho hai hợp âm lướt thì mỗi cái nửa phách
+    const durations = chordDurations(reharm.harmonic, 4)
+    expect(durations[0]).toBeLessThanOrEqual(2)
+    expect(totalBeatsOf(reharm.harmonic, 4)).toBe(14)
   })
 })
 

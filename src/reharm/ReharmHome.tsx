@@ -15,9 +15,12 @@ import { midiToName, pitchClassName } from '../shared/musicTheory/pitch'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import {
+  addChordPair,
   chordDurations,
   chordIndexAt,
   mainChordSpans,
+  pairedChordBeats,
+  removeChordPair,
   totalBeatsOf,
 } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
@@ -270,6 +273,16 @@ export function ReharmHome() {
    * theo đúng thứ tự trên lời.
    */
   const [arrangement, setArrangement] = useState<ArrangementStep[] | null>(null)
+  /**
+   * Các hợp âm **mở đầu** một ô nhịp dùng chung với hợp âm ngay sau nó.
+   *
+   * Chia đôi làm theo cặp chứ không cắt lẻ: ô nhịp là đơn vị cố định của bài,
+   * thêm một hợp âm vào ô thì hai hợp âm chia nhau thời gian của ô đó và **số
+   * ô nhịp không đổi**. Cắt lẻ thì bài ngắn đi, tức đổi luôn cấu trúc bài.
+   */
+  const [pairedChords, setPairedChords] = useState<ReadonlySet<number>>(
+    new Set(),
+  )
   const [pickerQuality, setPickerQuality] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -341,6 +354,12 @@ export function ReharmHome() {
     return Math.max(1, measures * style.beatsPerMeasure)
   }, [beatsPerChord, style.beatsPerMeasure])
 
+  /** Bảng thời lượng đưa vào đường ống: cặp chia đôi thì mỗi bên nửa ô nhịp. */
+  const halvedBeats = useMemo(
+    () => pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
+    [pairedChords, sequence.chords.length, chordBeats],
+  )
+
   const reharm = useMemo(() => {
     const parsedKey = manualKey
       ? {
@@ -378,6 +397,7 @@ export function ReharmHome() {
       key: parsedKey,
       acceptedPassing: chosen,
       beatsPerChord: chordBeats,
+      chordBeats: halvedBeats,
     })
   }, [
     sequence.chords,
@@ -391,6 +411,7 @@ export function ReharmHome() {
     manualKey,
     acceptedPassing,
     chordBeats,
+    halvedBeats,
   ])
 
   const recolored = reharm.colored
@@ -757,6 +778,7 @@ export function ReharmHome() {
           setPastedSong(parsed)
           setSectionMarks([])
           setArrangement(null)
+          setPairedChords(new Set())
           setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
@@ -789,6 +811,14 @@ export function ReharmHome() {
           <SongSheetView
             sheet={sheet}
             activeIndex={activeChordIndex}
+            pairedChords={pairedChords}
+            onSetChordSpan={(chordIndex, span) =>
+              setPairedChords((current) =>
+                span === 'half'
+                  ? addChordPair(current, chordIndex)
+                  : removeChordPair(current, chordIndex),
+              )
+            }
             onMark={(mark) => setSectionMarks((marks) => [...marks, mark])}
             onClearMarks={() => setSectionMarks([])}
             hasMarks={sectionMarks.length > 0}
