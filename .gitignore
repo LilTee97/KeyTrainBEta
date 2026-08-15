@@ -11,6 +11,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# File tải dở của trình duyệt
+*.crdownload
+*.part
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
