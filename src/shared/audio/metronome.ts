@@ -1,6 +1,7 @@
 import * as Tone from 'tone'
 import { create } from 'zustand'
 import { readSetting, writeSetting } from '../persistence/localSettings'
+import { acquireTransport, releaseTransport } from './audioEngine'
 
 /**
  * Máy đếm nhịp.
@@ -128,13 +129,15 @@ export async function startMetronome(): Promise<void> {
   loop ??= new Tone.Loop(handleTick, '4n')
   loop.start(0)
 
-  transport.start()
+  // Xin dùng đồng hồ thay vì tự khởi động, vì vòng lặp phần đệm cũng dùng
+  // chung đồng hồ này — tự tiện dừng sẽ tắt luôn phần của bên kia.
+  acquireTransport('metronome')
   useMetronomeStore.setState({ running: true })
 }
 
 export function stopMetronome(): void {
   loop?.stop()
-  Tone.getTransport().stop()
+  releaseTransport('metronome')
   tickIndex = 0
 
   useMetronomeStore.setState({

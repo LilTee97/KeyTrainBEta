@@ -2,9 +2,11 @@ import { useMemo, useState } from 'react'
 import {
   playChord,
   playChordSequence,
-  playTimeline,
   startAudio,
+  startTimelineLoop,
+  stopTimelineLoop,
   useAudioStore,
+  usePlaybackStore,
 } from '../shared/audio/audioEngine'
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
@@ -185,6 +187,7 @@ function notesForChord(chord: ParsedChord): MidiNote[] {
 
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
+  const looping = usePlaybackStore((state) => state.looping)
 
   // Cố ý để một vòng pop trơn, chưa có màu gì — như vậy tác dụng của phần tái
   // hòa âm nhìn ra ngay. Để sẵn một vòng đã đầy màu thì trông như app không
@@ -381,6 +384,17 @@ export function ReharmHome() {
           )
         : accompaniment,
     [accompaniment, solo, playSolo],
+  )
+
+  /**
+   * Độ dài một lượt lặp, tính theo **số hợp âm** chứ không theo nốt cuối cùng.
+   *
+   * Nếu lấy theo nốt cuối thì hợp âm cuối vòng bị cắt ngắn hoặc thừa ra tuỳ
+   * việc nốt cuối ngân bao lâu, và vòng lặp nghe lệch nhịp.
+   */
+  const loopLengthBeats = useMemo(
+    () => Math.max(1, withPassing.length * chordBeats),
+    [withPassing.length, chordBeats],
   )
 
   /**
@@ -1132,12 +1146,22 @@ export function ReharmHome() {
           <button
             type="button"
             onClick={() =>
-              playTimeline(eventsForHand(timeline, hand), bpm)
+              looping
+                ? stopTimelineLoop()
+                : startTimelineLoop(
+                    eventsForHand(timeline, hand),
+                    bpm,
+                    loopLengthBeats,
+                  )
             }
             disabled={!audioReady || timeline.length === 0}
-            className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
+            className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
+              looping
+                ? 'border border-line bg-white/6 text-cream hover:bg-white/12'
+                : 'bg-amber-key text-ink hover:brightness-110'
+            }`}
           >
-            ♪ Nghe bản đệm đầy đủ
+            {looping ? '■ Dừng' : '▶ Phát lặp bản đệm'}
           </button>
 
           <div className="flex gap-1">
@@ -1387,11 +1411,23 @@ export function ReharmHome() {
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => playTimeline(eventsForHand(timeline, 'both'), bpm)}
+                onClick={() =>
+                  looping
+                    ? stopTimelineLoop()
+                    : startTimelineLoop(
+                        eventsForHand(timeline, 'both'),
+                        bpm,
+                        loopLengthBeats,
+                      )
+                }
                 disabled={!audioReady || timeline.length === 0}
-                className="rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink hover:brightness-110 disabled:opacity-40"
+                className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
+                  looping
+                    ? 'border border-line bg-white/6 text-cream hover:bg-white/12'
+                    : 'bg-amber-key text-ink hover:brightness-110'
+                }`}
               >
-                ♪ Nghe kèm phần đệm
+                {looping ? '■ Dừng' : '▶ Phát lặp kèm phần đệm'}
               </button>
 
               <span className="font-mono text-[11px] text-dim">

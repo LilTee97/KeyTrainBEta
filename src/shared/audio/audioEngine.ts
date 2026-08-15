@@ -173,6 +173,118 @@ export function playTimeline(
   }
 }
 
+/**
+ * Danh sách những thứ đang dùng đồng hồ vận chuyển.
+ *
+ * Máy đếm nhịp và vòng lặp phần đệm chạy trên **cùng một** đồng hồ. Nếu ai
+ * cũng tự tiện dừng đồng hồ khi mình xong thì sẽ tắt luôn phần của người kia —
+ * nên phải đếm xem còn ai đang dùng không rồi mới dừng.
+ */
+const transportUsers = new Set<string>()
+
+/** Xin dùng đồng hồ. Đồng hồ chưa chạy thì khởi động. */
+export function acquireTransport(userId: string): void {
+  transportUsers.add(userId)
+
+  const transport = Tone.getTransport()
+  if (transport.state !== 'started') transport.start()
+}
+
+/** Trả lại đồng hồ. Chỉ dừng khi không còn ai dùng. */
+export function releaseTransport(userId: string): void {
+  transportUsers.delete(userId)
+
+  if (transportUsers.size === 0) {
+    const transport = Tone.getTransport()
+    transport.stop()
+    transport.position = 0
+  }
+}
+
+export interface PlaybackState {
+  /** Vòng lặp phần đệm có đang chạy không. */
+  looping: boolean
+}
+
+export const usePlaybackStore = create<PlaybackState>(() => ({
+  looping: false,
+}))
+
+/** Một sự kiện đã xếp lịch cho vòng lặp. */
+interface LoopEvent {
+  time: Tone.Unit.Time
+  notes: number[]
+  duration: Tone.Unit.Time
+  velocity: number
+}
+
+let loopPart: Tone.Part<LoopEvent> | null = null
+
+/**
+ * Phát phần đệm **lặp đi lặp lại** cho tới khi bị dừng.
+ *
+ * Nghe một lượt rồi tắt thì không ra bài hát, và cũng không đánh giá được câu
+ * giang tấu — câu nhạc cần lặp mới thấy nó ăn khớp với vòng hợp âm hay không.
+ *
+ * Thời điểm ghi theo **số phách** chứ không theo giây, nên đổi nhịp độ giữa
+ * chừng thì phần đệm co giãn theo chứ không lệch.
+ */
+export function startTimelineLoop(
+  hits: readonly ScheduledHit[],
+  bpm: number,
+  loopLengthBeats?: number,
+): void {
+  if (!isAudioReady() || hits.length === 0) return
+
+  stopTimelineLoop()
+
+  Tone.getTransport().bpm.value = Math.max(1, bpm)
+  const synthInstance = getSynth()
+
+  const events: LoopEvent[] = hits
+    .filter((hit) => hit.notes.length > 0)
+    .map((hit) => ({
+      time: { '4n': hit.startBeat },
+      notes: hit.notes.map(toFrequency),
+      duration: { '4n': Math.max(0.05, hit.durationBeats) },
+      velocity: hit.velocity / 127,
+    }))
+
+  const part = new Tone.Part<LoopEvent>((time, value) => {
+    synthInstance.triggerAttackRelease(
+      value.notes,
+      value.duration,
+      time,
+      value.velocity,
+    )
+  }, events)
+
+  const length =
+    loopLengthBeats ??
+    Math.ceil(
+      Math.max(...hits.map((hit) => hit.startBeat + hit.durationBeats)),
+    )
+
+  part.loop = true
+  part.loopEnd = { '4n': Math.max(1, length) }
+  part.start(0)
+  loopPart = part
+
+  acquireTransport('timeline-loop')
+  usePlaybackStore.setState({ looping: true })
+}
+
+/** Dừng vòng lặp phần đệm. */
+export function stopTimelineLoop(): void {
+  loopPart?.stop()
+  loopPart?.dispose()
+  loopPart = null
+
+  releaseTransport('timeline-loop')
+  releaseAllNotes()
+  usePlaybackStore.setState({ looping: false })
+}
+
 /** Nhả toàn bộ nốt đang vang. */
 export function releaseAllNotes(): void {
   if (!synth) return
