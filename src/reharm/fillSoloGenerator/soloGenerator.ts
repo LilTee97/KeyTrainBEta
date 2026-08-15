@@ -9,11 +9,11 @@ import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, stepInScale } from './graceNoteOrnamenter'
 import type { Lick } from './soloVocabulary'
 import {
-  LICKS,
   chordBlues,
   chordMaterial,
   chordPentatonic,
-  getLick,
+  fallbackLick,
+  licksFor,
   resolvesUpFourth,
 } from './soloVocabulary'
 
@@ -435,6 +435,25 @@ interface LickChoice {
  * giờ dùng cùng một trình tự mẫu câu. Ba phần tử mỗi thực đơn là đủ: nhiều hơn
  * thì hai lượt cách nhau quá xa, nghe như hai người khác nhau chơi.
  */
+interface LickChoice {
+  phrase: number
+  positionInPhrase: number
+  isPhraseEnd: boolean
+  playBeats: number
+  hasMotif: boolean
+  density: OrnamentDensity
+  take: number
+  /** Hợp âm sau nằm quãng bốn đi lên — chỗ V về I. */
+  resolving: boolean
+}
+
+/**
+ * Thực đơn mẫu câu cho vị trí mở câu và vị trí giữa câu.
+ *
+ * Xoay theo cả số câu lẫn số lượt, nên hai lượt giang tấu liền nhau không bao
+ * giờ dùng cùng một trình tự mẫu câu. Ba phần tử mỗi thực đơn là đủ: nhiều hơn
+ * thì hai lượt cách nhau quá xa, nghe như hai người khác nhau chơi.
+ */
 /*
   Vốn mẫu câu **đang dùng thật**.
 
@@ -444,16 +463,6 @@ interface LickChoice {
   bảy mẫu đã được duyệt bằng tai. Bật lại thì bật **từng cái một** để còn biết
   cái nào hỏng.
 */
-const OPENERS = ['arpeggio', 'chord-tone', 'sweep'] as const
-
-/** Chỉ dùng khi một câu dài từ ba hợp âm trở lên. */
-const MIDDLES = ['turn', 'approach', 'echo'] as const
-
-/** Các mẫu câu thật sự được chọn — dùng cho phần hiển thị trên giao diện. */
-export const ROTATION_IDS: readonly string[] = [
-  ...new Set([...OPENERS, ...MIDDLES, 'chord-tone', 'breath']),
-]
-
 /**
  * Chọn mẫu câu cho một hợp âm.
  *
@@ -463,6 +472,15 @@ export const ROTATION_IDS: readonly string[] = [
  * được đúng câu vừa nghe để tập theo, ngẫu nhiên mỗi lần phát thì không tập nổi.
  */
 function chooseLick(choice: LickChoice): Lick {
+  /*
+    Danh sách mẫu cho từng vị trí **suy ra từ `soloVocabulary.ts`**, không còn
+    viết tay ở đây nữa. Bản trước giữ hai mảng `OPENERS`/`MIDDLES` tại chỗ này,
+    tách rời khỏi chỗ định nghĩa mẫu — thêm mẫu mà quên thêm vào mảng là mẫu đó
+    không bao giờ được chọn, và đã có lần nửa vốn từ vựng nằm chết vì vậy.
+  */
+  const openers = licksFor('opener')
+  const middles = licksFor('middle')
+
   const {
     phrase,
     positionInPhrase,
@@ -473,14 +491,9 @@ function chooseLick(choice: LickChoice): Lick {
     take,
   } = choice
 
-  const pick = (id: string): Lick => {
-    const lick = getLick(id)
-    // Không đủ chỗ cho mẫu đã chọn thì lùi về mẫu nền tảng, đừng chơi dở dang.
-    if (!lick || lick.minBeats > playBeats) {
-      return getLick('chord-tone') ?? LICKS[0]
-    }
-    return lick
-  }
+  // Không đủ chỗ cho mẫu đã chọn thì lùi về mẫu nền tảng, đừng chơi dở dang.
+  const fit = (lick: Lick | undefined): Lick =>
+    lick && lick.minBeats <= playBeats ? lick : fallbackLick()
 
   /*
     Kết câu luôn dùng mẫu đi trên nốt hợp âm, vì chỉ mẫu đó kết ở nốt ổn định —
@@ -489,23 +502,27 @@ function chooseLick(choice: LickChoice): Lick {
   /*
     Kết câu ở nốt ổn định — mục 4: *"tránh dừng ở nốt lơ lửng khiến câu nhạc
     nghe dở dang"*.
-
-    Có một mẫu `guide-tone` buông nốt dẫn hướng ở đúng chỗ V về I, hợp lý về
-    nhạc lý, nhưng chưa được nghe duyệt nên tạm để ngoài.
   */
-  if (isPhraseEnd) return pick('chord-tone')
+  if (isPhraseEnd) return fit(fallbackLick())
 
   // Mật độ thưa thì thỉnh thoảng nghỉ hẳn một hợp âm cho câu nhạc thoáng.
-  if (density === 'sparse' && positionInPhrase === 1) return pick('breath')
+  if (density === 'sparse' && positionInPhrase === 1) {
+    return fit(licksFor('rest')[0])
+  }
 
   // Số lượt cộng vào chỗ xoay, nên lượt sau đổi hẳn trình tự mẫu câu.
   const rotation = phrase + take
 
-  if (positionInPhrase === 0) return pick(OPENERS[rotation % OPENERS.length])
+  if (positionInPhrase === 0 || middles.length === 0) {
+    return fit(openers[rotation % openers.length])
+  }
 
-  const middle = MIDDLES[(rotation + positionInPhrase) % MIDDLES.length]
-  // Chưa có mô-típ nào để nhắc lại thì lùi về hình láy.
-  return pick(middle === 'echo' && !hasMotif ? 'turn' : middle)
+  const middle = middles[(rotation + positionInPhrase) % middles.length]
+  // Chưa có mô-típ nào để nhắc lại thì lùi về mẫu giữa câu khác.
+  if (middle.id === 'echo' && !hasMotif) {
+    return fit(middles.find((lick) => lick.id !== 'echo') ?? middle)
+  }
+  return fit(middle)
 }
 
 

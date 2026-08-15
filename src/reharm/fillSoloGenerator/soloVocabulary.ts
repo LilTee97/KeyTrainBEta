@@ -16,6 +16,26 @@ import type { ParsedChord } from '../types'
  * `pianoimprovnotes.md` — tài liệu nói thẳng cách này *"luôn khớp hòa âm"*.
  *
  * Mỗi mẫu câu bên dưới đều ghi rõ nguồn. Không có mẫu nào do tôi tự nghĩ ra.
+ *
+ * ## Thêm một mẫu câu mới
+ *
+ * Sửa **đúng file này**, không phải sửa nơi nào khác:
+ *
+ * 1. Viết một hằng kiểu `Lick`, khai `roles` (mở câu / giữa câu / kết câu /
+ *    nghỉ), `minBeats`, và `source` trích rõ nguồn.
+ * 2. Đặt `inRotation: false` — mẫu mới chưa được nghe duyệt thì chưa cho vào
+ *    vòng xoay. Bật cả loạt cùng lúc thì hỏng cũng không biết cái nào gây ra,
+ *    và chuyện đó đã xảy ra một lần.
+ * 3. Thêm vào mảng `LICKS`. **Vị trí trong mảng chính là thứ tự xoay**, nên
+ *    chèn vào giữa sẽ đổi âm thanh của những mẫu đứng sau.
+ * 4. Nghe thử, ưng thì đổi `inRotation: true`.
+ *
+ * Không phải nhớ thêm vào danh sách nào bên `soloGenerator.ts` nữa: danh sách
+ * cho từng vị trí được **suy ra** từ chính mảng này qua `licksFor`.
+ *
+ * Hai bất biến khó nhất đã có hàm bọc `bounded` lo giúp, mẫu mới không phải
+ * tự xử: **không nốt nào tràn qua hợp âm sau**, và **mọi nốt rơi đúng lưới móc
+ * kép**. Mẫu nào cố ý chơi ngoài lưới thì khai `offGrid: true`.
  */
 
 export interface LickNote {
@@ -53,6 +73,25 @@ export interface LickResult {
   shape: number[]
 }
 
+/**
+ * Vị trí trong câu nhạc mà một mẫu câu dùng được.
+ *
+ * Khai ngay trong mẫu chứ không để thành danh sách riêng ở nơi khác. Bản trước
+ * giữ hai danh sách `OPENERS`/`MIDDLES` bên `soloGenerator.ts`, tách rời khỏi
+ * chỗ định nghĩa mẫu — nên thêm mẫu mà quên thêm vào danh sách là mẫu đó không
+ * bao giờ được chọn. Chuyện đó đã xảy ra: có lúc **nửa vốn từ vựng nằm chết**
+ * mà không ai biết, cho tới khi in kết quả ra đọc.
+ */
+export type LickRole =
+  /** Mở câu — nên là mẫu dứt khoát, tạo đà cho cả câu. */
+  | 'opener'
+  /** Giữa câu — chỗ triển khai, tô điểm. */
+  | 'middle'
+  /** Kết câu — bắt buộc kết ở nốt ổn định để câu nhạc đậu lại. */
+  | 'ending'
+  /** Nghỉ lấy hơi. */
+  | 'rest'
+
 export interface Lick {
   id: string
   label: string
@@ -60,6 +99,15 @@ export interface Lick {
   source: string
   /** Số phách tối thiểu mới chơi được mẫu này. */
   minBeats: number
+  /** Dùng được ở những vị trí nào trong câu nhạc. */
+  roles: readonly LickRole[]
+  /**
+   * Đã đưa vào vòng xoay chưa.
+   *
+   * Mẫu mới viết xong nên để `false` cho tới khi nghe duyệt. Bật cả loạt cùng
+   * lúc thì hỏng cũng không biết cái nào gây ra — đã một lần như vậy.
+   */
+  inRotation: boolean
   /**
    * Mẫu này cố ý chơi ngoài lưới móc kép.
    *
@@ -405,6 +453,8 @@ const chordTonePath: Lick = {
   label: 'Đi trên nốt hợp âm',
   source: 'pianoimprovnotes.md mục 3.1 — chord tone soloing',
   minBeats: 1,
+  roles: ['opener', 'ending'],
+  inRotation: true,
   build: ({ chord, startBeat, beats, from, low, high, material, notesPerBeat }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
@@ -443,6 +493,8 @@ const arpeggio: Lick = {
   label: 'Rải hợp âm đi lên',
   source: 'pianoimprovnotes.md mục 3.2 và 3.3 bước 6 — arpeggios',
   minBeats: 1.5,
+  roles: ['opener'],
+  inRotation: true,
   build: ({ chord, startBeat, beats, from, low, high, notesPerBeat }) => {
     const ladder = ladderOf(
       chordPitchClasses(chord.root, chord.quality),
@@ -481,6 +533,8 @@ const approachNotes: Lick = {
   label: 'Nốt dẫn nửa cung',
   source: 'pianoimprovnotes.md mục 3.2 — passing/approach note',
   minBeats: 2,
+  roles: ['middle'],
+  inRotation: true,
   build: ({ startBeat, beats, from, low, high, material }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
@@ -528,6 +582,8 @@ const neighborTurn: Lick = {
   label: 'Hình láy quay về',
   source: 'Hồng Kông 1, ô nhịp 49-50',
   minBeats: 2,
+  roles: ['middle'],
+  inRotation: true,
   build: ({ startBeat, beats, from, low, high, material }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length < 2) return { notes: [], shape: [] }
@@ -596,6 +652,8 @@ const pentatonicSweep: Lick = {
   label: 'Quét ngũ cung',
   source: 'Hồng Kông 1, ô nhịp 51-52 và 96-97',
   minBeats: 3,
+  roles: ['opener'],
+  inRotation: true,
   build: ({ chord, startBeat, beats, low, high, material }) => {
     /*
       Dùng chất liệu người dùng đã chọn, nhưng nếu bộ đó quá ít nốt thì lùi về
@@ -670,6 +728,8 @@ const motifEcho: Lick = {
   label: 'Nhắc lại mô-típ',
   source: 'Mơ, ô nhịp 25 và 41 — giai điệu được nhắc lại ở tầm cao hơn',
   minBeats: 1.5,
+  roles: ['middle'],
+  inRotation: true,
   build: ({ startBeat, beats, from, low, high, previousShape, material }) => {
     if (previousShape.length === 0) return { notes: [], shape: [] }
 
@@ -704,6 +764,8 @@ const guideTone: Lick = {
   label: 'Buông nốt dẫn hướng về hợp âm sau',
   source: 'Vòng ii-V-I — nốt dẫn hướng, xác nhận lại bằng 52 Piano Jazz Blues Licks.mxl',
   minBeats: 1.5,
+  roles: ['ending'],
+  inRotation: false,
   build: ({ chord, startBeat, beats, from, low, high, material, notesPerBeat }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
@@ -753,6 +815,8 @@ const enclosure: Lick = {
   label: 'Kẹp nửa cung hai phía',
   source: '52 Piano Jazz Blues Licks — 35% bước đi là nửa cung',
   minBeats: 2,
+  roles: ['middle'],
+  inRotation: false,
   build: ({ startBeat, beats, from, low, high, material }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
@@ -813,6 +877,8 @@ const tripletRun: Lick = {
   source:
     'pianoimprovnotes.md mục 4, và 17% nốt trong 52 Piano Jazz Blues Licks là chùm ba',
   minBeats: 2,
+  roles: ['opener', 'middle'],
+  inRotation: false,
   // Ba nốt đều nhau trong một phách thì không nốt nào rơi vào lưới móc kép.
   offGrid: true,
   build: ({ startBeat, beats, from, low, high, material }) => {
@@ -859,6 +925,8 @@ const breath: Lick = {
   label: 'Nghỉ lấy hơi',
   source: 'pianoimprovnotes.md mục 4 và 3.4 giai đoạn 4',
   minBeats: 1,
+  roles: ['rest'],
+  inRotation: true,
   build: () => ({ notes: [], shape: [] }),
 }
 
@@ -885,18 +953,40 @@ function bounded(lick: Lick): Lick {
   }
 }
 
+/**
+ * Toàn bộ vốn từ vựng, **theo đúng thứ tự xoay**.
+ *
+ * Thứ tự trong mảng này quyết định thứ tự các mẫu được chọn qua từng câu và
+ * từng lượt giang tấu. Đây là chỗ duy nhất cần sửa khi thêm mẫu mới: khai vai
+ * trò và cờ `inRotation` ngay trong mẫu, không phải nhớ thêm vào danh sách nào
+ * khác nữa.
+ */
 export const LICKS: readonly Lick[] = [
-  chordTonePath,
   arpeggio,
-  approachNotes,
-  neighborTurn,
+  chordTonePath,
   pentatonicSweep,
+  neighborTurn,
+  approachNotes,
   motifEcho,
   guideTone,
   enclosure,
   tripletRun,
   breath,
 ].map(bounded)
+
+/**
+ * Các mẫu đang dùng được ở một vị trí trong câu nhạc.
+ *
+ * Suy ra từ chính `LICKS`, nên không thể lệch với định nghĩa mẫu.
+ */
+export function licksFor(role: LickRole): Lick[] {
+  return LICKS.filter((lick) => lick.inRotation && lick.roles.includes(role))
+}
+
+/** Mẫu dùng làm chỗ lùi khi mẫu đã chọn không vừa chỗ. */
+export function fallbackLick(): Lick {
+  return licksFor('ending')[0] ?? LICKS[0]
+}
 
 /**
  * Hợp âm sau có nằm quãng bốn đi lên không — tức chỗ V về I.

@@ -28,7 +28,6 @@ import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import type { SoloNoteSource } from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
-  ROTATION_IDS,
   generateFillLine,
   generateSolo,
   soloToTimeline,
@@ -1444,9 +1443,7 @@ export function ReharmHome() {
                     Vốn mẫu câu đang dùng
                   </h4>
                   <ul className="flex flex-col gap-1">
-                    {LICKS.filter((lick) =>
-                      ROTATION_IDS.includes(lick.id),
-                    ).map((lick) => (
+                    {LICKS.filter((lick) => lick.inRotation).map((lick) => (
                       <li key={lick.id} className="text-xs leading-relaxed">
                         <span className="text-cream">{lick.label}</span>
                         <span className="text-dim"> — {lick.source}</span>

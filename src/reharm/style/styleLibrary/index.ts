@@ -12,6 +12,18 @@ import { VALSE } from './valse'
  * thông. Nhóm thứ hai để `cell` bằng null và `verified` bằng false, nên KeyTrain
  * **không bao giờ bịa ra mẫu tiết tấu** cho điệu chưa kiểm chứng — thà báo là
  * chưa có còn hơn dạy sai.
+ *
+ * ## Thêm một điệu, hoặc xác thực một điệu đang treo
+ *
+ * - **Điệu đang treo** (bolero, slow rock, cha cha, march): khi có bản ký âm,
+ *   điền `cell` và đổi `verified: true` ngay tại chỗ khai bên dưới. Không đụng
+ *   file nào khác — giao diện tự bỏ làm mờ.
+ * - **Điệu hoàn toàn mới**: thêm một file cạnh `ballad.ts`, rồi đăng ký vào
+ *   `VERIFIED_STYLES`. Hết.
+ *
+ * Lưu ý một chỗ chưa ai thử: `renderPattern` mới chạy qua nhịp 4/4 và 3/4.
+ * Nhịp 6/8 và 2/4 có thể cần chỉnh, nên khi xác thực điệu ở nhịp đó thì nghe
+ * kỹ trước khi tin.
  */
 
 /** Các điệu đã xác nhận trực tiếp từ video của kênh. */
