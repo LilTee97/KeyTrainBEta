@@ -509,6 +509,18 @@ export function ReharmHome() {
     [withPassing, chordBeats],
   )
 
+  /**
+   * Phách bắt đầu của hợp âm chính thứ `mainIndex`.
+   *
+   * Bản nhạc đánh số theo vòng **chính**, còn dòng thời gian chạy trên vòng đã
+   * chèn hợp âm lướt — nên phải đếm qua các hợp âm lướt để tìm đúng mốc.
+   */
+  const beatOfMainChord = useCallback(
+    (mainIndex: number) =>
+      mainChordSpans(withPassing, chordBeats)[mainIndex]?.start ?? 0,
+    [withPassing, chordBeats],
+  )
+
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
   const sheet = useMemo(
     () => (pastedSong ? buildSongSheet(pastedSong, reharm.colored) : null),
@@ -687,7 +699,28 @@ export function ReharmHome() {
             </p>
           )}
 
-          <SongSheetView sheet={sheet} activeIndex={activeChordIndex} />
+          <SongSheetView
+            sheet={sheet}
+            activeIndex={activeChordIndex}
+            onSeek={(chordIndex) => {
+              if (!audioReady) return
+
+              // Đang phát thì dừng hẳn rồi phát lại, cho khỏi chồng hai vòng.
+              stopTimelineLoop()
+              startTimelineLoop(
+                (pass) => eventsForHand(passAt(pass), hand),
+                bpm,
+                loopLengthBeats,
+                beatOfMainChord(chordIndex),
+              )
+            }}
+          />
+
+          <p className="mt-2 text-xs leading-relaxed text-dim">
+            Bấm vào một hợp âm để{' '}
+            <span className="text-cream">phát lại từ đúng chỗ đó</span>.
+            {!audioReady && ' Bật âm thanh trước đã.'}
+          </p>
         </div>
       )}
 

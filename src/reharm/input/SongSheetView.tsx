@@ -14,14 +14,18 @@ interface SongSheetViewProps {
   sheet: SongSheet
   /** Hợp âm đang vang, đếm từ 0. Rỗng nghĩa là đang không phát. */
   activeIndex: number | null
+  /** Bấm vào một hợp âm thì phát lại từ đúng chỗ đó. */
+  onSeek?: (chordIndex: number) => void
 }
 
 function AnchorRow({
   line,
   activeIndex,
+  onSeek,
 }: {
   line: SheetLine
   activeIndex: number | null
+  onSeek?: (chordIndex: number) => void
 }) {
   const placed = layoutAnchors(line.anchors)
 
@@ -33,7 +37,11 @@ function AnchorRow({
         return (
           <span key={index}>
             {' '.repeat(Math.max(0, gap))}
-            <ChordLabel anchor={anchor} active={anchor.chordIndex === activeIndex} />
+            <ChordLabel
+              anchor={anchor}
+              active={anchor.chordIndex === activeIndex}
+              onSeek={onSeek}
+            />
           </span>
         )
       })}
@@ -54,28 +62,43 @@ function previousEnd(
 function ChordLabel({
   anchor,
   active,
+  onSeek,
 }: {
   anchor: SheetAnchor
   active: boolean
+  onSeek?: (chordIndex: number) => void
 }) {
   if (anchor.broken) {
     return <span className="text-red-400">{anchor.symbol}</span>
   }
 
+  const style = active
+    ? 'rounded bg-amber-key px-0.5 font-semibold text-black'
+    : 'text-amber-key'
+
+  if (!onSeek || anchor.chordIndex === null) {
+    return <span className={style}>{anchor.symbol}</span>
+  }
+
+  const index = anchor.chordIndex
+
   return (
-    <span
-      className={
-        active
-          ? 'rounded bg-amber-key px-0.5 font-semibold text-black'
-          : 'text-amber-key'
-      }
+    <button
+      type="button"
+      onClick={() => onSeek(index)}
+      title="Phát lại từ hợp âm này"
+      className={`${style} cursor-pointer hover:underline`}
     >
       {anchor.symbol}
-    </span>
+    </button>
   )
 }
 
-export function SongSheetView({ sheet, activeIndex }: SongSheetViewProps) {
+export function SongSheetView({
+  sheet,
+  activeIndex,
+  onSeek,
+}: SongSheetViewProps) {
   if (sheet.sections.length === 0) return null
 
   return (
@@ -91,7 +114,11 @@ export function SongSheetView({ sheet, activeIndex }: SongSheetViewProps) {
           <div className="flex flex-col gap-2">
             {section.lines.map((line, position) => (
               <div key={position}>
-                <AnchorRow line={line} activeIndex={activeIndex} />
+                <AnchorRow
+                  line={line}
+                  activeIndex={activeIndex}
+                  onSeek={onSeek}
+                />
                 <div className="text-cream">{line.lyric || ' '}</div>
               </div>
             ))}

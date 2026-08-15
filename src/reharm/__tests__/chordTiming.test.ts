@@ -4,6 +4,7 @@ import {
   chordDurations,
   chordIndexAt,
   chordStarts,
+  mainChordSpans,
   splitBeats,
   totalBeatsOf,
 } from '../chordTiming'
@@ -124,6 +125,33 @@ describe('chèn hợp âm lướt không làm dài thêm vòng', () => {
 
   it('không chấp nhận gợi ý nào thì vòng y nguyên', () => {
     expect(applySuggestions(list, [], 4)).toEqual(list)
+  })
+})
+
+describe('tra mốc phách của hợp âm chính', () => {
+  /*
+    Dùng cho việc bấm vào một hợp âm trên bản nhạc rồi phát lại từ đúng chỗ đó.
+    Bản nhạc đánh số theo vòng **chính**, còn dòng thời gian chạy trên vòng đã
+    chèn hợp âm lướt, nên phải đếm qua các hợp âm lướt để tìm đúng mốc.
+  */
+  const plain = chords('C Am F G')
+  const iiV = suggestPassingChords(plain, {}).filter(
+    (suggestion) => suggestion.technique === 'secondary-ii-V',
+  )
+  const split = applySuggestions(plain, iiV, 4)
+
+  it('mốc của hợp âm chính không bị hợp âm lướt làm lệch', () => {
+    const starts = mainChordSpans(split, 4).map((span) => span.start)
+    expect(starts).toEqual([0, 4, 8, 12])
+  })
+
+  it('vòng chưa chèn gì thì mốc vẫn y như vậy', () => {
+    const starts = mainChordSpans(plain, 4).map((span) => span.start)
+    expect(starts).toEqual([0, 4, 8, 12])
+  })
+
+  it('số thứ tự vượt quá số hợp âm thì không có mốc', () => {
+    expect(mainChordSpans(split, 4)[99]).toBeUndefined()
   })
 })
 

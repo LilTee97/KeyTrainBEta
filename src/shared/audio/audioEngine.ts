@@ -264,6 +264,15 @@ export function startTimelineLoop(
   source: readonly ScheduledHit[] | ((pass: number) => readonly ScheduledHit[]),
   bpm: number,
   loopLengthBeats?: number,
+  /**
+   * Bắt đầu phát từ phách thứ mấy thay vì từ đầu vòng.
+   *
+   * Có để người dùng bấm vào một hợp âm trên bản nhạc rồi nghe từ đúng chỗ đó.
+   * Cách làm là **tua đồng hồ vận chuyển**, không phải cắt bớt sự kiện: `Part`
+   * đã nằm trên dòng thời gian của đồng hồ, nên tua đồng hồ là tua luôn phần
+   * đệm, và những gì đứng trước mốc vẫn còn nguyên cho vòng lặp sau.
+   */
+  startAtBeat = 0,
 ): void {
   if (!isAudioReady()) return
 
@@ -332,7 +341,12 @@ export function startTimelineLoop(
   positionTicker = ticker
 
   acquireTransport('timeline-loop')
-  usePlaybackStore.setState({ looping: true, positionBeats: 0 })
+
+  const transport = Tone.getTransport()
+  const from = Math.max(0, startAtBeat)
+  if (from > 0) transport.ticks = Math.round(from * transport.PPQ)
+
+  usePlaybackStore.setState({ looping: true, positionBeats: from })
 }
 
 /** Dừng vòng lặp phần đệm. */
