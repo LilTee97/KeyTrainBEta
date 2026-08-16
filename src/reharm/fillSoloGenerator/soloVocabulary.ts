@@ -764,8 +764,13 @@ const guideTone: Lick = {
   label: 'Buông nốt dẫn hướng về hợp âm sau',
   source: 'Vòng ii-V-I — nốt dẫn hướng, xác nhận lại bằng 52 Piano Jazz Blues Licks.mxl',
   minBeats: 1.5,
+  /*
+    Chỉ dùng ở **cuối câu**, nên nó không tranh chỗ với các mẫu chạy giữa câu.
+    Đó cũng là chỗ nó có nghĩa: nốt dẫn hướng chỉ đáng buông khi ngay sau nó có
+    một hợp âm để giải quyết vào.
+  */
   roles: ['ending'],
-  inRotation: false,
+  inRotation: true,
   build: ({ chord, startBeat, beats, from, low, high, material, notesPerBeat }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }

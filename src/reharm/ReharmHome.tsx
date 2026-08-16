@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   startTimelineLoop,
   stopTimelineLoop,
@@ -36,6 +36,7 @@ import {
 import type { ParsedSong } from './input/songTextParser'
 import { parseSongText } from './input/songTextParser'
 import type { SongSnapshot } from './persistence/songSnapshot'
+import { PROGRESSION_PRESETS } from './input/progressionPresets'
 import { SongLibrary } from './persistence/SongLibrary'
 import { SaveSongButton } from './persistence/SaveSongButton'
 import type {
@@ -355,6 +356,9 @@ export function ReharmHome() {
 
   /** Lời gốc đúng như người dùng dán vào, để lưu lại và phân tích lại. */
   const [sourceText, setSourceText] = useState('')
+  /** Khung bản nhạc, để cuộn tới sau khi nạp một bài mới. */
+  const sheetRef = useRef<HTMLDivElement>(null)
+
   /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
   const [songId, setSongId] = useState<string | null>(null)
   const [songTitle, setSongTitle] = useState<string | null>(null)
@@ -1002,6 +1006,41 @@ export function ReharmHome() {
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
+  /**
+   * Nạp một bài mới vào trang — dán lời hay chọn vòng dựng sẵn đều qua đây.
+   *
+   * Bài mới thì **bỏ mọi lựa chọn đã dựng**, và thôi gắn với bài đang mở trong
+   * kho: không thì bấm Lưu sẽ ghi đè bài cũ bằng một bài khác hẳn.
+   */
+  const loadSong = useCallback((parsed: ParsedSong, text: string) => {
+    /*
+      Cuộn tới bản nhạc sau khi nạp.
+
+      Nút chọn vòng dựng sẵn và ô dán lời nằm ở đầu trang, còn bản nhạc nằm
+      dưới ô dán lời và khung Bài đã lưu — tức ngoài tầm nhìn. Bấm xong mà màn
+      hình không đổi gì thì tưởng nút hỏng, dù nó đã chạy đúng.
+    */
+    window.requestAnimationFrame(() => {
+      sheetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+
+    setPastedSong(parsed)
+    setSourceText(text)
+    setSongId(null)
+    setSongTitle(null)
+
+    setSectionMarks([])
+    setArrangement(null)
+    setTranspose(0)
+    setPairedChords(new Set())
+    setMutedFills(new Set())
+    setTransitionEdits({})
+    setAcceptedPassing([])
+
+    setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
+    setSelectedIndex(null)
+  }, [])
+
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(
     () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
@@ -1155,28 +1194,28 @@ export function ReharmHome() {
         </p>
       </div>
 
-      <SongTextInput
-        onUseSong={(parsed, text) => {
-          setPastedSong(parsed)
-          setSourceText(text)
-          /*
-            Dán lời mới thì coi như bài mới: bỏ mọi lựa chọn đã dựng, và thôi
-            gắn với bài đang mở trong kho. Không thì bấm Lưu sẽ ghi đè bài cũ
-            bằng một bài khác hẳn.
-          */
-          setSongId(null)
-          setSongTitle(null)
-          setSectionMarks([])
-          setArrangement(null)
-          setTranspose(0)
-          setPairedChords(new Set())
-          setMutedFills(new Set())
-          setTransitionEdits({})
-          setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
-          setSelectedIndex(null)
-          setAcceptedPassing([])
-        }}
-      />
+      {/*
+        Vòng dựng sẵn đi chung một đường với việc dán lời: bộ đọc nhận cả dòng
+        chỉ toàn hợp âm, nên không cần luồng riêng.
+      */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+          Vòng dựng sẵn
+        </span>
+        {PROGRESSION_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            onClick={() => loadSong(parseSongText(preset.chords), preset.chords)}
+            title={preset.note}
+            className="rounded-lg border border-line bg-white/4 px-2.5 py-1 font-mono text-xs text-dim hover:bg-white/8 hover:text-cream"
+          >
+            {preset.name}
+          </button>
+        ))}
+      </div>
+
+      <SongTextInput onUseSong={loadSong} />
 
       <SongLibrary
         currentId={songId}
@@ -1189,7 +1228,7 @@ export function ReharmHome() {
       />
 
       {sheet && (
-        <div>
+        <div ref={sheetRef} className="scroll-mt-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
               Bản nhạc đã tái hoà âm
