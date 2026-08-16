@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LOOP_PASSES,
   startTimelineLoop,
@@ -7,6 +7,7 @@ import {
   usePlaybackStore,
 } from '../shared/audio/audioEngine'
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
+import { usePracticeStore } from './playback/practiceStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { chordNotes } from '../shared/musicTheory/chordDefinitions'
 import type { MidiNote } from '../shared/musicTheory/types'
@@ -57,7 +58,6 @@ import {
   generateSolo,
   soloToTimeline,
 } from './fillSoloGenerator/soloGenerator'
-import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import {
   TECHNIQUE_LABELS,
   groupPassingSuggestions,
@@ -292,6 +292,7 @@ function KeySelect({
 
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
+  const setPracticeSong = usePracticeStore((state) => state.setSong)
   const looping = usePlaybackStore((state) => state.looping)
   const positionBeats = usePlaybackStore((state) => state.positionBeats)
 
@@ -1294,6 +1295,24 @@ export function ReharmHome() {
   const timeline = song.events
   const loopLengthBeats = song.totalBeats
 
+  /*
+    Đăng bài đang mở lên kho dùng chung, để tab Luyện đệm lấy về.
+
+    Khung luyện tập đã tách sang tab riêng vì nó là **việc khác hẳn**: bên này
+    dựng bài, bên kia tập đàn. Gộp chung một trang thì lúc tập phải cuộn qua cả
+    chục khung chỉnh sửa mới tới, mà lúc dựng lại vướng một khung to chẳng dùng
+    tới.
+  */
+  useEffect(() => {
+    setPracticeSong({
+      title: songTitle ?? 'Bài chưa đặt tên',
+      timeline,
+      voicings: twoHands,
+      beatsPerChord: chordBeats,
+    })
+  }, [setPracticeSong, songTitle, timeline, twoHands, chordBeats])
+
+
   /**
    * Dòng thời gian của lần phát thứ `pass`, dùng cho nút phát lặp.
    *
@@ -2283,12 +2302,6 @@ export function ReharmHome() {
           </label>
         </div>
       </div>
-
-      <NoteGatedPractice
-        timeline={timeline}
-        voicings={twoHands}
-        beatsPerChord={chordBeats}
-      />
 
       {/*
         Khung "Chia hai tay" liệt kê nốt của từng tay cho từng hợp âm đã bỏ.

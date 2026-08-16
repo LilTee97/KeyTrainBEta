@@ -51,8 +51,19 @@ export function buildGatedSteps(
 ): GatedStep[] {
   const { hand = 'both', beatsPerChord } = options
 
+  /*
+    Bỏ nốt láy khỏi các chặng chờ.
+
+    Nốt láy vang trước nốt chính đúng một nốt kép. Tính nó thành chặng riêng
+    thì người tập phải bấm nó, chờ máy cho qua, rồi mới bấm nốt chính — mà nốt
+    láy vốn là **một cú vuốt liền tay**, không phải hai lần bấm. Gộp chung vào
+    một chặng cũng sai, vì thành ra phải giữ cả hai nốt cùng lúc.
+
+    App vẫn phát nốt láy cho nghe; nó chỉ không nằm trong phần bị chấm.
+  */
   const wanted = events.filter(
-    (event) => hand === 'both' || event.hand === hand,
+    (event) =>
+      !event.grace && (hand === 'both' || event.hand === hand),
   )
 
   const groups = new Map<number, TimelineEvent[]>()

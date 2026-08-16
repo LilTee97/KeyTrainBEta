@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { StoredSong } from '../../shared/persistence/db'
-import { deleteSong, listSongs } from '../../shared/persistence/db'
+import { deleteSong, listSongs, putSong } from '../../shared/persistence/db'
 import type { SongSnapshot } from './songSnapshot'
 import { readSnapshot } from './songSnapshot'
+import { fileNameFor, readFileText, toFileText } from './songFile'
 
 /**
  * Danh sách bài đã lưu: **mở lại và xoá**.
@@ -33,6 +34,7 @@ export function SongLibrary({
   reloadKey,
 }: SongLibraryProps) {
   const [songs, setSongs] = useState<StoredSong[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     setSongs(await listSongs())
@@ -54,11 +56,80 @@ export function SongLibrary({
     await refresh()
   }
 
+  /*
+    Tải bài xuống máy dưới dạng một file văn bản.
+
+    Dựng đường dẫn tạm rồi bấm hộ một thẻ liên kết — đó là cách duy nhất để một
+    trang web đưa file cho người dùng mà không cần máy chủ. Thu hồi đường dẫn
+    ngay sau đó, không thì nội dung file còn nằm trong bộ nhớ tới lúc đóng tab.
+  */
+  const download = (song: StoredSong) => {
+    const text = toFileText(song)
+    if (!text) return
+
+    const url = URL.createObjectURL(
+      new Blob([text], { type: 'application/json' }),
+    )
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileNameFor(song.title)
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  /** Đọc file người dùng chọn và thêm vào kho. */
+  const upload = async (file: File) => {
+    const parsed = readFileText(await file.text())
+    if (!parsed) {
+      setError('Không đọc được — file này không phải bài hát KeyTrain.')
+      return
+    }
+
+    setError(null)
+    await putSong({
+      // Khoá mới, nên nhập cùng một file hai lần ra hai bài chứ không đè nhau.
+      id: crypto.randomUUID(),
+      title: parsed.title,
+      sourceText: parsed.snapshot.sourceText,
+      updatedAt: Date.now(),
+      snapshot: parsed.snapshot,
+    })
+    await refresh()
+  }
+
   return (
     <div className="rounded-xl border border-line bg-black/25 p-4">
-      <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-        Bài đã lưu
-      </h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+          Bài đã lưu
+        </h3>
+
+        {/*
+          Ô chọn file nấp dưới cái nhãn: trình duyệt vẽ `input type=file` mỗi
+          nơi một kiểu và không tô màu theo được, nên bọc nó vào một nhãn trông
+          như nút.
+        */}
+        <label className="cursor-pointer rounded-lg border border-line bg-white/4 px-2.5 py-1 text-xs text-dim hover:bg-white/8 hover:text-cream">
+          Nhập từ file
+          <input
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              if (file) void upload(file)
+              // Xoá giá trị để chọn lại đúng file đó vẫn kích hoạt được.
+              event.target.value = ''
+            }}
+          />
+        </label>
+      </div>
+
+      {error && (
+        <p className="mb-2 rounded-lg border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+          {error}
+        </p>
+      )}
 
       {songs.length === 0 ? (
         <p className="text-xs text-dim">
@@ -94,6 +165,17 @@ export function SongLibrary({
               <span className="shrink-0 font-mono text-[10px] text-dim">
                 {new Date(song.updatedAt).toLocaleDateString('vi-VN')}
               </span>
+
+              <button
+                type="button"
+                onClick={() => download(song)}
+                disabled={readSnapshot(song.snapshot) === null}
+                aria-label={`Xuất bài ${song.title} ra file`}
+                title="Tải xuống một file mở được trên máy khác"
+                className="shrink-0 rounded px-1.5 text-xs text-dim hover:bg-white/8 hover:text-cream disabled:opacity-30"
+              >
+                ↓
+              </button>
 
               <button
                 type="button"

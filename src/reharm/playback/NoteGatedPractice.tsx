@@ -5,6 +5,7 @@ import {
   useAudioStore,
 } from '../../shared/audio/audioEngine'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
+import { MidiConnect } from '../../shared/midi/MidiConnect'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
@@ -127,6 +128,15 @@ export function NoteGatedPractice({
         <span className="font-mono text-xs text-dim">
           {progress.done}/{progress.total} chặng
         </span>
+      </div>
+
+      {/*
+        Nút cắm đàn đặt ngay đây, cạnh chỗ dùng tới nó. Bàn phím ảo và phím máy
+        tính vẫn chơi được mà không cần kết nối gì — đàn MIDI chỉ là một nguồn
+        nốt nữa đổ vào cùng chỗ.
+      */}
+      <div className="mb-3">
+        <MidiConnect />
       </div>
 
       {/* Chọn tay và mức chặt */}

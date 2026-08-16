@@ -998,6 +998,7 @@ export function soloToTimeline(
     hand: note.hand ?? ('right' as const),
     // Nốt láy đánh nhẹ hơn hẳn, nó chỉ là cái vuốt vào nốt chính.
     velocity: Math.round(note.isGrace ? velocity * 0.6 : velocity),
+    grace: note.isGrace,
   }))
 }
 

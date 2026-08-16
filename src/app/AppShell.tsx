@@ -5,6 +5,7 @@ import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
 import { ProgressionTrainer } from '../earTraining/progressionTrainer/ProgressionTrainer'
 import { ReviewSessionPage } from '../earTraining/srs/ReviewSessionPage'
 import { StatsPage } from '../earTraining/stats/StatsPage'
+import { PracticeHome } from '../reharm/PracticeHome'
 import { ReharmHome } from '../reharm/ReharmHome'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
@@ -14,6 +15,7 @@ const TABS = [
   { id: 'review', label: 'Ôn tập' },
   { id: 'metronome', label: 'Nhịp' },
   { id: 'reharm', label: 'Tái hòa âm' },
+  { id: 'practice', label: 'Luyện đệm' },
   { id: 'stats', label: 'Thống kê' },
   { id: 'debug', label: 'Gỡ lỗi' },
 ] as const
@@ -56,7 +58,19 @@ export function AppShell() {
       {tab === 'progression' && <ProgressionTrainer />}
       {tab === 'review' && <ReviewSessionPage />}
       {tab === 'metronome' && <MetronomePanel />}
-      {tab === 'reharm' && <ReharmHome />}
+      {/*
+        Tab Tái hoà âm **giữ nguyên trong cây** khi sang tab khác, chỉ ẩn đi.
+
+        Mọi tab còn lại tháo ra khi rời đi, và đó là đúng — chúng không giữ gì
+        đáng tiếc. Nhưng tab này giữ cả bài đang dựng: lời đã dán, cách chia
+        đoạn, thứ tự chơi, mốc chuyển đoạn. Tháo ra là mất sạch, mà người dùng
+        phải qua lại giữa nó và tab Luyện đệm suốt.
+      */}
+      <div hidden={tab !== 'reharm'}>
+        <ReharmHome />
+      </div>
+
+      {tab === 'practice' && <PracticeHome />}
       {tab === 'stats' && <StatsPage />}
       {tab === 'debug' && <MidiDebugPanel />}
     </div>

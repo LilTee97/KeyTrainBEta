@@ -5,6 +5,7 @@ import { BALLAD, VALSE } from '../../style/styleLibrary'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import type { TwoHandVoicing } from '../../voicingGenerator/handSplitVoicing'
 import type { GatedStep } from '../noteGatedPlaybackEngine'
+import type { TimelineEvent } from '../../style/types'
 import {
   advance,
   buildGatedSteps,
@@ -315,5 +316,40 @@ describe('bấm đúng thế bấm mà app sinh ra thì luôn qua được', () 
         expect(isStepMatched(step.notes, step)).toBe(true)
       }
     }
+  })
+})
+
+describe('chặng chờ nốt bỏ qua nốt láy', () => {
+  /*
+    Nốt láy vang trước nốt chính đúng một nốt kép. Tính nó thành chặng riêng
+    thì người tập phải bấm nó, chờ máy cho qua, rồi mới bấm nốt chính — mà nốt
+    láy vốn là một cú vuốt liền tay, không phải hai lần bấm.
+  */
+  const withGrace: TimelineEvent[] = [
+    { notes: [71], startBeat: 0.875, durationBeats: 0.125, hand: 'right', velocity: 60, grace: true },
+    { notes: [72], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 90 },
+  ]
+
+  it('nốt láy không thành chặng riêng', () => {
+    const steps = buildGatedSteps(withGrace, [], { beatsPerChord: 4 })
+
+    expect(steps).toHaveLength(1)
+    expect(steps[0].startBeat).toBe(1)
+  })
+
+  it('nốt láy cũng không bị gộp vào chặng của nốt chính', () => {
+    // Gộp chung thì thành ra phải giữ cả hai nốt cùng lúc
+    const steps = buildGatedSteps(withGrace, [], { beatsPerChord: 4 })
+
+    expect(steps[0].notes).toEqual([72])
+  })
+
+  it('nốt thường vẫn giữ nguyên chặng của mình', () => {
+    const plain: TimelineEvent[] = [
+      { notes: [60], startBeat: 0, durationBeats: 1, hand: 'left', velocity: 80 },
+      { notes: [64], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 80 },
+    ]
+
+    expect(buildGatedSteps(plain, [], { beatsPerChord: 4 })).toHaveLength(2)
   })
 })

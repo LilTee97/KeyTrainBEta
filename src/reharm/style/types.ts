@@ -84,4 +84,13 @@ export interface TimelineEvent {
   hand: 'left' | 'right'
   /** Lực nhấn theo thang MIDI 0-127. */
   velocity: number
+  /**
+   * Nốt láy — cái vuốt vào nốt chính, không phải một nốt của câu nhạc.
+   *
+   * Cần đánh dấu vì chế độ chờ đánh đúng nốt phải bỏ qua chúng: nốt láy vang
+   * trước nốt chính đúng một nốt kép, nên nếu tính thành chặng riêng thì người
+   * tập phải bấm nó, chờ, rồi mới bấm nốt chính — mà nốt láy vốn là một cú
+   * vuốt liền tay, không phải hai lần bấm.
+   */
+  grace?: boolean
 }
