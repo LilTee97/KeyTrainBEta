@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { StoredSong } from '../../../shared/persistence/db'
-import { fileNameFor, readFileText, toFileText } from '../songFile'
+import type { SongSnapshot } from '../songSnapshot'
+import { fileNameFor, packSong, readFileText, toFileText } from '../songFile'
 
 /**
  * Chuyển bài giữa hai máy cùng chạy KeyTrain.
@@ -9,12 +10,16 @@ import { fileNameFor, readFileText, toFileText } from '../songFile'
  * trên một máy — chép sang điện thoại thì không mang theo được.
  */
 
+/*
+  Chỉ điền những trường bài test cần tới; phần còn lại của ảnh chụp không ảnh
+  hưởng gì tới việc đóng gói và đọc lại file.
+*/
 const snapshot = {
   version: 1 as const,
   sourceText: '[Phiên khúc]\nC G\nHôm qua anh thấy',
   transpose: 2,
   sectionMarks: [],
-}
+} as unknown as SongSnapshot
 
 const song: StoredSong = {
   id: 'a',
@@ -96,5 +101,23 @@ describe('tên file gợi ý', () => {
 
   it('tên rỗng thì vẫn ra một cái tên dùng được', () => {
     expect(fileNameFor('   ')).toBe('bai-hat.keytrain.json')
+  })
+})
+
+describe('xuất bài đang dựng dở', () => {
+  /*
+    Nhận thẳng ảnh chụp chứ không đòi bài phải nằm sẵn trong kho: muốn cất bài
+    ra máy thì không có lý do gì bắt phải lưu vào trình duyệt trước.
+  */
+  it('đóng gói được mà không cần qua kho', () => {
+    const parsed = readFileText(packSong('Bài mới', snapshot))
+
+    expect(parsed?.title).toBe('Bài mới')
+    expect(parsed?.snapshot).toEqual(snapshot)
+  })
+
+  it('ra cùng nội dung với bài đã nằm trong kho', () => {
+    // Hai đường xuất phải cho cùng một file, không thì file lệ thuộc lối đi
+    expect(packSong(song.title, snapshot)).toBe(toFileText(song))
   })
 })

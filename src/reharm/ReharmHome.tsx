@@ -41,6 +41,7 @@ import type { SongSnapshot } from './persistence/songSnapshot'
 import { PROGRESSION_PRESETS } from './input/progressionPresets'
 import { SongLibrary } from './persistence/SongLibrary'
 import { SaveSongButton } from './persistence/SaveSongButton'
+import { SongFileButtons } from './persistence/SongFileButtons'
 import type {
   ApproachDirection,
   OrnamentDensity,
@@ -1443,6 +1444,20 @@ export function ReharmHome() {
                 setSongId(id)
                 setSongTitle(title)
                 setSaveCount((count) => count + 1)
+              }}
+            />
+
+            <SongFileButtons
+              snapshot={snapshot}
+              title={songTitle}
+              onOpen={(saved, title) => {
+                applySnapshot(saved)
+                setSongTitle(title)
+                /*
+                  Mở từ file thì **chưa gắn với bài nào trong kho**, nên bấm
+                  Lưu sau đó tạo bản mới chứ không đè lên một bài sẵn có.
+                */
+                setSongId(null)
               }}
             />
 

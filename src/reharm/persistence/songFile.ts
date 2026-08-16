@@ -31,20 +31,44 @@ export interface SongFile {
   snapshot: SongSnapshot
 }
 
-/** Đóng gói một bài đã lưu thành nội dung file. */
+/**
+ * Đóng gói một ảnh chụp thành nội dung file.
+ *
+ * Nhận thẳng ảnh chụp chứ không đòi bài phải nằm sẵn trong kho, để xuất được
+ * **bài đang dựng dở** — người dùng muốn cất ra máy thì không nên bắt họ lưu
+ * vào trình duyệt trước.
+ */
+export function packSong(title: string, snapshot: SongSnapshot): string {
+  const file: SongFile = { format: FORMAT, version: 1, title, snapshot }
+
+  // Xuống dòng và thụt lề để mở bằng trình soạn thảo cũng đọc được.
+  return JSON.stringify(file, null, 2)
+}
+
+/** Đóng gói một bài đã lưu trong kho. */
 export function toFileText(song: StoredSong): string | null {
   const snapshot = readSnapshot(song.snapshot)
   if (!snapshot) return null
 
-  const file: SongFile = {
-    format: FORMAT,
-    version: 1,
-    title: song.title,
-    snapshot,
-  }
+  return packSong(song.title, snapshot)
+}
 
-  // Xuống dòng và thụt lề để mở bằng trình soạn thảo cũng đọc được.
-  return JSON.stringify(file, null, 2)
+/**
+ * Đưa nội dung file cho người dùng tải xuống.
+ *
+ * Dựng đường dẫn tạm rồi bấm hộ một thẻ liên kết — đó là cách duy nhất để một
+ * trang web đưa file cho người dùng mà không cần máy chủ. Thu hồi đường dẫn
+ * ngay sau đó, không thì nội dung còn nằm trong bộ nhớ tới lúc đóng tab.
+ */
+export function downloadSong(title: string, text: string): void {
+  const url = URL.createObjectURL(
+    new Blob([text], { type: 'application/json' }),
+  )
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileNameFor(title)
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 /**

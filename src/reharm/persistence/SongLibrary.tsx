@@ -3,7 +3,7 @@ import type { StoredSong } from '../../shared/persistence/db'
 import { deleteSong, listSongs, putSong } from '../../shared/persistence/db'
 import type { SongSnapshot } from './songSnapshot'
 import { readSnapshot } from './songSnapshot'
-import { fileNameFor, readFileText, toFileText } from './songFile'
+import { downloadSong, readFileText, toFileText } from './songFile'
 
 /**
  * Danh sách bài đã lưu: **mở lại và xoá**.
@@ -56,25 +56,9 @@ export function SongLibrary({
     await refresh()
   }
 
-  /*
-    Tải bài xuống máy dưới dạng một file văn bản.
-
-    Dựng đường dẫn tạm rồi bấm hộ một thẻ liên kết — đó là cách duy nhất để một
-    trang web đưa file cho người dùng mà không cần máy chủ. Thu hồi đường dẫn
-    ngay sau đó, không thì nội dung file còn nằm trong bộ nhớ tới lúc đóng tab.
-  */
   const download = (song: StoredSong) => {
     const text = toFileText(song)
-    if (!text) return
-
-    const url = URL.createObjectURL(
-      new Blob([text], { type: 'application/json' }),
-    )
-    const link = document.createElement('a')
-    link.href = url
-    link.download = fileNameFor(song.title)
-    link.click()
-    URL.revokeObjectURL(url)
+    if (text) downloadSong(song.title, text)
   }
 
   /** Đọc file người dùng chọn và thêm vào kho. */
