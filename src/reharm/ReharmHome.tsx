@@ -1749,6 +1749,24 @@ export function ReharmHome() {
               {looping ? '■ Dừng' : playsOnce ? '▶ Phát trọn bài' : '▶ Phát cả bài'}
             </button>
 
+            {/*
+              Nhịp độ đặt ngay cạnh nút phát: chậm bài lại là việc làm nhiều
+              nhất khi tập, và đổi được ngay cả lúc đang phát vì phần đệm ghi
+              theo số phách chứ không theo giây.
+            */}
+            <label className="flex items-center gap-2 text-xs text-dim">
+              <input
+                type="range"
+                min={40}
+                max={160}
+                value={bpm}
+                onChange={(event) => setBpm(Number(event.target.value))}
+                title="Nhịp độ"
+                className="w-32 accent-amber-key"
+              />
+              <span className="w-16 font-mono text-cream">{bpm} BPM</span>
+            </label>
+
             <span className="font-mono text-[11px] text-dim">
               {loopLengthBeats} phách · giang tấu {soloTake(0).length} nốt ·{' '}
               {fills(0).length} nốt fill
@@ -2181,18 +2199,11 @@ export function ReharmHome() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-5">
-          <label className="flex items-center gap-3 text-xs text-dim">
-            Nhịp độ
-            <input
-              type="range"
-              min={40}
-              max={160}
-              value={bpm}
-              onChange={(event) => setBpm(Number(event.target.value))}
-              className="accent-amber-key"
-            />
-            <span className="w-16 font-mono text-cream">{bpm} BPM</span>
-          </label>
+          {/*
+            Ô nhịp độ đã chuyển lên cạnh nút Phát cả bài. Đang tập mà thấy
+            nhanh quá thì phải với tới được ngay, không phải cuộn xuống đáy
+            trang đi tìm.
+          */}
 
           <label className="flex items-center gap-2 text-xs text-dim">
             Mỗi hợp âm
