@@ -2,6 +2,7 @@ import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { SectionMark, SheetAnchor, SheetLine, SongSheet } from './songSheet'
 import { isPaired } from '../chordTiming'
+import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
 import {
   SECTION_KIND_COLORS,
   SECTION_KIND_LABELS,
@@ -463,6 +464,8 @@ function ChordContextMenu({
     Đang chia đôi thì việc cần làm là **trả về đủ nhịp**, và cần cả hai mức:
     chỉ chỗ vừa bấm, hoặc cả loạt. Chưa chia thì chỉ có một việc là chia.
   */
+  const { ref, style } = useFlipIntoView<HTMLDivElement>(menu.x, menu.y)
+
   const options: {
     key: string
     span: 'full' | 'half'
@@ -523,7 +526,8 @@ function ChordContextMenu({
 
   return (
     <div
-      style={{ left: menu.x, top: menu.y }}
+      ref={ref}
+      style={style}
       onPointerDown={(event) => event.stopPropagation()}
       className="fixed z-50 min-w-44 rounded-lg border border-line bg-ink p-1 shadow-xl"
     >

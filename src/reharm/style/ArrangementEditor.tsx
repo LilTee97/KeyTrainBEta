@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ArrangementStep, SourceSection } from './arrangement'
 import { DEFAULT_REST_AFTER, stepLabel } from './arrangement'
 import type { EndingMode } from './endingChord'
+import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
 
 /**
  * Danh sách thứ tự chơi: đoạn nào trước, đoạn nào lặp lại, kết ở đâu.
@@ -248,48 +249,14 @@ export function ArrangementEditor({
       )}
 
       {menu && (
-        <div
-          style={{ left: menu.x, top: menu.y }}
-          onPointerDown={(event) => event.stopPropagation()}
-          className="fixed z-50 min-w-52 rounded-lg border border-line bg-ink p-1 shadow-xl"
-        >
-          <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-            Đoạn kết bài
-          </p>
-
-          {/*
-            Ba lựa chọn thay vì một nút bật tắt: kết có màu và kết trơn là hai
-            cách kết khác nhau, không phải hai mức của cùng một thứ.
-          */}
-          {(
-            [
-              ['colored', 'Kết có màu', 'Hợp âm cuối đổi sang 6/9 hoặc m6'],
-              ['plain', 'Kết trơn', 'Gỡ hết màu, còn hợp âm ba'],
-              [undefined, 'Không phải đoạn kết', 'Chơi như mọi đoạn khác'],
-            ] as const
-          ).map(([mode, label, hint]) => {
-            const current = steps[menu.index]
-            const active =
-              current.type === 'section' && current.ending === mode
-
-            return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => {
-                  setEnding(menu.index, mode)
-                  setMenu(null)
-                }}
-                className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
-              >
-                <span className={active ? 'text-amber-key' : 'text-cream'}>
-                  {active ? `✓ ${label}` : label}
-                </span>
-                <span className="text-[10px] text-dim">{hint}</span>
-              </button>
-            )
-          })}
-        </div>
+        <EndingMenu
+          menu={menu}
+          steps={steps}
+          onPick={(mode) => {
+            setEnding(menu.index, mode)
+            setMenu(null)
+          }}
+        />
       )}
 
       <div className="flex flex-wrap items-center gap-2">
@@ -328,6 +295,66 @@ export function ArrangementEditor({
           + Giang tấu
         </button>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Menu chuột phải của một bước trong danh sách.
+ *
+ * Tách thành component riêng vì nó cần `useFlipIntoView` — hook không gọi được
+ * bên trong nhánh điều kiện của component cha.
+ */
+function EndingMenu({
+  menu,
+  steps,
+  onPick,
+}: {
+  menu: { index: number; x: number; y: number }
+  steps: readonly ArrangementStep[]
+  onPick: (mode: EndingMode | undefined) => void
+}) {
+  const { ref, style } = useFlipIntoView<HTMLDivElement>(menu.x, menu.y)
+  const current = steps[menu.index]
+
+  return (
+    <div
+      ref={ref}
+      style={style}
+      onPointerDown={(event) => event.stopPropagation()}
+      className="fixed z-50 min-w-52 rounded-lg border border-line bg-ink p-1 shadow-xl"
+    >
+      <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+        Đoạn kết bài
+      </p>
+
+      {/*
+        Ba lựa chọn thay vì một nút bật tắt: kết có màu và kết trơn là hai cách
+        kết khác nhau, không phải hai mức của cùng một thứ.
+      */}
+      {(
+        [
+          ['colored', 'Kết có màu', 'Hợp âm cuối đổi sang 6/9 hoặc m6'],
+          ['plain', 'Kết trơn', 'Gỡ hết màu, còn hợp âm ba'],
+          [undefined, 'Không phải đoạn kết', 'Chơi như mọi đoạn khác'],
+        ] as const
+      ).map(([mode, label, hint]) => {
+        const active = current.type === 'section' && current.ending === mode
+
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => onPick(mode)}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+          >
+            <span className={active ? 'text-amber-key' : 'text-cream'}>
+              {active ? `✓ ${label}` : label}
+            </span>
+            <span className="text-[10px] text-dim">{hint}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
