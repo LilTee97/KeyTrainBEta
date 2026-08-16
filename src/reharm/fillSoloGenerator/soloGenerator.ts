@@ -901,6 +901,7 @@ function chooseLick(choice: LickChoice): Lick {
   */
   const openers = licksFor('opener')
   const middles = licksFor('middle')
+  const endings = licksFor('ending')
 
   const {
     phrase,
@@ -917,22 +918,36 @@ function chooseLick(choice: LickChoice): Lick {
     lick && lick.minBeats <= playBeats ? lick : fallbackLick()
 
   /*
-    Kết câu luôn dùng mẫu đi trên nốt hợp âm, vì chỉ mẫu đó kết ở nốt ổn định —
-    mục 4: *"tránh dừng ở nốt lơ lửng khiến câu nhạc nghe dở dang"*.
+    Số lượt cộng vào chỗ xoay, nên lượt sau đổi hẳn trình tự mẫu câu.
+
+    Mở câu và kết câu quay như **hai bánh xe của đồng hồ đo**: bánh kết chỉ
+    nhích một nấc khi bánh mở đã quay hết một vòng. Nhờ vậy mọi tổ hợp đều xuất
+    hiện trước khi lặp lại, tức số câu khác nhau bằng tích hai danh sách chứ
+    không bằng cái dài hơn.
+
+    Bản trước cộng thẳng cùng một số vào cả hai chỗ, nên hai bánh quay cùng tốc
+    độ và chu kỳ co lại còn đúng bốn — nghe vài lượt là bắt đầu lặp.
   */
+  const rotation = phrase + take
+  const laps = Math.floor(rotation / Math.max(1, openers.length))
+
   /*
     Kết câu ở nốt ổn định — mục 4: *"tránh dừng ở nốt lơ lửng khiến câu nhạc
-    nghe dở dang"*.
+    nghe dở dang"*. Cả hai mẫu kết đều làm được điều đó, nên chúng thay phiên.
+
+    Bản trước gọi thẳng mẫu lùi ở đây, tức bỏ qua hẳn danh sách mẫu kết — mẫu
+    `guide-tone` đã bật vào vòng xoay mà không bao giờ được chọn.
   */
-  if (isPhraseEnd) return fit(fallbackLick())
+  if (isPhraseEnd) {
+    return fit(
+      endings.length > 0 ? endings[laps % endings.length] : fallbackLick(),
+    )
+  }
 
   // Mật độ thưa thì thỉnh thoảng nghỉ hẳn một hợp âm cho câu nhạc thoáng.
   if (density === 'sparse' && positionInPhrase === 1) {
     return fit(licksFor('rest')[0])
   }
-
-  // Số lượt cộng vào chỗ xoay, nên lượt sau đổi hẳn trình tự mẫu câu.
-  const rotation = phrase + take
 
   if (positionInPhrase === 0 || middles.length === 0) {
     return fit(openers[rotation % openers.length])

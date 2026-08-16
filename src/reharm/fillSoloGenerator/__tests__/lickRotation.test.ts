@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { parseChordInput } from '../../input/chordInputParser'
+import { generateSolo } from '../soloGenerator'
 import {
   LICKS,
   fallbackLick,
@@ -107,5 +109,44 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
       'guide-tone',
     ])
     expect(licksFor('rest').map((lick) => lick.id)).toEqual(['breath'])
+  })
+})
+
+describe('số câu giang tấu khác nhau', () => {
+  /*
+    Người dùng yêu cầu "mỗi lần giang tấu là một cái gì mới khác nhau". Chỗ
+    quyết định điều đó là cách xoay mẫu câu theo lượt.
+  */
+  const CHORDS = 'Cadd9 Am9 Fadd9 G7'
+
+  const shapeOfTake = (take: number) =>
+    generateSolo(parseChordInput(CHORDS).chords, {
+      beatsPerChord: 4,
+      density: 'medium',
+      graceDensity: 'none',
+      key: { tonic: 0, scale: 'major' },
+      take,
+    })
+      .map((note) => note.note)
+      .join(' ')
+
+  it('mở câu và kết câu quay như hai bánh xe, không cùng tốc độ', () => {
+    /*
+      Cộng thẳng cùng một số vào cả hai chỗ thì hai bánh quay cùng nhịp và chu
+      kỳ co lại còn bằng danh sách dài hơn. Quay lệch nhau thì số câu khác nhau
+      bằng **tích** hai danh sách.
+    */
+    const shapes = new Set(
+      Array.from({ length: 12 }, (_, take) => shapeOfTake(take)),
+    )
+
+    const expected = licksFor('opener').length * licksFor('ending').length
+    expect(shapes.size).toBe(Math.min(12, expected))
+  })
+
+  it('hai lượt liên tiếp không bao giờ giống nhau', () => {
+    for (let take = 0; take < 8; take += 1) {
+      expect(shapeOfTake(take)).not.toBe(shapeOfTake(take + 1))
+    }
   })
 })

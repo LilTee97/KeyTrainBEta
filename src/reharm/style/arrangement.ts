@@ -17,13 +17,15 @@ import type { TimelineEvent } from './types'
  */
 
 /**
- * Nghỉ mặc định sau đoạn giang tấu: **một phách**.
+ * Nghỉ mặc định sau đoạn giang tấu: **không nghỉ thêm**.
  *
- * Đủ để tai chuyển từ lối nghe độc tấu sang lối nghe bài hát, mà chưa đứt mạch.
- * Trọn một ô nhịp thì dài quá — và nó còn làm mất câu quay đầu, vì cách nhau
- * cả ô im lặng thì câu dẫn chẳng dẫn vào đâu.
+ * Chỗ nghỉ đã nằm sẵn trong cụm quay đầu — nửa sau ô nhịp thứ hai để trống cho
+ * người hát lấy hơi. Cộng thêm một khoảng nữa ở đây thì thành nghỉ hai lần.
+ *
+ * Đặt thành trọn một ô nhịp thì **bỏ hẳn cụm quay đầu**: cách nhau cả ô im
+ * lặng thì câu dẫn chẳng dẫn vào đâu.
  */
-export const DEFAULT_REST_AFTER = 1
+export const DEFAULT_REST_AFTER = 0
 
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 0.001

@@ -785,80 +785,72 @@ export function ReharmHome() {
       if (!target || !tail) return null
 
       /*
-        Cụm quay đầu chiếm đúng **ô cuối** của vòng, không lấn sang ô trước:
-        lấn thêm là đổi luôn hoà âm của giang tấu chứ không còn là câu dẫn.
-        Ô đủ dài thì chia đôi cho hai hợp âm, ô ngắn thì chỉ đủ một.
+        Cụm quay đầu chiếm **hai ô nhịp** cuối vòng giang tấu.
+
+        Nhồi cả cụm hai-năm-một lẫn câu rải vào một ô thì mỗi hợp âm chỉ được
+        một phách và câu rải chỉ được một phách — đánh vội tới mức không nghe
+        ra hợp âm gì. Hai ô cho mỗi thứ một chỗ đứng riêng.
       */
-      const beats = Math.min(tail.beats, chordBeats)
-      const slots = beats >= 2 ? 2 : 1
-      const plan = turnaroundInto(target.chord, slots, tail.chord)
+      const bar = chordBeats
+      const window = interludeWindow(over, next)
+      const beats = Math.min(bar * 2, window?.lengthBeats ?? bar)
+
+      const plan = turnaroundInto(target.chord, bar >= 2 ? 2 : 1, tail.chord)
       if (!plan) return null
 
       /*
-        Ô nối chia làm hai nửa.
+        **Ô thứ nhất** là cụm hai-năm-một khép vòng.
 
-        **Nửa đầu** là cụm hai-năm-một khép vòng: bậc hai và bậc năm là chỗ
-        *đi*, hợp âm đích là chỗ *đậu lại*. **Nửa sau** là một hợp âm rải mang
-        sức hút về đúng hợp âm sắp chơi — cú mở cửa cho đoạn sau.
-
-        Hợp âm rải lấy **một phần tư ô nhịp**, phần còn lại chia đều cho các
-        hợp âm của cụm. Chia vậy thì cả hai trường hợp đều rơi đúng lưới: ba
-        hợp âm được một phách mỗi cái, hai hợp âm được một phách rưỡi. Nhét cụm
-        vào nửa ô thì ba hợp âm ra 0,67 phách — lệch khỏi mọi lưới nhịp.
+        Hợp âm đích chiếm nửa ô, mấy hợp âm dẫn chia nhau nửa còn lại: bậc hai
+        và bậc năm là chỗ *đi*, hợp âm đích là chỗ *đậu lại*. Ba hợp âm ra
+        1 · 1 · 2 phách, hai hợp âm ra 2 · 2 — cả hai đều đúng lưới. Chia đều
+        ba hợp âm trong một ô thì ra 1,33 phách, lệch khỏi mọi lưới nhịp.
       */
-      const spreadBeats = beats / 4
-      const each = (beats - spreadBeats) / plan.chords.length
+      const approach = plan.chords.slice(0, -1)
+      const lead = approach.length > 0 ? bar / 2 / approach.length : 0
+      const beatsEach = [...approach.map(() => lead), bar / 2]
 
       const hands = voiceLeadTwoHands(plan.chords, {
         dropRootFromRightHand: dropRoot,
       })
 
       const events = renderPattern(hands, style, {
-        beatsPerChord: each,
-        beatsEach: plan.chords.map(() => each),
+        beatsPerChord: bar / 2,
+        beatsEach,
       })
 
       /*
-        Hợp âm rải ở nửa sau.
+        **Ô thứ hai** là hợp âm rải rồi nghỉ.
 
-        Cụm hai-năm-một vừa **kết thúc** một câu; chỗ nối sang đoạn hát cần một
+        Cụm hai-năm-một vừa *kết thúc* một câu; chỗ nối sang đoạn hát cần một
         cú mở cửa chứ không phải một dấu chấm. Hợp âm rải chạy lên rồi bỏ lửng,
         nên nó đẩy tai về phía trước thay vì chốt lại.
 
-        Chỉ một quãng tám: đây là cú hất nhẹ trước khi vào hát, không phải câu
-        chạy dài như ở chỗ chuyển đoạn giữa hai đoạn có lời.
+        Rải chiếm nửa đầu ô, nửa sau để trống — đó là chỗ người hát lấy hơi
+        trước khi vào.
       */
       const pull = pullChordFor(target.chord, plan.chords.at(-2))
-      const spread = pull
-        ? arpeggioRun({
-            chord: pull,
-            octaves: 2,
-            // Nốt cuối phải dứt **trước** vạch nhịp, không đè lên đoạn sau.
-            endBeat: beats - 0.25,
-            /*
-              Cho câu rải **nửa ô nhịp** để chọn giá trị nốt, dù chỗ chia hợp âm
-              chỉ tính một phần tư. Hai quãng tám là chín nốt: nhét vào một
-              phách thì phải xuống móc kép ba, nghe như vấp; trải ra nửa ô thì
-              vừa đúng nốt kép.
+      const spread =
+        pull && beats > bar
+          ? arpeggioRun({
+              chord: pull,
+              octaves: 2,
+              endBeat: bar + bar / 2,
+              maxBeats: bar / 2,
+            }).map((note) => ({
+              startBeat: note.startBeat,
+              durationBeats: note.durationBeats,
+              notes: [note.note],
+              hand: note.hand,
+              /*
+                Nhấn hơn phần đệm để nghe ra đây là lời mời vào hát.
 
-              Nó chạy đè lên mấy hợp âm cuối cụm — đúng như tay phải rải trên
-              nền hợp âm tay trái đang ngân.
-            */
-            maxBeats: beats / 2,
-          }).map((note) => ({
-            startBeat: note.startBeat,
-            durationBeats: note.durationBeats,
-            notes: [note.note],
-            hand: note.hand,
-            /*
-              Nhấn hơn phần đệm để nghe ra đây là lời mời vào hát.
-
-              Thang này là **MIDI 0-127**, không phải 0-1. Bản đầu để 0.9 nên
-              nó phát ở 0,7% âm lượng — nghe như không có. Phần đệm dùng 80.
-            */
-            velocity: 92,
-          }))
-        : []
+                Thang này là **MIDI 0-127**, không phải 0-1. Bản đầu để 0.9 nên
+                nó phát ở 0,7% âm lượng — nghe như không có. Phần đệm dùng 80.
+              */
+              velocity: 92,
+            }))
+          : []
 
       return { events: [...events, ...spread], beats }
     },

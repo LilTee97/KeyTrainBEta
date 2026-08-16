@@ -3,6 +3,7 @@ import { parseChordInput } from '../../input/chordInputParser'
 import type { SourceSection, TurnaroundTake } from '../arrangement'
 import { buildArrangedSong } from '../arrangement'
 import type { TimelineEvent } from '../types'
+import { arpeggioRun } from '../../fillSoloGenerator/leadIn'
 import { pullChordFor, turnaroundInto } from '../turnaround'
 
 const chord = (text: string) => parseChordInput(text).chords[0]
@@ -424,5 +425,73 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
 
       expect(pull.quality.id).not.toBe(id)
     }
+  })
+})
+
+describe('cụm quay đầu trải hai ô nhịp', () => {
+  /*
+    Nhồi cả cụm hai-năm-một lẫn câu rải vào một ô thì mỗi hợp âm chỉ được một
+    phách và câu rải chỉ được một phách — đánh vội tới mức không nghe ra hợp âm
+    gì. Hai ô cho mỗi thứ một chỗ đứng riêng.
+  */
+  const bar = 4
+
+  const layout = (target: string, last: string) => {
+    const plan = turnaroundInto(chord(target), 2, chord(last))!
+    const approach = plan.chords.slice(0, -1)
+    const lead = bar / 2 / approach.length
+    return [...approach.map(() => lead), bar / 2]
+  }
+
+  it('ba hợp âm chia một · một · hai phách trong ô thứ nhất', () => {
+    expect(layout('Cadd9', 'G13')).toEqual([1, 1, 2])
+  })
+
+  it('mọi mốc đều rơi đúng lưới nốt kép', () => {
+    // Chia đều ba hợp âm trong một ô thì ra 1,33 phách, lệch khỏi mọi lưới
+    let at = 0
+    for (const beats of layout('Cadd9', 'G13')) {
+      expect(Math.abs((at / 0.25) % 1)).toBeLessThan(0.001)
+      at += beats
+    }
+
+    expect(at).toBe(bar)
+  })
+
+  it('hợp âm đích ngân lâu nhất, vì nó là chỗ đậu lại', () => {
+    const beats = layout('Cadd9', 'G13')
+
+    for (const lead of beats.slice(0, -1)) {
+      expect(beats.at(-1)!).toBeGreaterThan(lead)
+    }
+  })
+
+  it('câu rải chiếm nửa đầu ô thứ hai, nửa sau để trống', () => {
+    const plan = turnaroundInto(chord('Cadd9'), 2, chord('G13'))!
+    const pull = pullChordFor(chord('Cadd9'), plan.chords.at(-2))!
+    const run = arpeggioRun({
+      chord: pull,
+      octaves: 2,
+      endBeat: bar + bar / 2,
+      maxBeats: bar / 2,
+    })
+
+    expect(run[0].startBeat).toBeGreaterThanOrEqual(bar)
+    // Nửa sau ô là chỗ người hát lấy hơi trước khi vào
+    const end = run.at(-1)!.startBeat + run.at(-1)!.durationBeats
+    expect(end).toBeLessThan(bar + bar / 2 + 0.5)
+  })
+
+  it('câu rải đi nốt kép, không phải móc kép ba', () => {
+    // Chín nốt nhét vào một phách thì phải xuống móc kép ba, nghe như vấp
+    const pull = pullChordFor(chord('Cadd9'))!
+    const run = arpeggioRun({
+      chord: pull,
+      octaves: 2,
+      endBeat: bar + bar / 2,
+      maxBeats: bar / 2,
+    })
+
+    expect(run[1].startBeat - run[0].startBeat).toBeCloseTo(0.25, 5)
   })
 })
