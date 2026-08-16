@@ -1698,6 +1698,21 @@ export function ReharmHome() {
             }}
           />
 
+          {/*
+            Nói thẳng ra cử chỉ mở bảng lựa chọn.
+
+            Trước đây chỉ có chú thích hiện khi rê chuột, mà trên điện thoại
+            không có chuột để mà rê — người dùng cảm ứng không có cách nào biết
+            rằng hợp âm bấm giữ được, tức là mất gần hết phần chỉnh bài.
+          */}
+          <p className="mt-2 text-[11px] leading-relaxed text-dim">
+            Bấm một hợp âm để phát từ đó.{' '}
+            <span className="text-cream">Chuột phải</span> — hoặc{' '}
+            <span className="text-cream">nhấn giữ</span> nếu dùng cảm ứng — để
+            đổi thời lượng, chèn hợp âm lướt, bật tắt câu fill hay đặt mốc
+            chuyển đoạn.
+          </p>
+
           <p className="mt-2 text-xs leading-relaxed text-dim">
             Bấm vào một hợp âm để{' '}
             <span className="text-cream">phát lại từ đúng chỗ đó</span>, chuột

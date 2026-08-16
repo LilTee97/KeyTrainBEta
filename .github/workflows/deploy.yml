@@ -1,0 +1,58 @@
+# Dựng app rồi đưa lên GitHub Pages sau mỗi lần đẩy mã lên nhánh chính.
+#
+# Cần cho việc chạy trên Android: Web MIDI chỉ hoạt động ở "ngữ cảnh an toàn",
+# tức https hoặc localhost. Mở app qua http trên mạng nội bộ thì trình duyệt
+# chặn cắm đàn và cũng không cho cài ra màn hình chính. Pages cho sẵn https.
+
+name: Đưa app lên GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  # Chạy tay được từ tab Actions, khỏi phải đẩy thêm một commit rỗng.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Đẩy liên tiếp thì để lượt sau chạy nốt, không huỷ lượt đang chạy dở.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          # Pages phục vụ trang ở .../tên-repo/ chứ không phải gốc tên miền.
+          BASE_PATH: /${{ github.event.repository.name }}/
+
+      # Không có tệp này thì Pages chạy Jekyll và bỏ qua thư mục bắt đầu bằng _
+      - run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

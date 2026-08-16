@@ -1,8 +1,9 @@
-import type React from 'react'
 import { useEffect, useRef, useState } from 'react'
 import type { SectionMark, SheetAnchor, SheetLine, SongSheet } from './songSheet'
 import { isPaired } from '../chordTiming'
 import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
+import type { LongPressHandlers } from '../../shared/ui/useLongPress'
+import { useLongPress } from '../../shared/ui/useLongPress'
 import {
   SECTION_KIND_COLORS,
   SECTION_KIND_LABELS,
@@ -165,6 +166,9 @@ export function SongSheetView({
   )
   const [menu, setMenu] = useState<ChordMenu | null>(null)
 
+  // Trên điện thoại không có chuột phải; nhấn giữ mở đúng bảng lựa chọn đó.
+  const bindPress = useLongPress()
+
   const canMark = onMark !== undefined
 
   /*
@@ -318,16 +322,12 @@ export function SongSheetView({
                       fillAt={fillAt}
                       pairedChords={pairedChords}
                       onSeek={onSeek}
-                      onContextMenu={
+                      bindMenu={
                         onSetChordSpan
-                          ? (chordIndex, event) => {
-                              event.preventDefault()
-                              setMenu({
-                                chordIndex,
-                                x: event.clientX,
-                                y: event.clientY,
-                              })
-                            }
+                          ? (chordIndex) =>
+                              bindPress((point) =>
+                                setMenu({ chordIndex, x: point.x, y: point.y }),
+                              )
                           : undefined
                       }
                     />
@@ -746,14 +746,14 @@ function AnchorRow({
   fillAt,
   pairedChords,
   onSeek,
-  onContextMenu,
+  bindMenu,
 }: {
   line: SheetLine
   activeIndex: number | null
   fillAt?: (chordIndex: number) => boolean | null
   pairedChords?: ReadonlySet<number>
   onSeek?: (chordIndex: number) => void
-  onContextMenu?: (chordIndex: number, event: React.MouseEvent) => void
+  bindMenu?: (chordIndex: number) => LongPressHandlers
 }) {
   const placed = layoutAnchors(line.anchors)
 
@@ -778,7 +778,7 @@ function AnchorRow({
                 isPaired(pairedChords, anchor.chordIndex)
               }
               onSeek={onSeek}
-              onContextMenu={onContextMenu}
+              bindMenu={bindMenu}
             />
           </span>
         )
@@ -803,7 +803,7 @@ function ChordLabel({
   hasFill,
   halved,
   onSeek,
-  onContextMenu,
+  bindMenu,
 }: {
   anchor: SheetAnchor
   active: boolean
@@ -812,7 +812,7 @@ function ChordLabel({
   /** Hợp âm này chỉ chiếm nửa ô nhịp. */
   halved: boolean
   onSeek?: (chordIndex: number) => void
-  onContextMenu?: (chordIndex: number, event: React.MouseEvent) => void
+  bindMenu?: (chordIndex: number) => LongPressHandlers
 }) {
   if (anchor.broken) {
     return <span className="text-red-400">{anchor.symbol}</span>
@@ -879,13 +879,13 @@ function ChordLabel({
     <button
       type="button"
       onClick={() => onSeek(index)}
-      onContextMenu={(event) => onContextMenu?.(index, event)}
+      {...bindMenu?.(index)}
       title={
         hasFill
-          ? 'Có câu fill · bấm để phát từ đây, chuột phải để tắt fill'
-          : 'Bấm để phát từ đây, chuột phải để đổi thời lượng'
+          ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
+          : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'
       }
-      className={`${style}${mark}${half} cursor-pointer hover:decoration-solid`}
+      className={`${style}${mark}${half} cursor-pointer select-none hover:decoration-solid`}
     >
       {anchor.symbol}
     </button>

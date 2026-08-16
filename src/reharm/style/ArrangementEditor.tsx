@@ -3,6 +3,7 @@ import type { ArrangementStep, SourceSection } from './arrangement'
 import { DEFAULT_REST_AFTER, stepLabel } from './arrangement'
 import type { EndingMode } from './endingChord'
 import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
+import { useLongPress } from '../../shared/ui/useLongPress'
 
 /**
  * Danh sách thứ tự chơi: đoạn nào trước, đoạn nào lặp lại, kết ở đâu.
@@ -30,6 +31,9 @@ export function ArrangementEditor({
     x: number
     y: number
   } | null>(null)
+
+  // Trên điện thoại không có chuột phải; nhấn giữ mở đúng bảng lựa chọn đó.
+  const bindPress = useLongPress()
 
   // Bấm ra ngoài hoặc nhấn Esc thì đóng menu.
   useEffect(() => {
@@ -109,8 +113,9 @@ export function ArrangementEditor({
         Bài chơi theo đúng danh sách này rồi{' '}
         <span className="text-cream">dừng ở bước cuối</span>. Thêm lại một đoạn
         để nó chơi hai lần, hoặc chèn giang tấu vào giữa.{' '}
-        <span className="text-cream">Chuột phải</span> vào một đoạn để đánh dấu
-        nó là đoạn kết bài.
+        <span className="text-cream">Chuột phải</span> — hoặc{' '}
+        <span className="text-cream">nhấn giữ</span> nếu dùng cảm ứng — vào một
+        đoạn để đánh dấu nó là đoạn kết bài.
       </p>
 
       {steps.length === 0 ? (
@@ -122,12 +127,12 @@ export function ArrangementEditor({
           {steps.map((step, index) => (
             <li
               key={index}
-              onContextMenu={(event) => {
-                if (step.type !== 'section') return
-                event.preventDefault()
-                setMenu({ index, x: event.clientX, y: event.clientY })
-              }}
-              className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 ${
+              {...(step.type === 'section'
+                ? bindPress((point) =>
+                    setMenu({ index, x: point.x, y: point.y }),
+                  )
+                : {})}
+              className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 select-none ${
                 step.type === 'section' && step.ending
                   ? 'border-amber-key/50 bg-amber-key/10'
                   : 'border-line bg-black/20'
