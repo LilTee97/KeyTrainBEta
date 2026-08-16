@@ -157,3 +157,52 @@ describe('câu solo bám hợp âm đang vang', () => {
     }
   })
 })
+
+describe('bộ đếm vị trí trong câu', () => {
+  /*
+    Mẫu nghỉ cố ý trả về rỗng. Bản trước nhảy thẳng tới hợp âm sau bằng
+    `continue` nên dòng tăng vị trí không chạy, hợp âm sau lại rơi đúng vị trí
+    "nghỉ" và cũng im nốt — ở mật độ thưa kẹt luôn hai ô nhịp liền.
+  */
+  it('mật độ thưa chỉ nghỉ một ô nhịp, không nghỉ hai ô liền', () => {
+    const chords = parseChordInput('Cadd9 Am9 Fadd9 G7').chords
+    const solo = generateSolo(chords, {
+      beatsPerChord: 4,
+      density: 'sparse',
+      graceDensity: 'none',
+      chordsPerPhrase: 4,
+      key: { tonic: 0, scale: 'major' },
+    })
+
+    const silent = [0, 1, 2, 3].filter(
+      (bar) =>
+        !solo.some(
+          (note) => note.startBeat >= bar * 4 && note.startBeat < (bar + 1) * 4,
+        ),
+    )
+
+    expect(silent).toHaveLength(1)
+  })
+
+  it('hình câu ra mở, nghỉ, giữa, kết', () => {
+    // Đúng phrasing `pianoimprovnotes.md` mục 4 mô tả
+    const chords = parseChordInput('Cadd9 Am9 Fadd9 G7').chords
+    const solo = generateSolo(chords, {
+      beatsPerChord: 4,
+      density: 'sparse',
+      graceDensity: 'none',
+      chordsPerPhrase: 4,
+      key: { tonic: 0, scale: 'major' },
+    })
+
+    const notesInBar = (bar: number) =>
+      solo.filter(
+        (note) => note.startBeat >= bar * 4 && note.startBeat < (bar + 1) * 4,
+      ).length
+
+    expect(notesInBar(0)).toBeGreaterThan(0)
+    expect(notesInBar(1)).toBe(0)
+    expect(notesInBar(2)).toBeGreaterThan(0)
+    expect(notesInBar(3)).toBeGreaterThan(0)
+  })
+})

@@ -373,12 +373,35 @@ export function ReharmHome() {
    * máy đánh, nên không ai đổi khỏi xen kẽ.
    */
   const soloDirection: ApproachDirection = 'mixed'
-  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
+  /**
+   * Mật độ nốt câu nhạc, mặc định **thưa**.
+   *
+   * Đi cùng câu dài bốn hợp âm bên dưới: ở mức thưa, vị trí thứ hai của câu tự
+   * thành chỗ nghỉ, nên hình câu ra `mở → nghỉ → giữa → kết` — đúng phrasing
+   * `pianoimprovnotes.md` mục 4 mô tả.
+   */
+  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('sparse')
+
+  /**
+   * Mật độ **chỗ chêm câu fill**, tách hẳn khỏi mật độ nốt câu nhạc.
+   *
+   * Hai thứ này ở hai chỗ khác nhau của bài: câu fill chêm vào đoạn **có lời**,
+   * câu solo chạy ở đoạn **giang tấu**. Gộp làm một ô thì để câu solo thưa cho
+   * thoáng là đoạn hát cũng mất luôn phần lớn chỗ chêm.
+   */
+  const [fillDensity, setFillDensity] = useState<OrnamentDensity>('medium')
   /** Mật độ nốt láy, tách riêng khỏi mật độ nốt của câu nhạc. */
   const [graceDensity, setGraceDensity] = useState<GraceDensity>('sparse')
   const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
-  const [chordsPerPhrase, setChordsPerPhrase] = useState(2)
+  /**
+   * Độ dài câu nhạc, mặc định **bốn hợp âm**.
+   *
+   * Câu hai hợp âm chỉ có chỗ mở và chỗ kết, nên năm mẫu giữa câu không bao
+   * giờ được chọn. Đo trên mười sáu lượt: câu bốn hợp âm cho 35 hình câu khác
+   * nhau, câu hai hợp âm chỉ cho 21.
+   */
+  const [chordsPerPhrase, setChordsPerPhrase] = useState(4)
   /** Giọng do người dùng chỉ định. Rỗng nghĩa là để app tự dò. */
   const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
@@ -880,13 +903,13 @@ export function ReharmHome() {
     () =>
       new Set(
         fillPositions(withPassing, {
-          density: soloDensity,
+          density: fillDensity,
           breaths,
           beatsPerChord: chordBeats,
           always: transitionAt,
         }).map((position) => position.mainIndex),
       ),
-    [withPassing, soloDensity, breaths, transitionAt, chordBeats],
+    [withPassing, fillDensity, breaths, transitionAt, chordBeats],
   )
 
   /**
@@ -913,7 +936,7 @@ export function ReharmHome() {
           sectionEnds: transitions,
           beatsPerChord: chordBeats,
           direction: soloDirection,
-          density: soloDensity,
+          density: fillDensity,
           key: reharm.key,
           skipFills: mutedFills,
           take,
@@ -923,7 +946,7 @@ export function ReharmHome() {
       withPassing,
       chordBeats,
       soloDirection,
-      soloDensity,
+      fillDensity,
       reharm.key,
       mutedFills,
       breaths,
@@ -1016,6 +1039,7 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       soloDensity,
+      fillDensity,
       graceDensity,
       noteSource,
       chordsPerPhrase,
@@ -1043,6 +1067,7 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       soloDensity,
+      fillDensity,
       graceDensity,
       noteSource,
       chordsPerPhrase,
@@ -1087,6 +1112,8 @@ export function ReharmHome() {
     setDominantColor(saved.dominantColor as DominantChordColor)
 
     setSoloDensity(saved.soloDensity as OrnamentDensity)
+    // Bài lưu từ trước khi tách thì câu fill dùng chung mật độ với câu nhạc.
+    setFillDensity((saved.fillDensity ?? saved.soloDensity) as OrnamentDensity)
     // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
     setGraceDensity((saved.graceDensity ?? 'sparse') as GraceDensity)
     setNoteSource(saved.noteSource as SoloNoteSource)
@@ -1629,7 +1656,7 @@ export function ReharmHome() {
           <div>
             <h4
               className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
-              title="Hết mỗi câu thì nghỉ một phách để lấy hơi, và câu sau đổi quãng âm"
+              title="Hết mỗi câu thì nghỉ lấy hơi, và câu sau đổi quãng âm. Câu ngắn thì thoáng nhưng chỉ dùng được mẫu mở và mẫu kết; câu dài mới có chỗ cho mẫu giữa câu."
             >
               Độ dài mỗi câu nhạc
             </h4>
@@ -1638,6 +1665,11 @@ export function ReharmHome() {
                 <button
                   key={count}
                   type="button"
+                  title={
+                    count < 3
+                      ? 'Câu ngắn: chỉ có chỗ mở câu và kết câu'
+                      : 'Câu dài: có thêm chỗ cho mẫu giữa câu, nhiều hình câu hơn hẳn'
+                  }
                   onClick={() => setChordsPerPhrase(count)}
                   className={`rounded-lg border px-3 py-1.5 text-xs ${
                     chordsPerPhrase === count
@@ -1671,6 +1703,31 @@ export function ReharmHome() {
                   title={option.description}
                   className={`rounded-lg border px-3 py-1.5 text-xs ${
                     soloDensity === option.id
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4
+              className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+              title="Chêm câu fill vào bao nhiêu chỗ ca sĩ lấy hơi trong đoạn có lời"
+            >
+              Mật độ câu fill
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {DENSITY_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setFillDensity(option.id)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    fillDensity === option.id
                       ? 'border-amber-key bg-amber-key/15 text-amber-key'
                       : 'border-line bg-white/4 text-dim hover:bg-white/8'
                   }`}

@@ -678,7 +678,7 @@ export function generateSolo(
       resolving: resolvesUpFourth(chord, spans[index + 1]?.chord ?? null),
     })
 
-    const built = lick.build({
+    const context = {
       chord,
       next: spans[index + 1]?.chord ?? null,
       startBeat: start,
@@ -690,7 +690,30 @@ export function generateSolo(
       previousShape,
       notesPerBeat,
       material: materialFor(chord, noteSource),
-    })
+    }
+
+    /*
+      Mẫu trả về rỗng thì **lùi về mẫu nền tảng**, đừng để trống ô nhịp.
+
+      Chỉ mẫu nghỉ mới được phép im. Các mẫu khác có điều kiện riêng — `echo`
+      cần một mô-típ đủ dài để nhắc lại chẳng hạn — và khi điều kiện không thoả
+      thì chúng trả về rỗng. Bản trước bỏ qua luôn ô đó, nên ở mật độ thưa có
+      lúc **hai trên bốn ô nhịp im lặng**: một ô nghỉ đúng ý, một ô im vì hỏng.
+    */
+    let built = lick.build(context)
+    if (built.notes.length === 0 && !lick.roles.includes('rest')) {
+      built = fallbackLick().build(context)
+    }
+
+    /*
+      Đếm vị trí **trước** khi có cơ hội bỏ qua ô nhịp này.
+
+      Mẫu nghỉ cố ý trả về rỗng, mà bản trước nhảy thẳng tới hợp âm sau bằng
+      `continue` — nên dòng tăng vị trí không chạy, hợp âm sau lại rơi đúng vị
+      trí "nghỉ" và cũng im nốt. Ở mật độ thưa nó kẹt luôn hai ô nhịp liền:
+      một ô nghỉ đúng ý, một ô im vì bộ đếm đứng yên.
+    */
+    positionInPhrase += 1
 
     if (built.notes.length === 0) continue
 
@@ -706,7 +729,6 @@ export function generateSolo(
     // Nối câu sau vào đúng chỗ câu trước dừng, cho liền mạch.
     from = built.notes[built.notes.length - 1].note
     if (built.shape.length > 0) previousShape = built.shape
-    positionInPhrase += 1
   }
 
   return addGraceNotes(result.sort((a, b) => a.startBeat - b.startBeat), {
