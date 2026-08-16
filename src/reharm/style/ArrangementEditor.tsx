@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import type { ArrangementStep, SourceSection } from './arrangement'
 import { DEFAULT_REST_AFTER, stepLabel } from './arrangement'
+import type { EndingMode } from './endingChord'
 
 /**
  * Danh sách thứ tự chơi: đoạn nào trước, đoạn nào lặp lại, kết ở đâu.
@@ -21,6 +23,30 @@ export function ArrangementEditor({
   steps,
   onChange,
 }: ArrangementEditorProps) {
+  /** Bước nào đang mở menu chuột phải, và mở ở đâu trên màn hình. */
+  const [menu, setMenu] = useState<{
+    index: number
+    x: number
+    y: number
+  } | null>(null)
+
+  // Bấm ra ngoài hoặc nhấn Esc thì đóng menu.
+  useEffect(() => {
+    if (!menu) return
+
+    const close = () => setMenu(null)
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenu(null)
+    }
+
+    window.addEventListener('pointerdown', close)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('pointerdown', close)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menu])
+
   if (sources.length === 0) return null
 
   const move = (from: number, to: number) => {
@@ -36,6 +62,15 @@ export function ArrangementEditor({
     onChange(steps.filter((_, position) => position !== index))
 
   const add = (step: ArrangementStep) => onChange([...steps, step])
+
+  const setEnding = (index: number, mode: EndingMode | undefined) =>
+    onChange(
+      steps.map((step, position) =>
+        position === index && step.type === 'section'
+          ? { ...step, ending: mode }
+          : step,
+      ),
+    )
 
   const setRestAfter = (index: number, restAfter: number) =>
     onChange(
@@ -72,7 +107,9 @@ export function ArrangementEditor({
       <p className="mb-3 text-xs leading-relaxed text-dim">
         Bài chơi theo đúng danh sách này rồi{' '}
         <span className="text-cream">dừng ở bước cuối</span>. Thêm lại một đoạn
-        để nó chơi hai lần, hoặc chèn giang tấu vào giữa.
+        để nó chơi hai lần, hoặc chèn giang tấu vào giữa.{' '}
+        <span className="text-cream">Chuột phải</span> vào một đoạn để đánh dấu
+        nó là đoạn kết bài.
       </p>
 
       {steps.length === 0 ? (
@@ -84,7 +121,16 @@ export function ArrangementEditor({
           {steps.map((step, index) => (
             <li
               key={index}
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-black/20 px-3 py-2"
+              onContextMenu={(event) => {
+                if (step.type !== 'section') return
+                event.preventDefault()
+                setMenu({ index, x: event.clientX, y: event.clientY })
+              }}
+              className={`flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 ${
+                step.type === 'section' && step.ending
+                  ? 'border-amber-key/50 bg-amber-key/10'
+                  : 'border-line bg-black/20'
+              }`}
             >
               <span className="w-5 font-mono text-[11px] text-dim">
                 {index + 1}.
@@ -97,6 +143,19 @@ export function ArrangementEditor({
               >
                 {stepLabel(step, sources)}
               </span>
+
+              {step.type === 'section' && step.ending && (
+                <span
+                  title={
+                    step.ending === 'colored'
+                      ? 'Hợp âm cuối đổi sang màu kết bài'
+                      : 'Hợp âm cuối trả về hợp âm ba trơn'
+                  }
+                  className="rounded border border-amber-key/40 px-1.5 py-0.5 font-mono text-[10px] text-amber-key"
+                >
+                  {step.ending === 'colored' ? 'kết · có màu' : 'kết · trơn'}
+                </span>
+              )}
 
               {step.type === 'interlude' && (
                 <>
@@ -186,6 +245,51 @@ export function ArrangementEditor({
             ── Kết bài ──
           </li>
         </ol>
+      )}
+
+      {menu && (
+        <div
+          style={{ left: menu.x, top: menu.y }}
+          onPointerDown={(event) => event.stopPropagation()}
+          className="fixed z-50 min-w-52 rounded-lg border border-line bg-ink p-1 shadow-xl"
+        >
+          <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+            Đoạn kết bài
+          </p>
+
+          {/*
+            Ba lựa chọn thay vì một nút bật tắt: kết có màu và kết trơn là hai
+            cách kết khác nhau, không phải hai mức của cùng một thứ.
+          */}
+          {(
+            [
+              ['colored', 'Kết có màu', 'Hợp âm cuối đổi sang 6/9 hoặc m6'],
+              ['plain', 'Kết trơn', 'Gỡ hết màu, còn hợp âm ba'],
+              [undefined, 'Không phải đoạn kết', 'Chơi như mọi đoạn khác'],
+            ] as const
+          ).map(([mode, label, hint]) => {
+            const current = steps[menu.index]
+            const active =
+              current.type === 'section' && current.ending === mode
+
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setEnding(menu.index, mode)
+                  setMenu(null)
+                }}
+                className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+              >
+                <span className={active ? 'text-amber-key' : 'text-cream'}>
+                  {active ? `✓ ${label}` : label}
+                </span>
+                <span className="text-[10px] text-dim">{hint}</span>
+              </button>
+            )
+          })}
+        </div>
       )}
 
       <div className="flex flex-wrap items-center gap-2">

@@ -1,3 +1,4 @@
+import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { interludeAccompaniment } from './songStructure'
 import type { TimelineEvent } from './types'
@@ -41,7 +42,17 @@ export interface SourceSection {
 /** Một bước trong thứ tự chơi. */
 export type ArrangementStep =
   /** Chơi một đoạn có thật, đúng như nó vốn có. */
-  | { type: 'section'; source: number }
+  | {
+      type: 'section'
+      source: number
+      /**
+       * Đoạn này là **đoạn kết bài**.
+       *
+       * Vòng hợp âm vẫn chạy bình thường; chỉ hợp âm cuối được đổi màu — xem
+       * `endingChord.ts`. Bỏ trống nghĩa là đoạn thường.
+       */
+      ending?: EndingMode
+    }
   /**
    * Chèn một đoạn giang tấu, chơi trên vòng hợp âm của đoạn `over`.
    *
@@ -161,6 +172,16 @@ export interface BuildArrangedSongOptions {
     next: SourceSection | null,
   ) => { startBeat: number; lengthBeats: number } | null
   /**
+   * Hợp âm cuối của **đoạn kết bài**, đã đổi màu.
+   *
+   * Dựng ở bên gọi vì chỗ này chỉ làm việc với mốc phách, còn muốn đổi màu thì
+   * phải đọc được hợp âm thật.
+   */
+  ending?: (
+    source: SourceSection,
+    mode: EndingMode,
+  ) => TurnaroundTake | null
+  /**
    * Im hẳn mấy phách sau đoạn giang tấu, trước khi vào bước kế tiếp.
    *
    * Hết ngẫu hứng mà đoạn hát vào ngay thì không có chỗ nào để tai chuyển từ
@@ -202,6 +223,7 @@ export function buildArrangedSong(
     interludeRange,
     restAfterInterlude = 0,
     beatsPerMeasure = 4,
+    ending,
   } = options
 
   const forInterlude = interludeAccompaniment(interlude ?? accompaniment)
@@ -229,10 +251,25 @@ export function buildArrangedSong(
         sourceBeat: source.startBeat,
       })
 
+      /*
+        Đoạn kết bài: vòng hợp âm chạy bình thường tới hợp âm cuối, chỗ đó mới
+        đổi màu. Cắt đúng phần cuối rồi thay bằng hợp âm đã đổi.
+      */
+      const close = step.ending && ending ? ending(source, step.ending) : null
+      const plain = close
+        ? Math.max(0, source.lengthBeats - close.beats)
+        : source.lengthBeats
+
       events.push(
-        ...slice(accompaniment, source.startBeat, source.lengthBeats, cursor),
-        ...slice(fills, source.startBeat, source.lengthBeats, cursor),
+        ...slice(accompaniment, source.startBeat, plain, cursor),
+        ...slice(fills, source.startBeat, plain, cursor),
       )
+
+      if (close) {
+        for (const event of close.events) {
+          events.push({ ...event, startBeat: event.startBeat + cursor + plain })
+        }
+      }
 
       cursor += source.lengthBeats
       continue

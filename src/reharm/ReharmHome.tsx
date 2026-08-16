@@ -100,6 +100,8 @@ import {
   defaultArrangement,
 } from './style/arrangement'
 import { pullChordFor, turnaroundInto } from './style/turnaround'
+import type { EndingMode } from './style/endingChord'
+import { endingChordFor } from './style/endingChord'
 import { chooseInterludeWindow } from './style/interludeLoop'
 import { arpeggioRun } from './fillSoloGenerator/leadIn'
 
@@ -1126,6 +1128,37 @@ export function ReharmHome() {
     setSelectedIndex(null)
   }, [])
 
+  /**
+   * Hợp âm cuối của đoạn kết bài, đã đổi màu.
+   *
+   * Chỉ đụng vào **một hợp âm cuối cùng**: vòng hợp âm của đoạn vẫn chạy
+   * nguyên vẹn, vì đổi cả đoạn thì không còn là kết bài mà là tái hoà âm lại.
+   */
+  const buildEnding = useCallback(
+    (source: SourceSection, mode: EndingMode) => {
+      const spans = mainChordSpans(withPassing, chordBeats)
+      const end = source.startBeat + source.lengthBeats
+      const last = spans.filter((span) => span.start < end - 0.001).at(-1)
+      if (!last) return null
+
+      const closing = endingChordFor(last.chord, mode)
+      if (!closing) return null
+
+      const hands = voiceLeadTwoHands([closing], {
+        dropRootFromRightHand: dropRoot,
+      })
+
+      return {
+        events: renderPattern(hands, style, {
+          beatsPerChord: last.beats,
+          beatsEach: [last.beats],
+        }),
+        beats: last.beats,
+      }
+    },
+    [withPassing, chordBeats, dropRoot, style],
+  )
+
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(
     () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
@@ -1155,6 +1188,7 @@ export function ReharmHome() {
           interludeRange: interludeWindow,
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
+          ending: buildEnding,
         })
       }
 
@@ -1182,6 +1216,7 @@ export function ReharmHome() {
       songSources,
       buildTurnaround,
       interludeWindow,
+      buildEnding,
       style.beatsPerMeasure,
       steps,
     ],
@@ -1257,6 +1292,18 @@ export function ReharmHome() {
   const advanceRound = useCallback(() => {
     playRound.current += LOOP_PASSES
   }, [])
+
+  /**
+   * Bài đã có đoạn kết bài thì **phát một lượt rồi dừng**.
+   *
+   * Lặp lại là phá luôn cái kết: vừa nghe hợp âm kết đọng xuống thì bài đã bắt
+   * đầu lại từ đầu. Bài chưa đánh dấu kết thì vẫn lặp, vì lúc đó nó là vòng để
+   * tập chứ không phải một bài trọn vẹn.
+   */
+  const playsOnce = useMemo(
+    () => steps.some((step) => step.type === 'section' && step.ending),
+    [steps],
+  )
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -1494,6 +1541,7 @@ export function ReharmHome() {
                 bpm,
                 loopLengthBeats,
                 beatOfMainChord(chordIndex),
+                playsOnce,
               )
               advanceRound()
             }}
@@ -1681,6 +1729,8 @@ export function ReharmHome() {
                       (pass) => eventsForHand(passAt(pass), 'both'),
                       bpm,
                       loopLengthBeats,
+                      0,
+                      playsOnce,
                     ),
                     advanceRound())
               }
@@ -1696,7 +1746,7 @@ export function ReharmHome() {
                   : 'bg-amber-key text-ink hover:brightness-110'
               }`}
             >
-              {looping ? '■ Dừng' : '▶ Phát cả bài'}
+              {looping ? '■ Dừng' : playsOnce ? '▶ Phát trọn bài' : '▶ Phát cả bài'}
             </button>
 
             <span className="font-mono text-[11px] text-dim">
@@ -2091,6 +2141,8 @@ export function ReharmHome() {
                     (pass) => eventsForHand(passAt(pass), hand),
                     bpm,
                     loopLengthBeats,
+                    0,
+                    playsOnce,
                   ),
                   advanceRound())
             }

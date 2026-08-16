@@ -302,6 +302,14 @@ export function startTimelineLoop(
    * đệm, và những gì đứng trước mốc vẫn còn nguyên cho vòng lặp sau.
    */
   startAtBeat = 0,
+  /**
+   * Phát **một lượt rồi dừng** thay vì lặp mãi.
+   *
+   * Bài đã có đoạn kết bài thì lặp lại là phá luôn cái kết: vừa nghe hợp âm
+   * kết đọng xuống thì bài đã bắt đầu lại từ đầu. Bài chưa đánh dấu kết thì
+   * vẫn lặp, vì lúc đó nó là vòng để tập chứ không phải một bài trọn vẹn.
+   */
+  once = false,
 ): void {
   if (!isAudioReady()) return
 
@@ -322,9 +330,15 @@ export function startTimelineLoop(
       ),
   )
 
+  /*
+    Phát một lượt thì chỉ dựng **một** lượt. Dựng đủ ba như khi lặp thì nó phát
+    cả bài ba lần rồi mới dừng.
+  */
+  const passes = once ? 1 : LOOP_PASSES
+
   // Dựng sẵn từng lượt rồi dời sang vị trí của nó trên vòng lặp dài.
   const events: LoopEvent[] = []
-  for (let pass = 0; pass < LOOP_PASSES; pass += 1) {
+  for (let pass = 0; pass < passes; pass += 1) {
     const offset = pass * passLength
     const hits = pass === 0 ? first : build(pass)
 
@@ -348,10 +362,29 @@ export function startTimelineLoop(
     )
   }, events)
 
-  part.loop = true
-  part.loopEnd = { '4n': passLength * LOOP_PASSES }
+  const totalBeats = passLength * passes
+
+  part.loop = !once
+  part.loopEnd = { '4n': totalBeats }
   part.start(0)
   loopPart = part
+
+  /*
+    Hết một lượt thì tự dừng, và dừng bằng chính `stopTimelineLoop` để giao
+    diện biết mà đổi nút về "phát" — tắt tiếng thôi thì nút vẫn hiện "dừng".
+
+    Chờ thêm một ô nhịp trước khi dừng: nốt cuối cùng vẫn đang ngân, huỷ `Part`
+    ngay lúc nó vừa gõ là cắt cụt tiếng đàn.
+  */
+  if (once) {
+    Tone.getTransport().scheduleOnce(
+      () => {
+        Tone.getDraw().schedule(() => stopTimelineLoop(), Tone.now())
+      },
+      // Chờ thêm một ô nhịp cho nốt cuối ngân hết.
+      { '4n': totalBeats + 4 },
+    )
+  }
 
   /*
     Báo vị trí cho giao diện ở độ phân giải móc kép. Dày hơn nữa cũng không
