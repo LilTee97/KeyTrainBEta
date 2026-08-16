@@ -115,7 +115,11 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
             density,
           })
 
-          for (const note of solo) {
+          /*
+            Nốt láy cố ý nằm ngoài lưới — nó là cái vuốt vào phách, vang ở khe
+            ngay trước nốt chính. Cái phải đúng lưới là **nốt chính**.
+          */
+          for (const note of solo.filter((entry) => !entry.isGrace)) {
             const steps = note.startBeat / GRID
             expect(
               Math.abs(steps - Math.round(steps)),

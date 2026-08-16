@@ -7,7 +7,7 @@ import type { TimelineEvent } from '../style/types'
 import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
-import { densityOption, stepInScale } from './graceNoteOrnamenter'
+import { densityOption, ornamentLine, stepInScale } from './graceNoteOrnamenter'
 import { arpeggioRun } from './leadIn'
 import type { Lick } from './soloVocabulary'
 import {
@@ -543,6 +543,7 @@ export function generateSolo(
   const {
     beatsPerChord,
     density = 'medium',
+    direction = 'mixed',
     key = null,
     noteSource = 'chordTone',
     chordsPerPhrase = 2,
@@ -673,9 +674,112 @@ export function generateSolo(
     positionInPhrase += 1
   }
 
-  return result.sort((a, b) => a.startBeat - b.startBeat)
+  return addGraceNotes(result.sort((a, b) => a.startBeat - b.startBeat), {
+    direction,
+    density,
+    tones,
+  })
 }
 
+/**
+ * Nốt láy dài bao nhiêu.
+ *
+ * Đủ ngắn để nghe ra là **cái vuốt vào nốt chính**, không phải một nốt riêng.
+ * Nốt kép là ranh giới: dài hơn thì tai đếm nó thành một nốt của câu nhạc và
+ * câu nhạc nghe như bị thêm nốt thừa.
+ */
+const GRACE_BEATS = 0.125
+
+/**
+ * Nốt đứng trước phải còn lại ít nhất chừng này sau khi bị cắt để nhường chỗ.
+ *
+ * Cắt ngắn hơn nữa thì nó không kịp vang, nghe thành tiếng gõ chứ không phải
+ * một nốt của câu nhạc.
+ */
+const GRACE_MIN_ROOM = 0.125
+
+/**
+ * Gắn nốt láy vào câu nhạc — kỹ thuật số 4 trong năm kỹ thuật của phong cách.
+ *
+ * `graceNoteOrnamenter.ts` đã dựng sẵn luật chọn nốt láy từ lâu nhưng **chưa
+ * ai gọi tới**: ô "Mật độ nốt láy" trên giao diện thật ra chỉ điều khiển mật
+ * độ nốt của câu solo. Chỗ này nối lại cho đúng cái tên.
+ *
+ * ## Nốt láy vang **trước** phách, không đẩy nốt chính đi
+ *
+ * Đây là chỗ bản đầu làm sai. Nó cắt đoạn đầu của nốt chính cho nốt láy, nên
+ * nốt chính bị dời sang phách 0,125 — cả câu nhạc trôi khỏi lưới nốt kép và
+ * nghe lệch với nhịp đệm.
+ *
+ * Đúng ra nốt láy là **cái vuốt vào phách**: nó vang ở khe ngay trước, còn nốt
+ * chính vẫn rơi đúng chỗ của nó. Chỗ cho nốt láy lấy từ **đuôi nốt đứng
+ * trước** — trên đàn thật thì ngón vừa nhả nốt cũ ra là vuốt luôn vào nốt mới.
+ */
+function addGraceNotes(
+  line: readonly SoloNote[],
+  options: {
+    direction: ApproachDirection
+    density: OrnamentDensity
+    tones: ReadonlySet<PitchClass>
+  },
+): SoloNote[] {
+  const { direction, density, tones } = options
+
+  // Chỉ láy nốt chính; nốt mềm sẵn có của mẫu câu thì để yên.
+  const main = line.filter((note) => !note.isGrace)
+  const ornamented = ornamentLine(
+    main.map((note) => note.note),
+    { direction, density, scaleTones: tones },
+  )
+
+  const result: SoloNote[] = line.filter((note) => note.isGrace)
+  const kept: SoloNote[] = []
+
+  main.forEach((note, index) => {
+    const { grace } = ornamented[index]
+    const graceStart = note.startBeat - GRACE_BEATS
+    const previous = kept[kept.length - 1]
+
+    /*
+      Không láy khi không có chỗ: nốt đầu câu chưa có gì phía trước để mượn,
+      còn nốt đứng trước quá ngắn thì cắt nữa là mất luôn.
+    */
+    const room =
+      graceStart >= 0 &&
+      (previous === undefined ||
+        graceStart - previous.startBeat >= GRACE_MIN_ROOM)
+
+    /*
+      Nốt láy trùng cao độ với nốt vừa đánh thì bỏ.
+
+      Nó không còn là nốt láy nữa mà thành đánh lại đúng nốt cũ — nghe ra là
+      lắp bắp, và đủ để tạo ba tiếng cùng cao độ liên tiếp trong câu.
+    */
+    const repeats = previous !== undefined && previous.note === grace
+
+    if (grace === null || !room || repeats) {
+      kept.push(note)
+      return
+    }
+
+    // Nốt trước còn vang tới chỗ nốt láy thì cắt đuôi nó đi.
+    if (previous && previous.startBeat + previous.durationBeats > graceStart) {
+      previous.durationBeats = graceStart - previous.startBeat
+    }
+
+    result.push({
+      note: grace,
+      startBeat: graceStart,
+      durationBeats: GRACE_BEATS,
+      isGrace: true,
+    })
+
+    // Nốt chính giữ nguyên mốc phách — đó là điểm mấu chốt.
+    kept.push({ ...note })
+  })
+
+  return [...result, ...kept].sort((a, b) => a.startBeat - b.startBeat)
+}
 
 /** Chất liệu nốt của một hợp âm theo nguồn người dùng chọn. */
 function materialFor(
