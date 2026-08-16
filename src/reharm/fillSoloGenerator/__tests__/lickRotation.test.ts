@@ -76,7 +76,15 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
   })
 
   it('thứ tự xoay hiện tại đúng như đã nghe duyệt', () => {
-    // Khoá lại để lần sắp xếp sau không đổi âm thanh mà không ai biết
+    /*
+      Khoá lại **cả bốn vai trò**, để lần sắp xếp sau không đổi âm thanh mà
+      không ai biết.
+
+      Bản đầu chỉ khoá `opener` và `middle`, nên khi bật mẫu `guide-tone` vào
+      vai `ending` thì test vẫn xanh — đúng chỗ lưới an toàn này sinh ra để bắt
+      lại lọt qua. Bật một mẫu là đổi tiếng đàn, và phải nghe duyệt từng cái
+      một; không khoá thì không có gì buộc người sửa dừng lại mà nghe.
+    */
     expect(licksFor('opener').map((lick) => lick.id)).toEqual([
       'arpeggio',
       'chord-tone',
@@ -86,6 +94,12 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
       'turn',
       'approach',
       'echo',
+      'enclosure',
     ])
+    expect(licksFor('ending').map((lick) => lick.id)).toEqual([
+      'chord-tone',
+      'guide-tone',
+    ])
+    expect(licksFor('rest').map((lick) => lick.id)).toEqual(['breath'])
   })
 })

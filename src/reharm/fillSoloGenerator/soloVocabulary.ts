@@ -821,7 +821,7 @@ const enclosure: Lick = {
   source: '52 Piano Jazz Blues Licks — 35% bước đi là nửa cung',
   minBeats: 2,
   roles: ['middle'],
-  inRotation: false,
+  inRotation: true,
   build: ({ startBeat, beats, from, low, high, material }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
