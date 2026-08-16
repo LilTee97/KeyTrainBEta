@@ -22,12 +22,16 @@ Cũng vì lý do đó, **mở app qua `http://192.168...` trên mạng nội b�
 
 ## Làm một lần: đưa app lên mạng
 
-1. Tạo một repo trên GitHub rồi đẩy mã lên:
+1. Tạo một repo trên GitHub (để trống, đừng tick *Add a README*) rồi đẩy mã lên:
 
    ```
    git remote add origin https://github.com/<tên-bạn>/<tên-repo>.git
-   git push -u origin master
+   git branch -M main
+   git push -u origin main
    ```
+
+   Lần `push` đầu sẽ hiện cửa sổ đăng nhập GitHub. Những lần sau chỉ cần
+   `git push`.
 
 2. Vào repo trên GitHub → **Settings** → **Pages** → mục *Build and deployment*,
    chọn **Source: GitHub Actions**.
