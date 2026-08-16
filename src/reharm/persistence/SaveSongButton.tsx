@@ -88,7 +88,7 @@ export function SaveSongButton({
         // Mở ô ra là gõ được ngay, không phải bấm thêm một cái nữa.
         autoFocus
         placeholder="Tên bài"
-        className="w-44 rounded-md border border-amber-key/50 bg-black/40 px-2 py-1 text-xs text-cream outline-none"
+        className="w-44 rounded-md border border-amber-key/50 bg-black/40 px-2 py-1 text-xs text-cream"
       />
 
       <button

@@ -8,8 +8,9 @@
 
 Repo `D:\Coding Piano app` khi lập kế hoạch còn trống hoàn toàn (chỉ có thư mục `Reference\`). Mục tiêu là xây **KeyTrain** — một web app luyện piano gồm **hai hệ thống con** dùng chung một lõi:
 
-> **Phạm vi đã chốt lại giữa chừng:** bước 23 (popup thế bấm) và mọi hình thức
-> game hoá cho hệ B đều **đã bỏ hẳn**, không phải hoãn. Đừng đề xuất làm lại.
+> **Phạm vi đã chốt lại giữa chừng.** Ba thứ **đã bỏ hẳn**, không phải hoãn —
+> đừng đề xuất làm lại: bước 23 (popup thế bấm), mọi hình thức game hoá cho hệ
+> B, và trang cài đặt cùng chức năng preset ở bước 30.
 
 - **Hệ A — Luyện tai nghe hợp âm** (lấy cảm hứng từ mikebwilliams.com/chords/): nhận diện hợp âm đơn, luyện progression, metronome, spaced repetition + thống kê. Điểm khác biệt: phần **ôn tập ghi nhớ được game hóa**.
 - **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → sinh câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B **không game hoá** — không điểm, không sao, không huy hiệu.
@@ -139,7 +140,7 @@ StatsEvent       { id, timestamp, mode: 'practice'|'review', itemKind, category,
 EarProgress      { xp, level, currentStreakDays, longestStreakDays, lastActiveDate,
                    badges: {id, tier, unlockedAt}[] }   // chỉ hệ A; combo là state
                                                         // trong buổi, không lưu
-Preset           { id, name, type, config }
+~~Preset~~       { id, name, type, config }   // đã bỏ — xem bước 30
 Song             { id, title, key, sections: [{ name, lines: [{ lyric,
                    chordAnchors: [{chordSymbol, charOffset}] }] }] }
 ReharmRule       { id, techniqueType, matcher, apply, verified, sourceNote? }
@@ -227,7 +228,9 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 27. **Chờ đánh đúng nốt (hai tay)** — `noteGatedPlaybackEngine.ts` gate timeline bước 26 theo `midiStore`. **Làm prototype quyết định transport tại đây** (rủi ro #2) trước khi xây tiếp lên trên.
 28. **Chế độ tay trái / tay phải riêng** — `practiceModeController.ts` lọc track theo tay.
 29. **Biến tấu khi lặp + đổi vòng cả bài sang ii-V-I-vi** — luật mang tính "gợi ý sáng tạo", để cuối.
-30. **Hoàn thiện** — lưu preset/bài hát (mở rộng schema bước 11), làm mờ điệu chưa xác thực, trang cài đặt, responsive cho bàn phím ảo, rà accessibility.
+30. **Hoàn thiện** — ~~lưu preset~~, lưu bài hát (mở rộng schema bước 11), làm mờ điệu chưa xác thực, ~~trang cài đặt~~, responsive cho bàn phím ảo, rà accessibility. **Đã xong.**
+
+    Hai mục bị bỏ, cùng một lý do: **mọi lựa chọn đều lưu theo từng bài**, mà đó mới đúng — điệu, màu hợp âm, mật độ fill là chuyện của từng bài chứ không phải cài đặt chung. Preset vì vậy trùng hẳn với chức năng lưu bài. Nhịp độ — thứ duy nhất đáng làm cài đặt chung — đã tự nhớ qua các lần mở app và nằm ngay cạnh nút phát. Một trang cài đặt sẽ không có gì để chứa.
 
 ---
 

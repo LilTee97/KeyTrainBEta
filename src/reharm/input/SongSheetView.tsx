@@ -529,6 +529,8 @@ function ChordContextMenu({
       ref={ref}
       style={style}
       onPointerDown={(event) => event.stopPropagation()}
+      role="menu"
+      aria-label="Tuỳ chọn"
       className="fixed z-50 min-w-44 rounded-lg border border-line bg-ink p-1 shadow-xl"
     >
       {onPick &&

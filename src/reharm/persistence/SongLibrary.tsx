@@ -98,6 +98,7 @@ export function SongLibrary({
               <button
                 type="button"
                 onClick={() => void remove(song.id)}
+                aria-label={`Xoá bài ${song.title}`}
                 title="Xoá bài này"
                 className="shrink-0 rounded px-1.5 text-xs text-dim hover:bg-white/8 hover:text-rose-300"
               >

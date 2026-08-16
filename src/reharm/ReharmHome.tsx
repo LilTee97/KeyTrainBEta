@@ -270,7 +270,7 @@ function KeySelect({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         title="Cho app biết bài đang ở giọng nào, để nó tô màu hợp âm theo đúng bậc. Đây không phải nút đổi tone — muốn dịch cả bài sang giọng khác thì dùng nút TONE."
-        className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
+        className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
       >
         <option value="">
           Tự dò{detectedLabel ? ` (${detectedLabel})` : ''}
@@ -1435,6 +1435,7 @@ export function ReharmHome() {
                 type="button"
                 onClick={() => setTranspose((value) => Math.max(-6, value - 1))}
                 disabled={transpose <= -6}
+                aria-label="Hạ tone nửa cung"
                 title="Hạ nửa cung"
                 className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream hover:bg-white/12 disabled:opacity-30"
               >
@@ -1451,6 +1452,7 @@ export function ReharmHome() {
                 type="button"
                 onClick={() => setTranspose((value) => Math.min(6, value + 1))}
                 disabled={transpose >= 6}
+                aria-label="Nâng tone nửa cung"
                 title="Nâng nửa cung"
                 className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream hover:bg-white/12 disabled:opacity-30"
               >
@@ -1460,6 +1462,7 @@ export function ReharmHome() {
                 <button
                   type="button"
                   onClick={() => setTranspose(0)}
+                  aria-label="Về tone gốc"
                   title="Về tone gốc"
                   className="rounded-md border border-line px-2 py-0.5 text-[10px] text-dim hover:bg-white/8"
                 >
@@ -1818,6 +1821,7 @@ export function ReharmHome() {
                 max={160}
                 value={bpm}
                 onChange={(event) => setBpm(Number(event.target.value))}
+                aria-label="Nhịp độ, số phách mỗi phút"
                 title="Nhịp độ"
                 className="w-32 accent-amber-key"
               />
@@ -2269,7 +2273,7 @@ export function ReharmHome() {
               onChange={(event) =>
                 setBeatsPerChord(Number(event.target.value))
               }
-              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream outline-none"
+              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
             >
               <option value={8}>2 ô nhịp</option>
               <option value={4}>1 ô nhịp</option>

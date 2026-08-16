@@ -164,7 +164,7 @@ export function ArrangementEditor({
                     value={step.over}
                     onChange={(event) => setOver(index, Number(event.target.value))}
                     title="Giang tấu chơi trên vòng hợp âm của đoạn nào"
-                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream outline-none"
+                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
                   >
                     {sources.map((source, position) => (
                       <option key={position} value={position}>
@@ -179,7 +179,7 @@ export function ArrangementEditor({
                       setLoops(index, Number(event.target.value))
                     }
                     title="Lặp mấy lượt"
-                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream outline-none"
+                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
                   >
                     {[1, 2, 3, 4].map((count) => (
                       <option key={count} value={count}>
@@ -199,7 +199,7 @@ export function ArrangementEditor({
                       setRestAfter(index, Number(event.target.value))
                     }
                     title="Im mấy phách sau khi hết ngẫu hứng, trước khi vào đoạn sau"
-                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream outline-none"
+                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
                   >
                     {[0, 1, 2, 4].map((beats) => (
                       <option key={beats} value={beats}>
@@ -217,6 +217,7 @@ export function ArrangementEditor({
                   type="button"
                   onClick={() => move(index, index - 1)}
                   disabled={index === 0}
+                  aria-label={`Đưa bước ${index + 1} lên trên`}
                   title="Lên trên"
                   className="rounded px-1.5 py-0.5 text-xs text-dim hover:bg-white/10 disabled:opacity-30"
                 >
@@ -226,6 +227,7 @@ export function ArrangementEditor({
                   type="button"
                   onClick={() => move(index, index + 1)}
                   disabled={index === steps.length - 1}
+                  aria-label={`Đưa bước ${index + 1} xuống dưới`}
                   title="Xuống dưới"
                   className="rounded px-1.5 py-0.5 text-xs text-dim hover:bg-white/10 disabled:opacity-30"
                 >
@@ -234,6 +236,7 @@ export function ArrangementEditor({
                 <button
                   type="button"
                   onClick={() => remove(index)}
+                  aria-label={`Bỏ bước ${index + 1}`}
                   title="Bỏ bước này"
                   className="rounded px-1.5 py-0.5 text-xs text-dim hover:bg-white/10"
                 >
@@ -322,6 +325,8 @@ function EndingMenu({
       ref={ref}
       style={style}
       onPointerDown={(event) => event.stopPropagation()}
+      role="menu"
+      aria-label="Tuỳ chọn"
       className="fixed z-50 min-w-52 rounded-lg border border-line bg-ink p-1 shadow-xl"
     >
       <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">

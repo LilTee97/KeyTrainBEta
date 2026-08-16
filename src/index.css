@@ -35,6 +35,27 @@ body {
 }
 
 /*
+  Viền tiêu điểm cho người dùng bàn phím.
+
+  Sáu chỗ trong app trước đây gắn `outline-none` để bỏ viền mặc định của trình
+  duyệt — nó vuông vức và chỏi với nền tối — nhưng không đặt gì thay thế. Kết
+  quả: đi bằng phím Tab thì không nhìn ra mình đang ở ô nào, tức những chỗ đó
+  gần như không dùng được nếu không có chuột.
+
+  Dùng `:focus-visible` chứ không phải `:focus`: bấm chuột vào một nút thì
+  không hiện viền, đi bằng phím mới hiện. Đó là lý do `outline-none` bị gắn
+  vào ngay từ đầu — người ta muốn tắt cái viền hiện ra khi bấm chuột.
+
+  Chọn `:where()` để quy tắc này có độ ưu tiên bằng không, nên bất kỳ lớp
+  Tailwind nào cũng đè lên được khi có chỗ cần khác đi.
+*/
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-amber-key);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
   Danh sách xổ xuống của thẻ select do hệ điều hành vẽ, không thừa hưởng màu
   chữ của phần tử cha. Trên nền tối, mặc định ra chữ xám trên nền tối và gần
   như không đọc được — nên phải chỉ định màu tường minh cho từng dòng.
