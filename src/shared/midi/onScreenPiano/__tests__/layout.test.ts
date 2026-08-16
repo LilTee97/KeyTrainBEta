@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isBlackKey } from '../../../musicTheory/pitch'
-import { buildKeyboardLayout } from '../layout'
+import { buildKeyboardLayout, keyPlacement } from '../layout'
 
 describe('buildKeyboardLayout', () => {
   it('một quãng tám có 7 phím trắng và 5 phím đen', () => {
@@ -85,5 +85,63 @@ describe('buildKeyboardLayout', () => {
     // C3 tới C6
     const { whiteKeys } = buildKeyboardLayout(48, 84)
     expect(whiteKeys).toHaveLength(22)
+  })
+})
+
+describe('keyPlacement', () => {
+  /*
+    Nốt rơi phải đáp xuống đúng phím của nó. Sai chỗ đứng ngang là nốt rơi nói
+    dối người tập — họ nhìn thấy nốt đang rơi về một phím rồi bấm phím đó.
+  */
+  const layout = buildKeyboardLayout(48, 84)
+
+  it('phím trắng chiếm trọn ô của nó, không chừa khe', () => {
+    const width = 100 / layout.whiteKeys.length
+
+    const c4 = keyPlacement(layout, 60)
+    expect(c4?.width).toBeCloseTo(width)
+    // C4 là phím trắng thứ 7 tính từ C3
+    expect(c4?.left).toBeCloseTo(width * 7)
+  })
+
+  it('phím trắng xếp liền nhau không hở không chồng', () => {
+    for (let i = 0; i < layout.whiteKeys.length - 1; i += 1) {
+      const here = keyPlacement(layout, layout.whiteKeys[i]!.note)!
+      const next = keyPlacement(layout, layout.whiteKeys[i + 1]!.note)!
+      expect(here.left + here.width).toBeCloseTo(next.left)
+    }
+  })
+
+  it('phím đen hẹp hơn phím trắng', () => {
+    const white = keyPlacement(layout, 60)!
+    const black = keyPlacement(layout, 61)!
+    expect(black.width).toBeLessThan(white.width)
+  })
+
+  it('tâm phím đen nằm đúng khe giữa hai phím trắng kề nó', () => {
+    const c4 = keyPlacement(layout, 60)!
+    const cSharp = keyPlacement(layout, 61)!
+
+    // Khe là chỗ C4 kết thúc và D4 bắt đầu
+    expect(cSharp.left + cSharp.width / 2).toBeCloseTo(c4.left + c4.width)
+  })
+
+  it('nốt ngoài dải không có chỗ đứng', () => {
+    expect(keyPlacement(layout, 36)).toBeNull()
+    expect(keyPlacement(layout, 96)).toBeNull()
+  })
+
+  it('bàn phím rỗng thì không nốt nào có chỗ đứng', () => {
+    expect(keyPlacement(buildKeyboardLayout(72, 60), 60)).toBeNull()
+  })
+
+  it('mọi nốt trong dải đều nằm gọn trong bề ngang bàn phím', () => {
+    for (let note = 48; note <= 84; note += 1) {
+      const place = keyPlacement(layout, note)
+      if (!place) continue
+
+      expect(place.left).toBeGreaterThanOrEqual(0)
+      expect(place.left + place.width).toBeLessThanOrEqual(100.001)
+    }
   })
 })

@@ -68,3 +68,34 @@ export function buildKeyboardLayout(
 
   return { whiteKeys, blackKeys }
 }
+
+/**
+ * Chỗ đứng ngang của một nốt trên bàn phím, tính theo phần trăm bề rộng.
+ *
+ * Dùng để vẽ **nốt rơi** thẳng hàng với phím mà nó sẽ đáp xuống. Phải tính lại
+ * từ chính bố cục bàn phím chứ không ước lượng theo cao độ: phím trắng chia
+ * đều bề ngang còn phím đen nằm chen vào khe, nên khoảng cách giữa hai nốt
+ * cách nhau một nửa cung không phải lúc nào cũng bằng nhau.
+ *
+ * Trả `null` cho nốt nằm ngoài dải bàn phím đang vẽ.
+ */
+export function keyPlacement(
+  layout: KeyboardLayout,
+  note: MidiNote,
+): { left: number; width: number } | null {
+  const whiteCount = layout.whiteKeys.length
+  if (whiteCount === 0) return null
+
+  const black = layout.blackKeys.find((key) => key.note === note)
+  if (black) {
+    // Phím đen hẹp hơn và tâm nằm đúng khe, nên lùi lại nửa bề rộng của nó.
+    const width = (100 / whiteCount) * 0.62
+    return { left: black.position * 100 - width / 2, width }
+  }
+
+  const white = layout.whiteKeys.find((key) => key.note === note)
+  if (!white) return null
+
+  const width = 100 / whiteCount
+  return { left: white.index * width, width }
+}

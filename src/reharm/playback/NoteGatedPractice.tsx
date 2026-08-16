@@ -5,11 +5,13 @@ import {
   useAudioStore,
 } from '../../shared/audio/audioEngine'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
+import { FallingNotes } from './FallingNotes'
 import { MidiConnect } from '../../shared/midi/MidiConnect'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import type { MidiNote } from '../../shared/musicTheory/types'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { PracticeHand } from './noteGatedPlaybackEngine'
@@ -63,6 +65,25 @@ export function NoteGatedPractice({
     () => buildGatedSteps(timeline, voicings, { hand, beatsPerChord }),
     [timeline, voicings, hand, beatsPerChord],
   )
+
+  /*
+    Dải phím phải trùm hết nốt của bài: nốt rơi mà không có phím để đáp xuống
+    thì người tập nhìn thấy nó biến mất giữa chừng. Nới ra tròn quãng tám
+    (Đô tới Si) cho bàn phím trông đúng hình, và giữ tối thiểu 3 quãng tám để
+    bài ít nốt không co lại thành một bàn phím tí hon.
+  */
+  const range = useMemo(() => {
+    const notes = steps.flatMap((step) => step.notes)
+    if (notes.length === 0) return { low: 48 as MidiNote, high: 84 as MidiNote }
+
+    const low = Math.floor(Math.min(...notes) / 12) * 12
+    const high = Math.ceil((Math.max(...notes) + 1) / 12) * 12 - 1
+
+    return {
+      low: Math.min(low, 60) as MidiNote,
+      high: Math.max(high, 83) as MidiNote,
+    }
+  }, [steps])
 
   const [session, setSession] = useState(() => startGatedSession(steps))
 
@@ -280,7 +301,22 @@ export function NoteGatedPractice({
       )}
 
       <div className="mt-4">
+        {/*
+          Nốt rơi dựng ngay trên bàn phím và dùng chung dải nốt với nó, nên nốt
+          rơi thẳng hàng với đúng phím mà nó sẽ đáp xuống.
+        */}
+        {active && (
+          <FallingNotes
+            steps={steps}
+            index={session.currentIndex}
+            lowNote={range.low}
+            highNote={range.high}
+          />
+        )}
+
         <OnScreenPiano
+          lowNote={range.low}
+          highNote={range.high}
           leftHandNotes={active && step ? step.leftNotes : undefined}
           rightHandNotes={active && step ? step.rightNotes : undefined}
         />
