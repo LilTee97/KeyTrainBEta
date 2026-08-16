@@ -102,9 +102,13 @@ describe('nhịp của câu fill', () => {
     for (const note of notes) expect(note.startBeat).toBeGreaterThanOrEqual(14)
   })
 
-  it('luôn đúng ba nốt, đủ nghe ra hướng mà không lấn phần hát', () => {
+  it('ba hoặc bốn nốt, đủ nghe ra hướng mà không lấn phần hát', () => {
+    // Số nốt đổi theo lượt phát, xem `fillVariation.test.ts`
     for (const at of [0, 1, 2, 3]) {
-      expect(fillAt('Cadd9 Am9 Fadd9 G7', at)).toHaveLength(3)
+      const line = fillAt('Cadd9 Am9 Fadd9 G7', at)
+
+      expect(line.length).toBeGreaterThanOrEqual(3)
+      expect(line.length).toBeLessThanOrEqual(4)
     }
   })
 })

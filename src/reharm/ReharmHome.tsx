@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
+  LOOP_PASSES,
   startTimelineLoop,
   stopTimelineLoop,
   useAudioStore,
@@ -8,7 +9,7 @@ import {
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { chordNotes } from '../shared/musicTheory/chordDefinitions'
-import type { MidiNote, PitchClass } from '../shared/musicTheory/types'
+import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import {
   addSimilarChordPairs,
@@ -45,6 +46,7 @@ import type {
 } from './fillSoloGenerator/graceNoteOrnamenter'
 import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import type {
+  GraceDensity,
   SoloNoteSource,
   TransitionRun,
 } from './fillSoloGenerator/soloGenerator'
@@ -61,7 +63,7 @@ import {
   groupPassingSuggestions,
   groupsAtSlot,
 } from './reharmEngine/passingChordRules'
-import { keyLabel, orderedKeys, scaleTones } from './reharmEngine/keyDetection'
+import { keyLabel, orderedKeys } from './reharmEngine/keyDetection'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
@@ -92,10 +94,14 @@ import {
   sourceBeatAt,
 } from './style/songStructure'
 import type { ArrangementStep, SourceSection } from './style/arrangement'
-import { buildArrangedSong, defaultArrangement } from './style/arrangement'
-import { turnaroundInto } from './style/turnaround'
+import {
+  DEFAULT_REST_AFTER,
+  buildArrangedSong,
+  defaultArrangement,
+} from './style/arrangement'
+import { pullChordFor, turnaroundInto } from './style/turnaround'
 import { chooseInterludeWindow } from './style/interludeLoop'
-import { leadInNotes } from './fillSoloGenerator/leadIn'
+import { arpeggioRun } from './fillSoloGenerator/leadIn'
 
 /**
  * Giang tấu chạy trên bốn hợp âm nhặt từ vòng của bài.
@@ -105,6 +111,7 @@ import { leadInNotes } from './fillSoloGenerator/leadIn'
  */
 const INTERLUDE_CHORDS = 4
 
+
 /**
  * Cách chơi ô nối mặc định: hợp âm rải hai quãng tám, im hai phách.
  *
@@ -112,6 +119,25 @@ const INTERLUDE_CHORDS = 4
  * trước phách mạnh. Người dùng chỉnh lại được từng chỗ bằng chuột phải.
  */
 const DEFAULT_TRANSITION: TransitionRun = { octaves: 2, restBeats: 2 }
+
+/**
+ * Bốn mức nốt láy, thêm mức tắt hẳn.
+ *
+ * Có người chỉ muốn nghe đúng nốt của hợp âm, và ở câu chạy nhanh thì nốt láy
+ * làm câu nhạc nhoè đi chứ không đẹp thêm.
+ */
+const GRACE_OPTIONS: readonly {
+  id: GraceDensity
+  label: string
+  description: string
+}[] = [
+  { id: 'none', label: 'Không', description: 'Chỉ nốt của câu nhạc, không tô điểm gì.' },
+  ...DENSITY_OPTIONS.map((option) => ({
+    id: option.id as GraceDensity,
+    label: option.label,
+    description: option.description,
+  })),
+]
 import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
@@ -346,6 +372,8 @@ export function ReharmHome() {
    */
   const soloDirection: ApproachDirection = 'mixed'
   const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
+  /** Mật độ nốt láy, tách riêng khỏi mật độ nốt của câu nhạc. */
+  const [graceDensity, setGraceDensity] = useState<GraceDensity>('sparse')
   const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   const [chordsPerPhrase, setChordsPerPhrase] = useState(2)
@@ -358,6 +386,9 @@ export function ReharmHome() {
   const [sourceText, setSourceText] = useState('')
   /** Khung bản nhạc, để cuộn tới sau khi nạp một bài mới. */
   const sheetRef = useRef<HTMLDivElement>(null)
+
+  /** Lần bấm phát thứ mấy, để câu giang tấu không lặp lại giữa các lần phát. */
+  const playRound = useRef(0)
 
   /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
   const [songId, setSongId] = useState<string | null>(null)
@@ -441,6 +472,27 @@ export function ReharmHome() {
 
   /** Chỉ các số thứ tự, cho những chỗ chỉ cần biết có mốc hay không. */
   const transitionAt = useMemo(() => new Set(transitions.keys()), [transitions])
+
+  /**
+   * Những ô nối **nhường chỗ cho câu chạy**, tức phần đệm im hẳn ở đó.
+   *
+   * Chọn không chạy quãng tám nào thì ô nối vẫn được thêm vào cho người hát
+   * ngân hết câu, nhưng nó đệm bình thường — bỏ đệm mà không có câu chạy thay
+   * vào thì ô đó câm hẳn.
+   */
+  const runningBars = useMemo(
+    () =>
+      new Set(
+        [...transitions.entries()]
+          /*
+            Nghỉ trọn ô nhịp thì câu chạy không còn chỗ nào để đứng, nên ô đó
+            cũng phải đệm bình thường — không thì nó câm hẳn.
+          */
+          .filter(([, run]) => run.octaves > 0 && run.restBeats < chordBeats)
+          .map(([index]) => index),
+      ),
+    [transitions, chordBeats],
+  )
 
   /**
    * Bảng thời lượng đưa vào đường ống.
@@ -583,9 +635,9 @@ export function ReharmHome() {
         beatsPerChord: chordBeats,
         beatsEach: chordDurations(withPassing, chordBeats),
         // Ô nối sang đoạn mới dành trọn cho câu chạy ngón.
-        barsWithoutComping: transitionAt,
+        barsWithoutComping: runningBars,
       }),
-    [twoHands, style, chordBeats, withPassing, transitionAt],
+    [twoHands, style, chordBeats, withPassing, runningBars],
   )
 
   /**
@@ -742,7 +794,21 @@ export function ReharmHome() {
       const plan = turnaroundInto(target.chord, slots, tail.chord)
       if (!plan) return null
 
-      const each = beats / plan.chords.length
+      /*
+        Ô nối chia làm hai nửa.
+
+        **Nửa đầu** là cụm hai-năm-một khép vòng: bậc hai và bậc năm là chỗ
+        *đi*, hợp âm đích là chỗ *đậu lại*. **Nửa sau** là một hợp âm rải mang
+        sức hút về đúng hợp âm sắp chơi — cú mở cửa cho đoạn sau.
+
+        Hợp âm rải lấy **một phần tư ô nhịp**, phần còn lại chia đều cho các
+        hợp âm của cụm. Chia vậy thì cả hai trường hợp đều rơi đúng lưới: ba
+        hợp âm được một phách mỗi cái, hai hợp âm được một phách rưỡi. Nhét cụm
+        vào nửa ô thì ba hợp âm ra 0,67 phách — lệch khỏi mọi lưới nhịp.
+      */
+      const spreadBeats = beats / 4
+      const each = (beats - spreadBeats) / plan.chords.length
+
       const hands = voiceLeadTwoHands(plan.chords, {
         dropRootFromRightHand: dropRoot,
       })
@@ -753,30 +819,50 @@ export function ReharmHome() {
       })
 
       /*
-        Câu báo hiệu vào hát, chạy ngón lên ở **phách cuối cùng**. Thiếu nó thì
-        giang tấu hết vòng là im, đoạn hát vào nghe như nhảy cóc.
+        Hợp âm rải ở nửa sau.
+
+        Cụm hai-năm-một vừa **kết thúc** một câu; chỗ nối sang đoạn hát cần một
+        cú mở cửa chứ không phải một dấu chấm. Hợp âm rải chạy lên rồi bỏ lửng,
+        nên nó đẩy tai về phía trước thay vì chốt lại.
+
+        Chỉ một quãng tám: đây là cú hất nhẹ trước khi vào hát, không phải câu
+        chạy dài như ở chỗ chuyển đoạn giữa hai đoạn có lời.
       */
-      const tones = reharm.key
-        ? scaleTones(reharm.key.tonic, reharm.key.scale)
-        : new Set<PitchClass>()
+      const pull = pullChordFor(target.chord, plan.chords.at(-2))
+      const spread = pull
+        ? arpeggioRun({
+            chord: pull,
+            octaves: 2,
+            // Nốt cuối phải dứt **trước** vạch nhịp, không đè lên đoạn sau.
+            endBeat: beats - 0.25,
+            /*
+              Cho câu rải **nửa ô nhịp** để chọn giá trị nốt, dù chỗ chia hợp âm
+              chỉ tính một phần tư. Hai quãng tám là chín nốt: nhét vào một
+              phách thì phải xuống móc kép ba, nghe như vấp; trải ra nửa ô thì
+              vừa đúng nốt kép.
 
-      const leadIn = leadInNotes({
-        target: target.chord.root,
-        tones,
-        startBeat: Math.max(0, beats - 1),
-        beats: Math.min(1, beats),
-      }).map((note) => ({
-        startBeat: note.startBeat,
-        durationBeats: note.durationBeats,
-        notes: [note.note],
-        hand: 'right' as const,
-        // Nhấn hơn phần đệm một chút để nghe ra đây là lời mời vào hát.
-        velocity: 0.9,
-      }))
+              Nó chạy đè lên mấy hợp âm cuối cụm — đúng như tay phải rải trên
+              nền hợp âm tay trái đang ngân.
+            */
+            maxBeats: beats / 2,
+          }).map((note) => ({
+            startBeat: note.startBeat,
+            durationBeats: note.durationBeats,
+            notes: [note.note],
+            hand: note.hand,
+            /*
+              Nhấn hơn phần đệm để nghe ra đây là lời mời vào hát.
 
-      return { events: [...events, ...leadIn], beats }
+              Thang này là **MIDI 0-127**, không phải 0-1. Bản đầu để 0.9 nên
+              nó phát ở 0,7% âm lượng — nghe như không có. Phần đệm dùng 80.
+            */
+            velocity: 92,
+          }))
+        : []
+
+      return { events: [...events, ...spread], beats }
     },
-    [withPassing, chordBeats, dropRoot, style, interludeWindow, reharm.key],
+    [withPassing, chordBeats, dropRoot, style, interludeWindow],
   )
 
   /**
@@ -825,8 +911,8 @@ export function ReharmHome() {
   )
 
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
-  const fills = useMemo(
-    () =>
+  const fills = useCallback(
+    (take: number) =>
       soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
@@ -836,6 +922,7 @@ export function ReharmHome() {
           density: soloDensity,
           key: reharm.key,
           skipFills: mutedFills,
+          take,
         }),
       ),
     [
@@ -861,6 +948,7 @@ export function ReharmHome() {
       beatsPerChord: chordBeats,
       direction: soloDirection,
       density: soloDensity,
+      graceDensity,
       key: reharm.key,
       noteSource,
       chordsPerPhrase,
@@ -872,6 +960,7 @@ export function ReharmHome() {
     chordBeats,
     soloDirection,
     soloDensity,
+    graceDensity,
     noteSource,
     chordsPerPhrase,
     reharm.key,
@@ -933,6 +1022,7 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       soloDensity,
+      graceDensity,
       noteSource,
       chordsPerPhrase,
     }),
@@ -959,6 +1049,7 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       soloDensity,
+      graceDensity,
       noteSource,
       chordsPerPhrase,
     ],
@@ -1002,6 +1093,8 @@ export function ReharmHome() {
     setDominantColor(saved.dominantColor as DominantChordColor)
 
     setSoloDensity(saved.soloDensity as OrnamentDensity)
+    // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
+    setGraceDensity((saved.graceDensity ?? 'sparse') as GraceDensity)
     setNoteSource(saved.noteSource as SoloNoteSource)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
@@ -1061,19 +1154,22 @@ export function ReharmHome() {
         return buildArrangedSong({
           accompaniment,
           interlude: interludeBacking,
-          fills,
+          // Câu chêm cũng đổi theo lượt, không riêng đoạn giang tấu.
+          fills: fills(pass),
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
           sources: songSources,
           steps,
           turnaround: buildTurnaround,
           interludeRange: interludeWindow,
+          restAfterInterlude: DEFAULT_REST_AFTER,
+          beatsPerMeasure: style.beatsPerMeasure,
         })
       }
 
       return buildSongTimeline({
         accompaniment,
         interlude: interludeBacking,
-        fills,
+        fills: fills(pass),
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         /*
@@ -1094,6 +1190,7 @@ export function ReharmHome() {
       songSources,
       buildTurnaround,
       interludeWindow,
+      style.beatsPerMeasure,
       steps,
     ],
   )
@@ -1143,12 +1240,31 @@ export function ReharmHome() {
   const timeline = song.events
   const loopLengthBeats = song.totalBeats
 
-  /** Dòng thời gian của lần phát thứ `pass`, dùng cho nút phát lặp. */
+  /**
+   * Dòng thời gian của lần phát thứ `pass`, dùng cho nút phát lặp.
+   *
+   * `pass` đếm **liên tục qua từng lần bấm phát**, không đếm lại từ 0.
+   *
+   * Bộ phát dựng sẵn ba lượt rồi lặp lại đúng ba lượt ấy, nên trong một lần
+   * phát thì ba lượt giang tấu đã khác nhau. Nhưng bấm phát lần nữa lại dựng
+   * từ lượt 0, tức lần nào cũng mở đầu bằng đúng một câu — không đúng yêu cầu
+   * "mỗi lần giang tấu là một cái gì mới khác nhau".
+   *
+   * Dùng ref chứ không dùng state: con số này chỉ đọc lúc dựng lịch phát, đổi
+   * nó không cần vẽ lại gì cả.
+   */
   const passAt = useCallback(
-    (pass: number) =>
-      pass === 0 ? timeline : buildPass(pass, song.soloTakes).events,
+    (pass: number) => {
+      const round = playRound.current + pass
+      return round === 0 ? timeline : buildPass(round, song.soloTakes).events
+    },
     [buildPass, timeline, song.soloTakes],
   )
+
+  /** Đếm số lượt đã dựng, để lần bấm phát sau nối tiếp chứ không lặp lại. */
+  const advanceRound = useCallback(() => {
+    playRound.current += LOOP_PASSES
+  }, [])
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -1387,6 +1503,7 @@ export function ReharmHome() {
                 loopLengthBeats,
                 beatOfMainChord(chordIndex),
               )
+              advanceRound()
             }}
           />
 
@@ -1503,7 +1620,7 @@ export function ReharmHome() {
 
           <div>
             <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-              Mật độ nốt láy
+              Mật độ nốt câu nhạc
             </h4>
             <div className="flex flex-wrap gap-2">
               {DENSITY_OPTIONS.map((option) => (
@@ -1514,6 +1631,35 @@ export function ReharmHome() {
                   title={option.description}
                   className={`rounded-lg border px-3 py-1.5 text-xs ${
                     soloDensity === option.id
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/*
+            Nốt láy tách hẳn khỏi mật độ nốt câu nhạc.
+
+            Một ô chỉnh làm hai việc thì muốn thưa nốt láy phải thưa luôn cả câu
+            solo — không có cách nào giữ câu chạy dày mà bớt láy đi.
+          */}
+          <div>
+            <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+              Nốt láy
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {GRACE_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setGraceDensity(option.id)}
+                  title={option.description}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    graceDensity === option.id
                       ? 'border-amber-key bg-amber-key/15 text-amber-key'
                       : 'border-line bg-white/4 text-dim hover:bg-white/8'
                   }`}
@@ -1539,16 +1685,22 @@ export function ReharmHome() {
               onClick={() =>
                 looping
                   ? stopTimelineLoop()
-                  : startTimelineLoop(
+                  : (startTimelineLoop(
                       (pass) => eventsForHand(passAt(pass), 'both'),
                       bpm,
                       loopLengthBeats,
-                    )
+                    ),
+                    advanceRound())
               }
               disabled={!audioReady || timeline.length === 0}
+              /*
+                Lúc đang phát, nút phải đọc ra ngay là "dừng lại". Bản cũ dùng
+                nền trắng mờ với chữ kem — trên nền tối thì gần như chỉ còn
+                chữ nổi lơ lửng, không ra hình cái nút.
+              */
               className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
                 looping
-                  ? 'border border-line bg-white/6 text-cream hover:bg-white/12'
+                  ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
                   : 'bg-amber-key text-ink hover:brightness-110'
               }`}
             >
@@ -1557,7 +1709,7 @@ export function ReharmHome() {
 
             <span className="font-mono text-[11px] text-dim">
               {loopLengthBeats} phách · giang tấu {soloTake(0).length} nốt ·{' '}
-              {fills.length} nốt fill
+              {fills(0).length} nốt fill
             </span>
 
             {!audioReady && (
@@ -1943,16 +2095,17 @@ export function ReharmHome() {
             onClick={() =>
               looping
                 ? stopTimelineLoop()
-                : startTimelineLoop(
+                : (startTimelineLoop(
                     (pass) => eventsForHand(passAt(pass), hand),
                     bpm,
                     loopLengthBeats,
-                  )
+                  ),
+                  advanceRound())
             }
             disabled={!audioReady || timeline.length === 0}
             className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
               looping
-                ? 'border border-line bg-white/6 text-cream hover:bg-white/12'
+                ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
                 : 'bg-amber-key text-ink hover:brightness-110'
             }`}
           >

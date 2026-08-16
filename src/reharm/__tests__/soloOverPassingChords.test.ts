@@ -22,6 +22,24 @@ import {
 
 const GRID = 0.25
 
+/**
+ * Nốt có rơi vào khung chùm ba không — ba nốt đều nhau trong một phách.
+ *
+ * Bất biến ban đầu là "mọi nốt đúng lưới móc kép", đặt ra khi 36 trên 47 nốt
+ * lệch lưới và người dùng nghe ra là lệch nhịp. Nhưng chùm ba **cố ý** không
+ * rơi vào lưới ấy: `pianoimprovnotes.md` mục 4 nói phải *"xen kẽ móc đơn đều
+ * và chùm ba để tránh đều đều máy móc"*, và đo trên tập 52 lick thì 17% số nốt
+ * dài đúng một phần ba phách.
+ *
+ * Nên bất biến đúng là **nốt phải rơi vào một khung chia nhịp đọc được** — móc
+ * kép hoặc chùm ba — chứ không phải một khung duy nhất. Nốt lệch cả hai mới là
+ * nốt trôi.
+ */
+function onTripletGrid(beat: number): boolean {
+  const thirds = beat * 3
+  return Math.abs(thirds - Math.round(thirds)) < 0.001
+}
+
 function withPassing(text: string) {
   const plain = parseChordInput(text).chords
   const iiV = suggestPassingChords(plain, {}).filter(
@@ -120,6 +138,8 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
             ngay trước nốt chính. Cái phải đúng lưới là **nốt chính**.
           */
           for (const note of solo.filter((entry) => !entry.isGrace)) {
+            if (onTripletGrid(note.startBeat)) continue
+
             const steps = note.startBeat / GRID
             expect(
               Math.abs(steps - Math.round(steps)),

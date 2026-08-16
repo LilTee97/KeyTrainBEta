@@ -65,6 +65,8 @@ export interface SongSnapshot {
 
   /** Câu fill và đoạn giang tấu. */
   soloDensity: string
+  /** Bỏ trống với bài lưu từ trước khi tách nốt láy ra khỏi mật độ nốt. */
+  graceDensity?: string
   noteSource: string
   chordsPerPhrase: number
 }

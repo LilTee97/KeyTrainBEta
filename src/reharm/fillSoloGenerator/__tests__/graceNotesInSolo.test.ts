@@ -13,10 +13,18 @@ import { generateSolo } from '../soloGenerator'
 const CHORDS = 'Cadd9 Am9 Fadd9 G7'
 const C_MAJOR = { tonic: 0 as const, scale: 'major' as const }
 
-const solo = (density: 'sparse' | 'medium' | 'dense' = 'medium') =>
+/**
+ * Mật độ nốt láy tách hẳn khỏi mật độ nốt câu nhạc, nên test phải chỉ định
+ * riêng — để mức dày ở ô này không kéo theo ô kia.
+ */
+const solo = (
+  graceDensity: 'none' | 'sparse' | 'medium' | 'dense' = 'dense',
+  density: 'sparse' | 'medium' | 'dense' = 'sparse',
+) =>
   generateSolo(parseChordInput(CHORDS).chords, {
     beatsPerChord: 4,
     density,
+    graceDensity,
     key: C_MAJOR,
   })
 
@@ -92,11 +100,39 @@ describe('nốt láy trong câu solo', () => {
   })
 
   it('láy dày hơn thì nhiều nốt láy hơn', () => {
-    const count = (density: 'sparse' | 'medium' | 'dense') =>
-      solo(density).filter((note) => note.isGrace).length
+    const count = (graceDensity: 'none' | 'sparse' | 'dense') =>
+      solo(graceDensity).filter((note) => note.isGrace).length
 
-    expect(count('sparse')).toBeLessThan(count('medium'))
-    expect(count('medium')).toBeLessThan(count('dense'))
+    expect(count('none')).toBe(0)
+    expect(count('sparse')).toBeLessThan(count('dense'))
+  })
+
+  it('tắt hẳn thì câu nhạc không đổi gì ngoài việc mất nốt láy', () => {
+    // Có người chỉ muốn nghe đúng nốt của hợp âm
+    const off = solo('none')
+    const on = solo('dense')
+
+    expect(off.some((note) => note.isGrace)).toBe(false)
+    expect(off.length).toBeLessThan(on.length)
+  })
+
+  it('chỉ láy nốt đủ dài, không láy từng nốt của câu chạy nhanh', () => {
+    /*
+      Nốt láy là đồ trang trí cho nốt tai dừng lại ở đó. Gắn vào từng nốt của
+      một câu chạy nhanh thì câu nhạc nhoè đi — đo được 76% số nốt có láy ở
+      bản trước, và nghe ra là "láy nhiều quá".
+    */
+    const line = solo('dense', 'dense')
+    const graced = new Set(
+      line
+        .filter((note) => note.isGrace)
+        .map((note) => (note.startBeat + note.durationBeats).toFixed(3)),
+    )
+
+    for (const note of line.filter((entry) => !entry.isGrace)) {
+      if (!graced.has(note.startBeat.toFixed(3))) continue
+      expect(note.durationBeats).toBeGreaterThanOrEqual(0.5)
+    }
   })
 
   it('không tràn ra ngoài vòng hợp âm', () => {
@@ -105,7 +141,7 @@ describe('nốt láy trong câu solo', () => {
       nhạc phải nằm gọn trong bốn ô nhịp của vòng như khi chưa có nó.
     */
     for (const density of ['sparse', 'medium', 'dense'] as const) {
-      for (const note of solo(density)) {
+      for (const note of solo('dense', density)) {
         expect(note.startBeat + note.durationBeats).toBeLessThanOrEqual(16.001)
       }
     }

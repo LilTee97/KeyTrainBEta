@@ -883,7 +883,7 @@ const tripletRun: Lick = {
     'pianoimprovnotes.md mục 4, và 17% nốt trong 52 Piano Jazz Blues Licks là chùm ba',
   minBeats: 2,
   roles: ['opener', 'middle'],
-  inRotation: false,
+  inRotation: true,
   // Ba nốt đều nhau trong một phách thì không nốt nào rơi vào lưới móc kép.
   offGrid: true,
   build: ({ startBeat, beats, from, low, high, material }) => {

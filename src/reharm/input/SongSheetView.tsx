@@ -99,7 +99,14 @@ interface SongSheetViewProps {
 
 /** Cách chơi ô nối, hiện trên menu chuột phải. */
 export interface TransitionOption {
-  /** Hợp âm rải chạy mấy quãng tám. */
+  /**
+   * Hợp âm rải chạy mấy quãng tám; `0` là không chạy ngón.
+   *
+   * Có chỗ chuyển đoạn không cần câu chạy — hợp âm cuối điệp khúc đi thẳng vào
+   * giang tấu chẳng hạn, vì ngay sau đó đã là phần ngẫu hứng rồi. Lúc ấy vẫn
+   * cần thêm một ô nhịp cho người hát ngân hết câu, nhưng ô đó **đệm bình
+   * thường** thay vì nhường chỗ cho câu chạy.
+   */
   octaves: number
   /** Im hẳn mấy phách trước vạch nhịp, cho người hát cất giọng. */
   restBeats: number
@@ -566,10 +573,10 @@ function ChordContextMenu({
           {transition && onSetTransition && (
             <>
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                Chạy mấy quãng tám
+                Chạy mấy quãng tám ở ô nối
               </p>
               <div className="flex gap-1 px-2.5 py-1">
-                {[2, 3].map((octaves) => (
+                {[0, 1, 2, 3].map((octaves) => (
                   <button
                     key={octaves}
                     type="button"
@@ -586,10 +593,10 @@ function ChordContextMenu({
               </div>
 
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                Nghỉ mấy phách
+                Im mấy phách cuối ô nối
               </p>
               <div className="flex gap-1 px-2.5 py-1">
-                {[0, 1, 2, 3].map((restBeats) => (
+                {[0, 1, 2, 3, 4].map((restBeats) => (
                   <button
                     key={restBeats}
                     type="button"

@@ -1,5 +1,5 @@
 import type { ArrangementStep, SourceSection } from './arrangement'
-import { stepLabel } from './arrangement'
+import { DEFAULT_REST_AFTER, stepLabel } from './arrangement'
 
 /**
  * Danh sách thứ tự chơi: đoạn nào trước, đoạn nào lặp lại, kết ở đâu.
@@ -36,6 +36,15 @@ export function ArrangementEditor({
     onChange(steps.filter((_, position) => position !== index))
 
   const add = (step: ArrangementStep) => onChange([...steps, step])
+
+  const setRestAfter = (index: number, restAfter: number) =>
+    onChange(
+      steps.map((step, position) =>
+        position === index && step.type === 'interlude'
+          ? { ...step, restAfter }
+          : step,
+      ),
+    )
 
   const setLoops = (index: number, loops: number) =>
     onChange(
@@ -115,6 +124,28 @@ export function ArrangementEditor({
                     {[1, 2, 3, 4].map((count) => (
                       <option key={count} value={count}>
                         ×{count}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/*
+                    Nghỉ trọn ô nhịp thì câu quay đầu bị bỏ, vì nó chẳng còn
+                    dẫn vào đâu. Nghỉ ngắn hơn thì giữ — một hai phách chỉ là
+                    chỗ lấy hơi, tai vẫn nối được câu dẫn với hợp âm đến sau.
+                  */}
+                  <select
+                    value={step.restAfter ?? DEFAULT_REST_AFTER}
+                    onChange={(event) =>
+                      setRestAfter(index, Number(event.target.value))
+                    }
+                    title="Im mấy phách sau khi hết ngẫu hứng, trước khi vào đoạn sau"
+                    className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream outline-none"
+                  >
+                    {[0, 1, 2, 4].map((beats) => (
+                      <option key={beats} value={beats}>
+                        {beats === 0
+                          ? 'xong vào ngay'
+                          : `xong nghỉ ${beats} phách`}
                       </option>
                     ))}
                   </select>

@@ -55,6 +55,31 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(run[run.length - 1].note - run[0].note).toBe(24)
   })
 
+  it('một quãng tám cũng mở và đóng cùng nốt gốc', () => {
+    // Vòng ngắn nhất còn giữ được hình mở-đóng cùng một nốt
+    const short = fill(mark(2, 1))
+    const root = chords()[2].root % 12
+
+    expect(short).toHaveLength(5)
+    expect(short[0].note % 12).toBe(root)
+    expect(short[short.length - 1].note % 12).toBe(root)
+    expect(short[short.length - 1].note - short[0].note).toBe(12)
+  })
+
+  it('chạy càng ngắn thì nốt càng chậm, vì có nhiều chỗ hơn cho mỗi nốt', () => {
+    /*
+      Luật là lấy giá trị nốt **chậm nhất còn vừa chỗ**, nên một quãng tám ra
+      nốt móc đơn, hai quãng tám ra nốt kép, ba quãng tám ra móc kép ba.
+    */
+    const gap = (octaves: number) => {
+      const line = fill(mark(2, octaves))
+      return line[1].startBeat - line[0].startBeat
+    }
+
+    expect(gap(1)).toBeGreaterThan(gap(2))
+    expect(gap(2)).toBeGreaterThan(gap(3))
+  })
+
   it('ba quãng tám thì kéo dài chân xuống, đỉnh giữ nguyên', () => {
     // Nhờ vậy mọi chỗ chuyển đoạn trong bài đều lên tới cùng một tầm
     const wider = fill(mark(2, 3))
@@ -129,12 +154,13 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     }
   })
 
-  it('giữa đoạn vẫn là câu ba nốt kết ở nốt dẫn', () => {
-    // Chỉ chỗ chuyển đoạn mới đổi hình
+  it('giữa đoạn vẫn là câu fill ngắn kết ở nốt dẫn', () => {
+    // Chỉ chỗ chuyển đoạn mới đổi hình; số nốt đổi theo lượt phát
     const inside = fill()
 
-    expect(inside).toHaveLength(3)
-    expect(inside[2].note % 12).toBe(5)
+    expect(inside.length).toBeGreaterThanOrEqual(3)
+    expect(inside.length).toBeLessThanOrEqual(4)
+    expect(inside.at(-1)!.note % 12).toBe(5)
   })
 })
 
@@ -202,5 +228,28 @@ describe('bộ lọc không được gạt chỗ chuyển đoạn', () => {
     })
 
     expect(found).toHaveLength(0)
+  })
+})
+
+describe('ô nối không chạy ngón', () => {
+  /*
+    Có chỗ chuyển đoạn không cần câu chạy — hợp âm cuối điệp khúc đi thẳng vào
+    giang tấu chẳng hạn, vì ngay sau đó đã là phần ngẫu hứng rồi. Lúc ấy vẫn
+    cần thêm một ô nhịp cho người hát ngân hết câu.
+  */
+  it('chọn không quãng tám nào thì không sinh câu chạy', () => {
+    expect(fill(mark(2, 0))).toHaveLength(0)
+  })
+
+  it('các chỗ ngắt khác vẫn chêm fill như thường', () => {
+    const line = generateFillLine(chords(), {
+      beatsPerChord: 4,
+      density: 'dense',
+      key: C_MAJOR,
+      breaths: new Set([0, 2]),
+      sectionEnds: mark(2, 0),
+    })
+
+    expect(line.length).toBeGreaterThan(0)
   })
 })

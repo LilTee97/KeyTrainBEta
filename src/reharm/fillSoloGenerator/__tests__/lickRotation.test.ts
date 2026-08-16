@@ -61,8 +61,12 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
   })
 
   it('mẫu chưa bật không lọt vào danh sách nào', () => {
+    /*
+      Không đòi danh sách chờ phải còn mẫu. Cả vốn từ vựng đã nghe duyệt xong
+      thì danh sách rỗng là đúng, và bắt nó luôn khác rỗng chỉ làm test đỏ ở
+      đúng lúc mọi thứ đã ổn.
+    */
     const waiting = LICKS.filter((lick) => !lick.inRotation)
-    expect(waiting.length).toBeGreaterThan(0)
 
     for (const role of ROLES) {
       const ids = licksFor(role).map((lick) => lick.id)
@@ -89,12 +93,14 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
       'arpeggio',
       'chord-tone',
       'sweep',
+      'triplet',
     ])
     expect(licksFor('middle').map((lick) => lick.id)).toEqual([
       'turn',
       'approach',
       'echo',
       'enclosure',
+      'triplet',
     ])
     expect(licksFor('ending').map((lick) => lick.id)).toEqual([
       'chord-tone',

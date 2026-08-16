@@ -30,6 +30,16 @@ import type { ParsedChord } from '../types'
  * màu thứ. Hợp âm treo không dùng ở đây vì nó xoá mất quãng ba, tức xoá luôn
  * cái làm nên màu thứ của chỗ sắp về.
  *
+ * ## Chơi đủ vòng, kể cả hợp âm đích
+ *
+ * Cụm gồm **ba** hợp âm: bậc hai, bậc năm, rồi chính hợp âm đích. Bản đầu chỉ
+ * chơi hai hợp âm đầu rồi để đoạn sau tự vào ở hợp âm đích — nghe như câu nói
+ * bỏ lửng, vì vòng hai-năm-một chưa được đóng lại.
+ *
+ * Hợp âm đích **vang hai lần**: một lần khép vòng ở đây, một lần nữa ở phách
+ * mạnh đầu đoạn mới. Trùng lặp ấy không phải lỗi — đó đúng là cách người ta
+ * chốt một câu rồi bắt đầu câu tiếp theo trên cùng hợp âm.
+ *
  * ## Khi vòng đã kết sẵn ở bậc năm
  *
  * Nhiều bài kết đoạn ngay ở bậc năm — điệp khúc kết `G7` rồi vào lại `Cadd9`
@@ -100,19 +110,72 @@ export function turnaroundInto(
 
   if (slots < 2) {
     // Đang là bậc năm sẵn rồi mà không còn khe để chèn thêm thì khỏi đụng vào.
-    return settled ? null : { chords: [dominant], label: dominant.symbol }
+    return settled
+      ? null
+      : { chords: [dominant, target], label: `${dominant.symbol} → ${target.symbol}` }
   }
 
   // Bậc hai của hợp âm đích: lên một cung.
   const supertonicRoot = normalizePitchClass(target.root + 2) as PitchClass
   const supertonic = makeChord(supertonicRoot, minor ? 'm7b5' : 'm7')
   if (!supertonic) {
-    return settled ? null : { chords: [dominant], label: dominant.symbol }
+    return settled
+      ? null
+      : { chords: [dominant, target], label: `${dominant.symbol} → ${target.symbol}` }
   }
 
-  return {
-    chords: [supertonic, dominant],
-    label: `${supertonic.symbol} → ${dominant.symbol}`,
-  }
+  const chords = [supertonic, dominant, target]
+  return { chords, label: chords.map((chord) => chord.symbol).join(' → ') }
 }
 
+
+/**
+ * Hợp âm **rải** chơi sau khi cụm hai-năm-một đã khép vòng.
+ *
+ * Cụm quay đầu đóng lại ở hợp âm đích, tức nó vừa *kết thúc* một câu. Nhưng
+ * ngay sau đó đoạn hát vào, và chỗ nối ấy cần một cú mở cửa chứ không phải một
+ * dấu chấm. Một hợp âm rải mang sức hút về đúng hợp âm sắp chơi làm việc đó:
+ * nó không đứng yên như hợp âm khối, mà chạy lên và bỏ lửng giữa chừng.
+ *
+ * Chọn **bậc năm của hợp âm đích** — cách phổ biến nhất, và cũng là chỗ hút
+ * mạnh nhất theo mọi luật khác trong `phongcachdemhatkhabu.md`.
+ *
+ * ## Màu phải khác màu vừa nghe
+ *
+ * Bậc năm vừa vang trong chính cụm quay đầu, nên rải lại đúng màu ấy thì nghe
+ * như đánh lặp chứ không như một cú mở cửa. Phần 12.2 của tài liệu nói thẳng
+ * nguyên tắc này qua chuỗi `C → CM7 → C6 → CM7`: cùng một gốc thì **đổi màu
+ * mỗi lần** để tránh đơn điệu.
+ *
+ * Bảng màu ở đây lấy từ đúng những màu tài liệu dùng cho bậc năm:
+ *
+ * - `9sus4` — màu chữ ký của phong cách, phần 15 ghi lại `Dm7 → G9sus4 → CM7`.
+ *   Mềm, hợp nhạc Việt, và vì thiếu quãng ba nên nó *treo* chứ không chốt.
+ * - `13` — bậc năm nới rộng, phần 12.2 gọi là biến hoá màu trên cùng một gốc.
+ * - `7b9` — bậc năm căng, phần 7 dùng cho chỗ dẫn về hợp âm thứ.
+ */
+export function pullChordFor(
+  target: ParsedChord,
+  /** Hợp âm bậc năm vừa vang trong cụm; tránh trùng màu với nó. */
+  avoid?: ParsedChord,
+): ParsedChord | null {
+  const root = normalizePitchClass(target.root + 7) as PitchClass
+  const minor = isMinorish(target)
+
+  /*
+    Xếp theo thứ tự ưu tiên, rồi lấy màu đầu tiên khác màu vừa nghe. Hợp âm
+    đích thứ thì bỏ hẳn màu treo: treo xoá mất quãng ba, tức xoá luôn cái làm
+    nên màu thứ của chỗ sắp về.
+  */
+  const palette = minor ? ['7b9', '7#5', '13'] : ['9sus4', '13', '7b9']
+  const used = avoid?.root === root ? avoid.quality.id : null
+
+  for (const id of palette) {
+    if (id === used) continue
+
+    const chord = makeChord(root, id)
+    if (chord) return chord
+  }
+
+  return null
+}

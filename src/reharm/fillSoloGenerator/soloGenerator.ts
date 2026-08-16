@@ -95,6 +95,15 @@ export const NOTE_SOURCE_OPTIONS: readonly NoteSourceOption[] = [
   },
 ]
 
+/**
+ * Mật độ nốt láy, tách hẳn khỏi mật độ nốt của câu nhạc.
+ *
+ * Trước đây một ô chỉnh làm hai việc, nên muốn thưa nốt láy thì buộc phải thưa
+ * luôn cả câu solo — không có cách nào giữ câu chạy dày mà bớt láy. `'none'`
+ * để tắt hẳn, vì có người chỉ muốn nghe đúng nốt của hợp âm.
+ */
+export type GraceDensity = OrnamentDensity | 'none'
+
 export interface SoloOptions {
   /** Số phách mỗi hợp âm chiếm. */
   beatsPerChord: number
@@ -102,6 +111,8 @@ export interface SoloOptions {
   notesPerChord?: number
   direction?: ApproachDirection
   density?: OrnamentDensity
+  /** Mật độ nốt láy, tách riêng khỏi mật độ nốt của câu nhạc. */
+  graceDensity?: GraceDensity
   key?: { tonic: PitchClass; scale: ScaleType } | null
   noteSource?: SoloNoteSource
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
@@ -387,6 +398,15 @@ export function generateFillLine(
      * Chỗ này câu fill đổi hình hẳn — xem ghi chú trong thân hàm.
      */
     sectionEnds?: ReadonlyMap<number, TransitionRun>
+    /**
+     * Lượt phát thứ mấy, để câu fill không lặp y nguyên giữa các lượt.
+     *
+     * Cùng lý do với đoạn giang tấu: nghe một bài hai lần mà câu chêm giống
+     * hệt nhau thì lộ ra ngay là máy đánh. Lượt chỉ đổi **hướng đi** của câu
+     * fill chứ không đổi nốt đích — nốt đích là chỗ hoà âm đòi hỏi, không phải
+     * chỗ để biến tấu.
+     */
+    take?: number
   },
 ): SoloNote[] {
   const {
@@ -398,6 +418,7 @@ export function generateFillLine(
     skipFills,
     breaths,
     sectionEnds,
+    take = 0,
   } = options
 
   if (chords.length < 2) return []
@@ -478,9 +499,22 @@ export function generateFillLine(
     /*
       Ba nốt là đủ để nghe ra hướng đi mà không lấn sang phần hát.
     */
-    const approachFrom = direction === 'above' ? 'down' : 'up'
+    /*
+      Hướng đi đổi theo **lượt phát và vị trí chỗ chêm**, khi người dùng để
+      `mixed`. Chọn hướng cố định thì mọi câu fill trong bài đều đi cùng chiều
+      và mọi lượt phát giống hệt nhau.
+    */
+    const approachFrom =
+      direction === 'above'
+        ? 'down'
+        : direction === 'below'
+          ? 'up'
+          : (mainIndex + take) % 2 === 0
+            ? 'up'
+            : 'down'
+    const steps = Math.floor((mainIndex + take) / 2) % 2 === 0 ? 2 : 3
     const line: MidiNote[] = [landing]
-    for (let step = 0; step < 2; step += 1) {
+    for (let step = 0; step < steps; step += 1) {
       line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
     }
 
@@ -543,6 +577,7 @@ export function generateSolo(
   const {
     beatsPerChord,
     density = 'medium',
+    graceDensity = 'sparse',
     direction = 'mixed',
     key = null,
     noteSource = 'chordTone',
@@ -676,7 +711,7 @@ export function generateSolo(
 
   return addGraceNotes(result.sort((a, b) => a.startBeat - b.startBeat), {
     direction,
-    density,
+    density: graceDensity,
     tones,
   })
 }
@@ -689,6 +724,15 @@ export function generateSolo(
  * câu nhạc nghe như bị thêm nốt thừa.
  */
 const GRACE_BEATS = 0.125
+
+/**
+ * Nốt phải dài ít nhất chừng này mới đáng láy.
+ *
+ * Nốt láy là đồ trang trí cho **nốt tai dừng lại ở đó**. Gắn nó vào từng nốt
+ * của một câu chạy nhanh thì câu nhạc nhoè đi, và đó chính là cảm giác "láy
+ * nhiều quá" nghe thấy khi đo được 76% số nốt có láy ở mức dày.
+ */
+const GRACE_MIN_NOTE = 0.5
 
 /**
  * Nốt đứng trước phải còn lại ít nhất chừng này sau khi bị cắt để nhường chỗ.
@@ -719,11 +763,12 @@ function addGraceNotes(
   line: readonly SoloNote[],
   options: {
     direction: ApproachDirection
-    density: OrnamentDensity
+    density: GraceDensity
     tones: ReadonlySet<PitchClass>
   },
 ): SoloNote[] {
   const { direction, density, tones } = options
+  if (density === 'none') return [...line]
 
   // Chỉ láy nốt chính; nốt mềm sẵn có của mẫu câu thì để yên.
   const main = line.filter((note) => !note.isGrace)
@@ -746,6 +791,7 @@ function addGraceNotes(
     */
     const room =
       graceStart >= 0 &&
+      note.durationBeats >= GRACE_MIN_NOTE &&
       (previous === undefined ||
         graceStart - previous.startBeat >= GRACE_MIN_ROOM)
 

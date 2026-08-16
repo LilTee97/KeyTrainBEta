@@ -16,6 +16,15 @@ import type { TimelineEvent } from './types'
  * danh sách rồi chọn nó **mượn vòng hợp âm của đoạn nào**.
  */
 
+/**
+ * Nghỉ mặc định sau đoạn giang tấu: **một phách**.
+ *
+ * Đủ để tai chuyển từ lối nghe độc tấu sang lối nghe bài hát, mà chưa đứt mạch.
+ * Trọn một ô nhịp thì dài quá — và nó còn làm mất câu quay đầu, vì cách nhau
+ * cả ô im lặng thì câu dẫn chẳng dẫn vào đâu.
+ */
+export const DEFAULT_REST_AFTER = 1
+
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 0.001
 
@@ -37,7 +46,19 @@ export type ArrangementStep =
    * Giang tấu vốn là chỗ trống giữa bài, không có vòng hợp âm riêng — nó mượn
    * vòng của một đoạn khác, thường là điệp khúc.
    */
-  | { type: 'interlude'; over: number; loops: number }
+  | {
+      type: 'interlude'
+      over: number
+      loops: number
+      /**
+       * Im mấy phách sau khi hết ngẫu hứng, trước khi vào bước kế tiếp.
+       *
+       * Bỏ trống thì lấy mặc định của cả bài. Để riêng từng bước vì mỗi chỗ
+       * giang tấu một khác: chỗ trả bài lại cho người hát cần nhiều chỗ thở,
+       * chỗ nối sang một đoạn nhạc khác thì gần như không cần.
+       */
+      restAfter?: number
+    }
 
 /** Thứ tự mặc định: chơi lần lượt từng đoạn đúng một lượt. */
 export function defaultArrangement(
@@ -137,6 +158,24 @@ export interface BuildArrangedSongOptions {
     over: SourceSection,
     next: SourceSection | null,
   ) => { startBeat: number; lengthBeats: number } | null
+  /**
+   * Im hẳn mấy phách sau đoạn giang tấu, trước khi vào bước kế tiếp.
+   *
+   * Hết ngẫu hứng mà đoạn hát vào ngay thì không có chỗ nào để tai chuyển từ
+   * lối nghe *độc tấu* sang lối nghe *bài hát*. Một ô nhịp trống làm việc đó.
+   *
+   * Nghỉ **trọn một ô nhịp** thì bỏ câu quay đầu: câu quay đầu sinh ra để dẫn
+   * thẳng vào hợp âm ngay sau nó, mà cách nhau cả ô nhịp im lặng thì nó chẳng
+   * dẫn vào đâu, lại nghe như bị cắt ngang.
+   *
+   * Nghỉ ngắn hơn thì **giữ câu quay đầu**: một hai phách chỉ là chỗ lấy hơi,
+   * tai vẫn nối được câu dẫn với hợp âm đến sau.
+   *
+   * Từng bước giang tấu ghi đè được bằng `restAfter` của chính nó.
+   */
+  restAfterInterlude?: number
+  /** Một ô nhịp dài mấy phách, để biết thế nào là nghỉ trọn ô. */
+  beatsPerMeasure?: number
 }
 
 /**
@@ -159,6 +198,8 @@ export function buildArrangedSong(
     steps,
     turnaround,
     interludeRange,
+    restAfterInterlude = 0,
+    beatsPerMeasure = 4,
   } = options
 
   const forInterlude = interludeAccompaniment(interlude ?? accompaniment)
@@ -215,7 +256,12 @@ export function buildArrangedSong(
       lengthBeats: loopBeats * loops,
     })
 
-    const turn = next && turnaround ? turnaround(over, next) : null
+    const restAfter =
+      next === null ? 0 : (step.restAfter ?? restAfterInterlude)
+
+    // Nghỉ trọn ô nhịp thì thôi quay đầu — xem `restAfterInterlude`.
+    const severed = restAfter >= beatsPerMeasure
+    const turn = next && turnaround && !severed ? turnaround(over, next) : null
     const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
 
     for (let loop = 0; loop < loops; loop += 1) {
@@ -254,7 +300,7 @@ export function buildArrangedSong(
       }
     }
 
-    cursor += loopBeats * loops
+    cursor += loopBeats * loops + restAfter
   }
 
   return {

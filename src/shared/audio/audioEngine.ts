@@ -278,7 +278,7 @@ let loopPart: Tone.Part<LoopEvent> | null = null
  * `Part.start()` lại nhận thời gian của **Transport**. Truyền nhầm giữa hai hệ
  * thì Part bị xếp lịch ở một chỗ vô nghĩa và không nốt nào kêu.
  */
-const LOOP_PASSES = 3
+export const LOOP_PASSES = 3
 
 /**
  * Phát phần đệm **lặp đi lặp lại** cho tới khi bị dừng.
