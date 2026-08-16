@@ -34,6 +34,10 @@ import {
   sectionChordRanges,
 } from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
+import { parseSongText } from './input/songTextParser'
+import type { SongSnapshot } from './persistence/songSnapshot'
+import { SongLibrary } from './persistence/SongLibrary'
+import { SaveSongButton } from './persistence/SaveSongButton'
 import type {
   ApproachDirection,
   OrnamentDensity,
@@ -348,6 +352,14 @@ export function ReharmHome() {
   const [manualKey, setManualKey] = useState('')
   /** Tay nào được phát, để nghe riêng từng tay. */
   const [hand, setHand] = useState<'both' | 'left' | 'right'>('both')
+
+  /** Lời gốc đúng như người dùng dán vào, để lưu lại và phân tích lại. */
+  const [sourceText, setSourceText] = useState('')
+  /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
+  const [songId, setSongId] = useState<string | null>(null)
+  const [songTitle, setSongTitle] = useState<string | null>(null)
+  /** Tăng lên mỗi lần lưu, để danh sách bài đọc lại kho. */
+  const [saveCount, setSaveCount] = useState(0)
 
   const bpm = useMetronomeStore((state) => state.bpm)
 
@@ -885,6 +897,111 @@ export function ReharmHome() {
     [withPassing, chordBeats],
   )
 
+  /**
+   * Gói toàn bộ lựa chọn của người dùng lại để lưu xuống kho.
+   *
+   * Cố ý liệt kê từng trường thay vì gom cả `state` — thêm một lựa chọn mới mà
+   * quên thêm vào đây thì `tsc` báo ngay, còn gom cả cục thì nó lặng lẽ lưu
+   * thiếu và chỉ phát hiện khi người dùng mở lại bài thấy mất.
+   */
+  const snapshot = useCallback(
+    (): SongSnapshot => ({
+      version: 1,
+      sourceText,
+      transpose,
+      manualKey,
+      sectionMarks,
+      arrangement,
+      transitionEdits,
+      pairedChords: [...pairedChords],
+      mutedFills: [...mutedFills],
+      acceptedPassing,
+      styleId,
+      beatsPerChord,
+      smoothVoicing,
+      dropRoot,
+      useSlashChords,
+      allowJazzColors,
+      intensity,
+      susDominant,
+      tonicColor,
+      majorColor,
+      minorColor,
+      dominantColor,
+      soloDensity,
+      noteSource,
+      chordsPerPhrase,
+    }),
+    [
+      sourceText,
+      transpose,
+      manualKey,
+      sectionMarks,
+      arrangement,
+      transitionEdits,
+      pairedChords,
+      mutedFills,
+      acceptedPassing,
+      styleId,
+      beatsPerChord,
+      smoothVoicing,
+      dropRoot,
+      useSlashChords,
+      allowJazzColors,
+      intensity,
+      susDominant,
+      tonicColor,
+      majorColor,
+      minorColor,
+      dominantColor,
+      soloDensity,
+      noteSource,
+      chordsPerPhrase,
+    ],
+  )
+
+  /**
+   * Đặt lại toàn bộ trang theo một ảnh chụp đã lưu.
+   *
+   * Phân tích lại lời từ `sourceText` chứ không lưu kết quả phân tích: bộ đọc
+   * lời còn sửa tiếp, và bài lưu hôm nay phải hưởng được bản sửa ngày mai.
+   */
+  const applySnapshot = useCallback((saved: SongSnapshot) => {
+    const parsed = parseSongText(saved.sourceText)
+
+    setSourceText(saved.sourceText)
+    setPastedSong(parsed)
+    setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
+    setSelectedIndex(null)
+
+    setTranspose(saved.transpose)
+    setManualKey(saved.manualKey)
+    setSectionMarks(saved.sectionMarks)
+    setArrangement(saved.arrangement)
+    setTransitionEdits(saved.transitionEdits)
+    setPairedChords(new Set(saved.pairedChords))
+    setMutedFills(new Set(saved.mutedFills))
+    setAcceptedPassing(saved.acceptedPassing)
+
+    setStyleId(saved.styleId)
+    setBeatsPerChord(saved.beatsPerChord)
+    setSmoothVoicing(saved.smoothVoicing)
+    setDropRoot(saved.dropRoot)
+    setUseSlashChords(saved.useSlashChords)
+
+    setAllowJazzColors(saved.allowJazzColors)
+    setIntensity(saved.intensity as ColorIntensity)
+    setSusDominant(saved.susDominant)
+    setTonicColor(saved.tonicColor as MajorChordColor)
+    setMajorColor(saved.majorColor as MajorChordColor)
+    setMinorColor(saved.minorColor as MinorChordColor)
+    setDominantColor(saved.dominantColor as DominantChordColor)
+
+    setSoloDensity(saved.soloDensity as OrnamentDensity)
+    setNoteSource(saved.noteSource as SoloNoteSource)
+    setChordsPerPhrase(saved.chordsPerPhrase)
+  }, [])
+
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(
     () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
@@ -1039,16 +1156,35 @@ export function ReharmHome() {
       </div>
 
       <SongTextInput
-        onUseSong={(parsed) => {
+        onUseSong={(parsed, text) => {
           setPastedSong(parsed)
+          setSourceText(text)
+          /*
+            Dán lời mới thì coi như bài mới: bỏ mọi lựa chọn đã dựng, và thôi
+            gắn với bài đang mở trong kho. Không thì bấm Lưu sẽ ghi đè bài cũ
+            bằng một bài khác hẳn.
+          */
+          setSongId(null)
+          setSongTitle(null)
           setSectionMarks([])
           setArrangement(null)
           setTranspose(0)
           setPairedChords(new Set())
           setMutedFills(new Set())
+          setTransitionEdits({})
           setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
           setSelectedIndex(null)
           setAcceptedPassing([])
+        }}
+      />
+
+      <SongLibrary
+        currentId={songId}
+        reloadKey={saveCount}
+        onOpen={(saved, id, title) => {
+          applySnapshot(saved)
+          setSongId(id)
+          setSongTitle(title)
         }}
       />
 
@@ -1058,6 +1194,17 @@ export function ReharmHome() {
             <h3 className="font-mono text-[11px] tracking-[0.08em] text-amber-key uppercase">
               Bản nhạc đã tái hoà âm
             </h3>
+
+            <SaveSongButton
+              snapshot={snapshot}
+              currentId={songId}
+              currentTitle={songTitle}
+              onSaved={(id, title) => {
+                setSongId(id)
+                setSongTitle(title)
+                setSaveCount((count) => count + 1)
+              }}
+            />
 
             <div className="flex items-center gap-1.5">
               <span className="font-mono text-[10px] tracking-[0.08em] text-dim uppercase">

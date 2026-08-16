@@ -8,6 +8,9 @@
 
 Repo `D:\Coding Piano app` khi lập kế hoạch còn trống hoàn toàn (chỉ có thư mục `Reference\`). Mục tiêu là xây **KeyTrain** — một web app luyện piano gồm **hai hệ thống con** dùng chung một lõi:
 
+> **Phạm vi đã chốt lại giữa chừng:** bước 23 (popup thế bấm) và mọi hình thức
+> game hoá cho hệ B đều **đã bỏ hẳn**, không phải hoãn. Đừng đề xuất làm lại.
+
 - **Hệ A — Luyện tai nghe hợp âm** (lấy cảm hứng từ mikebwilliams.com/chords/): nhận diện hợp âm đơn, luyện progression, metronome, spaced repetition + thống kê. Điểm khác biệt: phần **ôn tập ghi nhớ được game hóa**.
 - **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → sinh câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B **không game hoá** — không điểm, không sao, không huy hiệu.
 
@@ -217,7 +220,7 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 20. **Luật hợp âm lướt** — dim7 + vòng 2-5-1 lướt, hiện dạng gợi ý chấp nhận/từ chối.
 21. **Bossa / Swing / Valse** — các `styleLibrary/*.json` còn lại + nhánh cell cố định + UI chọn điệu. → **Mốc kiểm: cân nhắc lại phạm vi còn lại của hệ B (xem rủi ro #6) trước khi đi tiếp.**
 22. **Nhập bài hát** — `songTextParser.ts` (cả 2 định dạng) + tab "Bài hát" hiện hợp âm bấm được trên lời.
-23. **Popup thế bấm** — chạm hợp âm → hiện sơ đồ bàn phím 2 tay (bản piano của fret diagram bên Tunga).
+23. ~~**Popup thế bấm**~~ — **đã bỏ**. Bàn phím đàn dưới bản nhạc đã chỉ đúng thế bấm hai tay của hợp âm vừa chạm, và chế độ chờ đánh đúng nốt cũng hiện nốt đang chờ. Một popup nữa chỉ là cách thứ ba nói cùng một điều.
 24. **Câu fill V-I** — phát hiện chỗ V-I, chèn chuỗi dim7 đúng công thức tài liệu, có toggle.
 25. **Nốt láy + sinh solo** — tô điểm giai điệu + sinh câu solo/intro, **gắn nhãn "thử nghiệm / mô phỏng phong cách"** trên UI.
 26. **Backing track hoàn chỉnh** — gộp điệu + tái hòa âm + fill/solo vào một nút "Phát backing track".

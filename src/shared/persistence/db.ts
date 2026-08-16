@@ -63,13 +63,27 @@ export interface ProgressRecord {
   badges: { id: string; tier?: string; unlockedAt: number }[]
 }
 
-/** Bài hát người dùng nhập vào phần tái hòa âm. */
+/**
+ * Bài hát người dùng nhập vào phần tái hòa âm, kèm **mọi lựa chọn đã dựng**.
+ *
+ * `sourceText` là lời gốc, còn `snapshot` là tất cả những gì người dùng quyết
+ * định trên đó: chia đoạn, thứ tự chơi, hợp âm lướt đã chèn, ô nhịp đã chia
+ * đôi, mốc chuyển đoạn, tone đã dịch, điệu, màu hợp âm. Không có `snapshot`
+ * thì mở lại bài chỉ được cái lời — tức mất hết phần dựng, vốn là phần tốn
+ * công nhất.
+ *
+ * Kiểu của `snapshot` cố ý để **lỏng** ở tầng này: kho dữ liệu không nên biết
+ * chi tiết lựa chọn của phần tái hoà âm. Bên đọc tự kiểm lại — xem
+ * `reharm/persistence/songSnapshot.ts`.
+ */
 export interface StoredSong {
   id: string
   title: string
   /** Văn bản gốc người dùng dán vào, giữ nguyên để có thể phân tích lại. */
   sourceText: string
   updatedAt: number
+  /** Bỏ trống với bài lưu từ bản cũ, lúc chưa lưu kèm lựa chọn. */
+  snapshot?: unknown
 }
 
 interface KeyTrainDB extends DBSchema {
@@ -192,6 +206,29 @@ export async function putProgress(record: ProgressRecord): Promise<void> {
 }
 
 /** Xoá sạch dữ liệu luyện tập. Dùng cho nút đặt lại thống kê. */
+/** Lưu hoặc ghi đè một bài hát. */
+export async function putSong(song: StoredSong): Promise<void> {
+  const db = await getDb()
+  await db.put('songs', song)
+}
+
+/** Mọi bài đã lưu, **mới sửa gần nhất lên đầu**. */
+export async function listSongs(): Promise<StoredSong[]> {
+  const db = await getDb()
+  const songs = await db.getAllFromIndex('songs', 'by-updated')
+  return songs.reverse()
+}
+
+export async function getSong(id: string): Promise<StoredSong | undefined> {
+  const db = await getDb()
+  return db.get('songs', id)
+}
+
+export async function deleteSong(id: string): Promise<void> {
+  const db = await getDb()
+  await db.delete('songs', id)
+}
+
 export async function clearPracticeData(): Promise<void> {
   const db = await getDb()
   await Promise.all([

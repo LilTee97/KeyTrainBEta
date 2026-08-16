@@ -36,7 +36,8 @@ interface SongTextInputProps {
    * Truyền cả `ParsedSong` chứ không chỉ chuỗi hợp âm, vì trang chính còn cần
    * lời và vị trí neo để dựng bản nhạc có hợp âm đã tái hoà âm.
    */
-  onUseSong: (song: ParsedSong) => void
+  /** Nhận cả lời gốc, để dựng lại được bản nhạc khi mở bài đã lưu. */
+  onUseSong: (song: ParsedSong, sourceText: string) => void
 }
 
 /**
@@ -70,6 +71,11 @@ function PreviewLine({ line }: { line: SongLine }) {
 }
 
 export function SongTextInput({ onUseSong }: SongTextInputProps) {
+  /*
+    Mở một bài đã lưu **không** nạp lời ngược lại vào đây. Thứ được lưu là bản
+    nhạc đã tái hoà âm; mở ra là thấy ngay bản nhạc, không phải làm lại từ
+    bước dán lời. Ô này chỉ để đưa bài mới vào.
+  */
   const [text, setText] = useState('')
   /**
    * Đã bấm tái hoà âm cho đúng đoạn text đang có chưa.
@@ -119,7 +125,7 @@ export function SongTextInput({ onUseSong }: SongTextInputProps) {
           type="button"
           disabled={song.chords.length === 0}
           onClick={() => {
-            onUseSong(song)
+            onUseSong(song, text)
             setSubmitted(true)
           }}
           className="rounded-lg bg-amber-key px-3 py-1.5 text-xs font-semibold text-black disabled:opacity-40"
