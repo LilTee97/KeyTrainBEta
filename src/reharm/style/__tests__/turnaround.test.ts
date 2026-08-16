@@ -418,6 +418,23 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
     }
   })
 
+  it('dựng lại đúng ví dụ Em7 đổi thành E7b9 của tài liệu', () => {
+    /*
+      Phần 11 mục 5 và phần 1 ghi kỹ thuật "đổi hợp âm kết ở mỗi lượt lặp câu
+      nhạc (vd Em7 → E7b9)". Trong giọng Đô, đoạn kết ở Em7 mà chỗ sau vào Am
+      thì bậc năm của Am chính là E — và màu chọn cho hợp âm đích thứ ra đúng
+      E7b9 mà tài liệu ghi. Đây là chỗ đối chiếu luật với nguồn.
+    */
+    const pull = pullChordFor(chord('Am'), chord('Em7'))!
+
+    expect(pull.symbol).toBe('E7b9')
+  })
+
+  it('dựng lại đúng ví dụ C7 hút về FM7 của tài liệu', () => {
+    // Phần 15: lượt lặp kết bằng C7, tức V7/IV, kéo về FM7 ở đầu vòng
+    expect(pullChordFor(chord('Fmaj7'))!.root).toBe(chord('C').root)
+  })
+
   it('tránh được màu trùng thì vẫn còn màu khác để dùng', () => {
     for (const id of ['9sus4', '13', '7b9']) {
       const avoid = { ...chord('G7'), quality: chord(`G${id}`).quality }

@@ -80,7 +80,7 @@ Chia 3 tầng: `src/shared/` (xây một lần, cả 2 hệ dùng chung) — `sr
 - `reharmEngine/voiceLeadingOptimizer.ts` — **nguyên lý gốc**: chọn thế đảo/voicing sao cho tổng khoảng cách di chuyển giữa các hợp âm là nhỏ nhất. Mọi luật khác đều gọi lại module này khi chèn/đổi hợp âm.
 - `reharmEngine/staticVoicingRules.ts` — kỹ thuật 1: thay triad trơn bằng sus2/4/9/11/maj7/add2; quy hợp âm mở rộng về hình đơn giản chồng trên bass khác (upper-structure/slash chord) dưới dạng **luật tái dùng được**, không hardcode theo từng bài.
 - `reharmEngine/passingChordRules.ts` — kỹ thuật 2: 3 công thức dim7 lướt (I→ii, iii→ii, dẫn về vi), chèn vòng 2-5-1 lướt cho 5 bậc {ii, iii, IV, V, vi}, chuỗi 2-3 dim7 nối V→I. Mỗi luật = matcher + gợi ý chèn, hiển thị cho người dùng **chấp nhận/từ chối**, không tự áp dụng ngầm.
-- `reharmEngine/progressionSubstitution.ts` — kỹ thuật 3: đổi vòng cả bài sang ii-V-I-vi, **chỉ khi người dùng chủ động bật** (thay đổi bản sắc hòa âm).
+- ~~`reharmEngine/progressionSubstitution.ts`~~ — **đã bỏ**, xem bước 29.
 - `reharmEngine/repeatVariation.ts` — kỹ thuật 5: đổi hợp âm kết ở lượt lặp lại.
 - `reharmEngine/reharmPipeline.ts` — điều phối: parse → phân tích bậc → luật voicing tĩnh → gợi ý hợp âm lướt → tối ưu voice leading → `ReharmonizedProgression`.
 - `style/styleLibrary/*.json` — `ballad.json`, `bossaNova.json`, `swing.json`, `valse.json` (đều `verified: true`, đúng schema tài liệu §19.3) + `unverified/*.json` (march/polka, boston/mazurka, cha-cha/rhumba/bolero/disco, slow-rock) với `verified: false, cell: null` để UI làm mờ thay vì **bịa ra** mẫu tiết tấu.
@@ -227,7 +227,8 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 26. **Backing track hoàn chỉnh** — gộp điệu + tái hòa âm + fill/solo vào một nút "Phát backing track".
 27. **Chờ đánh đúng nốt (hai tay)** — `noteGatedPlaybackEngine.ts` gate timeline bước 26 theo `midiStore`. **Làm prototype quyết định transport tại đây** (rủi ro #2) trước khi xây tiếp lên trên.
 28. **Chế độ tay trái / tay phải riêng** — `practiceModeController.ts` lọc track theo tay.
-29. **Biến tấu khi lặp + đổi vòng cả bài sang ii-V-I-vi** — luật mang tính "gợi ý sáng tạo", để cuối.
+29. **Biến tấu khi lặp lại** — **đã xong**. Hợp âm kết của mỗi lượt lặp đổi thành bậc năm của hợp âm ngay sau nó, đúng hai ví dụ tài liệu ghi (§11 mục 5: `Em7 → E7b9`; §15: `C7` hút về `FM7`). Chỉ đổi từ lượt thứ hai trở đi, và không đổi ở đoạn kết bài hay bước cuối bài.
+    - ~~**Đổi vòng cả bài sang ii-V-I-vi**~~ (kỹ thuật 3, tài liệu §9) — **đã bỏ**. Chính tài liệu gọi đây là *"lựa chọn vòng hợp âm nền cho cả bài (compositional choice), không phải kỹ thuật lướt/nối tạm thời"* — tức nó dành cho lúc **viết** một bài, không phải lúc **đệm** một bài. Bốn kỹ thuật còn lại đều giữ nguyên bài hát và chỉ đổi cách bấm/nối/chèn; cái này thay hẳn vòng gốc, nên hợp âm không còn khớp giai điệu người dùng đang hát. Mà luồng của KeyTrain là dán lời một bài có thật rồi tập đệm chính bài đó.
 30. **Hoàn thiện** — ~~lưu preset~~, lưu bài hát (mở rộng schema bước 11), làm mờ điệu chưa xác thực, ~~trang cài đặt~~, responsive cho bàn phím ảo, rà accessibility. **Đã xong.**
 
     Hai mục bị bỏ, cùng một lý do: **mọi lựa chọn đều lưu theo từng bài**, mà đó mới đúng — điệu, màu hợp âm, mật độ fill là chuyện của từng bài chứ không phải cài đặt chung. Preset vì vậy trùng hẳn với chức năng lưu bài. Nhịp độ — thứ duy nhất đáng làm cài đặt chung — đã tự nhớ qua các lần mở app và nằm ngay cạnh nút phát. Một trang cài đặt sẽ không có gì để chứa.

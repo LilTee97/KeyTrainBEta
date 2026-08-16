@@ -333,3 +333,121 @@ describe('tra ngược về vòng hợp âm gốc', () => {
     expect(sourceBeatAt(song.segments, -1)).toBeNull()
   })
 })
+
+describe('đổi hợp âm kết khi lặp đoạn', () => {
+  /*
+    Kỹ thuật thứ năm của phong cách (tài liệu §11 mục 5, §1): "đổi hợp âm kết ở
+    mỗi lượt lặp câu nhạc (vd Em7 → E7b9) để tránh nhàm chán".
+  */
+  const varied: TimelineEvent[] = [
+    { notes: [61], startBeat: 0, durationBeats: 4, hand: 'right', velocity: 99 },
+  ]
+  const take = () => ({ events: varied, beats: 4 })
+
+  const withRepeat = (steps: readonly ArrangementStep[]) =>
+    buildArrangedSong({
+      accompaniment: ACCOMPANIMENT,
+      fills: FILLS,
+      solo: soloFor,
+      sources: SOURCES,
+      steps,
+      repeatEnding: take,
+    })
+
+  it('lượt đầu giữ nguyên câu nhạc như bài vốn có', () => {
+    // Có nghe lượt đầu như bài viết thì lượt sau đổi đi mới thành biến tấu
+    const song = withRepeat([
+      { type: 'section', source: 0 },
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ])
+
+    const first = song.events.filter(
+      (event) => event.startBeat < 8 && event.velocity === 99,
+    )
+    expect(first).toHaveLength(0)
+  })
+
+  it('lượt lặp lại đổi hợp âm cuối', () => {
+    const song = withRepeat([
+      { type: 'section', source: 0 },
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ])
+
+    // Ô cuối của lượt hai, tức bốn phách cuối trong khoảng 8-16
+    const second = song.events.filter(
+      (event) => event.startBeat === 12 && event.velocity === 99,
+    )
+    expect(second).toHaveLength(1)
+  })
+
+  it('đoạn chỉ chơi một lượt thì không đổi gì', () => {
+    const song = withRepeat([
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ])
+
+    expect(song.events.some((event) => event.velocity === 99)).toBe(false)
+  })
+
+  it('lượt cuối cùng của bài không đổi vì không hút về đâu', () => {
+    /*
+      Hợp âm kết đổi thành bậc năm của chỗ sắp vào; bước cuối không có chỗ nào
+      sắp vào, đổi thì bài kết lửng.
+    */
+    const song = withRepeat([
+      { type: 'section', source: 0 },
+      { type: 'section', source: 0 },
+    ])
+
+    expect(song.events.some((event) => event.velocity === 99)).toBe(false)
+  })
+
+  it('đoạn kết bài vẫn kết bằng hợp âm kết, không đổi thành hút đi tiếp', () => {
+    const closing: TimelineEvent[] = [
+      { notes: [72], startBeat: 0, durationBeats: 4, hand: 'right', velocity: 55 },
+    ]
+
+    const song = buildArrangedSong({
+      accompaniment: ACCOMPANIMENT,
+      fills: FILLS,
+      solo: soloFor,
+      sources: SOURCES,
+      steps: [
+        { type: 'section', source: 0 },
+        { type: 'section', source: 0, ending: 'colored' },
+        { type: 'section', source: 1 },
+      ],
+      repeatEnding: take,
+      ending: () => ({ events: closing, beats: 4 }),
+    })
+
+    expect(song.events.some((event) => event.velocity === 55)).toBe(true)
+    expect(song.events.some((event) => event.velocity === 99)).toBe(false)
+  })
+
+  it('không đổi gì khi tính năng tắt', () => {
+    const song = build([
+      { type: 'section', source: 0 },
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ])
+
+    // Bốn phách cuối lượt hai vẫn là phần đệm gốc
+    expect(
+      song.events.filter((event) => event.startBeat === 12).length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('lượt lặp không làm đoạn dài ra hay ngắn đi', () => {
+    // Đổi hợp âm chứ không chèn thêm ô nhịp, nên tổng số phách phải y nguyên
+    const steps: ArrangementStep[] = [
+      { type: 'section', source: 0 },
+      { type: 'section', source: 0 },
+      { type: 'section', source: 1 },
+    ]
+
+    expect(withRepeat(steps).totalBeats).toBe(build(steps).totalBeats)
+  })
+})

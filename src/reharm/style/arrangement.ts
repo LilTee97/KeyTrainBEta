@@ -182,6 +182,27 @@ export interface BuildArrangedSongOptions {
     mode: EndingMode,
   ) => TurnaroundTake | null
   /**
+   * Hợp âm kết **đổi màu ở mỗi lượt lặp lại** của cùng một đoạn.
+   *
+   * Kỹ thuật thứ năm trong tài liệu phong cách (§11 mục 5, §1): *"đổi hợp âm
+   * kết ở mỗi lượt lặp câu nhạc (vd Em7 → E7b9) để tránh nhàm chán"*. §15 ghi
+   * một ví dụ dài hơn: lượt đầu kết bằng Am9, lượt sau đổi thành cụm bốn hợp
+   * âm khép về đầu vòng.
+   *
+   * Chỉ đổi ở lượt **thứ hai trở đi**: lượt đầu là câu nhạc như bài vốn có, có
+   * nghe nó trước thì lượt sau đổi đi mới thành *biến tấu*. Đổi ngay từ lượt
+   * đầu thì không có gì để so, chỉ thành một hợp âm lạ.
+   *
+   * Đoạn đã đánh dấu kết bài thì bỏ qua — chỗ đó cần đóng lại, không cần hút
+   * đi tiếp.
+   */
+  repeatEnding?: (
+    source: SourceSection,
+    next: SourceSection,
+    /** Lượt thứ mấy của đoạn này, tính từ 0. */
+    pass: number,
+  ) => TurnaroundTake | null
+  /**
    * Im hẳn mấy phách sau đoạn giang tấu, trước khi vào bước kế tiếp.
    *
    * Hết ngẫu hứng mà đoạn hát vào ngay thì không có chỗ nào để tai chuyển từ
@@ -224,6 +245,7 @@ export function buildArrangedSong(
     restAfterInterlude = 0,
     beatsPerMeasure = 4,
     ending,
+    repeatEnding,
   } = options
 
   const forInterlude = interludeAccompaniment(interlude ?? accompaniment)
@@ -234,10 +256,16 @@ export function buildArrangedSong(
   let cursor = 0
   let take = 0
 
+  /** Đoạn nào đã chơi mấy lượt rồi, để biết lượt nào là lượt lặp lại. */
+  const passes = new Map<number, number>()
+
   for (const [index, step] of steps.entries()) {
     if (step.type === 'section') {
       const source = sources[step.source]
       if (!source) continue
+
+      const pass = passes.get(step.source) ?? 0
+      passes.set(step.source, pass + 1)
 
       sections.push({
         kind: source.kind,
@@ -255,7 +283,21 @@ export function buildArrangedSong(
         Đoạn kết bài: vòng hợp âm chạy bình thường tới hợp âm cuối, chỗ đó mới
         đổi màu. Cắt đúng phần cuối rồi thay bằng hợp âm đã đổi.
       */
-      const close = step.ending && ending ? ending(source, step.ending) : null
+      /*
+        Đoạn kết bài đóng lại bằng hợp âm kết; đoạn lặp lại thì đổi hợp âm kết
+        để lượt sau không nghe y hệt lượt trước. Hai việc loại trừ nhau — chỗ
+        kết bài không cần hút đi đâu nữa.
+      */
+      const repeat =
+        !step.ending && repeatEnding && pass > 0
+          ? (() => {
+              const after = nextSection(steps, index, sources)
+              return after ? repeatEnding(source, after, pass) : null
+            })()
+          : null
+
+      const close =
+        (step.ending && ending ? ending(source, step.ending) : null) ?? repeat
       const plain = close
         ? Math.max(0, source.lengthBeats - close.beats)
         : source.lengthBeats

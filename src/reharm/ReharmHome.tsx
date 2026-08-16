@@ -366,6 +366,13 @@ export function ReharmHome() {
     useState<DominantChordColor>('auto')
   /** Bấm theo lối hợp âm chồng trên bass cho dễ. */
   const [useSlashChords, setUseSlashChords] = useState(false)
+
+  /**
+   * Đổi hợp âm kết ở lượt lặp lại của một đoạn — kỹ thuật thứ năm của phong
+   * cách (tài liệu §11 mục 5). Bật sẵn vì đây là thói quen thường trực của
+   * phong cách này chứ không phải một lựa chọn phối khí thêm thắt.
+   */
+  const [varyOnRepeat, setVaryOnRepeat] = useState(true)
   /** Cho phép dùng cả những màu jazz không thấy trong tài liệu. */
   const [allowJazzColors, setAllowJazzColors] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
@@ -1035,6 +1042,7 @@ export function ReharmHome() {
       smoothVoicing,
       dropRoot,
       useSlashChords,
+      varyOnRepeat,
       allowJazzColors,
       intensity,
       susDominant,
@@ -1063,6 +1071,7 @@ export function ReharmHome() {
       smoothVoicing,
       dropRoot,
       useSlashChords,
+      varyOnRepeat,
       allowJazzColors,
       intensity,
       susDominant,
@@ -1106,6 +1115,8 @@ export function ReharmHome() {
     setSmoothVoicing(saved.smoothVoicing)
     setDropRoot(saved.dropRoot)
     setUseSlashChords(saved.useSlashChords)
+    // Bài lưu từ trước khi có mục này thì theo mặc định của phong cách.
+    setVaryOnRepeat(saved.varyOnRepeat ?? true)
 
     setAllowJazzColors(saved.allowJazzColors)
     setIntensity(saved.intensity as ColorIntensity)
@@ -1190,6 +1201,55 @@ export function ReharmHome() {
     [withPassing, chordBeats, dropRoot, style],
   )
 
+  /**
+   * Hợp âm kết đổi màu ở **lượt lặp lại** của một đoạn.
+   *
+   * Kỹ thuật thứ năm của phong cách (tài liệu §11 mục 5, §1): *"đổi hợp âm kết
+   * ở mỗi lượt lặp câu nhạc (vd Em7 → E7b9) để tránh nhàm chán"*.
+   *
+   * Cách đổi lấy đúng theo ví dụ ấy: hợp âm kết thành **bậc năm của hợp âm
+   * ngay sau nó**. Trong giọng Đô, đoạn kết ở Em7 mà chỗ sau vào Am thì bậc
+   * năm của Am là E — hoá ra đúng E7b9 mà tài liệu ghi. §15 cho thêm một ví dụ
+   * cùng lối: lượt lặp kết bằng C7, tức V7/IV, hút về FM7 ở đầu vòng.
+   *
+   * Không đổi cả câu nhạc, chỉ đổi **hợp âm cuối**: đổi nhiều hơn thì lượt sau
+   * thành một đoạn khác chứ không còn là đoạn cũ chơi lại.
+   */
+  const buildRepeatEnding = useCallback(
+    (source: SourceSection, next: SourceSection) => {
+      const spans = mainChordSpans(withPassing, chordBeats)
+
+      const end = source.startBeat + source.lengthBeats
+      const last = spans.filter((span) => span.start < end - 0.001).at(-1)
+      const target = spans.find(
+        (span) => Math.abs(span.start - next.startBeat) < 0.001,
+      )
+      if (!last || !target) return null
+
+      const pull = pullChordFor(target.chord, last.chord)
+      if (!pull) return null
+
+      /*
+        Hợp âm kết vốn đã là bậc năm của chỗ sau thì thôi: đổi nữa cũng ra đúng
+        cái đang có, mà mất công dựng lại.
+      */
+      if (pull.symbol === last.chord.symbol) return null
+
+      const hands = voiceLeadTwoHands([pull], {
+        dropRootFromRightHand: dropRoot,
+      })
+
+      return {
+        events: renderPattern(hands, style, {
+          beatsPerChord: last.beats,
+          beatsEach: [last.beats],
+        }),
+        beats: last.beats,
+      }
+    },
+    [withPassing, chordBeats, dropRoot, style],
+  )
+
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(
     () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
@@ -1220,6 +1280,7 @@ export function ReharmHome() {
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
           ending: buildEnding,
+          repeatEnding: varyOnRepeat ? buildRepeatEnding : undefined,
         })
       }
 
@@ -1248,6 +1309,8 @@ export function ReharmHome() {
       buildTurnaround,
       interludeWindow,
       buildEnding,
+      buildRepeatEnding,
+      varyOnRepeat,
       style.beatsPerMeasure,
       steps,
     ],
@@ -1962,6 +2025,19 @@ export function ReharmHome() {
               className="accent-amber-key"
             />
             Bấm kiểu chồng trên bass
+          </label>
+
+          <label
+            className="flex items-center gap-2 text-xs text-dim"
+            title="Đoạn nào chơi lại lượt hai thì hợp âm cuối đổi thành bậc năm của chỗ sắp vào — kỹ thuật thứ năm của phong cách, ví dụ Em7 đổi thành E7b9"
+          >
+            <input
+              type="checkbox"
+              checked={varyOnRepeat}
+              onChange={(event) => setVaryOnRepeat(event.target.checked)}
+              className="accent-amber-key"
+            />
+            Đổi hợp âm kết khi lặp đoạn
           </label>
         </div>
 

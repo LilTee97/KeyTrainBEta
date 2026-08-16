@@ -53,6 +53,13 @@ export interface SongSnapshot {
   smoothVoicing: boolean
   dropRoot: boolean
   useSlashChords: boolean
+  /**
+   * Đổi hợp âm kết ở lượt lặp lại của một đoạn.
+   *
+   * Bỏ trống với bài lưu từ trước khi có mục này; đọc lại thì theo mặc định
+   * của phong cách là bật.
+   */
+  varyOnRepeat?: boolean
 
   /** Màu hợp âm. */
   allowJazzColors: boolean
