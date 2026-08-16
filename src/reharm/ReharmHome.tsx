@@ -294,6 +294,8 @@ function KeySelect({
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
   const setPracticeSong = usePracticeStore((state) => state.setSong)
+  const openRequest = usePracticeStore((state) => state.request)
+  const clearOpenRequest = usePracticeStore((state) => state.clearRequest)
   const looping = usePlaybackStore((state) => state.looping)
   const positionBeats = usePlaybackStore((state) => state.positionBeats)
 
@@ -1306,12 +1308,34 @@ export function ReharmHome() {
   */
   useEffect(() => {
     setPracticeSong({
+      id: songId,
       title: songTitle ?? 'Bài chưa đặt tên',
       timeline,
       voicings: twoHands,
       beatsPerChord: chordBeats,
     })
-  }, [setPracticeSong, songTitle, timeline, twoHands, chordBeats])
+  }, [setPracticeSong, songId, songTitle, timeline, twoHands, chordBeats])
+
+  /*
+    Nhận lời nhờ mở bài từ tab Luyện đệm.
+
+    Bên kia chỉ có ảnh chụp, mà ảnh chụp chỉ ghi **lựa chọn** của người dùng —
+    dòng thời gian phải dựng lại từ đó qua cả chuỗi luật tái hoà âm, sinh
+    voicing và sinh câu fill, và chuỗi ấy nằm ở đây. Nên bên kia nhờ, bên này
+    dựng rồi đăng lại; chép chuỗi dựng sang đó thì có hai bản và hai bản sẽ
+    lệch nhau ngay lần sửa luật kế tiếp.
+
+    Làm được vì tab này ở lại trong cây khi người dùng sang tab khác, chỉ ẩn
+    đi. Tháo ra là mất sạch bài đang dựng, nên vốn đã phải giữ.
+  */
+  useEffect(() => {
+    if (!openRequest) return
+
+    applySnapshot(openRequest.snapshot)
+    setSongId(openRequest.id)
+    setSongTitle(openRequest.title)
+    clearOpenRequest()
+  }, [openRequest, applySnapshot, clearOpenRequest])
 
 
   /**
