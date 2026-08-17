@@ -280,8 +280,9 @@ export function fillPositions(
     if (!chords[index].passing) mainIndex += 1
 
     if (breaths) {
-      if (!breaths.has(mainIndex)) continue
-      breathCount += 1
+      const atBreath = breaths.has(mainIndex)
+      if (!atBreath && !always?.has(mainIndex)) continue
+      if (atBreath) breathCount += 1
       if (!always?.has(mainIndex) && breathCount % everyNth !== 0) continue
     } else if (index % everyNth !== 0 && !always?.has(mainIndex)) continue
 
@@ -299,13 +300,15 @@ export function fillPositions(
       loại nó cùng một rọ với hợp âm bị chia đôi, nên câu chạy chuyển đoạn
       không bao giờ được sinh ra.
     */
-    if (beatsOf(chords[index], beatsPerChord) < beatsPerChord) continue
+    const forced = always?.has(mainIndex) === true
+    if (!forced && beatsOf(chords[index], beatsPerChord) < beatsPerChord) {
+      continue
+    }
 
-    // Hợp âm cuối dẫn về hợp âm đầu, vì vòng được chơi lặp lại.
     const next = chords[(index + 1) % chords.length]
     if (next === chords[index]) continue
 
-    if (skip?.has(mainIndex)) continue
+    if (!forced && skip?.has(mainIndex)) continue
 
     positions.push({ index, mainIndex })
   }
@@ -382,7 +385,7 @@ export interface TransitionRun {
    * giọng, và đẩy cả đoạn hát lệch đi.
    */
   restBeats: number
-  /** Chạy ngón sau mấy phách (0–2) của ô nối. */
+  /** Hợp âm chơi bấy nhiêu phách ở ô nối rồi mới chạy ngón. 0 = chạy ngay. */
   delayBeats?: number
 }
 
@@ -471,18 +474,24 @@ export function generateFillLine(
         Hợp âm cuối đoạn được cấp thêm một ô nhịp để người hát ngân cho hết
         câu; ô thêm ấy chính là ô này.
       */
-      const barBeats = Math.min(
-        beatsPerChord,
-        beatsOf(chords[index], beatsPerChord),
+      let total = beatsOf(chords[index], beatsPerChord)
+      for (let next = index + 1; next < chords.length; next += 1) {
+        if (!chords[next].passing) break
+        total += beatsOf(chords[next], beatsPerChord)
+      }
+      const delay = Math.min(transition.delayBeats ?? 0, Math.max(0, total - 1))
+      const rest = Math.min(
+        transition.restBeats,
+        Math.max(0, total - delay - 0.5),
       )
-      const rest = Math.min(transition.restBeats, barBeats - 0.5)
-      const delay = Math.min(transition.delayBeats ?? 0, barBeats - rest - 0.5)
+      const runEnd = fillStarts[index] + total - rest
 
       for (const note of arpeggioRun({
         chord: chords[index],
         octaves: transition.octaves,
-        endBeat: chordEnd - rest,
-        maxBeats: barBeats - rest - Math.max(0, delay),
+        endBeat: runEnd,
+        maxBeats: total - rest - delay,
+        fromBeat: fillStarts[index] + delay,
       })) {
         result.push({ ...note, isGrace: false })
       }

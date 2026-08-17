@@ -125,7 +125,11 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
       new Map([[2, { octaves: 2, restBeats: 2, delayBeats: 2 }]]),
     )
     expect(delayed[0].startBeat).toBeGreaterThan(run[0].startBeat)
-    expect(delayed[delayed.length - 1].startBeat).toBeCloseTo(14, 5)
+  })
+
+  it('im cả ô thì vẫn còn chỗ chạy ngón', () => {
+    const line = fill(new Map([[2, { octaves: 2, restBeats: 4, delayBeats: 0 }]]))
+    expect(line.length).toBeGreaterThan(0)
   })
 
   it('nốt cuối rơi đúng số phách nghỉ đã đặt', () => {
@@ -155,9 +159,9 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(widerGap).toBeLessThan(gap)
   })
 
-  it('nằm gọn trong ô nhịp thêm vào', () => {
+  it('không đệm thì chạy ngón ngay từ đầu hợp âm, không chờ quạt hết ô', () => {
+    expect(run[0].startBeat).toBeCloseTo(8, 5)
     for (const note of run) {
-      expect(note.startBeat).toBeGreaterThanOrEqual(12)
       expect(note.startBeat).toBeLessThan(16)
     }
   })
@@ -195,20 +199,27 @@ describe('bộ lọc không được gạt chỗ chuyển đoạn', () => {
     expect(found.map((position) => position.mainIndex)).toContain(3)
   })
 
-  it('hợp âm ngắn hơn một ô nhịp thì vẫn bị loại', () => {
-    // Nửa sau ô đã là chỗ của hợp âm lướt, nhét fill vào là chồng tiếng
+  it('fill thường bỏ hợp âm ngắn, mốc chuyển đoạn thì vẫn chạy', () => {
     const short = list.map((chord, index) =>
       index === 3 ? { ...chord, beats: 2 } : chord,
     )
 
-    const found = fillPositions(short, {
-      density: 'dense',
-      beatsPerChord: 4,
-      breaths: new Set([3]),
-      always: new Set([3]),
-    })
+    expect(
+      fillPositions(short, {
+        density: 'dense',
+        beatsPerChord: 4,
+        breaths: new Set([3]),
+      }).map((position) => position.mainIndex),
+    ).not.toContain(3)
 
-    expect(found.map((position) => position.mainIndex)).not.toContain(3)
+    expect(
+      fillPositions(short, {
+        density: 'dense',
+        beatsPerChord: 4,
+        breaths: new Set([3]),
+        always: new Set([3]),
+      }).map((position) => position.mainIndex),
+    ).toContain(3)
   })
 
   it('mọi mức mật độ đều chêm ở chỗ chuyển đoạn', () => {
@@ -226,7 +237,7 @@ describe('bộ lọc không được gạt chỗ chuyển đoạn', () => {
     }
   })
 
-  it('người dùng tắt tay thì vẫn tắt được', () => {
+  it('tắt fill không tắt câu chạy ở mốc chuyển đoạn', () => {
     const found = fillPositions(list, {
       density: 'dense',
       beatsPerChord: 4,
@@ -235,7 +246,7 @@ describe('bộ lọc không được gạt chỗ chuyển đoạn', () => {
       skip: new Set([7]),
     })
 
-    expect(found).toHaveLength(0)
+    expect(found.map((position) => position.mainIndex)).toContain(7)
   })
 })
 
@@ -245,6 +256,18 @@ describe('ô nối không chạy ngón', () => {
     giang tấu chẳng hạn, vì ngay sau đó đã là phần ngẫu hứng rồi. Lúc ấy vẫn
     cần thêm một ô nhịp cho người hát ngân hết câu.
   */
+  it('tắt fill thì mốc chuyển đoạn vẫn chạy ngón', () => {
+    const line = generateFillLine(chords(), {
+      beatsPerChord: 4,
+      density: 'dense',
+      key: C_MAJOR,
+      breaths: new Set([2]),
+      sectionEnds: mark(2, 2, 2),
+      skipFills: new Set([2]),
+    })
+    expect(line.length).toBeGreaterThan(0)
+  })
+
   it('chọn không quãng tám nào thì không sinh câu chạy', () => {
     expect(fill(mark(2, 0))).toHaveLength(0)
   })

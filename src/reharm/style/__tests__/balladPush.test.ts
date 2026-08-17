@@ -111,6 +111,52 @@ describe('ô nối sang đoạn mới không quạt hợp âm', () => {
     expect(renderWith().length).toBeGreaterThan(renderWith(new Set([0])).length)
   })
 
+  it('Không đệm thì im từ đầu hợp âm mốc, không quạt rồi mới chạy', () => {
+    const chords = parseChordInput('C Am F G').chords
+    chords[3] = { ...chords[3], beats: 8 }
+    const events = renderPattern(voiceLeadTwoHands(chords, {}), BALLAD, {
+      beatsPerChord: 4,
+      beatsEach: [4, 4, 4, 8],
+      muteWindows: [{ from: 12, to: 20 }],
+    })
+    expect(
+      events.filter((event) => event.startBeat >= 12 && event.startBeat < 20),
+    ).toHaveLength(0)
+    expect(events.some((event) => event.startBeat < 12)).toBe(true)
+  })
+
+  it('muteWindows im cả ô nối và cắt nốt ngân sang', () => {
+    const { hands, beatsEach } = twoBars()
+    const events = renderPattern(hands, BALLAD, {
+      beatsPerChord: 4,
+      beatsEach,
+      muteWindows: [{ from: 4, to: 8 }],
+    })
+    expect(
+      events.filter((event) => event.startBeat >= 4 && event.startBeat < 8),
+    ).toHaveLength(0)
+    for (const event of events) {
+      if (event.startBeat < 4) {
+        expect(event.startBeat + event.durationBeats).toBeLessThanOrEqual(4.001)
+      }
+    }
+  })
+
+  it('hợp âm chơi N phách rồi mới im để chạy ngón', () => {
+    const { hands, beatsEach } = twoBars()
+    const events = renderPattern(hands, BALLAD, {
+      beatsPerChord: 4,
+      beatsEach,
+      barsWithoutComping: new Map([[0, 2]]),
+    })
+    expect(events.some((event) => event.startBeat >= 4 && event.startBeat < 6)).toBe(
+      true,
+    )
+    expect(events.some((event) => event.startBeat >= 6 && event.startBeat < 8)).toBe(
+      false,
+    )
+  })
+
   it('hợp âm ngắn hơn một ô nhịp thì không có ô nào để nhường', () => {
     const chords = parseChordInput('C Am').chords
     const events = renderPattern(voiceLeadTwoHands(chords, {}), BALLAD, {

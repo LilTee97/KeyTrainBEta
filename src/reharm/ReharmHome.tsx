@@ -606,27 +606,6 @@ export function ReharmHome() {
   const transitionAt = useMemo(() => new Set(transitions.keys()), [transitions])
 
   /**
-   * Những ô nối **nhường chỗ cho câu chạy**, tức phần đệm im hẳn ở đó.
-   *
-   * Chọn không chạy quãng tám nào thì ô nối vẫn được thêm vào cho người hát
-   * ngân hết câu, nhưng nó đệm bình thường — bỏ đệm mà không có câu chạy thay
-   * vào thì ô đó câm hẳn.
-   */
-  const runningBars = useMemo(
-    () =>
-      new Set(
-        [...transitions.entries()]
-          /*
-            Nghỉ trọn ô nhịp thì câu chạy không còn chỗ nào để đứng, nên ô đó
-            cũng phải đệm bình thường — không thì nó câm hẳn.
-          */
-          .filter(([, run]) => run.octaves > 0 && run.restBeats < chordBeats)
-          .map(([index]) => index),
-      ),
-    [transitions, chordBeats],
-  )
-
-  /**
    * Bảng thời lượng đưa vào đường ống.
    *
    * Cặp chia đôi thì mỗi bên nửa ô nhịp. Hợp âm **cuối mỗi đoạn** được cấp
@@ -822,6 +801,23 @@ export function ReharmHome() {
   /** Vòng hợp âm về mặt cách bấm — thứ tay thật sự chơi. */
   const withPassing = reharm.final
 
+  /**
+   * Từ phách delay trở đi không quạt điệu — chạy ngón thay thế, không chờ hết ô.
+   */
+  const muteWindows = useMemo(() => {
+    const spans = mainChordSpans(withPassing, chordBeats)
+    const windows: { from: number; to: number }[] = []
+    for (const [main, run] of transitions) {
+      if (run.octaves <= 0) continue
+      const span = spans[main]
+      if (!span) continue
+      const from = span.start + (run.delayBeats ?? 0)
+      const to = span.start + span.beats
+      if (from < to) windows.push({ from, to })
+    }
+    return windows
+  }, [transitions, withPassing, chordBeats])
+
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
     () =>
@@ -885,9 +881,9 @@ export function ReharmHome() {
     return renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach: chordDurations(withPassing, chordBeats),
-      barsWithoutComping: runningBars,
+      muteWindows,
     })
-  }, [twoHands, style, chordBeats, withPassing, runningBars])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows])
 
   /**
    * Cấu trúc thật của bài, suy ra từ cách chia đoạn trên bản nhạc.

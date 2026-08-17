@@ -5,6 +5,18 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from './keyDetection'
 import { beatsOf, splitBeats } from '../chordTiming'
+
+/** Mỗi hợp âm lướt 1 phách, sát hợp âm đích. Chật thì chia đôi ô. */
+function hugTarget(total: number, count: number) {
+  if (count <= 0) return { host: total, passing: [] as number[] }
+  if (total > count) {
+    return {
+      host: total - count,
+      passing: Array.from({ length: count }, () => 1),
+    }
+  }
+  return splitBeats(total, count)
+}
 import type { ParsedChord } from '../types'
 
 /**
@@ -427,7 +439,7 @@ export function applySuggestions(
               () => (total - keep) / inserted.length,
             ),
           }
-        : splitBeats(total, inserted.length)
+        : hugTarget(total, inserted.length)
 
     result[hostIndex] = { ...host, beats: hostBeats }
     result.splice(

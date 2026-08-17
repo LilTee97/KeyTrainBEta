@@ -35,10 +35,15 @@ export interface RenderOptions {
    * phần đệm phải im hẳn — cả hợp âm lẫn nốt bass — không thì câu chạy vừa bị
    * lấp vừa nghe dày.
    *
-   * Lọc sau khi dựng chứ không cài vào từng nhánh dựng, để **mọi điệu đều
-   * theo**: điệu có mẫu tiết tấu cố định cũng phải nhường ô đó như ballad.
-   */
-  barsWithoutComping?: ReadonlySet<number>
+    * Lọc sau khi dựng chứ không cài vào từng nhánh dựng, để **mọi điệu đều
+    * theo**: điệu có mẫu tiết tấu cố định cũng phải nhường ô đó như ballad.
+    *
+    * `Map` thì value là số phách đầu ô nối **vẫn đệm** (hợp âm chơi rồi mới
+    * chạy ngón). `Set` = im cả ô.
+    */
+  barsWithoutComping?: ReadonlySet<number> | ReadonlyMap<number, number>
+  /** Im đệm trong các khoảng phách này — cắt cả nốt ngân sang. */
+  muteWindows?: readonly { from: number; to: number }[]
   /** Đổi mẫu theo từng ô nhịp (ballad Khá Bự: verse/pre/chorus). */
   cellAt?: (beat: number) => RhythmCell
 }
@@ -169,6 +174,16 @@ function renderBlockChords(
  * Nhánh điệu có mẫu tiết tấu cố định: lặp mẫu, mỗi lần lặp lấy thế bấm của hợp
  * âm đang vang tại thời điểm đó.
  */
+function inMuteWindow(
+  beat: number,
+  windows: readonly { from: number; to: number }[] | undefined,
+): boolean {
+  if (!windows?.length) return false
+  return windows.some(
+    (window) => beat >= window.from - EPSILON && beat < window.to - EPSILON,
+  )
+}
+
 function renderWithCell(
   voicings: readonly TwoHandVoicing[],
   pattern: StylePattern,
@@ -176,6 +191,7 @@ function renderWithCell(
   starts: readonly number[],
   releaseRatio: number,
   cellAt?: (beat: number) => RhythmCell,
+  muteWindows?: readonly { from: number; to: number }[],
 ): TimelineEvent[] {
   const fallback = pattern.cell
   if (!fallback && !cellAt) return []
@@ -202,6 +218,7 @@ function renderWithCell(
       for (const hit of hits) {
         const startBeat = offset + hit.beat
         if (startBeat >= totalBeats) continue
+        if (inMuteWindow(startBeat, muteWindows)) continue
 
         const voicing = voicingAt(startBeat)
         if (!voicing) continue
@@ -225,7 +242,9 @@ function renderWithCell(
 
   return [
     ...events,
-    ...missingChordHits(events, voicings, starts, releaseRatio),
+    ...missingChordHits(events, voicings, starts, releaseRatio).filter(
+      (event) => !inMuteWindow(event.startBeat, muteWindows),
+    ),
   ]
 }
 
@@ -328,6 +347,7 @@ export function renderPattern(
     beatsEach,
     releaseRatio = 0.92,
     barsWithoutComping,
+    muteWindows,
     cellAt,
   } = options
 
@@ -345,7 +365,15 @@ export function renderPattern(
   }
 
   const events = pattern.cell || cellAt
-    ? renderWithCell(voicings, pattern, durations, starts, releaseRatio, cellAt)
+    ? renderWithCell(
+        voicings,
+        pattern,
+        durations,
+        starts,
+        releaseRatio,
+        cellAt,
+        muteWindows,
+      )
     : renderBlockChords(
         voicings,
         durations,
@@ -354,7 +382,7 @@ export function renderPattern(
         releaseRatio,
       )
 
-  const comped = barsWithoutComping?.size
+  const dropped = barsWithoutComping?.size
     ? dropLastMeasure(
         events,
         durations,
@@ -363,8 +391,33 @@ export function renderPattern(
         barsWithoutComping,
       )
     : events
+  const muted = muteWindows?.length ? applyMuteWindows(dropped, muteWindows) : dropped
 
-  return clipToChords(comped, starts).sort((a, b) => a.startBeat - b.startBeat)
+  return clipToChords(muted, starts).sort((a, b) => a.startBeat - b.startBeat)
+}
+
+function applyMuteWindows(
+  events: readonly TimelineEvent[],
+  windows: readonly { from: number; to: number }[],
+): TimelineEvent[] {
+  return events.flatMap((event) => {
+    const start = event.startBeat
+    const end = start + event.durationBeats
+    if (windows.some((window) => start >= window.from - EPSILON && start < window.to - EPSILON)) {
+      return []
+    }
+    let until = end
+    for (const window of windows) {
+      if (start < window.from && end > window.from) {
+        until = Math.min(until, window.from)
+      }
+    }
+    const durationBeats = until - start
+    if (durationBeats <= 0.05) return []
+    return durationBeats === event.durationBeats
+      ? [event]
+      : [{ ...event, durationBeats }]
+  })
 }
 
 /** Bỏ các tiếng đàn rơi vào ô nhịp cuối của những hợp âm được chỉ định. */
@@ -373,17 +426,22 @@ function dropLastMeasure(
   durations: readonly number[],
   starts: readonly number[],
   beatsPerMeasure: number,
-  chords: ReadonlySet<number>,
+  chords: ReadonlySet<number> | ReadonlyMap<number, number>,
 ): TimelineEvent[] {
   const windows: { from: number; to: number }[] = []
+  const keep =
+    chords instanceof Map
+      ? chords
+      : new Map([...chords].map((index) => [index, 0]))
 
-  for (const index of chords) {
+  for (const [index, lead] of keep) {
     const start = starts[index]
     const beats = durations[index]
-    // Hợp âm ngắn hơn một ô nhịp thì không có ô nào để nhường.
     if (start === undefined || beats < beatsPerMeasure) continue
 
-    windows.push({ from: start + beats - beatsPerMeasure, to: start + beats })
+    const from = start + beats - beatsPerMeasure + Math.max(0, lead)
+    if (from >= start + beats) continue
+    windows.push({ from, to: start + beats })
   }
 
   if (windows.length === 0) return [...events]

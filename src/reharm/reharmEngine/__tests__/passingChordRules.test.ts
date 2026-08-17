@@ -296,6 +296,19 @@ describe('applySuggestions', () => {
     expect(list.map((chord) => chord.symbol)).toEqual(before)
   })
 
+  it('mặc định mỗi hợp âm lướt 1 phách, sát đích', () => {
+    const list = chords('C Am7')
+    const iiV = suggestSecondaryIiV(list).find(
+      (suggestion) => suggestion.insertBeforeIndex === 1,
+    )
+    expect(iiV).toBeTruthy()
+    const result = applySuggestions(list, [iiV!], 4)
+    expect(result[0]?.beats).toBe(2)
+    expect(result.filter((chord) => chord.passing).map((chord) => chord.beats)).toEqual(
+      [1, 1],
+    )
+  })
+
   it('hostKeepBeats giữ đúng số phách host rồi mới lướt', () => {
     const list = chords('C Am7')
     const iiV = suggestSecondaryIiV(list).find(

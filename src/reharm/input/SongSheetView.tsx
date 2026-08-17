@@ -614,10 +614,16 @@ export function ChordContextMenu({
               </div>
 
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                Chạy ngón sau mấy phách
+                Đệm hợp âm rồi mới chạy ngón
               </p>
               <div className="flex gap-1 px-2.5 py-1">
-                {[0, 1, 2].map((delayBeats) => (
+                {(
+                  [
+                    [0, 'Không'],
+                    [1, '1 phách'],
+                    [2, '2 phách'],
+                  ] as const
+                ).map(([delayBeats, label]) => (
                   <button
                     key={delayBeats}
                     type="button"
@@ -630,7 +636,7 @@ export function ChordContextMenu({
                         : 'border-line bg-white/4 text-dim hover:bg-white/8'
                     }`}
                   >
-                    {delayBeats}
+                    {label}
                   </button>
                 ))}
               </div>

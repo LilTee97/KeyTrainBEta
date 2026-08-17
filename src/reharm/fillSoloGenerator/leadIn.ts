@@ -128,6 +128,8 @@ export function arpeggioRun(options: {
   noteChoices?: readonly number[]
   /** Câu chạy được phép dài tối đa bao nhiêu phách. */
   maxBeats: number
+  /** Bắt đầu từ phách này thay vì dồn vào cuối ô. */
+  fromBeat?: number
 }): RunNote[] {
   const {
     chord,
@@ -135,6 +137,7 @@ export function arpeggioRun(options: {
     endBeat,
     noteChoices = [0.5, 0.25, 0.125],
     maxBeats,
+    fromBeat,
   } = options
 
   if (octaves < 1 || maxBeats <= 0) return []
@@ -170,13 +173,17 @@ export function arpeggioRun(options: {
     noteChoices.find((choice) => choice * gaps <= maxBeats) ??
     noteChoices[noteChoices.length - 1]
 
-  const start = endBeat - gaps * noteBeats
+  const packed = endBeat - gaps * noteBeats
+  const start = fromBeat !== undefined ? fromBeat : packed
+  const step =
+    fromBeat !== undefined && endBeat > fromBeat
+      ? (endBeat - fromBeat) / gaps
+      : noteBeats
 
   return line.map((note, index) => ({
     note,
-    startBeat: start + index * noteBeats,
-    // Hở một chút để nghe ra từng nốt, không thành vệt liền.
-    durationBeats: noteBeats * 0.9,
+    startBeat: start + index * step,
+    durationBeats: step * 0.9,
     hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
   }))
 }
