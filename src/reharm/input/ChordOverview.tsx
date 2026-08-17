@@ -250,6 +250,9 @@ export function ChordOverview({
   }
 
   const active = activeBeat !== undefined ? activeBeat : cursor
+  const playhead = active === null || active === undefined ? null : Math.floor(active)
+  const activeChord =
+    playhead !== null && chordIndexAt ? chordIndexAt(playhead) : null
   useEffect(() => {
     if (!menu) return
     const close = () => setMenu(null)
@@ -335,7 +338,9 @@ export function ChordOverview({
                       className={`min-h-9 border-b border-r border-white/10 px-0.5 py-1 text-center font-mono text-[11px] ${
                         barStart ? 'border-l-2 border-l-white/35' : ''
                       } ${
-                        beat === active
+                        (activeChord !== null
+                          ? chordIndexAt?.(beat) === activeChord
+                          : beat === playhead)
                           ? 'bg-amber-key/35 text-amber-key'
                           : 'text-cream'
                       }`}
