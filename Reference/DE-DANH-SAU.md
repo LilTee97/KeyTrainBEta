@@ -6,14 +6,14 @@ Mỗi mục ghi đủ ngữ cảnh để sau này đọc lại là làm được
 
 ---
 
-## 1. Đổi màu hợp âm mỗi lượt lặp
+## 1. ~~Đổi màu hợp âm mỗi lượt lặp~~ — ĐÃ LÀM
 
-**Đây là kỹ thuật số 5 trong năm kỹ thuật của phong cách.** Tài liệu mô tả hai cấp độ; mới làm một.
+Kỹ thuật số 5, hai cấp độ:
 
-- **Cấp câu nhạc (đã làm, hiện trên lời):** đổi hợp âm **kết** ở lượt 2 của cùng loại đoạn. `varyOnRepeat` + `sectionRanges` → `varyRepeatEndings` trong `reharmonize`, nên phiên khúc 2 ghi `E7b9` trên lời. Cùng `source` chơi lại lần nữa thì `repeatEnding` vẫn đổi lúc phát. Cần bài đã chia đoạn.
-- **Cấp ô nhịp (chưa làm):** cùng gốc Đô ngân nhiều ô → `C → CM7 → C6 → CM7` (mục 12.2). Bản nhạc vẫn tô chết một màu cho mỗi lần xuất hiện. Làm khi có hứng; đừng nhầm với cấp câu đã xong.
+- **Cấp câu:** `varyRepeatEndings` — phiên khúc 2 ghi `E7b9` trên lời. Cùng đoạn chơi lại thì `repeatEnding` đổi lúc phát.
+- **Cấp ô nhịp:** `heldColorRun.ts` — cùng gốc ngân nhiều ô / nhiều token → `Cadd2 → CM7 → C6 → CM7`. Một token ngân nhiều ô ghi đủ chuỗi trên lời (gạch ngang trên); dãy `C C C C` mỗi ô một màu, cùng dấu. Phần đệm tách từng ô.
 
-Bài "Tháng Tư" còn đổi cả chuỗi bốn hợp âm quay đầu (`Dm7 → G9sus4 → CM7 → C7`) — cũng chưa làm; hiện chỉ đổi **một** hợp âm cuối.
+Còn để sau: bài "Tháng Tư" đổi cả chuỗi bốn hợp âm quay đầu (`Dm7 → G9sus4 → CM7 → C7`) — hiện chỉ đổi **một** hợp âm cuối.
 
 ---
 

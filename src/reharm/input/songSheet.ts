@@ -40,6 +40,10 @@ export interface SheetAnchor {
    * hợp âm chính.
    */
   passing?: boolean
+  /** Cùng gốc ngân nhiều ô — hiện đủ chuỗi `Cadd2 → CM7`. */
+  heldLabel?: string
+  /** Một nốt trong dãy cùng gốc đang xoay màu. */
+  holdRun?: boolean
 }
 
 export interface SheetLine {
@@ -115,11 +119,17 @@ export function buildSongSheet(
         ...lead,
         {
           symbol: aligned
-            ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
+            ? (reharmonized[index]?.holdRun
+                ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
+                : (reharmonized[index]?.heldLabel ??
+                  reharmonized[index]?.symbol ??
+                  anchor.chord.symbol))
             : anchor.chord.symbol,
           charOffset: anchor.charOffset,
           chordIndex: index,
           broken: false,
+          heldLabel: reharmonized[index]?.heldLabel,
+          holdRun: reharmonized[index]?.holdRun,
         },
       ]
     }),

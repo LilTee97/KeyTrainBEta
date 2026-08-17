@@ -31,7 +31,7 @@ Tô màu mù chức năng (`maj → add9` cho mọi bậc) sẽ biến bậc nă
    - **Cấp câu (đã làm, hiện trên lời):** `varyOnRepeat` (mặc định bật) + `sectionRanges` vào `reharmonize` → `varyRepeatEndings` (`turnaround.ts`) đổi hợp âm cuối lượt 2+ của verse/chorus/prechorus thành bậc năm của chỗ sắp vào (`pullChordFor`). Phiên khúc 2 ghi `E7b9` trên lời, không chỉ lúc phát.
    - Cùng một đoạn chơi lại lần nữa (cùng `source` trong thứ tự chơi): `arrangement.ts` `repeatEnding` / `buildRepeatEnding` vẫn đổi lúc phát.
    - Cần bài đã chia đoạn. Vòng trơn không có đoạn → không đổi. Đoạn cuối bài không đổi.
-   - **Cấp ô nhịp** (`C → CM7 → C6 → CM7`) chưa làm — xem `DE-DANH-SAU.md`. Đừng tự thêm.
+   - **Cấp ô nhịp (đã làm):** `heldColorRun.ts` `varyHeldColors` — cùng gốc resting-major ngân ≥2 ô/token: `add2 → maj7 → 6 → maj7`. Một token dài ghi `heldLabel` (`Cadd2 → CM7`) trên lời; `explodeHeldBars` tách lúc phát (ô sau `passing`). Bậc năm không xoay. `intensity: 'off'` thì bỏ.
 
 Turnaround: `src/reharm/style/turnaround.ts` (vd `Dm7 → G9sus4 → C`).
 

@@ -619,6 +619,7 @@ export function ReharmHome() {
       useSlashChords,
       varyOnRepeat,
       sectionRanges: rawSectionRanges,
+      beatsPerMeasure: style.beatsPerMeasure,
       key: parsedKey,
     })
 
@@ -638,6 +639,7 @@ export function ReharmHome() {
       useSlashChords,
       varyOnRepeat,
       sectionRanges: rawSectionRanges,
+      beatsPerMeasure: style.beatsPerMeasure,
       key: parsedKey,
       acceptedPassing: chosen,
       beatsPerChord: chordBeats,
@@ -654,6 +656,7 @@ export function ReharmHome() {
     useSlashChords,
     varyOnRepeat,
     rawSectionRanges,
+    style.beatsPerMeasure,
     manualKey,
     acceptedPassing,
     chordBeats,

@@ -854,6 +854,10 @@ function ChordLabel({
     thêm một ký tự đánh dấu thì phần canh cột phải tính lại theo.
   */
   const mark = hasFill ? ' underline decoration-dotted underline-offset-4' : ''
+  const held =
+    anchor.holdRun || anchor.heldLabel
+      ? ' overline decoration-dashed decoration-amber-key/70'
+      : ''
 
   /*
     Hợp âm chia đôi ô nhịp được **đóng khung**.
@@ -875,7 +879,16 @@ function ChordLabel({
 
   if (!onSeek || anchor.chordIndex === null) {
     return (
-      <span className={`${style}${mark}${half}`}>{anchor.symbol}</span>
+      <span
+        className={`${style}${mark}${held}${half}`}
+        title={
+          anchor.heldLabel
+            ? `Xoay màu cùng gốc: ${anchor.heldLabel}`
+            : undefined
+        }
+      >
+        {anchor.symbol}
+      </span>
     )
   }
 
@@ -887,11 +900,13 @@ function ChordLabel({
       onClick={() => onSeek(index)}
       {...bindMenu?.(index)}
       title={
-        hasFill
-          ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
-          : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'
+        anchor.heldLabel
+          ? `Xoay màu cùng gốc: ${anchor.heldLabel}`
+          : hasFill
+            ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
+            : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'
       }
-      className={`${style}${mark}${half} touch-manipulation cursor-pointer select-none py-1 hover:decoration-solid`}
+      className={`${style}${mark}${held}${half} touch-manipulation cursor-pointer select-none py-1 hover:decoration-solid`}
     >
       {anchor.symbol}
     </button>

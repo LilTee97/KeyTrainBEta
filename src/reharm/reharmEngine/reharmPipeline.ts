@@ -15,6 +15,7 @@ import {
 } from './passingChordRules'
 import type { RepeatSectionRange } from '../style/turnaround'
 import { varyRepeatEndings } from '../style/turnaround'
+import { explodeHeldBars, varyHeldColors } from './heldColorRun'
 import type { ColorOptions } from './staticVoicingRules'
 import {
   colorAnalyzedSequence,
@@ -78,6 +79,8 @@ export interface ReharmOptions extends ColorOptions {
   varyOnRepeat?: boolean
   /** Khoảng hợp âm từng đoạn, theo số thứ tự vòng gốc. */
   sectionRanges?: readonly RepeatSectionRange[]
+  /** Một ô nhịp dài mấy phách — để biết một hợp âm ngân mấy ô. */
+  beatsPerMeasure?: number
 }
 
 export interface ReharmResult {
@@ -131,6 +134,7 @@ export function reharmonize(
     useSlashChords = false,
     varyOnRepeat = false,
     sectionRanges,
+    beatsPerMeasure = 4,
     ...colorOptions
   } = options
 
@@ -187,10 +191,17 @@ export function reharmonize(
   const painted = activeKey
     ? colorAnalyzedSequence(analyzed, activeKey.scale, colorOptions)
     : colorSequence(original, colorOptions)
+  const held =
+    colorOptions.intensity === 'off'
+      ? painted
+      : varyHeldColors(painted, {
+          beatsOf: (index) => chordBeats?.[index] ?? beatsPerChord,
+          beatsPerMeasure,
+        })
   const colored =
     varyOnRepeat && sectionRanges && sectionRanges.length > 0
-      ? varyRepeatEndings(painted, sectionRanges)
-      : painted
+      ? varyRepeatEndings(held, sectionRanges)
+      : held
 
   /*
     Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.
@@ -217,7 +228,10 @@ export function reharmonize(
       )
     : colored
 
-  const harmonic = applySuggestions(timed, acceptedPassing, beatsPerChord)
+  const harmonic = explodeHeldBars(
+    applySuggestions(timed, acceptedPassing, beatsPerChord),
+    beatsPerChord,
+  )
 
   // Khâu 5 — chọn cách bấm. Đặt cuối vì hòa âm đã chốt xong ở các khâu trên.
   const final = useSlashChords ? toSlashSequence(harmonic) : harmonic

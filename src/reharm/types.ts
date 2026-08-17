@@ -31,6 +31,16 @@ export interface ParsedChord {
   source: string
   /** Tên hợp âm sau khi chuẩn hoá, ví dụ 'Am7' hoặc 'C/E'. */
   symbol: string
+  /**
+   * Cùng gốc ngân nhiều ô: ghi đủ chuỗi màu trên lời, ví dụ `Cadd2 → CM7`.
+   *
+   * `symbol` vẫn là màu ô đầu (để phát / neo lời 1-1). Chuỗi này chỉ để đọc.
+   */
+  heldLabel?: string
+  /** Thuộc một dãy cùng gốc đang xoay màu (C C C C). */
+  holdRun?: boolean
+  /** Tính chất từng ô khi một token ngân nhiều ô — để tách lúc phát. */
+  heldQualities?: string[]
 }
 
 /** Một cụm chữ không đọc được thành hợp âm. */

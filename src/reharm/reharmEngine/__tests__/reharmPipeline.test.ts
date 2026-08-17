@@ -548,6 +548,28 @@ describe('đổi hợp âm kết trên lời', () => {
   })
 })
 
+describe('xoay màu cùng gốc trên đường ống', () => {
+  it('C C C C ra Cadd2 CM7 C6 CM7 trên lời', () => {
+    const result = reharmonize(chords('C C C C'))
+    expect(result.colored.map((chord) => chord.symbol)).toEqual([
+      'Cadd2',
+      'Cmaj7',
+      'C6',
+      'Cmaj7',
+    ])
+  })
+
+  it('tắt màu thì không xoay', () => {
+    const result = reharmonize(chords('C C C C'), { intensity: 'off' })
+    expect(result.colored.map((chord) => chord.symbol)).toEqual([
+      'C',
+      'C',
+      'C',
+      'C',
+    ])
+  })
+})
+
 describe('đường ống', () => {
   it('giữ lại vòng gốc để đối chiếu', () => {
     const result = reharmonize(chords('C Am F G'))
