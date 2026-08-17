@@ -100,6 +100,27 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(fill(mark(2, 3))).toHaveLength(13)
   })
 
+  it('hợp âm ba cũng đủ bốn nốt mỗi quãng tám', () => {
+    const triad = parseChordInput('C F G C').chords
+    const line = generateFillLine(
+      triad.map((chord, index) =>
+        index === 2 ? { ...chord, beats: 8 } : chord,
+      ),
+      {
+        beatsPerChord: 4,
+        density: 'medium',
+        key: C_MAJOR,
+        breaths: new Set([2]),
+        sectionEnds: mark(2, 1),
+      },
+    )
+    expect(line.length).toBeGreaterThanOrEqual(5)
+    const firstOctave = line.filter(
+      (note) => note.note >= line[0].note && note.note < line[0].note + 12,
+    )
+    expect(firstOctave.length).toBeGreaterThanOrEqual(4)
+  })
+
   it('chỉ lấy bốn nốt lõi, bỏ nốt màu', () => {
     /*
       Nốt chín, mười một, mười ba nằm ở quãng từ 12 nửa cung trở lên. Gộp chúng

@@ -4,6 +4,7 @@ import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import type { TwoHandVoicing } from '../../voicingGenerator/handSplitVoicing'
 import {
   eventsForHand,
+  giveCompingToLeft,
   renderPattern,
   timelineLengthBeats,
 } from '../patternRenderer'
@@ -179,8 +180,10 @@ describe('renderPattern — nhánh điệu có mẫu tiết tấu', () => {
       (event) => event.startBeat === 4 && event.hand === 'right',
     )!
 
-    expect(atBeatZero.notes).toEqual(chords[0].right)
-    expect(atBeatFour.notes).toEqual(chords[1].right)
+    const pcs = (notes: readonly number[]) =>
+      [...notes.map((note) => note % 12)].sort((a, b) => a - b)
+    expect(pcs(atBeatZero.notes)).toEqual(pcs(chords[0].right))
+    expect(pcs(atBeatFour.notes)).toEqual(pcs(chords[1].right))
   })
 
   it('không sinh tiếng vượt quá độ dài đoạn', () => {
@@ -222,6 +225,44 @@ describe('timelineLengthBeats', () => {
         { notes: [60], startBeat: 4, durationBeats: 1, hand: 'right', velocity: 80 },
       ]),
     ).toBe(5)
+  })
+})
+
+describe('hai tay hai dải', () => {
+  it('đệm: trái ≤ G3, phải ≥ C4', () => {
+    for (const event of renderPattern(voicings('C Am F G'), BALLAD)) {
+      if (event.hand === 'left') {
+        expect(Math.max(...event.notes)).toBeLessThanOrEqual(55)
+      } else {
+        expect(Math.min(...event.notes)).toBeGreaterThanOrEqual(60)
+      }
+    }
+  })
+})
+
+describe('giveCompingToLeft', () => {
+  it('khi có fill thì quạt tay phải chuyển sang tay trái', () => {
+    const accomp = [
+      { notes: [48], startBeat: 0, durationBeats: 2, hand: 'left' as const, velocity: 80 },
+      { notes: [67, 71], startBeat: 1, durationBeats: 1, hand: 'right' as const, velocity: 80 },
+    ]
+    const fill = [
+      { notes: [76], startBeat: 1, durationBeats: 0.5, hand: 'right' as const, velocity: 90 },
+    ]
+    const next = giveCompingToLeft(accomp, fill)
+    expect(next[1]!.hand).toBe('left')
+    expect(Math.max(...next[1]!.notes)).toBeLessThanOrEqual(55)
+    expect(next[0]!.hand).toBe('left')
+  })
+
+  it('không đụng quạt khi không chồng fill', () => {
+    const accomp = [
+      { notes: [67], startBeat: 0, durationBeats: 1, hand: 'right' as const, velocity: 80 },
+    ]
+    const fill = [
+      { notes: [76], startBeat: 2, durationBeats: 1, hand: 'right' as const, velocity: 90 },
+    ]
+    expect(giveCompingToLeft(accomp, fill)[0]!.hand).toBe('right')
   })
 })
 

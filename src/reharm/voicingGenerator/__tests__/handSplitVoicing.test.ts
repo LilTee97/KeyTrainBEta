@@ -173,9 +173,7 @@ describe('hai tay không xếp xa nhau', () => {
 
   it('tay trái luôn nằm dưới tay phải, không chồng lên nhau', () => {
     for (const voicing of voiceLeadTwoHands(chords(ALL))) {
-      expect(Math.max(...voicing.left)).toBeLessThan(
-        Math.min(...voicing.right),
-      )
+      expect(Math.max(...voicing.left)).toBeLessThan(Math.min(...voicing.right))
     }
   })
 

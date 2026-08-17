@@ -115,6 +115,7 @@ import {
 } from './reharmEngine/voiceLeadingOptimizer'
 import {
   eventsForHand,
+  giveCompingToLeft,
   renderPattern,
 } from './style/patternRenderer'
 import {
@@ -1479,10 +1480,10 @@ export function ReharmHome() {
     (pass: number, takesPerPass: number) => {
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
+        const line = fills(pass)
         return buildArrangedSong({
-          accompaniment,
-          // Câu chêm cũng đổi theo lượt, không riêng đoạn giang tấu.
-          fills: fills(pass),
+          accompaniment: giveCompingToLeft(accompaniment, line),
+          fills: line,
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
           sources: songSources,
           steps,
@@ -1495,9 +1496,10 @@ export function ReharmHome() {
         })
       }
 
+      const line = fills(pass)
       return buildSongTimeline({
-        accompaniment,
-        fills: fills(pass),
+        accompaniment: giveCompingToLeft(accompaniment, line),
+        fills: line,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         /*

@@ -1,5 +1,8 @@
 import type { MidiNote } from '../../shared/musicTheory/types'
 import {
+  LEFT_HAND_HIGH,
+  LEFT_HAND_LOW,
+  clampToHandRegister,
   settleHands,
   type TwoHandVoicing,
 } from '../voicingGenerator/handSplitVoicing'
@@ -415,7 +418,12 @@ export function renderPattern(
     : events
   const muted = muteWindows?.length ? applyMuteWindows(dropped, muteWindows) : dropped
 
-  return clipToChords(muted, starts).sort((a, b) => a.startBeat - b.startBeat)
+  return clipToChords(muted, starts)
+    .map((event) => ({
+      ...event,
+      notes: event.notes.map((note) => clampToHandRegister(note, event.hand)),
+    }))
+    .sort((a, b) => a.startBeat - b.startBeat)
 }
 
 function applyMuteWindows(
@@ -494,4 +502,39 @@ export function eventsForHand(
 ): TimelineEvent[] {
   if (hand === 'both') return [...events]
   return events.filter((event) => event.hand === hand)
+}
+
+function overlaps(
+  event: TimelineEvent,
+  from: number,
+  to: number,
+): boolean {
+  return event.startBeat < to - 0.001 && event.startBeat + event.durationBeats > from + 0.001
+}
+
+/**
+ * Khi tay phải đang chạy fill / improvise / chạy ngón: bỏ quạt hợp âm tay phải,
+ * chuyển khối đó sang tay trái (hạ vào dải bass).
+ */
+export function giveCompingToLeft(
+  accompaniment: readonly TimelineEvent[],
+  melody: readonly TimelineEvent[],
+): TimelineEvent[] {
+  if (melody.length === 0) return [...accompaniment]
+
+  return accompaniment.map((event) => {
+    if (event.hand !== 'right') return event
+    const busy = melody.some((line) =>
+      overlaps(event, line.startBeat, line.startBeat + line.durationBeats),
+    )
+    if (!busy) return event
+
+    const notes = event.notes.map((note) => {
+      let pitch = note
+      while (pitch > LEFT_HAND_HIGH) pitch -= 12
+      while (pitch < LEFT_HAND_LOW) pitch += 12
+      return pitch as MidiNote
+    })
+    return { ...event, hand: 'left' as const, notes }
+  })
 }

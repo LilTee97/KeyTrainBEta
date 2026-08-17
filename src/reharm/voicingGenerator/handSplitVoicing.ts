@@ -22,9 +22,12 @@ export const LEFT_HAND_HIGH: MidiNote = 55
 
 /** Hai tay không dang quá hai quãng tám. */
 const MAX_HAND_SPAN = 24
+/** Khe tối thiểu giữa ngón cao nhất tay trái và thấp nhất tay phải. */
+const MIN_HAND_GAP = 7
 
 /**
- * Đưa hai tay ra hai bên: trái dưới phải, không chồng, không xa quá 2 quãng tám.
+ * Đưa hai tay ra hai bên: trái dưới phải, khe ≥ 5 độ, không xa quá 2 quãng tám.
+ * Trái tràn thì hạ trái trước, không đẩy phải lên chồng thêm.
  */
 export function settleHands(
   left: readonly MidiNote[],
@@ -40,13 +43,13 @@ export function settleHands(
   for (let step = 0; step < 8; step += 1) {
     const topLeft = Math.max(...low)
     const bottomRight = Math.min(...high)
-    if (topLeft >= bottomRight) {
-      if (Math.max(...high) + 12 <= 84) {
-        high = high.map((note) => (note + 12) as MidiNote)
+    if (bottomRight - topLeft < MIN_HAND_GAP) {
+      if (Math.min(...low) - 12 >= LEFT_HAND_LOW) {
+        low = low.map((note) => (note - 12) as MidiNote)
         continue
       }
-      if (Math.min(...low) - 12 >= 28) {
-        low = low.map((note) => (note - 12) as MidiNote)
+      if (Math.max(...high) + 12 <= 84) {
+        high = high.map((note) => (note + 12) as MidiNote)
         continue
       }
     }
@@ -66,6 +69,26 @@ export function settleHands(
   }
 
   return { left: low, right: high }
+}
+
+/** Trần tay trái / sàn tay phải — hai bên phím, không dùng chung quãng. */
+const LEFT_REGISTER_TOP = 55
+const RIGHT_REGISTER_FLOOR = 60
+
+export function clampToHandRegister(
+  note: MidiNote,
+  hand: 'left' | 'right',
+): MidiNote {
+  if (hand === 'left') {
+    let pitch = note
+    while (pitch > LEFT_REGISTER_TOP) pitch -= 12
+    while (pitch < LEFT_HAND_LOW) pitch += 12
+    return pitch as MidiNote
+  }
+  let pitch = note
+  while (pitch < RIGHT_REGISTER_FLOOR) pitch += 12
+  while (pitch > 79) pitch -= 12
+  return pitch as MidiNote
 }
 
 /**

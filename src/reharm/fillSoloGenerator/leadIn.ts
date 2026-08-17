@@ -2,6 +2,7 @@ import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import { stepInScale } from './graceNoteOrnamenter'
+import { chordPentatonic } from './soloVocabulary'
 
 /**
  * Câu báo hiệu vào hát — chạy ngón lên ngay trước khi đoạn mới bắt đầu.
@@ -151,6 +152,12 @@ export function arpeggioRun(options: {
       .filter((step) => step < 12)
       .map((step) => normalizePitchClass(chord.root + step)),
   )
+  if (classes.size < 4) {
+    for (const tone of chordPentatonic(chord)) {
+      classes.add(tone)
+      if (classes.size >= 4) break
+    }
+  }
 
   const top = TOP_OCTAVE + normalizePitchClass(chord.root)
   const bottom = top - 12 * octaves
