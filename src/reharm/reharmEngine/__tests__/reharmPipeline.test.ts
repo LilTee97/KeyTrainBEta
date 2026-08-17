@@ -211,6 +211,37 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     expect(result.colored[1].symbol).toBe('Am11')
   })
 
+  it('chủ âm thứ dùng m(add9), không m7', () => {
+    const result = reharmonize(chords('Am Dm E Am'), {
+      key: { tonic: 9, scale: 'minor' },
+    })
+    expect(result.colored[0].symbol).toBe('Am(add9)')
+    expect(result.colored[3].symbol).toBe('Am(add9)')
+    expect(
+      result.conflicts.some((conflict) => conflict.kind === 'tonic-not-resting'),
+    ).toBe(false)
+  })
+
+  it('A7 ở chủ âm thứ cũng về nhà, không thành A9sus4', () => {
+    const result = reharmonize(chords('Am Em A7 Am'), {
+      key: { tonic: 9, scale: 'minor' },
+      susDominant: true,
+      dominantColor: '9sus4',
+    })
+    expect(result.colored[2].symbol).toBe('Am(add9)')
+    expect(result.colored[1].quality.id).not.toMatch(/sus/)
+    expect(
+      result.conflicts.some((conflict) => conflict.kind === 'tonic-not-resting'),
+    ).toBe(false)
+  })
+
+  it('hợp âm giảm không bị đổi thành hợp âm thứ', () => {
+    const result = reharmonize(chords('C Adim F G'), {
+      key: { tonic: 0, scale: 'major' },
+    })
+    expect(result.colored[1].quality.id).toMatch(/^dim/)
+  })
+
   it('bậc năm giọng thứ nhận nốt giáng chín', () => {
     const result = reharmonize(chords('Am Dm E Am'), {
       key: { tonic: 9, scale: 'minor' },
@@ -383,13 +414,13 @@ describe('màu cho hợp âm thứ', () => {
     expect(result.colored[3].quality.intervals).toContain(10)
   })
 
-  it('áp cho bậc một và bậc bốn của giọng thứ', () => {
+  it('áp cho bậc bốn của giọng thứ, chủ âm thứ không lấy m11', () => {
     const result = reharmonize(chords('Am Dm E7 Am'), {
       key: { tonic: 9, scale: 'minor' },
       minorColor: 'm11',
     })
 
-    expect(result.colored[0].symbol).toBe('Am11')
+    expect(result.colored[0].symbol).toBe('Am(add9)')
     expect(result.colored[1].symbol).toBe('Dm11')
   })
 

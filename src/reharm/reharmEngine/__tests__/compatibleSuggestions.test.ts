@@ -5,6 +5,7 @@ import {
   groupPassingSuggestions,
   groupsAtSlot,
   suggestPassingChords,
+  targetOf,
 } from '../passingChordRules'
 import { reharmonize } from '../reharmPipeline'
 
@@ -25,8 +26,12 @@ describe('lọc gợi ý theo giọng của bài', () => {
     const kept = compatibleSuggestions(all, list, [], C_MAJOR)
 
     // Lab không thuộc giọng Đô trưởng nên không được nhận hợp âm lướt
-    expect(all.some((s) => list[s.insertBeforeIndex].root === 8)).toBe(true)
-    expect(kept.some((s) => list[s.insertBeforeIndex].root === 8)).toBe(false)
+    expect(all.some((s) => targetOf(list, s.insertBeforeIndex)?.root === 8)).toBe(
+      true,
+    )
+    expect(kept.some((s) => targetOf(list, s.insertBeforeIndex)?.root === 8)).toBe(
+      false,
+    )
   })
 
   it('giữ gợi ý dẫn vào hợp âm trong giọng', () => {
@@ -41,7 +46,7 @@ describe('lọc gợi ý theo giọng của bài', () => {
     expect(kept.length).toBeGreaterThan(0)
     for (const suggestion of kept) {
       expect([0, 2, 4, 5, 7, 9, 11]).toContain(
-        list[suggestion.insertBeforeIndex].root,
+        targetOf(list, suggestion.insertBeforeIndex)!.root,
       )
     }
   })
@@ -195,6 +200,16 @@ describe('gom hợp âm lướt thành nhóm', () => {
 
   it('khe không đặt được gì thì không có nhóm nào', () => {
     expect(groupsAtSlot(groups, 999)).toEqual([])
+  })
+
+  it('câu nối quay đầu (khe hết vòng) vẫn vào menu', () => {
+    const list = chords('C Am F G7')
+    const all = suggestPassingChords(list)
+    const kept = compatibleSuggestions(all, list, [], C_MAJOR)
+    expect(kept.some((item) => item.insertBeforeIndex === 4)).toBe(true)
+    expect(groupsAtSlot(groupPassingSuggestions(kept, list), 4).length).toBeGreaterThan(
+      0,
+    )
   })
 })
 

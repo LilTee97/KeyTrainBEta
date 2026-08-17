@@ -189,7 +189,10 @@ export function reharmonize(
 
   // Khâu 3 — thêm màu, theo bậc nếu biết giọng.
   const painted = activeKey
-    ? colorAnalyzedSequence(analyzed, activeKey.scale, colorOptions)
+    ? colorAnalyzedSequence(analyzed, activeKey.scale, {
+        ...colorOptions,
+        tonic: activeKey.tonic,
+      })
     : colorSequence(original, colorOptions)
   const held =
     colorOptions.intensity === 'off'

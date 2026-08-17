@@ -149,6 +149,33 @@ const INTERLUDE_CHORDS = 4
  */
 const DEFAULT_TRANSITION: TransitionRun = { octaves: 2, restBeats: 2 }
 
+function shiftRecord<T>(
+  table: Record<number, T>,
+  at: number,
+  delta: 1 | -1,
+): Record<number, T> {
+  const next: Record<number, T> = {}
+  for (const [key, value] of Object.entries(table)) {
+    const index = Number(key)
+    if (delta < 0 && index === at) continue
+    next[index >= at ? index + delta : index] = value
+  }
+  return next
+}
+
+function shiftIndexSet(
+  values: ReadonlySet<number>,
+  at: number,
+  delta: 1 | -1,
+): Set<number> {
+  const next = new Set<number>()
+  for (const index of values) {
+    if (delta < 0 && index === at) continue
+    next.add(index >= at ? index + delta : index)
+  }
+  return next
+}
+
 /**
  * Bốn mức nốt láy, thêm mức tắt hẳn.
  *
@@ -413,6 +440,7 @@ export function ReharmHome() {
   const [allowJazzColors, setAllowJazzColors] = useState(false)
   /** Các gợi ý hợp âm lướt người dùng đã chấp nhận, theo khoá vị trí + kỹ thuật. */
   const [acceptedPassing, setAcceptedPassing] = useState<string[]>([])
+  const [passingKeep, setPassingKeep] = useState<Record<string, number>>({})
   /**
    * Chiều nốt láy cố định là **xen kẽ**.
    *
@@ -652,11 +680,19 @@ export function ReharmHome() {
       key: parsedKey,
     })
 
-    const chosen = firstPass.passingSuggestions.filter((suggestion) =>
-      acceptedPassing.includes(
-        keyOf(suggestion.insertBeforeIndex, suggestion.technique),
-      ),
-    )
+    const chosen = firstPass.passingSuggestions
+      .filter((suggestion) =>
+        acceptedPassing.includes(
+          keyOf(suggestion.insertBeforeIndex, suggestion.technique),
+        ),
+      )
+      .map((suggestion) => {
+        const keep =
+          passingKeep[keyOf(suggestion.insertBeforeIndex, suggestion.technique)]
+        return keep === undefined
+          ? suggestion
+          : { ...suggestion, hostKeepBeats: keep }
+      })
 
     return reharmonize(sequence.chords, {
       intensity,
@@ -688,6 +724,7 @@ export function ReharmHome() {
     style.beatsPerMeasure,
     manualKey,
     acceptedPassing,
+    passingKeep,
     chordBeats,
     halvedBeats,
   ])
@@ -723,6 +760,51 @@ export function ReharmHome() {
   /** Nhóm này đã được chèn chưa. */
   const isGroupOn = (group: { technique: string; slots: number[] }) =>
     keysOfGroup(group).some((key) => acceptedPassing.includes(key))
+
+  const afterSlotOf = (index: number) => {
+    const count = sequence.chords.length
+    return count === 0 ? index : index === count - 1 ? count : index + 1
+  }
+
+  const isDim7After = (technique: string) =>
+    technique === 'dim7-chain-fill' || technique === 'dim7-passing'
+
+  const passingOptionsForChord = (
+    chordIndex: number,
+    otherSlot: number,
+  ) => {
+    const tail = afterSlotOf(chordIndex)
+    const dim7 = groupsAtSlot(passingGroups, tail).filter((group) =>
+      isDim7After(group.technique),
+    )
+    const other = groupsAtSlot(passingGroups, otherSlot).filter(
+      (group) => !isDim7After(group.technique),
+    )
+    return [
+      ...other.map((group) => ({
+        id: group.id,
+        slotId: keyOf(otherSlot, group.technique),
+        technique: TECHNIQUE_LABELS[group.technique],
+        chords: group.chords.map((chord) => chord.symbol).join(' → '),
+        places: group.slots.length,
+        applied: isGroupOn(group),
+        appliedHere: acceptedPassing.includes(
+          keyOf(otherSlot, group.technique),
+        ),
+        after: false,
+      })),
+      ...dim7.map((group) => ({
+        id: group.id,
+        slotId: keyOf(tail, group.technique),
+        technique: TECHNIQUE_LABELS[group.technique],
+        chords: group.chords.map((chord) => chord.symbol).join(' → '),
+        places: group.slots.length,
+        applied: isGroupOn(group),
+        appliedHere: acceptedPassing.includes(keyOf(tail, group.technique)),
+        after: true,
+      })),
+    ]
+  }
 
   const togglePassingGroup = (groupId: string) =>
     setAcceptedPassing((current) => {
@@ -1738,30 +1820,34 @@ export function ReharmHome() {
             similarChordPairs(recolored, chordIndex).length
           }
           passingOptionsFor={(chordIndex) =>
-            groupsAtSlot(passingGroups, chordIndex).map((group) => {
-              const slotId = keyOf(chordIndex, group.technique)
-              return {
-                id: group.id,
-                slotId,
-                technique: TECHNIQUE_LABELS[group.technique],
-                chords: group.chords.map((chord) => chord.symbol).join(' → '),
-                places: group.slots.length,
-                applied: isGroupOn(group),
-                appliedHere: acceptedPassing.includes(slotId),
-              }
-            })
+            passingOptionsForChord(chordIndex, afterSlotOf(chordIndex))
           }
           onTogglePassing={togglePassingGroup}
-          onAddPassingHere={(slotId) =>
+          onAddPassingHere={(slotId, hostKeepBeats) => {
             setAcceptedPassing((current) =>
               current.includes(slotId) ? current : [...current, slotId],
             )
-          }
-          onRemovePassingHere={(slotId) =>
+            setPassingKeep((current) => {
+              if (hostKeepBeats === undefined) {
+                if (!(slotId in current)) return current
+                const next = { ...current }
+                delete next[slotId]
+                return next
+              }
+              return { ...current, [slotId]: hostKeepBeats }
+            })
+          }}
+          onRemovePassingHere={(slotId) => {
             setAcceptedPassing((current) =>
               current.filter((entry) => entry !== slotId),
             )
-          }
+            setPassingKeep((current) => {
+              if (!(slotId in current)) return current
+              const next = { ...current }
+              delete next[slotId]
+              return next
+            })
+          }}
           transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
           onToggleTransition={(chordIndex) =>
             setTransitionEdits((current) => ({
@@ -1795,6 +1881,38 @@ export function ReharmHome() {
                 : removeSimilarChordPairs(current, recolored, chordIndex)
             })
           }
+          onRemoveChord={(index) => {
+            const list = parsed.chords.filter((_, i) => i !== index)
+            if (list.length === 0) return
+            setInput(list.map((chord) => chord.symbol).join(' '))
+            setPastedSong((song) =>
+              song ? { ...song, chords: list } : song,
+            )
+            setImportedBeats((table) => shiftRecord(table, index, -1))
+            setPairedChords((set) => shiftIndexSet(set, index, -1))
+            setMutedFills((set) => shiftIndexSet(set, index, -1))
+            setTransitionEdits((table) => shiftRecord(table, index, -1))
+            setAcceptedPassing((keys) =>
+              keys.flatMap((key) => {
+                const cut = key.indexOf(':')
+                const at = Number(key.slice(0, cut))
+                if (at === index) return []
+                const rest = key.slice(cut)
+                return [`${at > index ? at - 1 : at}${rest}`]
+              }),
+            )
+            setPassingKeep((table) => {
+              const next: Record<string, number> = {}
+              for (const [key, value] of Object.entries(table)) {
+                const cut = key.indexOf(':')
+                const at = Number(key.slice(0, cut))
+                if (at === index) continue
+                const rest = key.slice(cut)
+                next[`${at > index ? at - 1 : at}${rest}`] = value
+              }
+              return next
+            })
+          }}
         />
       )}
 
@@ -1963,20 +2081,7 @@ export function ReharmHome() {
             activeIndex={activeChordIndex}
             pairedChords={pairedChords}
             passingOptionsFor={(chordIndex) =>
-              groupsAtSlot(passingGroups, chordIndex).map((group) => {
-                const slotId = keyOf(chordIndex, group.technique)
-
-                return {
-                  id: group.id,
-                  slotId,
-                  technique: TECHNIQUE_LABELS[group.technique],
-                  chords: group.chords.map((chord) => chord.symbol).join(' → '),
-                  // Chọn một chỗ là áp cho mọi chỗ có cùng hợp âm đích.
-                  places: group.slots.length,
-                  applied: isGroupOn(group),
-                  appliedHere: acceptedPassing.includes(slotId),
-                }
-              })
+              passingOptionsForChord(chordIndex, chordIndex)
             }
             onTogglePassing={togglePassingGroup}
             onAddPassingHere={(slotId) =>
@@ -2529,7 +2634,7 @@ export function ReharmHome() {
 
             <ColorPicker
               title="Màu cho hợp âm thứ"
-              hint="Áp cho bậc ii, iii, vi của giọng trưởng và bậc i, iv của giọng thứ. Bậc nửa giảm không nằm trong nhóm này."
+              hint="Áp cho bậc ii, iii, vi và iv. Chủ âm thứ luôn m(add9), không lấy m7. Chọn m hoặc m(add9) nếu muốn bớt nốt ngoài giọng. dim/dim7 chỉ đổi hợp âm vốn đã giảm."
               options={MINOR_COLOR_OPTIONS}
               value={minorColor}
               onChange={setMinorColor}

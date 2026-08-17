@@ -51,6 +51,7 @@ describe('phần đệm khi có hợp âm lướt', () => {
         const to = from + durations[index]
 
         for (const hand of ['left', 'right'] as const) {
+
           const hits = events.filter(
             (event) =>
               event.hand === hand &&

@@ -112,6 +112,7 @@ export interface TransitionOption {
   octaves: number
   /** Im hẳn mấy phách trước vạch nhịp, cho người hát cất giọng. */
   restBeats: number
+  delayBeats?: number
 }
 
 /** Một hợp âm lướt có thể chèn vào trước một hợp âm. */
@@ -130,6 +131,8 @@ export interface PassingOption {
   applied: boolean
   /** Riêng chỗ đang bấm có đang chèn không. */
   appliedHere: boolean
+  /** Chơi sau hợp âm này (như fill), không chèn trước hợp âm sau. */
+  after?: boolean
 }
 
 /** Menu chuột phải đang mở trên hợp âm nào, ở đâu trên màn hình. */
@@ -440,6 +443,7 @@ export function ChordContextMenu({
   canMarkTransition,
   onToggleTransition,
   onSetTransition,
+  onDelete,
 }: {
   menu: ChordMenu
   paired: boolean
@@ -460,9 +464,14 @@ export function ChordContextMenu({
   canMarkTransition: boolean
   onToggleTransition?: () => void
   onSetTransition?: (run: TransitionOption) => void
+  onDelete?: () => void
 }) {
   const applied = passing.filter((option) => option.appliedHere)
   const available = passing.filter((option) => !option.appliedHere)
+  const appliedAfter = applied.filter((option) => option.after)
+  const appliedBefore = applied.filter((option) => !option.after)
+  const availableAfter = available.filter((option) => option.after)
+  const availableBefore = available.filter((option) => !option.after)
 
   /*
     Danh sách đổi theo trạng thái hiện tại, không bày cố định hai dòng.
@@ -605,6 +614,28 @@ export function ChordContextMenu({
               </div>
 
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Chạy ngón sau mấy phách
+              </p>
+              <div className="flex gap-1 px-2.5 py-1">
+                {[0, 1, 2].map((delayBeats) => (
+                  <button
+                    key={delayBeats}
+                    type="button"
+                    onClick={() =>
+                      onSetTransition({ ...transition, delayBeats })
+                    }
+                    className={`flex-1 rounded border px-2 py-1 text-xs ${
+                      (transition.delayBeats ?? 0) === delayBeats
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {delayBeats}
+                  </button>
+                ))}
+              </div>
+
+              <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Im mấy phách cuối ô nối
               </p>
               <div className="flex gap-1 px-2.5 py-1">
@@ -657,13 +688,13 @@ export function ChordContextMenu({
             với chữ nói thẳng, thay vì bắt người dùng đoán rằng bấm lại cái đang
             bật là để tắt.
           */}
-          {applied.length > 0 && (
+          {appliedBefore.length > 0 && (
             <>
               <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Đang có hợp âm lướt
               </p>
 
-              {applied.map((option) => (
+              {appliedBefore.map((option) => (
                 <div key={option.id}>
                   {onRemoveHere && (
                     <button
@@ -699,13 +730,13 @@ export function ChordContextMenu({
             </>
           )}
 
-          {available.length > 0 && (
+          {availableBefore.length > 0 && (
             <>
               <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Chèn hợp âm lướt vào trước
               </p>
 
-              {available.map((option) => (
+              {availableBefore.map((option) => (
                 <div key={option.id}>
                   {onAddHere && (
                     <button
@@ -740,6 +771,92 @@ export function ChordContextMenu({
               ))}
             </>
           )}
+
+          {appliedAfter.length > 0 && (
+            <>
+              <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Đang chơi sau hợp âm này
+              </p>
+              {appliedAfter.map((option) => (
+                <div key={option.id}>
+                  {onRemoveHere && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveHere(option.slotId)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-teal-key">
+                        Bỏ {option.chords} sau hợp âm này
+                      </span>
+                      <span className="text-[10px] text-dim">
+                        {option.technique} · như câu fill
+                      </span>
+                    </button>
+                  )}
+                  {option.places > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onTogglePassing(option.id)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-teal-key">
+                        Bỏ {option.chords} ở cả {option.places} chỗ
+                      </span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+
+          {availableAfter.length > 0 && (
+            <>
+              <p className="px-2.5 py-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Chơi sau hợp âm này (câu fill)
+              </p>
+              {availableAfter.map((option) => (
+                <div key={option.id}>
+                  {onAddHere && (
+                    <button
+                      type="button"
+                      onClick={() => onAddHere(option.slotId)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-cream">{option.chords} sau hợp âm này</span>
+                      <span className="text-[10px] text-dim">
+                        {option.technique} · cuối ô, như câu fill
+                      </span>
+                    </button>
+                  )}
+                  {option.places > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onTogglePassing(option.id)}
+                      className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+                    >
+                      <span className="text-cream">
+                        {option.chords} ở cả {option.places} chỗ
+                      </span>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      )}
+
+      {onDelete && (
+        <>
+          <div className="my-1 border-t border-line" />
+          <button
+            type="button"
+            onClick={onDelete}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+          >
+            <span className="text-rose-300">Xóa hợp âm</span>
+            <span className="text-[10px] text-dim">Gỡ khỏi vòng</span>
+          </button>
         </>
       )}
     </div>

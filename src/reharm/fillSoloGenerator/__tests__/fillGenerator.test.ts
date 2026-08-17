@@ -14,9 +14,10 @@ function chords(input: string): ParsedChord[] {
 /** Vòng hợp âm sau khi chèn câu nối. */
 function withFill(input: string): string[] {
   const list = chords(input)
-  return applySuggestions(list, suggestDim7ChainFills(list)).map(
-    (chord) => chord.symbol,
-  )
+  return applySuggestions(
+    list,
+    suggestDim7ChainFills(list, { includeTurnaround: false }),
+  ).map((chord) => chord.symbol)
 }
 
 describe('câu nối bằng chuỗi hợp âm giảm', () => {
@@ -63,19 +64,18 @@ describe('câu nối bằng chuỗi hợp âm giảm', () => {
   it('bắt được cả hợp âm treo đang làm chức năng bậc năm', () => {
     // D9sus4 không có bậc ba nào nhưng vẫn kéo về G
     const suggestions = suggestDim7ChainFills(chords('D9sus4 G'))
-    expect(suggestions).toHaveLength(1)
+    expect(suggestions.some((item) => item.insertBeforeIndex === 1)).toBe(true)
   })
 
-  it('không chèn khi hợp âm trước không phải bậc năm', () => {
-    // Cmaj7 có bậc bảy trưởng nên không kéo về đâu cả
-    expect(suggestDim7ChainFills(chords('Cmaj7 F'))).toEqual([])
-    expect(suggestDim7ChainFills(chords('Am7 Dm7'))).toEqual([])
+  it('lấp khoảng trống khi bass lên quãng bốn, không cần hợp âm át', () => {
+    expect(withFill('Am7 Dm7')).toEqual(['Am7', 'Bdim7', 'C#dim7', 'Dm7'])
+    expect(withFill('Cmaj7 F')).toEqual(['Cmaj7', 'Ddim7', 'Edim7', 'F'])
   })
 
-  it('không chèn khi không giải quyết lên quãng bốn', () => {
-    // G7 xuống F là quãng hai, không phải chuyển động của công thức này
+  it('không chèn khi khoảng bass quá hẹp hoặc quá rộng', () => {
     expect(suggestDim7ChainFills(chords('G7 F'))).toEqual([])
     expect(suggestDim7ChainFills(chords('G7 Am'))).toEqual([])
+    expect(suggestDim7ChainFills(chords('Em7 Dm7'))).toEqual([])
   })
 
   it('giải thích ghi rõ đường đi của nốt bass', () => {
@@ -85,7 +85,7 @@ describe('câu nối bằng chuỗi hợp âm giảm', () => {
 
   it('tìm được nhiều chỗ trong một vòng dài', () => {
     const suggestions = suggestDim7ChainFills(chords('G7 C E7 Am'))
-    expect(suggestions).toHaveLength(2)
+    expect(suggestions.length).toBeGreaterThanOrEqual(2)
   })
 
   it('vòng một hợp âm thì không có gì để nối', () => {
@@ -96,16 +96,16 @@ describe('câu nối bằng chuỗi hợp âm giảm', () => {
 
 describe('câu quay đầu — nối cuối vòng về đầu vòng', () => {
   it('bắt được chỗ hợp âm cuối kéo về hợp âm đầu', () => {
-    // Vòng pop quen thuộc: G cuối vòng kéo về C đầu vòng khi lặp lại
     const suggestions = suggestDim7ChainFills(chords('C Am F G7'))
-
-    expect(suggestions).toHaveLength(1)
-    expect(suggestions[0].insertBeforeIndex).toBe(4)
+    expect(suggestions.some((item) => item.insertBeforeIndex === 4)).toBe(true)
   })
 
   it('chèn vào cuối vòng', () => {
     const list = chords('C Am F G7')
-    const result = applySuggestions(list, suggestDim7ChainFills(list))
+    const wrap = suggestDim7ChainFills(list).filter(
+      (item) => item.insertBeforeIndex === 4,
+    )
+    const result = applySuggestions(list, wrap)
 
     expect(result.map((chord) => chord.symbol)).toEqual([
       'C',
@@ -118,21 +118,26 @@ describe('câu quay đầu — nối cuối vòng về đầu vòng', () => {
   })
 
   it('giải thích nói rõ đây là câu quay đầu', () => {
-    const [suggestion] = suggestDim7ChainFills(chords('C Am F G7'))
-    expect(suggestion.explanation).toContain('quay đầu')
+    const wrap = suggestDim7ChainFills(chords('C Am F G7')).find(
+      (item) => item.insertBeforeIndex === 4,
+    )
+    expect(wrap?.explanation).toContain('quay đầu')
   })
 
   it('tắt riêng được câu quay đầu', () => {
     expect(
       suggestDim7ChainFills(chords('C Am F G7'), {
         includeTurnaround: false,
-      }),
-    ).toEqual([])
+      }).some((item) => item.insertBeforeIndex === 4),
+    ).toBe(false)
   })
 
-  it('không chèn khi hợp âm cuối không kéo về hợp âm đầu', () => {
-    // F cuối vòng không phải bậc năm của C
-    expect(suggestDim7ChainFills(chords('C Am G7 F'))).toEqual([])
+  it('quãng bass 3–7 nửa cung thì vẫn nối được cuối vòng', () => {
+    expect(
+      suggestDim7ChainFills(chords('C Am G7 F')).some(
+        (item) => item.insertBeforeIndex === 4,
+      ),
+    ).toBe(true)
   })
 
   it('tìm được cả câu nối bên trong lẫn câu quay đầu', () => {
@@ -179,7 +184,10 @@ describe('nối vào bộ gợi ý chung', () => {
     expect(atSameSlot[0].technique).toBe('dim7-chain-fill')
 
     // Và khi áp dụng thì câu nối thắng
-    const result = applySuggestions(list, suggestions)
+    const result = applySuggestions(
+      list,
+      suggestions.filter((item) => item.insertBeforeIndex === 1),
+    )
     expect(result).toHaveLength(4)
   })
 })

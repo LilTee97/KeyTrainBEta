@@ -120,6 +120,14 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(hands.has('right')).toBe(true)
   })
 
+  it('chạy ngón sau N phách thì câu bắt đầu muộn hơn', () => {
+    const delayed = fill(
+      new Map([[2, { octaves: 2, restBeats: 2, delayBeats: 2 }]]),
+    )
+    expect(delayed[0].startBeat).toBeGreaterThan(run[0].startBeat)
+    expect(delayed[delayed.length - 1].startBeat).toBeCloseTo(14, 5)
+  })
+
   it('nốt cuối rơi đúng số phách nghỉ đã đặt', () => {
     // Ô nối kết thúc ở phách 16; nghỉ hai phách thì nốt cuối ở phách 14
     for (const restBeats of [1, 2, 3]) {

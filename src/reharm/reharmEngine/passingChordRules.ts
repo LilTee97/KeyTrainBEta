@@ -38,6 +38,8 @@ export interface PassingSuggestion {
   technique: PassingTechnique
   /** Giải thích ngắn cho người chơi hiểu vì sao chèn được ở đây. */
   explanation: string
+  /** Host giữ bấy nhiêu phách rồi mới tới hợp âm lướt. Bỏ trống = chia đôi ô. */
+  hostKeepBeats?: number
 }
 
 /** Dựng một hợp âm từ nốt gốc và định danh tính chất. */
@@ -91,14 +93,10 @@ export function suggestDim7Passing(
     const target = chords[index]
 
     const up = ascendingDistance(previous.root, target.root)
-    // Hai hợp âm cùng nốt gốc thì không có chỗ để lướt.
     if (up === 0) continue
 
-    // Đi lên thì tiếp cận từ nửa cung dưới, đi xuống thì từ nửa cung trên.
     const goingUp = up <= 6
     const passingRoot = normalizePitchClass(target.root + (goingUp ? -1 : 1))
-
-    // Hợp âm trước đã nằm ngay sát đích rồi thì chèn vào chỉ thành lặp lại.
     if (passingRoot === previous.root) continue
 
     const passing = makeChord(passingRoot, 'dim7')
@@ -108,7 +106,7 @@ export function suggestDim7Passing(
       insertBeforeIndex: index,
       chords: [passing],
       technique: 'dim7-passing',
-      explanation: `Lướt bán cung vào ${target.symbol}: bass đi ${pitchClassName(previous.root)} → ${pitchClassName(passingRoot)} → ${pitchClassName(target.root)}.`,
+      explanation: `Lướt bán cung sau ${previous.symbol} vào ${target.symbol}: bass đi ${pitchClassName(previous.root)} → ${pitchClassName(passingRoot)} → ${pitchClassName(target.root)}.`,
     })
   }
 
@@ -259,7 +257,7 @@ export function compatibleSuggestions(
 
     if (blocked.has(slot)) return false
 
-    const target = chords[slot]
+    const target = targetOf(chords, slot)
     if (!target) return false
 
     return tones === null || tones.has(target.root)
@@ -308,7 +306,7 @@ export function groupPassingSuggestions(
   for (const suggestion of [...suggestions].sort(
     (a, b) => a.insertBeforeIndex - b.insertBeforeIndex,
   )) {
-    const target = chords[suggestion.insertBeforeIndex]
+    const target = targetOf(chords, suggestion.insertBeforeIndex)
     if (!target) continue
 
     const id = `${suggestion.technique}:${target.root}:${target.quality.id}`
@@ -331,6 +329,15 @@ export function groupPassingSuggestions(
   }
 
   return [...groups.values()].filter((group) => group.slots.length > 0)
+}
+
+/** Hợp âm đích của một khe — khe = hết vòng thì đích là hợp âm đầu. */
+export function targetOf(
+  chords: readonly ParsedChord[],
+  insertBefore: number,
+): ParsedChord | undefined {
+  if (insertBefore === chords.length) return chords[0]
+  return chords[insertBefore]
 }
 
 /** Nhóm nào đặt được ngay trước hợp âm thứ `index`. */
@@ -404,20 +411,23 @@ export function applySuggestions(
   for (const position of positions) {
     const inserted = chosen.get(position)!.chords
 
-    /*
-      Hợp âm lướt **mượn thời gian của hợp âm đứng trước**, không thêm ô nhịp
-      mới — xem `chordTiming.ts` và mục 14.2 của tài liệu phong cách. Vị trí 0
-      thì mượn của hợp âm cuối, vì vòng được chơi lặp lại nên hợp âm cuối chính
-      là hợp âm đứng trước nó.
-    */
     const hostIndex = position === 0 ? result.length - 1 : position - 1
     const host = result[hostIndex]
     if (!host) continue
 
-    const { host: hostBeats, passing } = splitBeats(
-      beatsOf(host, beatsPerChord),
-      inserted.length,
-    )
+    const suggestion = chosen.get(position)!
+    const total = beatsOf(host, beatsPerChord)
+    const keep = suggestion.hostKeepBeats
+    const { host: hostBeats, passing } =
+      keep !== undefined && keep > 0 && keep < total
+        ? {
+            host: keep,
+            passing: Array.from(
+              { length: inserted.length },
+              () => (total - keep) / inserted.length,
+            ),
+          }
+        : splitBeats(total, inserted.length)
 
     result[hostIndex] = { ...host, beats: hostBeats }
     result.splice(

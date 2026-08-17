@@ -10,6 +10,7 @@ import { degreesOf } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { AnalyzedChord } from './degreeAnalysis'
+import { scaleTones } from './keyDetection'
 
 /**
  * Kỹ thuật 1 của phong cách: làm dày hợp âm và tư duy hợp âm chồng trên bass.
@@ -71,7 +72,8 @@ const MAJOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
 }
 
 const MINOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
-  1: { light: 'm7', full: 'm9' },
+  // Chủ âm thứ: không thêm bậc bảy thứ — nghe như át, mất cảm giác về nhà.
+  1: { light: 'min', full: 'madd9' },
   2: { light: 'm7b5', full: 'm7b5' },
   3: { light: 'maj7', full: 'maj9' },
   4: { light: 'm7', full: 'm9' },
@@ -122,6 +124,8 @@ export type MajorChordColor =
  */
 export type MinorChordColor =
   | 'auto'
+  | 'min'
+  | 'madd9'
   | 'm7'
   | 'm9'
   | 'm11'
@@ -129,6 +133,8 @@ export type MinorChordColor =
   | 'm6'
   /** Màu thứ hoà thanh, không thấy trong tài liệu. */
   | 'mMaj7'
+  | 'dim'
+  | 'dim7'
 
 /**
  * Màu này lấy từ đâu.
@@ -159,7 +165,19 @@ export const MINOR_COLOR_OPTIONS: readonly MinorColorOption[] = [
     id: 'auto',
     label: 'Theo bậc',
     description:
-      'Bậc hai dùng m11 đúng lối Am11 trong tài liệu, các bậc thứ khác dùng m9.',
+      'Bậc hai dùng m11 đúng lối Am11 trong tài liệu, các bậc thứ khác dùng m9. Chủ âm thứ luôn m(add9).',
+    source: 'khaBu',
+  },
+  {
+    id: 'min',
+    label: 'm',
+    description: 'Thứ trơn, không bảy — hết nốt ngoài giọng do bậc chín/mười một.',
+    source: 'khaBu',
+  },
+  {
+    id: 'madd9',
+    label: 'm(add9)',
+    description: 'Thêm chín, không bảy. Chủ âm thứ vẫn nghỉ.',
     source: 'khaBu',
   },
   {
@@ -193,6 +211,18 @@ export const MINOR_COLOR_OPTIONS: readonly MinorColorOption[] = [
     description:
       'Thứ với bậc bảy trưởng, màu căng và bí ẩn. Thêm nốt nằm ngoài giọng.',
     source: 'jazz',
+  },
+  {
+    id: 'dim',
+    label: 'dim',
+    description: 'Giữ hợp âm giảm ba nốt. Chỉ áp cho hợp âm vốn đã giảm.',
+    source: 'khaBu',
+  },
+  {
+    id: 'dim7',
+    label: 'dim7',
+    description: 'Giảm bảy — màu dim dày hơn. Chỉ áp cho hợp âm vốn đã giảm.',
+    source: 'khaBu',
   },
 ]
 
@@ -444,6 +474,9 @@ export interface ColorOptions {
    * mà tài liệu dùng nhiều nhất.
    */
   majorColor?: MajorChordColor
+  tonic?: PitchClass
+  /** Ép nốt ngoài giọng về chất diatonic của bậc. Mặc định bật. */
+  preferInKey?: boolean
   /**
    * Màu cho các bậc thứ đứng yên. Bỏ trống thì mỗi bậc dùng màu riêng của nó.
    */
@@ -546,6 +579,71 @@ export function colorSequence(
  * thấy nó đang đóng vai bậc năm phụ — lúc đó phải cho nó bậc bảy như một hợp
  * âm bậc năm thật, chứ không tô như hợp âm nghỉ.
  */
+const THINNER: Record<string, string> = {
+  m11: 'm9',
+  m9: 'm7',
+  m7: 'min',
+  madd9: 'min',
+  maj13: 'maj9',
+  maj9: 'maj7',
+  maj7: 'add9',
+  add9: 'maj',
+  '69': '6',
+  '6': 'maj',
+  sus2: 'maj',
+  '9sus4': '7sus4',
+  '7sus4': 'sus4',
+  '13': '9',
+  '9': '7',
+  '13b9': '7b9',
+  '7b9': '7',
+  '7#5': '7',
+  '7b13': '7',
+  m13: 'm11',
+}
+
+const KEEP_OUTSIDE = new Set([
+  'm6',
+  'mMaj7',
+  'maj7#11',
+  '7#11',
+  '7#9',
+  '7b5',
+  '7b9',
+  '13b9',
+  '7#5',
+  '7b13',
+])
+
+function fitsKey(
+  root: ParsedChord['root'],
+  qualityId: string,
+  tonic: PitchClass,
+  scale: ScaleType,
+): boolean {
+  const quality = getChordQuality(qualityId)
+  if (!quality) return true
+  const tones = scaleTones(tonic, scale)
+  return chordPitchClasses(root, quality).every((pitch) => tones.has(pitch))
+}
+
+function inKeyQuality(
+  root: ParsedChord['root'],
+  qualityId: string,
+  tonic: PitchClass,
+  scale: ScaleType,
+): string {
+  if (KEEP_OUTSIDE.has(qualityId)) return qualityId
+  let current = qualityId
+  for (let step = 0; step < 8; step += 1) {
+    if (fitsKey(root, current, tonic, scale)) return current
+    const next = THINNER[current]
+    if (!next || next === current) return current
+    current = next
+  }
+  return current
+}
+
 export function colorAnalyzedChord(
   analyzed: AnalyzedChord,
   scale: ScaleType,
@@ -558,10 +656,28 @@ export function colorAnalyzedChord(
     minorColor = 'auto',
     dominantColor = 'auto',
     tonicColor,
+    tonic,
+    preferInKey = true,
   } = options
   if (intensity === 'off') return analyzed.chord
 
   const { chord, degree } = analyzed
+  const qualityId = chord.quality.id
+
+  if (
+    (qualityId === 'dim' || qualityId === 'dim7') &&
+    !(degree === 7 && scale === 'major')
+  ) {
+    if (minorColor === 'dim' || minorColor === 'dim7') {
+      return withQuality(chord, minorColor)
+    }
+    if (intensity === 'full' && qualityId === 'dim') {
+      return withQuality(chord, 'dim7')
+    }
+    return chord
+  }
+
+  if (qualityId === 'aug') return chord
 
   // Hợp âm ngoài giọng nhưng đang giải quyết như bậc năm.
   if (degree === null && analyzed.actsAsDominant) {
@@ -576,6 +692,24 @@ export function colorAnalyzedChord(
   const rules = scale === 'minor' ? MINOR_DEGREE_RULES : MAJOR_DEGREE_RULES
   const rule = rules[degree]
   if (!rule) return colorChord(chord, options)
+
+  if (degree === 1 && scale === 'minor') {
+    return withQuality(chord, intensity === 'full' ? 'madd9' : 'min')
+  }
+
+  if (degree === 5 && thirdOf(chord.quality.intervals) === 'minor') {
+    const minorTarget =
+      minorColor !== 'auto' && minorColor !== 'dim' && minorColor !== 'dim7'
+        ? minorColor
+        : intensity === 'full'
+          ? 'm9'
+          : 'm7'
+    const clamped =
+      preferInKey && tonic !== undefined
+        ? inKeyQuality(chord.root, minorTarget, tonic, scale)
+        : minorTarget
+    return withQuality(chord, clamped)
+  }
 
   // Chỉ đổi bậc năm sang hợp âm treo; các bậc khác giữ nguyên luật của mình.
   if (susDominant && degree === 5 && thirdOf(chord.quality.intervals) !== 'minor') {
@@ -593,10 +727,35 @@ export function colorAnalyzedChord(
     target = tonicColor ?? majorColor
   } else if (isRestingMajorDegree(degree, scale)) {
     target = majorColor
-  } else if (minorColor !== 'auto' && isRestingMinorDegree(degree, scale)) {
+  } else if (
+    minorColor !== 'auto' &&
+    minorColor !== 'dim' &&
+    minorColor !== 'dim7' &&
+    isRestingMinorDegree(degree, scale)
+  ) {
     target = minorColor
   } else {
     target = rule.full
+  }
+
+  if (preferInKey && tonic !== undefined && degree !== null) {
+    const diatonicThird = isRestingMinorDegree(degree, scale)
+      ? 'minor'
+      : isRestingMajorDegree(degree, scale)
+        ? 'major'
+        : null
+    const chordThird = thirdOf(chord.quality.intervals)
+    if (diatonicThird && chordThird && chordThird !== diatonicThird) {
+      target =
+        diatonicThird === 'minor'
+          ? minorColor !== 'auto' && minorColor !== 'dim' && minorColor !== 'dim7'
+            ? minorColor
+            : intensity === 'full'
+              ? rule.full
+              : rule.light
+          : majorColor
+    }
+    target = inKeyQuality(chord.root, target, tonic, scale)
   }
 
   const targetQuality = getChordQuality(target)

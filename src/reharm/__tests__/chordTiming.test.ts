@@ -123,7 +123,6 @@ describe('chèn hợp âm lướt không làm dài thêm vòng', () => {
     const after = applySuggestions(list, iiV, 4)
     const starts = chordStarts(after, 4)
 
-    // Các hợp âm gốc phải nằm ở phách 0, 4, 8, 12
     const originalStarts = after
       .map((chord, index) => ({ chord, start: starts[index] }))
       .filter((entry) => entry.chord.beats === undefined)

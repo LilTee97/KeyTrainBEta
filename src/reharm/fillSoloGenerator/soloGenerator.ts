@@ -382,6 +382,8 @@ export interface TransitionRun {
    * giọng, và đẩy cả đoạn hát lệch đi.
    */
   restBeats: number
+  /** Chạy ngón sau mấy phách (0–2) của ô nối. */
+  delayBeats?: number
 }
 
 export function generateFillLine(
@@ -474,12 +476,13 @@ export function generateFillLine(
         beatsOf(chords[index], beatsPerChord),
       )
       const rest = Math.min(transition.restBeats, barBeats - 0.5)
+      const delay = Math.min(transition.delayBeats ?? 0, barBeats - rest - 0.5)
 
       for (const note of arpeggioRun({
         chord: chords[index],
         octaves: transition.octaves,
         endBeat: chordEnd - rest,
-        maxBeats: barBeats - rest,
+        maxBeats: barBeats - rest - Math.max(0, delay),
       })) {
         result.push({ ...note, isGrace: false })
       }

@@ -5,26 +5,18 @@ import type { PassingSuggestion } from '../reharmEngine/passingChordRules'
 import type { ParsedChord } from '../types'
 
 /**
- * Sinh câu nối giữa hợp âm bậc năm và hợp âm đích.
+ * Sinh câu nối lấp khoảng trống giữa hai hợp âm bằng chuỗi dim7.
  *
- * Tài liệu mô tả ở mục 5: một **chuỗi hợp âm bảy giảm** bắc cầu cho nốt bass
- * đi bộ lên từ hợp âm bậc năm tới hợp âm đích. Ví dụ nguyên văn:
+ * Tài liệu mục 5: bass đi bộ, mỗi bậc một dim7. Ví dụ nguyên văn V→I:
  *
  *     A7 → Bdim7 → C#dim7 → Dm7
  *
- * Nốt bass đi A → B → C# → D, tức **hai cung rồi nửa cung**. Cùng khuôn đó áp
- * cho G7 → C sẽ ra G → A → B → C. Hai ví dụ khớp nhau nên đây là công thức
- * chung, không phải trường hợp lẻ.
- *
- * Khác với hợp âm lướt ở `passingChordRules.ts` vốn chỉ chèn **một** hợp âm
- * vào một khe, câu nối ở đây lấp trọn quãng giữa hai hợp âm bằng nhiều bước.
+ * Cùng khuôn (bước 2 nửa cung) áp cho mọi cặp bass cách 3–7 nửa cung — chỗ
+ * ca sĩ nghỉ / hợp âm ngân dài. Quãng 4 đúng (5) ra đúng 2 dim7 như tài liệu.
  */
 
-/** Bước đi của nốt bass trong câu nối, tính bằng nửa cung từ hợp âm bậc năm. */
-const BASS_WALK_STEPS = [2, 4] as const
-
-/** Quãng từ hợp âm bậc năm lên hợp âm đích: một quãng bốn đúng. */
-const RESOLUTION_INTERVAL = 5
+const MIN_GAP = 3
+const MAX_GAP = 7
 
 /** Dựng một hợp âm bảy giảm trên nốt cho trước. */
 function dim7On(root: PitchClass): ParsedChord | null {
@@ -35,23 +27,32 @@ function dim7On(root: PitchClass): ParsedChord | null {
   return { root, quality, source: symbol, symbol }
 }
 
-/**
- * Hợp âm này có đang làm chức năng bậc năm không.
- *
- * Nhận theo cấu tạo chứ không theo tên: có bậc bảy thứ và không có bậc ba thứ.
- * Cách này bắt được cả hợp âm treo như `D9sus4` — không có bậc ba nào nhưng
- * vẫn đóng vai bậc năm.
- */
-function actsAsDominant(chord: ParsedChord): boolean {
-  const intervals = chord.quality.intervals
-  return intervals.includes(10) && !intervals.includes(3)
+/** Các nốt dim7 trên đường bass từ `from` tới `to`, chọn nhánh ngắn hơn. */
+function walkRoots(from: PitchClass, to: PitchClass): PitchClass[] {
+  const up = normalizePitchClass(to - from)
+  const down = normalizePitchClass(from - to)
+  const pick =
+    up >= MIN_GAP && up <= MAX_GAP && down >= MIN_GAP && down <= MAX_GAP
+      ? up <= down
+        ? up
+        : -down
+      : up >= MIN_GAP && up <= MAX_GAP
+        ? up
+        : down >= MIN_GAP && down <= MAX_GAP
+          ? -down
+          : 0
+  if (pick === 0) return []
+  const step = pick > 0 ? 2 : -2
+  const span = Math.abs(pick)
+  const roots: PitchClass[] = []
+  for (let distance = 2; distance < span; distance += 2) {
+    roots.push(normalizePitchClass(from + (step < 0 ? -distance : distance)))
+  }
+  return roots
 }
 
 /**
  * Tìm các chỗ chèn được câu nối bằng chuỗi hợp âm giảm.
- *
- * Chỉ áp khi hợp âm bậc năm giải quyết lên đúng một quãng bốn — đó là chuyển
- * động mà công thức trong tài liệu dựa vào.
  */
 export function suggestDim7ChainFills(
   chords: readonly ParsedChord[],
@@ -62,31 +63,21 @@ export function suggestDim7ChainFills(
 
   const suggestions: PassingSuggestion[] = []
 
-  /** Dựng đề xuất cho một cặp bậc năm và hợp âm đích, nếu áp được. */
   function tryPair(
-    dominant: ParsedChord,
+    host: ParsedChord,
     target: ParsedChord,
     insertBeforeIndex: number,
     isTurnaround: boolean,
   ): void {
-    if (!actsAsDominant(dominant)) return
-    if (
-      normalizePitchClass(target.root - dominant.root) !== RESOLUTION_INTERVAL
-    ) {
-      return
-    }
+    const roots = walkRoots(host.root, target.root)
+    if (roots.length === 0) return
 
-    const chain = BASS_WALK_STEPS.map((step) =>
-      dim7On(normalizePitchClass(dominant.root + step)),
-    ).filter((chord): chord is ParsedChord => chord !== null)
+    const chain = roots
+      .map((root) => dim7On(root))
+      .filter((chord): chord is ParsedChord => chord !== null)
+    if (chain.length !== roots.length) return
 
-    if (chain.length !== BASS_WALK_STEPS.length) return
-
-    const walk = [
-      dominant.root,
-      ...chain.map((chord) => chord.root),
-      target.root,
-    ]
+    const walk = [host.root, ...chain.map((chord) => chord.root), target.root]
       .map((pitch) => pitchClassName(pitch))
       .join(' → ')
 
@@ -95,8 +86,8 @@ export function suggestDim7ChainFills(
       chords: chain,
       technique: 'dim7-chain-fill',
       explanation: isTurnaround
-        ? `Câu quay đầu: nối ${dominant.symbol} cuối vòng về ${target.symbol} đầu vòng, bass đi bộ ${walk}.`
-        : `Câu nối lấp quãng giữa ${dominant.symbol} và ${target.symbol}: bass đi bộ ${walk}.`,
+        ? `Câu quay đầu: nối ${host.symbol} cuối vòng về ${target.symbol} đầu vòng, bass đi bộ ${walk}.`
+        : `Câu nối lấp khoảng trống giữa ${host.symbol} và ${target.symbol}: bass đi bộ ${walk}.`,
     })
   }
 
