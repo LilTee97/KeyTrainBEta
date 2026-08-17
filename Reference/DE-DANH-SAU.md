@@ -46,7 +46,9 @@ Cờ `verified` trong `src/reharm/style/types.ts` hiện mang nghĩa hẹp: *"đ
 
 Khi thêm điệu từ nguồn khác — sách nhạc, video khác, hoặc tự soạn — cần một trường ghi rõ **nguồn gốc** thay vì chỉ đúng/sai. Giữ phân biệt "đúng phong cách Khá Bự" với "điệu chuẩn nói chung" là có ích, vì mục tiêu của app là học **phong cách cụ thể đó**.
 
-Bốn điệu đang để trống chờ mẫu tiết tấu: Bolero, Slow Rock, Cha Cha Cha, March. Xem `src/reharm/style/styleLibrary/index.ts`.
+Bốn điệu vẫn trống (chưa có trên OneMotion): Bolero, Slow Rock, Cha Cha Cha, March.
+
+Đã thêm 7 điệu từ OneMotion Chord Player (`onemotion.ts`): Pop, Rock, Reggae, Samba, Country, Funk, Tango — `verified` + `sourceVideos: OneMotion`, không phải Khá Bự.
 
 ---
 

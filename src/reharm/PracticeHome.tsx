@@ -1,3 +1,4 @@
+import { ChordOverview } from './input/ChordOverview'
 import { SongLibrary } from './persistence/SongLibrary'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import { usePracticeStore } from './playback/practiceStore'
@@ -48,11 +49,21 @@ export function PracticeHome() {
       />
 
       {song && song.timeline.length > 0 ? (
-        <NoteGatedPractice
-          timeline={song.timeline}
-          voicings={song.voicings}
-          beatsPerChord={song.beatsPerChord}
-        />
+        <>
+          {song.perBeat.length > 0 && (
+            <ChordOverview
+              perBeat={song.perBeat}
+              meter={song.meter}
+              bpm={72}
+              showToolbar={false}
+            />
+          )}
+          <NoteGatedPractice
+            timeline={song.timeline}
+            voicings={song.voicings}
+            beatsPerChord={song.beatsPerChord}
+          />
+        </>
       ) : (
         <div className="rounded-xl border border-line bg-black/25 p-4">
           <p className="text-sm text-dim">

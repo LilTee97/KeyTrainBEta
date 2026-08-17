@@ -1,5 +1,6 @@
 import { pitchClassName } from '../shared/musicTheory/pitch'
 import type { AccidentalStyle, PitchClass } from '../shared/musicTheory/types'
+import { parseChordInput } from './input/chordInputParser'
 import type { ParsedChord } from './types'
 
 /**
@@ -48,6 +49,16 @@ export function transposeChords(
 ): ParsedChord[] {
   if (fold(semitones) === 0) return [...chords]
   return chords.map((chord) => transposeChord(chord, semitones, style))
+}
+
+export function transposeSymbol(
+  symbol: string,
+  semitones: number,
+  style: AccidentalStyle = 'sharp',
+): string {
+  const chord = parseChordInput(symbol).chords[0]
+  if (!chord) return symbol
+  return transposeChord(chord, semitones, style).symbol
 }
 
 /** Đổi giọng đang chọn theo cùng số nửa cung với nút TONE. */

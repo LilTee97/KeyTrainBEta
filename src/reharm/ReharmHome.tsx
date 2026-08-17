@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LOOP_PASSES,
+  setVolumeDb,
   startTimelineLoop,
   stopTimelineLoop,
   useAudioStore,
   usePlaybackStore,
 } from '../shared/audio/audioEngine'
+import {
+  loadSourceFile,
+  pauseSource,
+  stopSource,
+  setSourceEnabled,
+  setSourceNativeBpm,
+  setSourceVolume,
+  startSourceAtBeat,
+  syncSourceRate,
+} from '../shared/audio/sourceAudio'
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { usePracticeStore } from './playback/practiceStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
@@ -31,6 +42,10 @@ import {
   transposeChords,
   transposeLabel,
 } from './transpose'
+import { SongImport } from './input/SongImport'
+import { ChordOverview } from './input/ChordOverview'
+import { expandToBeats } from './input/chromaMatch'
+import { listToBeatTable } from './input/importedTrack'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
@@ -156,10 +171,9 @@ import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
   BALLAD,
-  balladCellFor,
   getStyle,
-  isPlayable,
 } from './style/styleLibrary'
+import { StylePicker } from './style/StylePicker'
 import type { ParsedChord } from './types'
 import { voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
 
@@ -307,6 +321,7 @@ function KeySelect({
 
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
+  const volumeDb = useAudioStore((state) => state.volumeDb)
   const setPracticeSong = usePracticeStore((state) => state.setSong)
   const openRequest = usePracticeStore((state) => state.request)
   const clearOpenRequest = usePracticeStore((state) => state.clearRequest)
@@ -355,6 +370,13 @@ export function ReharmHome() {
   const [pairedChords, setPairedChords] = useState<ReadonlySet<number>>(
     new Set(),
   )
+  /** Phách từng hợp âm khi nhập từ lưới / file — đè lên nhịp đổi hợp âm chung. */
+  const [importedBeats, setImportedBeats] = useState<Record<number, number>>({})
+  /** Có bài (file/lưu) thì giữ BPM bài, không đổi theo điệu. */
+  const [lockSongBpm, setLockSongBpm] = useState(false)
+  const [hasSource, setHasSource] = useState(false)
+  const [sourceOn, setSourceOn] = useState(false)
+  const [sourceVol, setSourceVol] = useState(45)
   /**
    * Các chỗ người dùng đã tắt câu fill, tính theo vòng hợp âm chính.
    *
@@ -368,7 +390,7 @@ export function ReharmHome() {
   const [dropRoot, setDropRoot] = useState(true)
   /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
   const [beatsPerChord, setBeatsPerChord] = useState(4)
-  const [styleId, setStyleId] = useState('ballad')
+  const [styleId, setStyleId] = useState('pop-1')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(true)
@@ -590,6 +612,7 @@ export function ReharmHome() {
    */
   const halvedBeats = useMemo(() => {
     const table = {
+      ...importedBeats,
       ...pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
     }
 
@@ -598,7 +621,13 @@ export function ReharmHome() {
     }
 
     return table
-  }, [pairedChords, transitionAt, sequence.chords.length, chordBeats])
+  }, [
+    importedBeats,
+    pairedChords,
+    transitionAt,
+    sequence.chords.length,
+    chordBeats,
+  ])
 
   const reharm = useMemo(() => {
     const parsedKey = manualKey
@@ -755,6 +784,11 @@ export function ReharmHome() {
     })
   }, [mainChords, style, chordBeats, dropRoot])
 
+  const reharmPerBeat = useMemo(
+    () => expandToBeats(withPassing, chordBeats),
+    [withPassing, chordBeats],
+  )
+
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
   const sheet = useMemo(() => {
     if (!pastedSong) return null
@@ -766,30 +800,12 @@ export function ReharmHome() {
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
   const accompaniment = useMemo(() => {
-    const spans = mainChordSpans(withPassing, chordBeats)
-    const ranges = sheet ? sectionChordRanges(sheet) : []
-
     return renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach: chordDurations(withPassing, chordBeats),
       barsWithoutComping: runningBars,
-      cellAt:
-        style.id === 'ballad' && ranges.length > 0
-          ? (beat) => {
-              const range = ranges.find((entry) => {
-                const first = spans[entry.from]
-                const last = spans[entry.to]
-                if (!first || !last) return false
-                return (
-                  beat >= first.start - 0.001 &&
-                  beat < last.start + last.beats - 0.001
-                )
-              })
-              return balladCellFor(range?.kind ?? 'verse')
-            }
-          : undefined,
     })
-  }, [twoHands, style, chordBeats, withPassing, runningBars, sheet])
+  }, [twoHands, style, chordBeats, withPassing, runningBars])
 
   /**
    * Cấu trúc thật của bài, suy ra từ cách chia đoạn trên bản nhạc.
@@ -1113,6 +1129,13 @@ export function ReharmHome() {
       acceptedPassing,
       styleId,
       beatsPerChord,
+      chordDurations:
+        Object.keys(importedBeats).length > 0
+          ? sequence.chords.map(
+              (_, index) => importedBeats[index] ?? beatsPerChord,
+            )
+          : undefined,
+      bpm,
       smoothVoicing,
       dropRoot,
       useSlashChords,
@@ -1142,6 +1165,9 @@ export function ReharmHome() {
       acceptedPassing,
       styleId,
       beatsPerChord,
+      importedBeats,
+      sequence.chords,
+      bpm,
       smoothVoicing,
       dropRoot,
       useSlashChords,
@@ -1186,6 +1212,19 @@ export function ReharmHome() {
 
     setStyleId(saved.styleId)
     setBeatsPerChord(saved.beatsPerChord)
+    setImportedBeats(listToBeatTable(saved.chordDurations) ?? {})
+    if (saved.bpm !== undefined) {
+      setBpm(saved.bpm)
+      setLockSongBpm(true)
+    } else {
+      setLockSongBpm(false)
+      const styleBpm = getStyle(saved.styleId)?.bpm
+      if (styleBpm) setBpm(styleBpm)
+    }
+    loadSourceFile(null)
+    setHasSource(false)
+    setSourceOn(false)
+    setSourceEnabled(false)
     setSmoothVoicing(saved.smoothVoicing)
     setDropRoot(saved.dropRoot)
     setUseSlashChords(saved.useSlashChords)
@@ -1237,13 +1276,17 @@ export function ReharmHome() {
     setTranspose(0)
     setManualKey('')
     setPairedChords(new Set())
+    setImportedBeats({})
+    setLockSongBpm(false)
+    const styleBpm = getStyle(styleId)?.bpm
+    if (styleBpm) setBpm(styleBpm)
     setMutedFills(new Set())
     setTransitionEdits({})
     setAcceptedPassing([])
 
     setInput(parsed.chords.map((chord) => chord.symbol).join(' '))
     setSelectedIndex(null)
-  }, [])
+  }, [styleId])
 
   /**
    * Hợp âm cuối của đoạn kết bài, đã đổi màu.
@@ -1451,8 +1494,19 @@ export function ReharmHome() {
       timeline,
       voicings: twoHands,
       beatsPerChord: chordBeats,
+      perBeat: reharmPerBeat,
+      meter: style.beatsPerMeasure === 3 ? 3 : 4,
     })
-  }, [setPracticeSong, songId, songTitle, timeline, twoHands, chordBeats])
+  }, [
+    setPracticeSong,
+    songId,
+    songTitle,
+    timeline,
+    twoHands,
+    chordBeats,
+    reharmPerBeat,
+    style.beatsPerMeasure,
+  ])
 
   /*
     Nhận lời nhờ mở bài từ tab Luyện đệm.
@@ -1513,6 +1567,30 @@ export function ReharmHome() {
     () => steps.some((step) => step.type === 'section' && step.ending),
     [steps],
   )
+
+  useEffect(() => {
+    if (looping) syncSourceRate(bpm)
+  }, [bpm, looping])
+
+  const playingStyle = useRef(styleId)
+  useEffect(() => {
+    if (playingStyle.current === styleId) return
+    playingStyle.current = styleId
+    if (!usePlaybackStore.getState().looping) return
+
+    const length = Math.max(1, loopLengthBeats)
+    const from = usePlaybackStore.getState().positionBeats % length
+    stopTimelineLoop()
+    pauseSource()
+    startTimelineLoop(
+      (pass) => eventsForHand(passAt(pass), hand),
+      bpm,
+      loopLengthBeats,
+      from,
+      playsOnce,
+    )
+    startSourceAtBeat(from, bpm, !playsOnce)
+  }, [styleId, passAt, hand, bpm, loopLengthBeats, playsOnce])
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -1591,6 +1669,157 @@ export function ReharmHome() {
           </button>
         ))}
       </div>
+
+      {reharmPerBeat.length > 0 && (
+        <ChordOverview
+          perBeat={reharmPerBeat}
+          meter={style.beatsPerMeasure === 3 ? 3 : 4}
+          bpm={bpm}
+          onBpm={setBpm}
+          showToolbar
+          playEnabled={audioReady && timeline.length > 0}
+          toneLabel={transposeLabel(transpose)}
+          onTone={(delta) => setTranspose((value) => value + delta)}
+          activeBeat={
+            looping
+              ? Math.floor(positionBeats % Math.max(1, loopLengthBeats))
+              : null
+          }
+          onPlay={() => {
+            startTimelineLoop(
+              (pass) => eventsForHand(passAt(pass), 'both'),
+              bpm,
+              loopLengthBeats,
+              0,
+              playsOnce,
+            )
+            startSourceAtBeat(0, bpm, !playsOnce)
+            advanceRound()
+          }}
+          onPause={() => {
+            stopTimelineLoop()
+            pauseSource()
+          }}
+          onStop={() => {
+            stopTimelineLoop()
+            stopSource()
+          }}
+          onSeekBeat={(beat) => {
+            const index = chordIndexAt(withPassing, chordBeats, beat)
+            let mainIndex = -1
+            for (let position = 0; position <= index; position += 1) {
+              if (!withPassing[position]?.passing) mainIndex += 1
+            }
+            setSelectedIndex(mainIndex >= 0 ? mainIndex : null)
+            if (!audioReady) return
+            stopTimelineLoop()
+            pauseSource()
+            startTimelineLoop(
+              (pass) => eventsForHand(passAt(pass), hand),
+              bpm,
+              loopLengthBeats,
+              beat,
+              playsOnce,
+            )
+            startSourceAtBeat(beat, bpm, !playsOnce)
+            advanceRound()
+          }}
+          chordIndexAt={(beat) => {
+            const index = chordIndexAt(withPassing, chordBeats, beat)
+            let mainIndex = -1
+            for (let position = 0; position <= index; position += 1) {
+              if (!withPassing[position]?.passing) mainIndex += 1
+            }
+            return mainIndex >= 0 ? mainIndex : null
+          }}
+          chordCount={sequence.chords.length}
+          pairedChords={pairedChords}
+          pairPlacesAt={(chordIndex) =>
+            similarChordPairs(recolored, chordIndex).length
+          }
+          passingOptionsFor={(chordIndex) =>
+            groupsAtSlot(passingGroups, chordIndex).map((group) => {
+              const slotId = keyOf(chordIndex, group.technique)
+              return {
+                id: group.id,
+                slotId,
+                technique: TECHNIQUE_LABELS[group.technique],
+                chords: group.chords.map((chord) => chord.symbol).join(' → '),
+                places: group.slots.length,
+                applied: isGroupOn(group),
+                appliedHere: acceptedPassing.includes(slotId),
+              }
+            })
+          }
+          onTogglePassing={togglePassingGroup}
+          onAddPassingHere={(slotId) =>
+            setAcceptedPassing((current) =>
+              current.includes(slotId) ? current : [...current, slotId],
+            )
+          }
+          onRemovePassingHere={(slotId) =>
+            setAcceptedPassing((current) =>
+              current.filter((entry) => entry !== slotId),
+            )
+          }
+          transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
+          onToggleTransition={(chordIndex) =>
+            setTransitionEdits((current) => ({
+              ...current,
+              [chordIndex]: transitions.has(chordIndex)
+                ? null
+                : DEFAULT_TRANSITION,
+            }))
+          }
+          onSetTransition={(chordIndex, run) =>
+            setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
+          }
+          fillAt={fillAt}
+          onToggleFill={(chordIndex) =>
+            setMutedFills((current) => {
+              const next = new Set(current)
+              if (next.has(chordIndex)) next.delete(chordIndex)
+              else next.add(chordIndex)
+              return next
+            })
+          }
+          onSetChordSpan={(chordIndex, span, scope) =>
+            setPairedChords((current) => {
+              if (scope === 'here') {
+                return span === 'half'
+                  ? addChordPair(current, chordIndex)
+                  : removeChordPair(current, chordIndex)
+              }
+              return span === 'half'
+                ? addSimilarChordPairs(current, recolored, chordIndex)
+                : removeSimilarChordPairs(current, recolored, chordIndex)
+            })
+          }
+        />
+      )}
+
+      <SongImport
+        onSourceFile={(file) => {
+          loadSourceFile(file)
+          setHasSource(!!file)
+        }}
+        onImport={(track) => {
+          const text = track.chords.map((entry) => entry.symbol).join(' ')
+          loadSong(parseSongText(text), text)
+          setImportedBeats(
+            Object.fromEntries(
+              track.chords.map((entry, index) => [index, entry.beats]),
+            ),
+          )
+          setBeatsPerChord(track.beatsPerMeasure)
+          if (track.beatsPerMeasure === 3) setStyleId('waltz-1')
+          setBpm(track.bpm)
+          setLockSongBpm(true)
+          setSourceNativeBpm(track.bpm)
+          setSongTitle(track.title)
+          if (track.key) setManualKey(track.key)
+        }}
+      />
 
       <SongTextInput onUseSong={loadSong} />
 
@@ -1725,6 +1954,10 @@ export function ReharmHome() {
             </p>
           )}
 
+          {sheet &&
+            sheet.sections.some((section) =>
+              section.lines.some((line) => line.lyric.trim().length > 0),
+            ) && (
           <SongSheetView
             sheet={sheet}
             activeIndex={activeChordIndex}
@@ -1805,6 +2038,7 @@ export function ReharmHome() {
 
               // Đang phát thì dừng hẳn rồi phát lại, cho khỏi chồng hai vòng.
               stopTimelineLoop()
+              pauseSource()
               startTimelineLoop(
                 (pass) => eventsForHand(passAt(pass), hand),
                 bpm,
@@ -1812,9 +2046,11 @@ export function ReharmHome() {
                 beatOfMainChord(chordIndex),
                 playsOnce,
               )
+              startSourceAtBeat(beatOfMainChord(chordIndex), bpm, !playsOnce)
               advanceRound()
             }}
           />
+            )}
 
           {/*
             Nói thẳng ra cử chỉ mở bảng lựa chọn.
@@ -2038,7 +2274,7 @@ export function ReharmHome() {
               type="button"
               onClick={() =>
                 looping
-                  ? stopTimelineLoop()
+                  ? (stopTimelineLoop(), pauseSource())
                   : (startTimelineLoop(
                       (pass) => eventsForHand(passAt(pass), 'both'),
                       bpm,
@@ -2046,6 +2282,7 @@ export function ReharmHome() {
                       0,
                       playsOnce,
                     ),
+                    startSourceAtBeat(0, bpm, !playsOnce),
                     advanceRound())
               }
               disabled={!audioReady || timeline.length === 0}
@@ -2081,6 +2318,65 @@ export function ReharmHome() {
               />
               <span className="w-16 font-mono text-cream">{bpm} BPM</span>
             </label>
+
+            <label className="flex items-center gap-2 text-xs text-dim">
+              Đệm
+              <input
+                type="range"
+                min={-24}
+                max={0}
+                value={volumeDb}
+                onChange={(event) => setVolumeDb(Number(event.target.value))}
+                aria-label="Âm lượng tiếng đệm"
+                className="w-24 accent-amber-key"
+              />
+            </label>
+
+            <label
+              className={`flex items-center gap-1.5 text-xs ${hasSource ? 'text-dim' : 'text-dim/40'}`}
+              title={
+                hasSource
+                  ? 'Phát file nhạc đã chọn làm nền'
+                  : 'Chọn file nhạc ở khung nhập bài trước'
+              }
+            >
+              <input
+                type="checkbox"
+                checked={sourceOn}
+                disabled={!hasSource}
+                onChange={(event) => {
+                  const on = event.target.checked
+                  setSourceOn(on)
+                  setSourceEnabled(on)
+                  if (on && looping) {
+                    startSourceAtBeat(positionBeats, bpm, !playsOnce)
+                  } else {
+                    pauseSource()
+                  }
+                }}
+                className="accent-amber-key"
+              />
+              Nhạc gốc nền
+            </label>
+
+            {hasSource && (
+              <label className="flex items-center gap-2 text-xs text-dim">
+                Nền
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={sourceVol}
+                  onChange={(event) => {
+                    const value = Number(event.target.value)
+                    setSourceVol(value)
+                    setSourceVolume(value / 100)
+                  }}
+                  aria-label="Âm lượng nhạc gốc"
+                  className="w-20 accent-amber-key"
+                />
+              </label>
+            )}
 
             <span className="font-mono text-[11px] text-dim">
               {loopLengthBeats} phách · giang tấu {soloTake(0).length} nốt ·{' '}
@@ -2438,41 +2734,23 @@ export function ReharmHome() {
             Đệm theo điệu
           </h3>
           <span className="font-mono text-[10px] text-teal-key">
-            {style.timeSignature} · đã xác nhận từ video
+            {style.timeSignature} · {style.bpm} BPM ·{' '}
+            {style.sourceVideos?.[0] ?? 'chưa có nguồn'}
           </span>
         </div>
 
-        {/* Chọn điệu */}
-        <div className="mb-3 flex flex-wrap gap-2">
-          {ALL_STYLES.map((entry) => {
-            const playable = isPlayable(entry)
-
-            return (
-              <button
-                key={entry.id}
-                type="button"
-                disabled={!playable}
-                onClick={() => setStyleId(entry.id)}
-                title={
-                  playable
-                    ? entry.note
-                    : 'Chưa có mẫu tiết tấu xác thực từ nguồn, nên KeyTrain không đoán bừa.'
-                }
-                className={`rounded-lg border px-3 py-1.5 text-xs ${
-                  !playable
-                    ? 'cursor-not-allowed border-line/50 bg-white/2 text-dim/40'
-                    : styleId === entry.id
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                {entry.name}
-                <span className="ml-1.5 font-mono text-[9px] opacity-60">
-                  {entry.timeSignature}
-                </span>
-              </button>
-            )
-          })}
+        <div className="mb-3">
+          <StylePicker
+            styles={ALL_STYLES}
+            selectedId={styleId}
+            onSelect={(id) => {
+              setStyleId(id)
+              if (!lockSongBpm) {
+                const next = getStyle(id)
+                if (next) setBpm(next.bpm)
+              }
+            }}
+          />
         </div>
 
         <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
@@ -2482,7 +2760,7 @@ export function ReharmHome() {
             type="button"
             onClick={() =>
               looping
-                ? stopTimelineLoop()
+                ? (stopTimelineLoop(), pauseSource())
                 : (startTimelineLoop(
                     (pass) => eventsForHand(passAt(pass), hand),
                     bpm,
@@ -2490,6 +2768,7 @@ export function ReharmHome() {
                     0,
                     playsOnce,
                   ),
+                  startSourceAtBeat(0, bpm, !playsOnce),
                   advanceRound())
             }
             disabled={!audioReady || timeline.length === 0}

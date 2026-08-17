@@ -5,6 +5,7 @@ import {
   shiftKeyId,
   transposeChords,
   transposeLabel,
+  transposeSymbol,
 } from '../transpose'
 
 const chords = (text: string) => parseChordInput(text).chords
@@ -18,6 +19,7 @@ const symbols = (
 describe('nâng hạ tone', () => {
   it('dịch nốt gốc đúng số nửa cung', () => {
     expect(symbols('C Am F G', 2)).toEqual(['D', 'Bm', 'G', 'A'])
+    expect(transposeSymbol('Csus4', 2)).toBe('Dsus4')
   })
 
   it('hạ tone cũng đúng', () => {

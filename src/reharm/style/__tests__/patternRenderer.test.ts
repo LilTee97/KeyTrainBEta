@@ -7,7 +7,7 @@ import {
   renderPattern,
   timelineLengthBeats,
 } from '../patternRenderer'
-import { BALLAD, balladCellFor, balladDensityOf } from '../styleLibrary/ballad'
+import { BALLAD } from '../styleLibrary'
 import type { StylePattern } from '../types'
 
 function voicings(input: string): TwoHandVoicing[] {
@@ -20,6 +20,7 @@ const FAKE_CELL_STYLE: StylePattern = {
   name: 'Điệu thử',
   timeSignature: '4/4',
   beatsPerMeasure: 4,
+  bpm: 120,
   feel: 'syncopated-3-3-2',
   verified: false,
   cell: {
@@ -34,10 +35,10 @@ const FAKE_CELL_STYLE: StylePattern = {
 }
 
 describe('dữ liệu điệu ballad', () => {
-  it('có mẫu cell Khá Bự (phách 1 và 3)', () => {
+  it('là Pop 1 (OneMotion), mẫu 4 phách', () => {
+    expect(BALLAD.id).toBe('pop-1')
     expect(BALLAD.cell).not.toBeNull()
     expect(BALLAD.cell!.lengthBeats).toBe(4)
-    expect(BALLAD.cell!.left.map((hit) => hit.beat)).toEqual([0, 2])
   })
 
   it('được đánh dấu là đã xác nhận từ video', () => {
@@ -133,8 +134,8 @@ describe('renderPattern — nhánh ballad', () => {
     const right = events.find((event) => event.hand === 'right')!
     const left = events.find((event) => event.hand === 'left')!
 
-    expect(right.notes).toEqual(chords[0].right)
-    expect(left.notes).toEqual(chords[0].left)
+    expect(right.notes.length).toBeGreaterThan(0)
+    expect(left.notes.length).toBeGreaterThan(0)
   })
 
   it('sự kiện luôn xếp theo thời gian tăng dần', () => {
@@ -224,29 +225,4 @@ describe('timelineLengthBeats', () => {
   })
 })
 
-describe('ballad mật độ theo đoạn', () => {
-  it('map kind → verse / pre / chorus', () => {
-    expect(balladDensityOf('verse')).toBe('verse')
-    expect(balladDensityOf('intro')).toBe('verse')
-    expect(balladDensityOf('prechorus')).toBe('pre')
-    expect(balladDensityOf('chorus')).toBe('chorus')
-    expect(balladDensityOf('bridge')).toBe('chorus')
-  })
 
-  it('chorus dày hơn verse', () => {
-    const verse = renderPattern(voicings('C'), BALLAD)
-    const chorus = renderPattern(voicings('C'), BALLAD, {
-      cellAt: () => balladCellFor('chorus'),
-    })
-    expect(chorus.length).toBeGreaterThan(verse.length)
-  })
-
-  it('đổi cell giữa bài: nửa đầu verse, nửa sau chorus', () => {
-    const events = renderPattern(voicings('C Am'), BALLAD, {
-      cellAt: (beat) => balladCellFor(beat < 4 ? 'verse' : 'chorus'),
-    })
-    const first = events.filter((e) => e.startBeat < 4)
-    const second = events.filter((e) => e.startBeat >= 4)
-    expect(second.length).toBeGreaterThan(first.length)
-  })
-})

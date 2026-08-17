@@ -26,6 +26,9 @@ export interface PracticeSong {
   voicings: TwoHandVoicing[]
   /** Số phách mỗi hợp âm, để quy chặng về đúng hợp âm. */
   beatsPerChord: number
+  /** Lưới hợp âm đã tái hòa âm, từng phách. */
+  perBeat: string[]
+  meter: 3 | 4
 }
 
 /**

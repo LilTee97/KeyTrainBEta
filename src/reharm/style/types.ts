@@ -37,6 +37,11 @@ export interface RhythmHit {
   velocityScale?: number
   /** Mặc định đánh cả hợp âm. */
   voice?: HitVoice
+  /**
+   * Nốt thứ mấy trong thế bấm (0 = nốt thấp nhất). Có thì chỉ đánh một nốt —
+   * dùng cho mẫu rải Basic / Arp của OneMotion.
+   */
+  toneIndex?: number
 }
 
 /** Mẫu tiết tấu lặp lại của một điệu. */
@@ -50,8 +55,15 @@ export interface RhythmCell {
 export interface StylePattern {
   id: string
   name: string
+  /** Nhóm trên UI, ví dụ `rock` → nút Rock rồi chọn Rock 1/2/3. */
+  family: string
+  familyName: string
+  /** 1, 2, 3… trong cùng họ. */
+  variant: number
   timeSignature: string
   beatsPerMeasure: number
+  /** BPM mặc định trên OneMotion. Bài hát ghi đè. */
+  bpm: number
   feel: Feel
   /**
    * Điệu này đã được xác nhận trực tiếp từ video của kênh hay chưa.

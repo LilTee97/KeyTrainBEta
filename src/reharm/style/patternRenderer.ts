@@ -56,8 +56,13 @@ function clampVelocity(value: number): number {
 function notesForVoice(
   notes: readonly MidiNote[],
   voice: HitVoice = 'chord',
+  toneIndex?: number,
 ): MidiNote[] {
   if (notes.length === 0) return []
+  if (toneIndex !== undefined) {
+    const index = ((toneIndex % notes.length) + notes.length) % notes.length
+    return [notes[index]]
+  }
 
   switch (voice) {
     case 'top':
@@ -202,7 +207,7 @@ function renderWithCell(
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
-        const notes = notesForVoice(source, hit.voice)
+        const notes = notesForVoice(source, hit.voice, hit.toneIndex)
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
         events.push({

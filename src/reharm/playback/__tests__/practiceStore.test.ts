@@ -43,6 +43,8 @@ describe('kho bài dùng chung giữa hai tab', () => {
         timeline: [],
         voicings: [],
         beatsPerChord: 4,
+        perBeat: [],
+        meter: 4,
       },
     })
 

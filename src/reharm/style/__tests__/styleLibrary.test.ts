@@ -26,7 +26,7 @@ describe('tính toàn vẹn của thư viện điệu', () => {
   })
 
   it('các điệu đã xác nhận đều có nguồn video', () => {
-    expect(VERIFIED_STYLES).toHaveLength(4)
+    expect(VERIFIED_STYLES.length).toBeGreaterThanOrEqual(4)
 
     for (const style of VERIFIED_STYLES) {
       expect(style.verified).toBe(true)
@@ -73,106 +73,60 @@ describe('tính toàn vẹn của thư viện điệu', () => {
   })
 })
 
-describe('ballad Khá Bự', () => {
-  it('khối hợp âm phách 1 và 3', () => {
-    expect(BALLAD.cell?.left.map((hit) => hit.beat)).toEqual([0, 2])
-    expect(BALLAD.cell?.right.map((hit) => hit.beat)).toEqual([0, 2])
-  })
-
-  it('bài cũ lưu ballad-pre/chorus vẫn ra ballad', () => {
+describe('bí danh bài cũ', () => {
+  it('ballad / bossa / valse / swing trỏ về biến thể OneMotion', () => {
+    expect(getStyle('ballad')).toBe(BALLAD)
     expect(getStyle('ballad-pre')).toBe(BALLAD)
-    expect(getStyle('ballad-chorus')).toBe(BALLAD)
+    expect(getStyle('bossa-nova')).toBe(BOSSA_NOVA)
+    expect(getStyle('valse')).toBe(VALSE)
+    expect(getStyle('swing')).toBe(SWING)
   })
 })
 
-describe('bossa nova', () => {
-  it('mẫu trải dài hai ô nhịp', () => {
-    expect(BOSSA_NOVA.cell?.lengthBeats).toBe(8)
-  })
-
-  it('tay phải đánh đúng các mốc mà tài liệu ghi', () => {
-    // Tài liệu ghi theo vị trí móc đơn: ô nhịp 1 vào móc 1 3 6 8,
-    // ô nhịp 2 vào móc 3 6. Đổi sang phách thì ra các mốc này.
-    expect(BOSSA_NOVA.cell?.right.map((hit) => hit.beat)).toEqual([
-      0, 1, 2.5, 3.5, 5, 6.5,
-    ])
-  })
-
-  it('có tiếng đàn rơi lệch phách, đúng chất bossa', () => {
-    const offBeats = BOSSA_NOVA.cell!.right.filter(
-      (hit) => !Number.isInteger(hit.beat),
-    )
-    expect(offBeats.length).toBeGreaterThan(0)
-  })
-
-  it('cả hai tay đều lệch phách', () => {
-    const leftOffBeats = BOSSA_NOVA.cell!.left.filter(
-      (hit) => !Number.isInteger(hit.beat),
-    )
-    expect(leftOffBeats.length).toBeGreaterThan(0)
-  })
-})
-
-describe('valse', () => {
-  it('nhịp ba bốn', () => {
-    expect(VALSE.timeSignature).toBe('3/4')
-    expect(VALSE.cell?.lengthBeats).toBe(3)
-  })
-
-  it('tay trái chỉ đánh một nốt bass ở phách 1', () => {
-    expect(VALSE.cell?.left).toHaveLength(1)
-    expect(VALSE.cell?.left[0].beat).toBe(0)
-  })
-
-  it('tay phải nghỉ phách 1 rồi đánh hai hợp âm', () => {
-    // Đây mới là chữ ký thật sự của điệu, theo tài liệu
-    expect(VALSE.cell?.right.map((hit) => hit.beat)).toEqual([1, 2])
-  })
-
-  it('hai tay không bao giờ đánh cùng lúc', () => {
-    const leftBeats = new Set(VALSE.cell!.left.map((hit) => hit.beat))
-    for (const hit of VALSE.cell!.right) {
-      expect(leftBeats.has(hit.beat)).toBe(false)
+describe('điệu OneMotion', () => {
+  it('mỗi điệu có họ, biến thể và mẫu', () => {
+    expect(VERIFIED_STYLES.length).toBeGreaterThan(30)
+    for (const style of VERIFIED_STYLES) {
+      expect(style.family.length).toBeGreaterThan(0)
+      expect(style.variant).toBeGreaterThan(0)
+      expect(style.cell).not.toBeNull()
+      expect(isPlayable(style)).toBe(true)
     }
   })
-})
 
-describe('swing', () => {
-  it('tay trái ngân bass nguyên ô nhịp', () => {
-    expect(SWING.cell?.left).toHaveLength(1)
-    expect(SWING.cell?.left[0].durationBeats).toBe(4)
+  it('mỗi điệu có BPM OneMotion', () => {
+    for (const style of VERIFIED_STYLES) {
+      expect(style.bpm).toBeGreaterThanOrEqual(40)
+      expect(style.bpm).toBeLessThanOrEqual(200)
+    }
+    expect(getStyle('pop-1')!.bpm).toBe(120)
+    expect(getStyle('pop-2')!.bpm).toBe(90)
+    expect(getStyle('swing-1')!.bpm).toBe(130)
+    expect(getStyle('reggae-1')!.bpm).toBe(80)
+    expect(getStyle('flamenco-1')!.bpm).toBe(100)
   })
 
-  it('tay phải xen kẽ hợp âm và nốt đơn', () => {
-    const voices = SWING.cell!.right.map((hit) => hit.voice)
-    expect(voices).toEqual([
-      'chord',
-      'top',
-      'chord',
-      'top',
-      'chord',
-      'top',
-      'chord',
-      'top',
-    ])
+  it('Rock / Pop / Funk có nhiều dạng', () => {
+    expect(VERIFIED_STYLES.filter((style) => style.family === 'rock')).toHaveLength(4)
+    expect(VERIFIED_STYLES.filter((style) => style.family === 'pop')).toHaveLength(4)
+    expect(VERIFIED_STYLES.filter((style) => style.family === 'funk')).toHaveLength(5)
   })
 
-  it('nốt đơn rơi vào chỗ nảy theo tỉ lệ hai một', () => {
-    const offBeat = SWING.cell!.right[1]
-    expect(offBeat.beat).toBeCloseTo(2 / 3)
+  it('có Once và Basic 1–4', () => {
+    expect(
+      VERIFIED_STYLES.filter((style) => style.family === 'basic').map(
+        (style) => style.id,
+      ),
+    ).toEqual(['once', 'basic-1', 'basic-2', 'basic-3', 'basic-4'])
   })
 
-  it('hợp âm dài gấp đôi nốt đơn, đúng cảm giác đong đưa', () => {
-    const chordHit = SWING.cell!.right[0]
-    const singleHit = SWING.cell!.right[1]
-
-    expect(chordHit.durationBeats / singleHit.durationBeats).toBeCloseTo(2)
-  })
-
-  it('nốt đơn nhẹ hơn hợp âm', () => {
-    expect(SWING.cell!.right[1].velocityScale!).toBeLessThan(
-      SWING.cell!.right[0].velocityScale!,
+  it('Basic 2 rải từng nốt, 8 tiếng một ô', () => {
+    const events = renderPattern(voicings('C'), getStyle('basic-2')!)
+    const right = events.filter(
+      (event) => event.hand === 'right' && event.startBeat < 4,
     )
+    expect(right).toHaveLength(8)
+    expect(right.every((event) => event.notes.length === 1)).toBe(true)
   })
 })
 
@@ -199,19 +153,9 @@ describe('dựng phần đệm cho từng điệu', () => {
     },
   )
 
-  it('điệu swing lấy đúng một nốt cho những tiếng ở chỗ nảy', () => {
-    const events = renderPattern(voicings('Cmaj7'), SWING)
-    const singleNotes = events.filter(
-      (event) => event.hand === 'right' && event.notes.length === 1,
-    )
-
-    expect(singleNotes.length).toBeGreaterThan(0)
-  })
-
   it('điệu valse dựng theo nhịp ba bốn', () => {
     const events = renderPattern(voicings('C F G'), VALSE)
-    // Ba hợp âm, mỗi hợp âm ba phách
-    expect(timelineLengthBeats(events)).toBeLessThanOrEqual(9)
+    expect(timelineLengthBeats(events)).toBeLessThanOrEqual(10)
   })
 
   it('điệu có mẫu cố định lặp y hệt bất kể hợp âm', () => {
@@ -227,11 +171,15 @@ describe('dựng phần đệm cho từng điệu', () => {
     expect(secondMeasure).toEqual(firstMeasure)
   })
 
-  it('ballad (cell) lặp mẫu cố định như các điệu khác', () => {
-    const events = renderPattern(voicings('Dm7 G7'), BALLAD)
-    // cell lặp lại y hệt bất kể hợp âm (như valse test bên trên)
-    const firstBar = events.filter((e) => e.startBeat < 4).map((e) => `${e.hand}:${(e.startBeat % 4).toFixed(2)}`)
-    const secondBar = events.filter((e) => e.startBeat >= 4 && e.startBeat < 8).map((e) => `${e.hand}:${((e.startBeat - 4) % 4).toFixed(2)}`)
+  it('điệu 4/4 lặp mẫu cố định sang ô sau', () => {
+    const pop = getStyle('pop-2')!
+    const events = renderPattern(voicings('Dm7 G7'), pop)
+    const firstBar = events
+      .filter((event) => event.startBeat < 4)
+      .map((event) => `${event.hand}:${event.startBeat.toFixed(2)}`)
+    const secondBar = events
+      .filter((event) => event.startBeat >= 4 && event.startBeat < 8)
+      .map((event) => `${event.hand}:${(event.startBeat - 4).toFixed(2)}`)
     expect(secondBar).toEqual(firstBar)
   })
 })

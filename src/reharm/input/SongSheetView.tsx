@@ -424,7 +424,7 @@ export function SongSheetView({
  * Đặt theo toạ độ con trỏ bằng `position: fixed`, vì khung bản nhạc cuộn ngang
  * được — neo vào trong khung thì menu trôi theo lúc cuộn.
  */
-function ChordContextMenu({
+export function ChordContextMenu({
   menu,
   paired,
   isLast,

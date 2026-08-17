@@ -48,6 +48,10 @@ export interface SongSnapshot {
   /** Điệu và nhịp đổi hợp âm. */
   styleId: string
   beatsPerChord: number
+  /** Phách từng hợp âm khi nhập từ lưới; bỏ trống = dùng `beatsPerChord`. */
+  chordDurations?: number[]
+  /** BPM lúc nhập bài. Bỏ trống thì giữ BPM đang có trên máy. */
+  bpm?: number
 
   /** Cách bấm. */
   smoothVoicing: boolean
