@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 import {
+  getPlaybackBeats,
   playChord,
   startAudio,
   useAudioStore,
@@ -26,6 +27,7 @@ import {
   currentStep,
   isStepMatched,
   missingNotes,
+  notesHittingAt,
   progressOf,
   registerMiss,
   restart,
@@ -97,6 +99,36 @@ export function NoteGatedPractice({
   }, [steps])
 
   const step = currentStep(session)
+
+  const [hitting, setHitting] = useState<{
+    left: number[]
+    right: number[]
+  }>({ left: [], right: [] })
+
+  useEffect(() => {
+    if (!looping) {
+      setHitting(
+        active && step
+          ? { left: [...step.leftNotes], right: [...step.rightNotes] }
+          : { left: [], right: [] },
+      )
+      return
+    }
+
+    let frame = 0
+    let last = ''
+    const tick = () => {
+      const next = notesHittingAt(steps, getPlaybackBeats())
+      const key = `${next.left.join()}/${next.right.join()}`
+      if (key !== last) {
+        last = key
+        setHitting(next)
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [looping, active, step, steps])
 
   /**
    * Chỉ chấm sau khi người học nhả hết phím của chặng trước, nếu không thì
@@ -370,8 +402,8 @@ export function NoteGatedPractice({
         <OnScreenPiano
           lowNote={range.low}
           highNote={range.high}
-          leftHandNotes={active && step ? step.leftNotes : undefined}
-          rightHandNotes={active && step ? step.rightNotes : undefined}
+          leftHandNotes={hitting.left}
+          rightHandNotes={hitting.right}
         />
 
         <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">

@@ -12,6 +12,7 @@ import {
   currentStep,
   isStepMatched,
   missingNotes,
+  notesHittingAt,
   progressOf,
   registerMiss,
   restart,
@@ -120,9 +121,38 @@ describe('buildGatedSteps', () => {
   })
 })
 
+describe('notesHittingAt', () => {
+  const steps: GatedStep[] = [
+    {
+      startBeat: 0,
+      durationBeats: 1,
+      notes: [60],
+      leftNotes: [48],
+      rightNotes: [60],
+      symbol: 'C',
+    },
+    {
+      startBeat: 2,
+      durationBeats: 0.5,
+      notes: [64],
+      leftNotes: [],
+      rightNotes: [64],
+      symbol: 'E',
+    },
+  ]
+
+  it('chỉ sáng khi nốt đang chạm vạch', () => {
+    expect(notesHittingAt(steps, 0).right).toEqual([60])
+    expect(notesHittingAt(steps, 1).right).toEqual([])
+    expect(notesHittingAt(steps, 2).right).toEqual([64])
+    expect(notesHittingAt(steps, 2.6).right).toEqual([])
+  })
+})
+
 describe('isStepMatched', () => {
   const step: GatedStep = {
     startBeat: 0,
+    durationBeats: 1,
     notes: [40, 60, 64, 67],
     leftNotes: [40],
     rightNotes: [60, 64, 67],
@@ -169,6 +199,7 @@ describe('isStepMatched', () => {
   it('chặng rỗng không bao giờ tính là qua', () => {
     const empty: GatedStep = {
       startBeat: 0,
+      durationBeats: 1,
       notes: [],
       leftNotes: [],
       rightNotes: [],
@@ -181,6 +212,7 @@ describe('isStepMatched', () => {
 describe('missingNotes', () => {
   const step: GatedStep = {
     startBeat: 0,
+    durationBeats: 1,
     notes: [40, 60, 64, 67],
     leftNotes: [40],
     rightNotes: [60, 64, 67],

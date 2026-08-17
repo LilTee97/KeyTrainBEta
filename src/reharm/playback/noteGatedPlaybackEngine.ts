@@ -24,6 +24,8 @@ export type PracticeHand = 'both' | 'left' | 'right'
 export interface GatedStep {
   /** Vị trí trong dòng thời gian, tính bằng phách. */
   startBeat: number
+  /** Ngân bao lâu — phím chỉ sáng trong khoảng này. */
+  durationBeats: number
   /** Toàn bộ nốt cần bấm ở chặng này. */
   notes: MidiNote[]
   leftNotes: MidiNote[]
@@ -94,6 +96,10 @@ export function buildGatedSteps(
 
       return {
         startBeat,
+        durationBeats: Math.max(
+          0.12,
+          ...list.map((event) => event.durationBeats),
+        ),
         notes: [...new Set([...leftNotes, ...rightNotes])].sort(
           (a, b) => a - b,
         ),
@@ -103,6 +109,22 @@ export function buildGatedSteps(
       }
     })
     .filter((step) => step.notes.length > 0)
+}
+
+/** Nốt đang chạm vạch đáy tại một phách. */
+export function notesHittingAt(
+  steps: readonly GatedStep[],
+  beat: number,
+): { left: MidiNote[]; right: MidiNote[] } {
+  const left: MidiNote[] = []
+  const right: MidiNote[] = []
+  for (const step of steps) {
+    if (beat + BEAT_EPSILON < step.startBeat) continue
+    if (beat >= step.startBeat + step.durationBeats - BEAT_EPSILON) continue
+    left.push(...step.leftNotes)
+    right.push(...step.rightNotes)
+  }
+  return { left, right }
 }
 
 export interface MatchOptions {

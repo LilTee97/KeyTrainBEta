@@ -384,3 +384,11 @@ Bass giang tấu vẫn nhân đôi xuống 8va (`interludeAccompaniment`); tiế
 ### Tab Luyện đệm phát cả bài, không phải từng hợp âm chờ
 
 ▶ trên lưới = cùng `startTimelineLoop` với tab Tái hòa âm. Nốt rơi theo đồng hồ vận chuyển. `ReharmHome` giữ mount khi đổi tab để khỏi mất bài. Tab luyện chỉ cần kết quả (timeline + lưới + transport), không dựng lại chuỗi tái hòa âm.
+
+### Nốt rơi 60fps; phím chỉ sáng khi nốt chạm vạch
+
+Ticker `16n` trên Zustand (~4 lần/phách) làm nốt nhảy cóc. Đẩy ticker lên 60Hz thì cả trang render lại — nặng trên Android.
+
+Chốt: `requestAnimationFrame` đọc `Tone.getTransport()` rồi **chỉ sửa `transform`**, không `setState` mỗi khung. 60fps trên Chrome PC và Android.
+
+Phím từng tô theo **chặng đang chờ** (cả hợp âm), nên sáng trước khi nốt rơi tới — nhìn như lệch hàng. Chốt: `notesHittingAt` — phím chỉ đổi màu khi playhead nằm trong `[startBeat, startBeat + duration)`. Cập nhật set nốt đang chạm qua rAF, `setState` chỉ khi set đổi.
