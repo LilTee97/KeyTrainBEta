@@ -392,3 +392,9 @@ Ticker `16n` trên Zustand (~4 lần/phách) làm nốt nhảy cóc. Đẩy tick
 Chốt: `requestAnimationFrame` đọc `Tone.getTransport()` rồi **chỉ sửa `transform`**, không `setState` mỗi khung. 60fps trên Chrome PC và Android.
 
 Phím từng tô theo **chặng đang chờ** (cả hợp âm), nên sáng trước khi nốt rơi tới — nhìn như lệch hàng. Chốt: `notesHittingAt` — phím chỉ đổi màu khi playhead nằm trong `[startBeat, startBeat + duration)`. Cập nhật set nốt đang chạm qua rAF, `setState` chỉ khi set đổi.
+
+### Hai tay chia hai bên, không xa quá hai quãng tám
+
+`RIGHT_HAND_LOW = 52` chồng lên `LEFT_HAND_HIGH = 55`, cộng bass `1+` (+8va) của điệu OneMotion, nên nốt rơi hai tay nằm cùng một quãng — nhìn như chồng ngón.
+
+Chốt `settleHands`: tay trái luôn dưới tay phải, khoảng cách max−min ≤ 24 nửa cung. Áp sau khi chia thế bấm **và** sau mỗi hit của `patternRenderer` (vì `1+` / `1f` lệch quãng tám lúc dựng nốt, không lúc chia tay).

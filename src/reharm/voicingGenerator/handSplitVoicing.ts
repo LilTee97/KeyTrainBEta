@@ -20,6 +20,54 @@ import {
 export const LEFT_HAND_LOW: MidiNote = 36
 export const LEFT_HAND_HIGH: MidiNote = 55
 
+/** Hai tay không dang quá hai quãng tám. */
+const MAX_HAND_SPAN = 24
+
+/**
+ * Đưa hai tay ra hai bên: trái dưới phải, không chồng, không xa quá 2 quãng tám.
+ */
+export function settleHands(
+  left: readonly MidiNote[],
+  right: readonly MidiNote[],
+): { left: MidiNote[]; right: MidiNote[] } {
+  if (left.length === 0 || right.length === 0) {
+    return { left: [...left], right: [...right] }
+  }
+
+  let low = [...left]
+  let high = [...right]
+
+  for (let step = 0; step < 8; step += 1) {
+    const topLeft = Math.max(...low)
+    const bottomRight = Math.min(...high)
+    if (topLeft >= bottomRight) {
+      if (Math.max(...high) + 12 <= 84) {
+        high = high.map((note) => (note + 12) as MidiNote)
+        continue
+      }
+      if (Math.min(...low) - 12 >= 28) {
+        low = low.map((note) => (note - 12) as MidiNote)
+        continue
+      }
+    }
+
+    const span = Math.max(...high) - Math.min(...low)
+    if (span > MAX_HAND_SPAN) {
+      if (Math.min(...high) - 12 > Math.max(...low)) {
+        high = high.map((note) => (note - 12) as MidiNote)
+        continue
+      }
+      if (Math.max(...low) + 12 < Math.min(...high)) {
+        low = low.map((note) => (note + 12) as MidiNote)
+        continue
+      }
+    }
+    break
+  }
+
+  return { left: low, right: high }
+}
+
 /**
  * Quãng tám neo của nốt bass.
  *
@@ -112,11 +160,11 @@ export function voiceLeadTwoHands(
       const stacked = fitStackedChord(bassNote, chord)
       const leftCount = leftHandNoteCount(chordSize)
 
-      return {
-        left: stacked.slice(0, leftCount),
-        right: stacked.slice(leftCount),
-        symbol: chord.symbol,
-      }
+      const split = settleHands(
+        stacked.slice(0, leftCount),
+        stacked.slice(leftCount),
+      )
+      return { ...split, symbol: chord.symbol }
     }
 
     let right = rightVoicings[index] ?? []
@@ -127,11 +175,8 @@ export function voiceLeadTwoHands(
       if (withoutRoot.length >= 3) right = withoutRoot
     }
 
-    return {
-      left: [bassNote],
-      right,
-      symbol: chord.symbol,
-    }
+    const split = settleHands([bassNote], right)
+    return { ...split, symbol: chord.symbol }
   })
 }
 

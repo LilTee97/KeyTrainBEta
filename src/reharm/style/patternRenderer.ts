@@ -1,5 +1,8 @@
 import type { MidiNote } from '../../shared/musicTheory/types'
-import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
+import {
+  settleHands,
+  type TwoHandVoicing,
+} from '../voicingGenerator/handSplitVoicing'
 import type { HitVoice, RhythmCell, StylePattern, TimelineEvent } from './types'
 
 /**
@@ -238,7 +241,12 @@ function renderWithCell(
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
-        const notes = notesForVoice(source, hit.voice, hit.toneIndex, hit.tones)
+        const raw = notesForVoice(source, hit.voice, hit.toneIndex, hit.tones)
+        const split = settleHands(
+          hand === 'left' ? raw : voicing.left,
+          hand === 'right' ? raw : voicing.right,
+        )
+        const notes = hand === 'left' ? split.left : split.right
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
         events.push({

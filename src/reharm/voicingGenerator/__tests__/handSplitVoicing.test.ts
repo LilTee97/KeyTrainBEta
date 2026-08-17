@@ -184,7 +184,7 @@ describe('hai tay không xếp xa nhau', () => {
     for (const voicing of voiceLeadTwoHands(chords(ALL))) {
       const lowest = Math.min(...voicing.left)
       const highest = Math.max(...voicing.right)
-      expect(highest - lowest).toBeLessThanOrEqual(26)
+      expect(highest - lowest).toBeLessThanOrEqual(24)
     }
   })
 
