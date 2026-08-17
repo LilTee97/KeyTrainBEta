@@ -431,6 +431,12 @@ export const usePlaybackStore = create<PlaybackState>(() => ({
   positionBeats: 0,
 }))
 
+/** Phách đang phát, đọc thẳng từ đồng hồ — dùng cho nốt rơi 60fps. */
+export function getPlaybackBeats(): number {
+  const transport = Tone.getTransport()
+  return transport.ticks / transport.PPQ
+}
+
 /** Đồng hồ báo vị trí cho giao diện, chạy song song với vòng lặp phần đệm. */
 let positionTicker: Tone.Loop | null = null
 

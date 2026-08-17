@@ -1,35 +1,35 @@
+import { useEffect, useRef } from 'react'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import { buildKeyboardLayout, keyPlacement } from '../../shared/midi/onScreenPiano/layout'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import { getPlaybackBeats } from '../../shared/audio/audioEngine'
 import type { GatedStep } from './noteGatedPlaybackEngine'
 
 /**
  * Nốt rơi xuống bàn phím, kiểu Synthesia.
  *
- * Danh sách tên nốt cho biết **phải bấm gì**, nhưng không cho biết **còn bao
- * lâu nữa** và **nốt nào đi cùng nốt nào**. Nốt rơi trả lời cả hai bằng hình:
- * càng gần vạch đáy càng sắp tới, và những nốt vang cùng lúc nằm cùng một hàng
- * ngang.
+ * Khi đang phát theo đồng hồ: `requestAnimationFrame` đọc phách từ Transport
+ * rồi chỉ sửa `transform` — không render lại React mỗi khung. 60fps trên
+ * Chrome PC và Android.
  *
- * ## Rơi theo chặng, không theo đồng hồ
- *
- * Ở chế độ chờ đánh đúng nốt, bài **đứng lại** cho tới khi bấm đúng — nên độ
- * cao của mỗi nốt tính theo *khoảng cách phách tới chặng đang chờ*, không tính
- * theo thời gian thật. Chặng đang chờ luôn nằm đúng vạch đáy, và cả khối trượt
- * xuống một nấc mỗi khi qua được một chặng.
+ * Chế độ chờ nốt: đứng yên theo chặng, không cần đồng hồ.
  */
 
-/** Nhìn trước bao nhiêu phách. Xa hơn nữa thì nốt chồng lên nhau, đọc không kịp. */
 const LOOK_AHEAD_BEATS = 8
-
-/** Chiều cao khung vẽ, tính bằng điểm ảnh. */
 const HEIGHT = 160
+const NOTE_H = 20
+
+function noteY(away: number): number {
+  return (1 - away / LOOK_AHEAD_BEATS) * (HEIGHT - NOTE_H)
+}
+
+function inWindow(away: number): boolean {
+  return away >= -0.2 && away <= LOOK_AHEAD_BEATS + 0.2
+}
 
 interface FallingNotesProps {
   steps: readonly GatedStep[]
-  /** Chặng đang chờ; các chặng trước đó đã bấm xong. */
   index: number
-  /** Phách đang phát — nếu có thì nốt rơi theo đồng hồ, không chờ. */
   nowBeat?: number | null
   lowNote: MidiNote
   highNote: MidiNote
@@ -42,17 +42,33 @@ export function FallingNotes({
   lowNote,
   highNote,
 }: FallingNotesProps) {
+  const live = nowBeat !== undefined && nowBeat !== null
+  const layer = useRef<HTMLDivElement>(null)
   const layout = buildKeyboardLayout(lowNote, highNote)
-  const origin =
-    nowBeat !== undefined && nowBeat !== null
-      ? nowBeat
-      : steps[index]?.startBeat
+  const origin = live ? nowBeat : steps[index]?.startBeat
   if (origin === undefined) return null
 
-  const upcoming = steps.filter((step) => {
-    const away = step.startBeat - origin
-    return away >= -0.05 && away <= LOOK_AHEAD_BEATS
-  })
+  const upcoming = steps.filter((step) => inWindow(step.startBeat - origin))
+
+  useEffect(() => {
+    if (!live) return
+    const root = layer.current
+    if (!root) return
+
+    let frame = 0
+    const tick = () => {
+      const now = getPlaybackBeats()
+      for (const el of root.children) {
+        if (!(el instanceof HTMLElement) || el.dataset.start === undefined) continue
+        const away = Number(el.dataset.start) - now
+        el.style.transform = `translate3d(0,${noteY(away)}px,0)`
+        el.hidden = !inWindow(away)
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [live, upcoming])
 
   return (
     <div
@@ -63,45 +79,34 @@ export function FallingNotes({
         .map((note) => midiToName(note))
         .join(' ')}`}
     >
-      {upcoming.map((step, position) =>
-        step.notes.map((note) => {
-          const place = keyPlacement(layout, note)
-          if (!place) return null
-
-          const away = step.startBeat - origin
-          /*
-            Vạch đáy là chỗ nốt được bấm, nên chặng đang chờ có `away` bằng 0 và
-            nằm sát đáy. Nốt xa hơn bị đẩy lên trên theo đúng tỉ lệ phách.
-          */
-          const bottom = (away / LOOK_AHEAD_BEATS) * HEIGHT
-
-          const isLeft = step.leftNotes.includes(note)
-          const waiting = position === 0
-
-          return (
-            <div
-              key={`${step.startBeat}-${note}`}
-              style={{
-                left: `${place.left}%`,
-                width: `${place.width}%`,
-                bottom: `${bottom}px`,
-              }}
-              className={`absolute flex h-5 items-center justify-center rounded text-[9px] font-semibold ${
-                isLeft
-                  ? 'bg-left-hand text-ink'
-                  : 'bg-right-hand text-ink'
-              } ${waiting ? 'ring-2 ring-cream' : 'opacity-70'}`}
-            >
-              {midiToName(note)}
-            </div>
-          )
-        }),
-      )}
-
-      {/*
-        Vạch đáy — chỗ nốt chạm tới là lúc phải bấm. Không có nó thì không biết
-        nốt đã "tới" hay chưa.
-      */}
+      <div ref={layer} className="absolute inset-0">
+        {upcoming.map((step, position) =>
+          step.notes.map((note) => {
+            const place = keyPlacement(layout, note)
+            if (!place) return null
+            const away = step.startBeat - origin
+            const isLeft = step.leftNotes.includes(note)
+            return (
+              <div
+                key={`${step.startBeat}-${note}`}
+                data-start={step.startBeat}
+                style={{
+                  left: `${place.left}%`,
+                  width: `${place.width}%`,
+                  height: NOTE_H,
+                  transform: `translate3d(0,${noteY(away)}px,0)`,
+                  willChange: live ? 'transform' : undefined,
+                }}
+                className={`absolute top-0 flex items-center justify-center rounded text-[9px] font-semibold ${
+                  isLeft ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
+                } ${position === 0 ? 'ring-2 ring-cream' : 'opacity-70'}`}
+              >
+                {midiToName(note)}
+              </div>
+            )
+          }),
+        )}
+      </div>
       <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
     </div>
   )

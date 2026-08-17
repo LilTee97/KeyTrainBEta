@@ -39,3 +39,4 @@ KeyTrain — app luyện tập piano offline, lấy cảm hứng từ mikebwilli
 
 - Code + biến/hàm bằng tiếng Anh, comment giải thích nhạc lý bằng tiếng Việt nếu cần
 - Mỗi bước lớn xong phải commit trước khi sang bước tiếp theo
+- Sau bước lớn: **nhắc** người dùng ghi `reference/SO-TAY.md` (quyết định đã chốt + lý do). Đừng tự ghi trừ khi họ bảo ghi.

@@ -318,3 +318,69 @@ Bài học: với code sinh nhạc, test bất biến cấu trúc là chưa đ�
 ### Tách bộ xương cao độ khỏi cách chơi
 
 `generateSolo` chia làm hai việc: chọn **bộ xương cao độ** (nốt nào, theo hoà âm và nốt kết câu) rồi giao cho `renderPhrase` của từng mức **đổ ra tiết tấu và hình giai điệu**. Tách vậy vì cao độ phải đúng hoà âm ở mọi trình độ — chỉ cách chơi mới thay đổi theo trình độ. Nhờ đó thêm mức mới chỉ cần viết thêm một hàm đổ, không đụng tới phần hoà âm.
+
+## 17/8/2026 — Điệu OneMotion, tiếng đàn, lưới, giang tấu
+
+Các quyết định chốt từ khi chuyển sang phiên này. Không lặp lại phần giang tấu / lick ở trên, chỉ ghi chỗ đổi ý hoặc phát hiện mới.
+
+### Đệm theo điệu = catalog OneMotion, không phải mẫu Khá Bự
+
+Mẫu tiết tấu (Pop, Waltz, Flamenco…) lấy từ tab Styles của OneMotion Chord Player. Phong cách anh Khá chỉ còn ở **ngắt nghỉ, fill, hợp âm lướt**. Alias bài cũ: `ballad` → `pop-1`, `bossa-nova` → `bossa-nova-1`, `valse` → `waltz-1`, `swing` → `swing-1`.
+
+`beatsPerMeasure` lấy **tử số nhịp** (`4/4` → 4), không lấy `bar` trong chuỗi arp. `bar: 8` của samba / bossa là *hai ô 4/4*, không phải nhịp 8 — đổi nhầm một lần, test phách mỗi ô vỡ ngay.
+
+Điệu nhóm trên UI theo **4/4, 3/4, 6/8**. Còn trống trên OneMotion: Bolero, Cha Cha Cha, March.
+
+### Chuỗi arp OneMotion là nốt, không phải “có tiếng / nghỉ”
+
+Bản đầu chỉ đọc token thành hit/rest + nhấn/ngắn. `13`, `1s3s`, `11f` của Flamenco vì thế thành quạt cả hợp âm.
+
+Quy tắc đúng: `x`/`0` = cả hợp âm; số `1–9` = nốt thứ mấy trong thế bấm; `f` = +5; `+` = +8va; chuỗi ngắn hơn ô thì **lặp cho đủ ô**. Flamenco 1 (6/8) là `. xs .` lặp hai lần — bass gốc+5 ở phách 1 và 4, quạt lệch sau bass. Flamenco 3 là rasgueado `1-2-3-4`.
+
+### Slow Rock không có trên OneMotion — tự viết 6/8
+
+Mạnh phách **1 và 4**, không phải 12/8. Bản quạt-chỉ-1-và-4 và bản rải 12/8 đã bỏ vì nghe không ra điệu.
+
+Ba biến thể giữ lại:
+
+- **Điệp** — quạt móc đơn cả 6 phách, nhấn 1 và 4.
+- **Rải** — gốc–5–8–3–5–8.
+- **Hai tay** — bass 1 và 4, tay phải rải lệch 2-3 và 5-6.
+
+Không scrape MIDI / Style Yamaha. Cùng hệ `RhythmHit` với điệu khác.
+
+### Piano và Synth từng là một tiếng
+
+`loadPiano` fail (CDN, race `getSynth()` gán synth trong lúc chờ sample) thì `catch` trả **đúng** synth tam giác. Đổi Tiếng không đổi gì.
+
+Chốt: một `boot` duy nhất; `getSynth` không tự tạo synth; Piano fail thì AMSynth riêng, không lẫn Synth. Salamander concert grand **chói** — đổi sang sample tonejs-instruments + lowpass ~2 kHz. Guitar (nylon/acoustic + quạt dây) chỉ tự bật khi chọn Flamenco. Không nhúng FluidSynth / `.sf2` — không chạy trong trình duyệt.
+
+Nút Phát **không** `disabled` vì `!audioReady`: `playFromBeat` tự `await startAudio()`. Cú bấm đã là cử chỉ mở khoá.
+
+### Hợp âm lướt sát đích; dim7 là fill, không phải dẫn vào
+
+2-5-1 / hợp âm lướt: mỗi cái **một phách, sát hợp âm đích** (`hugTarget`), không chia đôi ô. Chuột phải **đúng phách** trên lưới — `hostKeepBeats` giữ phách đầu cho hợp âm chủ.
+
+Chuỗi dim7 chơi **sau** hợp âm như fill (menu riêng), không chèn trước. Chủ âm thứ luôn `madd9`. `preferInKey` bật thì hợp âm mượn kéo về nốt trong giọng (`Cm` → `Cadd2`, `E` → `Em9` ở Sol trưởng).
+
+Ô nối: **Không / 1 phách / 2 phách** = đệm rồi mới chạy ngón. “Không” = im điệu ngay và chạy từ đầu. Mute theo `muteWindows` (cửa sổ phách), không tắt nhầm fill. Bỏ kéo-copy hợp âm — hay đụng nhầm.
+
+### Click hợp âm phải ra phách bài đã sắp
+
+Bản lời đánh số theo **vòng gốc**. Dòng phát là bài đã sắp (điệp trước, giang tấu chen giữa). Phát đúng `beatOfMainChord` thì sau khi có giang tấu, click điệp lại rơi vào giữa đoạn giang tấu.
+
+`arrangedBeatAt` đổi mốc gốc → phách bài đã sắp, **ưu tiên đoạn có lời** (giang tấu cũng mượn cùng mốc đó). Lưới / tab Luyện đệm tô sáng bằng `sourceBeatAt` ngược lại. File gốc (nếu có) vẫn tua theo mốc gốc.
+
+### Giang tấu cắt giữa ô thì bass lệch pha — mọi điệu
+
+`renderPattern` lặp cell từ phách 0 của **cả bài**. Cửa sổ 4 hợp âm bắt đầu ở phách 8, waltz cell 3 phách: 8 % 3 = 2 → bass giang tấu lệch một phách so với phiên/điệp. 4/4 + hợp âm 4 phách thì phiên và điệp vẫn thẳng hàng với đầu bài, nên chỉ giang tấu nghe sai — đúng triệu chứng.
+
+Sửa: **dựng lại** đệm từ đúng 4 hợp âm, cell chạy từ phách 0 của vòng ngắn. Không slice timeline đầy đủ.
+
+Kéo theo solo: cắt solo cả bài theo `range.startBeat` thì câu còn dính nốt hợp âm **ngoài** vòng ngắn, cộng cụm quay đầu. Waltz nặng hơn vì `turnaround` tính 2 ô theo `beatsPerChord` (thường 4) trong khi ô điệu là 3 — nửa vòng giang tấu thành ii-V. Chốt: solo sinh trên đúng 4 hợp âm đó; độ dài quay đầu theo `style.beatsPerMeasure`.
+
+Bass giang tấu vẫn nhân đôi xuống 8va (`interludeAccompaniment`); tiết tấu phải trùng phiên/điệp sau khi dựng lại.
+
+### Tab Luyện đệm phát cả bài, không phải từng hợp âm chờ
+
+▶ trên lưới = cùng `startTimelineLoop` với tab Tái hòa âm. Nốt rơi theo đồng hồ vận chuyển. `ReharmHome` giữ mount khi đổi tab để khỏi mất bài. Tab luyện chỉ cần kết quả (timeline + lưới + transport), không dựng lại chuỗi tái hòa âm.
