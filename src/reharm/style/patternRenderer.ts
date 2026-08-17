@@ -58,15 +58,29 @@ function clampVelocity(value: number): number {
  * Điệu swing cần lấy riêng nốt trên cùng cho những tiếng ở chỗ nảy — đó chính
  * là phần "nốt đơn" xen kẽ giữa các hợp âm.
  */
+function pickTone(
+  notes: readonly MidiNote[],
+  toneIndex: number,
+  semitones = 0,
+): MidiNote {
+  const index = ((toneIndex % notes.length) + notes.length) % notes.length
+  return (notes[index] + semitones) as MidiNote
+}
+
 function notesForVoice(
   notes: readonly MidiNote[],
   voice: HitVoice = 'chord',
   toneIndex?: number,
+  tones?: readonly { toneIndex: number; semitones?: number }[],
 ): MidiNote[] {
   if (notes.length === 0) return []
+  if (tones?.length) {
+    return tones.map((spec) =>
+      pickTone(notes, spec.toneIndex, spec.semitones ?? 0),
+    )
+  }
   if (toneIndex !== undefined) {
-    const index = ((toneIndex % notes.length) + notes.length) % notes.length
-    return [notes[index]]
+    return [pickTone(notes, toneIndex)]
   }
 
   switch (voice) {
@@ -224,7 +238,7 @@ function renderWithCell(
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
-        const notes = notesForVoice(source, hit.voice, hit.toneIndex)
+        const notes = notesForVoice(source, hit.voice, hit.toneIndex, hit.tones)
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
         events.push({

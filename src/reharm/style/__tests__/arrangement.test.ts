@@ -5,7 +5,7 @@ import {
   defaultArrangement,
   stepLabel,
 } from '../arrangement'
-import { sourceBeatAt } from '../songStructure'
+import { arrangedBeatAt, sourceBeatAt } from '../songStructure'
 import type { TimelineEvent } from '../types'
 
 /**
@@ -331,6 +331,25 @@ describe('tra ngược về vòng hợp âm gốc', () => {
 
     expect(sourceBeatAt(song.segments, song.totalBeats)).toBeNull()
     expect(sourceBeatAt(song.segments, -1)).toBeNull()
+  })
+
+  it('bấm hợp âm gốc nhảy vào đoạn có lời, không vào giang tấu', () => {
+    const song = buildArrangedSong({
+      accompaniment: [],
+      fills: [],
+      solo: () => [],
+      sources: parts,
+      steps: [
+        { type: 'section', source: 0 },
+        { type: 'interlude', over: 1, loops: 1 },
+        { type: 'section', source: 1 },
+      ],
+      interludeRange: () => ({ startBeat: 8, lengthBeats: 8 }),
+    })
+
+    expect(arrangedBeatAt(song.segments, 0, song.sections)).toBe(0)
+    expect(arrangedBeatAt(song.segments, 8, song.sections)).toBe(16)
+    expect(arrangedBeatAt(song.segments, 10, song.sections)).toBe(18)
   })
 })
 

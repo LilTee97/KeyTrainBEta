@@ -37,7 +37,7 @@ function make(def: Def): StylePattern {
     familyName: def.familyName,
     variant: def.variant,
     timeSignature: def.ts ?? '4/4',
-    beatsPerMeasure: bar === 3 ? 3 : bar === 6 ? 6 : 4,
+    beatsPerMeasure: Number((def.ts ?? '4/4').split('/')[0]),
     bpm: def.bpm ?? 120,
     feel: def.feel ?? 'straight-block-chord',
     verified: true,
@@ -227,10 +227,98 @@ const ARP_STYLES: StylePattern[] = ARP_CYCLES.map((entry, index) =>
   ),
 )
 
+function slowRockBass(): RhythmHit[] {
+  return [0, 3].map((beat, index) => ({
+    beat,
+    durationBeats: 2.7,
+    voice: 'bottom' as const,
+    toneIndex: index === 0 ? 0 : 2,
+    velocityScale: 1,
+  }))
+}
+
+const SLOW_ROCK_META = {
+  family: 'slow-rock' as const,
+  familyName: 'Slow Rock',
+  timeSignature: '6/8' as const,
+  beatsPerMeasure: 6,
+  bpm: 66,
+  feel: 'straight-block-chord' as const,
+  verified: true,
+}
+
+const SLOW_ROCK_STYLES: StylePattern[] = [
+  {
+    ...SLOW_ROCK_META,
+    id: 'slow-rock-2',
+    name: 'Slow Rock điệp',
+    variant: 1,
+    sourceVideos: ['6/8 slow-rock piano điệp: quạt móc đơn, mạnh 1 và 4'],
+    cell: {
+      lengthBeats: 6,
+      right: [0, 1, 2, 3, 4, 5].map((beat) => ({
+        beat,
+        durationBeats: 0.85,
+        velocityScale: beat === 0 || beat === 3 ? 1 : 0.55,
+      })),
+      left: slowRockBass(),
+    },
+    note: 'Slow Rock 6/8 điệp — quạt móc đơn, nhấn 1 và 4.',
+  },
+  {
+    ...SLOW_ROCK_META,
+    id: 'slow-rock-3',
+    name: 'Slow Rock rải',
+    variant: 2,
+    sourceVideos: ['6/8 rải: gốc–5–8–3–5–8'],
+    cell: {
+      lengthBeats: 6,
+      right: [
+        { toneIndex: 0 },
+        { toneIndex: 2 },
+        { tones: [{ toneIndex: 0, semitones: 12 }] },
+        { toneIndex: 1 },
+        { toneIndex: 2 },
+        { tones: [{ toneIndex: 0, semitones: 12 }] },
+      ].map((tone, beat) => ({
+        beat,
+        durationBeats: 0.95,
+        velocityScale: beat === 0 || beat === 3 ? 1 : 0.8,
+        ...tone,
+      })),
+      left: [{ beat: 0, durationBeats: 5.5, voice: 'bottom', toneIndex: 0, velocityScale: 0.9 }],
+    },
+    note: 'Slow Rock 6/8 rải — gốc 5 8 3 5 8.',
+  },
+  {
+    ...SLOW_ROCK_META,
+    id: 'slow-rock-4',
+    name: 'Slow Rock hai tay',
+    variant: 3,
+    sourceVideos: ['6/8 hai tay: bass 1+4, rải 2-3 và 5-6'],
+    cell: {
+      lengthBeats: 6,
+      right: [
+        { beat: 1, toneIndex: 1 },
+        { beat: 2, toneIndex: 2 },
+        { beat: 4, tones: [{ toneIndex: 1, semitones: 12 }] },
+        { beat: 5, tones: [{ toneIndex: 2, semitones: 12 }] },
+      ].map((hit) => ({
+        ...hit,
+        durationBeats: 0.9,
+        velocityScale: 0.88,
+      })),
+      left: slowRockBass(),
+    },
+    note: 'Slow Rock 6/8 hai tay — bass phách 1 và 4, tay phải rải lệch.',
+  },
+]
+
 export const ONEMOTION_STYLES: readonly StylePattern[] = [
   ...BASIC_STYLES,
   ...DEFS.map(make),
   ...ARP_STYLES,
+  ...SLOW_ROCK_STYLES,
 ]
 
 export function styleFamilies(

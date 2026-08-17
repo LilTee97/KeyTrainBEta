@@ -8,6 +8,11 @@ import {
   setSourceVolume,
   stopSource,
 } from '../../shared/audio/sourceAudio'
+import {
+  INSTRUMENTS,
+  setInstrument,
+  useAudioStore,
+} from '../../shared/audio/audioEngine'
 import { useLongPress } from '../../shared/ui/useLongPress'
 import { isPaired } from '../chordTiming'
 import { transposeSymbol } from '../transpose'
@@ -18,6 +23,120 @@ import {
 } from './SongSheetView'
 
 const BARS_PER_ROW = 4
+
+export function PlaybackToolbar({
+  canPlay,
+  onPlay,
+  onPause,
+  onStop,
+  onTone,
+  toneLabel,
+  bpm,
+  onBpm,
+}: {
+  canPlay: boolean
+  onPlay: () => void
+  onPause: () => void
+  onStop: () => void
+  onTone?: (delta: number) => void
+  toneLabel?: string
+  bpm: number
+  onBpm?: (bpm: number) => void
+}) {
+  const [shift, setShift] = useState(0)
+  const [volume, setVolume] = useState(45)
+  const instrument = useAudioStore((state) => state.instrument)
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={!canPlay}
+        onClick={onPlay}
+        className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
+      >
+        ▶
+      </button>
+      <button
+        type="button"
+        disabled={!canPlay}
+        onClick={onPause}
+        className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
+      >
+        ❚❚
+      </button>
+      <button
+        type="button"
+        disabled={!canPlay}
+        onClick={onStop}
+        className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
+      >
+        ■
+      </button>
+      <span className="font-mono text-[10px] text-dim">Tone</span>
+      <button
+        type="button"
+        onClick={() => (onTone ? onTone(-1) : setShift((value) => value - 1))}
+        className="rounded-md border border-line px-2 py-1 text-xs text-cream"
+      >
+        −
+      </button>
+      <span className="w-8 text-center font-mono text-[11px] text-amber-key">
+        {toneLabel ?? (shift === 0 ? '0' : shift > 0 ? `+${shift}` : String(shift))}
+      </span>
+      <button
+        type="button"
+        onClick={() => (onTone ? onTone(1) : setShift((value) => value + 1))}
+        className="rounded-md border border-line px-2 py-1 text-xs text-cream"
+      >
+        +
+      </button>
+      <label className="flex items-center gap-1.5 text-xs text-dim">
+        BPM
+        <input
+          type="range"
+          min={40}
+          max={160}
+          value={bpm}
+          onChange={(event) => onBpm?.(Number(event.target.value))}
+          className="w-24 accent-amber-key"
+        />
+        <span className="w-8 font-mono text-cream">{bpm}</span>
+      </label>
+      <label className="flex items-center gap-1.5 text-xs text-dim">
+        Tiếng
+        <select
+          value={instrument}
+          onChange={(event) => {
+            void setInstrument(event.target.value as (typeof INSTRUMENTS)[number]['id'])
+          }}
+          className="rounded border border-line bg-white/6 px-1.5 py-0.5 text-cream"
+        >
+          {INSTRUMENTS.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex items-center gap-1.5 text-xs text-dim">
+        Vol
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={volume}
+          disabled={!canPlay}
+          onChange={(event) => {
+            const value = Number(event.target.value)
+            setVolume(value)
+            setSourceVolume(value / 100)
+          }}
+          className="w-16 accent-amber-key"
+        />
+      </label>
+    </div>
+  )
+}
 
 interface ChordOverviewProps {
   perBeat: readonly string[]
@@ -91,7 +210,6 @@ export function ChordOverview({
   onRemoveChord,
 }: ChordOverviewProps) {
   const [shift, setShift] = useState(0)
-  const [volume, setVolume] = useState(45)
   const [playing, setPlaying] = useState(false)
   const [cursor, setCursor] = useState<number | null>(null)
   const [menuBeat, setMenuBeat] = useState<number | null>(null)
@@ -149,90 +267,25 @@ export function ChordOverview({
   return (
     <div className="flex flex-col gap-2">
       {showToolbar && (
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          disabled={!canPlay}
-          onClick={() => (onPlay ? onPlay() : playFrom(active ?? 0))}
-          className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
-        >
-          ▶
-        </button>
-        <button
-          type="button"
-          disabled={!canPlay}
-          onClick={() => {
+        <PlaybackToolbar
+          canPlay={canPlay}
+          onPlay={() => (onPlay ? onPlay() : playFrom(active ?? 0))}
+          onPause={() => {
             if (onPause) onPause()
             else pauseSource()
             setPlaying(false)
           }}
-          className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
-        >
-          ❚❚
-        </button>
-        <button
-          type="button"
-          disabled={!canPlay}
-          onClick={() => {
+          onStop={() => {
             if (onStop) onStop()
             else stopSource()
             setPlaying(false)
             setCursor(null)
           }}
-          className="rounded-md border border-line bg-white/6 px-2 py-1 text-xs text-cream disabled:opacity-30"
-        >
-          ■
-        </button>
-
-        <span className="font-mono text-[10px] text-dim">Tone</span>
-        <button
-          type="button"
-          onClick={() => (onTone ? onTone(-1) : setShift((value) => value - 1))}
-          className="rounded-md border border-line px-2 py-1 text-xs text-cream"
-        >
-          −
-        </button>
-        <span className="w-8 text-center font-mono text-[11px] text-amber-key">
-          {toneLabel ?? (shift === 0 ? '0' : shift > 0 ? `+${shift}` : String(shift))}
-        </span>
-        <button
-          type="button"
-          onClick={() => (onTone ? onTone(1) : setShift((value) => value + 1))}
-          className="rounded-md border border-line px-2 py-1 text-xs text-cream"
-        >
-          +
-        </button>
-
-        <label className="flex items-center gap-1.5 text-xs text-dim">
-          BPM
-          <input
-            type="range"
-            min={40}
-            max={160}
-            value={bpm}
-            onChange={(event) => onBpm?.(Number(event.target.value))}
-            className="w-24 accent-amber-key"
-          />
-          <span className="w-8 font-mono text-cream">{bpm}</span>
-        </label>
-
-        <label className="flex items-center gap-1.5 text-xs text-dim">
-          Vol
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={volume}
-            disabled={!canPlay}
-            onChange={(event) => {
-              const value = Number(event.target.value)
-              setVolume(value)
-              setSourceVolume(value / 100)
-            }}
-            className="w-16 accent-amber-key"
-          />
-        </label>
-      </div>
+          onTone={onTone ?? ((delta) => setShift((value) => value + delta))}
+          toneLabel={toneLabel}
+          bpm={bpm}
+          onBpm={onBpm}
+        />
       )}
 
       <p className="text-[11px] text-dim">

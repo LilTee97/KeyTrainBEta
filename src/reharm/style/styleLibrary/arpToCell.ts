@@ -6,19 +6,49 @@ function isHit(token: string): boolean {
   return /[x0-9]/i.test(token)
 }
 
-function hitsFromArp(arp: string, step: number): RhythmHit[] {
-  const tokens = arp.trim().split(/\s+/)
-  const hits: RhythmHit[] = []
-  tokens.forEach((token, index) => {
-    if (!isHit(token)) return
-    const accent = token.includes('!')
-    const short = /s/i.test(token) && !accent
-    hits.push({
-      beat: index * step,
-      durationBeats: Math.max(0.18, step * (short ? 0.7 : 1.4)),
-      velocityScale: accent ? 1 : short ? 0.78 : 0.88,
+/** `13` → nốt 1+3; `1f` gốc+5; `1+` gốc lên 8; `x`/`0` cả hợp âm. */
+function parseTones(
+  token: string,
+): { toneIndex: number; semitones?: number }[] | undefined {
+  if (/x/i.test(token) || !/[1-9]/.test(token)) return undefined
+  const tones: { toneIndex: number; semitones?: number }[] = []
+  for (const part of token.matchAll(/([1-9])([f+]*)/g)) {
+    let semitones = 0
+    if (part[2].includes('+')) semitones += 12
+    if (part[2].includes('f')) semitones += 7
+    tones.push({
+      toneIndex: Number(part[1]) - 1,
+      ...(semitones ? { semitones } : {}),
     })
-  })
+  }
+  return tones.length ? tones : undefined
+}
+
+function hitsFromArp(
+  arp: string,
+  step: number,
+  lengthBeats: number,
+): RhythmHit[] {
+  const tokens = arp.trim().split(/\s+/)
+  const cycle = tokens.length * step
+  const repeats = cycle > 0 ? Math.ceil(lengthBeats / cycle) : 1
+  const hits: RhythmHit[] = []
+  for (let repeat = 0; repeat < repeats; repeat += 1) {
+    tokens.forEach((token, index) => {
+      if (!isHit(token)) return
+      const beat = repeat * cycle + index * step
+      if (beat >= lengthBeats) return
+      const accent = token.includes('!')
+      const short = /s/i.test(token) && !accent
+      const tones = parseTones(token)
+      hits.push({
+        beat,
+        durationBeats: Math.max(0.18, step * (short ? 0.7 : 1.4)),
+        velocityScale: accent ? 1 : short ? 0.78 : 0.88,
+        ...(tones ? { tones } : {}),
+      })
+    })
+  }
   return hits
 }
 
@@ -108,11 +138,11 @@ export function cellFromArps(
   const right =
     chord === 'beat' || chord === 'backbeat' || chord === 'offbeat'
       ? namedChordHits(chord, lengthBeats)
-      : hitsFromArp(chord, chordStep)
+      : hitsFromArp(chord, chordStep, lengthBeats)
   const left =
     bass === 'octaves' || bass === 'boogie'
       ? namedBassHits(bass, lengthBeats)
-      : hitsFromArp(bass, bassStep).map((hit) => ({
+      : hitsFromArp(bass, bassStep, lengthBeats).map((hit) => ({
           ...hit,
           voice: 'bottom' as const,
         }))

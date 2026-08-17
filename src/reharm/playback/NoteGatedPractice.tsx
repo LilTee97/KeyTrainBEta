@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 import {
   playChord,
   startAudio,
   useAudioStore,
+  usePlaybackStore,
 } from '../../shared/audio/audioEngine'
-import { useMetronomeStore } from '../../shared/audio/metronome'
+import { setBpm, useMetronomeStore } from '../../shared/audio/metronome'
+import { PlaybackToolbar } from '../input/ChordOverview'
+import { usePracticeStore } from './practiceStore'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { FallingNotes } from './FallingNotes'
 import { MidiConnect } from '../../shared/midi/MidiConnect'
@@ -56,6 +59,9 @@ export function NoteGatedPractice({
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
   const bpm = useMetronomeStore((state) => state.bpm)
+  const looping = usePlaybackStore((state) => state.looping)
+  const positionBeats = usePlaybackStore((state) => state.positionBeats)
+  const transport = usePracticeStore((state) => state.transport)
 
   useLiveSound()
   useComputerKeyboard(60)
@@ -83,56 +89,12 @@ export function NoteGatedPractice({
   */
   const range = keyboardRange
 
-  const fullPlayRef = useRef<number | null>(null)
-  const isPlayingFullRef = useRef(false)
-  const [isPlayingFull, setIsPlayingFull] = useState(false)
-
-  const stopFullPlay = useCallback(() => {
-    if (fullPlayRef.current) {
-      clearTimeout(fullPlayRef.current)
-      fullPlayRef.current = null
-    }
-    isPlayingFullRef.current = false
-    setIsPlayingFull(false)
-  }, [])
-
-  const playFullSong = useCallback(() => {
-    if (steps.length === 0) return
-    stopFullPlay()
-    setActive(true)
-    isPlayingFullRef.current = true
-    setIsPlayingFull(true)
-
-    let i = 0
-    const playNext = () => {
-      if (i >= steps.length || !isPlayingFullRef.current) {
-        stopFullPlay()
-        return
-      }
-      const currentStepItem = steps[i]
-      playChord(currentStepItem.notes)
-
-      // Tính thời lượng dựa trên nhịp hiện tại
-      const beatDuration = 60 / bpm
-      const durationMs = Math.max(300, beatDuration * beatsPerChord * 1000)
-      i += 1
-      fullPlayRef.current = window.setTimeout(playNext, durationMs)
-    }
-    playNext()
-  }, [steps, beatsPerChord, bpm, stopFullPlay, setActive]) // playChord is stable import
-
   const [session, setSession] = useState(() => startGatedSession(steps))
 
   /** Dựng lại lượt khi đổi vòng hợp âm, điệu hoặc chế độ tay. */
   useEffect(() => {
     setSession(startGatedSession(steps))
   }, [steps])
-
-  // Dừng nghe cả bài khi thoát chế độ active hoặc unmount
-  useEffect(() => {
-    if (!active) stopFullPlay()
-    return () => stopFullPlay()
-  }, [active, stopFullPlay])
 
   const step = currentStep(session)
 
@@ -147,10 +109,6 @@ export function NoteGatedPractice({
 
   useEffect(() => {
     if (!active || !step) return
-
-    if (isPlayingFullRef.current && heldNotes.length > 0) {
-      stopFullPlay()
-    }
 
     if (heldNotes.length === 0) {
       armedRef.current = true
@@ -168,7 +126,7 @@ export function NoteGatedPractice({
       armedRef.current = false
       setSession((current) => registerMiss(current))
     }
-  }, [heldNotes, step, active, ignoreOctave, stopFullPlay])
+  }, [heldNotes, step, active, ignoreOctave])
 
   const progress = progressOf(session)
   const missing = step ? missingNotes(heldNotes, step, { ignoreOctave }) : []
@@ -322,40 +280,21 @@ export function NoteGatedPractice({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  stopFullPlay()
-                  playChord(step.notes)
-                }}
+                onClick={() => playChord(step.notes)}
                 className="rounded-lg border border-line bg-white/6 px-3 py-1.5 text-xs text-cream hover:bg-white/12"
               >
                 ♪ Nghe chặng này
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  if (isPlayingFull) stopFullPlay()
-                  else playFullSong()
-                }}
-                className="rounded-lg border border-line bg-white/6 px-3 py-1.5 text-xs text-cream hover:bg-white/12"
-              >
-                {isPlayingFull ? 'Dừng nghe cả bài' : '♪ Nghe cả bài'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  stopFullPlay()
-                  setSession((current) => advance(current))
-                }}
+                onClick={() => setSession((current) => advance(current))}
                 className="rounded-lg border border-line px-3 py-1.5 text-xs text-dim hover:bg-white/6"
               >
                 Bỏ qua chặng →
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  stopFullPlay()
-                  setActive(false)
-                }}
+                onClick={() => setActive(false)}
                 className="rounded-lg border border-line px-3 py-1.5 text-xs text-dim hover:bg-white/6"
               >
                 Dừng
@@ -407,10 +346,22 @@ export function NoteGatedPractice({
           Nốt rơi dựng ngay trên bàn phím và dùng chung dải nốt với nó, nên nốt
           rơi thẳng hàng với đúng phím mà nó sẽ đáp xuống.
         */}
-        {active && (
+        <PlaybackToolbar
+          canPlay={!!transport}
+          onPlay={() => transport?.playFrom(0)}
+          onPause={() => transport?.pause()}
+          onStop={() => transport?.stop()}
+          onTone={transport?.onTone}
+          toneLabel={transport?.toneLabel}
+          bpm={bpm}
+          onBpm={setBpm}
+        />
+
+        {(active || looping) && (
           <FallingNotes
             steps={steps}
             index={session.currentIndex}
+            nowBeat={looping ? positionBeats : undefined}
             lowNote={range.low}
             highNote={range.high}
           />

@@ -189,6 +189,39 @@ export function sourceBeatAt(
   return null
 }
 
+/**
+ * Phách trên bài đã sắp, ứng với một mốc trên vòng hợp âm gốc.
+ *
+ * Bấm hợp âm trên bản lời là bấm **mốc gốc**; phát nhạc chạy trên dòng đã sắp
+ * (điệp trước phiên, giang tấu chen giữa). Không đổi thì phát nhầm đoạn.
+ * Ưu tiên đoạn có lời — giang tấu cũng mượn cùng mốc đó.
+ */
+export function arrangedBeatAt(
+  segments: readonly TimeSegment[],
+  sourceBeat: number,
+  sections: readonly PlacedSection[] = [],
+): number | null {
+  let interludeHit: number | null = null
+
+  for (const segment of segments) {
+    const from = segment.sourceBeat
+    const to = from + segment.lengthBeats
+    if (sourceBeat < from || sourceBeat >= to) continue
+
+    const at = segment.startBeat + (sourceBeat - from)
+    const interlude = sections.some(
+      (section) =>
+        section.kind === 'interlude' &&
+        at >= section.startBeat &&
+        at < section.startBeat + section.lengthBeats,
+    )
+    if (!interlude) return at
+    interludeHit ??= at
+  }
+
+  return interludeHit
+}
+
 /** Dời một nhóm sự kiện sang vị trí khác trên dòng thời gian. */
 function shift(
   events: readonly TimelineEvent[],

@@ -152,7 +152,6 @@ export function arpeggioRun(options: {
       .map((step) => normalizePitchClass(chord.root + step)),
   )
 
-  // Đỉnh luôn ở quãng tám thứ năm, để mọi chỗ chuyển đoạn lên cùng một tầm.
   const top = TOP_OCTAVE + normalizePitchClass(chord.root)
   const bottom = top - 12 * octaves
 

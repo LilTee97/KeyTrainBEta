@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { SongSnapshot } from '../persistence/songSnapshot'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { TimelineEvent } from '../style/types'
+import type { PassingOption, TransitionOption } from '../input/SongSheetView'
 
 /**
  * Bài đang mở, để tab **Luyện đệm** dùng chung với tab **Tái hoà âm**.
@@ -14,6 +15,37 @@ import type { TimelineEvent } from '../style/types'
  * chung nào ngoài `AppShell`, mà nhồi cả bài hát qua đó thì `AppShell` phải
  * biết những thứ chẳng liên quan gì tới việc chuyển tab.
  */
+
+export interface PracticeTransport {
+  playFrom: (beat: number) => void
+  pause: () => void
+  stop: () => void
+  onTone: (delta: number) => void
+  toneLabel: string
+  sourceBeat?: (arrangedBeat: number) => number | null
+}
+
+export interface PracticeGrid {
+  chordIndexAt: (beat: number) => number | null
+  chordCount: number
+  pairedChords?: ReadonlySet<number>
+  pairPlacesAt?: (chordIndex: number) => number
+  passingOptionsFor?: (chordIndex: number) => PassingOption[]
+  onSetChordSpan?: (
+    chordIndex: number,
+    span: 'full' | 'half',
+    scope: 'here' | 'all',
+  ) => void
+  onTogglePassing?: (id: string) => void
+  onAddPassingHere?: (slotId: string, hostKeepBeats?: number) => void
+  onRemovePassingHere?: (slotId: string) => void
+  fillAt?: (chordIndex: number) => boolean | null
+  onToggleFill?: (chordIndex: number) => void
+  transitionAt?: (chordIndex: number) => TransitionOption | null
+  onToggleTransition?: (chordIndex: number) => void
+  onSetTransition?: (chordIndex: number, run: TransitionOption) => void
+  onRemoveChord?: (index: number) => void
+}
 
 export interface PracticeSong {
   /** Khoá của bài trong kho; rỗng nghĩa là bài chưa lưu lần nào. */
@@ -53,6 +85,10 @@ export interface OpenRequest {
 interface PracticeState {
   song: PracticeSong | null
   setSong: (song: PracticeSong | null) => void
+  transport: PracticeTransport | null
+  setTransport: (transport: PracticeTransport | null) => void
+  grid: PracticeGrid | null
+  setGrid: (grid: PracticeGrid | null) => void
 
   request: OpenRequest | null
   /** Nhờ tab Tái hoà âm dựng lại bài này rồi đăng sang đây. */
@@ -64,6 +100,10 @@ interface PracticeState {
 export const usePracticeStore = create<PracticeState>((set) => ({
   song: null,
   setSong: (song) => set({ song }),
+  transport: null,
+  setTransport: (transport) => set({ transport }),
+  grid: null,
+  setGrid: (grid) => set({ grid }),
 
   request: null,
   requestOpen: (request) => set({ request }),

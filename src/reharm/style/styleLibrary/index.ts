@@ -21,6 +21,8 @@ const ALIAS: Record<string, string> = {
   'bossa-nova': 'bossa-nova-1',
   valse: 'waltz-1',
   swing: 'swing-1',
+  'slow-rock': 'slow-rock-2',
+  'slow-rock-1': 'slow-rock-2',
 }
 
 export function getStyle(id: string): StylePattern | undefined {

@@ -80,6 +80,13 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(gap(2)).toBeGreaterThan(gap(3))
   })
 
+  it('bốn quãng tám thì thấp hơn ba quãng tám đúng một quãng tám', () => {
+    const four = fill(mark(2, 4))
+    const three = fill(mark(2, 3))
+    expect(four[0].note).toBe(three[0].note - 12)
+    expect(four[four.length - 1].note).toBe(three[three.length - 1].note)
+  })
+
   it('ba quãng tám thì kéo dài chân xuống, đỉnh giữ nguyên', () => {
     // Nhờ vậy mọi chỗ chuyển đoạn trong bài đều lên tới cùng một tầm
     const wider = fill(mark(2, 3))

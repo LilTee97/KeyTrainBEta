@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LOOP_PASSES,
+  setInstrument,
   setVolumeDb,
+  startAudio,
   startTimelineLoop,
   stopTimelineLoop,
   useAudioStore,
@@ -118,6 +120,7 @@ import {
 import {
   SONG_FORMS,
   buildSongTimeline,
+  arrangedBeatAt,
   sourceBeatAt,
 } from './style/songStructure'
 import type { ArrangementStep, SourceSection } from './style/arrangement'
@@ -350,6 +353,8 @@ export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
   const volumeDb = useAudioStore((state) => state.volumeDb)
   const setPracticeSong = usePracticeStore((state) => state.setSong)
+  const setPracticeTransport = usePracticeStore((state) => state.setTransport)
+  const setPracticeGrid = usePracticeStore((state) => state.setGrid)
   const openRequest = usePracticeStore((state) => state.request)
   const clearOpenRequest = usePracticeStore((state) => state.clearRequest)
   const looping = usePlaybackStore((state) => state.looping)
@@ -836,32 +841,6 @@ export function ReharmHome() {
    * Mỗi hợp âm lấy lại trọn khoảng thời gian của mình, kể cả phần đã nhường
    * cho hợp âm lướt, nên tổng độ dài vòng không đổi.
    */
-  const mainChords = useMemo(
-    () =>
-      mainChordSpans(withPassing, chordBeats).map((span) => ({
-        ...span.chord,
-        beats: span.beats,
-      })),
-    [withPassing, chordBeats],
-  )
-
-  /**
-   * Phần đệm cho **đoạn giang tấu**, dựng trên vòng chính không hợp âm lướt.
-   *
-   * Câu solo đã bám vòng chính; nếu tay đệm vẫn chơi hợp âm lướt thì hai tay
-   * đánh nhau. Và hợp âm lướt vốn là đồ trang trí cho đoạn hát — vào giang tấu
-   * thì phần đệm rút về khung hoà âm gốc để nhường chỗ cho ngẫu hứng.
-   */
-  const interludeBacking = useMemo(() => {
-    const hands = voiceLeadTwoHands(mainChords, {
-      dropRootFromRightHand: dropRoot,
-    })
-    return renderPattern(hands, style, {
-      beatsPerChord: chordBeats,
-      beatsEach: chordDurations(mainChords, chordBeats),
-    })
-  }, [mainChords, style, chordBeats, dropRoot])
-
   const reharmPerBeat = useMemo(
     () => expandToBeats(withPassing, chordBeats),
     [withPassing, chordBeats],
@@ -960,14 +939,51 @@ export function ReharmHome() {
 
       const first = inside[window.from]
       const last = inside[window.to]
+      const picked = inside.slice(window.from, window.to + 1)
+
+      const windowChords = picked.map((span) => span.chord)
 
       return {
         startBeat: first.start,
         lengthBeats: last.start + last.beats - first.start,
-        chords: inside.slice(window.from, window.to + 1),
+        chords: picked,
+        events: renderPattern(
+          voiceLeadTwoHands(windowChords, {
+            dropRootFromRightHand: dropRoot,
+          }),
+          style,
+          {
+            beatsPerChord: chordBeats,
+            beatsEach: picked.map((span) => span.beats),
+          },
+        ),
+        solo: (take: number) =>
+          soloToTimeline(
+            generateSolo(windowChords, {
+              beatsPerChord: chordBeats,
+              direction: soloDirection,
+              density: soloDensity,
+              graceDensity,
+              key: reharm.key,
+              noteSource,
+              chordsPerPhrase,
+              take,
+            }),
+          ),
       }
     },
-    [withPassing, chordBeats],
+    [
+      withPassing,
+      chordBeats,
+      dropRoot,
+      style,
+      soloDirection,
+      soloDensity,
+      graceDensity,
+      reharm.key,
+      noteSource,
+      chordsPerPhrase,
+    ],
   )
 
   /**
@@ -995,7 +1011,7 @@ export function ReharmHome() {
         một phách và câu rải chỉ được một phách — đánh vội tới mức không nghe
         ra hợp âm gì. Hai ô cho mỗi thứ một chỗ đứng riêng.
       */
-      const bar = chordBeats
+      const bar = style.beatsPerMeasure
       const window = interludeWindow(over, next)
       const beats = Math.min(bar * 2, window?.lengthBeats ?? bar)
 
@@ -1465,7 +1481,6 @@ export function ReharmHome() {
       if (songSources && steps.length > 0) {
         return buildArrangedSong({
           accompaniment,
-          interlude: interludeBacking,
           // Câu chêm cũng đổi theo lượt, không riêng đoạn giang tấu.
           fills: fills(pass),
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
@@ -1482,7 +1497,6 @@ export function ReharmHome() {
 
       return buildSongTimeline({
         accompaniment,
-        interlude: interludeBacking,
         fills: fills(pass),
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
@@ -1497,7 +1511,6 @@ export function ReharmHome() {
     },
     [
       accompaniment,
-      interludeBacking,
       fills,
       soloTake,
       oneLoopBeats,
@@ -1586,6 +1599,112 @@ export function ReharmHome() {
     style.beatsPerMeasure,
   ])
 
+  useEffect(() => {
+    setPracticeGrid({
+      chordIndexAt: (beat) => {
+        const index = chordIndexAt(withPassing, chordBeats, beat)
+        let mainIndex = -1
+        for (let position = 0; position <= index; position += 1) {
+          if (!withPassing[position]?.passing) mainIndex += 1
+        }
+        return mainIndex >= 0 ? mainIndex : null
+      },
+      chordCount: sequence.chords.length,
+      pairedChords,
+      pairPlacesAt: (chordIndex) =>
+        similarChordPairs(recolored, chordIndex).length,
+      passingOptionsFor: (chordIndex) =>
+        passingOptionsForChord(chordIndex, afterSlotOf(chordIndex)),
+      onSetChordSpan: (chordIndex, span, scope) =>
+        setPairedChords((current) => {
+          if (scope === 'here') {
+            return span === 'half'
+              ? addChordPair(current, chordIndex)
+              : removeChordPair(current, chordIndex)
+          }
+          return span === 'half'
+            ? addSimilarChordPairs(current, recolored, chordIndex)
+            : removeSimilarChordPairs(current, recolored, chordIndex)
+        }),
+      onTogglePassing: togglePassingGroup,
+      onAddPassingHere: (slotId, hostKeepBeats) => {
+        setAcceptedPassing((current) =>
+          current.includes(slotId) ? current : [...current, slotId],
+        )
+        setPassingKeep((current) => {
+          if (hostKeepBeats === undefined) {
+            if (!(slotId in current)) return current
+            const next = { ...current }
+            delete next[slotId]
+            return next
+          }
+          return { ...current, [slotId]: hostKeepBeats }
+        })
+      },
+      onRemovePassingHere: (slotId) => {
+        setAcceptedPassing((current) =>
+          current.filter((entry) => entry !== slotId),
+        )
+        setPassingKeep((current) => {
+          if (!(slotId in current)) return current
+          const next = { ...current }
+          delete next[slotId]
+          return next
+        })
+      },
+      fillAt,
+      onToggleFill: (chordIndex) =>
+        setMutedFills((current) => {
+          const next = new Set(current)
+          if (next.has(chordIndex)) next.delete(chordIndex)
+          else next.add(chordIndex)
+          return next
+        }),
+      transitionAt: (chordIndex) => transitions.get(chordIndex) ?? null,
+      onToggleTransition: (chordIndex) =>
+        setTransitionEdits((current) => ({
+          ...current,
+          [chordIndex]: transitions.has(chordIndex)
+            ? null
+            : DEFAULT_TRANSITION,
+        })),
+      onSetTransition: (chordIndex, run) =>
+        setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
+      onRemoveChord: (index) => {
+        const list = parsed.chords.filter((_, i) => i !== index)
+        if (list.length === 0) return
+        setInput(list.map((chord) => chord.symbol).join(' '))
+        setPastedSong((song) => (song ? { ...song, chords: list } : song))
+        setImportedBeats((table) => shiftRecord(table, index, -1))
+        setPairedChords((set) => shiftIndexSet(set, index, -1))
+        setMutedFills((set) => shiftIndexSet(set, index, -1))
+        setTransitionEdits((table) => shiftRecord(table, index, -1))
+        setAcceptedPassing((keys) =>
+          keys.flatMap((key) => {
+            const cut = key.indexOf(':')
+            const at = Number(key.slice(0, cut))
+            if (at === index) return []
+            const rest = key.slice(cut)
+            return [`${at > index ? at - 1 : at}${rest}`]
+          }),
+        )
+      },
+    })
+  }, [
+    setPracticeGrid,
+    withPassing,
+    chordBeats,
+    sequence.chords.length,
+    pairedChords,
+    recolored,
+    fillAt,
+    transitions,
+    parsed.chords,
+    acceptedPassing,
+    passingKeep,
+    passingGroups,
+  ])
+
   /*
     Nhận lời nhờ mở bài từ tab Luyện đệm.
 
@@ -1645,6 +1764,63 @@ export function ReharmHome() {
     () => steps.some((step) => step.type === 'section' && step.ending),
     [steps],
   )
+
+  const playFromBeat = useCallback(
+    async (beat: number, sourceBeat = beat) => {
+      await startAudio()
+      stopTimelineLoop()
+      pauseSource()
+      startTimelineLoop(
+        (pass) => eventsForHand(passAt(pass), hand),
+        bpm,
+        loopLengthBeats,
+        beat,
+        playsOnce,
+      )
+      startSourceAtBeat(sourceBeat, bpm, !playsOnce)
+      advanceRound()
+    },
+    [passAt, hand, bpm, loopLengthBeats, playsOnce, advanceRound],
+  )
+
+  const playFromSourceBeat = useCallback(
+    (sourceBeat: number) => {
+      const at =
+        arrangedBeatAt(song.segments, sourceBeat, song.sections) ?? sourceBeat
+      void playFromBeat(at, sourceBeat)
+    },
+    [song.segments, song.sections, playFromBeat],
+  )
+
+  const pausePlay = useCallback(() => {
+    stopTimelineLoop()
+    pauseSource()
+  }, [])
+
+  const stopPlay = useCallback(() => {
+    stopTimelineLoop()
+    stopSource()
+  }, [])
+
+  useEffect(() => {
+    setPracticeTransport({
+      playFrom: playFromSourceBeat,
+      pause: pausePlay,
+      stop: stopPlay,
+      onTone: (delta) => setTranspose((value) => value + delta),
+      toneLabel: transposeLabel(transpose),
+      sourceBeat: (arranged) =>
+        sourceBeatAt(song.segments, arranged % Math.max(1, song.totalBeats)),
+    })
+  }, [
+    setPracticeTransport,
+    playFromSourceBeat,
+    pausePlay,
+    stopPlay,
+    transpose,
+    song.segments,
+    song.totalBeats,
+  ])
 
   useEffect(() => {
     if (looping) syncSourceRate(bpm)
@@ -1755,33 +1931,20 @@ export function ReharmHome() {
           bpm={bpm}
           onBpm={setBpm}
           showToolbar
-          playEnabled={audioReady && timeline.length > 0}
+          playEnabled={timeline.length > 0}
           toneLabel={transposeLabel(transpose)}
           onTone={(delta) => setTranspose((value) => value + delta)}
           activeBeat={
             looping
-              ? Math.floor(positionBeats % Math.max(1, loopLengthBeats))
+              ? sourceBeatAt(
+                  song.segments,
+                  positionBeats % Math.max(1, loopLengthBeats),
+                )
               : null
           }
-          onPlay={() => {
-            startTimelineLoop(
-              (pass) => eventsForHand(passAt(pass), 'both'),
-              bpm,
-              loopLengthBeats,
-              0,
-              playsOnce,
-            )
-            startSourceAtBeat(0, bpm, !playsOnce)
-            advanceRound()
-          }}
-          onPause={() => {
-            stopTimelineLoop()
-            pauseSource()
-          }}
-          onStop={() => {
-            stopTimelineLoop()
-            stopSource()
-          }}
+          onPlay={() => void playFromBeat(0)}
+          onPause={pausePlay}
+          onStop={stopPlay}
           onSeekBeat={(beat) => {
             const index = chordIndexAt(withPassing, chordBeats, beat)
             let mainIndex = -1
@@ -1789,18 +1952,7 @@ export function ReharmHome() {
               if (!withPassing[position]?.passing) mainIndex += 1
             }
             setSelectedIndex(mainIndex >= 0 ? mainIndex : null)
-            if (!audioReady) return
-            stopTimelineLoop()
-            pauseSource()
-            startTimelineLoop(
-              (pass) => eventsForHand(passAt(pass), hand),
-              bpm,
-              loopLengthBeats,
-              beat,
-              playsOnce,
-            )
-            startSourceAtBeat(beat, bpm, !playsOnce)
-            advanceRound()
+            playFromSourceBeat(beat)
           }}
           chordIndexAt={(beat) => {
             const index = chordIndexAt(withPassing, chordBeats, beat)
@@ -2133,22 +2285,8 @@ export function ReharmHome() {
             onClearMarks={() => setSectionMarks([])}
             hasMarks={sectionMarks.length > 0}
             onSeek={(chordIndex) => {
-              // Bàn phím đàn phía dưới chỉ thế bấm của đúng hợp âm vừa bấm.
               setSelectedIndex(chordIndex)
-              if (!audioReady) return
-
-              // Đang phát thì dừng hẳn rồi phát lại, cho khỏi chồng hai vòng.
-              stopTimelineLoop()
-              pauseSource()
-              startTimelineLoop(
-                (pass) => eventsForHand(passAt(pass), hand),
-                bpm,
-                loopLengthBeats,
-                beatOfMainChord(chordIndex),
-                playsOnce,
-              )
-              startSourceAtBeat(beatOfMainChord(chordIndex), bpm, !playsOnce)
-              advanceRound()
+              playFromSourceBeat(beatOfMainChord(chordIndex))
             }}
           />
             )}
@@ -2374,19 +2512,9 @@ export function ReharmHome() {
             <button
               type="button"
               onClick={() =>
-                looping
-                  ? (stopTimelineLoop(), pauseSource())
-                  : (startTimelineLoop(
-                      (pass) => eventsForHand(passAt(pass), 'both'),
-                      bpm,
-                      loopLengthBeats,
-                      0,
-                      playsOnce,
-                    ),
-                    startSourceAtBeat(0, bpm, !playsOnce),
-                    advanceRound())
+                looping ? pausePlay() : void playFromBeat(0)
               }
-              disabled={!audioReady || timeline.length === 0}
+              disabled={timeline.length === 0}
               /*
                 Lúc đang phát, nút phải đọc ra ngay là "dừng lại". Bản cũ dùng
                 nền trắng mờ với chữ kem — trên nền tối thì gần như chỉ còn
@@ -2846,10 +2974,9 @@ export function ReharmHome() {
             selectedId={styleId}
             onSelect={(id) => {
               setStyleId(id)
-              if (!lockSongBpm) {
-                const next = getStyle(id)
-                if (next) setBpm(next.bpm)
-              }
+              const next = getStyle(id)
+              if (next?.family === 'flamenco') void setInstrument('guitar')
+              if (!lockSongBpm && next) setBpm(next.bpm)
             }}
           />
         </div>
@@ -2860,19 +2987,9 @@ export function ReharmHome() {
           <button
             type="button"
             onClick={() =>
-              looping
-                ? (stopTimelineLoop(), pauseSource())
-                : (startTimelineLoop(
-                    (pass) => eventsForHand(passAt(pass), hand),
-                    bpm,
-                    loopLengthBeats,
-                    0,
-                    playsOnce,
-                  ),
-                  startSourceAtBeat(0, bpm, !playsOnce),
-                  advanceRound())
+              looping ? pausePlay() : void playFromBeat(0)
             }
-            disabled={!audioReady || timeline.length === 0}
+            disabled={timeline.length === 0}
             className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
               looping
                 ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'

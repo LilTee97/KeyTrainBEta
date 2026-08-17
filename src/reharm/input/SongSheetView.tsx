@@ -11,6 +11,8 @@ import {
   layoutAnchors,
 } from './songSheet'
 import type { SongSectionKind } from './songTextParser'
+import { readSetting } from '../../shared/persistence/localSettings'
+import { getKeyboardRange } from '../../shared/midi/onScreenPiano/layout'
 
 /**
  * Bản nhạc: lời bài hát với hợp âm **đã tái hoà âm** ghi trên đầu, hợp âm đang
@@ -597,20 +599,29 @@ export function ChordContextMenu({
                 Chạy mấy quãng tám ở ô nối
               </p>
               <div className="flex gap-1 px-2.5 py-1">
-                {[0, 1, 2, 3].map((octaves) => (
-                  <button
-                    key={octaves}
-                    type="button"
-                    onClick={() => onSetTransition({ ...transition, octaves })}
-                    className={`flex-1 rounded border px-2 py-1 text-xs ${
-                      transition.octaves === octaves
-                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                    }`}
-                  >
-                    {octaves}
-                  </button>
-                ))}
+                {[0, 1, 2, 3, 4].map((octaves) => {
+                  const fits =
+                    octaves < 1 ||
+                    72 - 12 * octaves >=
+                      getKeyboardRange(readSetting('midiKeyboardKeys')).low
+                  return (
+                    <button
+                      key={octaves}
+                      type="button"
+                      disabled={!fits}
+                      onClick={() => onSetTransition({ ...transition, octaves })}
+                      className={`flex-1 rounded border px-2 py-1 text-xs ${
+                        !fits
+                          ? 'cursor-not-allowed opacity-30'
+                          : transition.octaves === octaves
+                            ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                            : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                      }`}
+                    >
+                      {octaves}
+                    </button>
+                  )
+                })}
               </div>
 
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">

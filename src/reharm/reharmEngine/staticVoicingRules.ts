@@ -687,7 +687,14 @@ export function colorAnalyzedChord(
     return withQuality(chord, intensity === 'full' ? '13' : '7')
   }
 
-  if (degree === null) return colorChord(chord, options)
+  if (degree === null) {
+    const painted = colorChord(chord, options)
+    if (!preferInKey || tonic === undefined) return painted
+    return withQuality(
+      painted,
+      inKeyQuality(painted.root, painted.quality.id, tonic, scale),
+    )
+  }
 
   const rules = scale === 'minor' ? MINOR_DEGREE_RULES : MAJOR_DEGREE_RULES
   const rule = rules[degree]
@@ -760,16 +767,19 @@ export function colorAnalyzedChord(
 
   const targetQuality = getChordQuality(target)
   if (!targetQuality) return chord
-  // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
-  // làm mỏng đi.
-  if (targetQuality.intervals.length < chord.quality.intervals.length) {
+  const sourceFits =
+    !preferInKey ||
+    tonic === undefined ||
+    fitsKey(chord.root, qualityId, tonic, scale)
+  if (
+    sourceFits &&
+    targetQuality.intervals.length < chord.quality.intervals.length
+  ) {
     return chord
   }
-  // Bậc lấy từ nốt gốc; Cm ở bậc IV hay Em bị gán nhầm bậc V không được đổi
-  // thành hợp âm trưởng.
   const fromThird = thirdOf(chord.quality.intervals)
   const toThird = thirdOf(targetQuality.intervals)
-  if (fromThird && toThird && fromThird !== toThird) {
+  if (sourceFits && fromThird && toThird && fromThird !== toThird) {
     return colorChord(chord, options)
   }
 

@@ -13,46 +13,213 @@ import { readSetting, writeSetting } from '../persistence/localSettings'
  */
 
 /** Trình duyệt chỉ cho phát tiếng sau khi người dùng chạm vào trang. */
+export type InstrumentId = 'piano' | 'epiano' | 'synth' | 'guitar'
+
+export const INSTRUMENTS: readonly { id: InstrumentId; label: string }[] = [
+  { id: 'piano', label: 'Piano' },
+  { id: 'guitar', label: 'Guitar' },
+  { id: 'epiano', label: 'E-Piano' },
+  { id: 'synth', label: 'Synth' },
+]
+
 export interface AudioState {
   ready: boolean
   /** Âm lượng tính bằng decibel; 0 là mức gốc. */
   volumeDb: number
+  instrument: InstrumentId
   setReady: (ready: boolean) => void
   setVolumeDb: (volumeDb: number) => void
+  setInstrument: (instrument: InstrumentId) => void
+}
+
+function readInstrument(): InstrumentId {
+  const saved = readSetting('instrument')
+  return saved === 'epiano' || saved === 'synth' || saved === 'guitar' || saved === 'piano'
+    ? saved
+    : 'piano'
 }
 
 export const useAudioStore = create<AudioState>((set) => ({
   ready: false,
   volumeDb: readSetting('volumeDb'),
+  instrument: readInstrument(),
   setReady: (ready) => set({ ready }),
   setVolumeDb: (volumeDb) => set({ volumeDb }),
+  setInstrument: (instrument) => set({ instrument }),
 }))
 
-let synth: Tone.PolySynth<Tone.Synth> | null = null
+type Voice = Tone.PolySynth | Tone.Sampler
 
-/**
- * Thông số tạo tiếng gần giống đàn phím: vào tiếng gần như tức thì, tắt dần
- * khá nhanh nhưng vẫn ngân nhẹ khi giữ phím, và buông tiếng mượt khi nhả.
- */
-function createSynth(): Tone.PolySynth<Tone.Synth> {
-  const instrument = new Tone.PolySynth(Tone.Synth, {
-    oscillator: { type: 'triangle' },
-    envelope: {
-      attack: 0.005,
-      decay: 0.7,
-      sustain: 0.18,
-      release: 1.1,
-    },
-  }).toDestination()
+let voice: Voice | null = null
 
+const PIANO_NOTES = [
+  'A1',
+  'C2',
+  'Ds2',
+  'Fs2',
+  'A2',
+  'C3',
+  'Ds3',
+  'Fs3',
+  'A3',
+  'C4',
+  'Ds4',
+  'Fs4',
+  'A4',
+  'C5',
+  'Ds5',
+  'Fs5',
+  'A5',
+  'C6',
+] as const
+
+function applyVolume(instrument: Voice): Voice {
   instrument.volume.value = useAudioStore.getState().volumeDb
   return instrument
 }
 
-function getSynth(): Tone.PolySynth<Tone.Synth> {
-  synth ??= createSynth()
-  return synth
+function createSynth(): Tone.PolySynth {
+  return applyVolume(
+    new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: {
+        attack: 0.005,
+        decay: 0.7,
+        sustain: 0.18,
+        release: 1.1,
+      },
+    }).toDestination(),
+  )
 }
+
+function createPianoFallback(): Tone.PolySynth {
+  return applyVolume(
+    new Tone.PolySynth(Tone.AMSynth, {
+      harmonicity: 1.4,
+      envelope: { attack: 0.004, decay: 1.4, sustain: 0.12, release: 1.6 },
+      modulationEnvelope: { attack: 0.002, decay: 0.3, sustain: 0, release: 0.4 },
+    }).toDestination(),
+  )
+}
+
+function loadSampler(
+  baseUrl: string,
+  notes: readonly string[],
+): Promise<Tone.Sampler> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('timeout')), 15000)
+    const sampler = new Tone.Sampler({
+      urls: Object.fromEntries(notes.map((note) => [note, `${note}.mp3`])),
+      baseUrl,
+      onload: () => {
+        window.clearTimeout(timer)
+        resolve(sampler)
+      },
+      onerror: (error) => {
+        window.clearTimeout(timer)
+        sampler.dispose()
+        reject(error)
+      },
+    })
+    sampler.toDestination()
+  })
+}
+
+function createEPiano(): Tone.PolySynth {
+  return applyVolume(
+    new Tone.PolySynth(Tone.FMSynth, {
+      harmonicity: 3.2,
+      modulationIndex: 12,
+      envelope: { attack: 0.01, decay: 0.35, sustain: 0.15, release: 0.7 },
+    }).toDestination(),
+  )
+}
+
+const GUITAR_NOTES = ['A2', 'C3', 'A3', 'C4', 'A4', 'C5'] as const
+
+async function createVoice(id: InstrumentId): Promise<Voice> {
+  if (id === 'synth') return createSynth()
+  if (id === 'epiano') return createEPiano()
+  try {
+    if (id === 'guitar') {
+      return applyVolume(
+        await loadSampler(
+          'https://nbrosowsky.github.io/tonejs-instruments/samples/guitar-acoustic/',
+          GUITAR_NOTES,
+        ),
+      )
+    }
+    return applyVolume(await loadPiano())
+  } catch {
+    return id === 'piano' ? createPianoFallback() : createSynth()
+  }
+}
+
+const STRUM_GAP = 0.014
+
+function fireNotes(
+  instrument: Voice,
+  notes: number[],
+  duration: Tone.Unit.Time,
+  time: number,
+  velocity: number,
+): void {
+  const strum =
+    useAudioStore.getState().instrument === 'guitar' && notes.length > 1
+  if (!strum) {
+    instrument.triggerAttackRelease(notes, duration, time, velocity)
+    return
+  }
+  notes.forEach((freq, index) => {
+    instrument.triggerAttackRelease(
+      freq,
+      duration,
+      time + index * STRUM_GAP,
+      velocity * (1 - index * 0.04),
+    )
+  })
+}
+
+function softenPiano(sampler: Tone.Sampler): Tone.Sampler {
+  sampler.disconnect()
+  const filter = new Tone.Filter({
+    frequency: 2000,
+    type: 'lowpass',
+    rolloff: -24,
+  })
+  sampler.chain(filter, Tone.getDestination())
+  const dispose = sampler.dispose.bind(sampler)
+  sampler.dispose = () => {
+    filter.dispose()
+    return dispose()
+  }
+  return sampler
+}
+
+async function loadPiano(): Promise<Tone.Sampler> {
+  try {
+    return softenPiano(
+      await loadSampler(
+        'https://nbrosowsky.github.io/tonejs-instruments/samples/piano/',
+        ['A2', 'C3', 'A3', 'C4', 'A4', 'C5'],
+      ),
+    )
+  } catch {
+    return softenPiano(
+      await loadSampler(
+        'https://tonejs.github.io/audio/salamander/',
+        PIANO_NOTES,
+      ),
+    )
+  }
+}
+
+function getSynth(): Voice {
+  if (!voice) throw new Error('audio not started')
+  return voice
+}
+
+let boot: Promise<void> | null = null
 
 /** Đổi nốt MIDI sang tần số để đưa vào Tone.js. */
 function toFrequency(note: MidiNote): number {
@@ -63,12 +230,26 @@ function toFrequency(note: MidiNote): number {
  * Mở khoá âm thanh. Bắt buộc gọi từ một thao tác thật của người dùng
  * (bấm chuột, chạm màn hình) — trình duyệt chặn phát tiếng tự động.
  */
-export async function startAudio(): Promise<void> {
-  if (useAudioStore.getState().ready) return
+export function startAudio(): Promise<void> {
+  if (voice && useAudioStore.getState().ready) return Promise.resolve()
+  boot ??= (async () => {
+    await Tone.start()
+    if (!voice) {
+      voice = await createVoice(useAudioStore.getState().instrument)
+    }
+    useAudioStore.getState().setReady(true)
+  })()
+  return boot
+}
 
-  await Tone.start()
-  getSynth()
-  useAudioStore.getState().setReady(true)
+export async function setInstrument(id: InstrumentId): Promise<void> {
+  writeSetting('instrument', id)
+  useAudioStore.getState().setInstrument(id)
+  if (boot) await boot
+  if (!useAudioStore.getState().ready) return
+  const next = await createVoice(id)
+  voice?.dispose()
+  voice = next
 }
 
 /**
@@ -193,7 +374,8 @@ export function playTimeline(
   for (const hit of hits) {
     if (hit.notes.length === 0) continue
 
-    synthInstance.triggerAttackRelease(
+    fireNotes(
+      synthInstance,
       hit.notes.map(toFrequency),
       Math.max(0.05, hit.durationBeats * secondsPerBeat),
       startAt + hit.startBeat * secondsPerBeat,
@@ -354,12 +536,7 @@ export function startTimelineLoop(
   }
 
   const part = new Tone.Part<LoopEvent>((time, value) => {
-    synthInstance.triggerAttackRelease(
-      value.notes,
-      value.duration,
-      time,
-      value.velocity,
-    )
+    fireNotes(synthInstance, value.notes, value.duration, time, value.velocity)
   }, events)
 
   const totalBeats = passLength * passes
@@ -432,20 +609,21 @@ export function stopTimelineLoop(): void {
 
 /** Nhả toàn bộ nốt đang vang. */
 export function releaseAllNotes(): void {
-  if (!synth) return
-  synth.releaseAll(Tone.now())
+  if (!voice) return
+  voice.releaseAll(Tone.now())
 }
 
 /** Chỉnh âm lượng, tính bằng decibel. */
 export function setVolumeDb(volumeDb: number): void {
   useAudioStore.getState().setVolumeDb(volumeDb)
   writeSetting('volumeDb', volumeDb)
-  if (synth) synth.volume.value = volumeDb
+  if (voice) voice.volume.value = volumeDb
 }
 
 /** Dọn dẹp khi thoát. */
 export function disposeAudio(): void {
-  synth?.dispose()
-  synth = null
+  voice?.dispose()
+  voice = null
+  boot = null
   useAudioStore.getState().setReady(false)
 }

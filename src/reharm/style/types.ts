@@ -37,12 +37,14 @@ export interface RhythmHit {
   velocityScale?: number
   /** Mặc định đánh cả hợp âm. */
   voice?: HitVoice
-  /**
-   * Nốt thứ mấy trong thế bấm (0 = nốt thấp nhất). Có thì chỉ đánh một nốt —
-   * dùng cho mẫu rải Basic / Arp của OneMotion.
-   */
-  toneIndex?: number
-}
+    /**
+     * Nốt thứ mấy trong thế bấm (0 = nốt thấp nhất). Có thì chỉ đánh một nốt —
+     * dùng cho mẫu rải Basic / Arp của OneMotion.
+     */
+    toneIndex?: number
+    /** Nhiều nốt (1, 13, 1f…) — OneMotion ghi số thứ tự nốt hợp âm. */
+    tones?: readonly { toneIndex: number; semitones?: number }[]
+  }
 
 /** Mẫu tiết tấu lặp lại của một điệu. */
 export interface RhythmCell {

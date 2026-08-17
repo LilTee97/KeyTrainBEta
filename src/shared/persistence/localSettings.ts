@@ -29,6 +29,8 @@ export interface Settings {
 
   /** Âm lượng tính bằng decibel. */
   volumeDb: number
+  /** Tiếng phát: piano (sample), epiano, synth. */
+  instrument: string
 
   /** Số phím của đàn MIDI đang dùng (44, 49, 61, 73, 76, 88...). Dùng để hiển thị bàn phím ảo đúng kích thước. */
   midiKeyboardKeys: number
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: Settings = {
   progressionUseSevenths: true,
 
   volumeDb: -6,
+  instrument: 'piano',
 
   midiKeyboardKeys: 61,
 }

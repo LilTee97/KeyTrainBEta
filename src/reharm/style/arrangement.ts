@@ -130,6 +130,20 @@ function slice(
     }))
 }
 
+/** Đặt dòng thời gian (đã tính từ phách 0) vào vị trí mới. */
+function place(
+  events: readonly TimelineEvent[],
+  offset: number,
+  length: number,
+): TimelineEvent[] {
+  return events
+    .filter(
+      (event) =>
+        event.startBeat >= -EPSILON && event.startBeat < length - EPSILON,
+    )
+    .map((event) => ({ ...event, startBeat: event.startBeat + offset }))
+}
+
 /** Câu quay đầu đã dựng xong, các mốc tính từ phách 0. */
 export interface TurnaroundTake {
   events: readonly TimelineEvent[]
@@ -170,7 +184,14 @@ export interface BuildArrangedSongOptions {
   interludeRange?: (
     over: SourceSection,
     next: SourceSection | null,
-  ) => { startBeat: number; lengthBeats: number } | null
+  ) => {
+    startBeat: number
+    lengthBeats: number
+    /** Đệm dựng từ phách 0 của vòng — cùng pha bass với phiên/điệp. */
+    events?: readonly TimelineEvent[]
+    /** Solo trên đúng vòng ngắn, cũng từ phách 0. */
+    solo?: (take: number) => readonly TimelineEvent[]
+  } | null
   /**
    * Hợp âm cuối của **đoạn kết bài**, đã đổi màu.
    *
@@ -362,9 +383,12 @@ export function buildArrangedSong(
       })
 
       events.push(
-        ...slice(forInterlude, range.startBeat, length, at),
-        // Mỗi lượt một câu ngẫu hứng khác, không lặp lại y nguyên.
-        ...slice(solo(take), range.startBeat, length, at),
+        ...(range.events
+          ? place(interludeAccompaniment(range.events), at, length)
+          : slice(forInterlude, range.startBeat, length, at)),
+        ...(range.solo
+          ? place(range.solo(take), at, length)
+          : slice(solo(take), range.startBeat, length, at)),
       )
       take += 1
 

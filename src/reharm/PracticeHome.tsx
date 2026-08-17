@@ -2,6 +2,8 @@ import { ChordOverview } from './input/ChordOverview'
 import { SongLibrary } from './persistence/SongLibrary'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
 import { usePracticeStore } from './playback/practiceStore'
+import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
+import { usePlaybackStore } from '../shared/audio/audioEngine'
 
 /**
  * Tab **Luyện đệm**: tập đàn theo bài đã dựng ở tab Tái hoà âm.
@@ -18,7 +20,12 @@ import { usePracticeStore } from './playback/practiceStore'
 
 export function PracticeHome() {
   const song = usePracticeStore((state) => state.song)
+  const grid = usePracticeStore((state) => state.grid)
+  const transport = usePracticeStore((state) => state.transport)
   const requestOpen = usePracticeStore((state) => state.requestOpen)
+  const bpm = useMetronomeStore((state) => state.bpm)
+  const looping = usePlaybackStore((state) => state.looping)
+  const positionBeats = usePlaybackStore((state) => state.positionBeats)
 
   return (
     <section className="flex flex-col gap-4">
@@ -54,8 +61,36 @@ export function PracticeHome() {
             <ChordOverview
               perBeat={song.perBeat}
               meter={song.meter}
-              bpm={72}
+              bpm={bpm}
+              onBpm={setBpm}
               showToolbar={false}
+              playEnabled={!!transport}
+              onTone={transport?.onTone}
+              toneLabel={transport?.toneLabel}
+              activeBeat={
+                looping
+                  ? (transport?.sourceBeat?.(positionBeats) ??
+                    Math.floor(
+                      positionBeats % Math.max(1, song.perBeat.length),
+                    ))
+                  : null
+              }
+              onSeekBeat={transport?.playFrom}
+              chordIndexAt={grid?.chordIndexAt}
+              chordCount={grid?.chordCount ?? 0}
+              pairedChords={grid?.pairedChords}
+              pairPlacesAt={grid?.pairPlacesAt}
+              passingOptionsFor={grid?.passingOptionsFor}
+              onSetChordSpan={grid?.onSetChordSpan}
+              onTogglePassing={grid?.onTogglePassing}
+              onAddPassingHere={grid?.onAddPassingHere}
+              onRemovePassingHere={grid?.onRemovePassingHere}
+              fillAt={grid?.fillAt}
+              onToggleFill={grid?.onToggleFill}
+              transitionAt={grid?.transitionAt}
+              onToggleTransition={grid?.onToggleTransition}
+              onSetTransition={grid?.onSetTransition}
+              onRemoveChord={grid?.onRemoveChord}
             />
           )}
           <NoteGatedPractice

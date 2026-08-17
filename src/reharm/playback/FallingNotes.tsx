@@ -29,6 +29,8 @@ interface FallingNotesProps {
   steps: readonly GatedStep[]
   /** Chặng đang chờ; các chặng trước đó đã bấm xong. */
   index: number
+  /** Phách đang phát — nếu có thì nốt rơi theo đồng hồ, không chờ. */
+  nowBeat?: number | null
   lowNote: MidiNote
   highNote: MidiNote
 }
@@ -36,23 +38,28 @@ interface FallingNotesProps {
 export function FallingNotes({
   steps,
   index,
+  nowBeat,
   lowNote,
   highNote,
 }: FallingNotesProps) {
   const layout = buildKeyboardLayout(lowNote, highNote)
-  const current = steps[index]
-  if (!current) return null
+  const origin =
+    nowBeat !== undefined && nowBeat !== null
+      ? nowBeat
+      : steps[index]?.startBeat
+  if (origin === undefined) return null
 
-  const upcoming = steps
-    .slice(index)
-    .filter((step) => step.startBeat - current.startBeat <= LOOK_AHEAD_BEATS)
+  const upcoming = steps.filter((step) => {
+    const away = step.startBeat - origin
+    return away >= -0.05 && away <= LOOK_AHEAD_BEATS
+  })
 
   return (
     <div
       className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
       style={{ height: HEIGHT }}
       role="img"
-      aria-label={`Nốt sắp tới: ${current.notes
+      aria-label={`Nốt sắp tới: ${upcoming[0]?.notes
         .map((note) => midiToName(note))
         .join(' ')}`}
     >
@@ -61,7 +68,7 @@ export function FallingNotes({
           const place = keyPlacement(layout, note)
           if (!place) return null
 
-          const away = step.startBeat - current.startBeat
+          const away = step.startBeat - origin
           /*
             Vạch đáy là chỗ nốt được bấm, nên chặng đang chờ có `away` bằng 0 và
             nằm sát đáy. Nốt xa hơn bị đẩy lên trên theo đúng tỉ lệ phách.

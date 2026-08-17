@@ -177,12 +177,19 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     expect(asDominant.quality.intervals).toContain(10)
   })
 
-  it('hợp âm thứ mượn không bị đổi thành trưởng vì trùng nốt gốc', () => {
-    const result = reharmonize(chords('G C Cm D'), {
+  it('hợp âm mượn được kéo về nốt trong giọng', () => {
+    const result = reharmonize(chords('G C Cm D E'), {
       key: { tonic: 7, scale: 'major' },
     })
-    expect(result.colored[2].quality.intervals).toContain(3)
-    expect(result.colored[2].quality.intervals).not.toContain(4)
+    const tones = new Set([7, 9, 11, 0, 2, 4, 6])
+    for (const chord of [result.colored[2], result.colored[4]]) {
+      const pitches = chord.quality.intervals.map(
+        (interval) => (chord.root + interval) % 12,
+      )
+      expect(pitches.every((pitch) => tones.has(pitch))).toBe(true)
+    }
+    expect(result.colored[2].quality.intervals).toContain(4)
+    expect(result.colored[4].quality.intervals).toContain(3)
   })
 
   it('dịch bài Sol sang La thì chủ âm đi theo, không chỉ tô lại màu', () => {
