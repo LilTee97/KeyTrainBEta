@@ -1,5 +1,5 @@
 import { pitchClassName } from '../shared/musicTheory/pitch'
-import type { PitchClass } from '../shared/musicTheory/types'
+import type { AccidentalStyle, PitchClass } from '../shared/musicTheory/types'
 import type { ParsedChord } from './types'
 
 /**
@@ -21,6 +21,7 @@ function fold(semitones: number): number {
 export function transposeChord(
   chord: ParsedChord,
   semitones: number,
+  style: AccidentalStyle = 'sharp',
 ): ParsedChord {
   const shift = fold(semitones)
   if (shift === 0) return chord
@@ -31,10 +32,10 @@ export function transposeChord(
       ? undefined
       : (fold(chord.bass + shift) as PitchClass)
 
-  const base = `${pitchClassName(root)}${chord.quality.symbol}`
+  const base = `${pitchClassName(root, style)}${chord.quality.symbol}`
   const symbol =
     bass !== undefined && bass !== root
-      ? `${base}/${pitchClassName(bass)}`
+      ? `${base}/${pitchClassName(bass, style)}`
       : base
 
   return { ...chord, root, bass, symbol, source: symbol }
@@ -43,9 +44,25 @@ export function transposeChord(
 export function transposeChords(
   chords: readonly ParsedChord[],
   semitones: number,
+  style: AccidentalStyle = 'sharp',
 ): ParsedChord[] {
   if (fold(semitones) === 0) return [...chords]
-  return chords.map((chord) => transposeChord(chord, semitones))
+  return chords.map((chord) => transposeChord(chord, semitones, style))
+}
+
+/** Đổi giọng đang chọn theo cùng số nửa cung với nút TONE. */
+export function shiftKeyId(key: string, semitones: number): string {
+  if (!key) return key
+  const [tonic, scale] = key.split(':')
+  if (tonic === undefined || scale === undefined) return key
+  return `${fold(Number(tonic) + semitones)}:${scale}`
+}
+
+/** Số nửa cung ngắn nhất để đi từ giọng này sang giọng kia, trong khoảng −6…+6. */
+export function semitonesToKey(fromTonic: number, toTonic: number): number {
+  let delta = fold(toTonic - fromTonic)
+  if (delta > 6) delta -= 12
+  return delta
 }
 
 /** Nhãn hiện trên nút, ví dụ `+2` hoặc `−3`. */

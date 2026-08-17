@@ -53,10 +53,12 @@ export interface LongPressHandlers {
  */
 export function useLongPress(): (
   onTrigger: (point: PressPoint) => void,
+  onTap?: () => void,
 ) => LongPressHandlers {
   const timer = useRef<number | null>(null)
   const start = useRef<PressPoint | null>(null)
   const fired = useRef(false)
+  const tapHandled = useRef(false)
 
   const cancel = useCallback(() => {
     if (timer.current !== null) {
@@ -70,7 +72,7 @@ export function useLongPress(): (
   useEffect(() => cancel, [cancel])
 
   return useCallback(
-    (onTrigger: (point: PressPoint) => void): LongPressHandlers => ({
+    (onTrigger: (point: PressPoint) => void, onTap?: () => void): LongPressHandlers => ({
       onContextMenu: (event) => {
         event.preventDefault()
         onTrigger({ x: event.clientX, y: event.clientY })
@@ -85,7 +87,9 @@ export function useLongPress(): (
         if (event.pointerType === 'mouse') return
 
         fired.current = false
+        tapHandled.current = false
         start.current = { x: event.clientX, y: event.clientY }
+        event.currentTarget.setPointerCapture(event.pointerId)
 
         timer.current = window.setTimeout(() => {
           const point = start.current
@@ -104,17 +108,39 @@ export function useLongPress(): (
         const moved =
           Math.abs(event.clientX - from.x) > MOVE_TOLERANCE ||
           Math.abs(event.clientY - from.y) > MOVE_TOLERANCE
-        if (moved) cancel()
+        if (!moved) return
+
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId)
+        }
+        cancel()
       },
 
-      onPointerUp: cancel,
+      onPointerUp: () => {
+        /*
+          Android/Chrome thường không bắn `click` sau pointer + nhấn giữ.
+          `fired` cũ nuốt nốt lần chạm sau. Tap xử lý ngay trên pointerup.
+        */
+        const shouldTap = start.current !== null && !fired.current
+        const swallowGhost = fired.current
+        cancel()
+        if (shouldTap && onTap) {
+          tapHandled.current = true
+          onTap()
+        }
+        if (swallowGhost) {
+          window.setTimeout(() => {
+            fired.current = false
+          }, 400)
+        }
+      },
       onPointerCancel: cancel,
 
       onClickCapture: (event) => {
-        if (!fired.current) return
+        if (!fired.current && !tapHandled.current) return
 
-        // Nuốt đúng một cú bấm — cú bấm thật sau đó vẫn phải chạy bình thường.
         fired.current = false
+        tapHandled.current = false
         event.preventDefault()
         event.stopPropagation()
       },

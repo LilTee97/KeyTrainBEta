@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../input/chordInputParser'
-import { transposeChords, transposeLabel } from '../transpose'
+import {
+  semitonesToKey,
+  shiftKeyId,
+  transposeChords,
+  transposeLabel,
+} from '../transpose'
 
 const chords = (text: string) => parseChordInput(text).chords
-const symbols = (text: string, semitones: number) =>
-  transposeChords(chords(text), semitones).map((chord) => chord.symbol)
+const symbols = (
+  text: string,
+  semitones: number,
+  style?: 'sharp' | 'flat',
+) =>
+  transposeChords(chords(text), semitones, style).map((chord) => chord.symbol)
 
 describe('nâng hạ tone', () => {
   it('dịch nốt gốc đúng số nửa cung', () => {
@@ -62,5 +71,23 @@ describe('nhãn trên nút', () => {
   it('nâng thì có dấu cộng, hạ thì có dấu trừ', () => {
     expect(transposeLabel(3)).toBe('+3')
     expect(transposeLabel(-3)).toBe('−3')
+  })
+})
+
+describe('đổi sang một giọng cụ thể', () => {
+  it('lấy đường ngắn, không đi vòng cả quãng tám', () => {
+    expect(semitonesToKey(7, 9)).toBe(2)
+    expect(semitonesToKey(7, 5)).toBe(-2)
+    expect(semitonesToKey(0, 11)).toBe(-1)
+  })
+
+  it('giọng giáng viết bằng giáng, không viết thăng', () => {
+    expect(symbols('G C D', 1, 'flat')).toEqual(['Ab', 'Db', 'Eb'])
+  })
+
+  it('ô chọn giọng đi cùng nút TONE', () => {
+    expect(shiftKeyId('7:major', 2)).toBe('9:major')
+    expect(shiftKeyId('9:minor', -2)).toBe('7:minor')
+    expect(shiftKeyId('', 3)).toBe('')
   })
 })

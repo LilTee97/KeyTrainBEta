@@ -55,7 +55,8 @@ describe('đọc một hợp âm', () => {
     expect(symbols('D9sus4')).toEqual(['D9sus4'])
     expect(symbols('E7b9')).toEqual(['E7b9'])
     expect(symbols('C13b9')).toEqual(['C13b9'])
-    expect(symbols('Cadd2')).toEqual(['Cadd9'])
+    expect(symbols('Cadd2')).toEqual(['Cadd2'])
+    expect(symbols('Cadd9')).toEqual(['Cadd2'])
   })
 })
 

@@ -103,8 +103,8 @@ export const CHORD_QUALITIES: readonly ChordQuality[] = [
   // trong phong cách này, thường viết là add2.
   {
     id: 'add9',
-    symbol: 'add9',
-    aliases: ['add2'],
+    symbol: 'add2',
+    aliases: ['add9', 'add2'],
     intervals: [0, 4, 7, 14],
     label: 'Trưởng thêm quãng 9',
     family: 'triad',

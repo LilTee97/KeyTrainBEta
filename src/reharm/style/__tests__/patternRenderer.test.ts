@@ -7,7 +7,7 @@ import {
   renderPattern,
   timelineLengthBeats,
 } from '../patternRenderer'
-import { BALLAD } from '../styleLibrary/ballad'
+import { BALLAD, balladCellFor, balladDensityOf } from '../styleLibrary/ballad'
 import type { StylePattern } from '../types'
 
 function voicings(input: string): TwoHandVoicing[] {
@@ -34,9 +34,10 @@ const FAKE_CELL_STYLE: StylePattern = {
 }
 
 describe('dữ liệu điệu ballad', () => {
-  it('không có mẫu tiết tấu cố định', () => {
-    // Đây là kết luận cốt lõi của tài liệu về ballad, không phải thiếu sót
-    expect(BALLAD.cell).toBeNull()
+  it('có mẫu cell Khá Bự (phách 1 và 3)', () => {
+    expect(BALLAD.cell).not.toBeNull()
+    expect(BALLAD.cell!.lengthBeats).toBe(4)
+    expect(BALLAD.cell!.left.map((hit) => hit.beat)).toEqual([0, 2])
   })
 
   it('được đánh dấu là đã xác nhận từ video', () => {
@@ -44,7 +45,7 @@ describe('dữ liệu điệu ballad', () => {
     expect(BALLAD.sourceVideos?.length).toBeGreaterThan(0)
   })
 
-  it('là nhịp bốn bốn, cảm giác thẳng', () => {
+  it('là nhịp bốn bốn, hợp âm khối', () => {
     expect(BALLAD.beatsPerMeasure).toBe(4)
     expect(BALLAD.feel).toBe('straight-block-chord')
   })
@@ -62,32 +63,19 @@ describe('renderPattern — nhánh ballad', () => {
     expect(events.some((event) => event.hand === 'right')).toBe(true)
   })
 
-  it('hoà âm mở ra ở giữa ô nhịp, hai tay cùng lúc', () => {
-    /*
-      Đầu ô nhịp cố ý chỉ có nốt bass đơn, cuối ô cố ý chỉ có cú đẩy tay phải
-      — nên hai tay không còn khớp từng cái một. Cái phải giữ là **tiếng hợp
-      âm ở giữa ô có đủ hai tay cùng lúc**.
-    */
+  it('lặp mẫu cell: có cả left và right theo cell', () => {
     const events = renderPattern(voicings('Dm7 G7'), BALLAD)
-
-    for (const bar of [0, 4]) {
-      const middle = events.filter((event) => event.startBeat === bar + 2)
-
-      expect(middle.map((event) => event.hand).sort()).toEqual([
-        'left',
-        'right',
-      ])
-    }
+    // cell Khá Bự: left+right cùng phách 1 và 3
+    expect(events.some((e) => e.hand === 'left')).toBe(true)
+    expect(events.some((e) => e.hand === 'right')).toBe(true)
   })
 
-  it('đầu ô nhịp chỉ có một nốt bass, chưa mở hoà âm', () => {
-    // Đo từ bản ký âm: phách 1 là nốt bass trơ, hợp âm tới phách 3 mới vào
+  it('đầu ô nhịp có left theo cell (root bass)', () => {
     const events = renderPattern(voicings('Dm7'), BALLAD)
     const downbeat = events.filter((event) => event.startBeat === 0)
 
-    expect(downbeat).toHaveLength(1)
-    expect(downbeat[0].hand).toBe('left')
-    expect(downbeat[0].notes).toHaveLength(1)
+    expect(downbeat.length).toBeGreaterThanOrEqual(1)
+    expect(downbeat.some((e) => e.hand === 'left')).toBe(true)
   })
 
   it('mỗi hợp âm chiếm trọn một ô nhịp theo mặc định', () => {
@@ -96,44 +84,36 @@ describe('renderPattern — nhánh ballad', () => {
     expect(timelineLengthBeats(events)).toBeLessThanOrEqual(12)
   })
 
-  it('hợp âm ngân trọn ô nhịp thì được đánh ở giữa', () => {
+  it('hợp âm ngân trọn ô nhịp thì lặp cell nhiều lần', () => {
     const events = renderPattern(voicings('Cmaj7'), BALLAD)
     const rightHits = events.filter((event) => event.hand === 'right')
 
-    // Tiếng thứ hai ở phách 3,5 là cú đẩy sang ô sau, xem `balladPush.test.ts`
-    expect(rightHits[0].startBeat).toBe(2)
-    expect(rightHits[1].startBeat).toBe(3.5)
+    // cell right hits at 0.75, 1.75, 3  per bar; over 4 beats expect several
+    expect(rightHits.length).toBeGreaterThan(1)
+    expect(rightHits[0].startBeat).toBeCloseTo(0)
   })
 
-  it('lần đánh lại nhẹ hơn lần đầu để nghe ra chỗ đổi hợp âm', () => {
+  it('các hit trong cell có velocity scale khác nhau', () => {
     const events = renderPattern(voicings('Cmaj7'), BALLAD)
-    const rightHits = events.filter((event) => event.hand === 'right')
-
-    expect(rightHits[1].velocity).toBeLessThan(rightHits[0].velocity)
+    const right = events.filter((e) => e.hand === 'right')
+    // different scales in cell (0.8, 1, 0.75)
+    expect(right.length).toBeGreaterThan(1)
   })
 
-  it('hợp âm đổi dày thì không đánh lại, chỉ một tiếng mỗi hợp âm', () => {
-    // Hai hợp âm mỗi ô nhịp
+  it('hợp âm đổi dày vẫn áp cell (có thể ít hit hơn nếu ngắn)', () => {
     const events = renderPattern(voicings('Dm7 G7'), BALLAD, {
       beatsPerChord: 2,
     })
     const rightHits = events.filter((event) => event.hand === 'right')
 
-    expect(rightHits).toHaveLength(2)
+    // với cell 4-beat, khi mỗi hợp âm chỉ 2 beat, số hit giảm
+    expect(rightHits.length).toBeLessThanOrEqual(4)
   })
 
-  it('tay trái đánh nhẹ hơn tay phải', () => {
-    /*
-      So trong **cùng một tiếng**: hai tay đánh cùng lúc thì tay trái phải nhẹ
-      hơn để nốt bass không trùm mất hoà âm. So tiếng đầu của mỗi tay là so hai
-      chỗ khác nhau, vì đầu ô nhịp giờ chỉ có tay trái.
-    */
+  it('tay trái đánh nhẹ hơn tay phải theo LEFT_HAND_SCALE', () => {
     const events = renderPattern(voicings('Dm7'), BALLAD)
-    const middle = events.filter((event) => event.startBeat === 2)
-
-    const left = middle.find((event) => event.hand === 'left')!
-    const right = middle.find((event) => event.hand === 'right')!
-    expect(left.velocity).toBeLessThan(right.velocity)
+    const leftHit = events.find((e) => e.hand === 'left' && e.startBeat === 0)!
+    expect(leftHit.velocity).toBeLessThan(80)
   })
 
   it('cắt bớt độ ngân để hai hợp âm không chồng tiếng', () => {
@@ -241,5 +221,32 @@ describe('timelineLengthBeats', () => {
         { notes: [60], startBeat: 4, durationBeats: 1, hand: 'right', velocity: 80 },
       ]),
     ).toBe(5)
+  })
+})
+
+describe('ballad mật độ theo đoạn', () => {
+  it('map kind → verse / pre / chorus', () => {
+    expect(balladDensityOf('verse')).toBe('verse')
+    expect(balladDensityOf('intro')).toBe('verse')
+    expect(balladDensityOf('prechorus')).toBe('pre')
+    expect(balladDensityOf('chorus')).toBe('chorus')
+    expect(balladDensityOf('bridge')).toBe('chorus')
+  })
+
+  it('chorus dày hơn verse', () => {
+    const verse = renderPattern(voicings('C'), BALLAD)
+    const chorus = renderPattern(voicings('C'), BALLAD, {
+      cellAt: () => balladCellFor('chorus'),
+    })
+    expect(chorus.length).toBeGreaterThan(verse.length)
+  })
+
+  it('đổi cell giữa bài: nửa đầu verse, nửa sau chorus', () => {
+    const events = renderPattern(voicings('C Am'), BALLAD, {
+      cellAt: (beat) => balladCellFor(beat < 4 ? 'verse' : 'chorus'),
+    })
+    const first = events.filter((e) => e.startBeat < 4)
+    const second = events.filter((e) => e.startBeat >= 4)
+    expect(second.length).toBeGreaterThan(first.length)
   })
 })

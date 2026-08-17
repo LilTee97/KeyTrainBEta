@@ -89,6 +89,7 @@ export const ALL_STYLES: readonly StylePattern[] = [
 ]
 
 export function getStyle(id: string): StylePattern | undefined {
+  if (id === 'ballad-pre' || id === 'ballad-chorus') return BALLAD
   return ALL_STYLES.find((style) => style.id === id)
 }
 
@@ -103,3 +104,4 @@ export function isPlayable(style: StylePattern): boolean {
 }
 
 export { BALLAD, BOSSA_NOVA, SWING, VALSE }
+export { balladCellFor } from './ballad'

@@ -8,18 +8,12 @@ Mỗi mục ghi đủ ngữ cảnh để sau này đọc lại là làm được
 
 ## 1. Đổi màu hợp âm mỗi lượt lặp
 
-**Đây là kỹ thuật số 5 trong năm kỹ thuật của phong cách** — hiện là kỹ thuật duy nhất chưa làm.
+**Đây là kỹ thuật số 5 trong năm kỹ thuật của phong cách.** Tài liệu mô tả hai cấp độ; mới làm một.
 
-Tài liệu `phongcachdemhatkhabu.md` mô tả ở hai cấp độ:
+- **Cấp câu nhạc (đã làm, hiện trên lời):** đổi hợp âm **kết** ở lượt 2 của cùng loại đoạn. `varyOnRepeat` + `sectionRanges` → `varyRepeatEndings` trong `reharmonize`, nên phiên khúc 2 ghi `E7b9` trên lời. Cùng `source` chơi lại lần nữa thì `repeatEnding` vẫn đổi lúc phát. Cần bài đã chia đoạn.
+- **Cấp ô nhịp (chưa làm):** cùng gốc Đô ngân nhiều ô → `C → CM7 → C6 → CM7` (mục 12.2). Bản nhạc vẫn tô chết một màu cho mỗi lần xuất hiện. Làm khi có hứng; đừng nhầm với cấp câu đã xong.
 
-- **Cấp ô nhịp** (mục 12.2): cùng hợp âm gốc Đô nhưng bốn ô nhịp liên tiếp đổi màu — `C → CM7 → C6 → CM7`. Mục đích là tránh đơn điệu khi một hợp âm ngân lâu.
-- **Cấp câu nhạc** (mục 1 và 15): đổi hợp âm **kết** ở lượt lặp thứ hai. Ví dụ lượt một kết `Em7`, lượt hai kết `E7b9`. Bài "Tháng Tư Là Lời Nói Dối Của Em" còn đổi cả một chuỗi bốn hợp âm làm vòng quay đầu: `Dm7 → G9sus4 → CM7 → C7`, trong đó `C7` đóng vai bậc năm phụ kéo về `FM7` ở đầu vòng.
-
-**Tình trạng hiện tại:** app tô **chết một màu** cho mỗi bậc. Hợp âm chủ âm xuất hiện bốn lần thì cả bốn lần đều là `Cadd9`.
-
-**Việc cần làm:** thêm khâu `repeatVariation.ts` vào cuối `reharmPipeline.ts` (sau khâu thêm màu, trước khâu chọn cách bấm). Cần phát hiện chỗ nào là lượt lặp — với vòng hợp âm ngắn thì dễ, còn với bài hát đầy đủ thì phải chờ có phân đoạn Verse/Chorus, tức là phụ thuộc bước nhập lời bài hát.
-
-**Lưu ý thiết kế:** nên cho người dùng bật/tắt, vì đổi màu tự động có thể phá ý đồ của người soạn.
+Bài "Tháng Tư" còn đổi cả chuỗi bốn hợp âm quay đầu (`Dm7 → G9sus4 → CM7 → C7`) — cũng chưa làm; hiện chỉ đổi **một** hợp âm cuối.
 
 ---
 

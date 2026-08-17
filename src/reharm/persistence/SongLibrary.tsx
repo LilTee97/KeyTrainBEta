@@ -35,6 +35,7 @@ export function SongLibrary({
 }: SongLibraryProps) {
   const [songs, setSongs] = useState<StoredSong[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
 
   const refresh = useCallback(async () => {
     setSongs(await listSongs())
@@ -81,8 +82,17 @@ export function SongLibrary({
     await refresh()
   }
 
+  const shown = query.trim()
+    ? songs.filter((song) =>
+        song.title.toLowerCase().includes(query.trim().toLowerCase()),
+      )
+    : songs
+
   return (
-    <div className="rounded-xl border border-line bg-black/25 p-4">
+    <div
+      id="song-library"
+      className="scroll-mt-4 rounded-xl border border-line bg-black/25 p-4"
+    >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
           Bài đã lưu
@@ -115,6 +125,17 @@ export function SongLibrary({
         </p>
       )}
 
+      {songs.length > 0 && (
+        <input
+          id="song-library-search"
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Tìm theo tên…"
+          className="mb-3 w-full rounded-lg border border-line bg-black/40 px-3 py-1.5 text-sm text-cream placeholder:text-dim"
+        />
+      )}
+
       {songs.length === 0 ? (
         <p className="text-xs text-dim">
           Chưa lưu bài nào. Dán lời, dựng xong rồi bấm <b>Lưu bài</b> ở khung
@@ -123,7 +144,10 @@ export function SongLibrary({
         </p>
       ) : (
         <div className="flex flex-col gap-1">
-          {songs.map((song) => (
+          {shown.length === 0 ? (
+            <p className="text-xs text-dim">Không có bài nào khớp.</p>
+          ) : (
+          shown.map((song) => (
             <div
               key={song.id}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
@@ -171,7 +195,8 @@ export function SongLibrary({
                 ×
               </button>
             </div>
-          ))}
+          ))
+          )}
         </div>
       )}
     </div>

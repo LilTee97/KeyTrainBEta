@@ -25,7 +25,7 @@ describe('tính toàn vẹn của thư viện điệu', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('bốn điệu đã xác nhận đều có nguồn video', () => {
+  it('các điệu đã xác nhận đều có nguồn video', () => {
     expect(VERIFIED_STYLES).toHaveLength(4)
 
     for (const style of VERIFIED_STYLES) {
@@ -70,6 +70,18 @@ describe('tính toàn vẹn của thư viện điệu', () => {
   it('tra được điệu theo định danh', () => {
     expect(getStyle('valse')).toBe(VALSE)
     expect(getStyle('không-có-thật')).toBeUndefined()
+  })
+})
+
+describe('ballad Khá Bự', () => {
+  it('khối hợp âm phách 1 và 3', () => {
+    expect(BALLAD.cell?.left.map((hit) => hit.beat)).toEqual([0, 2])
+    expect(BALLAD.cell?.right.map((hit) => hit.beat)).toEqual([0, 2])
+  })
+
+  it('bài cũ lưu ballad-pre/chorus vẫn ra ballad', () => {
+    expect(getStyle('ballad-pre')).toBe(BALLAD)
+    expect(getStyle('ballad-chorus')).toBe(BALLAD)
   })
 })
 
@@ -215,15 +227,11 @@ describe('dựng phần đệm cho từng điệu', () => {
     expect(secondMeasure).toEqual(firstMeasure)
   })
 
-  it('ballad khác hẳn: không lặp mẫu mà bám nhịp đổi hợp âm', () => {
-    const dense = renderPattern(voicings('Dm7 G7'), BALLAD, {
-      beatsPerChord: 2,
-    })
-    const sparse = renderPattern(voicings('Dm7 G7'), BALLAD, {
-      beatsPerChord: 4,
-    })
-
-    // Hợp âm ngân lâu hơn thì được đánh lại, nên nhiều tiếng hơn
-    expect(sparse.length).toBeGreaterThan(dense.length)
+  it('ballad (cell) lặp mẫu cố định như các điệu khác', () => {
+    const events = renderPattern(voicings('Dm7 G7'), BALLAD)
+    // cell lặp lại y hệt bất kể hợp âm (như valse test bên trên)
+    const firstBar = events.filter((e) => e.startBeat < 4).map((e) => `${e.hand}:${(e.startBeat % 4).toFixed(2)}`)
+    const secondBar = events.filter((e) => e.startBeat >= 4 && e.startBeat < 8).map((e) => `${e.hand}:${((e.startBeat - 4) % 4).toFixed(2)}`)
+    expect(secondBar).toEqual(firstBar)
   })
 })

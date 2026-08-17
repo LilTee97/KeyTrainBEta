@@ -402,11 +402,10 @@ export function startTimelineLoop(
   ticker.start(0)
   positionTicker = ticker
 
-  acquireTransport('timeline-loop')
-
   const transport = Tone.getTransport()
   const from = Math.max(0, startAtBeat)
-  if (from > 0) transport.ticks = Math.round(from * transport.PPQ)
+  transport.ticks = Math.round(from * transport.PPQ)
+  acquireTransport('timeline-loop')
 
   usePlaybackStore.setState({ looping: true, positionBeats: from })
 }

@@ -4,6 +4,7 @@ import {
   getChordQuality,
 } from '../../shared/musicTheory/chordDefinitions'
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
+import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import { degreesOf } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
@@ -220,6 +221,7 @@ export type DominantChordColor =
   /** Màu blues, không thấy trong tài liệu. */
   | '7#9'
   | '7b5'
+  | '9sus4'
 
 export interface DominantColorOption extends ColorOptionBase {
   id: DominantChordColor
@@ -294,6 +296,12 @@ export const DOMINANT_COLOR_OPTIONS: readonly DominantColorOption[] = [
     description: 'Giáng năm, màu mờ ảo.',
     source: 'jazz',
   },
+  {
+    id: '9sus4',
+    label: '9sus4',
+    description: 'Treo bậc bốn cộng chín. Lối D9sus4, E9sus4 của Khá Bự.',
+    source: 'khaBu',
+  },
 ]
 
 /**
@@ -325,8 +333,8 @@ export const PALETTE_BY_TONIC_COLOR: Record<MajorChordColor, ColorPalette> = {
   add9: {
     major: 'add9',
     minor: 'auto',
-    dominant: 'auto',
-    susDominant: false,
+    dominant: '9sus4',
+    susDominant: true,
     styleName: 'Pop ballad',
   },
   maj7: {
@@ -376,7 +384,7 @@ export const PALETTE_BY_TONIC_COLOR: Record<MajorChordColor, ColorPalette> = {
 export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
   {
     id: 'add9',
-    label: 'add9',
+    label: 'add2',
     description: 'Thêm nốt bậc chín, giữ nguyên cảm giác nghỉ. Lối Cadd2.',
     source: 'khaBu',
   },
@@ -474,15 +482,26 @@ function isRestingMinorDegree(degree: number, scale: ScaleType): boolean {
   return entry?.seventhQualityId === 'm7'
 }
 
+function accidentalStyleOf(symbol: string): AccidentalStyle {
+  return /^[A-G]b/.test(symbol) ? 'flat' : 'sharp'
+}
+
+function thirdOf(intervals: readonly number[]): 'major' | 'minor' | null {
+  if (intervals.includes(3)) return 'minor'
+  if (intervals.includes(4)) return 'major'
+  return null
+}
+
 /** Dựng lại một hợp âm với tính chất khác, giữ nguyên nốt gốc và nốt bass. */
 function withQuality(chord: ParsedChord, qualityId: string): ParsedChord {
   const quality = getChordQuality(qualityId)
   if (!quality) return chord
 
-  const base = `${pitchClassName(chord.root)}${quality.symbol}`
+  const style = accidentalStyleOf(chord.symbol)
+  const base = `${pitchClassName(chord.root, style)}${quality.symbol}`
   const symbol =
     chord.bass !== undefined
-      ? `${base}/${pitchClassName(chord.bass)}`
+      ? `${base}/${pitchClassName(chord.bass, style)}`
       : base
 
   return { ...chord, quality, symbol }
@@ -559,7 +578,7 @@ export function colorAnalyzedChord(
   if (!rule) return colorChord(chord, options)
 
   // Chỉ đổi bậc năm sang hợp âm treo; các bậc khác giữ nguyên luật của mình.
-  if (susDominant && degree === 5) {
+  if (susDominant && degree === 5 && thirdOf(chord.quality.intervals) !== 'minor') {
     return withQuality(chord, intensity === 'full' ? '9sus4' : '7sus4')
   }
 
@@ -580,14 +599,19 @@ export function colorAnalyzedChord(
     target = rule.full
   }
 
+  const targetQuality = getChordQuality(target)
+  if (!targetQuality) return chord
   // Hợp âm người dùng nhập đã dày hơn mức luật đề xuất thì giữ nguyên, không
   // làm mỏng đi.
-  const targetQuality = getChordQuality(target)
-  if (
-    targetQuality &&
-    targetQuality.intervals.length < chord.quality.intervals.length
-  ) {
+  if (targetQuality.intervals.length < chord.quality.intervals.length) {
     return chord
+  }
+  // Bậc lấy từ nốt gốc; Cm ở bậc IV hay Em bị gán nhầm bậc V không được đổi
+  // thành hợp âm trưởng.
+  const fromThird = thirdOf(chord.quality.intervals)
+  const toThird = thirdOf(targetQuality.intervals)
+  if (fromThird && toThird && fromThird !== toThird) {
+    return colorChord(chord, options)
   }
 
   return withQuality(chord, target)

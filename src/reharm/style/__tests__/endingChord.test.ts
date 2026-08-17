@@ -66,7 +66,7 @@ describe('màu hợp âm kết bài', () => {
   })
 
   it('nhãn ghi rõ đổi từ gì sang gì', () => {
-    expect(endingChordLabel(chord('Cadd9'), 'colored')).toBe('Cadd9 → C6/9')
+    expect(endingChordLabel(chord('Cadd9'), 'colored')).toBe('Cadd2 → C6/9')
   })
 })
 

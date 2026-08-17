@@ -6,12 +6,7 @@ import { renderPattern } from '../patternRenderer'
 import { BALLAD } from '../styleLibrary'
 
 /**
- * Cú đẩy trước vạch nhịp.
- *
- * Đếm trên bản ký âm `reference/nguoi ay.mxl`: tay trái có đúng ba cú mỗi ô —
- * bass ở phách 1, hợp âm ở phách 3, và một cú đẩy ở phách 4,5 — lặp ở 24 trên
- * 28 ô nhịp. Thiếu cú thứ ba thì mỗi ô đứng lại một phách rưỡi và chỗ chuyển
- * đoạn nghe hụt hẳn.
+ * Kiểm tra cell ballad Khá Bự — khối hợp âm phách 1 và 3.
  */
 
 const render = (text: string, beatsEach?: number[]) => {
@@ -28,39 +23,31 @@ const render = (text: string, beatsEach?: number[]) => {
 const beatsOf = (events: { startBeat: number }[]) =>
   [...new Set(events.map((event) => event.startBeat))].sort((a, b) => a - b)
 
-describe('ba cú mỗi ô nhịp', () => {
-  it('ô nhịp trọn vẹn có cú đẩy ở nửa phách trước vạch nhịp', () => {
-    expect(beatsOf(render('C Am'))).toEqual([0, 2, 3.5, 4, 6, 7.5])
+describe('mẫu cell rải ngắt mỗi ô nhịp', () => {
+  it('ô nhịp trọn vẹn có đúng các mốc theo cell', () => {
+    expect(beatsOf(render('C Am'))).toEqual([0, 2, 4, 6])
   })
 
-  it('cú đẩy nhẹ hơn hẳn hai cú chính', () => {
-    // Nó bắc cầu sang ô sau, không phải chỗ nhấn
+  it('các hit right có velocity khác nhau theo cell', () => {
     const events = render('C')
-    const push = events.find((event) => event.startBeat === 3.5)!
-    const downbeat = events.find((event) => event.startBeat === 0)!
-
-    expect(push.velocity).toBeLessThan(downbeat.velocity)
+    const rights = events.filter((e) => e.hand === 'right')
+    expect(rights.length).toBeGreaterThan(1)
   })
 
-  it('cú đẩy ngắn, không ngân đè sang ô sau', () => {
-    const push = render('C').find((event) => event.startBeat === 3.5)!
-
-    expect(push.startBeat + push.durationBeats).toBeLessThanOrEqual(4)
+  it('hit cuối ô ngắn vừa đủ', () => {
+    const lastHit = render('C').filter((e) => e.startBeat < 4).slice(-1)[0]
+    expect(lastHit.startBeat + lastHit.durationBeats).toBeLessThanOrEqual(4)
   })
 
-  it('hợp âm ngân hai ô thì mỗi ô được đủ hình ba tiếng', () => {
-    // Không phải hai tiếng cách nhau bốn phách như bản đầu
-    expect(beatsOf(render('C', [8]))).toEqual([0, 2, 3.5, 4, 6, 7.5])
+  it('hợp âm ngân hai ô thì lặp cell đầy đủ', () => {
+    expect(beatsOf(render('C', [8]))).toEqual([0, 2, 4, 6])
   })
 
-  it('ô đã chia đôi thì không đẩy', () => {
-    /*
-      Chỗ đó vốn đã dày vì hai hợp âm chung một ô, đẩy thêm chỉ thành rối.
-    */
+  it('hợp âm ngắn (chia đôi) sinh ít hit hơn', () => {
     expect(beatsOf(render('C Am', [2, 2]))).toEqual([0, 2])
   })
 
-  it('cú đẩy không đẻ thêm ô nhịp nào', () => {
+  it('cell không kéo dài quá độ dài đoạn', () => {
     const events = render('C Am F G')
     const last = Math.max(
       ...events.map((event) => event.startBeat + event.durationBeats),

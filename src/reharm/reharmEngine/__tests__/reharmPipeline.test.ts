@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getChordQuality } from '../../../shared/musicTheory/chordDefinitions'
 import { parseChordInput } from '../../input/chordInputParser'
+import { transposeChords } from '../../transpose'
 import type { ParsedChord } from '../../types'
 import { analyzeInKey, degreeOf } from '../degreeAnalysis'
 import { bestKey, detectKey, isAmbiguous, scaleTones } from '../keyDetection'
@@ -22,21 +23,21 @@ function final(input: string, options = {}): string[] {
 
 describe('dò giọng', () => {
   it('nhận ra giọng đô trưởng từ vòng pop quen thuộc', () => {
-    expect(bestKey(chords('C Am F G'))?.label).toBe('C trưởng')
+    expect(bestKey(chords('C Am F G'))?.label).toBe('C')
   })
 
   it('nhận ra giọng qua vòng hai năm một', () => {
-    expect(bestKey(chords('Dm7 G7 Cmaj7'))?.label).toBe('C trưởng')
+    expect(bestKey(chords('Dm7 G7 Cmaj7'))?.label).toBe('C')
   })
 
   it('nhận ra giọng sol trưởng từ vòng trong tài liệu', () => {
     // Vòng bài Cứ Chill Thôi, tài liệu ghi rõ là dạy ở giọng G trưởng
-    expect(bestKey(chords('Am11 D9sus4 E9sus4 Em7'))?.label).toBe('G trưởng')
+    expect(bestKey(chords('Am11 D9sus4 E9sus4 Em7'))?.label).toBe('G')
   })
 
   it('nhận ra giọng fa trưởng từ vòng bossa nova', () => {
     // Tài liệu ghi bài Người Hãy Quên Em Đi ở giọng F trưởng
-    expect(bestKey(chords('Dm9 Gm7 C7 FM7 BbM7'))?.label).toBe('F trưởng')
+    expect(bestKey(chords('Dm9 Gm7 C7 FM7 BbM7'))?.label).toBe('F')
   })
 
   it('nhận ra giọng thứ', () => {
@@ -45,7 +46,7 @@ describe('dò giọng', () => {
 
   it('hợp âm bảy át đúng bậc năm là dấu hiệu mạnh', () => {
     const withDominant = bestKey(chords('C F G7 C'))
-    expect(withDominant?.label).toBe('C trưởng')
+    expect(withDominant?.label).toBe('C')
   })
 
   it('kết ở chủ âm được cộng điểm', () => {
@@ -161,7 +162,7 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
   })
 
   it('chủ âm nhận add9, đúng lối Cadd2 trong tài liệu', () => {
-    expect(reharmonize(chords('C Am F G')).colored[0].symbol).toBe('Cadd9')
+    expect(reharmonize(chords('C Am F G')).colored[0].symbol).toBe('Cadd2')
   })
 
   it('cùng một hợp âm được tô khác nhau tuỳ vai trò trong giọng', () => {
@@ -172,8 +173,35 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     }).colored[0]
 
     expect(asDominant.symbol).not.toBe(asTonic.symbol)
-    expect(asTonic.symbol).toBe('Gadd9')
+    expect(asTonic.symbol).toBe('Gadd2')
     expect(asDominant.quality.intervals).toContain(10)
+  })
+
+  it('hợp âm thứ mượn không bị đổi thành trưởng vì trùng nốt gốc', () => {
+    const result = reharmonize(chords('G C Cm D'), {
+      key: { tonic: 7, scale: 'major' },
+    })
+    expect(result.colored[2].quality.intervals).toContain(3)
+    expect(result.colored[2].quality.intervals).not.toContain(4)
+  })
+
+  it('dịch bài Sol sang La thì chủ âm đi theo, không chỉ tô lại màu', () => {
+    const moved = transposeChords(chords('G C D G Bm Em Am D'), 2)
+    const result = reharmonize(moved)
+
+    expect(moved.map((chord) => chord.symbol)).toEqual([
+      'A',
+      'D',
+      'E',
+      'A',
+      'C#m',
+      'F#m',
+      'Bm',
+      'E',
+    ])
+    expect(result.key?.label).toBe('A')
+    expect(result.colored[0].symbol).toBe('Aadd2')
+    expect(result.colored[5].quality.intervals).toContain(3)
   })
 
   it('bậc hai nhận hợp âm mười một, đúng lối Am11 trong tài liệu', () => {
@@ -222,13 +250,13 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
 
   it('bật hợp âm treo không đụng tới các bậc khác', () => {
     const result = reharmonize(chords('C Am F G'), { susDominant: true })
-    expect(result.colored[0].symbol).toBe('Cadd9')
+    expect(result.colored[0].symbol).toBe('Cadd2')
   })
 })
 
 describe('màu cho hợp âm trưởng đứng yên', () => {
   it('mặc định dùng add9', () => {
-    expect(reharmonize(chords('C Am F G')).colored[0].symbol).toBe('Cadd9')
+    expect(reharmonize(chords('C Am F G')).colored[0].symbol).toBe('Cadd2')
   })
 
   it('đổi được sang các màu khác trong bảng', () => {
@@ -351,7 +379,7 @@ describe('màu cho hợp âm thứ', () => {
 
   it('không đụng tới hợp âm trưởng', () => {
     const result = reharmonize(chords('C Dm Am G'), { minorColor: 'm11' })
-    expect(result.colored[0].symbol).toBe('Cadd9')
+    expect(result.colored[0].symbol).toBe('Cadd2')
     expect(result.colored[3].quality.intervals).toContain(10)
   })
 
@@ -437,7 +465,7 @@ describe('màu cho bậc năm', () => {
 
   it('không đụng tới các bậc khác', () => {
     const result = reharmonize(chords('C Am F G'), { dominantColor: '7#9' })
-    expect(result.colored[0].symbol).toBe('Cadd9')
+    expect(result.colored[0].symbol).toBe('Cadd2')
     expect(result.colored[1].symbol).toBe('Am9')
   })
 })
@@ -492,6 +520,34 @@ describe('phân nguồn màu', () => {
   })
 })
 
+describe('đổi hợp âm kết trên lời', () => {
+  const ranges = [
+    { kind: 'verse', from: 0, to: 3 },
+    { kind: 'chorus', from: 4, to: 7 },
+    { kind: 'verse', from: 8, to: 11 },
+    { kind: 'chorus', from: 12, to: 15 },
+  ]
+
+  it('phiên khúc 2 ghi E7b9 trên vòng colored', () => {
+    const result = reharmonize(
+      chords('C G Am Em  Am F G C  C G Am Em  Am F G C'),
+      { varyOnRepeat: true, sectionRanges: ranges },
+    )
+
+    expect(result.colored[11].symbol).toBe('E7b9')
+    expect(result.original[11].symbol).toBe('Em')
+  })
+
+  it('tắt thì giữ màu lượt đầu', () => {
+    const result = reharmonize(
+      chords('C G Am Em  Am F G C  C G Am Em  Am F G C'),
+      { sectionRanges: ranges },
+    )
+
+    expect(result.colored[11].quality.id).not.toBe('7b9')
+  })
+})
+
 describe('đường ống', () => {
   it('giữ lại vòng gốc để đối chiếu', () => {
     const result = reharmonize(chords('C Am F G'))
@@ -515,7 +571,7 @@ describe('đường ống', () => {
     const result = reharmonize(chords('C Am F G'), {
       key: { tonic: 9, scale: 'minor' },
     })
-    expect(result.key?.label).toBe('A thứ')
+    expect(result.key?.label).toBe('Am')
   })
 
   it('sinh gợi ý hợp âm lướt trên vòng đã thêm màu', () => {

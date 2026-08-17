@@ -1,6 +1,24 @@
 import { isBlackKey } from '../../musicTheory/pitch'
 import type { MidiNote } from '../../musicTheory/types'
 
+/** Các kích thước bàn phím MIDI phổ biến. */
+export const KEYBOARD_SIZES = [44, 49, 61, 73, 76, 88] as const
+
+/**
+ * Lấy dải nốt MIDI tương ứng với số phím.
+ * Dùng các mapping chuẩn cho từng loại đàn.
+ */
+export function getKeyboardRange(keyCount: number): { low: MidiNote; high: MidiNote } {
+  if (keyCount >= 88) return { low: 21, high: 108 } // A0 - C8
+  if (keyCount >= 76) return { low: 28, high: 103 } // E1 - G7
+  if (keyCount >= 61) return { low: 36, high: 96 }  // C2 - C7
+  if (keyCount >= 49) return { low: 36, high: 84 }  // C2 - C6
+  if (keyCount >= 44) return { low: 41, high: 84 }  // F2 - C6
+  // fallback cho phím nhỏ
+  const approxLow = Math.max(36, 60 - Math.floor((keyCount / 2) / 12) * 12) as MidiNote
+  return { low: approxLow, high: (approxLow + keyCount - 1) as MidiNote }
+}
+
 /**
  * Tính bố cục phím đàn cho bàn phím ảo.
  *

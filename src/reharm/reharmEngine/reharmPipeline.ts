@@ -6,13 +6,15 @@ import { analyzeColorConflicts } from './colorConflicts'
 import type { AnalyzedChord } from './degreeAnalysis'
 import { analyzeInKey } from './degreeAnalysis'
 import type { KeyCandidate } from './keyDetection'
-import { bestKey, detectKey, isAmbiguous, keyLabel } from './keyDetection'
+import { detectKey, isAmbiguous, keyLabel } from './keyDetection'
 import type { PassingSuggestion } from './passingChordRules'
 import {
   applySuggestions,
   compatibleSuggestions,
   suggestPassingChords,
 } from './passingChordRules'
+import type { RepeatSectionRange } from '../style/turnaround'
+import { varyRepeatEndings } from '../style/turnaround'
 import type { ColorOptions } from './staticVoicingRules'
 import {
   colorAnalyzedSequence,
@@ -68,6 +70,14 @@ export interface ReharmOptions extends ColorOptions {
    * hòa âm: hợp âm đã chọn xong rồi, giờ mới chọn cách đặt tay cho dễ.
    */
   useSlashChords?: boolean
+  /**
+   * Đổi hợp âm kết ở lượt lặp lại của một đoạn (kỹ thuật 5), ghi luôn lên lời.
+   *
+   * Cần `sectionRanges` — không có đoạn thì không biết lượt nào là lượt hai.
+   */
+  varyOnRepeat?: boolean
+  /** Khoảng hợp âm từng đoạn, theo số thứ tự vòng gốc. */
+  sectionRanges?: readonly RepeatSectionRange[]
 }
 
 export interface ReharmResult {
@@ -119,6 +129,8 @@ export function reharmonize(
     beatsPerChord = 4,
     chordBeats,
     useSlashChords = false,
+    varyOnRepeat = false,
+    sectionRanges,
     ...colorOptions
   } = options
 
@@ -140,9 +152,18 @@ export function reharmonize(
     }
   }
 
-  // Khâu 1 — dò giọng, trừ khi người dùng đã chỉ định.
-  const keyCandidates = detectKey(original)
-  const detected = bestKey(original)
+  /*
+    Khâu 1 — dò giọng, trừ khi người dùng đã chỉ định.
+
+    Cân theo thời lượng từng hợp âm: hợp âm ngân trọn hai ô nhịp nói lên giọng
+    nhiều hơn hợp âm lướt qua nửa phách. Chưa chỉ định thì mọi hợp âm dài đều
+    nhau, đúng như trước.
+  */
+  const keyWeights = original.map(
+    (_, index) => chordBeats?.[index] ?? beatsPerChord,
+  )
+  const keyCandidates = detectKey(original, { beats: keyWeights })
+  const detected = keyCandidates[0] ?? null
 
   const activeKey = manualKey ?? detected
   const keySource: ReharmResult['keySource'] = manualKey
@@ -163,9 +184,13 @@ export function reharmonize(
       }))
 
   // Khâu 3 — thêm màu, theo bậc nếu biết giọng.
-  const colored = activeKey
+  const painted = activeKey
     ? colorAnalyzedSequence(analyzed, activeKey.scale, colorOptions)
     : colorSequence(original, colorOptions)
+  const colored =
+    varyOnRepeat && sectionRanges && sectionRanges.length > 0
+      ? varyRepeatEndings(painted, sectionRanges)
+      : painted
 
   /*
     Khâu 4 — gợi ý hợp âm lướt trên vòng đã thêm màu.

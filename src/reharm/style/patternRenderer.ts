@@ -1,16 +1,12 @@
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
-import type { HitVoice, StylePattern, TimelineEvent } from './types'
+import type { HitVoice, RhythmCell, StylePattern, TimelineEvent } from './types'
 
 /**
  * Biến chuỗi thế bấm hai tay thành dòng thời gian các tiếng đàn.
  *
- * Có hai nhánh, đúng theo cách tài liệu nguồn phân loại điệu:
- *
- * - Điệu **có mẫu tiết tấu cố định** (bossa, valse, swing): lặp lại mẫu đó
- *   bất kể hợp âm là gì.
- * - Điệu **không có mẫu** (ballad): tiết tấu bám theo nhịp đổi hợp âm của
- *   từng bài, nốt dài khi hợp âm ngân lâu và ngắn khi hợp âm đổi dày.
+ * - Điệu có `cell`: lặp mẫu cố định (ballad Khá Bự, bossa, valse, swing).
+ * - renderBlockChords chỉ còn cho trường hợp cell=null.
  */
 
 /** Lực nhấn chuẩn của tiếng đàn trong phần đệm. */
@@ -43,6 +39,8 @@ export interface RenderOptions {
    * theo**: điệu có mẫu tiết tấu cố định cũng phải nhường ô đó như ballad.
    */
   barsWithoutComping?: ReadonlySet<number>
+  /** Đổi mẫu theo từng ô nhịp (ballad Khá Bự: verse/pre/chorus). */
+  cellAt?: (beat: number) => RhythmCell
 }
 
 function clampVelocity(value: number): number {
@@ -75,30 +73,7 @@ function notesForVoice(
 const PUSH_BEFORE_BAR = 0.5
 
 /**
- * Nhánh ballad: **bass đơn → hợp âm → cú đẩy**, ba tiếng mỗi ô nhịp.
- *
- * Hình này đo thẳng từ bản ký âm `reference/nguoi ay.mxl`. Tay trái ở đó có
- * đúng ba tiếng mỗi ô, và hình lặp ở **24 trên 28 ô nhịp** — ba ô còn lại là ô
- * chứa hai hợp âm mà bộ đọc không đặt được mốc chắc chắn, và ô cuối bài:
- *
- * ```
- * phách 1     C3          nốt bass đơn
- * phách 3     E3 G3 C3    hợp âm đầy đủ
- * phách 4,5   G3 C3       cú đẩy sang ô sau
- * ```
- *
- * Ba điểm bản đầu làm khác, và cả ba đều làm phần đệm nghe dày mà lại hụt:
- *
- * 1. **Đầu ô nhịp chỉ có một nốt bass**, không phải cả hợp âm. Hoà âm mở ra ở
- *    giữa ô mới đúng, và cũng chừa chỗ cho câu hát ở chỗ nó vào.
- * 2. **Có tiếng thứ ba trước vạch nhịp.** Thiếu nó thì đánh xong phách 3 là im
- *    một phách rưỡi, chỗ chuyển đoạn nghe hụt vì không gì bắc cầu sang ô sau.
- * 3. **Đếm theo từng ô nhịp**, không chia đôi cả quãng hợp âm. Hợp âm ngân hai
- *    ô thì được hai lượt đủ hình, chứ không phải hai tiếng cách nhau bốn phách.
- *
- * Ô cuối bài không đẩy — hết bài thì không còn ô nào phía trước để bắc cầu
- * sang. Ở đây không xử lý riêng vì phần đệm không biết mình có phải ô cuối hay
- * không; thứ tự chơi mới biết điều đó.
+ * Nhánh block chords (dùng khi style.cell === null).
  */
 function renderBlockChords(
   voicings: readonly TwoHandVoicing[],
@@ -195,12 +170,14 @@ function renderWithCell(
   durations: readonly number[],
   starts: readonly number[],
   releaseRatio: number,
+  cellAt?: (beat: number) => RhythmCell,
 ): TimelineEvent[] {
-  const cell = pattern.cell
-  if (!cell) return []
+  const fallback = pattern.cell
+  if (!fallback && !cellAt) return []
 
   const totalBeats = starts[starts.length - 1] + durations[durations.length - 1]
   const events: TimelineEvent[] = []
+  const step = fallback?.lengthBeats ?? 4
 
   /** Hợp âm nào đang vang tại một thời điểm, khi chúng dài ngắn khác nhau. */
   const voicingAt = (beat: number) => {
@@ -210,7 +187,10 @@ function renderWithCell(
     return voicings[0]
   }
 
-  for (let offset = 0; offset < totalBeats; offset += cell.lengthBeats) {
+  for (let offset = 0; offset < totalBeats; offset += step) {
+    const cell = cellAt?.(offset) ?? fallback
+    if (!cell) continue
+
     for (const hand of ['right', 'left'] as const) {
       const hits = hand === 'right' ? cell.right : cell.left
 
@@ -343,6 +323,7 @@ export function renderPattern(
     beatsEach,
     releaseRatio = 0.92,
     barsWithoutComping,
+    cellAt,
   } = options
 
   if (voicings.length === 0) return []
@@ -358,8 +339,8 @@ export function renderPattern(
     cursor += beats
   }
 
-  const events = pattern.cell
-    ? renderWithCell(voicings, pattern, durations, starts, releaseRatio)
+  const events = pattern.cell || cellAt
+    ? renderWithCell(voicings, pattern, durations, starts, releaseRatio, cellAt)
     : renderBlockChords(
         voicings,
         durations,

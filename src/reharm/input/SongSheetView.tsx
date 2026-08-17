@@ -325,8 +325,14 @@ export function SongSheetView({
                       bindMenu={
                         onSetChordSpan
                           ? (chordIndex) =>
-                              bindPress((point) =>
-                                setMenu({ chordIndex, x: point.x, y: point.y }),
+                              bindPress(
+                                (point) =>
+                                  setMenu({
+                                    chordIndex,
+                                    x: point.x,
+                                    y: point.y,
+                                  }),
+                                () => onSeek?.(chordIndex),
                               )
                           : undefined
                       }
@@ -885,7 +891,7 @@ function ChordLabel({
           ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
           : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'
       }
-      className={`${style}${mark}${half} cursor-pointer select-none hover:decoration-solid`}
+      className={`${style}${mark}${half} touch-manipulation cursor-pointer select-none py-1 hover:decoration-solid`}
     >
       {anchor.symbol}
     </button>

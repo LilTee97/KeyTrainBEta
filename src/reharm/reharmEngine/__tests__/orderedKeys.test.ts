@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { keyLabel, orderedKeys } from '../keyDetection'
 
 /**
- * Ô chọn giọng bày theo **bộ khoá**, không bày theo điểm khớp.
- *
- * `detectKey` trả về danh sách xếp theo mức khớp với vòng hợp âm — hợp lý cho
- * việc đoán, nhưng bày lên ô chọn thì nhìn như xếp lung tung.
+ * Ô chọn giọng bày theo thứ tự từ C, ghép cặp trưởng/thứ.
  */
 
 describe('thứ tự các giọng trong ô chọn', () => {
@@ -18,10 +15,10 @@ describe('thứ tự các giọng trong ô chọn', () => {
     expect(new Set(ids).size).toBe(24)
   })
 
-  it('mở đầu bằng Đô trưởng và La thứ', () => {
-    // Bộ khoá không dấu, chỗ ai cũng tìm trước tiên
-    expect(keyLabel(keys[0].tonic, keys[0].scale)).toBe('C trưởng')
-    expect(keyLabel(keys[1].tonic, keys[1].scale)).toBe('A thứ')
+  it('mở đầu bằng C và Am', () => {
+    // Bắt đầu từ Đô
+    expect(keyLabel(keys[0].tonic, keys[0].scale)).toBe('C')
+    expect(keyLabel(keys[1].tonic, keys[1].scale)).toBe('Am')
   })
 
   it('mỗi giọng trưởng đi liền giọng thứ song song của nó', () => {
@@ -36,13 +33,18 @@ describe('thứ tự các giọng trong ô chọn', () => {
     }
   })
 
-  it('các giọng trưởng đi theo vòng quãng năm', () => {
+  it('các giọng trưởng đi theo thứ tự từ C (nửa cung)', () => {
     const majors = keys.filter((key) => key.scale === 'major')
 
     for (let index = 1; index < majors.length; index += 1) {
       const step = (majors[index].tonic - majors[index - 1].tonic + 12) % 12
-      expect(step).toBe(7)
+      expect(step).toBe(1)
     }
+  })
+
+  it('giọng giáng viết bằng giáng', () => {
+    expect(keyLabel(8, 'major')).toBe('Ab')
+    expect(keyLabel(10, 'major')).toBe('Bb')
   })
 
   it('phủ hết mười hai nốt gốc ở cả hai tính chất', () => {

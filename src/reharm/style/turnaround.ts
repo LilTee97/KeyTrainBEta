@@ -179,3 +179,51 @@ export function pullChordFor(
 
   return null
 }
+
+const REPEATABLE = new Set(['verse', 'chorus', 'prechorus'])
+
+export interface RepeatSectionRange {
+  kind: string
+  from: number
+  to: number
+}
+
+/**
+ * Đổi hợp âm kết trên **lời** ở lượt 2+ của cùng loại đoạn.
+ *
+ * Playback đã đổi lúc phát (`repeatEnding`). Bản nhạc thì lấy vòng `colored`
+ * nên vẫn ghi màu lượt đầu. Hàm này sửa vòng đó: phiên khúc 2 kết `E7b9`
+ * thay vì `Em7` khi đoạn sau vào `Am`.
+ *
+ * Đoạn cuối bài bỏ qua — không còn chỗ để hút. Chỉ đụng verse / chorus /
+ * prechorus: intro, bridge, giang tấu không "lặp câu" theo nghĩa tài liệu.
+ */
+export function varyRepeatEndings(
+  chords: readonly ParsedChord[],
+  ranges: readonly RepeatSectionRange[],
+): ParsedChord[] {
+  if (ranges.length < 2) return [...chords]
+
+  const seen = new Map<string, number>()
+  const next = [...chords]
+
+  for (let index = 0; index < ranges.length; index += 1) {
+    const range = ranges[index]
+    const count = (seen.get(range.kind) ?? 0) + 1
+    seen.set(range.kind, count)
+
+    if (!REPEATABLE.has(range.kind) || count < 2) continue
+    if (index === ranges.length - 1) continue
+
+    const last = next[range.to]
+    const target = next[ranges[index + 1].from]
+    if (!last || !target) continue
+
+    const pull = pullChordFor(target, last)
+    if (!pull || pull.symbol === last.symbol) continue
+
+    next[range.to] = pull
+  }
+
+  return next
+}

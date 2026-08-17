@@ -4,7 +4,7 @@ import type { SourceSection, TurnaroundTake } from '../arrangement'
 import { buildArrangedSong } from '../arrangement'
 import type { TimelineEvent } from '../types'
 import { arpeggioRun } from '../../fillSoloGenerator/leadIn'
-import { pullChordFor, turnaroundInto } from '../turnaround'
+import { pullChordFor, turnaroundInto, varyRepeatEndings } from '../turnaround'
 
 const chord = (text: string) => parseChordInput(text).chords[0]
 
@@ -24,7 +24,7 @@ describe('cụm hợp âm quay đầu', () => {
   it('hợp âm cuối cụm đúng là hợp âm của đoạn sắp vào', () => {
     for (const symbol of ['Cadd9', 'Fmaj7', 'Am9']) {
       const plan = turnaroundInto(chord(symbol), 2)!
-      expect(plan.chords.at(-1)!.symbol).toBe(symbol)
+      expect(plan.chords.at(-1)!.quality.id).toBe(chord(symbol).quality.id)
     }
   })
 
@@ -84,7 +84,7 @@ describe('khi vòng đã kết sẵn ở bậc năm', () => {
   it('giữ nguyên hợp âm đang có, chỉ chèn thêm bậc hai phía trước', () => {
     const plan = turnaroundInto(chord('Cadd9'), 2, chord('G7'))!
 
-    expect(plan.chords.map((c) => c.symbol)).toEqual(['Dm7', 'G7', 'Cadd9'])
+    expect(plan.chords.map((c) => c.symbol)).toEqual(['Dm7', 'G7', 'Cadd2'])
   })
 
   it('không thay bậc năm bằng hợp âm treo', () => {
@@ -109,7 +109,7 @@ describe('khi vòng đã kết sẵn ở bậc năm', () => {
 
   it('nhãn ghi đúng hợp âm được giữ lại', () => {
     expect(turnaroundInto(chord('Cadd9'), 2, chord('G7'))!.label).toBe(
-      'Dm7 → G7 → Cadd9',
+      'Dm7 → G7 → Cadd2',
     )
   })
 
@@ -442,6 +442,42 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
 
       expect(pull.quality.id).not.toBe(id)
     }
+  })
+})
+
+describe('đổi hợp âm kết trên lời khi lặp đoạn', () => {
+  const verseChorusVerse = [
+    { kind: 'verse', from: 0, to: 3 },
+    { kind: 'chorus', from: 4, to: 7 },
+    { kind: 'verse', from: 8, to: 11 },
+    { kind: 'chorus', from: 12, to: 15 },
+  ]
+
+  it('phiên khúc 2 kết E7b9 khi đoạn sau vào Am', () => {
+    const list = parseChordInput('C G Am Em  Am F G C  C G Am Em  Am F G C').chords
+    const varied = varyRepeatEndings(list, verseChorusVerse)
+
+    expect(varied[11].symbol).toBe('E7b9')
+    expect(varied[3].symbol).toBe('Em')
+  })
+
+  it('đoạn chỉ xuất hiện một lần thì không đổi', () => {
+    const list = parseChordInput('C G Am Em  Am F G C').chords
+    const varied = varyRepeatEndings(list, verseChorusVerse.slice(0, 2))
+
+    expect(varied.map((entry) => entry.symbol)).toEqual(
+      list.map((entry) => entry.symbol),
+    )
+  })
+
+  it('đoạn cuối bài không đổi', () => {
+    const list = parseChordInput('C G Am Em  C G Am Em').chords
+    const varied = varyRepeatEndings(list, [
+      { kind: 'verse', from: 0, to: 3 },
+      { kind: 'verse', from: 4, to: 7 },
+    ])
+
+    expect(varied[7].symbol).toBe('Em')
   })
 })
 

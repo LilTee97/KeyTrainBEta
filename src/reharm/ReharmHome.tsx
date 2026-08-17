@@ -25,7 +25,12 @@ import {
   totalBeatsOf,
 } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
-import { transposeChords, transposeLabel } from './transpose'
+import {
+  semitonesToKey,
+  shiftKeyId,
+  transposeChords,
+  transposeLabel,
+} from './transpose'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
@@ -64,7 +69,13 @@ import {
   groupPassingSuggestions,
   groupsAtSlot,
 } from './reharmEngine/passingChordRules'
-import { keyLabel, orderedKeys } from './reharmEngine/keyDetection'
+import {
+  accidentalStyleFor,
+  bestKey,
+  keyLabel,
+  orderedKeys,
+} from './reharmEngine/keyDetection'
+import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
@@ -145,6 +156,7 @@ import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
   BALLAD,
+  balladCellFor,
   getStyle,
   isPlayable,
 } from './style/styleLibrary'
@@ -258,30 +270,32 @@ function KeySelect({
   value,
   onChange,
   detectedLabel,
+  scaleFilter,
 }: {
   value: string
   onChange: (value: string) => void
   /** Giọng **app tự dò ra**, không phải giọng đang chọn. */
   detectedLabel: string | undefined
+  /** Chỉ hiện các giọng cùng tính chất (major/minor) với bài hiện tại. */
+  scaleFilter?: 'major' | 'minor' | null
 }) {
+  const keys = scaleFilter
+    ? orderedKeys().filter((k) => k.scale === scaleFilter)
+    : orderedKeys()
+
   return (
     <label className="flex items-center gap-2 text-xs text-dim">
       Giọng
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        title="Cho app biết bài đang ở giọng nào, để nó tô màu hợp âm theo đúng bậc. Đây không phải nút đổi tone — muốn dịch cả bài sang giọng khác thì dùng nút TONE."
+        title="Đổi cả bài sang giọng này. Chọn Tự dò nếu muốn để app đoán lại."
         className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
       >
         <option value="">
           Tự dò{detectedLabel ? ` (${detectedLabel})` : ''}
         </option>
-        {/*
-          Bày theo vòng quãng năm, ghép cặp trưởng với thứ song song. Trước đây
-          bày theo thứ tự `detectKey` trả về — tức xếp theo điểm khớp — nhìn
-          như xếp lung tung và không tìm được giọng mình muốn.
-        */}
-        {orderedKeys().map(({ tonic, scale }) => (
+        {keys.map(({ tonic, scale }) => (
           <option key={`${tonic}:${scale}`} value={`${tonic}:${scale}`}>
             {keyLabel(tonic, scale)}
           </option>
@@ -357,13 +371,13 @@ export function ReharmHome() {
   const [styleId, setStyleId] = useState('ballad')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
-  const [susDominant, setSusDominant] = useState(false)
+  const [susDominant, setSusDominant] = useState(true)
   /** Màu của chủ âm — quyết định gu chung của cả vòng. */
   const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
   const [dominantColor, setDominantColor] =
-    useState<DominantChordColor>('auto')
+    useState<DominantChordColor>('9sus4')
   /** Bấm theo lối hợp âm chồng trên bass cho dễ. */
   const [useSlashChords, setUseSlashChords] = useState(false)
 
@@ -436,13 +450,41 @@ export function ReharmHome() {
 
   const parsed = useMemo(() => parseChordInput(input), [input])
 
+  /** Giọng của bản dán, trước khi nâng hạ tone. */
+  const chartKey = useMemo(() => bestKey(parsed.chords), [parsed.chords])
+
+  const lockedKey = useMemo(() => {
+    if (!manualKey) return null
+    const [tonic, scale] = manualKey.split(':')
+    return {
+      tonic: Number(tonic),
+      scale: scale as 'major' | 'minor',
+    }
+  }, [manualKey])
+
+  /**
+   * Ô Giọng đang chọn thì tone phải khớp giọng đó — không để kẹt
+   * "E thứ" mà hợp âm vẫn ở G.
+   */
+  const effectiveTranspose =
+    lockedKey && chartKey
+      ? semitonesToKey(chartKey.tonic, lockedKey.tonic)
+      : transpose
+
+  const soundingStyle = chartKey
+    ? accidentalStyleFor(
+        normalizePitchClass(chartKey.tonic + effectiveTranspose),
+        lockedKey?.scale ?? chartKey.scale,
+      )
+    : 'sharp'
+
   /** Vòng hợp âm sau khi nâng hạ tone — mọi thứ phía sau đều dựa trên đây. */
   const sequence = useMemo(
     () => ({
       ...parsed,
-      chords: transposeChords(parsed.chords, transpose),
+      chords: transposeChords(parsed.chords, effectiveTranspose, soundingStyle),
     }),
-    [parsed, transpose],
+    [parsed, effectiveTranspose, soundingStyle],
   )
 
   /** Khoá định danh một gợi ý, để nhớ người dùng đã bật cái nào. */
@@ -478,17 +520,21 @@ export function ReharmHome() {
    *
    * Đoạn cuối bài không tính: hết bài rồi thì không còn ai phải vào đâu nữa.
    */
-  const sectionEnds = useMemo(() => {
-    if (!pastedSong) return undefined
+  const rawSectionRanges = useMemo(() => {
+    if (!pastedSong) return []
 
-    const raw = resectionSheet(
-      buildSongSheet(pastedSong, sequence.chords),
-      sectionMarks,
+    return sectionChordRanges(
+      resectionSheet(buildSongSheet(pastedSong, sequence.chords), sectionMarks),
     )
-    const ranges = sectionChordRanges(raw)
-
-    return new Set(ranges.slice(0, -1).map((range) => range.to))
   }, [pastedSong, sequence.chords, sectionMarks])
+
+  const sectionEnds = useMemo(
+    () =>
+      rawSectionRanges.length === 0
+        ? undefined
+        : new Set(rawSectionRanges.slice(0, -1).map((range) => range.to)),
+    [rawSectionRanges],
+  )
 
   /**
    * Mốc chuyển đoạn thật sự dùng: chỗ app tự dò, sau đó áp phần người dùng chỉnh.
@@ -571,6 +617,8 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       useSlashChords,
+      varyOnRepeat,
+      sectionRanges: rawSectionRanges,
       key: parsedKey,
     })
 
@@ -588,6 +636,8 @@ export function ReharmHome() {
       minorColor,
       dominantColor,
       useSlashChords,
+      varyOnRepeat,
+      sectionRanges: rawSectionRanges,
       key: parsedKey,
       acceptedPassing: chosen,
       beatsPerChord: chordBeats,
@@ -602,6 +652,8 @@ export function ReharmHome() {
     minorColor,
     dominantColor,
     useSlashChords,
+    varyOnRepeat,
+    rawSectionRanges,
     manualKey,
     acceptedPassing,
     chordBeats,
@@ -610,6 +662,11 @@ export function ReharmHome() {
 
   const recolored = reharm.colored
   const passingSuggestions = reharm.passingSuggestions
+
+  /** Tính chất giọng hiện tại (để lọc ô Giọng chỉ hiện trưởng hoặc thứ). */
+  const currentKeyScale: 'major' | 'minor' | null = manualKey
+    ? (manualKey.split(':')[1] as 'major' | 'minor')
+    : (reharm.key?.scale ?? reharm.keyCandidates[0]?.scale ?? null)
 
   /**
    * Bật tắt một hợp âm lướt, **áp cho mọi chỗ có cùng hợp âm đích**.
@@ -663,19 +720,6 @@ export function ReharmHome() {
   /** Thế bấm mộc, chỉ xếp chồng từ nốt gốc — để đối chiếu. */
   const plain = useMemo(() => plainSequence(withPassing), [withPassing])
 
-
-  /** Dòng thời gian phần đệm theo điệu đang chọn. */
-  const accompaniment = useMemo(
-    () =>
-      renderPattern(twoHands, style, {
-        beatsPerChord: chordBeats,
-        beatsEach: chordDurations(withPassing, chordBeats),
-        // Ô nối sang đoạn mới dành trọn cho câu chạy ngón.
-        barsWithoutComping: runningBars,
-      }),
-    [twoHands, style, chordBeats, withPassing, runningBars],
-  )
-
   /**
    * Vòng hợp âm **chính**, đã gỡ hết hợp âm lướt.
    *
@@ -716,6 +760,33 @@ export function ReharmHome() {
       sectionMarks,
     )
   }, [pastedSong, reharm.colored, withPassing, sectionMarks])
+
+  /** Dòng thời gian phần đệm theo điệu đang chọn. */
+  const accompaniment = useMemo(() => {
+    const spans = mainChordSpans(withPassing, chordBeats)
+    const ranges = sheet ? sectionChordRanges(sheet) : []
+
+    return renderPattern(twoHands, style, {
+      beatsPerChord: chordBeats,
+      beatsEach: chordDurations(withPassing, chordBeats),
+      barsWithoutComping: runningBars,
+      cellAt:
+        style.id === 'ballad' && ranges.length > 0
+          ? (beat) => {
+              const range = ranges.find((entry) => {
+                const first = spans[entry.from]
+                const last = spans[entry.to]
+                if (!first || !last) return false
+                return (
+                  beat >= first.start - 0.001 &&
+                  beat < last.start + last.beats - 0.001
+                )
+              })
+              return balladCellFor(range?.kind ?? 'verse')
+            }
+          : undefined,
+    })
+  }, [twoHands, style, chordBeats, withPassing, runningBars, sheet])
 
   /**
    * Cấu trúc thật của bài, suy ra từ cách chia đoạn trên bản nhạc.
@@ -1029,7 +1100,7 @@ export function ReharmHome() {
     (): SongSnapshot => ({
       version: 1,
       sourceText,
-      transpose,
+      transpose: effectiveTranspose,
       manualKey,
       sectionMarks,
       arrangement,
@@ -1058,7 +1129,7 @@ export function ReharmHome() {
     }),
     [
       sourceText,
-      transpose,
+      effectiveTranspose,
       manualKey,
       sectionMarks,
       arrangement,
@@ -1161,6 +1232,7 @@ export function ReharmHome() {
     setSectionMarks([])
     setArrangement(null)
     setTranspose(0)
+    setManualKey('')
     setPairedChords(new Set())
     setMutedFills(new Set())
     setTransitionEdits({})
@@ -1488,6 +1560,19 @@ export function ReharmHome() {
         chỉ toàn hợp âm, nên không cần luồng riêng.
       */}
       <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            document.getElementById('song-library')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            })
+            document.getElementById('song-library-search')?.focus()
+          }}
+          className="rounded-lg border border-amber-key/50 bg-amber-key/10 px-2.5 py-1 text-xs font-semibold text-amber-key hover:bg-amber-key/20"
+        >
+          Bài đã lưu
+        </button>
         <span className="font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
           Vòng dựng sẵn
         </span>
@@ -1554,8 +1639,14 @@ export function ReharmHome() {
               </span>
               <button
                 type="button"
-                onClick={() => setTranspose((value) => Math.max(-6, value - 1))}
-                disabled={transpose <= -6}
+                onClick={() => {
+                  const next = Math.max(-6, effectiveTranspose - 1)
+                  const applied = next - effectiveTranspose
+                  if (applied === 0) return
+                  setTranspose(next)
+                  setManualKey((key) => shiftKeyId(key, applied))
+                }}
+                disabled={effectiveTranspose <= -6}
                 aria-label="Hạ tone nửa cung"
                 title="Hạ nửa cung"
                 className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream hover:bg-white/12 disabled:opacity-30"
@@ -1564,25 +1655,39 @@ export function ReharmHome() {
               </button>
               <span
                 className={`w-10 text-center font-mono text-xs ${
-                  transpose === 0 ? 'text-dim' : 'text-amber-key'
+                  effectiveTranspose === 0 ? 'text-dim' : 'text-amber-key'
                 }`}
               >
-                {transposeLabel(transpose)}
+                {reharm.key
+                  ? pitchClassName(
+                      reharm.key.tonic,
+                      accidentalStyleFor(reharm.key.tonic, reharm.key.scale),
+                    )
+                  : transposeLabel(effectiveTranspose)}
               </span>
               <button
                 type="button"
-                onClick={() => setTranspose((value) => Math.min(6, value + 1))}
-                disabled={transpose >= 6}
+                onClick={() => {
+                  const next = Math.min(6, effectiveTranspose + 1)
+                  const applied = next - effectiveTranspose
+                  if (applied === 0) return
+                  setTranspose(next)
+                  setManualKey((key) => shiftKeyId(key, applied))
+                }}
+                disabled={effectiveTranspose >= 6}
                 aria-label="Nâng tone nửa cung"
                 title="Nâng nửa cung"
                 className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream hover:bg-white/12 disabled:opacity-30"
               >
                 +
               </button>
-              {transpose !== 0 && (
+              {effectiveTranspose !== 0 && (
                 <button
                   type="button"
-                  onClick={() => setTranspose(0)}
+                  onClick={() => {
+                    setManualKey('')
+                    setTranspose(0)
+                  }}
                   aria-label="Về tone gốc"
                   title="Về tone gốc"
                   className="rounded-md border border-line px-2 py-0.5 text-[10px] text-dim hover:bg-white/8"
@@ -1594,8 +1699,18 @@ export function ReharmHome() {
 
             <KeySelect
               value={manualKey}
-              onChange={setManualKey}
+              onChange={(value) => {
+                setManualKey(value)
+                if (!value || !chartKey) {
+                  if (!value) setTranspose(0)
+                  return
+                }
+                setTranspose(
+                  semitonesToKey(chartKey.tonic, Number(value.split(':')[0])),
+                )
+              }}
               detectedLabel={reharm.keyCandidates[0]?.label}
+              scaleFilter={currentKeyScale}
             />
           </div>
 
@@ -2044,7 +2159,7 @@ export function ReharmHome() {
 
           <label
             className="flex items-center gap-2 text-xs text-dim"
-            title="Đoạn nào chơi lại lượt hai thì hợp âm cuối đổi thành bậc năm của chỗ sắp vào — kỹ thuật thứ năm của phong cách, ví dụ Em7 đổi thành E7b9"
+            title="Lượt hai của cùng loại đoạn: hợp âm cuối đổi thành bậc năm của chỗ sắp vào, ghi luôn trên lời. Ví dụ Em7 → E7b9"
           >
             <input
               type="checkbox"

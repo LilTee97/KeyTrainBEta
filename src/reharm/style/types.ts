@@ -8,7 +8,7 @@ import type { MidiNote } from '../../shared/musicTheory/types'
  * phách khác hẳn nhau. Vì vậy phải tra theo **hai trục**: nhịp và feel.
  */
 export type Feel =
-  /** Hợp âm khối bám nhịp đổi hợp âm, không có mẫu tiết tấu cố định. */
+  /** Hợp âm khối bám nhịp đổi hợp âm. */
   | 'straight-block-chord'
   /** Lệch phách kiểu bossa, chu kỳ 3+3+2. */
   | 'syncopated-3-3-2'

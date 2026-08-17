@@ -30,7 +30,7 @@ describe('colorChord — mức tắt', () => {
 describe('colorChord — hợp âm ba trơn', () => {
   it('không để hợp âm ba trơn ở mức đậm', () => {
     // Đây là chữ ký số một của phong cách
-    expect(colored('C')).toBe('Cadd9')
+    expect(colored('C')).toBe('Cadd2')
     expect(colored('Am')).toBe('Am9')
   })
 
@@ -103,7 +103,7 @@ describe('colorChord — giữ nguyên những gì cần giữ', () => {
   it('giữ nguyên nốt bass của hợp âm chồng trên bass', () => {
     const result = colorChord(chord('C/E'))
     expect(result.bass).toBe(4)
-    expect(result.symbol).toBe('Cadd9/E')
+    expect(result.symbol).toBe('Cadd2/E')
   })
 
   it('hợp âm không có luật nào thì để nguyên', () => {
@@ -127,10 +127,10 @@ describe('colorSequence', () => {
   it('đổi màu cả vòng hợp âm', () => {
     const result = colorSequence(parseChordInput('C Am F G').chords)
     expect(result.map((entry) => entry.symbol)).toEqual([
-      'Cadd9',
+      'Cadd2',
       'Am9',
-      'Fadd9',
-      'Gadd9',
+      'Fadd2',
+      'Gadd2',
     ])
   })
 

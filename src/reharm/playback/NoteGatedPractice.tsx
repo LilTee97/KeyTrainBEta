@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 import {
   playChord,
   startAudio,
   useAudioStore,
 } from '../../shared/audio/audioEngine'
+import { useMetronomeStore } from '../../shared/audio/metronome'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { FallingNotes } from './FallingNotes'
 import { MidiConnect } from '../../shared/midi/MidiConnect'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
+import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
-import type { MidiNote } from '../../shared/musicTheory/types'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { PracticeHand } from './noteGatedPlaybackEngine'
@@ -53,37 +55,71 @@ export function NoteGatedPractice({
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
+  const bpm = useMetronomeStore((state) => state.bpm)
 
   useLiveSound()
   useComputerKeyboard(60)
 
-  const [hand, setHand] = useState<PracticeHand>('right')
+  const [hand, setHand] = useState<PracticeHand>('both')
   const [ignoreOctave, setIgnoreOctave] = useState(false)
   const [active, setActive] = useState(false)
+
+  const [keyboardKeys, setKeyboardKeys] = useState(() => readSetting('midiKeyboardKeys'))
 
   const steps = useMemo(
     () => buildGatedSteps(timeline, voicings, { hand, beatsPerChord }),
     [timeline, voicings, hand, beatsPerChord],
   )
 
+  /** Dải phím dựa theo kích thước đàn MIDI thật người dùng đang cắm. */
+  const keyboardRange = useMemo(
+    () => getKeyboardRange(keyboardKeys),
+    [keyboardKeys],
+  )
+
   /*
-    Dải phím phải trùm hết nốt của bài: nốt rơi mà không có phím để đáp xuống
-    thì người tập nhìn thấy nó biến mất giữa chừng. Nới ra tròn quãng tám
-    (Đô tới Si) cho bàn phím trông đúng hình, và giữ tối thiểu 3 quãng tám để
-    bài ít nốt không co lại thành một bàn phím tí hon.
+    Dải hiển thị cho nốt rơi và bàn phím ảo dùng range của đàn thật.
+    Nếu bài có nốt ngoài range đàn thì vẫn cố gắng hiển thị nhưng có thể bị cắt.
   */
-  const range = useMemo(() => {
-    const notes = steps.flatMap((step) => step.notes)
-    if (notes.length === 0) return { low: 48 as MidiNote, high: 84 as MidiNote }
+  const range = keyboardRange
 
-    const low = Math.floor(Math.min(...notes) / 12) * 12
-    const high = Math.ceil((Math.max(...notes) + 1) / 12) * 12 - 1
+  const fullPlayRef = useRef<number | null>(null)
+  const isPlayingFullRef = useRef(false)
+  const [isPlayingFull, setIsPlayingFull] = useState(false)
 
-    return {
-      low: Math.min(low, 60) as MidiNote,
-      high: Math.max(high, 83) as MidiNote,
+  const stopFullPlay = useCallback(() => {
+    if (fullPlayRef.current) {
+      clearTimeout(fullPlayRef.current)
+      fullPlayRef.current = null
     }
-  }, [steps])
+    isPlayingFullRef.current = false
+    setIsPlayingFull(false)
+  }, [])
+
+  const playFullSong = useCallback(() => {
+    if (steps.length === 0) return
+    stopFullPlay()
+    setActive(true)
+    isPlayingFullRef.current = true
+    setIsPlayingFull(true)
+
+    let i = 0
+    const playNext = () => {
+      if (i >= steps.length || !isPlayingFullRef.current) {
+        stopFullPlay()
+        return
+      }
+      const currentStepItem = steps[i]
+      playChord(currentStepItem.notes)
+
+      // Tính thời lượng dựa trên nhịp hiện tại
+      const beatDuration = 60 / bpm
+      const durationMs = Math.max(300, beatDuration * beatsPerChord * 1000)
+      i += 1
+      fullPlayRef.current = window.setTimeout(playNext, durationMs)
+    }
+    playNext()
+  }, [steps, beatsPerChord, bpm, stopFullPlay, setActive]) // playChord is stable import
 
   const [session, setSession] = useState(() => startGatedSession(steps))
 
@@ -91,6 +127,12 @@ export function NoteGatedPractice({
   useEffect(() => {
     setSession(startGatedSession(steps))
   }, [steps])
+
+  // Dừng nghe cả bài khi thoát chế độ active hoặc unmount
+  useEffect(() => {
+    if (!active) stopFullPlay()
+    return () => stopFullPlay()
+  }, [active, stopFullPlay])
 
   const step = currentStep(session)
 
@@ -105,6 +147,10 @@ export function NoteGatedPractice({
 
   useEffect(() => {
     if (!active || !step) return
+
+    if (isPlayingFullRef.current && heldNotes.length > 0) {
+      stopFullPlay()
+    }
 
     if (heldNotes.length === 0) {
       armedRef.current = true
@@ -122,7 +168,7 @@ export function NoteGatedPractice({
       armedRef.current = false
       setSession((current) => registerMiss(current))
     }
-  }, [heldNotes, step, active, ignoreOctave])
+  }, [heldNotes, step, active, ignoreOctave, stopFullPlay])
 
   const progress = progressOf(session)
   const missing = step ? missingNotes(heldNotes, step, { ignoreOctave }) : []
@@ -276,21 +322,40 @@ export function NoteGatedPractice({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => playChord(step.notes)}
+                onClick={() => {
+                  stopFullPlay()
+                  playChord(step.notes)
+                }}
                 className="rounded-lg border border-line bg-white/6 px-3 py-1.5 text-xs text-cream hover:bg-white/12"
               >
                 ♪ Nghe chặng này
               </button>
               <button
                 type="button"
-                onClick={() => setSession((current) => advance(current))}
+                onClick={() => {
+                  if (isPlayingFull) stopFullPlay()
+                  else playFullSong()
+                }}
+                className="rounded-lg border border-line bg-white/6 px-3 py-1.5 text-xs text-cream hover:bg-white/12"
+              >
+                {isPlayingFull ? 'Dừng nghe cả bài' : '♪ Nghe cả bài'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  stopFullPlay()
+                  setSession((current) => advance(current))
+                }}
                 className="rounded-lg border border-line px-3 py-1.5 text-xs text-dim hover:bg-white/6"
               >
                 Bỏ qua chặng →
               </button>
               <button
                 type="button"
-                onClick={() => setActive(false)}
+                onClick={() => {
+                  stopFullPlay()
+                  setActive(false)
+                }}
                 className="rounded-lg border border-line px-3 py-1.5 text-xs text-dim hover:bg-white/6"
               >
                 Dừng
@@ -301,6 +366,43 @@ export function NoteGatedPractice({
       )}
 
       <div className="mt-4">
+        <div className="mb-2 flex items-center gap-2 text-xs text-dim">
+          <span>Bàn phím MIDI:</span>
+          <select
+            value={keyboardKeys}
+            onChange={(e) => {
+              const n = Number(e.target.value)
+              setKeyboardKeys(n)
+              writeSetting('midiKeyboardKeys', n)
+            }}
+            className="rounded border border-line bg-white/6 px-2 py-0.5 text-cream"
+          >
+            {KEYBOARD_SIZES.map((k) => (
+              <option key={k} value={k}>
+                {k} phím
+              </option>
+            ))}
+            {/* allow custom if not in list */}
+            {!(KEYBOARD_SIZES as readonly number[]).includes(keyboardKeys) && (
+              <option value={keyboardKeys}>{keyboardKeys} phím (tùy chỉnh)</option>
+            )}
+          </select>
+          <input
+            type="number"
+            min={25}
+            max={88}
+            value={keyboardKeys}
+            onChange={(e) => {
+              const n = Math.max(25, Math.min(88, Number(e.target.value) || 61))
+              setKeyboardKeys(n)
+              writeSetting('midiKeyboardKeys', n)
+            }}
+            className="w-16 rounded border border-line bg-white/6 px-1 py-0.5 text-xs text-cream"
+            title="Nhập số phím nếu đàn của bạn không có trong danh sách"
+          />
+          <span className="text-[10px] text-dim/70">phím</span>
+        </div>
+
         {/*
           Nốt rơi dựng ngay trên bàn phím và dùng chung dải nốt với nó, nên nốt
           rơi thẳng hàng với đúng phím mà nó sẽ đáp xuống.
