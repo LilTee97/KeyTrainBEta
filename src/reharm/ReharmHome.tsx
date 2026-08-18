@@ -1482,7 +1482,11 @@ export function ReharmHome() {
       if (songSources && steps.length > 0) {
         const line = fills(pass)
         return buildArrangedSong({
-          accompaniment: giveCompingToLeft(accompaniment, line),
+          accompaniment: giveCompingToLeft(
+            accompaniment,
+            line,
+            style.beatsPerMeasure,
+          ),
           fills: line,
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
           sources: songSources,
@@ -1498,7 +1502,11 @@ export function ReharmHome() {
 
       const line = fills(pass)
       return buildSongTimeline({
-        accompaniment: giveCompingToLeft(accompaniment, line),
+        accompaniment: giveCompingToLeft(
+          accompaniment,
+          line,
+          style.beatsPerMeasure,
+        ),
         fills: line,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,

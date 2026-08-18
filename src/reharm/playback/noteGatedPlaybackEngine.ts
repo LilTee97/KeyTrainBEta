@@ -119,8 +119,8 @@ export function notesHittingAt(
   const left: MidiNote[] = []
   const right: MidiNote[] = []
   for (const step of steps) {
-    if (beat + BEAT_EPSILON < step.startBeat) continue
-    if (beat >= step.startBeat + step.durationBeats - BEAT_EPSILON) continue
+    const away = step.startBeat - beat
+    if (away > 0.05 || away < -0.2) continue
     left.push(...step.leftNotes)
     right.push(...step.rightNotes)
   }

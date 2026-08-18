@@ -519,14 +519,23 @@ function overlaps(
 export function giveCompingToLeft(
   accompaniment: readonly TimelineEvent[],
   melody: readonly TimelineEvent[],
+  beatsPerMeasure = 4,
 ): TimelineEvent[] {
   if (melody.length === 0) return [...accompaniment]
 
+  const bar = Math.max(1, beatsPerMeasure)
+  const busyBars = new Set(
+    melody.map((line) => Math.floor(line.startBeat / bar + 1e-6)),
+  )
+
   return accompaniment.map((event) => {
     if (event.hand !== 'right') return event
-    const busy = melody.some((line) =>
-      overlaps(event, line.startBeat, line.startBeat + line.durationBeats),
-    )
+    const barIndex = Math.floor(event.startBeat / bar + 1e-6)
+    const busy =
+      busyBars.has(barIndex) ||
+      melody.some((line) =>
+        overlaps(event, line.startBeat, line.startBeat + line.durationBeats),
+      )
     if (!busy) return event
 
     const notes = event.notes.map((note) => {
