@@ -19,6 +19,9 @@ function voicings(input: string): TwoHandVoicing[] {
 const FAKE_CELL_STYLE: StylePattern = {
   id: 'test-cell',
   name: 'Điệu thử',
+  family: 'test',
+  familyName: 'Test',
+  variant: 1,
   timeSignature: '4/4',
   beatsPerMeasure: 4,
   bpm: 120,

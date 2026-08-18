@@ -348,7 +348,10 @@ export function buildArrangedSong(
     const next = nextSection(steps, index, sources)
 
     // Vòng ngắn nhặt từ đoạn, hoặc trọn đoạn nếu bên gọi không nhặt.
-    const range = interludeRange?.(over, next) ?? over
+    const range = interludeRange?.(over, next) ?? {
+      startBeat: over.startBeat,
+      lengthBeats: over.lengthBeats,
+    }
     const loopBeats = range.lengthBeats
     const loops = Math.max(1, Math.floor(step.loops))
 

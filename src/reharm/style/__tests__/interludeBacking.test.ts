@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chordDurations, mainChordSpans } from '../../chordTiming'
+import { chordDurations } from '../../chordTiming'
 import { parseChordInput } from '../../input/chordInputParser'
 import { reharmonize } from '../../reharmEngine/reharmPipeline'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'

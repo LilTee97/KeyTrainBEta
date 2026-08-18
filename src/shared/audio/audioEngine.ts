@@ -73,7 +73,7 @@ const PIANO_NOTES = [
   'C6',
 ] as const
 
-function applyVolume(instrument: Voice): Voice {
+function applyVolume<T extends Voice>(instrument: T): T {
   instrument.volume.value = useAudioStore.getState().volumeDb
   return instrument
 }
