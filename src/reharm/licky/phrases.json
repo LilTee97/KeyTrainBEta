@@ -1,0 +1,3559 @@
+{
+  "source": "Reference/52 Piano Jazz Blues Licks.mxl",
+  "readable": true,
+  "note": "Interval patterns for personal practice. Source file is third-party copyright.",
+  "phrases": [
+    {
+      "id": "lick-01",
+      "label": "#13",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -6,
+          "dur": 1,
+          "at": 3
+        },
+        {
+          "interval": -3,
+          "dur": 1.5,
+          "at": 4
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 5.5
+        }
+      ]
+    },
+    {
+      "id": "lick-02",
+      "label": "lick 2",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -5,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-03",
+      "label": "#27",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 2
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -4,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-04",
+      "label": "#37",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.125,
+          "at": 2
+        },
+        {
+          "interval": -2,
+          "dur": 0.125,
+          "at": 2.125
+        },
+        {
+          "interval": -3,
+          "dur": 0.125,
+          "at": 2.25
+        },
+        {
+          "interval": -7,
+          "dur": 0.125,
+          "at": 2.375
+        },
+        {
+          "interval": -12,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -14,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -15,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -15,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-05",
+      "label": "lick 5",
+      "kind": "run",
+      "span": 6.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.5
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.625
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.75
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.875
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 11,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 9,
+          "dur": 2,
+          "at": 4.5
+        }
+      ]
+    },
+    {
+      "id": "lick-06",
+      "label": "lick 6",
+      "kind": "run",
+      "span": 4,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 1,
+          "at": 1
+        },
+        {
+          "interval": 4,
+          "dur": 2,
+          "at": 2
+        }
+      ]
+    },
+    {
+      "id": "lick-07",
+      "label": "#3:52 lick",
+      "kind": "run",
+      "span": 12,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 7.5
+        },
+        {
+          "interval": 0,
+          "dur": 4,
+          "at": 8
+        }
+      ]
+    },
+    {
+      "id": "lick-08",
+      "label": "#17",
+      "kind": "run",
+      "span": 7,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 3
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 3.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 3.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 4
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 4.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 4.6667
+        },
+        {
+          "interval": -8,
+          "dur": 2,
+          "at": 5
+        }
+      ]
+    },
+    {
+      "id": "lick-09",
+      "label": "#9",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 1,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-10",
+      "label": "#11",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 9,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 2
+        },
+        {
+          "interval": 7,
+          "dur": 0.3333,
+          "at": 2.3333
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 2.6667
+        },
+        {
+          "interval": -3,
+          "dur": 1,
+          "at": 3
+        },
+        {
+          "interval": -3,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-11",
+      "label": "lick 11",
+      "kind": "run",
+      "span": 9.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 8,
+          "dur": 1.5,
+          "at": 1.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": -7,
+          "dur": 2,
+          "at": 7.5
+        }
+      ]
+    },
+    {
+      "id": "lick-12",
+      "label": "H2:52 Lick",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -6,
+          "dur": 1,
+          "at": 3
+        },
+        {
+          "interval": -3,
+          "dur": 1.5,
+          "at": 4
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 5.5
+        }
+      ]
+    },
+    {
+      "id": "lick-13",
+      "label": "lick 13",
+      "kind": "run",
+      "span": 24,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -5,
+          "dur": 4,
+          "at": 4
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 8
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 8.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 9
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 9.5
+        },
+        {
+          "interval": 1,
+          "dur": 1,
+          "at": 10
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 11
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 11.5
+        },
+        {
+          "interval": -3,
+          "dur": 4,
+          "at": 12
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 16
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 16.5
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 17
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 17.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.125,
+          "at": 18
+        },
+        {
+          "interval": 4,
+          "dur": 0.125,
+          "at": 18.125
+        },
+        {
+          "interval": 1,
+          "dur": 0.125,
+          "at": 18.25
+        },
+        {
+          "interval": -3,
+          "dur": 0.125,
+          "at": 18.375
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 18.5
+        },
+        {
+          "interval": -10,
+          "dur": 0.5,
+          "at": 19
+        },
+        {
+          "interval": -11,
+          "dur": 0.5,
+          "at": 19.5
+        },
+        {
+          "interval": -11,
+          "dur": 4,
+          "at": 20
+        }
+      ]
+    },
+    {
+      "id": "lick-14",
+      "label": "lick 14",
+      "kind": "run",
+      "span": 11.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.5
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.625
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.75
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.875
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 11,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 9,
+          "dur": 4,
+          "at": 4.5
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 8.5
+        },
+        {
+          "interval": 4,
+          "dur": 1,
+          "at": 9.5
+        },
+        {
+          "interval": 7,
+          "dur": 1,
+          "at": 10.5
+        }
+      ]
+    },
+    {
+      "id": "lick-15",
+      "label": "#16 FIND L.K.",
+      "kind": "run",
+      "span": 12,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 7.5
+        },
+        {
+          "interval": 0,
+          "dur": 4,
+          "at": 8
+        }
+      ]
+    },
+    {
+      "id": "lick-16",
+      "label": "#17 FINL D.K.",
+      "kind": "run",
+      "span": 7,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 7,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 3
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 3.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 3.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 4
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 4.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 4.6667
+        },
+        {
+          "interval": -8,
+          "dur": 2,
+          "at": 5
+        }
+      ]
+    },
+    {
+      "id": "lick-17",
+      "label": "#115BMG Lick.",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 1,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-18",
+      "label": "#107, LICK",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 9,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 2
+        },
+        {
+          "interval": 7,
+          "dur": 0.3333,
+          "at": 2.3333
+        },
+        {
+          "interval": -2,
+          "dur": 0.3333,
+          "at": 2.6667
+        },
+        {
+          "interval": -3,
+          "dur": 1,
+          "at": 3
+        },
+        {
+          "interval": -3,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-19",
+      "label": "#2072 Lick",
+      "kind": "run",
+      "span": 9.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 8,
+          "dur": 1.5,
+          "at": 1.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": -7,
+          "dur": 2,
+          "at": 7.5
+        }
+      ]
+    },
+    {
+      "id": "lick-20",
+      "label": "G7 F C Lick",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -6,
+          "dur": 1,
+          "at": 3
+        },
+        {
+          "interval": -3,
+          "dur": 1.5,
+          "at": 4
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 5.5
+        }
+      ]
+    },
+    {
+      "id": "lick-21",
+      "label": "lick 21",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -5,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-22",
+      "label": "G D7 C# Lick",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 2
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -4,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-23",
+      "label": "G# D7 C# Lick",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.125,
+          "at": 2
+        },
+        {
+          "interval": 0,
+          "dur": 0.125,
+          "at": 2.125
+        },
+        {
+          "interval": -3,
+          "dur": 0.125,
+          "at": 2.25
+        },
+        {
+          "interval": -7,
+          "dur": 0.125,
+          "at": 2.375
+        },
+        {
+          "interval": -12,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -14,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -15,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -15,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-24",
+      "label": "lick 24",
+      "kind": "run",
+      "span": 10.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.5
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.625
+        },
+        {
+          "interval": 12,
+          "dur": 0.125,
+          "at": 2.75
+        },
+        {
+          "interval": 11,
+          "dur": 0.125,
+          "at": 2.875
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 11,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 9,
+          "dur": 4,
+          "at": 4.5
+        },
+        {
+          "interval": -8,
+          "dur": 1,
+          "at": 8.5
+        },
+        {
+          "interval": -5,
+          "dur": 1,
+          "at": 9.5
+        }
+      ]
+    },
+    {
+      "id": "lick-25",
+      "label": "lick 25",
+      "kind": "run",
+      "span": 34.6666,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 7.5
+        },
+        {
+          "interval": 0,
+          "dur": 4,
+          "at": 8
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 12
+        },
+        {
+          "interval": 6,
+          "dur": 0.3333,
+          "at": 12.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 12.6667
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 13
+        },
+        {
+          "interval": 6,
+          "dur": 0.3333,
+          "at": 13.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 13.6667
+        },
+        {
+          "interval": 12,
+          "dur": 0.3333,
+          "at": 14
+        },
+        {
+          "interval": 12,
+          "dur": 0.3333,
+          "at": 14.3333
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 14.6666
+        },
+        {
+          "interval": 6,
+          "dur": 0.3333,
+          "at": 14.9999
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 15.3333
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 15.6666
+        },
+        {
+          "interval": 6,
+          "dur": 0.3333,
+          "at": 15.9999
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 16.3333
+        },
+        {
+          "interval": 0,
+          "dur": 2,
+          "at": 16.6666
+        },
+        {
+          "interval": 12,
+          "dur": 0.5,
+          "at": 18.6666
+        },
+        {
+          "interval": 12,
+          "dur": 0.5,
+          "at": 19.1666
+        },
+        {
+          "interval": 13,
+          "dur": 0.5,
+          "at": 19.6666
+        },
+        {
+          "interval": 14,
+          "dur": 0.5,
+          "at": 20.1666
+        },
+        {
+          "interval": 15,
+          "dur": 0.5,
+          "at": 20.6666
+        },
+        {
+          "interval": 8,
+          "dur": 0.5,
+          "at": 21.1666
+        },
+        {
+          "interval": 11,
+          "dur": 0.5,
+          "at": 21.6666
+        },
+        {
+          "interval": 12,
+          "dur": 0.5,
+          "at": 22.1666
+        },
+        {
+          "interval": 12,
+          "dur": 4,
+          "at": 22.6666
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 26.6666
+        },
+        {
+          "interval": 12,
+          "dur": 0.3333,
+          "at": 26.9999
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 27.3333
+        },
+        {
+          "interval": 2,
+          "dur": 0.3333,
+          "at": 27.6666
+        },
+        {
+          "interval": 11,
+          "dur": 0.3333,
+          "at": 27.9999
+        },
+        {
+          "interval": 2,
+          "dur": 0.3333,
+          "at": 28.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 28.6666
+        },
+        {
+          "interval": 10,
+          "dur": 0.3333,
+          "at": 28.9999
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 29.3333
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 29.6666
+        },
+        {
+          "interval": 0,
+          "dur": 4,
+          "at": 30.6666
+        }
+      ]
+    },
+    {
+      "id": "lick-26",
+      "label": "lick 26",
+      "kind": "run",
+      "span": 9.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 8,
+          "dur": 1.5,
+          "at": 1.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": -7,
+          "dur": 2,
+          "at": 7.5
+        }
+      ]
+    },
+    {
+      "id": "lick-27",
+      "label": "lick 27",
+      "kind": "run",
+      "span": 16.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 2,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 2,
+          "at": 2.5
+        },
+        {
+          "interval": 5,
+          "dur": 2,
+          "at": 4.5
+        },
+        {
+          "interval": 6,
+          "dur": 1,
+          "at": 6.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 7.5
+        },
+        {
+          "interval": 7,
+          "dur": 0.5,
+          "at": 8
+        },
+        {
+          "interval": 7,
+          "dur": 1,
+          "at": 8.5
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 9.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 10
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 10.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 11.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 12
+        },
+        {
+          "interval": 0,
+          "dur": 4,
+          "at": 12.5
+        }
+      ]
+    },
+    {
+      "id": "lick-28",
+      "label": "0:23,02 Lick",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": 1,
+          "dur": 1,
+          "at": 2
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -2,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-29",
+      "label": "#3: #33",
+      "kind": "run",
+      "span": 4,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -3,
+          "dur": 1,
+          "at": 3
+        }
+      ]
+    },
+    {
+      "id": "lick-30",
+      "label": "#5",
+      "kind": "run",
+      "span": 4,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 0,
+          "dur": 2,
+          "at": 2
+        }
+      ]
+    },
+    {
+      "id": "lick-31",
+      "label": "#3",
+      "kind": "run",
+      "span": 4,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 5,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 3,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": 8,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3.5
+        }
+      ]
+    },
+    {
+      "id": "lick-32",
+      "label": "#4",
+      "kind": "run",
+      "span": 4,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 3,
+          "dur": 2,
+          "at": 2
+        }
+      ]
+    },
+    {
+      "id": "lick-33",
+      "label": "#37",
+      "kind": "run",
+      "span": 7.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 12,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 3,
+          "dur": 0.25,
+          "at": 4
+        },
+        {
+          "interval": 2,
+          "dur": 0.25,
+          "at": 4.25
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 0,
+          "dur": 2,
+          "at": 5.5
+        }
+      ]
+    },
+    {
+      "id": "lick-34",
+      "label": "#3: #3: C Bb7",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -6,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-35",
+      "label": "#7",
+      "kind": "run",
+      "span": 9.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.3333,
+          "at": 0.8333
+        },
+        {
+          "interval": 6,
+          "dur": 0.3333,
+          "at": 1.1667
+        },
+        {
+          "interval": 9,
+          "dur": 1,
+          "at": 1.5
+        },
+        {
+          "interval": 9,
+          "dur": 1,
+          "at": 2.5
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": -3,
+          "dur": 2,
+          "at": 7.5
+        }
+      ]
+    },
+    {
+      "id": "lick-36",
+      "label": "#3-Bb7 Lick",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 6.5
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 7
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 7.5
+        }
+      ]
+    },
+    {
+      "id": "lick-37",
+      "label": "#3",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.25,
+          "at": 2
+        },
+        {
+          "interval": 3,
+          "dur": 0.25,
+          "at": 2.25
+        },
+        {
+          "interval": 0,
+          "dur": 0.25,
+          "at": 2.5
+        },
+        {
+          "interval": -4,
+          "dur": 0.25,
+          "at": 2.75
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -4,
+          "dur": 4,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-38",
+      "label": "#9",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -3,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-39",
+      "label": "#13",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 0
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -3,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-40",
+      "label": "#3:",
+      "kind": "run",
+      "span": 10,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 2,
+          "dur": 1,
+          "at": 2
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -10,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": -6,
+          "dur": 0.3333,
+          "at": 5
+        },
+        {
+          "interval": -3,
+          "dur": 0.3333,
+          "at": 5.3333
+        },
+        {
+          "interval": -1,
+          "dur": 0.3333,
+          "at": 5.6667
+        },
+        {
+          "interval": -3,
+          "dur": 0.6667,
+          "at": 6
+        },
+        {
+          "interval": -5,
+          "dur": 0.6667,
+          "at": 6.6667
+        },
+        {
+          "interval": -6,
+          "dur": 0.6667,
+          "at": 7.3333
+        },
+        {
+          "interval": -6,
+          "dur": 2,
+          "at": 8
+        }
+      ]
+    },
+    {
+      "id": "lick-41",
+      "label": "#4:37",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.25,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.25,
+          "at": 0.25
+        },
+        {
+          "interval": 0,
+          "dur": 0.25,
+          "at": 0.5
+        },
+        {
+          "interval": -2,
+          "dur": 0.25,
+          "at": 0.75
+        },
+        {
+          "interval": -7,
+          "dur": 0.25,
+          "at": 1
+        },
+        {
+          "interval": -5,
+          "dur": 0.25,
+          "at": 1.25
+        },
+        {
+          "interval": -7,
+          "dur": 0.25,
+          "at": 1.5
+        },
+        {
+          "interval": -10,
+          "dur": 0.25,
+          "at": 1.75
+        },
+        {
+          "interval": -12,
+          "dur": 0.25,
+          "at": 2
+        },
+        {
+          "interval": -11,
+          "dur": 0.25,
+          "at": 2.25
+        },
+        {
+          "interval": -12,
+          "dur": 0.25,
+          "at": 2.5
+        },
+        {
+          "interval": -14,
+          "dur": 0.25,
+          "at": 2.75
+        },
+        {
+          "interval": -19,
+          "dur": 0.25,
+          "at": 3
+        },
+        {
+          "interval": -17,
+          "dur": 0.25,
+          "at": 3.25
+        },
+        {
+          "interval": -19,
+          "dur": 0.25,
+          "at": 3.5
+        },
+        {
+          "interval": -22,
+          "dur": 0.25,
+          "at": 3.75
+        },
+        {
+          "interval": -22,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": -22,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": -22,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -22,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-42",
+      "label": "#4:42",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 1.5,
+          "at": 0
+        },
+        {
+          "interval": 2,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 2,
+          "dur": 1.5,
+          "at": 2
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -1,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-43",
+      "label": "#3:35",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 2,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.3333,
+          "at": 3
+        },
+        {
+          "interval": -6,
+          "dur": 0.3333,
+          "at": 3.3333
+        },
+        {
+          "interval": -5,
+          "dur": 0.3333,
+          "at": 3.6667
+        },
+        {
+          "interval": -6,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -10,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -10,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-44",
+      "label": "#4:37",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 2.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 2.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 3
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 3.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 3.6667
+        },
+        {
+          "interval": -6,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": -6,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -6,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -6,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-45",
+      "label": "#47(5)",
+      "kind": "run",
+      "span": 8.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": 5,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": 6,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 4,
+          "dur": 4,
+          "at": 4.5
+        }
+      ]
+    },
+    {
+      "id": "lick-46",
+      "label": "4: #3:53",
+      "kind": "run",
+      "span": 6,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.1667,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.1667,
+          "at": 0.1667
+        },
+        {
+          "interval": 2,
+          "dur": 0.1667,
+          "at": 0.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.1667,
+          "at": 0.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.1667,
+          "at": 0.6667
+        },
+        {
+          "interval": -3,
+          "dur": 0.1667,
+          "at": 0.8333
+        },
+        {
+          "interval": 0,
+          "dur": 0.1667,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.1667,
+          "at": 1.1667
+        },
+        {
+          "interval": 2,
+          "dur": 0.1667,
+          "at": 1.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.1667,
+          "at": 1.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.1667,
+          "at": 1.6667
+        },
+        {
+          "interval": -3,
+          "dur": 0.1667,
+          "at": 1.8333
+        },
+        {
+          "interval": 0,
+          "dur": 0.1667,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.1667,
+          "at": 2.1667
+        },
+        {
+          "interval": 2,
+          "dur": 0.1667,
+          "at": 2.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.1667,
+          "at": 2.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.1667,
+          "at": 2.6667
+        },
+        {
+          "interval": -3,
+          "dur": 0.1667,
+          "at": 2.8333
+        },
+        {
+          "interval": 0,
+          "dur": 0.1667,
+          "at": 3
+        },
+        {
+          "interval": 1,
+          "dur": 0.1667,
+          "at": 3.1667
+        },
+        {
+          "interval": 2,
+          "dur": 0.1667,
+          "at": 3.3333
+        },
+        {
+          "interval": 3,
+          "dur": 0.1667,
+          "at": 3.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.1667,
+          "at": 3.6667
+        },
+        {
+          "interval": -3,
+          "dur": 0.1667,
+          "at": 3.8333
+        },
+        {
+          "interval": -3,
+          "dur": 2,
+          "at": 4
+        }
+      ]
+    },
+    {
+      "id": "lick-47",
+      "label": "#4:07",
+      "kind": "run",
+      "span": 8,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 0.5
+        },
+        {
+          "interval": -5,
+          "dur": 0.5,
+          "at": 1
+        },
+        {
+          "interval": -4,
+          "dur": 0.5,
+          "at": 1.5
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 2.5
+        },
+        {
+          "interval": -12,
+          "dur": 0.5,
+          "at": 3
+        },
+        {
+          "interval": -11,
+          "dur": 0.5,
+          "at": 3.5
+        },
+        {
+          "interval": -7,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": -8,
+          "dur": 0.5,
+          "at": 4.5
+        },
+        {
+          "interval": -9,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -11,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -11,
+          "dur": 2,
+          "at": 6
+        }
+      ]
+    },
+    {
+      "id": "lick-48",
+      "label": "#130(52)",
+      "kind": "run",
+      "span": 14.5,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 0
+        },
+        {
+          "interval": 4,
+          "dur": 1.5,
+          "at": 0.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 2
+        },
+        {
+          "interval": 5,
+          "dur": 1.5,
+          "at": 2.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 4
+        },
+        {
+          "interval": 6,
+          "dur": 1.5,
+          "at": 4.5
+        },
+        {
+          "interval": 9,
+          "dur": 0.5,
+          "at": 6
+        },
+        {
+          "interval": 7,
+          "dur": 1,
+          "at": 6.5
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 7.5
+        },
+        {
+          "interval": 4,
+          "dur": 0.5,
+          "at": 8
+        },
+        {
+          "interval": 0,
+          "dur": 1,
+          "at": 8.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 9.5
+        },
+        {
+          "interval": 0,
+          "dur": 0.5,
+          "at": 10
+        },
+        {
+          "interval": 0,
+          "dur": 2,
+          "at": 10.5
+        },
+        {
+          "interval": 0,
+          "dur": 2,
+          "at": 12.5
+        }
+      ]
+    },
+    {
+      "id": "lick-49",
+      "label": "lick 49",
+      "kind": "run",
+      "span": 16,
+      "notes": [
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 0.3333
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 0.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 1
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 1.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 2
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 2.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 2.6667
+        },
+        {
+          "interval": 0,
+          "dur": 0.3333,
+          "at": 3
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 3.3333
+        },
+        {
+          "interval": 1,
+          "dur": 0.3333,
+          "at": 3.6667
+        },
+        {
+          "interval": 1,
+          "dur": 1,
+          "at": 4
+        },
+        {
+          "interval": -1,
+          "dur": 0.5,
+          "at": 5
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 5.5
+        },
+        {
+          "interval": -2,
+          "dur": 2,
+          "at": 6
+        },
+        {
+          "interval": 3,
+          "dur": 1,
+          "at": 9
+        },
+        {
+          "interval": 3,
+          "dur": 0.5,
+          "at": 10
+        },
+        {
+          "interval": 1,
+          "dur": 0.5,
+          "at": 10.5
+        },
+        {
+          "interval": -3,
+          "dur": 0.5,
+          "at": 11
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 11.5
+        },
+        {
+          "interval": -6,
+          "dur": 1,
+          "at": 12
+        },
+        {
+          "interval": -6,
+          "dur": 0.5,
+          "at": 13
+        },
+        {
+          "interval": -2,
+          "dur": 0.5,
+          "at": 13.5
+        },
+        {
+          "interval": -2,
+          "dur": 2,
+          "at": 14
+        }
+      ]
+    }
+  ]
+}

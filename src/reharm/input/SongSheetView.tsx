@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { SectionMark, SheetAnchor, SheetLine, SongSheet } from './songSheet'
 import { isPaired } from '../chordTiming'
 import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
@@ -8,7 +8,6 @@ import {
   SECTION_KIND_COLORS,
   SECTION_KIND_LABELS,
   flattenLines,
-  layoutAnchors,
 } from './songSheet'
 import type { SongSectionKind } from './songTextParser'
 import { readSetting } from '../../shared/persistence/localSettings'
@@ -90,6 +89,10 @@ interface SongSheetViewProps {
    */
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  runAt?: (chordIndex: number) => boolean | null
+  onToggleRun?: (chordIndex: number) => void
+  colorHintAt?: (chordIndex: number) => string | null
+  onCycleColor?: (chordIndex: number) => void
   /**
    * Hợp âm này có đang là **mốc chuyển đoạn** không, và chơi ô nối thế nào.
    *
@@ -99,6 +102,9 @@ interface SongSheetViewProps {
   transitionAt?: (chordIndex: number) => TransitionOption | null
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
+  slashHintAt?: (chordIndex: number) => string | null
+  onToggleSlash?: (chordIndex: number) => void
+  toolbar?: ReactNode
 }
 
 /** Cách chơi ô nối, hiện trên menu chuột phải. */
@@ -160,9 +166,16 @@ export function SongSheetView({
   onRemovePassingHere,
   fillAt,
   onToggleFill,
+  runAt,
+  onToggleRun,
+  colorHintAt,
+  onCycleColor,
   transitionAt,
   onToggleTransition,
   onSetTransition,
+  slashHintAt,
+  onToggleSlash,
+  toolbar,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
   /** Khoảng dòng đang được bôi đen, chờ chọn loại đoạn. */
@@ -291,6 +304,7 @@ export function SongSheetView({
         ref={container}
         className="flex flex-col gap-4 overflow-x-auto rounded-lg border border-line bg-black/25 p-4 font-mono text-xs leading-relaxed"
       >
+        {toolbar}
         {sheet.sections.map((section, index) => {
           const tone = SECTION_KIND_COLORS[section.kind]
 
@@ -323,8 +337,10 @@ export function SongSheetView({
                   >
                     <AnchorRow
                       line={line}
+                      lyricClass={tone.lyric}
                       activeIndex={activeIndex}
                       fillAt={fillAt}
+                      runAt={runAt}
                       pairedChords={pairedChords}
                       onSeek={onSeek}
                       bindMenu={
@@ -342,7 +358,6 @@ export function SongSheetView({
                           : undefined
                       }
                     />
-                    <div className={tone.lyric}>{line.lyric || ' '}</div>
                   </div>
                 )
               })}
@@ -417,6 +432,30 @@ export function SongSheetView({
                 }
               : undefined
           }
+          run={runAt?.(menu.chordIndex) ?? null}
+          onToggleRun={
+            onToggleRun
+              ? () => {
+                  onToggleRun(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          colorHint={colorHintAt?.(menu.chordIndex) ?? null}
+          onCycleColor={
+            onCycleColor
+              ? () => onCycleColor(menu.chordIndex)
+              : undefined
+          }
+          slashHint={slashHintAt?.(menu.chordIndex) ?? null}
+          onToggleSlash={
+            onToggleSlash
+              ? () => {
+                  onToggleSlash(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -441,6 +480,12 @@ export function ChordContextMenu({
   onRemoveHere,
   fill,
   onToggleFill,
+  run,
+  onToggleRun,
+  colorHint,
+  onCycleColor,
+  slashHint,
+  onToggleSlash,
   transition,
   canMarkTransition,
   onToggleTransition,
@@ -461,6 +506,12 @@ export function ChordContextMenu({
   /** Chỗ này đang có fill không; rỗng nghĩa là không chêm được. */
   fill: boolean | null
   onToggleFill?: () => void
+  run?: boolean | null
+  onToggleRun?: () => void
+  colorHint?: string | null
+  onCycleColor?: () => void
+  slashHint?: string | null
+  onToggleSlash?: () => void
   /** Đang là mốc chuyển đoạn không, và chơi ô nối thế nào. */
   transition: TransitionOption | null
   canMarkTransition: boolean
@@ -676,25 +727,71 @@ export function ChordContextMenu({
         </>
       )}
 
-      {onToggleFill && fill !== null && (
+      {onCycleColor && (
         <>
           <div className="my-1 border-t border-line" />
           <button
             type="button"
-            onClick={onToggleFill}
-            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+            disabled={colorHint === null}
+            onClick={onCycleColor}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8 disabled:opacity-40"
           >
-            <span className={fill ? 'text-cream' : 'text-amber-key'}>
-              {fill ? 'Bỏ câu fill ở đây' : 'Chêm lại câu fill ở đây'}
-            </span>
+            <span className="text-amber-key">Đổi màu hòa âm</span>
             <span className="text-[10px] text-dim">
-              {fill
-                ? 'Để trống khe cuối hợp âm này'
-                : 'Lấp khe cuối hợp âm này bằng câu nối'}
+              {colorHint
+                ? `Chỉ hợp âm này · tiếp theo ${colorHint}`
+                : 'Không còn màu khác trong giọng'}
             </span>
           </button>
         </>
       )}
+
+      {onToggleSlash && slashHint && (
+        <button
+          type="button"
+          onClick={onToggleSlash}
+          className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+        >
+          <span className="text-amber-key">Đổi slash chord</span>
+          <span className="text-[10px] text-dim">
+            Chỉ hợp âm này · {slashHint}
+          </span>
+        </button>
+      )}
+
+      {(onToggleFill && fill !== null) || (onToggleRun && run !== null) ? (
+        <>
+          <div className="my-1 border-t border-line" />
+          {onToggleFill && fill !== null && !transition && (
+            <button
+              type="button"
+              onClick={onToggleFill}
+              className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+            >
+              <span className={fill ? 'text-cream' : 'text-amber-key'}>
+                {fill ? 'Bỏ Licky Fills' : 'Licky Fills'}
+              </span>
+              <span className="text-[10px] text-dim">
+                Câu lick chêm cuối ô hợp âm này
+              </span>
+            </button>
+          )}
+          {onToggleRun && run !== null && !transition && (
+            <button
+              type="button"
+              onClick={onToggleRun}
+              className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+            >
+              <span className={run ? 'text-cream' : 'text-amber-key'}>
+                {run ? 'Bỏ Licky Runs' : 'Licky Runs'}
+              </span>
+              <span className="text-[10px] text-dim">
+                Câu chạy ngón từ sổ Licky
+              </span>
+            </button>
+          )}
+        </>
+      ) : null}
 
       {onTogglePassing && passing.length > 0 && (
         <>
@@ -882,66 +979,77 @@ export function ChordContextMenu({
 
 function AnchorRow({
   line,
+  lyricClass,
   activeIndex,
   fillAt,
+  runAt,
   pairedChords,
   onSeek,
   bindMenu,
 }: {
   line: SheetLine
+  lyricClass: string
   activeIndex: number | null
   fillAt?: (chordIndex: number) => boolean | null
+  runAt?: (chordIndex: number) => boolean | null
   pairedChords?: ReadonlySet<number>
   onSeek?: (chordIndex: number) => void
   bindMenu?: (chordIndex: number) => LongPressHandlers
 }) {
-  const placed = layoutAnchors(line.anchors)
+  const clusters: { offset: number; items: SheetAnchor[] }[] = []
+  for (const anchor of line.anchors) {
+    const last = clusters.at(-1)
+    if (last && last.offset === anchor.charOffset) last.items.push(anchor)
+    else clusters.push({ offset: anchor.charOffset, items: [anchor] })
+  }
 
   return (
-    <div className="whitespace-pre">
-      {placed.map(({ anchor, column }, index) => {
-        const gap = column - previousEnd(placed, index)
-
-        return (
-          <span key={index}>
-            {' '.repeat(Math.max(0, gap))}
-            <ChordLabel
-              anchor={anchor}
-              active={anchor.chordIndex === activeIndex}
-              hasFill={
-                anchor.chordIndex !== null &&
-                (fillAt?.(anchor.chordIndex) ?? false) === true
-              }
-              halved={
-                anchor.chordIndex !== null &&
-                pairedChords !== undefined &&
-                isPaired(pairedChords, anchor.chordIndex)
-              }
-              onSeek={onSeek}
-              bindMenu={bindMenu}
-            />
+    <div className="relative font-mono">
+      <div className="relative min-h-[1.5em]">
+        {clusters.map((cluster) => (
+          <span
+            key={cluster.offset}
+            className="absolute top-0 whitespace-nowrap"
+            style={{ left: `${cluster.offset}ch` }}
+          >
+            {cluster.items.map((anchor, index) => (
+              <ChordLabel
+                key={`${cluster.offset}-${index}`}
+                lead={index > 0}
+                anchor={anchor}
+                active={anchor.chordIndex === activeIndex}
+                hasFill={
+                  anchor.chordIndex !== null &&
+                  (fillAt?.(anchor.chordIndex) ?? false) === true
+                }
+                hasRun={
+                  anchor.chordIndex !== null &&
+                  (runAt?.(anchor.chordIndex) ?? false) === true
+                }
+                halved={
+                  anchor.chordIndex !== null &&
+                  pairedChords !== undefined &&
+                  isPaired(pairedChords, anchor.chordIndex)
+                }
+                onSeek={onSeek}
+                bindMenu={bindMenu}
+              />
+            ))}
           </span>
-        )
-      })}
+        ))}
+      </div>
+      <div className={`whitespace-pre ${lyricClass}`}>{line.lyric || ' '}</div>
     </div>
   )
-}
-
-/** Cột kết thúc của ký hiệu đứng trước, để tính khoảng trắng cần chèn. */
-function previousEnd(
-  placed: readonly { anchor: SheetAnchor; column: number }[],
-  index: number,
-): number {
-  if (index === 0) return 0
-  const previous = placed[index - 1]
-  return previous.column + previous.anchor.symbol.length
 }
 
 function ChordLabel({
   anchor,
   active,
   hasFill,
+  hasRun,
   halved,
+  lead,
   onSeek,
   bindMenu,
 }: {
@@ -949,8 +1057,10 @@ function ChordLabel({
   active: boolean
   /** Chỗ này đang có câu fill nối sang hợp âm sau. */
   hasFill: boolean
+  hasRun?: boolean
   /** Hợp âm này chỉ chiếm nửa ô nhịp. */
   halved: boolean
+  lead?: boolean
   onSeek?: (chordIndex: number) => void
   bindMenu?: (chordIndex: number) => LongPressHandlers
 }) {
@@ -987,7 +1097,11 @@ function ChordLabel({
     Gạch chân cũng **không chiếm chỗ ngang**, nên cột hợp âm không bị xô lệch —
     thêm một ký tự đánh dấu thì phần canh cột phải tính lại theo.
   */
-  const mark = hasFill ? ' underline decoration-dotted underline-offset-4' : ''
+  const mark = hasRun
+    ? ' underline decoration-double decoration-2 underline-offset-4 text-rose-300'
+    : hasFill
+      ? ' underline decoration-dotted underline-offset-4'
+      : ''
   const held =
     anchor.holdRun || anchor.heldLabel
       ? ' overline decoration-dashed decoration-amber-key/70'
@@ -1036,11 +1150,13 @@ function ChordLabel({
       title={
         anchor.heldLabel
           ? `Xoay màu cùng gốc: ${anchor.heldLabel}`
-          : hasFill
+          : hasRun
+            ? 'Có câu chạy ngón Licky · bấm để phát từ đây'
+            : hasFill
             ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
             : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'
       }
-      className={`${style}${mark}${held}${half} touch-manipulation cursor-pointer select-none py-1 hover:decoration-solid`}
+      className={`${lead ? 'ml-1 ' : ''}${style}${mark}${held}${half} touch-manipulation cursor-pointer select-none py-1 hover:decoration-solid`}
     >
       {anchor.symbol}
     </button>

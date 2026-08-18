@@ -171,6 +171,12 @@ interface ChordOverviewProps {
   onRemovePassingHere?: (slotId: string) => void
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  runAt?: (chordIndex: number) => boolean | null
+  onToggleRun?: (chordIndex: number) => void
+  colorHintAt?: (chordIndex: number) => string | null
+  onCycleColor?: (chordIndex: number) => void
+  slashHintAt?: (chordIndex: number) => string | null
+  onToggleSlash?: (chordIndex: number) => void
   transitionAt?: (chordIndex: number) => TransitionOption | null
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
@@ -204,6 +210,12 @@ export function ChordOverview({
   onRemovePassingHere,
   fillAt,
   onToggleFill,
+  runAt,
+  onToggleRun,
+  colorHintAt,
+  onCycleColor,
+  slashHintAt,
+  onToggleSlash,
   transitionAt,
   onToggleTransition,
   onSetTransition,
@@ -311,7 +323,10 @@ export function ChordOverview({
                 .map((symbol, offset) => {
                   const beat = row * cellsPerRow + offset
                   const start =
-                    beat === 0 || shown[beat] !== shown[beat - 1]
+                    beat === 0 ||
+                    shown[beat] !== shown[beat - 1] ||
+                    (chordIndexAt !== undefined &&
+                      chordIndexAt(beat) !== chordIndexAt(beat - 1))
                   const barStart = beat % meter === 0
                   const chordIndex = chordIndexAt?.(beat) ?? null
                   const press =
@@ -342,7 +357,9 @@ export function ChordOverview({
                           ? chordIndexAt?.(beat) === activeChord
                           : beat === playhead)
                           ? 'bg-amber-key/35 text-amber-key'
-                          : 'text-cream'
+                          : runAt?.(chordIndex ?? -1) === true
+                            ? 'bg-rose-400/20 text-rose-300 underline decoration-double'
+                            : 'text-cream'
                       }`}
                     >
                       {start ? symbol : ''}
@@ -424,6 +441,30 @@ export function ChordOverview({
             onToggleFill
               ? () => {
                   onToggleFill(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          run={runAt?.(menu.chordIndex) ?? null}
+          onToggleRun={
+            onToggleRun
+              ? () => {
+                  onToggleRun(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          colorHint={colorHintAt?.(menu.chordIndex) ?? null}
+          onCycleColor={
+            onCycleColor
+              ? () => onCycleColor(menu.chordIndex)
+              : undefined
+          }
+          slashHint={slashHintAt?.(menu.chordIndex) ?? null}
+          onToggleSlash={
+            onToggleSlash
+              ? () => {
+                  onToggleSlash(menu.chordIndex)
                   setMenu(null)
                 }
               : undefined

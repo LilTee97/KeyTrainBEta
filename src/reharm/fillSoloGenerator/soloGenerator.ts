@@ -8,14 +8,21 @@ import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTimi
 import type { ParsedChord } from '../types'
 import type { ApproachDirection, OrnamentDensity } from './graceNoteOrnamenter'
 import { densityOption, ornamentLine, stepInScale } from './graceNoteOrnamenter'
-import { arpeggioRun } from './leadIn'
+import { arpeggioRun, octaveRun } from './leadIn'
+import type { LickyMode } from '../licky/types'
+import { placeLick } from '../licky/generate'
 import type { Lick } from './soloVocabulary'
 import {
   chordBlues,
   chordMaterial,
   chordPentatonic,
   fallbackLick,
+  getLick,
+  inKeyMaterial,
+  keepInKey,
+  ladderOf,
   licksFor,
+  nearestStep,
   resolvesUpFourth,
 } from './soloVocabulary'
 
@@ -129,6 +136,8 @@ export interface SoloOptions {
    * đoạn cũ, nên người học tập theo được. Ngẫu nhiên mỗi lần phát thì không.
    */
   take?: number
+  /** Hợp âm cuối vòng: chạy ngón trên đúng hợp âm đó. */
+  endWithRun?: boolean
 }
 
 /**
@@ -277,7 +286,8 @@ export function fillPositions(
   let breathCount = -1
 
   for (let index = 0; index < chords.length; index += 1) {
-    if (!chords[index].passing) mainIndex += 1
+    if (chords[index].passing) continue
+    mainIndex += 1
 
     if (breaths) {
       const atBreath = breaths.has(mainIndex)
@@ -412,6 +422,14 @@ export function generateFillLine(
      * chỗ để biến tấu.
      */
     take?: number
+    /** Câu fill lấy từ sổ Licky thay vì đi liền bậc. */
+    lickyFills?: boolean
+    /** Câu chạy ngón lấy từ sổ Licky thay vì hợp âm rải. */
+    lickyRuns?: boolean
+    lickyMode?: LickyMode
+    /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
+    extraFills?: ReadonlySet<number>
+    extraRuns?: ReadonlySet<number>
   },
 ): SoloNote[] {
   const {
@@ -424,6 +442,10 @@ export function generateFillLine(
     breaths,
     sectionEnds,
     take = 0,
+    lickyFills = false,
+    lickyMode = 'clone',
+    extraFills,
+    extraRuns,
   } = options
 
   if (chords.length < 2) return []
@@ -439,7 +461,11 @@ export function generateFillLine(
     breaths,
     beatsPerChord,
     // Chỗ chuyển đoạn luôn được chêm, mật độ không gạt đi được.
-    always: sectionEnds ? new Set(sectionEnds.keys()) : undefined,
+    always: new Set([
+      ...(sectionEnds?.keys() ?? []),
+      ...(extraFills ?? []),
+      ...(extraRuns ?? []),
+    ]),
   })) {
     const next = chords[(index + 1) % chords.length]
     const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
@@ -482,20 +508,57 @@ export function generateFillLine(
       const delay = Math.min(transition.delayBeats ?? 0, Math.max(0, total - 1))
       const rest = Math.min(
         transition.restBeats,
-        Math.max(0, total - delay - 0.5),
+        Math.max(0, total - delay - Math.min(2, total)),
       )
       const runEnd = fillStarts[index] + total - rest
+      const runBeats = total - rest - delay
+      const fromBeat = fillStarts[index] + delay
 
       for (const note of arpeggioRun({
         chord: chords[index],
         octaves: transition.octaves,
         endBeat: runEnd,
-        maxBeats: total - rest - delay,
-        fromBeat: fillStarts[index] + delay,
+        maxBeats: runBeats,
+        fromBeat,
       })) {
         result.push({ ...note, isGrace: false })
       }
 
+      continue
+    }
+
+    const start =
+      chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
+
+    if (extraRuns?.has(mainIndex)) {
+      const runBeats = Math.min(2, beatsOf(chords[index], beatsPerChord))
+      result.push(
+        ...placeLick({
+          chord: chords[index],
+          next,
+          startBeat: chordEnd - runBeats,
+          beats: runBeats,
+          take: mainIndex + take,
+          mode: lickyMode,
+          kind: 'run',
+        }),
+      )
+      continue
+    }
+
+    if (lickyFills || extraFills?.has(mainIndex)) {
+      result.push(
+        ...placeLick({
+          chord: chords[index],
+          next,
+          startBeat: start,
+          beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+          take: mainIndex + take,
+          mode: lickyMode,
+          kind: 'fill',
+          key,
+        }),
+      )
       continue
     }
 
@@ -506,7 +569,14 @@ export function generateFillLine(
     */
     const guide = guideToneInto(chords[index], next)
     const [targetClass] = targetPitchClasses(next, 1)
-    const landing = nearestNote(guide ?? targetClass, MELODY_LOW + 7)
+    let landClass = guide ?? targetClass
+    if (tones.size > 0 && !tones.has(landClass)) {
+      const allowed = [...tones]
+      landClass = allowed.reduce((best, tone) =>
+        Math.abs(tone - landClass) < Math.abs(best - landClass) ? tone : best,
+      )
+    }
+    const landing = nearestNote(landClass, MELODY_LOW + 7)
 
     /*
       Ba nốt là đủ để nghe ra hướng đi mà không lấn sang phần hát.
@@ -521,17 +591,14 @@ export function generateFillLine(
         ? 'down'
         : direction === 'below'
           ? 'up'
-          : (mainIndex + take) % 2 === 0
+          : ((mainIndex + take) * 5 + 3) % 2 === 0
             ? 'up'
             : 'down'
-    const steps = Math.floor((mainIndex + take) / 2) % 2 === 0 ? 2 : 3
+    const steps = 2 + (((mainIndex + take) * 3) % 3)
     const line: MidiNote[] = [landing]
     for (let step = 0; step < steps; step += 1) {
       line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
     }
-
-    const start =
-      chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
 
     /*
       Mấy nốt chạy đi nhanh, **nốt kết ngân dài** phần còn lại.
@@ -591,15 +658,19 @@ export function generateSolo(
     density = 'medium',
     graceDensity = 'sparse',
     direction = 'mixed',
-    key = null,
     noteSource = 'chordTone',
     chordsPerPhrase = 2,
     take = 0,
+    endWithRun = false,
   } = options
 
   if (chords.length === 0) return []
 
-  const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
+  const tones = new Set<PitchClass>()
+  for (const chord of chords) {
+    if (chord.passing) continue
+    for (const tone of chordMaterial(chord)) tones.add(tone)
+  }
   const phraseChords = Math.max(1, chordsPerPhrase)
   const round = Math.max(0, Math.floor(take))
 
@@ -642,7 +713,7 @@ export function generateSolo(
   const phraseAt = (beat: number) => Math.floor((beat + EPSILON) / phraseBeats)
 
   const result: SoloNote[] = []
-  let from: MidiNote = SOLO_LOW + 12
+  let from: MidiNote = (SOLO_LOW + 8 + ((Math.imul(round + 3, 2654435761) >>> 0) % 17)) as MidiNote
   let previousShape: number[] = []
   let positionInPhrase = 0
   let currentPhrase = -1
@@ -679,6 +750,88 @@ export function generateSolo(
       ? Math.max(chordBeats / 2, chordBeats - REST_BEATS)
       : chordBeats
 
+    if (endWithRun && index === spans.length - 1) {
+      for (const note of octaveRun({
+        chord,
+        startBeat: start,
+        beats: chordBeats,
+        scale: tones,
+      })) {
+        result.push({
+          note: note.note,
+          startBeat: note.startBeat,
+          durationBeats: note.durationBeats,
+          isGrace: false,
+          hand: note.hand,
+        })
+      }
+      positionInPhrase += 1
+      continue
+    }
+
+    if (positionInPhrase === 0 && index !== spans.length - 1) {
+      const sweep = getLick('sweep')
+      const swept = sweep?.build({
+        chord,
+        next: spans[index + 1]?.chord ?? null,
+        startBeat: start,
+        beats: playBeats,
+        from,
+        low,
+        high,
+        scaleTones: tones,
+        previousShape,
+        notesPerBeat,
+        material: materialFor(chord, noteSource, null, [], tones),
+      })
+      const line =
+        swept && swept.notes.length > 0
+          ? swept.notes.map((note) => ({
+              note: note.note,
+              startBeat: note.startBeat,
+              durationBeats: note.durationBeats,
+              isGrace: false,
+              hand: note.note < 60 ? ('left' as const) : ('right' as const),
+            }))
+          : arpeggioRun({
+              chord,
+              octaves: 2,
+              endBeat: start + playBeats,
+              maxBeats: playBeats,
+              fromBeat: start,
+            }).map((note) => ({
+              note: note.note,
+              startBeat: note.startBeat,
+              durationBeats: note.durationBeats,
+              isGrace: false,
+              hand: note.hand,
+            }))
+      result.push(...line)
+      positionInPhrase += 1
+      continue
+    }
+
+    if (positionInPhrase === 2 && index !== spans.length - 1) {
+      for (const note of placeLick({
+        chord,
+        next: spans[index + 1]?.chord,
+        startBeat: start,
+        beats: playBeats,
+        take: round + index + 5,
+        kind: 'run',
+      })) {
+        result.push({
+          note: note.note,
+          startBeat: note.startBeat,
+          durationBeats: note.durationBeats,
+          isGrace: false,
+          hand: note.hand,
+        })
+      }
+      positionInPhrase += 1
+      continue
+    }
+
     const lick = chooseLick({
       phrase,
       positionInPhrase,
@@ -700,8 +853,20 @@ export function generateSolo(
       high,
       scaleTones: tones,
       previousShape,
-      notesPerBeat,
-      material: materialFor(chord, noteSource),
+      notesPerBeat:
+        positionInPhrase === 2 && !isPhraseEnd
+          ? notesPerBeat * 2
+          : notesPerBeat,
+      material: materialFor(
+        chord,
+        noteSource,
+        null,
+        [
+          spans[index + 1]?.chord,
+          spans[index - 1]?.chord,
+        ].filter((entry): entry is ParsedChord => entry !== undefined),
+        tones,
+      ),
     }
 
     /*
@@ -715,6 +880,28 @@ export function generateSolo(
     let built = lick.build(context)
     if (built.notes.length === 0 && !lick.roles.includes('rest')) {
       built = fallbackLick().build(context)
+    }
+    const safe = ladderOf(context.material, low, high)
+    if (safe.length > 0) {
+      built = {
+        ...built,
+        notes: built.notes.map((note) => ({
+          ...note,
+          note: safe[nearestStep(safe, note.note)] ?? note.note,
+          soft: false,
+        })),
+      }
+    }
+    if (positionInPhrase === 2 && !isPhraseEnd && built.notes.length > 0) {
+      const slot = playBeats / built.notes.length
+      built = {
+        ...built,
+        notes: built.notes.map((note, index) => ({
+          ...note,
+          startBeat: start + index * slot,
+          durationBeats: slot * 0.85,
+        })),
+      }
     }
 
     /*
@@ -743,10 +930,70 @@ export function generateSolo(
     if (built.shape.length > 0) previousShape = built.shape
   }
 
-  return addGraceNotes(result.sort((a, b) => a.startBeat - b.startBeat), {
-    direction,
-    density: graceDensity,
-    tones,
+  const lockedFrom = endWithRun
+    ? (spans[spans.length - 1]?.start ?? Number.POSITIVE_INFINITY)
+    : Number.POSITIVE_INFINITY
+  const locked = (beat: number) => beat + 1e-6 >= lockedFrom
+
+  const ordered = result.sort((a, b) => a.startBeat - b.startBeat)
+  const mains = ordered.filter((note) => !note.isGrace)
+  for (let index = 1; index < mains.length; index += 1) {
+    const prev = mains[index - 1]!
+    const curr = mains[index]!
+    if (locked(curr.startBeat)) continue
+    while (curr.note - prev.note > 14) curr.note = (curr.note - 12) as MidiNote
+    while (prev.note - curr.note > 14) curr.note = (curr.note + 12) as MidiNote
+  }
+
+  if (tones.size > 0 && round > 0) {
+    const ladder = ladderOf([...tones], SOLO_LOW, SOLO_CEILING)
+    if (ladder.length > 1) {
+      for (const note of ordered) {
+        if (locked(note.startBeat)) continue
+        const at = nearestStep(ladder, note.note)
+        note.note = ladder[(at + round) % ladder.length]!
+      }
+    }
+  }
+
+  if (tones.size > 0) {
+    for (const note of ordered) {
+      if (locked(note.startBeat)) continue
+      const pitch = ((note.note % 12) + 12) % 12 as PitchClass
+      if (tones.has(pitch)) continue
+      const span = spans.find(
+        (entry) =>
+          note.startBeat + 1e-6 >= entry.start &&
+          note.startBeat < entry.start + entry.beats,
+      )
+      const pool = span
+        ? materialFor(span.chord, noteSource, null, [], tones).filter((tone) =>
+            tones.has(tone),
+          )
+        : [...tones]
+      const ladder = ladderOf(pool.length > 0 ? pool : [...tones], SOLO_LOW, SOLO_CEILING)
+      note.note = ladder[nearestStep(ladder, note.note)] ?? note.note
+    }
+  }
+
+  const free = ordered.filter((note) => !locked(note.startBeat))
+  const run = ordered.filter((note) => locked(note.startBeat))
+  const withGrace = [
+    ...addGraceNotes(free, {
+      direction,
+      density: graceDensity,
+      tones,
+    }),
+    ...run,
+  ]
+  const lined = withGrace.sort((a, b) => a.startBeat - b.startBeat)
+  return lined.map((note) => {
+    let duration = note.durationBeats
+    for (const other of lined) {
+      const room = other.startBeat - note.startBeat
+      if (room > 1e-6 && duration > room) duration = room
+    }
+    return duration === note.durationBeats ? note : { ...note, durationBeats: duration }
   })
 }
 
@@ -865,10 +1112,36 @@ function addGraceNotes(
 function materialFor(
   chord: ParsedChord,
   noteSource: SoloNoteSource,
+  key?: { tonic: PitchClass; scale: ScaleType } | null,
+  alts: readonly ParsedChord[] = [],
+  pool?: ReadonlySet<PitchClass>,
 ): PitchClass[] {
-  if (noteSource === 'chordPentatonic') return chordPentatonic(chord)
-  if (noteSource === 'blues') return chordBlues(chord)
-  return chordMaterial(chord)
+  const raw =
+    noteSource === 'chordPentatonic'
+      ? chordPentatonic(chord)
+      : noteSource === 'blues'
+        ? chordBlues(chord)
+        : chordMaterial(chord)
+  const clip = (pitches: readonly PitchClass[]) => {
+    const keyed = keepInKey(pitches, key)
+    if (!pool || pool.size === 0) return keyed
+    return keyed.filter((tone) => pool.has(tone))
+  }
+  const kept = clip(raw)
+  if (kept.length >= 3 || (!key && !pool)) return kept.length > 0 ? kept : raw
+  for (const alt of alts) {
+    const other = clip(
+      noteSource === 'chordPentatonic'
+        ? chordPentatonic(alt)
+        : noteSource === 'blues'
+          ? chordBlues(alt)
+          : chordMaterial(alt),
+    )
+    if (other.length >= 3) return other
+  }
+  const fallback = inKeyMaterial(chord, key)
+  const clipped = pool ? fallback.filter((tone) => pool.has(tone)) : fallback
+  return clipped.length > 0 ? clipped : kept.length > 0 ? kept : raw
 }
 
 interface LickChoice {
@@ -962,7 +1235,8 @@ function chooseLick(choice: LickChoice): Lick {
     Bản trước cộng thẳng cùng một số vào cả hai chỗ, nên hai bánh quay cùng tốc
     độ và chu kỳ co lại còn đúng bốn — nghe vài lượt là bắt đầu lặp.
   */
-  const rotation = phrase + take
+  const mix = (salt: number) => Math.imul(take + 1 + salt + phrase * 17, 2654435761) >>> 0
+  const rotation = mix(3)
   const laps = Math.floor(rotation / Math.max(1, openers.length))
 
   /*
@@ -983,11 +1257,25 @@ function chooseLick(choice: LickChoice): Lick {
     return fit(licksFor('rest')[0])
   }
 
-  if (positionInPhrase === 0 || middles.length === 0) {
+  const sweep = openers.find((lick) => lick.id === 'sweep')
+  const runners = openers.filter((lick) => lick.id !== 'chord-tone')
+  if (positionInPhrase === 0 && runners.length > 0) {
+    if (sweep && mix(9) % 5 !== 0) return fit(sweep)
+    return fit(runners[mix(11) % runners.length])
+  }
+  if (positionInPhrase === 2) {
+    return fit(openers.find((lick) => lick.id === 'chord-tone') ?? fallbackLick())
+  }
+
+  if (middles.length === 0) {
     return fit(openers[rotation % openers.length])
   }
 
-  const middle = middles[(rotation + positionInPhrase) % middles.length]
+  const inKey = middles.filter(
+    (lick) => lick.id !== 'approach' && lick.id !== 'enclosure',
+  )
+  const pool = inKey.length > 0 ? inKey : middles
+  const middle = pool[mix(13 + positionInPhrase) % pool.length]
   // Chưa có mô-típ nào để nhắc lại thì lùi về mẫu giữa câu khác.
   if (middle.id === 'echo' && !hasMotif) {
     return fit(middles.find((lick) => lick.id !== 'echo') ?? middle)

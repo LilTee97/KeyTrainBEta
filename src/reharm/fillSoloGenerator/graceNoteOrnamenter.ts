@@ -54,6 +54,10 @@ export const DENSITY_OPTIONS: readonly DensityOption[] = [
   },
 ]
 
+export const PHRASE_DENSITY_OPTIONS = DENSITY_OPTIONS.filter(
+  (option) => option.id !== 'sparse',
+)
+
 export function densityOption(density: OrnamentDensity): DensityOption {
   return (
     DENSITY_OPTIONS.find((option) => option.id === density) ??

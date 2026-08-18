@@ -290,9 +290,6 @@ export function NoteGatedPractice({
         step && (
           <div>
             <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-              <span className="font-serif text-2xl font-semibold text-amber-key">
-                {step.symbol}
-              </span>
               <span className="font-mono text-xs text-dim">
                 {step.notes.map((note) => midiToName(note)).join(' ')}
               </span>
@@ -396,6 +393,12 @@ export function NoteGatedPractice({
             nowBeat={looping ? positionBeats : undefined}
             lowNote={range.low}
             highNote={range.high}
+            chord={
+              looping
+                ? [...steps].reverse().find((entry) => entry.startBeat <= positionBeats)
+                    ?.symbol
+                : step?.symbol
+            }
           />
         )}
 

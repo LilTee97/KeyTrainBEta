@@ -97,3 +97,36 @@ export function chooseInterludeWindow(
 
   return best
 }
+
+/**
+ * Chọn 4 hợp âm từ điệp: ưu tiên móc lặp lại, cuối hút về đầu, hòa thì lấy đầu đoạn.
+ */
+export function chooseChorusLoop(
+  chords: readonly ParsedChord[],
+  size = 4,
+): { from: number; to: number } | null {
+  if (chords.length === 0) return null
+  if (chords.length <= size) return { from: 0, to: chords.length - 1 }
+
+  const keyOf = (from: number) =>
+    chords
+      .slice(from, from + size)
+      .map((chord) => `${chord.root}`)
+      .join('-')
+
+  const counts = new Map<string, number>()
+  for (let from = 0; from + size <= chords.length; from += 1) {
+    const key = keyOf(from)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+
+  let best = { from: 0, to: size - 1, score: -1 }
+  for (let from = 0; from + size <= chords.length; from += 1) {
+    const to = from + size - 1
+    const pull = pullStrength(chords[to]!, chords[from]!)
+    const repeats = counts.get(keyOf(from)) ?? 1
+    const score = pull + (repeats > 1 ? 3 : 0) + (from === 0 ? 2 : 0)
+    if (score > best.score) best = { from, to, score }
+  }
+  return { from: best.from, to: best.to }
+}

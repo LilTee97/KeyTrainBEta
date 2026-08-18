@@ -81,12 +81,13 @@ describe('nốt láy trong câu solo', () => {
   })
 
   it('nốt đứng trước được cắt đuôi, không chồng lên nốt láy', () => {
-    const sorted = [...line].sort((a, b) => a.startBeat - b.startBeat)
+    const sorted = [...solo()].sort((a, b) => a.startBeat - b.startBeat)
 
     for (let index = 1; index < sorted.length; index += 1) {
-      const previous = sorted[index - 1]
+      if (!sorted[index]!.isGrace) continue
+      const previous = sorted[index - 1]!
       const end = previous.startBeat + previous.durationBeats
-      expect(end).toBeLessThanOrEqual(sorted[index].startBeat + 0.001)
+      expect(end).toBeLessThanOrEqual(sorted[index]!.startBeat + 0.001)
     }
   })
 

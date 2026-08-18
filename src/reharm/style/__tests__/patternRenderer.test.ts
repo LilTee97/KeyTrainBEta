@@ -258,24 +258,14 @@ describe('giveCompingToLeft', () => {
     expect(next[0]!.hand).toBe('left')
   })
 
-  it('cùng ô nhịp với fill thì cả ô nhường tay trái', () => {
+  it('chưa tới nốt fill thì tay phải vẫn quạt', () => {
     const accomp = [
       { notes: [67], startBeat: 0, durationBeats: 1, hand: 'right' as const, velocity: 80 },
     ]
     const fill = [
       { notes: [76], startBeat: 2, durationBeats: 1, hand: 'right' as const, velocity: 90 },
     ]
-    expect(giveCompingToLeft(accomp, fill, 4)[0]!.hand).toBe('left')
-  })
-
-  it('ô khác thì vẫn quạt tay phải', () => {
-    const accomp = [
-      { notes: [67], startBeat: 0, durationBeats: 1, hand: 'right' as const, velocity: 80 },
-    ]
-    const fill = [
-      { notes: [76], startBeat: 5, durationBeats: 1, hand: 'right' as const, velocity: 90 },
-    ]
-    expect(giveCompingToLeft(accomp, fill, 4)[0]!.hand).toBe('right')
+    expect(giveCompingToLeft(accomp, fill)[0]!.hand).toBe('right')
   })
 })
 

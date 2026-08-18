@@ -27,6 +27,7 @@ import type { MidiNote } from '../shared/musicTheory/types'
 import { fitToKeyboard } from '../shared/musicTheory/voicing'
 import {
   addSimilarChordPairs,
+  beatsOf,
   chordDurations,
   chordIndexAt,
   mainChordSpans,
@@ -68,7 +69,10 @@ import type {
   ApproachDirection,
   OrnamentDensity,
 } from './fillSoloGenerator/graceNoteOrnamenter'
-import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
+import {
+  DENSITY_OPTIONS,
+  PHRASE_DENSITY_OPTIONS,
+} from './fillSoloGenerator/graceNoteOrnamenter'
 import type {
   GraceDensity,
   SoloNoteSource,
@@ -108,6 +112,11 @@ import {
   MINOR_COLOR_OPTIONS,
   PALETTE_BY_TONIC_COLOR,
   bestUpperStructure,
+  compatibleColorIds,
+  nextColorId,
+  withQuality,
+  colorPlainChord,
+  toSlashChord,
 } from './reharmEngine/staticVoicingRules'
 import {
   plainSequence,
@@ -130,11 +139,12 @@ import {
   buildArrangedSong,
   defaultArrangement,
 } from './style/arrangement'
-import { pullChordFor, turnaroundInto } from './style/turnaround'
+import { pullChordFor } from './style/turnaround'
+import { chooseChorusLoop } from './style/interludeLoop'
 import type { EndingMode } from './style/endingChord'
 import { endingChordFor } from './style/endingChord'
-import { chooseInterludeWindow } from './style/interludeLoop'
-import { arpeggioRun } from './fillSoloGenerator/leadIn'
+import type { LickyMode } from './licky/types'
+import { blockedDocs } from './licky/docs'
 
 /**
  * Giang tấu chạy trên bốn hợp âm nhặt từ vòng của bài.
@@ -417,6 +427,14 @@ export function ReharmHome() {
    * chung. Ghi kiểu này thì đổi mật độ vẫn giữ được lựa chọn của người dùng.
    */
   const [mutedFills, setMutedFills] = useState<ReadonlySet<number>>(new Set())
+  const [extraFills, setExtraFills] = useState<ReadonlySet<number>>(new Set())
+  const [extraRuns, setExtraRuns] = useState<ReadonlySet<number>>(new Set())
+  const [lickyFills, setLickyFills] = useState(false)
+  const [lickyRuns, setLickyRuns] = useState(false)
+  const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
+  const [phraseSpin, setPhraseSpin] = useState(0)
+  const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
+  const [slashEdits, setSlashEdits] = useState<Record<number, boolean>>({})
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
   const [smoothVoicing, setSmoothVoicing] = useState(true)
@@ -461,7 +479,7 @@ export function ReharmHome() {
    * thành chỗ nghỉ, nên hình câu ra `mở → nghỉ → giữa → kết` — đúng phrasing
    * `pianoimprovnotes.md` mục 4 mô tả.
    */
-  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('sparse')
+  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
 
   /**
    * Mật độ **chỗ chêm câu fill**, tách hẳn khỏi mật độ nốt câu nhạc.
@@ -495,6 +513,7 @@ export function ReharmHome() {
 
   /** Lần bấm phát thứ mấy, để câu giang tấu không lặp lại giữa các lần phát. */
   const playRound = useRef(0)
+  const playSpin = useRef(0)
 
   /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
   const [songId, setSongId] = useState<string | null>(null)
@@ -629,18 +648,8 @@ export function ReharmHome() {
       ...pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
     }
 
-    for (const index of transitionAt) {
-      table[index] = (table[index] ?? chordBeats) + chordBeats
-    }
-
     return table
-  }, [
-    importedBeats,
-    pairedChords,
-    transitionAt,
-    sequence.chords.length,
-    chordBeats,
-  ])
+  }, [importedBeats, pairedChords, sequence.chords.length, chordBeats])
 
   const reharm = useMemo(() => {
     const parsedKey = manualKey
@@ -714,7 +723,17 @@ export function ReharmHome() {
     halvedBeats,
   ])
 
-  const recolored = reharm.colored
+  const recolored = useMemo(
+    () =>
+      reharm.colored.map((chord, index) => {
+        const painted = colorEdits[index]
+          ? withQuality(chord, colorEdits[index])
+          : chord
+        if (slashEdits[index] === true) return toSlashChord(painted) ?? painted
+        return painted
+      }),
+    [reharm.colored, colorEdits, slashEdits],
+  )
   const passingSuggestions = reharm.passingSuggestions
 
   /** Tính chất giọng hiện tại (để lọc ô Giọng chỉ hiện trưởng hoặc thứ). */
@@ -805,7 +824,23 @@ export function ReharmHome() {
     })
 
   /** Vòng hợp âm về mặt cách bấm — thứ tay thật sự chơi. */
-  const withPassing = reharm.final
+  const withPassing = useMemo(() => {
+    let main = -1
+    return reharm.final.map((chord) => {
+      if (chord.passing) return chord
+      main += 1
+      const painted = colorEdits[main]
+        ? withQuality(chord, colorEdits[main])
+        : chord
+      if (slashEdits[main] === true) return toSlashChord(painted) ?? painted
+      if (slashEdits[main] === false) {
+        const base = reharm.colored[main]
+        if (!base) return painted
+        return colorEdits[main] ? withQuality(base, colorEdits[main]) : base
+      }
+      return painted
+    })
+  }, [reharm.final, reharm.colored, colorEdits, slashEdits])
 
   /**
    * Từ phách delay trở đi không quạt điệu — chạy ngón thay thế, không chờ hết ô.
@@ -851,10 +886,10 @@ export function ReharmHome() {
   const sheet = useMemo(() => {
     if (!pastedSong) return null
     return resectionSheet(
-      buildSongSheet(pastedSong, reharm.colored, withPassing),
+      buildSongSheet(pastedSong, recolored, withPassing),
       sectionMarks,
     )
-  }, [pastedSong, reharm.colored, withPassing, sectionMarks])
+  }, [pastedSong, recolored, withPassing, sectionMarks])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
   const accompaniment = useMemo(() => {
@@ -907,42 +942,68 @@ export function ReharmHome() {
    *
    * Ở đây mới dựng được vì chỗ này là chỗ duy nhất biết **hợp âm thật**: khung
    * thứ tự chơi chỉ làm việc với mốc phách, còn muốn biết hút về đâu thì phải
-   * đọc được hợp âm đầu tiên của đoạn kế tiếp.
-   */
+    * đọc được hợp âm đầu tiên của đoạn kế tiếp.
+    */
   /**
-   * Vòng ngắn mà giang tấu chạy trên đó, nhặt từ đoạn được mượn.
-   *
-   * Mượn trọn cả đoạn thì giang tấu dài lê thê, nên chỉ lấy bốn hợp âm — chọn
-   * sao cho hợp âm cuối hút mạnh nhất về đoạn sắp vào. Xem `interludeLoop.ts`.
+   * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
    */
   const interludeWindow = useCallback(
-    (over: SourceSection, next: SourceSection | null) => {
+    (over: SourceSection, _next: SourceSection | null) => {
       const spans = mainChordSpans(withPassing, chordBeats)
-      const end = over.startBeat + over.lengthBeats
+      const verse =
+        songSources?.find((source) => /điệp\s*khúc/i.test(source.name)) ??
+        over
+      const end = verse.startBeat + verse.lengthBeats
 
-      const inside = spans.filter(
-        (span) =>
-          span.start >= over.startBeat - 0.001 && span.start < end - 0.001,
-      )
-      if (inside.length === 0) return null
+      const chorus: typeof spans = []
+      let main = -1
+      for (const chord of withPassing) {
+        if (chord.passing) continue
+        main += 1
+        const span = spans[main]
+        if (!span) continue
+        if (span.start < verse.startBeat - 0.001 || span.start >= end - 0.001) {
+          continue
+        }
+        if (pairedChords.has(main - 1)) continue
+        chorus.push(span)
+      }
+      if (chorus.length === 0) return null
 
-      const target = next
-        ? spans.find((span) => Math.abs(span.start - next.startBeat) < 0.001)
-        : undefined
-
-      const window = chooseInterludeWindow(
-        inside.map((span) => span.chord),
-        // Không có đoạn nào sau thì không có gì để hút về; lấy khoảng cuối.
-        target?.chord ?? inside[inside.length - 1].chord,
+      const window = chooseChorusLoop(
+        chorus.map((span) => span.chord),
         INTERLUDE_CHORDS,
       )
-      if (!window) return null
+      const picked = window
+        ? chorus.slice(window.from, window.to + 1)
+        : chorus.slice(0, INTERLUDE_CHORDS)
+      const first = picked[0]
+      const last = picked[picked.length - 1]
+      if (!first || !last) return null
 
-      const first = inside[window.from]
-      const last = inside[window.to]
-      const picked = inside.slice(window.from, window.to + 1)
+      const windowChords = picked.map((span) => colorPlainChord(span.chord))
+      const runBeats = Math.max(0.5, last.beats - 1)
+      const lastLoopChords = windowChords.map((chord, index) =>
+        index === windowChords.length - 1
+          ? { ...chord, beats: runBeats }
+          : chord,
+      )
+      const nextFirst = _next
+        ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
+        : undefined
+      const pull = nextFirst
+        ? pullChordFor(nextFirst.chord, last.chord)
+        : null
+      const pullHit = pull
+        ? renderPattern(
+            voiceLeadTwoHands([pull], { dropRootFromRightHand: dropRoot }),
+            style,
+            { beatsPerChord: 1, beatsEach: [1] },
+          )
+        : []
 
-      const windowChords = picked.map((span) => span.chord)
+      const head = picked.slice(0, -1)
+      const headChords = windowChords.slice(0, -1)
 
       return {
         startBeat: first.start,
@@ -958,9 +1019,20 @@ export function ReharmHome() {
             beatsEach: picked.map((span) => span.beats),
           },
         ),
-        solo: (take: number) =>
+        lastEvents: renderPattern(
+          voiceLeadTwoHands(headChords, {
+            dropRootFromRightHand: dropRoot,
+          }),
+          style,
+          {
+            beatsPerChord: chordBeats,
+            beatsEach: head.map((span) => span.beats),
+          },
+        ),
+        exit: pullHit,
+        solo: (take: number, lastLoop?: boolean) =>
           soloToTimeline(
-            generateSolo(windowChords, {
+            generateSolo(lastLoop ? lastLoopChords : windowChords, {
               beatsPerChord: chordBeats,
               direction: soloDirection,
               density: soloDensity,
@@ -968,7 +1040,8 @@ export function ReharmHome() {
               key: reharm.key,
               noteSource,
               chordsPerPhrase,
-              take,
+              take: take + phraseSpin + playSpin.current,
+              endWithRun: lastLoop === true,
             }),
           ),
       }
@@ -976,6 +1049,8 @@ export function ReharmHome() {
     [
       withPassing,
       chordBeats,
+      pairedChords,
+      songSources,
       dropRoot,
       style,
       soloDirection,
@@ -984,98 +1059,8 @@ export function ReharmHome() {
       reharm.key,
       noteSource,
       chordsPerPhrase,
+      phraseSpin,
     ],
-  )
-
-  /**
-   * Dựng câu quay đầu cuối giang tấu, hút về đoạn ngay sau nó.
-   *
-   * Ở đây mới dựng được vì chỗ này là chỗ duy nhất biết **hợp âm thật**: khung
-   * thứ tự chơi chỉ làm việc với mốc phách, còn muốn biết hút về đâu thì phải
-   * đọc được hợp âm đầu tiên của đoạn kế tiếp.
-   */
-  const buildTurnaround = useCallback(
-    (over: SourceSection, next: SourceSection) => {
-      const spans = mainChordSpans(withPassing, chordBeats)
-
-      const target = spans.find(
-        (span) => Math.abs(span.start - next.startBeat) < 0.001,
-      )
-      // Ô cuối của **vòng giang tấu**, không phải ô cuối của cả đoạn.
-      const tail = interludeWindow(over, next)?.chords.at(-1)
-      if (!target || !tail) return null
-
-      /*
-        Cụm quay đầu chiếm **hai ô nhịp** cuối vòng giang tấu.
-
-        Nhồi cả cụm hai-năm-một lẫn câu rải vào một ô thì mỗi hợp âm chỉ được
-        một phách và câu rải chỉ được một phách — đánh vội tới mức không nghe
-        ra hợp âm gì. Hai ô cho mỗi thứ một chỗ đứng riêng.
-      */
-      const bar = style.beatsPerMeasure
-      const window = interludeWindow(over, next)
-      const beats = Math.min(bar * 2, window?.lengthBeats ?? bar)
-
-      const plan = turnaroundInto(target.chord, bar >= 2 ? 2 : 1, tail.chord)
-      if (!plan) return null
-
-      /*
-        **Ô thứ nhất** là cụm hai-năm-một khép vòng.
-
-        Hợp âm đích chiếm nửa ô, mấy hợp âm dẫn chia nhau nửa còn lại: bậc hai
-        và bậc năm là chỗ *đi*, hợp âm đích là chỗ *đậu lại*. Ba hợp âm ra
-        1 · 1 · 2 phách, hai hợp âm ra 2 · 2 — cả hai đều đúng lưới. Chia đều
-        ba hợp âm trong một ô thì ra 1,33 phách, lệch khỏi mọi lưới nhịp.
-      */
-      const approach = plan.chords.slice(0, -1)
-      const lead = approach.length > 0 ? bar / 2 / approach.length : 0
-      const beatsEach = [...approach.map(() => lead), bar / 2]
-
-      const hands = voiceLeadTwoHands(plan.chords, {
-        dropRootFromRightHand: dropRoot,
-      })
-
-      const events = renderPattern(hands, style, {
-        beatsPerChord: bar / 2,
-        beatsEach,
-      })
-
-      /*
-        **Ô thứ hai** là hợp âm rải rồi nghỉ.
-
-        Cụm hai-năm-một vừa *kết thúc* một câu; chỗ nối sang đoạn hát cần một
-        cú mở cửa chứ không phải một dấu chấm. Hợp âm rải chạy lên rồi bỏ lửng,
-        nên nó đẩy tai về phía trước thay vì chốt lại.
-
-        Rải chiếm nửa đầu ô, nửa sau để trống — đó là chỗ người hát lấy hơi
-        trước khi vào.
-      */
-      const pull = pullChordFor(target.chord, plan.chords.at(-2))
-      const spread =
-        pull && beats > bar
-          ? arpeggioRun({
-              chord: pull,
-              octaves: 2,
-              endBeat: bar + bar / 2,
-              maxBeats: bar / 2,
-            }).map((note) => ({
-              startBeat: note.startBeat,
-              durationBeats: note.durationBeats,
-              notes: [note.note],
-              hand: note.hand,
-              /*
-                Nhấn hơn phần đệm để nghe ra đây là lời mời vào hát.
-
-                Thang này là **MIDI 0-127**, không phải 0-1. Bản đầu để 0.9 nên
-                nó phát ở 0,7% âm lượng — nghe như không có. Phần đệm dùng 80.
-              */
-              velocity: 92,
-            }))
-          : []
-
-      return { events: [...events, ...spread], beats }
-    },
-    [withPassing, chordBeats, dropRoot, style, interludeWindow],
   )
 
   /**
@@ -1102,10 +1087,10 @@ export function ReharmHome() {
           density: fillDensity,
           breaths,
           beatsPerChord: chordBeats,
-          always: transitionAt,
+          always: new Set([...transitionAt, ...extraFills, ...extraRuns]),
         }).map((position) => position.mainIndex),
       ),
-    [withPassing, fillDensity, breaths, transitionAt, chordBeats],
+    [withPassing, fillDensity, breaths, transitionAt, extraFills, extraRuns, chordBeats],
   )
 
   /**
@@ -1115,13 +1100,177 @@ export function ReharmHome() {
    * chia đôi cho hợp âm lướt. Lúc đó giao diện không bày mục bật tắt ra, vì bày
    * một nút không làm gì chỉ gây hiểu nhầm.
    */
+  const fullMeasureAt = useCallback(
+    (chordIndex: number) => {
+      let main = -1
+      for (const chord of withPassing) {
+        if (chord.passing) continue
+        main += 1
+        if (main === chordIndex) {
+          return beatsOf(chord, chordBeats) >= chordBeats
+        }
+      }
+      return false
+    },
+    [withPassing, chordBeats],
+  )
+
   const fillAt = useCallback(
     (chordIndex: number) => {
-      if (!fillEligible.has(chordIndex)) return null
-      return !mutedFills.has(chordIndex)
+      if (transitions.has(chordIndex)) return null
+      if (extraFills.has(chordIndex)) return true
+      if (extraRuns.has(chordIndex)) {
+        return fullMeasureAt(chordIndex) ? false : null
+      }
+      if (fillEligible.has(chordIndex)) return !mutedFills.has(chordIndex)
+      if (fullMeasureAt(chordIndex)) return false
+      return null
     },
-    [fillEligible, mutedFills],
+    [transitions, extraFills, extraRuns, fillEligible, mutedFills, fullMeasureAt],
   )
+
+  const runAt = useCallback(
+    (chordIndex: number) => {
+      if (transitions.has(chordIndex)) return null
+      if (extraRuns.has(chordIndex)) return true
+      if (fullMeasureAt(chordIndex)) return false
+      return null
+    },
+    [extraRuns, fullMeasureAt, transitions],
+  )
+
+  const toggleFill = useCallback((chordIndex: number) => {
+    if (transitions.has(chordIndex)) return
+    setPhraseSpin((spin) => spin + 1)
+    const on =
+      extraFills.has(chordIndex) ||
+      (fillEligible.has(chordIndex) && !mutedFills.has(chordIndex))
+    setLickyFills(true)
+    setExtraRuns((current) => {
+      if (!current.has(chordIndex)) return current
+      const next = new Set(current)
+      next.delete(chordIndex)
+      return next
+    })
+    setExtraFills((current) => {
+      const next = new Set(current)
+      if (on) next.delete(chordIndex)
+      else next.add(chordIndex)
+      return next
+    })
+    setMutedFills((current) => {
+      const next = new Set(current)
+      if (on) next.add(chordIndex)
+      else next.delete(chordIndex)
+      return next
+    })
+  }, [transitions, extraFills, fillEligible, mutedFills])
+
+  const cycleColor = useCallback(
+    (chordIndex: number) => {
+      const painted = reharm.colored[chordIndex]
+      if (!painted) return
+      const currentId = colorEdits[chordIndex] ?? painted.quality.id
+      const next = nextColorId(painted, reharm.key, currentId)
+      setColorEdits((current) => {
+        if (next === painted.quality.id) {
+          if (!(chordIndex in current)) return current
+          const copy = { ...current }
+          delete copy[chordIndex]
+          return copy
+        }
+        return { ...current, [chordIndex]: next }
+      })
+    },
+    [reharm.colored, reharm.key, colorEdits],
+  )
+
+  const colorHintAt = useCallback(
+    (chordIndex: number) => {
+      const painted = reharm.colored[chordIndex]
+      if (!painted) return null
+      if (compatibleColorIds(painted, reharm.key).length < 2) return null
+      const currentId = colorEdits[chordIndex] ?? painted.quality.id
+      return withQuality(
+        painted,
+        nextColorId(painted, reharm.key, currentId),
+      ).symbol
+    },
+    [reharm.colored, reharm.key, colorEdits],
+  )
+
+  const slashHintAt = useCallback(
+    (chordIndex: number) => {
+      const painted = reharm.colored[chordIndex]
+      if (!painted) return null
+      const base = colorEdits[chordIndex]
+        ? withQuality(painted, colorEdits[chordIndex])
+        : painted
+      const slashed = toSlashChord(base)
+      const showing =
+        slashEdits[chordIndex] === true ||
+        (slashEdits[chordIndex] !== false && base.bass !== undefined)
+      if (showing) return base.symbol
+      return slashed?.symbol ?? null
+    },
+    [reharm.colored, colorEdits, slashEdits],
+  )
+
+  const toggleSlash = useCallback((chordIndex: number) => {
+    setSlashEdits((current) => {
+      const painted = reharm.colored[chordIndex]
+      if (!painted) return current
+      const base = colorEdits[chordIndex]
+        ? withQuality(painted, colorEdits[chordIndex])
+        : painted
+      const slashed = toSlashChord(base)
+      const showing =
+        current[chordIndex] === true ||
+        (current[chordIndex] !== false && base.bass !== undefined)
+      if (showing) return { ...current, [chordIndex]: false }
+      if (!slashed) return current
+      return { ...current, [chordIndex]: true }
+    })
+  }, [reharm.colored, colorEdits])
+
+  const markTransition = useCallback((chordIndex: number) => {
+    const on = transitions.has(chordIndex)
+    setTransitionEdits((current) => ({
+      ...current,
+      [chordIndex]: on ? null : DEFAULT_TRANSITION,
+    }))
+    if (on) return
+    setExtraFills((current) => {
+      if (!current.has(chordIndex)) return current
+      const next = new Set(current)
+      next.delete(chordIndex)
+      return next
+    })
+    setExtraRuns((current) => {
+      if (!current.has(chordIndex)) return current
+      const next = new Set(current)
+      next.delete(chordIndex)
+      return next
+    })
+  }, [transitions])
+
+  const toggleRun = useCallback((chordIndex: number) => {
+    if (transitions.has(chordIndex)) return
+    setPhraseSpin((spin) => spin + 1)
+    setLickyRuns(true)
+    setExtraFills((current) => {
+      if (!current.has(chordIndex)) return current
+      const next = new Set(current)
+      next.delete(chordIndex)
+      return next
+    })
+    setExtraRuns((current) => {
+      const next = new Set(current)
+      if (next.has(chordIndex)) next.delete(chordIndex)
+      else next.add(chordIndex)
+      return next
+    })
+  }, [transitions])
 
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useCallback(
@@ -1135,7 +1284,16 @@ export function ReharmHome() {
           density: fillDensity,
           key: reharm.key,
           skipFills: mutedFills,
-          take,
+          extraFills: new Set(
+            [...extraFills].filter((index) => !transitions.has(index)),
+          ),
+          extraRuns: new Set(
+            [...extraRuns].filter((index) => !transitions.has(index)),
+          ),
+          lickyFills,
+          lickyRuns,
+          lickyMode,
+          take: take + phraseSpin + playSpin.current,
         }),
       ),
     [
@@ -1145,6 +1303,12 @@ export function ReharmHome() {
       fillDensity,
       reharm.key,
       mutedFills,
+      extraFills,
+      extraRuns,
+      lickyFills,
+      lickyRuns,
+      lickyMode,
+      phraseSpin,
       breaths,
       transitions,
     ],
@@ -1167,7 +1331,11 @@ export function ReharmHome() {
       chordsPerPhrase,
     }
 
-    return (take: number) => generateSolo(withPassing, { ...args, take })
+    return (take: number) =>
+      generateSolo(withPassing, {
+        ...args,
+        take: take + phraseSpin + playSpin.current,
+      })
   }, [
     withPassing,
     chordBeats,
@@ -1177,6 +1345,7 @@ export function ReharmHome() {
     noteSource,
     chordsPerPhrase,
     reharm.key,
+    phraseSpin,
   ])
 
   /**
@@ -1221,6 +1390,13 @@ export function ReharmHome() {
       transitionEdits,
       pairedChords: [...pairedChords],
       mutedFills: [...mutedFills],
+      extraFills: [...extraFills],
+      extraRuns: [...extraRuns],
+      colorEdits,
+      slashEdits,
+      lickyFills,
+      lickyRuns,
+      lickyMode,
       acceptedPassing,
       styleId,
       beatsPerChord,
@@ -1257,6 +1433,13 @@ export function ReharmHome() {
       transitionEdits,
       pairedChords,
       mutedFills,
+      extraFills,
+      extraRuns,
+      colorEdits,
+      slashEdits,
+      lickyFills,
+      lickyRuns,
+      lickyMode,
       acceptedPassing,
       styleId,
       beatsPerChord,
@@ -1303,6 +1486,13 @@ export function ReharmHome() {
     setTransitionEdits(saved.transitionEdits)
     setPairedChords(new Set(saved.pairedChords))
     setMutedFills(new Set(saved.mutedFills))
+    setExtraFills(new Set(saved.extraFills ?? []))
+    setExtraRuns(new Set(saved.extraRuns ?? []))
+    setColorEdits(saved.colorEdits ?? {})
+    setSlashEdits(saved.slashEdits ?? {})
+    setLickyFills(saved.lickyFills ?? false)
+    setLickyRuns(saved.lickyRuns ?? false)
+    setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)
 
     setStyleId(saved.styleId)
@@ -1334,7 +1524,11 @@ export function ReharmHome() {
     setMinorColor(saved.minorColor as MinorChordColor)
     setDominantColor(saved.dominantColor as DominantChordColor)
 
-    setSoloDensity(saved.soloDensity as OrnamentDensity)
+    setSoloDensity(
+      saved.soloDensity === 'sparse'
+        ? 'medium'
+        : (saved.soloDensity as OrnamentDensity),
+    )
     // Bài lưu từ trước khi tách thì câu fill dùng chung mật độ với câu nhạc.
     setFillDensity((saved.fillDensity ?? saved.soloDensity) as OrnamentDensity)
     // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
@@ -1376,6 +1570,10 @@ export function ReharmHome() {
     const styleBpm = getStyle(styleId)?.bpm
     if (styleBpm) setBpm(styleBpm)
     setMutedFills(new Set())
+    setExtraFills(new Set())
+    setExtraRuns(new Set())
+    setColorEdits({})
+    setPhraseSpin(0)
     setTransitionEdits({})
     setAcceptedPassing([])
 
@@ -1480,18 +1678,17 @@ export function ReharmHome() {
     (pass: number, takesPerPass: number) => {
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
-        const line = fills(pass)
         return buildArrangedSong({
           accompaniment: giveCompingToLeft(
             accompaniment,
-            line,
+            fills(pass),
             style.beatsPerMeasure,
           ),
-          fills: line,
+          fills: (take) => fills(take + pass * 11),
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
           sources: songSources,
           steps,
-          turnaround: buildTurnaround,
+          turnaround: undefined,
           interludeRange: interludeWindow,
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
@@ -1500,14 +1697,13 @@ export function ReharmHome() {
         })
       }
 
-      const line = fills(pass)
       return buildSongTimeline({
         accompaniment: giveCompingToLeft(
           accompaniment,
-          line,
+          fills(pass),
           style.beatsPerMeasure,
         ),
-        fills: line,
+        fills,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         /*
@@ -1525,7 +1721,7 @@ export function ReharmHome() {
       soloTake,
       oneLoopBeats,
       songSources,
-      buildTurnaround,
+
       interludeWindow,
       buildEnding,
       buildRepeatEnding,
@@ -1663,21 +1859,15 @@ export function ReharmHome() {
         })
       },
       fillAt,
-      onToggleFill: (chordIndex) =>
-        setMutedFills((current) => {
-          const next = new Set(current)
-          if (next.has(chordIndex)) next.delete(chordIndex)
-          else next.add(chordIndex)
-          return next
-        }),
+      onToggleFill: toggleFill,
+      runAt,
+      onToggleRun: toggleRun,
+      colorHintAt,
+      onCycleColor: cycleColor,
+      slashHintAt,
+      onToggleSlash: toggleSlash,
       transitionAt: (chordIndex) => transitions.get(chordIndex) ?? null,
-      onToggleTransition: (chordIndex) =>
-        setTransitionEdits((current) => ({
-          ...current,
-          [chordIndex]: transitions.has(chordIndex)
-            ? null
-            : DEFAULT_TRANSITION,
-        })),
+      onToggleTransition: markTransition,
       onSetTransition: (chordIndex, run) =>
         setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
       onRemoveChord: (index) => {
@@ -1688,6 +1878,10 @@ export function ReharmHome() {
         setImportedBeats((table) => shiftRecord(table, index, -1))
         setPairedChords((set) => shiftIndexSet(set, index, -1))
         setMutedFills((set) => shiftIndexSet(set, index, -1))
+        setExtraFills((set) => shiftIndexSet(set, index, -1))
+        setExtraRuns((set) => shiftIndexSet(set, index, -1))
+        setColorEdits((table) => shiftRecord(table, index, -1))
+        setSlashEdits((table) => shiftRecord(table, index, -1))
         setTransitionEdits((table) => shiftRecord(table, index, -1))
         setAcceptedPassing((keys) =>
           keys.flatMap((key) => {
@@ -1708,6 +1902,14 @@ export function ReharmHome() {
     pairedChords,
     recolored,
     fillAt,
+    toggleFill,
+    runAt,
+    toggleRun,
+    colorHintAt,
+    cycleColor,
+    slashHintAt,
+    toggleSlash,
+    markTransition,
     transitions,
     parsed.chords,
     acceptedPassing,
@@ -1752,10 +1954,9 @@ export function ReharmHome() {
    */
   const passAt = useCallback(
     (pass: number) => {
-      const round = playRound.current + pass
-      return round === 0 ? timeline : buildPass(round, song.soloTakes).events
+      return buildPass(playRound.current + pass, song.soloTakes).events
     },
-    [buildPass, timeline, song.soloTakes],
+    [buildPass, song.soloTakes],
   )
 
   /** Đếm số lượt đã dựng, để lần bấm phát sau nối tiếp chứ không lặp lại. */
@@ -1780,8 +1981,15 @@ export function ReharmHome() {
       await startAudio()
       stopTimelineLoop()
       pauseSource()
+      playSpin.current += 1
+      setPhraseSpin((spin) => spin + 1)
+      const base = playSpin.current * 31 + 7
       startTimelineLoop(
-        (pass) => eventsForHand(passAt(pass), hand),
+        (pass) =>
+          eventsForHand(
+            buildPass(base + pass, song.soloTakes).events,
+            hand,
+          ),
         bpm,
         loopLengthBeats,
         beat,
@@ -1790,7 +1998,7 @@ export function ReharmHome() {
       startSourceAtBeat(sourceBeat, bpm, !playsOnce)
       advanceRound()
     },
-    [passAt, hand, bpm, loopLengthBeats, playsOnce, advanceRound],
+    [buildPass, song.soloTakes, hand, bpm, loopLengthBeats, playsOnce, advanceRound],
   )
 
   const playFromSourceBeat = useCallback(
@@ -2007,26 +2215,18 @@ export function ReharmHome() {
             })
           }}
           transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-          onToggleTransition={(chordIndex) =>
-            setTransitionEdits((current) => ({
-              ...current,
-              [chordIndex]: transitions.has(chordIndex)
-                ? null
-                : DEFAULT_TRANSITION,
-            }))
-          }
+          onToggleTransition={markTransition}
           onSetTransition={(chordIndex, run) =>
             setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
           }
           fillAt={fillAt}
-          onToggleFill={(chordIndex) =>
-            setMutedFills((current) => {
-              const next = new Set(current)
-              if (next.has(chordIndex)) next.delete(chordIndex)
-              else next.add(chordIndex)
-              return next
-            })
-          }
+          onToggleFill={toggleFill}
+          runAt={runAt}
+          onToggleRun={toggleRun}
+          colorHintAt={colorHintAt}
+          onCycleColor={cycleColor}
+          slashHintAt={slashHintAt}
+          onToggleSlash={toggleSlash}
           onSetChordSpan={(chordIndex, span, scope) =>
             setPairedChords((current) => {
               if (scope === 'here') {
@@ -2049,6 +2249,9 @@ export function ReharmHome() {
             setImportedBeats((table) => shiftRecord(table, index, -1))
             setPairedChords((set) => shiftIndexSet(set, index, -1))
             setMutedFills((set) => shiftIndexSet(set, index, -1))
+            setExtraFills((set) => shiftIndexSet(set, index, -1))
+            setExtraRuns((set) => shiftIndexSet(set, index, -1))
+            setColorEdits((table) => shiftRecord(table, index, -1))
             setTransitionEdits((table) => shiftRecord(table, index, -1))
             setAcceptedPassing((keys) =>
               keys.flatMap((key) => {
@@ -2253,26 +2456,52 @@ export function ReharmHome() {
               )
             }
             transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-            onToggleTransition={(chordIndex) =>
-              setTransitionEdits((current) => ({
-                ...current,
-                // Đang có mốc thì gỡ; chưa có thì thêm với cách chơi mặc định.
-                [chordIndex]: transitions.has(chordIndex)
-                  ? null
-                  : DEFAULT_TRANSITION,
-              }))
-            }
+            onToggleTransition={markTransition}
             onSetTransition={(chordIndex, run) =>
               setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
             }
             fillAt={fillAt}
-            onToggleFill={(chordIndex) =>
-              setMutedFills((current) => {
-                const next = new Set(current)
-                if (next.has(chordIndex)) next.delete(chordIndex)
-                else next.add(chordIndex)
-                return next
-              })
+            onToggleFill={toggleFill}
+            runAt={runAt}
+            onToggleRun={toggleRun}
+            colorHintAt={colorHintAt}
+            onCycleColor={cycleColor}
+            slashHintAt={slashHintAt}
+            onToggleSlash={toggleSlash}
+            toolbar={
+              <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-line pb-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    looping ? pausePlay() : void playFromBeat(0)
+                  }
+                  disabled={timeline.length === 0}
+                  className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
+                    looping
+                      ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
+                      : 'bg-amber-key text-ink hover:brightness-110'
+                  }`}
+                >
+                  {looping
+                    ? '■ Dừng'
+                    : playsOnce
+                      ? '▶ Phát trọn bài'
+                      : '▶ Phát cả bài'}
+                </button>
+                <label className="flex items-center gap-2 text-xs text-dim">
+                  <input
+                    type="range"
+                    min={40}
+                    max={160}
+                    value={bpm}
+                    onChange={(event) => setBpm(Number(event.target.value))}
+                    aria-label="Nhịp độ, số phách mỗi phút"
+                    title="Nhịp độ"
+                    className="w-32 accent-amber-key"
+                  />
+                  <span className="w-16 font-mono text-cream">{bpm} BPM</span>
+                </label>
+              </div>
             }
             onSetChordSpan={(chordIndex, span, scope) =>
               setPairedChords((current) => {
@@ -2330,6 +2559,10 @@ export function ReharmHome() {
               có câu fill
             </span>{' '}
             ·{' '}
+            <span className="text-rose-300 underline decoration-double decoration-2 underline-offset-4">
+              Licky Runs
+            </span>{' '}
+            ·{' '}
             <span className="overline decoration-1">chia đôi ô nhịp</span>
           </p>
         </div>
@@ -2372,6 +2605,63 @@ export function ReharmHome() {
         </div>
 
         <div className="flex flex-col gap-3">
+          <div>
+            <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+              Licky
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setLickyFills((on) => !on)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  lickyFills
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                Licky Fills
+              </button>
+              <button
+                type="button"
+                onClick={() => setLickyRuns((on) => !on)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  lickyRuns
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                Licky Runs
+              </button>
+              {(lickyFills || lickyRuns) &&
+                (
+                  [
+                    ['clone', 'Thuộc câu'],
+                    ['create', 'Sáng tạo'],
+                  ] as const
+                ).map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setLickyMode(id)}
+                    className={`rounded-lg border px-3 py-1.5 text-xs ${
+                      lickyMode === id
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+            </div>
+            {(lickyFills || lickyRuns) && blockedDocs().length > 0 && (
+              <p className="mt-2 text-[10px] text-dim">
+                Chưa đọc hết:{' '}
+                {blockedDocs()
+                  .map((doc) => `${doc.file.replace('Reference/', '')} (${doc.status})`)
+                  .join(' · ')}
+              </p>
+            )}
+          </div>
           <div>
             <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
               Lấy nốt từ đâu
@@ -2437,7 +2727,7 @@ export function ReharmHome() {
               Mật độ nốt câu nhạc
             </h4>
             <div className="flex flex-wrap gap-2">
-              {DENSITY_OPTIONS.map((option) => (
+              {PHRASE_DENSITY_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   type="button"
@@ -2519,45 +2809,6 @@ export function ReharmHome() {
         </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
-            <button
-              type="button"
-              onClick={() =>
-                looping ? pausePlay() : void playFromBeat(0)
-              }
-              disabled={timeline.length === 0}
-              /*
-                Lúc đang phát, nút phải đọc ra ngay là "dừng lại". Bản cũ dùng
-                nền trắng mờ với chữ kem — trên nền tối thì gần như chỉ còn
-                chữ nổi lơ lửng, không ra hình cái nút.
-              */
-              className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
-                looping
-                  ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
-                  : 'bg-amber-key text-ink hover:brightness-110'
-              }`}
-            >
-              {looping ? '■ Dừng' : playsOnce ? '▶ Phát trọn bài' : '▶ Phát cả bài'}
-            </button>
-
-            {/*
-              Nhịp độ đặt ngay cạnh nút phát: chậm bài lại là việc làm nhiều
-              nhất khi tập, và đổi được ngay cả lúc đang phát vì phần đệm ghi
-              theo số phách chứ không theo giây.
-            */}
-            <label className="flex items-center gap-2 text-xs text-dim">
-              <input
-                type="range"
-                min={40}
-                max={160}
-                value={bpm}
-                onChange={(event) => setBpm(Number(event.target.value))}
-                aria-label="Nhịp độ, số phách mỗi phút"
-                title="Nhịp độ"
-                className="w-32 accent-amber-key"
-              />
-              <span className="w-16 font-mono text-cream">{bpm} BPM</span>
-            </label>
-
             <label className="flex items-center gap-2 text-xs text-dim">
               Đệm
               <input

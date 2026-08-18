@@ -2,7 +2,7 @@ import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import { stepInScale } from './graceNoteOrnamenter'
-import { chordPentatonic } from './soloVocabulary'
+import { chordPentatonic, keepInKey, type SongKey } from './soloVocabulary'
 
 /**
  * Câu báo hiệu vào hát — chạy ngón lên ngay trước khi đoạn mới bắt đầu.
@@ -131,14 +131,16 @@ export function arpeggioRun(options: {
   maxBeats: number
   /** Bắt đầu từ phách này thay vì dồn vào cuối ô. */
   fromBeat?: number
+  key?: SongKey | null
 }): RunNote[] {
   const {
     chord,
     octaves,
     endBeat,
-    noteChoices = [0.5, 0.25, 0.125],
+    noteChoices = [0.25, 0.125],
     maxBeats,
     fromBeat,
+    key = null,
   } = options
 
   if (octaves < 1 || maxBeats <= 0) return []
@@ -158,6 +160,14 @@ export function arpeggioRun(options: {
       if (classes.size >= 4) break
     }
   }
+  if (key) {
+    const allowed = new Set(keepInKey([...classes], key))
+    if (allowed.size >= 2) {
+      for (const tone of [...classes]) {
+        if (!allowed.has(tone)) classes.delete(tone)
+      }
+    }
+  }
 
   const top = TOP_OCTAVE + normalizePitchClass(chord.root)
   const bottom = top - 12 * octaves
@@ -169,26 +179,62 @@ export function arpeggioRun(options: {
 
   if (line.length < 2) return []
 
-  /*
-    Chọn giá trị nốt **chậm nhất còn vừa chỗ**. Chạy ba quãng tám thì nốt phải
-    nhanh hơn hẳn chạy hai quãng tám — không phải vì muốn nhanh, mà vì chừng ấy
-    nốt không nhét vừa chỗ trống nếu đi chậm.
-  */
   const gaps = line.length - 1
+  const room =
+    fromBeat !== undefined
+      ? Math.max(0.125, endBeat - fromBeat)
+      : maxBeats
   const noteBeats =
-    noteChoices.find((choice) => choice * gaps <= maxBeats) ??
+    noteChoices.find((choice) => choice * gaps <= room) ??
     noteChoices[noteChoices.length - 1]
 
   const packed = endBeat - gaps * noteBeats
   const start = fromBeat !== undefined ? fromBeat : packed
-  const step =
-    fromBeat !== undefined && endBeat > fromBeat
-      ? (endBeat - fromBeat) / gaps
-      : noteBeats
+  const step = noteBeats
 
   return line.map((note, index) => ({
     note,
     startBeat: start + index * step,
+    durationBeats: step * 0.9,
+    hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
+  }))
+}
+
+/** Chạy ngón một–hai quãng 8: đi liền bậc từ gốc lên, không rải. */
+export function octaveRun(options: {
+  chord: ParsedChord
+  startBeat: number
+  beats: number
+  scale?: ReadonlySet<PitchClass>
+}): RunNote[] {
+  const { chord, startBeat, beats, scale } = options
+  if (beats <= 0) return []
+
+  const cores = new Set(
+    chord.quality.intervals
+      .filter((step) => step < 12)
+      .map((step) => normalizePitchClass(chord.root + step)),
+  )
+  const pool =
+    scale && scale.size > 0 ? scale : cores
+  if (pool.size === 0) return []
+
+  const root = normalizePitchClass(chord.root)
+  const low = (48 + root) as MidiNote
+  const high = (low + 24) as MidiNote
+  const line: MidiNote[] = []
+  for (let note = low; note <= high; note += 1) {
+    if (pool.has(normalizePitchClass(note))) line.push(note)
+  }
+  if (line.length < 2) return []
+
+  const step = line.length * 0.25 <= beats ? 0.25 : 0.125
+  const count = Math.min(line.length, Math.floor(beats / step))
+  if (count < 2) return []
+
+  return line.slice(0, count).map((note, index) => ({
+    note,
+    startBeat: startBeat + index * step,
     durationBeats: step * 0.9,
     hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
   }))

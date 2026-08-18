@@ -325,21 +325,21 @@ describe('nguồn nốt cho câu solo', () => {
       hợp âm mà chen nốt blue vào thì không còn là rải hợp âm nữa. Nên nốt hợp
       âm luôn được chấp nhận bên cạnh thang blues.
     */
+    const allowed = new Set(
+      list.flatMap((chord) => [
+        ...chord.quality.intervals.map((step) => (chord.root + step) % 12),
+        (chord.root + 2) % 12,
+      ]),
+    )
     for (const note of solo.filter((entry) => !entry.isGrace)) {
-      const index = Math.min(list.length - 1, Math.floor(note.startBeat / 4))
-      const chord = list[index]
-      const allowed = new Set([
-        ...[0, 3, 5, 6, 7, 10].map((step) => (chord.root + step) % 12),
-        ...chord.quality.intervals.map((i) => (chord.root + i) % 12),
-      ])
       expect(allowed.has(note.note % 12)).toBe(true)
     }
   })
 
-  it('nốt blue thật sự xuất hiện trong câu', () => {
+  it('nốt blue thật sự xuất hiện khi chưa biết giọng', () => {
     const list = chords('C7 F7 G7 C7')
     const solo = generateSolo(list, {
-      ...options,
+      beatsPerChord: 4,
       noteSource: 'blues',
       density: 'dense',
     })
@@ -350,6 +350,21 @@ describe('nguồn nốt cho câu solo', () => {
     })
 
     expect(blueNotes.length).toBeGreaterThan(0)
+  })
+
+  it('giang tấu chỉ dùng nốt của vòng đang chạy, không lấy cả giọng bài', () => {
+    const list = chords('Am F G C')
+    const solo = generateSolo(list, {
+      beatsPerChord: 4,
+      key: { tonic: 4, scale: 'minor' },
+      noteSource: 'chordTone',
+      density: 'dense',
+    })
+    const allowed = new Set([0, 2, 4, 5, 7, 9, 11])
+    for (const note of solo.filter((entry) => !entry.isGrace)) {
+      expect(allowed.has(note.note % 12)).toBe(true)
+      expect(note.note % 12).not.toBe(6)
+    }
   })
 
   it('nốt hợp âm lấy từ chính hợp âm đang vang', () => {

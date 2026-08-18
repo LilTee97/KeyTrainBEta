@@ -66,18 +66,14 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(short[short.length - 1].note - short[0].note).toBe(12)
   })
 
-  it('chạy càng ngắn thì nốt càng chậm, vì có nhiều chỗ hơn cho mỗi nốt', () => {
-    /*
-      Luật là lấy giá trị nốt **chậm nhất còn vừa chỗ**, nên một quãng tám ra
-      nốt móc đơn, hai quãng tám ra nốt kép, ba quãng tám ra móc kép ba.
-    */
+  it('chạy ngón đi nốt kép, không kéo giãn cho đầy ô', () => {
     const gap = (octaves: number) => {
       const line = fill(mark(2, octaves))
       return line[1].startBeat - line[0].startBeat
     }
 
-    expect(gap(1)).toBeGreaterThan(gap(2))
-    expect(gap(2)).toBeGreaterThan(gap(3))
+    expect(gap(1)).toBeCloseTo(0.25, 5)
+    expect(gap(2)).toBeCloseTo(0.25, 5)
   })
 
   it('bốn quãng tám thì thấp hơn ba quãng tám đúng một quãng tám', () => {
@@ -160,13 +156,11 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(line.length).toBeGreaterThan(0)
   })
 
-  it('nốt cuối rơi đúng số phách nghỉ đã đặt', () => {
-    // Ô nối kết thúc ở phách 16; nghỉ hai phách thì nốt cuối ở phách 14
+  it('nốt cuối không lấn vào chỗ nghỉ', () => {
     for (const restBeats of [1, 2, 3]) {
       const line = fill(mark(2, 2, restBeats))
       const last = line[line.length - 1]
-
-      expect(last.startBeat).toBeCloseTo(16 - restBeats, 5)
+      expect(last.startBeat).toBeLessThanOrEqual(16 - restBeats)
     }
   })
 
@@ -178,13 +172,9 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(new Set(gaps.map((gap) => gap.toFixed(4))).size).toBe(1)
   })
 
-  it('chạy dài hơn thì nốt nhanh hơn, để vẫn nhét vừa chỗ trống', () => {
-    // Không phải vì muốn nhanh, mà vì chừng ấy nốt không vừa nếu đi chậm
+  it('ba quãng tám vẫn nốt kép nếu còn chỗ', () => {
     const wider = fill(mark(2, 3))
-
-    const gap = run[1].startBeat - run[0].startBeat
-    const widerGap = wider[1].startBeat - wider[0].startBeat
-    expect(widerGap).toBeLessThan(gap)
+    expect(wider[1].startBeat - wider[0].startBeat).toBeCloseTo(0.25, 5)
   })
 
   it('không đệm thì chạy ngón ngay từ đầu hợp âm, không chờ quạt hết ô', () => {
@@ -298,6 +288,44 @@ describe('ô nối không chạy ngón', () => {
 
   it('chọn không quãng tám nào thì không sinh câu chạy', () => {
     expect(fill(mark(2, 0))).toHaveLength(0)
+  })
+
+  it('bật Licky Fills/Runs không biến mốc chuyển đoạn thành lick', () => {
+    const list = parseChordInput('Fadd9 Dm7 E9sus4 Am').chords.map(
+      (chord, index) => (index === 2 ? { ...chord, beats: 2 } : chord),
+    )
+    const line = generateFillLine(list, {
+      beatsPerChord: 4,
+      density: 'dense',
+      key: C_MAJOR,
+      breaths: new Set([1, 2]),
+      sectionEnds: mark(2, 2, 2),
+      lickyFills: true,
+      lickyRuns: true,
+      extraRuns: new Set([2]),
+    })
+    const run = line.filter((note) => note.startBeat >= 8)
+    expect(run.length).toBeGreaterThanOrEqual(5)
+    expect(run[0].startBeat).toBeCloseTo(8, 5)
+    expect(run[0].note % 12).toBe(list[2].root % 12)
+  })
+
+  it('hợp âm lướt trước mốc không đẻ fill riêng', () => {
+    const list = [
+      ...parseChordInput('Fadd9').chords,
+      { ...parseChordInput('Bm7b5').chords[0], passing: true, beats: 1 },
+      { ...parseChordInput('E7').chords[0], passing: true, beats: 1 },
+      { ...parseChordInput('E9sus4').chords[0], beats: 4 },
+      ...parseChordInput('Am').chords,
+    ]
+    const found = fillPositions(list, {
+      density: 'dense',
+      beatsPerChord: 4,
+      breaths: new Set([0, 1]),
+      always: new Set([1]),
+    })
+    expect(found.every((position) => !list[position.index].passing)).toBe(true)
+    expect(found.map((position) => position.mainIndex)).toContain(1)
   })
 
   it('các chỗ ngắt khác vẫn chêm fill như thường', () => {

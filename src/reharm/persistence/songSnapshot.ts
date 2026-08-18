@@ -42,6 +42,14 @@ export interface SongSnapshot {
   pairedChords: number[]
   /** Các chỗ người dùng đã tắt câu fill. */
   mutedFills: number[]
+  /** Các chỗ tự chêm fill ngoài mật độ. Bỏ trống = bài cũ. */
+  extraFills?: number[]
+  extraRuns?: number[]
+  colorEdits?: Record<number, string>
+  slashEdits?: Record<number, boolean>
+  lickyFills?: boolean
+  lickyRuns?: boolean
+  lickyMode?: string
   /** Các gợi ý hợp âm lướt đã chấp nhận, theo khoá vị trí và kỹ thuật. */
   acceptedPassing: string[]
 

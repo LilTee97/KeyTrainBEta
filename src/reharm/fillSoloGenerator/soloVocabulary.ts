@@ -1,6 +1,8 @@
 import { chordPitchClasses } from '../../shared/musicTheory/chordDefinitions'
+import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import { scaleTones } from '../reharmEngine/keyDetection'
 
 /**
  * Vốn từ vựng câu ngẫu hứng — mỗi mẫu câu lấy từ một chỗ cụ thể trong tài liệu.
@@ -132,6 +134,50 @@ const STABLE_INTERVALS = [0, 3, 4, 7]
  * 5, quãng 7, quãng 9"*. Bậc chín thêm vào vì nó là nốt màu rẻ nhất mà vẫn
  * chắc chắn khớp hoà âm.
  */
+export type SongKey = { tonic: PitchClass; scale: ScaleType }
+
+/** Giữ lại các lớp cao độ nằm trong giọng. */
+export function keepInKey(
+  pitches: readonly PitchClass[],
+  key?: SongKey | null,
+): PitchClass[] {
+  if (!key) return [...pitches]
+  const scale = scaleTones(key.tonic, key.scale)
+  return pitches.filter((pitch) => scale.has(pitch))
+}
+
+/**
+ * Nốt hợp âm đã lọc nốt ngoài giọng.
+ *
+ * Ít hơn 3 nốt thì lấy tam giác diatonic gần gốc nhất — đủ để chạy câu mà
+ * không phải dùng C# trên B9sus4 trong giọng Mi thứ.
+ */
+export function inKeyMaterial(
+  chord: ParsedChord,
+  key?: SongKey | null,
+): PitchClass[] {
+  const kept = keepInKey(chordMaterial(chord), key)
+  if (kept.length >= 3 || !key) return kept.length > 0 ? kept : chordMaterial(chord)
+
+  const scale = scaleTones(key.tonic, key.scale)
+  let base = chord.root
+  for (let step = 0; step <= 6; step += 1) {
+    const up = ((chord.root + step) % 12) as PitchClass
+    const down = ((chord.root - step + 12) % 12) as PitchClass
+    if (scale.has(up)) {
+      base = up
+      break
+    }
+    if (scale.has(down)) {
+      base = down
+      break
+    }
+  }
+  return [0, 3, 4, 7]
+    .map((interval) => ((base + interval) % 12) as PitchClass)
+    .filter((pitch, index, all) => scale.has(pitch) && all.indexOf(pitch) === index)
+}
+
 export function chordMaterial(chord: ParsedChord): PitchClass[] {
   const tones = new Set(chordPitchClasses(chord.root, chord.quality))
   if (allowsNaturalNinth(chord)) {
@@ -588,7 +634,7 @@ const neighborTurn: Lick = {
     const ladder = ladderOf(material, low, high)
     if (ladder.length < 2) return { notes: [], shape: [] }
 
-    const count = Math.max(2, Math.min(4, Math.floor(beats)))
+    const count = Math.max(3, Math.min(6, Math.round(beats * 1.2)))
     const sign = directionFrom(from, low, high)
 
     const steps = walkSteps(
@@ -651,19 +697,16 @@ const pentatonicSweep: Lick = {
   id: 'sweep',
   label: 'Quét ngũ cung',
   source: 'Hồng Kông 1, ô nhịp 51-52 và 96-97',
-  minBeats: 3,
+  minBeats: 2,
   roles: ['opener'],
   inRotation: true,
-  build: ({ chord, startBeat, beats, low, high, material }) => {
-    /*
-      Dùng chất liệu người dùng đã chọn, nhưng nếu bộ đó quá ít nốt thì lùi về
-      ngũ cung của hợp âm — cú quét cần ít nhất bốn nốt mới thành ô.
-    */
-    const ladder = ladderOf(
-      material.length >= 4 ? material : chordPentatonic(chord),
-      low,
-      high,
-    )
+  build: ({ startBeat, beats, low, high, material, scaleTones }) => {
+    const pad = [...material]
+    for (const tone of scaleTones) {
+      if (pad.length >= 4) break
+      if (!pad.includes(tone)) pad.push(tone)
+    }
+    const ladder = ladderOf(pad, low, high)
     if (ladder.length < 4) return { notes: [], shape: [] }
 
     // Ô bốn nốt tính từ đáy tầm, đúng như bản nhạc bắt cú quét từ dưới lên.

@@ -87,6 +87,12 @@ export function PracticeHome() {
               onRemovePassingHere={grid?.onRemovePassingHere}
               fillAt={grid?.fillAt}
               onToggleFill={grid?.onToggleFill}
+              runAt={grid?.runAt}
+              onToggleRun={grid?.onToggleRun}
+              colorHintAt={grid?.colorHintAt}
+              onCycleColor={grid?.onCycleColor}
+              slashHintAt={grid?.slashHintAt}
+              onToggleSlash={grid?.onToggleSlash}
               transitionAt={grid?.transitionAt}
               onToggleTransition={grid?.onToggleTransition}
               onSetTransition={grid?.onSetTransition}

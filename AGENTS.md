@@ -23,6 +23,7 @@ KeyTrain — app luyện tập piano offline, lấy cảm hứng từ mikebwilli
 
 - `.opencode/skills/khabu-reharm` — tái hòa âm (màu, slash, dim7, 2-5-1)
 - `.opencode/skills/khabu-fill-solo` — câu fill, giang tấu, nốt láy
+- `.opencode/skills/licky` — Licky: clone/sáng tạo câu fill và chạy ngón từ sổ lick
 - `.opencode/skills/khabu-ballad` — mật độ đệm ballad theo đoạn
 - `.opencode/skills/song-import` — nhập bài (file/link) → vòng hợp âm + BPM, đệm bằng điệu app, luyện ở tab Luyện đệm
 

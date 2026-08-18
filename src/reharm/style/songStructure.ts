@@ -110,8 +110,10 @@ export interface PlacedSection {
 export interface BuildSongOptions {
   /** Phần đệm của **một** lượt vòng hợp âm. */
   accompaniment: readonly TimelineEvent[]
-  /** Câu fill, chỉ dùng ở đoạn có lời. */
-  fills: readonly TimelineEvent[]
+  /** Câu fill, chỉ dùng ở đoạn có lời. Hàm thì mỗi lượt một câu khác. */
+  fills:
+    | readonly TimelineEvent[]
+    | ((take: number) => readonly TimelineEvent[])
   /**
    * Câu solo cho **lượt giang tấu thứ mấy**, đếm từ 0.
    *
@@ -299,6 +301,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
     giang tấu thứ hai của đoạn sau vẫn khác lượt thứ hai của đoạn trước.
   */
   let take = takeOffset
+  let fillTake = takeOffset
 
   for (const section of form.sections) {
     const lengthBeats = section.loops * loopLengthBeats
@@ -323,7 +326,13 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
         events.push(...shift(solo(take), offset))
         take += 1
       } else {
-        events.push(...shift(fills, offset))
+        events.push(
+          ...shift(
+            typeof fills === 'function' ? fills(fillTake) : fills,
+            offset,
+          ),
+        )
+        fillTake += 1
       }
     }
 

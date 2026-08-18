@@ -156,7 +156,9 @@ export interface BuildArrangedSongOptions {
   accompaniment: readonly TimelineEvent[]
   /** Phần đệm dùng cho đoạn giang tấu, cũng của cả bài. */
   interlude?: readonly TimelineEvent[]
-  fills: readonly TimelineEvent[]
+  fills:
+    | readonly TimelineEvent[]
+    | ((take: number) => readonly TimelineEvent[])
   solo: (take: number) => readonly TimelineEvent[]
   sources: readonly SourceSection[]
   steps: readonly ArrangementStep[]
@@ -190,7 +192,11 @@ export interface BuildArrangedSongOptions {
     /** Đệm dựng từ phách 0 của vòng — cùng pha bass với phiên/điệp. */
     events?: readonly TimelineEvent[]
     /** Solo trên đúng vòng ngắn, cũng từ phách 0. */
-    solo?: (take: number) => readonly TimelineEvent[]
+    solo?: (take: number, lastLoop?: boolean) => readonly TimelineEvent[]
+    /** Đệm vòng cuối: hợp âm cuối ngắn hơn, phách chót là hợp âm hút. */
+    lastEvents?: readonly TimelineEvent[]
+    /** Phách chót vòng cuối: hợp âm hút, cả hai tay. */
+    exit?: readonly TimelineEvent[]
   } | null
   /**
    * Hợp âm cuối của **đoạn kết bài**, đã đổi màu.
@@ -325,7 +331,12 @@ export function buildArrangedSong(
 
       events.push(
         ...slice(accompaniment, source.startBeat, plain, cursor),
-        ...slice(fills, source.startBeat, plain, cursor),
+        ...slice(
+          typeof fills === 'function' ? fills(pass) : fills,
+          source.startBeat,
+          plain,
+          cursor,
+        ),
       )
 
       if (close) {
@@ -385,26 +396,25 @@ export function buildArrangedSong(
         sourceBeat: range.startBeat,
       })
 
+      const backing =
+        last && range.lastEvents ? range.lastEvents : range.events
       events.push(
-        ...(range.events
-          ? place(interludeAccompaniment(range.events), at, length)
+        ...(backing
+          ? place(interludeAccompaniment(backing), at, length)
           : slice(forInterlude, range.startBeat, length, at)),
         ...(range.solo
-          ? place(range.solo(take), at, length)
+          ? place(range.solo(take, last), at, length)
           : slice(solo(take), range.startBeat, length, at)),
       )
       take += 1
 
-      /*
-        Cụm quay đầu chơi bằng **cả hai tay**, không rút gọn như phần còn lại
-        của giang tấu. Suốt giang tấu tay phải để dành cho câu ngẫu hứng; đến
-        chỗ này cả hai tay quay lại chơi hợp âm chính là dấu hiệu nghe ra ngay
-        rằng phần ngẫu hứng đã hết và đoạn hát sắp vào.
-      */
       if (last && turn) {
         for (const event of turn.events) {
           events.push({ ...event, startBeat: event.startBeat + at + played })
         }
+      }
+      if (last && range.exit && range.exit.length > 0) {
+        events.push(...place(range.exit, at + loopBeats - 1, 2))
       }
     }
 

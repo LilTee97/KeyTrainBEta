@@ -449,6 +449,13 @@ interface LoopEvent {
 }
 
 let loopPart: Tone.Part<LoopEvent> | null = null
+let loopFollowUp: number | null = null
+
+function clearLoopFollowUp(): void {
+  if (loopFollowUp === null) return
+  Tone.getTransport().clear(loopFollowUp)
+  loopFollowUp = null
+}
 
 /**
  * Số lượt được dựng sẵn và nối vào một vòng lặp.
@@ -518,55 +525,48 @@ export function startTimelineLoop(
       ),
   )
 
-  /*
-    Phát một lượt thì chỉ dựng **một** lượt. Dựng đủ ba như khi lặp thì nó phát
-    cả bài ba lần rồi mới dừng.
-  */
-  const passes = once ? 1 : LOOP_PASSES
+  const fire = (time: number, value: LoopEvent) => {
+    fireNotes(synthInstance, value.notes, value.duration, time, value.velocity)
+  }
 
-  // Dựng sẵn từng lượt rồi dời sang vị trí của nó trên vòng lặp dài.
-  const events: LoopEvent[] = []
-  for (let pass = 0; pass < passes; pass += 1) {
-    const offset = pass * passLength
-    const hits = pass === 0 ? first : build(pass)
-
+  const attach = (hits: readonly ScheduledHit[], atBeat: number) => {
+    const events: LoopEvent[] = []
     for (const hit of hits) {
       if (hit.notes.length === 0) continue
       events.push({
-        time: { '4n': hit.startBeat + offset },
+        time: { '4n': atBeat + hit.startBeat },
         notes: hit.notes.map(toFrequency),
         duration: { '4n': Math.max(0.05, hit.durationBeats) },
         velocity: hit.velocity / 127,
       })
     }
+    const part = new Tone.Part<LoopEvent>(fire, events)
+    part.loop = false
+    part.start(0)
+    const prev = loopPart
+    loopPart = part
+    if (prev) {
+      prev.stop()
+      prev.dispose()
+    }
   }
 
-  const part = new Tone.Part<LoopEvent>((time, value) => {
-    fireNotes(synthInstance, value.notes, value.duration, time, value.velocity)
-  }, events)
+  attach(first, 0)
 
-  const totalBeats = passLength * passes
-
-  part.loop = !once
-  part.loopEnd = { '4n': totalBeats }
-  part.start(0)
-  loopPart = part
-
-  /*
-    Hết một lượt thì tự dừng, và dừng bằng chính `stopTimelineLoop` để giao
-    diện biết mà đổi nút về "phát" — tắt tiếng thôi thì nút vẫn hiện "dừng".
-
-    Chờ thêm một ô nhịp trước khi dừng: nốt cuối cùng vẫn đang ngân, huỷ `Part`
-    ngay lúc nó vừa gõ là cắt cụt tiếng đàn.
-  */
   if (once) {
-    Tone.getTransport().scheduleOnce(
-      () => {
-        Tone.getDraw().schedule(() => stopTimelineLoop(), Tone.now())
-      },
-      // Chờ thêm một ô nhịp cho nốt cuối ngân hết.
-      { '4n': totalBeats + 4 },
-    )
+    loopFollowUp = Tone.getTransport().scheduleOnce(() => {
+      Tone.getDraw().schedule(() => stopTimelineLoop(), Tone.now())
+    }, { '4n': passLength + 4 })
+  } else {
+    let gen = 0
+    const arm = (atBeat: number) => {
+      loopFollowUp = Tone.getTransport().scheduleOnce(() => {
+        gen += 1
+        attach(build(gen), atBeat)
+        arm(atBeat + passLength)
+      }, { '4n': atBeat + passLength })
+    }
+    arm(0)
   }
 
   /*
@@ -600,6 +600,7 @@ export function stopTimelineLoop(): void {
     phải để `Part` tự giữ lịch thay vì gọi thẳng `triggerAttackRelease`: lệnh
     đó đẩy nốt xuống tận đồng hồ thẻ âm thanh, dừng rồi vẫn kêu tới hết lượt.
   */
+  clearLoopFollowUp()
   loopPart?.stop()
   loopPart?.dispose()
   loopPart = null

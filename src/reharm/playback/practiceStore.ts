@@ -41,6 +41,12 @@ export interface PracticeGrid {
   onRemovePassingHere?: (slotId: string) => void
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  runAt?: (chordIndex: number) => boolean | null
+  onToggleRun?: (chordIndex: number) => void
+  colorHintAt?: (chordIndex: number) => string | null
+  onCycleColor?: (chordIndex: number) => void
+  slashHintAt?: (chordIndex: number) => string | null
+  onToggleSlash?: (chordIndex: number) => void
   transitionAt?: (chordIndex: number) => TransitionOption | null
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void

@@ -526,7 +526,7 @@ function thirdOf(intervals: readonly number[]): 'major' | 'minor' | null {
 }
 
 /** Dựng lại một hợp âm với tính chất khác, giữ nguyên nốt gốc và nốt bass. */
-function withQuality(chord: ParsedChord, qualityId: string): ParsedChord {
+export function withQuality(chord: ParsedChord, qualityId: string): ParsedChord {
   const quality = getChordQuality(qualityId)
   if (!quality) return chord
 
@@ -615,7 +615,7 @@ const KEEP_OUTSIDE = new Set([
   '7b13',
 ])
 
-function fitsKey(
+export function fitsKey(
   root: ParsedChord['root'],
   qualityId: string,
   tonic: PitchClass,
@@ -793,6 +793,73 @@ export function colorAnalyzedSequence(
   options: ColorOptions = {},
 ): ParsedChord[] {
   return analyzed.map((entry) => colorAnalyzedChord(entry, scale, options))
+}
+
+function colorFamily(
+  chord: ParsedChord,
+): 'major' | 'minor' | 'dominant' | 'dim' {
+  const id = chord.quality.id
+  if (id === 'dim' || id === 'dim7') return 'dim'
+  const intervals = chord.quality.intervals
+  if (intervals.includes(10) && (intervals.includes(4) || intervals.includes(5))) {
+    return 'dominant'
+  }
+  if (intervals.includes(3)) return 'minor'
+  return 'major'
+}
+
+/**
+ * Các màu cùng họ, khớp giọng — để xoay từng hợp âm trên menu chuột phải.
+ */
+export function compatibleColorIds(
+  chord: ParsedChord,
+  key: { tonic: PitchClass; scale: ScaleType } | null,
+): string[] {
+  const family = colorFamily(chord)
+  const pool =
+    family === 'minor'
+      ? MINOR_COLOR_OPTIONS
+      : family === 'dominant'
+        ? DOMINANT_COLOR_OPTIONS
+        : family === 'dim'
+          ? MINOR_COLOR_OPTIONS.filter(
+              (option) => option.id === 'dim' || option.id === 'dim7',
+            )
+          : MAJOR_COLOR_OPTIONS
+
+  const ids = pool
+    .map((option) => option.id)
+    .filter((id) => id !== 'auto')
+    .filter((id) => family === 'dim' || (id !== 'dim' && id !== 'dim7'))
+
+  const current = chord.quality.id
+  const fitted = key
+    ? ids.filter(
+        (id) => id === current || fitsKey(chord.root, id, key.tonic, key.scale),
+      )
+    : ids
+
+  return [current, ...fitted.filter((id) => id !== current && id !== 'min')]
+}
+
+/** Triad / 7 trơn → màu KeyTrain (add2, m(add9), 9). */
+export function colorPlainChord(chord: ParsedChord): ParsedChord {
+  const id = chord.quality.id
+  if (id === 'maj') return withQuality(chord, 'add9')
+  if (id === 'min') return withQuality(chord, 'madd9')
+  if (id === '7') return withQuality(chord, '9')
+  if (id === 'm7') return withQuality(chord, 'm9')
+  return chord
+}
+
+export function nextColorId(
+  chord: ParsedChord,
+  key: { tonic: PitchClass; scale: ScaleType } | null,
+  currentId: string,
+): string {
+  const cycle = compatibleColorIds(chord, key)
+  const at = cycle.indexOf(currentId)
+  return cycle[((at < 0 ? 0 : at) + 1) % cycle.length] ?? currentId
 }
 
 /** Một cách đọc hợp âm theo lối chồng trên bass. */

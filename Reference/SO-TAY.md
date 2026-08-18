@@ -404,3 +404,37 @@ Chốt `settleHands`: tay trái luôn dưới tay phải, khoảng cách max−m
 Lời tô theo `activeChordIndex` (cả hợp âm). Lưới từng so `beat === active` — `sourceBeatAt` trả số lẻ thì không ô nào sáng, và chỉ một phách sáng dù hợp âm dài bốn phách.
 
 Chốt: lấy hợp âm tại `floor(activeBeat)` rồi sáng mọi ô cùng `chordIndexAt`. Hợp âm lướt vẫn neo về hợp âm chính, như trên lời.
+
+## 19/8/2026 — Licky, giang tấu, mốc chuyển đoạn, lời/slash/luyện đệm
+
+### Licky là sổ câu, không phải máy rải
+
+Fill/run lấy từ `src/reharm/licky/phrases.json` (clone hoặc create). Menu chuột phải: Licky Fills / Licky Runs — chỉ hợp âm đủ phách. Runs = gạch chân kép hồng. `lickyFills` / `lickyRuns` là cờ toàn bài; `extraFills` / `extraRuns` là từng chỗ.
+
+### Giang tấu mượn 4 hợp âm điệp, không cả đoạn
+
+`chooseChorusLoop`: móc lặp + hút về đầu điệp; không có thì 4 hợp âm đầu. Cặp chia đôi chỉ lấy hợp âm đầu. `colorPlainChord`: maj→add9, min→madd9, 7→9, m7→m9.
+
+Hình câu: ô 1 = quét Cà Pháo (`sweep`); ô 3 = chạy ngón Licky tự do; ô 2 = nốt hợp âm chia đều, không ngân, không run. Mỗi vòng `take` scramble, không xoay 2 câu. Bỏ turnaround cũ.
+
+Hợp âm cuối **chỉ chạy ngón ở vòng cuối** (hết số lần lặp), không phải mỗi vòng. Các vòng trước đệm bình thường. Vòng cuối: không quạt hợp âm cuối; tay phải rải/chạy quãng 8; phách chót = hợp âm hút hai tay (`exit`, không lọc RH).
+
+Xáo nốt theo `take` và nốt láy **không** đụng câu chạy vòng cuối — bản trước biến chạy 8va thành rải tự do.
+
+Mật độ câu nhạc UI: chỉ Vừa / Dày (`PHRASE_DENSITY_OPTIONS`). Snapshot cũ `'sparse'` nâng lên medium khi load.
+
+### Mốc chuyển đoạn không phải Licky Fill
+
+`sectionEnds` luôn `arpeggioRun`, không `placeLick` dù đang bật Licky. `fillPositions` bỏ hợp âm lướt — bản trước kế thừa `mainIndex` của hợp âm chủ nên Bm7b5/E7b9 đẻ fill nhầm.
+
+Hợp âm ngắn (Fadd2|E9sus4 chia đôi) + nghỉ 2 phách từng nuốt hết câu chạy: nghỉ không được ăn dưới 2 phách chạy (hoặc hết ô nếu ô ngắn hơn).
+
+UI: mốc chuyển đoạn không gạch chân fill/run; menu Licky ẩn. Đánh dấu mốc thì gỡ `extraFills`/`extraRuns` chỗ đó.
+
+### Lời neo theo cột chữ, không đẩy hợp âm sang phải
+
+`layoutAnchors` đẩy ký hiệu dài sang phải để khỏi chồng — lệch lời. Chốt: cụm hợp âm (kể cả lướt) đặt `left: charOffset ch` đúng chữ. Ký hiệu dài có thể chồng nhau một chút.
+
+Slash từng hợp âm: `slashEdits[i] = true/false`, menu chỉ hiện khi `toSlashChord` được hoặc đang có bass. Không phụ thuộc nút slash cả bài.
+
+Phát + BPM nằm **đầu khung lời**. Tab Luyện đệm: tên hợp âm lớn, vàng, `z-10` lơ lửng đáy khung nốt rơi (ngay trên dải phím), không lẫn nốt.

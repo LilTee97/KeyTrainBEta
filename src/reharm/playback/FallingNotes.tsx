@@ -16,7 +16,7 @@ import type { GatedStep } from './noteGatedPlaybackEngine'
  */
 
 const LOOK_AHEAD_BEATS = 8
-const HEIGHT = 160
+const HEIGHT = 180
 const NOTE_H = 20
 
 function noteY(away: number): number {
@@ -33,6 +33,7 @@ interface FallingNotesProps {
   nowBeat?: number | null
   lowNote: MidiNote
   highNote: MidiNote
+  chord?: string
 }
 
 export function FallingNotes({
@@ -41,6 +42,7 @@ export function FallingNotes({
   nowBeat,
   lowNote,
   highNote,
+  chord,
 }: FallingNotesProps) {
   const live = nowBeat !== undefined && nowBeat !== null
   const layer = useRef<HTMLDivElement>(null)
@@ -79,6 +81,11 @@ export function FallingNotes({
         .map((note) => midiToName(note))
         .join(' ')}`}
     >
+      {chord && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 text-center font-serif text-4xl font-bold tracking-wide text-amber-key drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+          {chord}
+        </div>
+      )}
       <div ref={layer} className="absolute inset-0">
         {upcoming.map((step, position) =>
           step.notes.map((note) => {
