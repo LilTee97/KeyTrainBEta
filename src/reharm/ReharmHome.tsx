@@ -144,7 +144,7 @@ import { chooseChorusLoop } from './style/interludeLoop'
 import type { EndingMode } from './style/endingChord'
 import { endingChordFor } from './style/endingChord'
 import type { LickyMode } from './licky/types'
-import { blockedDocs } from './licky/docs'
+
 
 /**
  * Giang tấu chạy trên bốn hợp âm nhặt từ vòng của bài.
@@ -1145,7 +1145,6 @@ export function ReharmHome() {
     const on =
       extraFills.has(chordIndex) ||
       (fillEligible.has(chordIndex) && !mutedFills.has(chordIndex))
-    setLickyFills(true)
     setExtraRuns((current) => {
       if (!current.has(chordIndex)) return current
       const next = new Set(current)
@@ -1257,7 +1256,6 @@ export function ReharmHome() {
   const toggleRun = useCallback((chordIndex: number) => {
     if (transitions.has(chordIndex)) return
     setPhraseSpin((spin) => spin + 1)
-    setLickyRuns(true)
     setExtraFills((current) => {
       if (!current.has(chordIndex)) return current
       const next = new Set(current)
@@ -2605,63 +2603,6 @@ export function ReharmHome() {
         </div>
 
         <div className="flex flex-col gap-3">
-          <div>
-            <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-              Licky
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setLickyFills((on) => !on)}
-                className={`rounded-lg border px-3 py-1.5 text-xs ${
-                  lickyFills
-                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                Licky Fills
-              </button>
-              <button
-                type="button"
-                onClick={() => setLickyRuns((on) => !on)}
-                className={`rounded-lg border px-3 py-1.5 text-xs ${
-                  lickyRuns
-                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                Licky Runs
-              </button>
-              {(lickyFills || lickyRuns) &&
-                (
-                  [
-                    ['clone', 'Thuộc câu'],
-                    ['create', 'Sáng tạo'],
-                  ] as const
-                ).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setLickyMode(id)}
-                    className={`rounded-lg border px-3 py-1.5 text-xs ${
-                      lickyMode === id
-                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-            </div>
-            {(lickyFills || lickyRuns) && blockedDocs().length > 0 && (
-              <p className="mt-2 text-[10px] text-dim">
-                Chưa đọc hết:{' '}
-                {blockedDocs()
-                  .map((doc) => `${doc.file.replace('Reference/', '')} (${doc.status})`)
-                  .join(' · ')}
-              </p>
-            )}
-          </div>
           <div>
             <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
               Lấy nốt từ đâu

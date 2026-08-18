@@ -442,7 +442,6 @@ export function generateFillLine(
     breaths,
     sectionEnds,
     take = 0,
-    lickyFills = false,
     lickyMode = 'clone',
     extraFills,
     extraRuns,
@@ -546,7 +545,7 @@ export function generateFillLine(
       continue
     }
 
-    if (lickyFills || extraFills?.has(mainIndex)) {
+    if (extraFills?.has(mainIndex)) {
       result.push(
         ...placeLick({
           chord: chords[index],
