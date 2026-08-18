@@ -82,7 +82,7 @@ export function FallingNotes({
         .join(' ')}`}
     >
       {chord && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 text-center font-serif text-4xl font-bold tracking-wide text-amber-key drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+        <div className="pointer-events-none absolute top-2 right-3 z-10 font-serif text-4xl font-bold tracking-wide text-amber-key drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
           {chord}
         </div>
       )}
