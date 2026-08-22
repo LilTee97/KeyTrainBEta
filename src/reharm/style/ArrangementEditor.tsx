@@ -77,6 +77,16 @@ export function ArrangementEditor({
       ),
     )
 
+  /** Chỗ nghỉ sau đoạn dạo đầu, trước khi bài hát vào. */
+  const setIntroRest = (index: number, restAfter: number) =>
+    onChange(
+      steps.map((step, position) =>
+        position === index && step.type === 'intro'
+          ? { ...step, restAfter }
+          : step,
+      ),
+    )
+
   const setRestAfter = (index: number, restAfter: number) =>
     onChange(
       steps.map((step, position) =>
@@ -161,6 +171,31 @@ export function ArrangementEditor({
                 >
                   {step.ending === 'colored' ? 'kết · có màu' : 'kết · trơn'}
                 </span>
+              )}
+
+              {step.type === 'intro' && (
+                /*
+                  Đặt ngay cạnh bước, không giấu trong menu chuột phải.
+
+                  Bản trước để trong menu, nhưng hàng này không gắn xử lý chuột
+                  phải nên bấm vào chỉ ra menu của trình duyệt — lựa chọn có mà
+                  không ai với tới được. Ô chọn tại chỗ thì thấy ngay, và giống
+                  đúng cách bước giang tấu đang làm.
+                */
+                <select
+                  value={step.restAfter ?? 0}
+                  onChange={(event) =>
+                    setIntroRest(index, Number(event.target.value))
+                  }
+                  title="Hết dạo đầu thì vào bài ngay hay chừa cho ca sĩ một nhịp lấy hơi"
+                  className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
+                >
+                  {[0, 1].map((beats) => (
+                    <option key={beats} value={beats}>
+                      {beats === 0 ? 'xong vào ngay' : 'xong nghỉ 1 phách'}
+                    </option>
+                  ))}
+                </select>
               )}
 
               {step.type === 'interlude' && (
@@ -257,10 +292,10 @@ export function ArrangementEditor({
       )}
 
       {menu && (
-        <EndingMenu
+        <StepMenu
           menu={menu}
           steps={steps}
-          onPick={(mode) => {
+          onPickEnding={(mode) => {
             setEnding(menu.index, mode)
             setMenu(null)
           }}
@@ -302,6 +337,30 @@ export function ArrangementEditor({
         >
           + Giang tấu
         </button>
+
+        {/*
+          Dạo đầu luôn đứng trước cả bài, kết bài luôn đứng cuối — không có chỗ
+          nào khác cho chúng, nên hai nút này tự đặt đúng chỗ thay vì bắt người
+          dùng kéo thả. Nốt do bộ não soạn; não không có luật nào cho phép thì
+          bước này im tiếng và bài chạy như không có nó.
+        */}
+        <button
+          type="button"
+          onClick={() => onChange([{ type: 'intro' }, ...steps])}
+          title="Chèn đoạn dạo đầu vào trước bài. Bộ não chọn vòng và nốt theo luật thầy Kingsley: sus2 hoặc sus4 giải về bậc ba."
+          className="rounded-lg border border-amber-key/50 bg-amber-key/10 px-2.5 py-1 text-xs text-amber-key hover:bg-amber-key/20"
+        >
+          + Dạo đầu
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onChange([...steps, { type: 'outro' }])}
+          title="Chèn đoạn kết vào cuối bài. Bộ não rải ngược add2 theo luật thầy Kingsley."
+          className="rounded-lg border border-amber-key/50 bg-amber-key/10 px-2.5 py-1 text-xs text-amber-key hover:bg-amber-key/20"
+        >
+          + Kết bài
+        </button>
       </div>
     </div>
   )
@@ -313,14 +372,14 @@ export function ArrangementEditor({
  * Tách thành component riêng vì nó cần `useFlipIntoView` — hook không gọi được
  * bên trong nhánh điều kiện của component cha.
  */
-function EndingMenu({
+function StepMenu({
   menu,
   steps,
-  onPick,
+  onPickEnding,
 }: {
   menu: { index: number; x: number; y: number }
   steps: readonly ArrangementStep[]
-  onPick: (mode: EndingMode | undefined) => void
+  onPickEnding: (mode: EndingMode | undefined) => void
 }) {
   const { ref, style } = useFlipIntoView<HTMLDivElement>(menu.x, menu.y)
   const current = steps[menu.index]
@@ -355,7 +414,7 @@ function EndingMenu({
           <button
             key={label}
             type="button"
-            onClick={() => onPick(mode)}
+            onClick={() => onPickEnding(mode)}
             className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
           >
             <span className={active ? 'text-amber-key' : 'text-cream'}>

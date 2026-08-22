@@ -6,19 +6,26 @@ function isHit(token: string): boolean {
   return /[x0-9]/i.test(token)
 }
 
-/** `13` → nốt 1+3; `1f` gốc+5; `1+` gốc lên 8; `x`/`0` cả hợp âm. */
+/**
+ * `13` → nốt 1+3; `1f` gốc+5; `1+` gốc lên 8; `x`/`0` cả hợp âm.
+ *
+ * `1r` → **nốt gốc của hợp âm**, không phải nốt thấp nhất của thế bấm. Hai thứ
+ * này chỉ trùng nhau khi hợp âm bấm ở thể gốc; bấm thể đảo thì lệch, và câu rải
+ * mở bằng bậc ba nghe như chưa vào hợp âm. Xem `fromRoot` trong `types.ts`.
+ */
 function parseTones(
   token: string,
-): { toneIndex: number; semitones?: number }[] | undefined {
+): { toneIndex: number; semitones?: number; fromRoot?: boolean }[] | undefined {
   if (/x/i.test(token) || !/[1-9]/.test(token)) return undefined
-  const tones: { toneIndex: number; semitones?: number }[] = []
-  for (const part of token.matchAll(/([1-9])([f+]*)/g)) {
+  const tones: { toneIndex: number; semitones?: number; fromRoot?: boolean }[] = []
+  for (const part of token.matchAll(/([1-9])([f+r]*)/g)) {
     let semitones = 0
     if (part[2].includes('+')) semitones += 12
     if (part[2].includes('f')) semitones += 7
     tones.push({
       toneIndex: Number(part[1]) - 1,
       ...(semitones ? { semitones } : {}),
+      ...(part[2].includes('r') ? { fromRoot: true } : {}),
     })
   }
   return tones.length ? tones : undefined

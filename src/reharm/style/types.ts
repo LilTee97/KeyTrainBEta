@@ -42,8 +42,20 @@ export interface RhythmHit {
      * dùng cho mẫu rải Basic / Arp của OneMotion.
      */
     toneIndex?: number
-    /** Nhiều nốt (1, 13, 1f…) — OneMotion ghi số thứ tự nốt hợp âm. */
-    tones?: readonly { toneIndex: number; semitones?: number }[]
+    /**
+     * Nhiều nốt (1, 13, 1f…) — OneMotion ghi số thứ tự nốt hợp âm.
+     *
+     * `fromRoot` đổi cách hiểu con số: thay vì "nốt thứ mấy trong thế bấm", nó
+     * lấy **nốt gốc của hợp âm** rồi đặt vào tầm của thế bấm ấy. Cần cờ này vì
+     * thế bấm sắp theo cao độ, không theo bậc: hợp âm La thứ bấm thể đảo thành
+     * Đô - Mi - La thì nốt thấp nhất là Đô, và câu rải mở bằng "nốt thứ nhất"
+     * sẽ mở bằng bậc ba chứ không phải nốt gốc.
+     */
+    tones?: readonly {
+      toneIndex: number
+      semitones?: number
+      fromRoot?: boolean
+    }[]
   }
 
 /** Mẫu tiết tấu lặp lại của một điệu. */

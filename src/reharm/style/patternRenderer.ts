@@ -52,6 +52,15 @@ export interface RenderOptions {
   muteWindows?: readonly { from: number; to: number }[]
   /** Đổi mẫu theo từng ô nhịp (ballad Khá Bự: verse/pre/chorus). */
   cellAt?: (beat: number) => RhythmCell
+  /**
+   * Những mốc phách **bắt buộc mở ô nhịp mới**, thường là chỗ vào đoạn mới.
+   *
+   * Không có nó thì một ô nhịp dài tràn qua ranh giới đoạn, và mẫu của đoạn sau
+   * phải chờ hết ô mới được vào — với ô nhịp bốn ô thì trễ tới bốn nhịp, nghe ra
+   * đúng là đổi nhầm chỗ. Có nó thì ô đang chạy bị cắt đúng vạch, phần thừa bỏ
+   * đi, và đoạn mới mở ô của mình từ đầu.
+   */
+  cellBreaks?: readonly number[]
 }
 
 function clampVelocity(value: number): number {
@@ -73,16 +82,135 @@ function pickTone(
   return (notes[index] + semitones) as MidiNote
 }
 
+/**
+ * Nốt **theo bậc hợp âm**, đặt vào đúng tầm của thế bấm đang chơi.
+ *
+ * Đây là chỗ sửa một lỗi nghe rất rõ. Con số trong ô nhịp vốn nghĩa là "nốt thứ
+ * mấy **trong thế bấm**", mà thế bấm sắp theo cao độ và đã được tô màu. Trên
+ * hợp âm `Cadd2` thế bấm là `C4 D4 E4 G4`, nên `2` ra nốt Rê — bậc chín — chứ
+ * không phải bậc ba. Câu rải định đi 1-3-5 hoá ra đi Đô - Rê - Mi, một chùm
+ * liền bậc đập vào nốt màu; đó chính là tiếng chói người dùng nghe thấy. Trên
+ * `Am9` bấm `E3 G3 B3` còn tệ hơn: `1` ra nốt Mi, câu rải không chạm nốt La lần
+ * nào.
+ *
+ * Hậu tố `r` đổi con số sang **bậc của hợp âm**: 1 gốc, 2 bậc ba, 3 bậc năm, 4
+ * bậc bảy. Bậc được dò trong chính các nốt đang vang, nên hợp âm thứ ra bậc ba
+ * thứ, hợp âm át ra bậc bảy thứ, không phải đoán.
+ *
+ * Bậc cần tìm không có mặt trong thế bấm — ví dụ đòi bậc bảy trên hợp âm ba nốt
+ * — thì lùi về nốt gốc, chứ không lấy bừa một nốt bên cạnh.
+ */
+/**
+ * Quãng của từng bậc, và **đường lùi** khi bậc ấy không có trong thế bấm.
+ *
+ * Thế bấm rút gọn hay thiếu bậc: `Am9` thường bấm `E G B` — bậc năm, bậc bảy,
+ * bậc chín, **không có bậc ba**. Đòi bậc ba ở đó mà lùi về nốt gốc thì cả câu
+ * rải đập đúng một nốt; đo ra "La - La - Mi - La", nghe như đàn hỏng phím.
+ *
+ * Nên bậc ba thiếu thì lùi về **bậc bảy** chứ không về bậc năm: bậc năm đã có
+ * chỗ của nó ở con số kế tiếp, lùi vào đó là hai con số ra cùng một nốt.
+ */
+const DEGREE_CHAIN: Readonly<Record<number, readonly (readonly number[])[]>> = {
+  // Bậc ba: quãng ba trưởng hoặc thứ, lùi về bậc bảy, rồi bậc năm.
+  1: [[4, 3], [10, 11], [7, 6, 8]],
+  // Bậc năm: đúng hoặc giảm hoặc tăng, lùi về bậc bảy, rồi bậc ba.
+  2: [[7, 6, 8], [10, 11], [4, 3]],
+  // Bậc bảy: thứ hoặc trưởng, lùi về bậc năm.
+  3: [[10, 11], [7, 6, 8]],
+}
+
+function degreeTone(
+  notes: readonly MidiNote[],
+  rootPc: number,
+  toneIndex: number,
+  semitones = 0,
+  near?: MidiNote,
+): MidiNote {
+  const floor = notes[0]
+  const sounding = new Set(notes.map((note) => ((note % 12) + 12) % 12))
+
+  /*
+    Nốt gốc **không bao giờ lùi**. Nó có thể vắng mặt ở tay phải — thế bấm rút
+    gọn hay bỏ nó cho tay trái giữ — nhưng nó vẫn là nốt gốc của hợp âm, và câu
+    rải mở bằng nó mới nghe ra đã vào hợp âm.
+  */
+  let pitchClass = rootPc
+
+  if (toneIndex > 0) {
+    let found: number | null = null
+    for (const group of DEGREE_CHAIN[toneIndex] ?? []) {
+      for (const step of group) {
+        if (sounding.has((rootPc + step) % 12)) {
+          found = (rootPc + step) % 12
+          break
+        }
+      }
+      if (found !== null) break
+    }
+    pitchClass = found ?? rootPc
+  }
+
+  const step = (((pitchClass - (floor % 12)) % 12) + 12) % 12
+  const placed = floor + step + semitones
+
+  if (near === undefined) return placed as MidiNote
+
+  /*
+    Đặt nốt vào quãng tám **gần nốt vừa chơi nhất**.
+
+    Không có bước này thì mọi nốt bị neo vào đáy thế bấm, và thế bấm nằm thấp
+    là câu rải nhảy cóc: đo trên `Fadd2` bấm `A2 C3 F3 G3` ra một bước chín nửa
+    cung giữa hai nốt liền nhau — tay phải với hụt. Câu rải là để một bàn tay
+    chơi liền mạch, nên nốt sau phải rơi cạnh nốt trước.
+
+    Ký hiệu `+` vẫn giữ nghĩa "cao hơn một quãng tám": nó được cộng vào **sau**
+    khi đã chọn quãng tám gần nhất, nên câu vẫn với lên được khi cần.
+  */
+  /*
+    Chỉ chọn trong tầm tay phải.
+
+    Chọn xong mới để `clampToHandRegister` kéo lên thì hỏng đúng thứ vừa làm:
+    nốt La quãng tám 3 nằm dưới sàn nên bị đẩy lên La quãng tám 4, và bước đang
+    là quãng ba đi xuống hoá thành bước chín nửa cung đi lên. Lọc sẵn ở đây thì
+    không có gì để kéo.
+  */
+  const base = placed - semitones
+  let best: number | null = null
+  for (let octave = -4; octave <= 4; octave += 1) {
+    const candidate = base + octave * 12
+    if (candidate < RIGHT_ARPEGGIO_LOW || candidate > RIGHT_ARPEGGIO_HIGH) continue
+    if (best === null || Math.abs(candidate - near) < Math.abs(best - near)) {
+      best = candidate
+    }
+  }
+  return ((best ?? base) + semitones) as MidiNote
+}
+
+/*
+  Tầm câu rải tay phải. Trùng với tầm `clampToHandRegister` cho tay phải, để
+  chọn xong là dùng được luôn, không bị kéo lệch.
+*/
+const RIGHT_ARPEGGIO_LOW = 60
+const RIGHT_ARPEGGIO_HIGH = 79
+
 function notesForVoice(
   notes: readonly MidiNote[],
   voice: HitVoice = 'chord',
   toneIndex?: number,
-  tones?: readonly { toneIndex: number; semitones?: number }[],
+  tones?: readonly {
+    toneIndex: number
+    semitones?: number
+    fromRoot?: boolean
+  }[],
+  rootPc?: number,
+  near?: MidiNote,
 ): MidiNote[] {
   if (notes.length === 0) return []
   if (tones?.length) {
     return tones.map((spec) =>
-      pickTone(notes, spec.toneIndex, spec.semitones ?? 0),
+      spec.fromRoot && rootPc !== undefined
+        ? degreeTone(notes, rootPc, spec.toneIndex, spec.semitones ?? 0, near)
+        : pickTone(notes, spec.toneIndex, spec.semitones ?? 0),
     )
   }
   if (toneIndex !== undefined) {
@@ -212,13 +340,13 @@ function renderWithCell(
   releaseRatio: number,
   cellAt?: (beat: number) => RhythmCell,
   muteWindows?: readonly { from: number; to: number }[],
+  cellBreaks?: readonly number[],
 ): TimelineEvent[] {
   const fallback = pattern.cell
   if (!fallback && !cellAt) return []
 
   const totalBeats = starts[starts.length - 1] + durations[durations.length - 1]
   const events: TimelineEvent[] = []
-  const step = fallback?.lengthBeats ?? 4
 
   /** Hợp âm nào đang vang tại một thời điểm, khi chúng dài ngắn khác nhau. */
   const voicingAt = (beat: number) => {
@@ -228,29 +356,75 @@ function renderWithCell(
     return voicings[0]
   }
 
-  for (let offset = 0; offset < totalBeats; offset += step) {
+  /*
+    Bước nhảy lấy theo **ô nhịp đang dùng**, không phải theo ô nhịp mặc định.
+
+    Trước đây bước nhảy cố định bằng độ dài `pattern.cell`. Lúc mọi ô nhịp dài
+    như nhau thì không sao, nhưng khi `cellAt` trả về ô nhịp khác cho đoạn điệp
+    khúc — và bản điệp khúc thường ngắn hơn bản phiên khúc — thì phần dôi ra bị
+    bỏ trống, đoạn điệp khúc mất tiếng.
+
+    `cellBreaks` là mốc **bắt buộc mở ô mới**, thường là chỗ vào một đoạn mới.
+    Không có nó thì ô nhịp cũ tràn qua ranh giới đoạn, và bản điệp khúc phải chờ
+    hết ô mới được vào — chậm mất mấy nhịp, nghe như đổi nhầm chỗ.
+  */
+  const nextBreak = (after: number): number => {
+    let soonest = Infinity
+    for (const mark of cellBreaks ?? []) {
+      if (mark > after + EPSILON && mark < soonest) soonest = mark
+    }
+    return soonest
+  }
+
+  for (let offset = 0; offset < totalBeats; ) {
     const cell = cellAt?.(offset) ?? fallback
-    if (!cell) continue
+    if (!cell) break
+
+    const until = Math.min(offset + cell.lengthBeats, nextBreak(offset))
 
     for (const hand of ['right', 'left'] as const) {
       const hits = hand === 'right' ? cell.right : cell.left
+      /*
+        Nốt vừa chơi của bàn tay này, để nốt kế tiếp rơi cạnh nó thay vì nhảy về
+        đáy thế bấm. Đặt lại ở mỗi ô nhịp: mở ô mới là mở câu mới.
+      */
+      let near: MidiNote | undefined
 
       for (const hit of hits) {
         const startBeat = offset + hit.beat
         if (startBeat >= totalBeats) continue
+        // Ô bị cắt ngắn ở ranh giới đoạn: phần thừa thuộc về đoạn sau, bỏ đi.
+        if (startBeat >= until - EPSILON) continue
         if (inMuteWindow(startBeat, muteWindows)) continue
 
         const voicing = voicingAt(startBeat)
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
-        const raw = notesForVoice(source, hit.voice, hit.toneIndex, hit.tones)
+        /*
+          Nốt gốc lấy từ nốt bass của tay trái: đó là nốt đáy của hợp âm, kể cả
+          khi tay phải đang bấm thể đảo.
+        */
+        const rootPc =
+          voicing.left.length > 0
+            ? ((Math.min(...voicing.left) % 12) + 12) % 12
+            : undefined
+        const raw = notesForVoice(
+          source,
+          hit.voice,
+          hit.toneIndex,
+          hit.tones,
+          rootPc,
+          near,
+        )
         const split = settleHands(
           hand === 'left' ? raw : voicing.left,
           hand === 'right' ? raw : voicing.right,
         )
         const notes = hand === 'left' ? split.left : split.right
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
+
+        if (notes.length > 0) near = notes[notes.length - 1]
 
         events.push({
           notes,
@@ -263,6 +437,8 @@ function renderWithCell(
         })
       }
     }
+
+    offset = until
   }
 
   return [
@@ -374,6 +550,7 @@ export function renderPattern(
     barsWithoutComping,
     muteWindows,
     cellAt,
+    cellBreaks,
   } = options
 
   if (voicings.length === 0) return []
@@ -398,6 +575,7 @@ export function renderPattern(
         releaseRatio,
         cellAt,
         muteWindows,
+        cellBreaks,
       )
     : renderBlockChords(
         voicings,

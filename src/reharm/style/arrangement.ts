@@ -72,6 +72,32 @@ export type ArrangementStep =
        */
       restAfter?: number
     }
+  /**
+   * Đoạn dạo đầu hoặc đoạn kết, do bộ não PianoBrain soạn.
+   *
+   * Khác hẳn hai loại trên ở một điểm: nó **không mượn vòng hợp âm nào của
+   * bài**. Bài chỉ nói "chỗ này có một đoạn dạo dài bấy nhiêu phách"; nốt thì
+   * lấy sẵn từ não qua `phrase` trong `BuildArrangedSongOptions`. Não không có
+   * luật nào cho phép thì `phrase` trả rỗng, bước này không kêu tiếng nào, và
+   * bài vẫn chạy bình thường.
+   */
+  | {
+      type: 'intro'
+      /** Dài mấy phách. Bỏ trống thì lấy đúng độ dài não soạn ra. */
+      lengthBeats?: number
+      /**
+       * Im mấy phách sau đoạn dạo đầu, trước khi bài hát vào.
+       *
+       * Hai lối đệm đều có người dùng thật: **vào ngay** (0 phách) thì hợp âm
+       * báo nối thẳng vào câu hát, gọn và dứt khoát; **nghỉ một phách** thì
+       * chừa cho ca sĩ một nhịp lấy hơi. Bỏ trống là vào ngay.
+       */
+      restAfter?: number
+    }
+  | {
+      type: 'outro'
+      lengthBeats?: number
+    }
 
 /** Thứ tự mặc định: chơi lần lượt từng đoạn đúng một lượt. */
 export function defaultArrangement(
@@ -88,6 +114,9 @@ export function stepLabel(
   if (step.type === 'section') {
     return sources[step.source]?.name || 'Đoạn không tên'
   }
+
+  if (step.type === 'intro') return 'Dạo đầu (não soạn)'
+  if (step.type === 'outro') return 'Kết bài (não soạn)'
 
   const over = sources[step.over]?.name ?? 'đoạn đầu'
   const times = step.loops > 1 ? ` ×${step.loops}` : ''
@@ -108,6 +137,13 @@ function nextSection(
 ): SourceSection | null {
   const step = steps[index + 1]
   if (!step) return null
+  /*
+    Đoạn dạo không mượn vòng của đoạn nào, nên nó không phải "đoạn vang lên
+    tiếp theo" — nhìn xuyên qua nó tới bước sau nữa.
+  */
+  if (step.type === 'intro' || step.type === 'outro') {
+    return nextSection(steps, index + 1, sources)
+  }
   return sources[step.type === 'section' ? step.source : step.over] ?? null
 }
 
@@ -162,6 +198,17 @@ export interface BuildArrangedSongOptions {
   solo: (take: number) => readonly TimelineEvent[]
   sources: readonly SourceSection[]
   steps: readonly ArrangementStep[]
+  /**
+   * Nốt cho đoạn dạo đầu và đoạn kết, do bên gọi hỏi bộ não.
+   *
+   * Để bên gọi lo chứ không gọi thẳng não ở đây, vì tệp này là chỗ **xếp thời
+   * gian**, không phải chỗ biết về kho kiến thức. Trả `null` thì bước dạo bị bỏ
+   * qua, và bài chạy như không có nó.
+   */
+  phrase?: (kind: 'intro' | 'outro') => {
+    events: readonly TimelineEvent[]
+    lengthBeats: number
+  } | null
   /**
    * Câu quay đầu ở cuối lượt giang tấu **cuối cùng**, hút về đoạn ngay sau.
    *
@@ -269,6 +316,7 @@ export function buildArrangedSong(
     steps,
     turnaround,
     interludeRange,
+    phrase,
     restAfterInterlude = 0,
     beatsPerMeasure = 4,
     ending,
@@ -346,6 +394,28 @@ export function buildArrangedSong(
       }
 
       cursor += source.lengthBeats
+      continue
+    }
+
+    if (step.type === 'intro' || step.type === 'outro') {
+      /*
+        Đoạn dạo lấy nốt sẵn từ não. Não không có luật cho phép thì `phrase`
+        trả `null`, bước này chiếm 0 phách và coi như không có — bài vẫn chạy.
+      */
+      const made = phrase?.(step.type)
+      if (!made || made.events.length === 0) continue
+
+      const lengthBeats = step.lengthBeats ?? made.lengthBeats
+      sections.push({ kind: 'interlude', startBeat: cursor, lengthBeats })
+      for (const event of made.events) {
+        events.push({ ...event, startBeat: event.startBeat + cursor })
+      }
+      /*
+        Chỗ nghỉ sau đoạn dạo đầu là **khoảng im**, không phải phần của đoạn:
+        nó nằm ngoài `lengthBeats` nên không kéo dài đoạn dạo, chỉ đẩy chỗ bài
+        hát bắt đầu ra sau.
+      */
+      cursor += lengthBeats + (step.type === 'intro' ? (step.restAfter ?? 0) : 0)
       continue
     }
 
