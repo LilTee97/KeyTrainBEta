@@ -7,6 +7,7 @@ import {
   nearestStep,
 } from '../fillSoloGenerator/soloVocabulary'
 import type { ParsedChord } from '../types'
+import { brainLickPhrases } from '../brain/lickyPhrases'
 import library from './phrases.json'
 import type { LickPhrase, PlaceOptions, PlacedNote } from './types'
 
@@ -19,8 +20,15 @@ const RUN_GRID = 0.25
 
 const phrases = (library as { phrases: LickPhrase[] }).phrases
 
+/**
+ * Sổ câu: câu trong `phrases.json` **cộng thêm** câu của thầy Kingsley lấy từ
+ * bộ não PianoBrain.
+ *
+ * Nối lúc chạy chứ không ghi vào tệp, để `phrases.json` giữ nguyên nguồn gốc
+ * của nó. Kho không cho phép câu nào thì phần thêm rỗng và sổ y như cũ.
+ */
 export function lickyPhrases(): readonly LickPhrase[] {
-  return phrases
+  return [...phrases, ...brainLickPhrases()]
 }
 
 function scramble(take: number): number {
@@ -28,10 +36,11 @@ function scramble(take: number): number {
 }
 
 function pick(kind: PlaceOptions['kind'], take: number): LickPhrase {
+  const book = lickyPhrases()
   const pool =
     kind === 'run'
-      ? phrases.filter((phrase) => phrase.notes.length >= 6)
-      : phrases
+      ? book.filter((phrase) => phrase.notes.length >= 6)
+      : book
   return pool[scramble(take) % pool.length] ?? phrases[0]!
 }
 

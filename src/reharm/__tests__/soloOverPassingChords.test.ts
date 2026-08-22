@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { mainChordSpans } from '../chordTiming'
 import { generateSolo } from '../fillSoloGenerator/soloGenerator'
-import { chordMaterial } from '../fillSoloGenerator/soloVocabulary'
+import {
+  chordMaterial,
+  chordPentatonic,
+} from '../fillSoloGenerator/soloVocabulary'
+import { scaleTones } from '../reharmEngine/keyDetection'
 import { parseChordInput } from '../input/chordInputParser'
 import {
   applySuggestions,
@@ -76,7 +80,13 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
       const chords = withPassing(text)
       const spans = mainChordSpans(chords, 4)
 
-      for (const note of soloOf(chords).filter((entry) => !entry.isGrace)) {
+      /*
+        Nốt tô điểm của mẫu câu — nốt kẹp nửa cung — cố ý nằm ngoài hoà âm; đó
+        là cả ngón đàn, không phải nốt lạc.
+      */
+      for (const note of soloOf(chords).filter(
+        (entry) => !entry.isGrace && !entry.ornament,
+      )) {
         let span = spans[0]
         for (let index = spans.length - 1; index >= 0; index -= 1) {
           if (note.startBeat >= spans[index].start - 1e-6) {
@@ -85,8 +95,22 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
           }
         }
 
+        /*
+          "Bám hợp âm chính" tính cả ba tầng của bậc ưu tiên nốt giang tấu: nốt
+          hợp âm, ngũ cung dựng trên nốt gốc hợp âm ấy, và thang âm của giọng.
+          Hai tầng đầu dựng trên chính hợp âm chính; tầng ba là nốt trong giọng,
+          bộ sinh câu vẫn dùng để bước nối giữa hai nốt trụ.
+
+          Chốt chặn thật với hợp âm lướt nằm ở bài kiểm ngay bên dưới: nốt đặc
+          trưng của hợp âm lướt (bậc ba của bậc năm phụ chẳng hạn) nằm **ngoài
+          giọng**, nên vẫn bị bắt ở đó.
+        */
         expect(
-          chordMaterial(span.chord),
+          [
+            ...chordMaterial(span.chord),
+            ...chordPentatonic(span.chord),
+            ...scaleTones(0, 'major'),
+          ],
           `${span.chord.symbol} ở phách ${note.startBeat}`,
         ).toContain(note.note % 12)
       }
@@ -100,7 +124,7 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
     const mainTones = new Set(
       spans.flatMap((span) => chordMaterial(span.chord)),
     )
-    for (const note of soloOf(chords).filter((entry) => !entry.isGrace)) {
+    for (const note of soloOf(chords).filter((entry) => !entry.isGrace && !entry.ornament)) {
       expect(mainTones).toContain(note.note % 12)
     }
   })
@@ -137,7 +161,7 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
             Nốt láy cố ý nằm ngoài lưới — nó là cái vuốt vào phách, vang ở khe
             ngay trước nốt chính. Cái phải đúng lưới là **nốt chính**.
           */
-          for (const note of solo.filter((entry) => !entry.isGrace)) {
+          for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
             if (onTripletGrid(note.startBeat)) continue
 
             const steps = note.startBeat / GRID

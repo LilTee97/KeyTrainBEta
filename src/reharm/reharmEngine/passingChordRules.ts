@@ -41,6 +41,14 @@ export type PassingTechnique =
   | 'secondary-ii-V'
   /** Câu nối bằng chuỗi hợp âm giảm, xem `../fillSoloGenerator/fillGenerator.ts`. */
   | 'dim7-chain-fill'
+  /**
+   * Hợp âm át bảy giáng chín kéo về hợp âm thứ, do bộ não PianoBrain đề xuất.
+   *
+   * Nằm cạnh các kỹ thuật của anh Khá chứ không thay: luật ở tệp này không đổi,
+   * đề xuất kia được nối vào cùng danh sách ở `../brain/passing.ts`. Cũng phải
+   * người dùng bấm nhận mới vào bài, y như mọi đề xuất khác.
+   */
+  | 'hai-7b9'
 
 export interface PassingSuggestion {
   /** Vị trí chèn: đứng ngay trước hợp âm thứ `insertBeforeIndex`. */
@@ -52,6 +60,13 @@ export interface PassingSuggestion {
   explanation: string
   /** Host giữ bấy nhiêu phách rồi mới tới hợp âm lướt. Bỏ trống = chia đôi ô. */
   hostKeepBeats?: number
+  /**
+   * Item trong kho PianoBrain cho phép đề xuất này, nếu nó tới từ bộ não.
+   *
+   * Bỏ trống nghĩa là đề xuất do chính engine của KeyTrain nghĩ ra — giao diện
+   * gắn huy hiệu "KeyTrain" cho những cái đó. Xem `../brain/badge.ts`.
+   */
+  authorizedBy?: string[]
 }
 
 /** Dựng một hợp âm từ nốt gốc và định danh tính chất. */
@@ -293,6 +308,8 @@ export interface PassingGroup {
   explanation: string
   /** Các khe sẽ chèn, đã bỏ những khe sát nhau. */
   slots: number[]
+  /** Item kho cho phép, nếu nhóm này tới từ bộ não. Xem `PassingSuggestion`. */
+  authorizedBy?: string[]
 }
 
 /**
@@ -331,6 +348,7 @@ export function groupPassingSuggestions(
         chords: suggestion.chords,
         explanation: suggestion.explanation,
         slots: [suggestion.insertBeforeIndex],
+        ...(suggestion.authorizedBy ? { authorizedBy: suggestion.authorizedBy } : {}),
       })
       continue
     }
@@ -462,4 +480,5 @@ export const TECHNIQUE_LABELS: Record<PassingTechnique, string> = {
   'secondary-dominant': 'Bậc năm phụ',
   'secondary-ii-V': 'Vòng 2-5-1 lướt',
   'dim7-chain-fill': 'Câu nối chuỗi hợp âm giảm',
+  'hai-7b9': 'Át 7b9 về bậc thứ (gợi ý não)',
 }

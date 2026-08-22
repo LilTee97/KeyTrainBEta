@@ -141,6 +141,12 @@ export interface PassingOption {
   appliedHere: boolean
   /** Chơi sau hợp âm này (như fill), không chèn trước hợp âm sau. */
   after?: boolean
+  /**
+   * Ai dạy cách này: tên thầy, "Suy luận chung", hay "KeyTrain".
+   *
+   * Kho có nhiều thầy nên phải nói rõ từng cái của ai — xem `../brain/badge.ts`.
+   */
+  teacher?: string
 }
 
 /** Menu chuột phải đang mở trên hợp âm nào, ở đâu trên màn hình. */
@@ -863,6 +869,11 @@ export function ChordContextMenu({
                       </span>
                       <span className="text-[10px] text-dim">
                         {option.technique} · chỉ chỗ này
+                        {option.teacher && (
+                          <span className="ml-1 rounded-sm border border-line px-1 py-px font-mono text-[9px] text-dim">
+                            {option.teacher}
+                          </span>
+                        )}
                       </span>
                     </button>
                   )}
@@ -878,6 +889,11 @@ export function ChordContextMenu({
                       </span>
                       <span className="text-[10px] text-dim">
                         {option.technique} · mọi chỗ có cùng hợp âm đích
+                        {option.teacher && (
+                          <span className="ml-1 rounded-sm border border-line px-1 py-px font-mono text-[9px] text-dim">
+                            {option.teacher}
+                          </span>
+                        )}
                       </span>
                     </button>
                   )}
@@ -904,6 +920,11 @@ export function ChordContextMenu({
                       </span>
                       <span className="text-[10px] text-dim">
                         {option.technique} · như câu fill
+                        {option.teacher && (
+                          <span className="ml-1 rounded-sm border border-line px-1 py-px font-mono text-[9px] text-dim">
+                            {option.teacher}
+                          </span>
+                        )}
                       </span>
                     </button>
                   )}
@@ -939,6 +960,11 @@ export function ChordContextMenu({
                       <span className="text-cream">{option.chords} sau hợp âm này</span>
                       <span className="text-[10px] text-dim">
                         {option.technique} · cuối ô, như câu fill
+                        {option.teacher && (
+                          <span className="ml-1 rounded-sm border border-line px-1 py-px font-mono text-[9px] text-dim">
+                            {option.teacher}
+                          </span>
+                        )}
                       </span>
                     </button>
                   )}

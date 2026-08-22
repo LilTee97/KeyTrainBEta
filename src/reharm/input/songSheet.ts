@@ -414,6 +414,36 @@ export function layoutAnchors(
  * Hợp âm lướt cũng bỏ qua: nó không có chỗ riêng trong vòng hợp âm chính nên
  * không đánh số cùng hệ với những chỗ khác.
  */
+/**
+ * Những hợp âm mà **giọng hát đang vang**, suy từ lời đã dán.
+ *
+ * Nhìn ngược với `breathChords`: hàm kia trả về chỗ *hết* một câu hát, hàm này
+ * trả về chỗ giọng còn đang chiếm. Cây đàn không lót vào những ô này, vì câu lót
+ * vốn để lấp khoảng trống chứ không phải để chen vào giọng.
+ *
+ * Ô cuối mỗi dòng lời **không** tính là đang hát: chính đuôi ô đó là chỗ ca sĩ
+ * buông ra lấy hơi, và đó là chỗ câu lót thuộc về.
+ */
+export function singingChords(sheet: SongSheet): Set<number> {
+  const breaths = breathChords(sheet)
+  const singing = new Set<number>()
+
+  for (const section of sheet.sections) {
+    for (const line of section.lines) {
+      if (line.lyric.trim().length === 0) continue
+
+      for (const anchor of line.anchors) {
+        if (anchor.passing || anchor.broken || anchor.chordIndex === null) {
+          continue
+        }
+        if (!breaths.has(anchor.chordIndex)) singing.add(anchor.chordIndex)
+      }
+    }
+  }
+
+  return singing
+}
+
 export function breathChords(sheet: SongSheet): Set<number> {
   const found = new Set<number>()
 

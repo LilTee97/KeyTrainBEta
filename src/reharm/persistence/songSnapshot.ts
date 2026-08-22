@@ -89,6 +89,13 @@ export interface SongSnapshot {
   /** Bỏ trống với bài lưu từ trước khi tách câu fill ra khỏi mật độ nốt. */
   fillDensity?: string
   noteSource: string
+  /**
+   * Đoạn không lời lấy thang âm jazz từ kho PianoBrain.
+   *
+   * Bỏ trống với bài lưu từ trước khi có công tắc này — đọc ra `undefined` thì
+   * coi là tắt, đúng luật "item còn draft không tự thành tiếng".
+   */
+  jazzScales?: boolean
   chordsPerPhrase: number
 }
 

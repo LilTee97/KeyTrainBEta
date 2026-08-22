@@ -54,6 +54,7 @@ import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
 import {
   breathChords,
+  singingChords,
   buildSongSheet,
   resectionSheet,
   sectionChordRanges,
@@ -105,6 +106,25 @@ import type {
   MajorChordColor,
   MinorChordColor,
 } from './reharmEngine/staticVoicingRules'
+import { haiPalette } from './brain/haiPalette'
+import { brainFill } from './brain/fillFromBrain'
+import { brainInterludeWindow } from './brain/interlude'
+import { brainPassingSuggestions } from './brain/passing'
+import { brainPhrase } from './brain/phrase'
+import { walkingBassLine } from './brain/walkingBass'
+import { teacherBadge } from './brain/badge'
+import { jazzScaleFor } from './brain/jazzScale'
+import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
+import { plainForInterlude } from './style/interludeChords'
+import { OUTRO_LEAD_BARS, cueChord, phraseChords } from './style/phraseChords'
+import { cueStrike, slowClose } from './style/phraseCue'
+import { arpeggioRun } from './fillSoloGenerator/leadIn'
+import { interludeBassLine } from './style/interludeBass'
+import {
+  hasChorusVariant,
+  isSplitAwareStyle,
+  resolveStyleForSection,
+} from './style/sectionStyles'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -115,7 +135,6 @@ import {
   compatibleColorIds,
   nextColorId,
   withQuality,
-  colorPlainChord,
   toSlashChord,
 } from './reharmEngine/staticVoicingRules'
 import {
@@ -133,6 +152,7 @@ import {
   arrangedBeatAt,
   sourceBeatAt,
 } from './style/songStructure'
+import type { SectionKind } from './style/songStructure'
 import type { ArrangementStep, SourceSection } from './style/arrangement'
 import {
   DEFAULT_REST_AFTER,
@@ -447,6 +467,12 @@ export function ReharmHome() {
   const [susDominant, setSusDominant] = useState(true)
   /** Màu của chủ âm — quyết định gu chung của cả vòng. */
   const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
+  /*
+    Đang chơi gu thầy Hải hay gu anh Khá. Mặc định vẫn là Khá — bảng màu của
+    thầy Hải là thứ *thêm vào*, bấm mới có, không tự chiếm chỗ.
+  */
+  const [haiGu, setHaiGu] = useState(false)
+  const paletteHai = haiPalette()
   const [majorColor, setMajorColor] = useState<MajorChordColor>('add9')
   const [minorColor, setMinorColor] = useState<MinorChordColor>('auto')
   const [dominantColor, setDominantColor] =
@@ -489,9 +515,67 @@ export function ReharmHome() {
    * thoáng là đoạn hát cũng mất luôn phần lớn chỗ chêm.
    */
   const [fillDensity, setFillDensity] = useState<OrnamentDensity>('medium')
+  /*
+    Câu lót lấy hình từ bộ não PianoBrain (luật thầy Kingsley) thay vì câu ba
+    nốt đi liền bậc của KeyTrain. Mặc định tắt: đây là thứ thêm vào, không phải
+    thứ thay chỗ cách chơi cũ. Não không có luật khớp thì tự lùi về cách cũ.
+  */
+  const [brainFills, setBrainFills] = useState(false)
+  /*
+    Tay trái đi walking bass 1-2-3-5 theo Pianote thay vì tuyến trầm của ô nhịp.
+    Mặc định tắt: đây là thứ thêm vào, không phải thứ thay cách đệm sẵn có.
+  */
+  const [walkingBass, setWalkingBass] = useState(false)
+
+  /*
+    Điệu đang chọn có thuộc họ ballad không.
+
+    Walking 1-2-3-5 và câu lót Kingsley đều rút từ bài giảng đệm ballad, đem
+    sang swing hay bossa là dùng sai chỗ — nên hai công tắc ấy chỉ hiện ở họ
+    ballad. Xem `style/balladFamily.ts`.
+  */
+  const ballad = isBalladStyle(styleId)
+
+  /*
+    Chặn walking chạy ngầm.
+
+    Người dùng bật walking ở ballad rồi đổi sang swing thì ô tick biến mất,
+    nhưng biến trạng thái vẫn còn `true`. Lấy giá trị đã nhân với `ballad` chứ
+    không đọc thẳng biến kia, nên đổi điệu là tuyến trầm cũ quay lại ngay, không
+    phụ thuộc vào việc dọn trạng thái có kịp chạy hay không.
+  */
+  const walkingOn = walkingBass && ballad
+  const brainFillsOn = brainFills && ballad
+
+  /*
+    Rời họ ballad thì tắt hẳn hai công tắc, đừng để chúng nhớ lựa chọn cũ.
+
+    Phần phát tiếng đã an toàn nhờ `walkingOn` ở trên; effect này lo phần còn
+    lại: quay về ballad sau khi ghé qua swing thì ô tick phải trống, chứ không
+    bật sẵn lại một thứ người dùng không chọn lần này.
+  */
+  useEffect(() => {
+    if (ballad) return
+    setWalkingBass(false)
+    setBrainFills(false)
+  }, [ballad])
   /** Mật độ nốt láy, tách riêng khỏi mật độ nốt của câu nhạc. */
   const [graceDensity, setGraceDensity] = useState<GraceDensity>('sparse')
   const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
+  /**
+   * Lấy thang âm jazz từ kho PianoBrain cho đoạn không lời.
+   *
+   * Nằm riêng chứ không phải mục thứ tư của hàng "lấy nốt từ đâu": ba nguồn kia
+   * dựng nốt từ chính hợp âm và luôn có tiếng, còn công tắc này đọc kho, chỉ
+   * chạy ở đoạn không lời, và im lặng trên hợp âm nào kho chưa có gam.
+   *
+   * Mặc định **tắt**. Toàn bộ item gam trong kho còn `status: "draft"` — đã rút
+   * từ video thật nhưng chưa ai xem lại để đối chiếu, nên không được tự thành
+   * tiếng đàn. Xem `brain/gate.ts` và `brain/jazzScale.ts`.
+   */
+  const [jazzScales, setJazzScales] = useState(false)
+  /** Nguồn nốt thật sự đưa cho bộ sinh câu: công tắc gam jazz đè lên lựa chọn kia. */
+  const soloNoteSource: SoloNoteSource = jazzScales ? 'jazzScale' : noteSource
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -674,7 +758,17 @@ export function ReharmHome() {
       key: parsedKey,
     })
 
-    const chosen = firstPass.passingSuggestions
+    /*
+      Gợi ý của bộ não nối vào **cuối** danh sách của anh Khá, không chen vào
+      giữa và không thay cái nào. Nó cũng đi qua đúng bộ lọc `acceptedPassing`
+      như mọi gợi ý khác, nên mặc định không có gì vào bài.
+    */
+    const fromBrain = brainPassingSuggestions({
+      chords: sequence.chords,
+      key: parsedKey ?? firstPass.key,
+    })
+
+    const chosen = [...firstPass.passingSuggestions, ...fromBrain]
       .filter((suggestion) =>
         acceptedPassing.includes(
           keyOf(suggestion.insertBeforeIndex, suggestion.technique),
@@ -688,7 +782,7 @@ export function ReharmHome() {
           : { ...suggestion, hostKeepBeats: keep }
       })
 
-    return reharmonize(sequence.chords, {
+    const result = reharmonize(sequence.chords, {
       intensity,
       susDominant,
       tonicColor,
@@ -704,6 +798,11 @@ export function ReharmHome() {
       beatsPerChord: chordBeats,
       chordBeats: halvedBeats,
     })
+
+    return {
+      ...result,
+      passingSuggestions: [...result.passingSuggestions, ...fromBrain],
+    }
   }, [
     sequence.chords,
     intensity,
@@ -789,6 +888,8 @@ export function ReharmHome() {
         id: group.id,
         slotId: keyOf(otherSlot, group.technique),
         technique: TECHNIQUE_LABELS[group.technique],
+        // Nhóm không có `authorizedBy` là luật của chính KeyTrain, không qua kho.
+        teacher: teacherBadge(group.authorizedBy),
         chords: group.chords.map((chord) => chord.symbol).join(' → '),
         places: group.slots.length,
         applied: isGroupOn(group),
@@ -801,6 +902,8 @@ export function ReharmHome() {
         id: group.id,
         slotId: keyOf(tail, group.technique),
         technique: TECHNIQUE_LABELS[group.technique],
+        // Nhóm không có `authorizedBy` là luật của chính KeyTrain, không qua kho.
+        teacher: teacherBadge(group.authorizedBy),
         chords: group.chords.map((chord) => chord.symbol).join(' → '),
         places: group.slots.length,
         applied: isGroupOn(group),
@@ -892,13 +995,6 @@ export function ReharmHome() {
   }, [pastedSong, recolored, withPassing, sectionMarks])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
-  const accompaniment = useMemo(() => {
-    return renderPattern(twoHands, style, {
-      beatsPerChord: chordBeats,
-      beatsEach: chordDurations(withPassing, chordBeats),
-      muteWindows,
-    })
-  }, [twoHands, style, chordBeats, withPassing, muteWindows])
 
   /**
    * Cấu trúc thật của bài, suy ra từ cách chia đoạn trên bản nhạc.
@@ -944,6 +1040,84 @@ export function ReharmHome() {
    * thứ tự chơi chỉ làm việc với mốc phách, còn muốn biết hút về đâu thì phải
     * đọc được hợp âm đầu tiên của đoạn kế tiếp.
     */
+  const accompaniment = useMemo(() => {
+    const beatsEach = chordDurations(withPassing, chordBeats)
+
+    /*
+      Vào điệp khúc thì đổi sang bản điệp khúc của chính điệu đang chọn.
+
+      Người dùng chỉ bấm một điệu trên bảng chọn; chuyện phiên khúc chơi khác
+      điệp khúc là việc của phần đệm, không bắt họ canh giữa bài mà bấm tay.
+      Điệu không có bản điệp khúc thì `resolveStyleForSection` trả về chính nó,
+      `cellAt` luôn ra cùng một ô nhịp, và cả bài chạy như trước.
+
+      `cellBreaks` là mốc vào đoạn: không có nó thì ô nhịp đang chạy tràn qua
+      vạch, và bản điệp khúc phải chờ hết ô mới vào — với ô nhịp bốn ô thì trễ
+      tới bốn nhịp.
+    */
+    const kindAt = (beat: number): SectionKind => {
+      const found = songSources?.find(
+        (source) =>
+          beat >= source.startBeat - 0.001 &&
+          beat < source.startBeat + source.lengthBeats - 0.001,
+      )
+      return found?.kind ?? 'verse'
+    }
+
+    const cellFor = (beat: number) => {
+      const resolved = getStyle(resolveStyleForSection(style.id, kindAt(beat)))
+      return resolved?.cell ?? style.cell
+    }
+
+    const swaps = hasChorusVariant(style.id) && songSources !== null
+
+    /*
+      Hợp âm chia đôi: mở ô nhịp mới ngay giữa ô.
+
+      Không làm vậy thì hợp âm thứ hai rơi vào mốc "nhẹ ở giữa ô" của hợp âm
+      thứ nhất — nốt gốc của nó không được nhấn lần nào, nghe như đánh nhờ nhịp
+      của hợp âm trước. Cắt ở đây thì mỗi nửa có phách mạnh của chính nó.
+    */
+    const chordStarts: number[] = []
+    let running = 0
+    for (const beats of beatsEach) {
+      chordStarts.push(running)
+      running += beats
+    }
+    const splitStarts = isSplitAwareStyle(style.id)
+      ? chordStarts.filter((_, index) => beatsEach[index] < chordBeats)
+      : []
+
+    const breaks = [
+      ...(swaps ? songSources!.map((source) => source.startBeat) : []),
+      ...splitStarts,
+    ]
+
+    const played = renderPattern(twoHands, style, {
+      beatsPerChord: chordBeats,
+      beatsEach,
+      muteWindows,
+      ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
+      ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
+    })
+
+    if (!walkingOn) return played
+
+    /*
+      Walking bass thay **tuyến trầm** của ô nhịp, không thay cả phần đệm: tay
+      phải vẫn quạt đúng điệu đang chọn. Tắt công tắc là quay về y như cũ, kể cả
+      Pop 1 — nhánh trên trả về trước khi đụng tới gì.
+    */
+    const walk = walkingBassLine({
+      chords: withPassing,
+      beatsPerChord: chordBeats,
+      beatsEach,
+    })
+    if (!walk) return played
+
+    return [...played.filter((event) => event.hand !== 'left'), ...walk.events]
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources])
+
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
    */
@@ -955,7 +1129,20 @@ export function ReharmHome() {
         over
       const end = verse.startBeat + verse.lengthBeats
 
-      const chorus: typeof spans = []
+      /*
+        Giang tấu lấy **vòng hợp âm gốc**, không lấy bản đã tô màu.
+
+        Vòng đang vang là `withPassing` — đã qua tái hòa âm của anh Khá nên đầy
+        add9, 9, dim7. Màu ấy đúng chỗ khi có người hát: giọng hát là đường
+        giai điệu, hợp âm dày lên thì nghe đầy. Nhưng giang tấu không có ai hát;
+        cây đàn tự chạy câu, và nốt màu chồng lên nền solo làm câu chạy nghe
+        lạc.
+
+        Nên chỗ này lần ngược về `sequence.chords` theo số thứ tự hợp âm chính,
+        rồi rút nốt về tính chất cơ bản. Xem `style/interludeChords.ts` và item
+        `rule-interlude-plain-harmony` trong kho.
+      */
+      const chorus: { span: (typeof spans)[number]; main: number }[] = []
       let main = -1
       for (const chord of withPassing) {
         if (chord.passing) continue
@@ -966,31 +1153,49 @@ export function ReharmHome() {
           continue
         }
         if (pairedChords.has(main - 1)) continue
-        chorus.push(span)
+        chorus.push({ span, main })
       }
+
+      /** Hợp âm gốc của một ô, đã rút về màu cơ bản. */
+      const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord =>
+        plainForInterlude(sequence.chords[mainIndex] ?? fallback)
       if (chorus.length === 0) return null
 
-      const window = chooseChorusLoop(
-        chorus.map((span) => span.chord),
-        INTERLUDE_CHORDS,
-      )
-      const picked = window
-        ? chorus.slice(window.from, window.to + 1)
-        : chorus.slice(0, INTERLUDE_CHORDS)
+      /*
+        Hỏi não trước, heuristic cũ đỡ sau.
+
+        Não chỉ trả lời khi bốn hợp âm ấy nằm trong một vòng hòa âm thầy Hải đã
+        chỉ đích danh là dùng được cho đoạn dạo. Không có căn cứ thì nó im, và
+        `chooseChorusLoop` chọn như trước — không mất gì.
+      */
+      const nextFirst = _next
+        ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
+        : undefined
+      const loopChords = chorus.map((entry) => plainAt(entry.main, entry.span.chord))
+      const fromBrain = brainInterludeWindow({
+        chords: loopChords,
+        key: reharm.key,
+        nextChord: nextFirst?.chord,
+        size: INTERLUDE_CHORDS,
+      })
+      const window = fromBrain ?? chooseChorusLoop(loopChords, INTERLUDE_CHORDS)
+      const picked = (
+        window
+          ? chorus.slice(window.from, window.to + 1)
+          : chorus.slice(0, INTERLUDE_CHORDS)
+      ).map((entry) => ({ ...entry.span, chord: plainAt(entry.main, entry.span.chord) }))
       const first = picked[0]
       const last = picked[picked.length - 1]
       if (!first || !last) return null
 
-      const windowChords = picked.map((span) => colorPlainChord(span.chord))
+      // Đã rút về màu cơ bản ở trên; **không** tô thêm màu cho giang tấu.
+      const windowChords = picked.map((span) => span.chord)
       const runBeats = Math.max(0.5, last.beats - 1)
       const lastLoopChords = windowChords.map((chord, index) =>
         index === windowChords.length - 1
           ? { ...chord, beats: runBeats }
           : chord,
       )
-      const nextFirst = _next
-        ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
-        : undefined
       const pull = nextFirst
         ? pullChordFor(nextFirst.chord, last.chord)
         : null
@@ -1009,26 +1214,46 @@ export function ReharmHome() {
         startBeat: first.start,
         lengthBeats: last.start + last.beats - first.start,
         chords: picked,
-        events: renderPattern(
-          voiceLeadTwoHands(windowChords, {
-            dropRootFromRightHand: dropRoot,
-          }),
-          style,
-          {
-            beatsPerChord: chordBeats,
+        /*
+          Tay trái đoạn giang tấu **rải ngón** thay vì giữ một nốt bass.
+
+          Tay phải đã bỏ hẳn mẫu đệm để lên chạy giai điệu, nên nếu tay trái
+          cũng chỉ đặt một nốt mỗi ô thì cả đoạn rỗng ruột. Bản ký âm Hồng Kông
+          1 cho 5,5 lần tay trái vào mỗi ô nhịp ở đoạn giang tấu — bốn nốt rải
+          một ô nằm đúng trong khoảng đó. Xem `style/interludeBass.ts`.
+        */
+        events: [
+          ...renderPattern(
+            voiceLeadTwoHands(windowChords, {
+              dropRootFromRightHand: dropRoot,
+            }),
+            style,
+            {
+              beatsPerChord: chordBeats,
+              beatsEach: picked.map((span) => span.beats),
+            },
+          ).filter((event) => event.hand !== 'left'),
+          ...interludeBassLine({
+            chords: windowChords,
             beatsEach: picked.map((span) => span.beats),
-          },
-        ),
-        lastEvents: renderPattern(
-          voiceLeadTwoHands(headChords, {
-            dropRootFromRightHand: dropRoot,
           }),
-          style,
-          {
-            beatsPerChord: chordBeats,
+        ],
+        lastEvents: [
+          ...renderPattern(
+            voiceLeadTwoHands(headChords, {
+              dropRootFromRightHand: dropRoot,
+            }),
+            style,
+            {
+              beatsPerChord: chordBeats,
+              beatsEach: head.map((span) => span.beats),
+            },
+          ).filter((event) => event.hand !== 'left'),
+          ...interludeBassLine({
+            chords: headChords,
             beatsEach: head.map((span) => span.beats),
-          },
-        ),
+          }),
+        ],
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
           soloToTimeline(
@@ -1038,10 +1263,16 @@ export function ReharmHome() {
               density: soloDensity,
               graceDensity,
               key: reharm.key,
-              noteSource,
+              noteSource: soloNoteSource,
               chordsPerPhrase,
               take: take + phraseSpin + playSpin.current,
               endWithRun: lastLoop === true,
+              // Đoạn giang tấu: nốt theo bậc ưu tiên riêng, không lấy màu Khá.
+              interlude: true,
+              // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
+              jazzScale: jazzScaleFor,
+              // Điệu ballad thì hạ trần câu solo cho khớp tay người đệm.
+              ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
             }),
           ),
       }
@@ -1057,7 +1288,7 @@ export function ReharmHome() {
       soloDensity,
       graceDensity,
       reharm.key,
-      noteSource,
+      soloNoteSource,
       chordsPerPhrase,
       phraseSpin,
     ],
@@ -1071,6 +1302,17 @@ export function ReharmHome() {
    */
   const breaths = useMemo(
     () => (sheet ? breathChords(sheet) : undefined),
+    [sheet],
+  )
+
+  /**
+   * Chỗ giọng hát đang vang — đàn không lót vào.
+   *
+   * Chưa dán lời thì bỏ trống, và bộ chêm fill giữ nguyên cách cũ: chỉ lót ở
+   * cuối câu theo mật độ, chứ không tự cho mình quyền chêm khắp nơi.
+   */
+  const singing = useMemo(
+    () => (sheet ? singingChords(sheet) : undefined),
     [sheet],
   )
 
@@ -1292,6 +1534,10 @@ export function ReharmHome() {
           lickyRuns,
           lickyMode,
           take: take + phraseSpin + playSpin.current,
+          vocal: singing,
+          brainFill: brainFillsOn
+            ? (request) => brainFill({ ...request, key: reharm.key })
+            : undefined,
         }),
       ),
     [
@@ -1299,6 +1545,8 @@ export function ReharmHome() {
       chordBeats,
       soloDirection,
       fillDensity,
+      brainFillsOn,
+      singing,
       reharm.key,
       mutedFills,
       extraFills,
@@ -1325,7 +1573,7 @@ export function ReharmHome() {
       density: soloDensity,
       graceDensity,
       key: reharm.key,
-      noteSource,
+      noteSource: soloNoteSource,
       chordsPerPhrase,
     }
 
@@ -1333,6 +1581,11 @@ export function ReharmHome() {
       generateSolo(withPassing, {
         ...args,
         take: take + phraseSpin + playSpin.current,
+        // Câu solo chỉ chơi ở đoạn không lời, nên đi theo bậc ưu tiên giang tấu.
+        interlude: true,
+        // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
+        jazzScale: jazzScaleFor,
+        ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
       })
   }, [
     withPassing,
@@ -1340,10 +1593,11 @@ export function ReharmHome() {
     soloDirection,
     soloDensity,
     graceDensity,
-    noteSource,
+    soloNoteSource,
     chordsPerPhrase,
     reharm.key,
     phraseSpin,
+    ballad,
   ])
 
   /**
@@ -1420,6 +1674,7 @@ export function ReharmHome() {
       fillDensity,
       graceDensity,
       noteSource,
+      jazzScales,
       chordsPerPhrase,
     }),
     [
@@ -1459,6 +1714,7 @@ export function ReharmHome() {
       fillDensity,
       graceDensity,
       noteSource,
+      jazzScales,
       chordsPerPhrase,
     ],
   )
@@ -1532,6 +1788,8 @@ export function ReharmHome() {
     // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
     setGraceDensity((saved.graceDensity ?? 'sparse') as GraceDensity)
     setNoteSource(saved.noteSource as SoloNoteSource)
+    // Bài lưu từ trước khi có công tắc này thì mặc định tắt, đúng luật draft.
+    setJazzScales(saved.jazzScales === true)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -1599,8 +1857,20 @@ export function ReharmHome() {
         dropRootFromRightHand: dropRoot,
       })
 
+      /*
+        Hợp âm kết cũng phải theo mẫu của đoạn nó đóng lại: kết một đoạn điệp
+        khúc mà lùi về mẫu phiên khúc thì nghe như tụt lực ngay nốt cuối.
+      */
+      const closingStyle =
+        getStyle(
+          resolveStyleForSection(
+            style.id,
+            source.kind === 'chorus' ? 'chorus' : 'verse',
+          ),
+        ) ?? style
+
       return {
-        events: renderPattern(hands, style, {
+        events: renderPattern(hands, closingStyle, {
           beatsPerChord: last.beats,
           beatsEach: [last.beats],
         }),
@@ -1648,8 +1918,20 @@ export function ReharmHome() {
         dropRootFromRightHand: dropRoot,
       })
 
+      /*
+        Hợp âm kết cũng phải theo mẫu của đoạn nó đóng lại: kết một đoạn điệp
+        khúc mà lùi về mẫu phiên khúc thì nghe như tụt lực ngay nốt cuối.
+      */
+      const closingStyle =
+        getStyle(
+          resolveStyleForSection(
+            style.id,
+            source.kind === 'chorus' ? 'chorus' : 'verse',
+          ),
+        ) ?? style
+
       return {
-        events: renderPattern(hands, style, {
+        events: renderPattern(hands, closingStyle, {
           beatsPerChord: last.beats,
           beatsEach: [last.beats],
         }),
@@ -1688,6 +1970,120 @@ export function ReharmHome() {
           steps,
           turnaround: undefined,
           interludeRange: interludeWindow,
+          /*
+            Nốt đoạn dạo hỏi não ngay lúc dựng dòng thời gian. Não im thì bước
+            dạo chiếm 0 phách, bài chạy y như không có nó.
+          */
+          /*
+            Đoạn dạo đầu và đoạn kết chơi **cùng điệu với thân bài**.
+
+            Bộ não chỉ soạn nốt tay phải — sus2 lên bậc ba, rải ngược add2. Nếu
+            chỉ phát bấy nhiêu thì đoạn dạo là một dòng nốt bay lơ lửng, không
+            có bass đỡ bên dưới, nghe như ai đó tập gam. Nên chỗ này quạt điệu
+            đang chọn trên đúng vòng hợp âm mà não dùng, rồi mới chồng nốt não
+            lên trên.
+
+            Não im — kho chưa có luật Kingsley nào khớp — thì vẫn còn nguyên
+            phần đệm, đoạn dạo không bị mất tiếng.
+          */
+          phrase: (kind) => {
+            const opening = recolored.find((chord) => !chord.passing) ?? null
+            const chords = phraseChords(kind, reharm.key)
+            if (chords.length === 0) return brainPhrase({ kind, key: reharm.key })
+
+            const beatsEach = chords.map(() => chordBeats)
+            const backing = renderPattern(
+              voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }),
+              style,
+              { beatsPerChord: chordBeats, beatsEach },
+            )
+
+            /*
+              Nốt của não bắt đầu ở đâu.
+
+              Dạo đầu: ngay ô 1. Kết bài: sau ô dẫn bậc V, vì câu rải ngược của
+              não dựng trên bậc I — đặt nó lên ô bậc V là hai tay chơi hai hợp
+              âm khác nhau.
+            */
+            const offset = kind === 'outro' ? OUTRO_LEAD_BARS * chordBeats : 0
+            const melody = brainPhrase({
+              kind,
+              key: reharm.key,
+              beatsPerMeasure: chordBeats,
+            })
+            const voiced = (melody?.events ?? []).map((event) => ({
+              ...event,
+              startBeat: event.startBeat + offset,
+            }))
+
+            const roundBeats = chords.length * chordBeats
+
+            /*
+              Vòng dạo đầu chạy **trọn** rồi mới tới một phách hợp âm báo.
+
+              Ô cuối của vòng được chạy ngón, y như ô cuối đoạn giang tấu: chuỗi
+              nốt đều dẫn thẳng tới vạch nhịp thì ca sĩ vào đúng phách dễ hơn hẳn
+              so với đếm thầm trong khoảng lặng.
+            */
+            const cueOf = kind === 'intro' ? cueChord(opening) : null
+            const lengthBeats = roundBeats + (cueOf ? 1 : 0)
+
+            const closingRun =
+              kind === 'intro'
+                ? arpeggioRun({
+                    chord: chords[chords.length - 1],
+                    octaves: 2,
+                    endBeat: roundBeats,
+                    maxBeats: Math.min(2, chordBeats),
+                    fromBeat: roundBeats - Math.min(2, chordBeats),
+                  }).map((note) => ({
+                    notes: [note.note],
+                    startBeat: note.startBeat,
+                    durationBeats: note.durationBeats,
+                    // Câu chạy đóng vòng dạo là ngón tay phải, kể cả nốt thấp.
+                    hand: 'right' as const,
+                    velocity: 80,
+                    grace: false,
+                  }))
+                : []
+
+            /*
+              Hợp âm báo nâng lên tầm tay phải.
+
+              `voiceLeadTwoHands` cho một hợp âm đứng lẻ thì đặt nó khá thấp —
+              đo ra Rê quãng tám 3 tới La quãng tám 3, tức chồng lên đúng chỗ
+              tay trái đang giữ bass. Đây là tiếng báo cho ca sĩ, nó phải nổi
+              lên trên chứ không lẫn vào bè trầm.
+            */
+            const cueVoicing = voiceLeadTwoHands([cueOf ?? opening ?? chords[0]], {
+              dropRootFromRightHand: dropRoot,
+            })[0].right.map((note) => {
+              let pitch: number = note
+              while (pitch < 60) pitch += 12
+              while (pitch > 84) pitch -= 12
+              return pitch as typeof note
+            })
+
+            const cue = cueOf
+              ? cueStrike(cueVoicing, roundBeats, {
+                  // Ballad thì rải ngón cho mềm, điệu khác thì dặm một lượt.
+                  roll: ballad,
+                })
+              : []
+            /*
+              Kết thì **cả hai tay cùng chậm lại**, không riêng giai điệu.
+
+              Giãn mỗi nốt não mà phần đệm vẫn quạt đủ lực thì nghe như người
+              hát ngân còn ban nhạc chưa biết bài sắp hết.
+            */
+            const whole = [...backing, ...voiced]
+            const events =
+              kind === 'outro'
+                ? slowClose(whole, lengthBeats)
+                : [...whole, ...closingRun, ...cue]
+
+            return { events, lengthBeats }
+          },
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
           ending: buildEnding,
@@ -2071,11 +2467,28 @@ export function ReharmHome() {
   const applyTonicColor = (color: MajorChordColor) => {
     const palette = PALETTE_BY_TONIC_COLOR[color]
 
+    setHaiGu(false)
     setTonicColor(color)
     setMajorColor(palette.major)
     setMinorColor(palette.minor)
     setDominantColor(palette.dominant)
     setSusDominant(palette.susDominant)
+  }
+
+  /**
+   * Đổi sang bảng màu đọc từ kho thầy Hải.
+   *
+   * Không đụng `PALETTE_BY_TONIC_COLOR`: bảng của anh Khá còn nguyên, bấm màu
+   * chủ âm bất kỳ là quay về gu Khá ngay.
+   */
+  const applyHaiGu = () => {
+    if (!paletteHai) return
+    setHaiGu(true)
+    setTonicColor(paletteHai.major)
+    setMajorColor(paletteHai.major)
+    setMinorColor(paletteHai.minor)
+    setDominantColor(paletteHai.dominant)
+    setSusDominant(paletteHai.susDominant)
   }
 
   /** Xung đột nhạc lý, gom theo vị trí hợp âm để hiện ngay cạnh nó. */
@@ -2143,6 +2556,34 @@ export function ReharmHome() {
       {reharmPerBeat.length > 0 && (
         <ChordOverview
           perBeat={reharmPerBeat}
+          /*
+            Hợp âm đoạn dạo chỉ hiện khi thứ tự chơi **thật sự có** bước đó —
+            bày sẵn một dải cho đoạn chưa chèn thì người dùng tưởng bài đã có
+            dạo đầu rồi.
+          */
+          leadIn={
+            steps.some((step) => step.type === 'intro')
+              ? {
+                  label: 'Dạo đầu',
+                  chords: [
+                    ...phraseChords('intro', reharm.key).map((c) => c.symbol),
+                    ...(cueChord(recolored.find((c) => !c.passing) ?? null)
+                      ? [
+                          `${cueChord(recolored.find((c) => !c.passing) ?? null)!.symbol} (báo)`,
+                        ]
+                      : []),
+                  ],
+                }
+              : undefined
+          }
+          leadOut={
+            steps.some((step) => step.type === 'outro')
+              ? {
+                  label: 'Kết bài',
+                  chords: phraseChords('outro', reharm.key).map((c) => c.symbol),
+                }
+              : undefined
+          }
           meter={style.beatsPerMeasure === 3 ? 3 : 4}
           bpm={bpm}
           onBpm={setBpm}
@@ -2309,6 +2750,115 @@ export function ReharmHome() {
           setSongTitle(title)
         }}
       />
+
+      {/* Đệm theo điệu */}
+      <div className="rounded-xl border border-line bg-black/25 p-4">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+            Đệm theo điệu
+          </h3>
+          <span className="font-mono text-[10px] text-teal-key">
+            {style.timeSignature} · {style.bpm} BPM ·{' '}
+            {style.sourceVideos?.[0] ?? 'chưa có nguồn'}
+          </span>
+        </div>
+
+        <div className="mb-3">
+          <StylePicker
+            styles={ALL_STYLES}
+            selectedId={styleId}
+            onSelect={(id) => {
+              setStyleId(id)
+              const next = getStyle(id)
+              if (next?.family === 'flamenco') void setInstrument('guitar')
+              if (!lockSongBpm && next) setBpm(next.bpm)
+            }}
+          />
+        </div>
+
+        <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              looping ? pausePlay() : void playFromBeat(0)
+            }
+            disabled={timeline.length === 0}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
+              looping
+                ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
+                : 'bg-amber-key text-ink hover:brightness-110'
+            }`}
+          >
+            {looping ? '■ Dừng' : '▶ Phát lặp bản đệm'}
+          </button>
+
+          {/*
+            Nhịp độ nằm ngay trong khung chọn điệu, vì hai thứ này luôn đi cùng
+            nhau: đổi sang Boston hay Waltz là tempo phải đổi theo, mà mỗi điệu
+            lại mang sẵn một mức riêng. Để cách nhau thì đổi điệu xong còn phải
+            đi tìm chỗ chỉnh nhịp.
+
+            Khung này đứng trên bản nhạc nên đang tập vẫn với tới được, không
+            phải cuộn xuống đáy trang.
+          */}
+          <label className="flex items-center gap-2 text-xs text-dim">
+            <input
+              type="range"
+              min={40}
+              max={160}
+              value={bpm}
+              onChange={(event) => setBpm(Number(event.target.value))}
+              aria-label="Nhịp độ, số phách mỗi phút"
+              title="Nhịp độ"
+              className="w-32 accent-amber-key"
+            />
+            <span className="w-16 font-mono text-cream">{bpm} BPM</span>
+          </label>
+
+          <div className="flex gap-1">
+            {(
+              [
+                ['both', 'Hai tay'],
+                ['left', 'Tay trái'],
+                ['right', 'Tay phải'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHand(value)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  hand === value
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-5">
+          <label className="flex items-center gap-2 text-xs text-dim">
+            Mỗi hợp âm
+            <select
+              value={beatsPerChord}
+              onChange={(event) =>
+                setBeatsPerChord(Number(event.target.value))
+              }
+              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
+            >
+              <option value={8}>2 ô nhịp</option>
+              <option value={4}>1 ô nhịp</option>
+              <option value={2}>nửa ô nhịp</option>
+              <option value={1}>1 phách</option>
+            </select>
+          </label>
+        </div>
+      </div>
 
       {sheet && (
         <div ref={sheetRef} className="scroll-mt-4">
@@ -2486,19 +3036,6 @@ export function ReharmHome() {
                       ? '▶ Phát trọn bài'
                       : '▶ Phát cả bài'}
                 </button>
-                <label className="flex items-center gap-2 text-xs text-dim">
-                  <input
-                    type="range"
-                    min={40}
-                    max={160}
-                    value={bpm}
-                    onChange={(event) => setBpm(Number(event.target.value))}
-                    aria-label="Nhịp độ, số phách mỗi phút"
-                    title="Nhịp độ"
-                    className="w-32 accent-amber-key"
-                  />
-                  <span className="w-16 font-mono text-cream">{bpm} BPM</span>
-                </label>
               </div>
             }
             onSetChordSpan={(chordIndex, span, scope) =>
@@ -2709,6 +3246,77 @@ export function ReharmHome() {
                 </button>
               ))}
             </div>
+
+            {/*
+              Gam jazz đứng RIÊNG, dưới hàng nút chứ không nằm trong hàng nút.
+
+              Ba nút trên là ba cách dựng nốt từ chính hợp âm, chọn một trong ba,
+              và cách nào cũng ra tiếng. Công tắc này khác loại: nó đọc kho
+              PianoBrain, chỉ chạy ở đoạn không lời, và im lặng trên hợp âm nào
+              kho chưa có gam — mà đó là phần lớn hợp âm nhạc pop.
+
+              Không khoá theo họ ballad như hai công tắc dưới: gam jazz dùng được
+              ở mọi điệu, và thật ra ballad là chỗ ít cần nó nhất.
+            */}
+            <label
+              className="mt-2 flex items-center gap-2 text-xs text-dim"
+              title="Đoạn không lời chạy đúng thang âm của chất hợp âm, lấy từ 13 bài giảng jazz trong kho PianoBrain: Lydian cho maj7, Bebop Dominant cho hợp âm át, Altered cho át biến âm, Melodic Minor cho m(maj7), Whole Tone cho 7#5. Hợp âm ba nốt, sus và add9 thì kho chưa có gam — những hợp âm đó giữ nguyên nốt hợp âm. Câu lót chen giữa lời không đổi."
+            >
+              <input
+                type="checkbox"
+                checked={jazzScales}
+                onChange={(event) => setJazzScales(event.target.checked)}
+                className="accent-teal-key"
+              />
+              Gam jazz của kho
+              <span className="font-mono text-[10px] text-amber-key/70">chờ rà</span>
+            </label>
+
+            {jazzScales && (
+              <p className="mt-1 text-[10px] leading-snug text-dim/80">
+                Chỉ đổi đoạn không lời. Mọi item gam còn ở trạng thái draft — đã
+                rút từ video thật nhưng chưa ai xem lại để đối chiếu.
+              </p>
+            )}
+
+            {/*
+              Hai công tắc này chỉ có nghĩa ở họ ballad, nên điệu khác thì không
+              bày ra. Bày một lựa chọn không dùng được ở đó chỉ khiến người học
+              tưởng walking 1-2-3-5 hợp với mọi điệu.
+            */}
+            {ballad && (
+              <>
+                <label
+                  className="mt-2 flex items-center gap-2 text-xs text-dim"
+                  title="Hình câu lót lấy từ luật thầy Kingsley trong kho PianoBrain: 1-7-5-3 chỉ khi ô trước bậc vi đúng là bậc I, còn lại lùi về preceding 3-2-1. Chỗ nào kho không có luật thì giữ nguyên câu fill cũ."
+                >
+                  <input
+                    type="checkbox"
+                    checked={brainFills}
+                    onChange={(event) => setBrainFills(event.target.checked)}
+                    className="accent-teal-key"
+                  />
+                  Câu lót theo thầy Kingsley
+                </label>
+
+                <label
+                  className="mt-1.5 flex items-center gap-2 text-xs text-dim"
+                  title="Tay trái đi bốn nốt đen 1-2-3-5 theo Pianote: hợp âm trưởng đi C-D-E-G, hợp âm thứ đi A-B-C-E. Tay phải giữ nguyên điệu đang chọn. Tắt thì tuyến trầm chạy đúng ô nhịp như cũ."
+                >
+                  <input
+                    type="checkbox"
+                    checked={walkingBass}
+                    onChange={(event) => setWalkingBass(event.target.checked)}
+                    className="accent-teal-key"
+                  />
+                  Tay trái walking 1-2-3-5 (Pianote)
+                </label>
+
+                <p className="mt-1 font-mono text-[10px] text-teal-key/70">
+                  Chỉ có ở họ ballad
+                </p>
+              </>
+            )}
           </div>
 
           {/*
@@ -2942,11 +3550,30 @@ export function ReharmHome() {
               <p className="mt-2 rounded-lg border border-teal-key/30 bg-teal-key/5 px-3 py-2 text-xs leading-relaxed text-dim">
                 Gu hiện tại:{' '}
                 <span className="text-teal-key">
-                  {PALETTE_BY_TONIC_COLOR[tonicColor].styleName}
+                  {haiGu && paletteHai
+                    ? paletteHai.styleName
+                    : PALETTE_BY_TONIC_COLOR[tonicColor].styleName}
                 </span>
                 . Đổi màu chủ âm sẽ đặt lại các hàng bên dưới cho ăn khớp, sau
                 đó bạn vẫn chỉnh riêng từng hàng được.
               </p>
+
+              {paletteHai && (
+                <button
+                  type="button"
+                  onClick={applyHaiGu}
+                  aria-pressed={haiGu}
+                  title="Bảng màu đếm ra từ 70 bài giảng của thầy Hải trong kho PianoBrain. Bấm một màu chủ âm ở trên là quay lại gu anh Khá."
+                  className={`mt-2 rounded-lg border px-3 py-1.5 text-xs ${
+                    haiGu
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line text-dim hover:bg-white/5'
+                  }`}
+                >
+                  Gu thầy Hải ({paletteHai.major} · {paletteHai.minor} ·{' '}
+                  {paletteHai.dominant})
+                </button>
+              )}
             </div>
 
             <ColorPicker
@@ -3157,98 +3784,6 @@ export function ReharmHome() {
         này bày một danh sách rời rồi bắt người dùng tự dò xem nó nói về chỗ
         nào. Bày cả hai thì vừa dài vừa dễ lệch nhau.
       */}
-
-      {/* Đệm theo điệu */}
-      <div className="rounded-xl border border-line bg-black/25 p-4">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
-            Đệm theo điệu
-          </h3>
-          <span className="font-mono text-[10px] text-teal-key">
-            {style.timeSignature} · {style.bpm} BPM ·{' '}
-            {style.sourceVideos?.[0] ?? 'chưa có nguồn'}
-          </span>
-        </div>
-
-        <div className="mb-3">
-          <StylePicker
-            styles={ALL_STYLES}
-            selectedId={styleId}
-            onSelect={(id) => {
-              setStyleId(id)
-              const next = getStyle(id)
-              if (next?.family === 'flamenco') void setInstrument('guitar')
-              if (!lockSongBpm && next) setBpm(next.bpm)
-            }}
-          />
-        </div>
-
-        <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              looping ? pausePlay() : void playFromBeat(0)
-            }
-            disabled={timeline.length === 0}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
-              looping
-                ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
-                : 'bg-amber-key text-ink hover:brightness-110'
-            }`}
-          >
-            {looping ? '■ Dừng' : '▶ Phát lặp bản đệm'}
-          </button>
-
-          <div className="flex gap-1">
-            {(
-              [
-                ['both', 'Hai tay'],
-                ['left', 'Tay trái'],
-                ['right', 'Tay phải'],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setHand(value)}
-                className={`rounded-lg border px-3 py-1.5 text-xs ${
-                  hand === value
-                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-5">
-          {/*
-            Ô nhịp độ đã chuyển lên cạnh nút Phát cả bài. Đang tập mà thấy
-            nhanh quá thì phải với tới được ngay, không phải cuộn xuống đáy
-            trang đi tìm.
-          */}
-
-          <label className="flex items-center gap-2 text-xs text-dim">
-            Mỗi hợp âm
-            <select
-              value={beatsPerChord}
-              onChange={(event) =>
-                setBeatsPerChord(Number(event.target.value))
-              }
-              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
-            >
-              <option value={8}>2 ô nhịp</option>
-              <option value={4}>1 ô nhịp</option>
-              <option value={2}>nửa ô nhịp</option>
-              <option value={1}>1 phách</option>
-            </select>
-          </label>
-        </div>
-      </div>
 
       {/*
         Khung "Chia hai tay" liệt kê nốt của từng tay cho từng hợp âm đã bỏ.

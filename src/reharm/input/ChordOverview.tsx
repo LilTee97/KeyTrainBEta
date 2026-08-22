@@ -140,6 +140,10 @@ export function PlaybackToolbar({
 
 interface ChordOverviewProps {
   perBeat: readonly string[]
+  /** Hợp âm đoạn dạo đầu, hiện thành dải riêng phía trên lưới. */
+  leadIn?: { label: string; chords: readonly string[] }
+  /** Hợp âm đoạn kết, hiện thành dải riêng phía dưới lưới. */
+  leadOut?: { label: string; chords: readonly string[] }
   meter: 3 | 4
   bpm: number
   onBpm?: (bpm: number) => void
