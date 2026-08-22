@@ -142,7 +142,7 @@ describe('câu solo bám hợp âm đang vang', () => {
     const list = chords(PROGRESSION)
     const solo = generateSolo(list, { ...options, noteSource: 'chordTone' })
 
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       const chord = list[Math.floor(note.startBeat / 4)]
       const material = new Set([
         ...chord.quality.intervals.map((i) => (chord.root + i) % 12),

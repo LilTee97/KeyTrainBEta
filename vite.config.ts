@@ -1,5 +1,8 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { pianobrainKnowledge, pianobrainRoot } from './src/reharm/brain/pianobrainPlugin'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -12,9 +15,20 @@ import { VitePWA } from 'vite-plugin-pwa'
  */
 const base = process.env.BASE_PATH ?? '/'
 
+/**
+ * PianoBrain là bộ NÃO, sống ở repo riêng. KeyTrain đọc nó qua bí danh
+ * `@pianobrain`, không chép mã lẫn kho sang đây và không gộp hai repo.
+ */
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const BRAIN = pianobrainRoot(HERE)
+
 export default defineConfig({
   base,
+  resolve: {
+    alias: { '@pianobrain': path.join(BRAIN, 'src') },
+  },
   plugins: [
+    pianobrainKnowledge(HERE),
     react(),
     tailwindcss(),
     /*
@@ -63,10 +77,18 @@ export default defineConfig({
       workbox: {
         // Gói sẵn mọi thứ app cần, để lần mở sau không đụng tới mạng nữa.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        /*
+          Kho kiến thức PianoBrain nằm trong gói mã, đẩy tệp vượt mức 2 MiB mặc
+          định. Vẫn phải gói sẵn: tab Mr Hải chạy hẳn trong máy, mất mạng vẫn
+          hỏi được, nên không thể để nó ngoài bộ nhớ đệm.
+        */
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
     }),
   ],
   server: {
+    // Cho phép đọc mã nguồn PianoBrain nằm ngoài thư mục dự án.
+    fs: { allow: [HERE, BRAIN] },
     watch: {
       /*
         Không theo dõi thư mục tài liệu tham khảo.

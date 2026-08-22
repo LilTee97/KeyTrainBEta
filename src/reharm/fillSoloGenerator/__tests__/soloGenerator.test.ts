@@ -300,7 +300,7 @@ describe('nguồn nốt cho câu solo', () => {
         ? [0, 3, 5, 7, 10]
         : [0, 2, 4, 7, 9]
 
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       const index = Math.min(list.length - 1, Math.floor(note.startBeat / 4))
       const chord = list[index]
       // Mẫu rải hợp âm dùng đúng nốt hợp âm, nên chấp nhận cả hai bộ
@@ -331,7 +331,7 @@ describe('nguồn nốt cho câu solo', () => {
         (chord.root + 2) % 12,
       ]),
     )
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       expect(allowed.has(note.note % 12)).toBe(true)
     }
   })
@@ -361,7 +361,7 @@ describe('nguồn nốt cho câu solo', () => {
       density: 'dense',
     })
     const allowed = new Set([0, 2, 4, 5, 7, 9, 11])
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       expect(allowed.has(note.note % 12)).toBe(true)
       expect(note.note % 12).not.toBe(6)
     }
@@ -380,16 +380,27 @@ describe('nguồn nốt cho câu solo', () => {
       ...list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
       (list[0].root + 2) % 12,
     ])
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       expect(allowed.has(note.note % 12)).toBe(true)
     }
   })
 
   it('mọi nguồn nốt đều có mô tả cho người dùng', () => {
+    /*
+      Ba nút: nốt hợp âm, ngũ cung của hợp âm, màu blues.
+
+      `jazzScale` cố ý KHÔNG có mặt — nó là công tắc riêng bên `ReharmHome`, vì
+      nó đọc kho, chỉ chạy ở đoạn không lời, và im lặng trên hợp âm nào kho chưa
+      có gam. Xếp nó vào hàng nút này là nói bốn thứ cùng loại.
+    */
     expect(NOTE_SOURCE_OPTIONS).toHaveLength(3)
+    expect(NOTE_SOURCE_OPTIONS.map((o) => o.id)).not.toContain('jazzScale')
     for (const option of NOTE_SOURCE_OPTIONS) {
-      expect(option.description.length).toBeGreaterThan(0)
+      expect(option.description.length, option.id).toBeGreaterThan(0)
+      expect(option.label.length, option.id).toBeGreaterThan(0)
     }
+    // Trùng id thì ô chọn trong giao diện có hai mục chọn cùng một thứ.
+    expect(new Set(NOTE_SOURCE_OPTIONS.map((o) => o.id)).size).toBe(NOTE_SOURCE_OPTIONS.length)
   })
 
   it('nốt hợp âm gồm cả bậc chín, đúng danh sách 1-3-5-7-9 của tài liệu', () => {
@@ -405,7 +416,7 @@ describe('nguồn nốt cho câu solo', () => {
       ...list[0].quality.intervals.map((i) => (list[0].root + i) % 12),
       (list[0].root + 2) % 12,
     ])
-    for (const note of solo.filter((entry) => !entry.isGrace)) {
+    for (const note of solo.filter((entry) => !entry.isGrace && !entry.ornament)) {
       expect(allowed.has(note.note % 12)).toBe(true)
     }
   })

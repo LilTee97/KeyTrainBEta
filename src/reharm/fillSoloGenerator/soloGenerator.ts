@@ -3,6 +3,7 @@ import { normalizePitchClass } from '../../shared/musicTheory/pitch'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
+import { assignFingers, capStack } from './fingering'
 import type { TimelineEvent } from '../style/types'
 import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
@@ -16,9 +17,11 @@ import {
   chordBlues,
   chordMaterial,
   chordPentatonic,
+  chordTonesStrict,
   fallbackLick,
   getLick,
   inKeyMaterial,
+  interludeMaterial,
   keepInKey,
   ladderOf,
   licksFor,
@@ -43,13 +46,23 @@ import {
 /** Sai số cho phép khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 1e-6
 
-/** Tầm giai điệu của đoạn giang tấu, và các mức nâng. */
+/**
+ * Tầm giai điệu của đoạn giang tấu, và các mức nâng.
+ *
+ * Trần đặt ở **La quãng tám 5**, không phải Sol quãng tám 6 như bản đầu. Đây là
+ * app đệm hát: cây đàn nâng giọng người, nên câu solo giang tấu vẫn phải nằm
+ * trong tầm một người đệm với tới. Sol quãng tám 6 là tầm của người độc tấu —
+ * nghe ra ngay là hai người chơi hai bài khác nhau.
+ *
+ * Dòng nhạc nào cần câu solo lên cao thì vẫn lên được: bên gọi truyền `range`
+ * riêng, và mọi chỗ dựng nốt đều đi theo tầm ấy.
+ */
 const SOLO_LOW: MidiNote = 62
-const SOLO_HIGH: MidiNote = 90
+const SOLO_HIGH: MidiNote = 79
 /** Nâng cho câu lẻ trong cùng một lượt. */
 const PHRASE_LIFT = 5
 /** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */
-const SOLO_CEILING: MidiNote = 96
+const SOLO_CEILING: MidiNote = 81
 
 /** Khoảng nghỉ lấy hơi ở cuối mỗi câu nhạc, tính bằng phách. */
 const REST_BEATS = 1
@@ -74,6 +87,14 @@ export type SoloNoteSource =
   | 'chordPentatonic'
   /** Ngũ cung của hợp âm cộng nốt blue ở quãng năm giảm. */
   | 'blues'
+  /**
+   * Thang âm jazz lấy từ kho PianoBrain, theo đúng chất hợp âm đang vang.
+   *
+   * Chỉ có tác dụng ở **đoạn không lời**. Câu lót chen giữa lời không đọc nguồn
+   * nốt này — chỗ đó giọng hát là giai điệu, thêm #11 và b9 vào là giành chỗ
+   * của người hát.
+   */
+  | 'jazzScale'
 
 export interface NoteSourceOption {
   id: SoloNoteSource
@@ -101,6 +122,20 @@ export const NOTE_SOURCE_OPTIONS: readonly NoteSourceOption[] = [
       'Ngũ cung của hợp âm cộng nốt blue ở quãng năm giảm, tạo cảm giác căng rồi giải toả.',
   },
 ]
+
+/*
+  `jazzScale` **cố ý không có** trong danh sách trên.
+
+  Ba nguồn nốt kia là ba cách dựng nốt từ chính hợp âm, ngang hàng nhau, chọn
+  một trong ba. Gam jazz thì khác hẳn: nó đọc kho PianoBrain, nó chỉ có tác dụng
+  ở đoạn không lời, và mọi item của nó còn ở trạng thái draft. Xếp nó thành mục
+  thứ tư trong cùng một hàng nút là nói với người dùng rằng bốn thứ này cùng
+  loại — trong khi ba thứ đầu luôn có tiếng, còn thứ tư im lặng trên phần lớn
+  hợp âm nhạc pop vì kho chưa có gam cho chúng.
+
+  Nó nằm riêng thành một công tắc, và `ReharmHome` bật nó bằng cách đổi
+  `noteSource` sang giá trị này.
+*/
 
 /**
  * Mật độ nốt láy, tách hẳn khỏi mật độ nốt của câu nhạc.
@@ -138,6 +173,38 @@ export interface SoloOptions {
   take?: number
   /** Hợp âm cuối vòng: chạy ngón trên đúng hợp âm đó. */
   endWithRun?: boolean
+  /**
+   * Trần và sàn cao độ của câu solo.
+   *
+   * Mặc định là tầm giang tấu rộng — câu solo lúc ấy là giọng chính, chơi cao
+   * hơn hẳn phần đệm để nghe tách bạch, lên tới quãng tám thứ sáu.
+   *
+   * Nhưng ở **họ ballad** thì tầm ấy sai chỗ: đệm ballad là đàn nâng giọng hát,
+   * và một câu vọt lên Si quãng tám 6 nghe như hai người chơi hai bài. Bên gọi
+   * hạ trần xuống cho khớp tay người đệm. Xem `style/balladFamily.ts`.
+   */
+  range?: { low: MidiNote; high: MidiNote }
+  /**
+   * Đang dựng câu cho **đoạn không lời** (giang tấu, dạo đầu, dạo giữa).
+   *
+   * Bật thì nốt đi theo bậc ưu tiên riêng: nốt hợp âm trước, rồi ngũ cung, rồi
+   * thang âm của giọng — xem `interludeMaterial`. Mặc định bật, vì hàm này sinh
+   * ra chỉ để chơi ở đoạn không lời; câu lót chen giữa lời là việc của
+   * `generateFillLine` và hàm đó không đọc cờ này.
+   */
+  interlude?: boolean
+  /**
+   * Hỏi thang âm cho một hợp âm — cửa duy nhất để gam jazz của kho vào câu nhạc.
+   *
+   * **Mặc định không có.** Toàn bộ item gam trong kho đang ở `status: "draft"`,
+   * tức đã rút từ video thật nhưng chưa ai đối chiếu lại. Draft thì được tra,
+   * được đọc, nhưng không được tự thành tiếng đàn — nên bên gọi phải chủ động
+   * đưa hàm này vào, không có đường nào bật ngầm.
+   *
+   * Trả `null` cho hợp âm kho chưa có gam; khi đó câu chạy quay về nốt hợp âm
+   * như cũ. Xem `../brain/jazzScale.ts`.
+   */
+  jazzScale?: (chord: ParsedChord) => readonly PitchClass[] | null
 }
 
 /**
@@ -190,8 +257,22 @@ export interface SoloNote {
   durationBeats: number
   /** Nốt láy hay nốt chính. */
   isGrace: boolean
+  /**
+   * Nốt **tô điểm của mẫu câu** — nốt kẹp nửa cung, nốt dẫn.
+   *
+   * Khác nốt láy: nốt láy vuốt sát ngay trước nốt chính và cách đúng một bậc,
+   * còn nốt tô điểm là một bậc thật của câu nhạc, chỉ nằm ngoài hoà âm. Chúng
+   * được miễn khỏi bước ép về nốt hợp âm — ép thì cả cụm bao vây biến thành
+   * một nốt đánh ba lần.
+   */
+  ornament?: boolean
   /** Tay nào chơi; bỏ trống thì mặc định tay phải. */
   hand?: 'left' | 'right'
+  /**
+   * Ngón bấm, 1 là ngón cái. Quy ước soạn của KeyTrain, xem `fingering.ts` —
+   * kho chưa có thế ngón của thầy nào cho gam bebop hay gam biến âm.
+   */
+  finger?: 1 | 2 | 3 | 4 | 5
 }
 
 /**
@@ -408,6 +489,17 @@ export function generateFillLine(
     /** Các hợp âm mà câu hát kết thúc ở đó; xem `fillPositions`. */
     breaths?: ReadonlySet<number>
     /**
+     * Ô nào ca sĩ **đang hát**, tính theo vòng hợp âm chính.
+     *
+     * `'full'` nghĩa là hát kín cả bài. Bỏ trống nghĩa là chưa biết — lúc đó
+     * `breaths` và mật độ quyết định như cũ.
+     *
+     * Khác `breaths` ở chỗ nhìn ngược: `breaths` đánh dấu chỗ **hết câu hát**,
+     * còn đây đánh dấu chỗ **giọng đang vang**. Chỗ giọng đang vang thì cây đàn
+     * im, vì câu lót vốn để lấp khoảng trống chứ không phải để chen vào giọng.
+     */
+    vocal?: 'full' | ReadonlySet<number>
+    /**
      * Các hợp âm là **mốc chuyển đoạn**, kèm cách chơi ô nối của từng chỗ.
      *
      * Chỗ này câu fill đổi hình hẳn — xem ghi chú trong thân hàm.
@@ -430,6 +522,20 @@ export function generateFillLine(
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
     extraRuns?: ReadonlySet<number>
+    /**
+     * Hỏi bộ não PianoBrain hình câu lót ở một chỗ, thay cho câu ba nốt đi liền
+     * bậc dựng sẵn ở đây.
+     *
+     * Chỗ chêm vẫn do bên này quyết (`fillPositions`, `breaths`) — não chỉ
+     * được hỏi *chơi cái gì*, không được hỏi *chêm ở đâu*. Trả `null` là não
+     * không có luật nào khớp, và câu fill cũ của KeyTrain chạy tiếp như thường,
+     * nên bật hay tắt cũng không làm hỏng bài.
+     */
+    brainFill?: (request: {
+      chord: ParsedChord
+      next: ParsedChord
+      chordStartBeat: number
+    }) => readonly SoloNote[] | null
   },
 ): SoloNote[] {
   const {
@@ -445,14 +551,30 @@ export function generateFillLine(
     lickyMode = 'clone',
     extraFills,
     extraRuns,
+    brainFill,
+    vocal,
   } = options
 
   if (chords.length < 2) return []
+
+  /*
+    Hát kín cả bài thì **không lót câu nào**.
+
+    Đây là luật của thầy Kingsley trong kho: ca sĩ hát kín thì chỉ giữ nền, đàn
+    không chen. Trả mảng rỗng ngay ở đây chứ không lọc từng chỗ, vì lọc từng chỗ
+    thì chỗ chuyển đoạn (`sectionEnds`) vẫn lọt qua — mà chen vào giữa câu hát ở
+    chỗ chuyển đoạn cũng là chen.
+  */
+  if (vocal === 'full') return []
 
   const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
   const fillStarts = chordStarts(chords, beatsPerChord)
 
   const result: SoloNote[] = []
+
+  /** Ô này ca sĩ đang hát, nên đàn không được lót vào. */
+  const singingAt = (mainIndex: number): boolean =>
+    vocal !== undefined && vocal.has(mainIndex)
 
   for (const { index, mainIndex } of fillPositions(chords, {
     density,
@@ -466,6 +588,9 @@ export function generateFillLine(
       ...(extraRuns ?? []),
     ]),
   })) {
+    // Biết ca sĩ đang hát ở ô này thì bỏ qua, kể cả chỗ chuyển đoạn.
+    if (singingAt(mainIndex)) continue
+
     const next = chords[(index + 1) % chords.length]
     const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
 
@@ -559,6 +684,18 @@ export function generateFillLine(
         }),
       )
       continue
+    }
+
+    if (brainFill) {
+      const fromBrain = brainFill({
+        chord: chords[index],
+        next,
+        chordStartBeat: fillStarts[index],
+      })
+      if (fromBrain) {
+        result.push(...fromBrain)
+        continue
+      }
     }
 
     /*
@@ -661,14 +798,40 @@ export function generateSolo(
     chordsPerPhrase = 2,
     take = 0,
     endWithRun = false,
+    interlude = true,
+    range,
+    jazzScale,
   } = options
+
+  const soloLow = range?.low ?? SOLO_LOW
+  const soloHigh = range?.high ?? SOLO_HIGH
+  const soloCeiling = range?.high ?? SOLO_CEILING
 
   if (chords.length === 0) return []
 
   const tones = new Set<PitchClass>()
   for (const chord of chords) {
     if (chord.passing) continue
-    for (const tone of chordMaterial(chord)) tones.add(tone)
+    /*
+      Vùng nốt chung của cả đoạn cũng phải theo bậc ưu tiên giang tấu, vì nó là
+      bộ lọc cuối cùng: để `chordMaterial` dựng vùng này thì bậc chín lọt vào từ
+      cửa sau, dù từng ô đã lọc sạch.
+    */
+    const source =
+      interlude && noteSource === 'jazzScale'
+        ? /*
+             Vùng chung phải mở theo đúng gam đang dùng.
+
+             Nó là bộ lọc CUỐI: dựng nó bằng nốt hợp âm rồi mới cắt gam jazz qua
+             nó thì đúng những nốt làm nên chất jazz — Fa thăng của Lydian, bậc
+             chín giáng của gam altered — bị chặn ở cửa sau, và câu chạy quay về
+             y hệt bản nốt hợp âm.
+          */
+          (jazzScale?.(chord) ?? chordTonesStrict(chord))
+        : interlude && noteSource === 'chordTone'
+          ? chordTonesStrict(chord)
+          : chordMaterial(chord)
+    for (const tone of source) tones.add(tone)
   }
   const phraseChords = Math.max(1, chordsPerPhrase)
   const round = Math.max(0, Math.floor(take))
@@ -712,7 +875,10 @@ export function generateSolo(
   const phraseAt = (beat: number) => Math.floor((beat + EPSILON) / phraseBeats)
 
   const result: SoloNote[] = []
-  let from: MidiNote = (SOLO_LOW + 8 + ((Math.imul(round + 3, 2654435761) >>> 0) % 17)) as MidiNote
+  let from: MidiNote = Math.min(
+    soloCeiling,
+    soloLow + 8 + ((Math.imul(round + 3, 2654435761) >>> 0) % 17),
+  ) as MidiNote
   let previousShape: number[] = []
   let positionInPhrase = 0
   let currentPhrase = -1
@@ -738,8 +904,8 @@ export function generateSolo(
       như cùng một người chơi.
     */
     const lift = phrase % 2 === 0 ? 0 : PHRASE_LIFT
-    const low = SOLO_LOW + lift
-    const high = Math.min(SOLO_CEILING, SOLO_HIGH + lift)
+    const low = soloLow + lift
+    const high = Math.min(soloCeiling, soloHigh + lift)
 
     /*
       Nghỉ lấy hơi ở cuối mỗi câu. `pianoimprovnotes.md` mục 4 nói thẳng: cần
@@ -769,7 +935,17 @@ export function generateSolo(
     }
 
     if (positionInPhrase === 0 && index !== spans.length - 1) {
-      const sweep = getLick('sweep')
+      /*
+        Ô mở câu **luân phiên hai ngón**, không phải lúc nào cũng quét.
+
+        Trước đây chỗ này gọi thẳng cú quét, bỏ qua hẳn bộ chọn mẫu — nên ô 1 và
+        ô 3 của mọi vòng giang tấu đều ra cùng một ngón, nghe hai lần một câu.
+        Ô 1 quét ngũ cung (Cà Pháo, Hồng Kông 1 ô 51-52); ô 3 kẹp nửa cung, tức
+        chạm nốt trên rồi nốt dưới mới vào nốt đích — ngón chromatic nghe rõ
+        nhất mà nốt đích vẫn là nốt hợp âm nên hoà âm không lung lay.
+      */
+      const opener = index % 4 === 2 ? getLick('enclosure') : getLick('sweep')
+      const sweep = opener ?? getLick('sweep')
       const swept = sweep?.build({
         chord,
         next: spans[index + 1]?.chord ?? null,
@@ -781,7 +957,7 @@ export function generateSolo(
         scaleTones: tones,
         previousShape,
         notesPerBeat,
-        material: materialFor(chord, noteSource, null, [], tones),
+        material: materialFor(chord, noteSource, null, [], tones, interlude, jazzScale),
       })
       const line =
         swept && swept.notes.length > 0
@@ -790,7 +966,17 @@ export function generateSolo(
               startBeat: note.startBeat,
               durationBeats: note.durationBeats,
               isGrace: false,
-              hand: note.note < 60 ? ('left' as const) : ('right' as const),
+              ...(note.soft ? { ornament: true } : {}),
+              /*
+                Câu solo **luôn là tay phải**, kể cả nốt thấp.
+
+                Bản trước chia tay theo cao độ: nốt dưới Đô quãng tám 4 bị dán
+                nhãn tay trái. Trên piano roll thành mấy nốt xanh nằm lẫn giữa
+                câu solo hồng, mà tay trái lúc ấy đang bận giữ bass — người xem
+                tưởng phải bắt chéo tay, còn thật ra đó vẫn là một tuyến giai
+                điệu của tay phải.
+              */
+              hand: 'right' as const,
             }))
           : arpeggioRun({
               chord,
@@ -832,6 +1018,7 @@ export function generateSolo(
     }
 
     const lick = chooseLick({
+      chordIndex: index,
       phrase,
       positionInPhrase,
       isPhraseEnd,
@@ -865,6 +1052,8 @@ export function generateSolo(
           spans[index - 1]?.chord,
         ].filter((entry): entry is ParsedChord => entry !== undefined),
         tones,
+        interlude,
+        jazzScale,
       ),
     }
 
@@ -945,7 +1134,7 @@ export function generateSolo(
   }
 
   if (tones.size > 0 && round > 0) {
-    const ladder = ladderOf([...tones], SOLO_LOW, SOLO_CEILING)
+    const ladder = ladderOf([...tones], soloLow, soloCeiling)
     if (ladder.length > 1) {
       for (const note of ordered) {
         if (locked(note.startBeat)) continue
@@ -958,6 +1147,19 @@ export function generateSolo(
   if (tones.size > 0) {
     for (const note of ordered) {
       if (locked(note.startBeat)) continue
+      /*
+        Nốt tô điểm được giữ nguyên, kể cả khi nó nằm ngoài hoà âm.
+
+        Mẫu kẹp nửa cung và mẫu nốt dẫn **cố ý** chạm nốt trên và nốt dưới rồi
+        mới vào nốt chính — đó là cả ngón đàn. Ép chúng về nốt hợp âm gần nhất
+        thì hai nốt kẹp biến thành chính nốt đích, ngón bao vây mất sạch, và cả
+        đoạn giang tấu không còn một nốt nửa cung nào. Đo trên tám lượt trước
+        khi sửa: 232 nốt, 0 nốt ngoài giọng.
+
+        Chúng mang cờ `isGrace` vì mẫu câu đánh dấu `soft` — nốt mềm, đi kèm
+        nốt chính chứ không phải một bậc của câu nhạc.
+      */
+      if (note.isGrace || note.ornament) continue
       const pitch = ((note.note % 12) + 12) % 12 as PitchClass
       if (tones.has(pitch)) continue
       const span = spans.find(
@@ -966,17 +1168,150 @@ export function generateSolo(
           note.startBeat < entry.start + entry.beats,
       )
       const pool = span
-        ? materialFor(span.chord, noteSource, null, [], tones).filter((tone) =>
+        ? materialFor(span.chord, noteSource, null, [], tones, interlude, jazzScale).filter((tone) =>
             tones.has(tone),
           )
         : [...tones]
-      const ladder = ladderOf(pool.length > 0 ? pool : [...tones], SOLO_LOW, SOLO_CEILING)
+      /*
+        Dùng tầm bên gọi đưa vào, không phải hằng số mặc định.
+
+        Chỗ này là câu chạy cuối câu nhạc. Bỏ sót nó thì hạ trần cho điệu ballad
+        xong câu chạy vẫn leo lên quãng tám thứ sáu — đúng chỗ người dùng nghe
+        thấy phi thực tế.
+      */
+      const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
       note.note = ladder[nearestStep(ladder, note.note)] ?? note.note
     }
   }
 
-  const free = ordered.filter((note) => !locked(note.startBeat))
-  const run = ordered.filter((note) => locked(note.startBeat))
+  /*
+    Gom về **một dòng giai điệu** rồi mới thêm nốt láy.
+
+    Hai đường dựng nốt — câu nhạc thường và câu chạy cuối câu — có thể cùng đặt
+    nốt vào một mốc phách. Trên piano roll thành hai nốt chồng cách nhau một
+    quãng tám: tai nghe tiếng đúp, tay không biết bấm nốt nào.
+
+    Làm trước khi thêm nốt láy, vì nốt láy tính theo nốt chính; sửa nốt chính
+    sau thì nốt láy trỏ sai chỗ.
+  */
+  const single: SoloNote[] = []
+  let previous: MidiNote | null = null
+  for (const note of [...ordered].sort((a, b) => a.startBeat - b.startBeat)) {
+    const clash = single.find(
+      (kept) => Math.abs(kept.startBeat - note.startBeat) < 1e-6,
+    )
+    if (!clash) {
+      single.push(note)
+      previous = note.note
+      continue
+    }
+    // Giữ nốt gần nốt vừa chơi nhất, để câu đi liền mạch.
+    if (previous !== null && Math.abs(note.note - previous) < Math.abs(clash.note - previous)) {
+      single[single.indexOf(clash)] = note
+    }
+  }
+
+  /*
+    Kéo nốt về trong tầm, và khép lại bước nhảy quá một quãng tám.
+
+    Chỉ động vào nốt **thật sự cần**: ra ngoài tầm, hoặc cách nốt trước hơn một
+    quãng tám. Kéo mọi nốt về quãng tám gần nhất thì đường giai điệu bị ép
+    phẳng, đo ra ba nốt giống hệt nhau liên tiếp — câu đứng im.
+
+    Bước gộp ở trên bỏ bớt nốt, mà nốt bị bỏ có khi đang làm bậc bắc cầu; nên
+    lượt này chạy cả khi bên gọi không nói tầm.
+  */
+  const asked = range ?? { low: soloLow, high: soloCeiling }
+  /*
+    Chừa hai nửa cung ở hai đầu cho nốt láy.
+
+    Nốt láy được thêm **sau** bước này và nằm cách nốt chính một bậc. Ép nốt
+    chính sát trần thì nốt láy của nó vọt ra ngoài tầm, mà dời riêng nốt láy lại
+    hỏng quan hệ một bậc với nốt chính.
+  */
+  const bounds = { low: asked.low + 2, high: asked.high - 2 }
+  let anchor: MidiNote | null = null
+  const bounded = single.map((note) => {
+    const outside = note.note < bounds.low || note.note > bounds.high
+    const leap = anchor !== null && Math.abs(note.note - anchor) > 12
+    if (!outside && !leap) {
+      anchor = note.note
+      return note
+    }
+
+    let best: number | null = null
+    for (let pitch = bounds.low; pitch <= bounds.high; pitch += 1) {
+      if (((pitch - note.note) % 12 + 12) % 12 !== 0) continue
+      const from = anchor ?? note.note
+      if (best === null || Math.abs(pitch - from) < Math.abs(best - from)) best = pitch
+    }
+    if (best === null) {
+      anchor = note.note
+      return note
+    }
+    anchor = best as MidiNote
+    return best === note.note ? note : { ...note, note: best as MidiNote }
+  })
+
+
+  /*
+    Không đánh **cùng một nốt hai lần liền nhau**.
+
+    Cú quét lặp một ô bốn nốt lên qua từng quãng tám; tới trần thì tầng cuối bị
+    cắt và nốt còn lại trùng đúng nốt vừa chơi — nghe thành gõ hai lần một nốt
+    chứ không phải câu chạy. Đẩy nốt sau sang bậc kế tiếp trong cùng bộ nốt của
+    hợp âm, nên hoà âm không đổi, chỉ hết chỗ đứng im.
+
+    Nốt tô điểm **có tính**. Nó vốn nằm sát nốt chính, nhưng "sát" nghĩa là kề
+    một bậc chứ không phải trùng: một nốt tô điểm cùng cao độ với nốt chính thì
+    không tô điểm gì cả, nó chỉ là một lần gõ lại. Bản trước miễn hẳn cho nó,
+    nên chuỗi *nốt chính - tô điểm - nốt chính* cùng cao độ lọt lưới trọn vẹn.
+  */
+  const ordered2 = [...bounded].sort((a, b) => a.startBeat - b.startBeat)
+  let lastPlayed: SoloNote | null = null
+  const noRepeat = ordered2.map((note) => {
+    /*
+      So với nốt đã **sửa xong**, không phải nốt gốc.
+
+      Ba nốt trùng liên tiếp thì cách cũ sửa nốt thứ hai rồi lại đem nốt thứ ba
+      so với nốt thứ hai *chưa sửa* — hết một cặp, còn nguyên một cặp.
+    */
+    if (note.isGrace) return note
+    const before = lastPlayed
+    lastPlayed = note
+    if (!before || before.note !== note.note) return note
+
+    /*
+      Đẩy sang bậc kế tiếp **trong đúng chất liệu của hợp âm đang vang**, không
+      phải trong bộ nốt chung của cả vòng. Lấy bộ chung thì nốt nhảy sang một
+      hợp âm khác — hết lặp nhưng lạc hoà âm, đổi một lỗi lấy một lỗi.
+    */
+    const span = spans.find(
+      (entry) =>
+        note.startBeat + 1e-6 >= entry.start &&
+        note.startBeat < entry.start + entry.beats,
+    )
+    if (!span) return note
+
+    const pool = materialFor(span.chord, noteSource, null, [], tones, interlude, jazzScale)
+    const ladder = ladderOf(pool, bounds.low, bounds.high)
+    const step = ladder.indexOf(note.note)
+    const next = step >= 0 ? ladder[step + 1] ?? ladder[step - 1] : undefined
+    if (next === undefined) return note
+    const moved = { ...note, note: next }
+    lastPlayed = moved
+    return moved
+  })
+
+  /*
+    Sửa giai điệu xong **rồi mới tô điểm**, không phải ngược lại.
+
+    Nốt láy được gắn theo nốt chính và cách nốt chính đúng một bậc trong giọng.
+    Tô điểm trước rồi mới đẩy nốt chính sang bậc khác thì nốt láy ở lại chỗ cũ —
+    nó không còn là nốt láy của ai nữa.
+  */
+  const free = noRepeat.filter((note) => !locked(note.startBeat))
+  const run = noRepeat.filter((note) => locked(note.startBeat))
   const withGrace = [
     ...addGraceNotes(free, {
       direction,
@@ -985,8 +1320,9 @@ export function generateSolo(
     }),
     ...run,
   ]
-  const lined = withGrace.sort((a, b) => a.startBeat - b.startBeat)
-  return lined.map((note) => {
+
+  const lined = capStack(withGrace).sort((a, b) => a.startBeat - b.startBeat)
+  const clipped = lined.map((note) => {
     let duration = note.durationBeats
     for (const other of lined) {
       const room = other.startBeat - note.startBeat
@@ -994,6 +1330,10 @@ export function generateSolo(
     }
     return duration === note.durationBeats ? note : { ...note, durationBeats: duration }
   })
+
+  // Ngón gán sau cùng, khi cao độ đã chốt — gán trước thì mọi bước sửa nốt
+  // phía trên đều làm số ngón nói dối.
+  return assignFingers(clipped).notes
 }
 
 /**
@@ -1114,7 +1454,26 @@ function materialFor(
   key?: { tonic: PitchClass; scale: ScaleType } | null,
   alts: readonly ParsedChord[] = [],
   pool?: ReadonlySet<PitchClass>,
+  interlude = false,
+  jazzScale?: (chord: ParsedChord) => readonly PitchClass[] | null,
 ): PitchClass[] {
+  /*
+    Giang tấu đi theo bậc ưu tiên riêng: nốt hợp âm trước, rồi mới ngũ cung, rồi
+    mới thang âm của giọng — và **không** tự thêm bậc chín. Người dùng tự chọn
+    ngũ cung hay màu blues thì tôn lựa chọn ấy, không ép về nốt hợp âm.
+  */
+  if (interlude && (noteSource === 'chordTone' || noteSource === 'jazzScale')) {
+    /*
+      Gam jazz chỉ vào khi người dùng chọn đúng nguồn nốt ấy. Đưa nó vào ngầm là
+      để một tầng kiến thức còn draft tự thành tiếng đàn — xem `../brain/gate.ts`.
+    */
+    const extra = noteSource === 'jazzScale' ? (jazzScale?.(chord) ?? undefined) : undefined
+    const layered = interludeMaterial(chord, key, extra)
+    const clipped = pool ? layered.filter((tone) => pool.has(tone)) : layered
+    if (clipped.length >= 3) return clipped
+    if (layered.length > 0) return layered
+  }
+
   const raw =
     noteSource === 'chordPentatonic'
       ? chordPentatonic(chord)
@@ -1144,25 +1503,8 @@ function materialFor(
 }
 
 interface LickChoice {
-  phrase: number
-  positionInPhrase: number
-  isPhraseEnd: boolean
-  playBeats: number
-  hasMotif: boolean
-  density: OrnamentDensity
-  take: number
-  /** Hợp âm sau nằm quãng bốn đi lên — chỗ V về I. */
-  resolving: boolean
-}
-
-/**
- * Thực đơn mẫu câu cho vị trí mở câu và vị trí giữa câu.
- *
- * Xoay theo cả số câu lẫn số lượt, nên hai lượt giang tấu liền nhau không bao
- * giờ dùng cùng một trình tự mẫu câu. Ba phần tử mỗi thực đơn là đủ: nhiều hơn
- * thì hai lượt cách nhau quá xa, nghe như hai người khác nhau chơi.
- */
-interface LickChoice {
+  /** Hợp âm thứ mấy trong vòng — ô 1 quét, ô 3 chạy nửa cung. */
+  chordIndex: number
   phrase: number
   positionInPhrase: number
   isPhraseEnd: boolean
@@ -1210,6 +1552,7 @@ function chooseLick(choice: LickChoice): Lick {
   const endings = licksFor('ending')
 
   const {
+    chordIndex,
     phrase,
     positionInPhrase,
     isPhraseEnd,
@@ -1258,7 +1601,34 @@ function chooseLick(choice: LickChoice): Lick {
 
   const sweep = openers.find((lick) => lick.id === 'sweep')
   const runners = openers.filter((lick) => lick.id !== 'chord-tone')
+
+  /*
+    Hai ô mở câu của đoạn giang tấu **chơi hai ngón khác nhau**.
+
+    Câu 1 mở bằng cú quét ngũ cung của anh Cà Pháo; câu 2 mở bằng một câu chạy
+    nửa cung (bao vây hoặc nốt dẫn). Trước đây cả hai ô đều bốc trúng cú quét
+    bốn lần trên năm, nên bốn ô giang tấu nghe ra hai lần cùng một ngón.
+
+    Đây cũng là chỗ vốn từ vựng có sẵn mà chưa dùng tới: `enclosure` và
+    `approach` đều đã ghi nguồn, chỉ chưa bao giờ được gọi ở vị trí mở câu.
+  */
+  const chromatic = [...openers, ...middles].filter(
+    (lick) => lick.id === 'enclosure' || lick.id === 'approach',
+  )
+
   if (positionInPhrase === 0 && runners.length > 0) {
+    /*
+      Bám thẳng **số thứ tự ô** chứ không bám số câu.
+
+      Ô 1 quét, ô 3 chạy nửa cung, và cứ bốn ô lại lặp. Cách cũ chia theo chẵn
+      lẻ của câu nhạc, mà cách đánh số câu còn phụ thuộc mấy thứ khác — đo ra
+      cả ô 1 lẫn ô 3 đều bốc trúng cú quét, tức bốn ô nghe hai lần một ngón.
+    */
+    const opening = chordIndex % 4
+    if (opening === 0 && sweep) return fit(sweep)
+    if (opening === 2 && chromatic.length > 0) {
+      return fit(chromatic[mix(13) % chromatic.length])
+    }
     if (sweep && mix(9) % 5 !== 0) return fit(sweep)
     return fit(runners[mix(11) % runners.length])
   }
@@ -1270,9 +1640,18 @@ function chooseLick(choice: LickChoice): Lick {
     return fit(openers[rotation % openers.length])
   }
 
-  const inKey = middles.filter(
-    (lick) => lick.id !== 'approach' && lick.id !== 'enclosure',
-  )
+  /*
+    Bật lại mẫu **kẹp nửa cung**, giữ nguyên chỗ chặn mẫu nốt dẫn.
+
+    Ghi chú phía trên dặn rõ: ba mẫu này từng được bật cả loạt và nghe tệ hơn
+    hẳn, nên bật lại thì bật từng cái để còn biết cái nào hỏng. Đây là cái đầu
+    tiên, chọn nó vì nó là ngón chromatic nghe ra rõ nhất — hai nốt kẹp trên và
+    dưới rồi mới vào nốt đích, mà nốt đích vẫn là nốt hợp âm nên hoà âm không
+    lung lay.
+
+    Trước khi bật: tám lượt giang tấu, 232 nốt, **không một nốt nửa cung nào**.
+  */
+  const inKey = middles.filter((lick) => lick.id !== 'approach')
   const pool = inKey.length > 0 ? inKey : middles
   const middle = pool[mix(13 + positionInPhrase) % pool.length]
   // Chưa có mô-típ nào để nhắc lại thì lùi về mẫu giữa câu khác.

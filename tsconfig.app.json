@@ -23,8 +23,10 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@pianobrain/*": ["../PianoBrain/src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["../PianoBrain/src/tests"]
 }

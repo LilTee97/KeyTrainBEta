@@ -94,10 +94,17 @@ describe('danh sách xoay suy ra từ vốn từ vựng', () => {
     expect(licksFor('opener').map((lick) => lick.id)).toEqual([
       'arpeggio',
       'chord-tone',
+      // Mẫu chạy dọc gam, thêm sau khi đo được mạch đi một chiều chỉ 1,7 nốt.
+      'scale-run',
+      // Hình bài 6: rải lên rồi gam xuống. Chỉ chạy trên hợp âm át có gam bebop.
+      'bebop-pair',
       'sweep',
       'triplet',
     ])
     expect(licksFor('middle').map((lick) => lick.id)).toEqual([
+      // Chạy dọc gam cũng dùng được ở giữa câu, không chỉ ở chỗ mở câu.
+      'scale-run',
+      'bebop-pair',
       'turn',
       'approach',
       'echo',

@@ -178,6 +178,75 @@ export function inKeyMaterial(
     .filter((pitch, index, all) => scale.has(pitch) && all.indexOf(pitch) === index)
 }
 
+/**
+ * Nốt của hợp âm, **đúng những nốt hợp âm có**, không cộng thêm gì.
+ *
+ * Khác `chordMaterial` ở chỗ không tự thêm bậc chín. Dùng cho đoạn giang tấu:
+ * ở đó không có ai hát, cây đàn tự chạy câu, nên nốt màu chồng vào làm câu chạy
+ * nghe lạc — xem `interludeMaterial`.
+ */
+export function chordTonesStrict(chord: ParsedChord): PitchClass[] {
+  return [...new Set(chordPitchClasses(chord.root, chord.quality))]
+}
+
+/**
+ * Chất liệu nốt cho **đoạn giang tấu**, xếp theo bậc ưu tiên.
+ *
+ * Đoạn có lời thì giọng hát là đường giai điệu, hợp âm dày lên nghe đầy, và nốt
+ * bậc chín của `chordMaterial` đúng chỗ. Giang tấu thì ngược lại: câu chạy
+ * *chính là* giai điệu, nên nó cần chỗ tựa chắc chứ không cần màu.
+ *
+ * Ba tầng, lấy tầng hẹp nhất còn đủ nốt để dựng câu:
+ *
+ * 1. **Nốt hợp âm** 1-3-5-7. Chắc chắn khớp hoà âm, và câu kết rơi vào đây.
+ * 2. **Ngũ cung** dựng trên nốt gốc hợp âm, khi tầng một quá ít nốt.
+ * 3. **Thang âm của giọng**, khi hai tầng trên bị bộ lọc giọng cắt gần hết.
+ *
+ * `extra` là thang âm jazz do bên gọi đưa vào. Có nó thì nó **đứng đầu**, và nó
+ * **không đi qua bộ lọc giọng**. Hai điều đó đi liền nhau:
+ *
+ * - Đứng đầu, vì tầng nốt hợp âm luôn đủ ba nốt nên mọi tầng dưới không bao giờ
+ *   tới lượt. Đặt gam jazz xuống dưới là viết một tầng chết. Gam mà bộ chọn bên
+ *   PianoBrain trả về đã được kiểm là **chứa đủ nốt của hợp âm**, nên nó là tập
+ *   rộng hơn nốt hợp âm chứ không phải tập khác — lấy nó không mất chỗ tựa nào.
+ * - Không lọc giọng, vì thứ làm câu jazz ra chất chính là nốt ngoài giọng: #11
+ *   của Lydian, b9 và #9 của gam altered, nốt bậc 7 tự nhiên của bebop. Lọc
+ *   xong thì còn lại đúng thang âm của giọng, tức là không dùng gam nào cả.
+ *
+ * Bên gọi không đưa `extra` thì hàm chạy y như cũ, từng nốt một — đó là đường
+ * mặc định của điệu ballad và của mọi bài chưa bật gam jazz.
+ */
+export function interludeMaterial(
+  chord: ParsedChord,
+  key?: SongKey | null,
+  extra?: readonly PitchClass[],
+): PitchClass[] {
+  const enough = (pitches: readonly PitchClass[]) => pitches.length >= 3
+
+  if (extra && extra.length >= 3) return [...new Set(extra)]
+
+  /*
+    Nốt của chính hợp âm **không** đi qua bộ lọc giọng.
+
+    Bộ lọc từng cắt cả nốt hợp âm, và trên hợp âm mượn thì nó cắt gần hết: một
+    Ebmaj7 trong bài giọng Đô bị bỏ mất Mi giáng, Si giáng lẫn Rê, tụt xuống
+    tầng ngũ cung rồi trả về Fa Sol Đô — câu chạy không còn một nốt nào của hợp
+    âm đang vang. Hợp âm là hoà âm đang kêu dưới tay trái; nó không cần xin phép
+    giọng của bài.
+  */
+  const tones = chordTonesStrict(chord)
+  if (enough(tones)) return tones
+
+  const pentatonic = keepInKey(chordPentatonic(chord), key)
+  if (enough(pentatonic)) return pentatonic
+
+  const diatonic = inKeyMaterial(chord, key)
+  if (enough(diatonic)) return diatonic
+
+  // Cạn đường: thà trả nốt hợp âm còn hơn trả rỗng rồi im tiếng.
+  return tones.length > 0 ? tones : chordTonesStrict(chord)
+}
+
 export function chordMaterial(chord: ParsedChord): PitchClass[] {
   const tones = new Set(chordPitchClasses(chord.root, chord.quality))
   if (allowsNaturalNinth(chord)) {
@@ -394,6 +463,16 @@ function landOn(
   ladder.forEach((note, index) => {
     if (note % 12 !== pitchClass || index === before) return
     const distance = Math.abs(index - target)
+    /*
+      Hạ cánh phải **trong tầm với**, không được nhảy tới.
+
+      Bản trước lấy nốt ổn định gần nhất bất kể xa bao nhiêu, nên câu nhạc chạy
+      liền mạch xong bị bẻ một cú **quãng tám** ngay ở nốt cuối — đo được bước
+      12 nửa cung ở mẫu `chord-tone` và `guide-tone`. Không có bậc ổn định nào
+      trong hai bậc thì thà đậu ở nốt câu tự đi tới: một nốt hơi lơ lửng nghe
+      còn hơn một cú nhảy không đàn nổi.
+    */
+    if (distance > 2) return
     if (distance < best) {
       best = distance
       landing = index
@@ -686,6 +765,246 @@ const neighborTurn: Lick = {
 }
 
 /**
+ * Bậc thang này có đi được từng bước không, hay mỗi bước là một cú nhảy.
+ *
+ * Bậc thang dựng từ **nốt hợp âm** có hai bậc kề cách nhau quãng ba: đi "từng
+ * bậc" trên đó chính là rải hợp âm, và mẫu rải đã có riêng. Bậc thang dựng từ
+ * một thang âm hay ngũ cung thì bước là quãng hai hoặc quãng ba thứ — đó mới là
+ * chỗ câu chạy dọc gam có nghĩa.
+ *
+ * Đo bằng phần bước nhỏ chứ không bằng bước lớn nhất: ngũ cung có hai chỗ nhảy
+ * quãng ba thứ mà vẫn là gam để chạy, còn Cmaj7 có đúng một bước nửa cung
+ * (Si-Đô) mà vẫn là hợp âm rải.
+ */
+function isStepwiseLadder(ladder: readonly MidiNote[]): boolean {
+  if (ladder.length < 5) return false
+  let small = 0
+  for (let at = 1; at < ladder.length; at += 1) {
+    if (ladder[at] - ladder[at - 1] <= 2) small += 1
+  }
+  return small / (ladder.length - 1) >= 0.5
+}
+
+/**
+ * Câu chạy **dọc gam**, một chiều, hạ cánh vào nốt hợp âm.
+ *
+ * Đây là mẫu câu mà đoạn giang tấu vốn thiếu hẳn. Đo trên bản cũ: mạch đi một
+ * chiều trung bình **1,7 nốt**, hơn nửa số lần quay đầu ngay sau một nốt — tức
+ * không phải câu nhạc mà là bước đi ngẫu nhiên, và không thế ngón nào đặt vừa.
+ *
+ * Ba luật, cả ba đều lấy từ kho chứ không tự đặt:
+ *
+ * 1. **Đi liền một chiều 4-8 nốt.** Bài 6 của nguồn Jazz Scales (`02:25-03:42`,
+ *    Pattern Type 1) dạy đúng khuôn bốn nốt liền một chiều rồi mới đổi.
+ * 2. **Nốt hợp âm rơi vào chỗ đậu.** Đó là lý do gam Bebop Dominant tồn tại —
+ *    bài 5 (`03:05-03:57`): thêm một nốt thành gam 8 nốt để nốt hợp âm rơi vào
+ *    phách mạnh. Ở đây làm bằng cách **dịch cả câu** dọc bậc thang cho nốt cuối
+ *    trúng nốt hợp âm, chứ không bẻ riêng nốt cuối: bẻ nốt cuối là đúng thứ tạo
+ *    ra cú nhảy quãng tám mà bản cũ đang mắc.
+ * 3. **Sải không quá một quãng tám.** Một vị trí tay là năm ngón, thêm một lần
+ *    luồn ngón cái là tới quãng tám. Chạm mép thì quay đầu **một lần duy nhất**,
+ *    và một lần quay đầu là câu nhạc, hai lần trở lên là loạn.
+ *
+ * Bậc thang thưa (nốt hợp âm) thì mẫu này **tự rút lui**, trả về rỗng để bộ
+ * chọn lấy mẫu khác — chạy "dọc gam" trên bốn nốt hợp âm chỉ là rải hợp âm, mà
+ * việc đó `arpeggio` đã làm.
+ */
+const scaleRun: Lick = {
+  id: 'scale-run',
+  label: 'Câu chạy dọc gam',
+  source: 'Jazz Scales bài 6 02:25-03:42 (bốn nốt liền một chiều) và bài 5 03:05-03:57 (nốt hợp âm vào phách mạnh)',
+  minBeats: 2,
+  roles: ['opener', 'middle'],
+  inRotation: true,
+  build: ({ chord, startBeat, beats, from, low, high, material, notesPerBeat }) => {
+    const ladder = ladderOf(material, low, high)
+    if (!isStepwiseLadder(ladder)) return { notes: [], shape: [] }
+
+    const count = Math.max(4, Math.min(8, Math.round(beats * notesPerBeat)))
+    if (ladder.length < count) return { notes: [], shape: [] }
+
+    const top = ladder.length - 1
+    const start = clampStep(ladder, nearestStep(ladder, from))
+    let dir: 1 | -1 = directionFrom(from, low, high)
+
+    const steps: number[] = [start]
+    let turned = false
+    while (steps.length < count) {
+      const current = steps[steps.length - 1]
+      let next = current + dir
+      // Chạm mép tầm, hoặc sải quá một quãng tám tính từ nốt đầu: quay một lần.
+      const tooWide = next >= 0 && next <= top && Math.abs(ladder[next] - ladder[start]) > 12
+      if (next < 0 || next > top || tooWide) {
+        if (turned) break
+        turned = true
+        dir = -dir as 1 | -1
+        next = current + dir
+        if (next < 0 || next > top) break
+      }
+      steps.push(next)
+    }
+    if (steps.length < 3) return { notes: [], shape: [] }
+
+    /*
+      Dịch cả câu để nốt cuối trúng nốt hợp âm.
+
+      Dịch chứ không bẻ: bẻ riêng nốt cuối về nốt ổn định gần nhất là cách bản
+      cũ làm, và nó đẻ ra cú nhảy quãng tám ngay ở chỗ câu nhạc đang cần đậu.
+    */
+    const tones = new Set(chordPitchClasses(chord.root, chord.quality))
+    const last = steps[steps.length - 1]
+    let shift = 0
+    for (let offset = 0; offset <= 3; offset += 1) {
+      const candidates = offset === 0 ? [0] : [offset, -offset]
+      const found = candidates.find((delta) => {
+        const landing = last + delta
+        if (landing < 0 || landing > top) return false
+        if (!tones.has((ladder[landing] % 12) as PitchClass)) return false
+        return steps.every((step) => step + delta >= 0 && step + delta <= top)
+      })
+      if (found !== undefined) {
+        shift = found
+        break
+      }
+    }
+
+    const shifted = steps.map((step) => step + shift)
+    return {
+      notes: evenNotes(shifted.map((step) => ladder[step]), startBeat, beats),
+      shape: shapeOf(shifted),
+    }
+  },
+}
+
+/**
+ * Rải bốn nốt ghép với bốn nốt gam đi ngược chiều — hình câu bebop kinh điển.
+ *
+ * Kho PianoBrain mô tả hình này bằng lời, bài 6 của nguồn Jazz Scales:
+ *
+ * > *"Pattern Type 1: rải bốn nốt đi lên (bắt đầu từ bậc 3, 5 hoặc 7) rồi bốn
+ * > nốt gam Dominant Bebop đi xuống. Nhấn nốt cao nhất của mỗi cụm rải để lấy
+ * > chất swing."* (`02:25-03:42`)
+ * > *"Pattern Type 2: đảo chiều — bốn nốt gam đi xuống trước, đậu vào một nốt
+ * > hợp âm, rồi rải bốn nốt đi lên."* (`03:43-04:46`)
+ *
+ * Ba cụm rải mẫu cũng có sẵn, trên G7: từ bậc 3 là `B-D-F-A`, từ bậc 5 là
+ * `D-F-A-C`, từ bậc 7 là `F-A-C-E` (`00:41-02:24`).
+ *
+ * **Vì sao đúng tám nốt**: gam bebop có tám bậc, nên chạy móc đơn thì nốt hợp
+ * âm rơi đúng vào phách mạnh — chính là lý do gam ấy được dựng ra. Ghép 4 + 4
+ * là một ô nhịp trọn vẹn của móc đơn.
+ *
+ * Phần khái quát từ "trên G7" lên "trên mọi hợp âm át, mọi giọng" là **suy
+ * luận**, không phải lời thầy — xem `rule-bebop-arpeggio-scale-pair` bên
+ * PianoBrain, `origin: "derived"`, không gán cho thầy nào.
+ *
+ * Mẫu tự rút lui khi hợp âm không phải hợp âm át, hoặc khi chất liệu không phải
+ * một thang âm: chồng quãng ba của hình này dựng trên hợp âm át, và bốn nốt "đi
+ * xuống theo gam" cần một cái gam để đi.
+ */
+const bebopPair: Lick = {
+  id: 'bebop-pair',
+  label: 'Rải lên rồi gam xuống',
+  source: 'Jazz Scales bài 6, 02:25-03:42 và 03:43-04:46 — qua luật rule-bebop-arpeggio-scale-pair',
+  minBeats: 2,
+  roles: ['opener', 'middle'],
+  inRotation: true,
+  build: ({ chord, startBeat, beats, from, low, high, material, notesPerBeat }) => {
+    const intervals = chord.quality.intervals
+    const isDominant = intervals.includes(4) && intervals.includes(10)
+    if (!isDominant) return { notes: [], shape: [] }
+
+    const ladder = ladderOf(material, low, high)
+    if (!isStepwiseLadder(ladder) || ladder.length < 9) return { notes: [], shape: [] }
+
+    /*
+      Điểm xuất phát: bậc 3, bậc 5 hoặc bậc 7 của hợp âm — đúng ba chỗ bài giảng
+      nêu. Chọn cái gần nốt vừa chơi nhất, để câu trước nối vào câu này không
+      phải nhảy.
+    */
+    const starts = [4, 7, 10]
+      .map((interval) => ((chord.root + interval) % 12) as PitchClass)
+      .flatMap((pitchClass) =>
+        ladder
+          .map((note, index) => ({ note, index }))
+          .filter((entry) => ((entry.note % 12) + 12) % 12 === pitchClass),
+      )
+    if (starts.length === 0) return { notes: [], shape: [] }
+
+    /*
+      Cụm rải chiếm khoảng một quãng tám rưỡi tính từ nốt mở. Chọn chỗ mở còn đủ
+      chỗ trèo lên, nếu không thì mẫu leo tới trần rồi tắt giữa chừng.
+    */
+    const roomy = starts.filter((entry) => entry.note + 17 <= high)
+    const pool = roomy.length > 0 ? roomy : starts
+    const begin = pool.reduce((best, entry) =>
+      Math.abs(entry.note - from) < Math.abs(best.note - from) ? entry : best,
+    )
+
+    /*
+      Cụm rải là **chồng quãng ba**, dựng từ chính bậc thang chứ không cộng bừa
+      ba nửa cung: quãng ba trong gam lúc là ba nửa cung, lúc là bốn. Bước qua
+      nốt kề rồi lấy nốt sau nó, và bỏ nốt nào chỉ cách một nửa cung — đó là nốt
+      lướt thêm vào của gam bebop, không phải một bậc của chồng quãng ba.
+    */
+    const arpeggio: number[] = [begin.index]
+    while (arpeggio.length < 4) {
+      const current = arpeggio[arpeggio.length - 1]
+      let next = current + 1
+      while (next < ladder.length && ladder[next] - ladder[current] < 3) next += 1
+      if (next >= ladder.length) break
+      arpeggio.push(next)
+    }
+    if (arpeggio.length < 3) return { notes: [], shape: [] }
+
+    /*
+      Type 1 rải lên trước, Type 2 gam xuống trước. Chọn theo chỗ nốt vừa chơi
+      đứng trong tầm: đang ở dưới thì đi lên trước cho câu mở ra, đang ở trên
+      thì buông xuống trước — cùng một cách chọn hướng như mọi mẫu khác.
+    */
+    const typeOne = directionFrom(from, low, high) > 0
+
+    if (typeOne) {
+      // Bốn nốt gam đi xuống, tiếp ngay từ đỉnh cụm rải.
+      const down: number[] = []
+      let step = arpeggio[arpeggio.length - 1]
+      while (down.length < 4 && step - 1 >= 0) {
+        step -= 1
+        down.push(step)
+      }
+      return finish([...arpeggio, ...down])
+    }
+
+    /*
+      Type 2: bốn nốt gam đi xuống **đậu vào nốt hợp âm mở cụm rải**, rồi mới rải
+      lên từ chính nốt ấy. Đó là chỗ chữ "landing on a target chord tone" trong
+      bài giảng: câu đi xuống không rơi tự do, nó nhắm sẵn chỗ đậu.
+    */
+    const top = begin.index + 4
+    if (top >= ladder.length) return { notes: [], shape: [] }
+    const down = [top, top - 1, top - 2, top - 3]
+    const steps = [...down, ...arpeggio]
+
+    return finish(steps)
+
+    function finish(line: readonly number[]): LickResult {
+      const room = Math.max(4, Math.min(8, Math.round(beats * notesPerBeat)))
+      const picked = line.slice(0, room)
+
+    /*
+      Nhấn nốt cao nhất của cụm rải — bài giảng nói thẳng, và đó là chỗ chất
+      swing nằm. Ở đây đánh dấu bằng cách để nốt ấy KHÔNG mềm, còn mấy nốt gam
+      đi xuống thì mềm hơn.
+    */
+      return {
+        notes: evenNotes(picked.map((index) => ladder[index]), startBeat, beats),
+        shape: shapeOf(picked),
+      }
+    }
+  },
+}
+
+/**
  * Cú quét ngũ cung vắt nhiều quãng tám.
  *
  * Hồng Kông 1 ô nhịp 51-52 và 96-97: lấy một ô **bốn nốt** trong ngũ cung rồi
@@ -709,14 +1028,24 @@ const pentatonicSweep: Lick = {
     const ladder = ladderOf(pad, low, high)
     if (ladder.length < 4) return { notes: [], shape: [] }
 
-    // Ô bốn nốt tính từ đáy tầm, đúng như bản nhạc bắt cú quét từ dưới lên.
-    const cell = ladder.slice(0, 4)
+    /*
+      Ô tính từ đáy tầm, đúng như bản nhạc bắt cú quét từ dưới lên.
+
+      **Độ dài ô bằng số bậc trong một quãng tám của chính bậc thang đang dùng**,
+      chứ không cố định bốn nốt. Ô bốn nốt đúng cho ngũ cung — bốn bậc ngũ cung
+      gần trọn một quãng tám nên hai ô liền nhau khép lại mượt. Trên thang âm bảy
+      nốt thì bốn bậc mới đi được một quãng năm, nên chỗ nối sang ô sau hụt mất
+      một quãng năm: đo được một cú nhảy **7 nửa cung nằm giữa một chuỗi móc kép**
+      — tay không với kịp, và đó đúng là chỗ người chơi trượt ngón.
+    */
+    const perOctave = ladder.findIndex((note) => note >= ladder[0] + 12)
+    const cellSize = perOctave > 0 ? Math.min(perOctave, 8) : 4
     const sweep: MidiNote[] = []
     for (let octave = 0; octave < 4; octave += 1) {
-      for (const note of cell) {
-        const shifted = note + octave * 12
-        if (shifted > high) break
-        sweep.push(shifted)
+      for (let index = 0; index < cellSize; index += 1) {
+        const note = ladder[index + octave * cellSize]
+        if (note === undefined || note > high) break
+        sweep.push(note)
       }
     }
     if (sweep.length === 0) return { notes: [], shape: [] }
@@ -1012,6 +1341,8 @@ function bounded(lick: Lick): Lick {
 export const LICKS: readonly Lick[] = [
   arpeggio,
   chordTonePath,
+  scaleRun,
+  bebopPair,
   pentatonicSweep,
   neighborTurn,
   approachNotes,
