@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 import {
+  SYNC_LIMIT_MS,
+  defaultSyncOffsetMs,
   getPlaybackBeats,
   playChord,
+  setSyncOffsetMs,
   startAudio,
   useAudioStore,
   usePlaybackStore,
@@ -73,6 +76,26 @@ export function NoteGatedPractice({
   const [active, setActive] = useState(false)
 
   const [keyboardKeys, setKeyboardKeys] = useState(() => readSetting('midiKeyboardKeys'))
+
+  /*
+    Mức bù lệch: lấy con số đã dò nếu có, không thì theo máy.
+
+    `null` trong cài đặt nghĩa là **chưa ai dò** — khác hẳn với dò ra đúng 0.
+    Phân biệt hai thứ ấy mới cho nút *Trả về mặc định* làm được đúng việc của
+    nó: quên con số cũ đi và bám lại theo máy.
+  */
+  const [syncOffset, setSyncOffset] = useState(
+    () => readSetting('syncOffsetMs') ?? defaultSyncOffsetMs(),
+  )
+  useEffect(() => {
+    setSyncOffsetMs(syncOffset)
+  }, [syncOffset])
+
+  const applySyncOffset = (ms: number) => {
+    const clamped = Math.max(-SYNC_LIMIT_MS, Math.min(SYNC_LIMIT_MS, Math.round(ms)))
+    setSyncOffset(clamped)
+    writeSetting('syncOffsetMs', clamped)
+  }
 
   const steps = useMemo(
     () => buildGatedSteps(timeline, voicings, { hand, beatsPerChord }),
@@ -334,6 +357,59 @@ export function NoteGatedPractice({
       )}
 
       <div className="mt-4">
+        {/*
+          Dò lệch tiếng và hình.
+
+          Đồng hồ của Tone không phải đồng hồ của tai: nó đọc vị trí ở chỗ đang
+          *xếp lịch*, sớm hơn chỗ loa đang *kêu*, và quãng đường từ trình duyệt
+          tới màng loa thì mỗi máy một khác. Mặc định lấy con số máy tự tính;
+          còn lại để tai người chơi dò, vì thứ cần khớp nằm trong đầu người nghe.
+        */}
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-dim">
+          <span title="Kéo cho tiếng đàn khớp với lúc nốt chạm lằn kẻ">
+            Lệch tiếng ↔ hình:
+          </span>
+          <input
+            type="range"
+            min={-SYNC_LIMIT_MS}
+            max={SYNC_LIMIT_MS}
+            step={5}
+            value={syncOffset}
+            onChange={(event) => applySyncOffset(Number(event.target.value))}
+            className="w-40 accent-amber-key"
+          />
+          <input
+            type="number"
+            min={-SYNC_LIMIT_MS}
+            max={SYNC_LIMIT_MS}
+            step={5}
+            value={syncOffset}
+            onChange={(event) => applySyncOffset(Number(event.target.value) || 0)}
+            className="w-16 rounded border border-line bg-white/6 px-1 py-0.5 text-cream"
+          />
+          <span className="text-[10px] text-dim/70">ms</span>
+          <button
+            type="button"
+            onClick={() => {
+              writeSetting('syncOffsetMs', null)
+              const back = defaultSyncOffsetMs()
+              setSyncOffsetMs(back)
+              setSyncOffset(back)
+            }}
+            className="rounded border border-line px-2 py-0.5 text-[11px] text-cream hover:bg-white/6"
+            title={`Về mức máy tự tính (${defaultSyncOffsetMs()} ms)`}
+          >
+            Trả về mặc định
+          </button>
+          <span className="text-[10px] text-dim/70">
+            {syncOffset > 0
+              ? 'hình đang chạy trước — kéo hình chậm lại'
+              : syncOffset < 0
+                ? 'tiếng đang chạy trước — kéo hình nhanh lên'
+                : 'không bù'}
+          </span>
+        </div>
+
         <div className="mb-2 flex items-center gap-2 text-xs text-dim">
           <span>Bàn phím MIDI:</span>
           <select

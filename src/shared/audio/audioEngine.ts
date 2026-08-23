@@ -431,10 +431,72 @@ export const usePlaybackStore = create<PlaybackState>(() => ({
   positionBeats: 0,
 }))
 
-/** Phách đang phát, đọc thẳng từ đồng hồ — dùng cho nốt rơi 60fps. */
+/*
+  Bù lệch giữa **tiếng nghe được** và **hình vẽ ra**.
+
+  Đồng hồ của Tone không phải đồng hồ của tai. `Clock.ticks` đọc vị trí tại
+  `currentTime + lookAhead` — mặc định sớm hơn 0,1 giây — vì đó là chỗ Tone
+  đang *xếp lịch*, không phải chỗ loa đang *kêu*. Cộng thêm `outputLatency` của
+  chính máy: quãng đường từ lúc mẫu tiếng rời trình duyệt tới lúc màng loa
+  động. Trên Windows con số ấy thường 100–250 ms và không hằng số nào trong app
+  từng bù nó.
+
+  Hệ quả là nốt rơi chạm lằn kẻ ở một lúc, tiếng đàn kêu ở một lúc khác — và
+  lệch bao nhiêu thì tuỳ máy, tuỳ trình duyệt, tuỳ tai nghe hay loa ngoài.
+
+  Nên có hai thứ ở đây: một con số **mặc định tính từ chính máy đang chạy**, và
+  một con số **người chơi tự dò**. Người chỉnh A/V sync bao giờ cũng dò bằng tai
+  chứ không tính ra, vì thứ cần khớp nằm trong đầu người nghe.
+
+  Dấu: **dương** nghĩa là hình đang chạy trước, kéo hình chậm lại. **Âm** nghĩa
+  là tiếng đang chạy trước, kéo hình nhanh lên.
+*/
+/** Không nhận quá nửa giây mỗi chiều: quá đó là hỏng chỗ khác, không phải lệch. */
+export const SYNC_LIMIT_MS = 500
+
+/** Bù mặc định, đo từ chính máy đang chạy. */
+export function defaultSyncOffsetMs(): number {
+  try {
+    const context = Tone.getContext()
+    const raw = context.rawContext as unknown as { outputLatency?: number }
+    const output =
+      typeof raw.outputLatency === 'number' && Number.isFinite(raw.outputLatency)
+        ? raw.outputLatency
+        : 0
+    return Math.round((context.lookAhead + output) * 1000)
+  } catch {
+    // Chưa có AudioContext — lúc chạy test, hoặc trước khi người dùng bấm phát.
+    return 100
+  }
+}
+
+let syncOffsetMs: number | null = null
+
+export function getSyncOffsetMs(): number {
+  return syncOffsetMs ?? defaultSyncOffsetMs()
+}
+
+/**
+ * Đặt mức bù. Việc **nhớ** con số này là của giao diện, không phải của đây:
+ * `shared/persistence/localSettings` đã là chỗ cất cài đặt của cả app, và một
+ * cái kho thứ hai nằm trong bộ máy âm thanh là một chỗ nữa để hai bên lệch nhau.
+ */
+export function setSyncOffsetMs(ms: number): void {
+  syncOffsetMs = Math.max(-SYNC_LIMIT_MS, Math.min(SYNC_LIMIT_MS, Math.round(ms)))
+}
+
+/**
+ * Phách đang phát, đọc thẳng từ đồng hồ — dùng cho nốt rơi 60fps.
+ *
+ * Đã trừ phần bù lệch, nên con số này là **chỗ tai đang nghe**, không phải chỗ
+ * Tone đang xếp lịch. Mọi thứ vẽ theo nó — nốt rơi và phím sáng — vì thế khớp
+ * với nhau và khớp với tiếng.
+ */
 export function getPlaybackBeats(): number {
   const transport = Tone.getTransport()
-  return transport.ticks / transport.PPQ
+  const raw = transport.ticks / transport.PPQ
+  const beatsPerSecond = transport.bpm.value / 60
+  return raw - (getSyncOffsetMs() / 1000) * beatsPerSecond
 }
 
 /** Đồng hồ báo vị trí cho giao diện, chạy song song với vòng lặp phần đệm. */

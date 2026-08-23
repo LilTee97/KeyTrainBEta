@@ -34,6 +34,15 @@ export interface Settings {
 
   /** Số phím của đàn MIDI đang dùng (44, 49, 61, 73, 76, 88...). Dùng để hiển thị bàn phím ảo đúng kích thước. */
   midiKeyboardKeys: number
+
+  /**
+   * Bù lệch giữa tiếng nghe được và hình vẽ ra, tính bằng mili giây.
+   *
+   * `null` nghĩa là **chưa dò tay** — lúc ấy lấy mức máy tự tính. Người dùng
+   * kéo thanh trượt một lần thì con số ở lại; bấm *Trả về mặc định* thì về
+   * `null`, tức lại theo máy.
+   */
+  syncOffsetMs: number | null
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -54,6 +63,8 @@ export const DEFAULT_SETTINGS: Settings = {
   instrument: 'piano',
 
   midiKeyboardKeys: 61,
+
+  syncOffsetMs: null,
 }
 
 /**
