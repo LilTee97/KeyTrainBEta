@@ -12,6 +12,17 @@ import type { Plugin } from 'vite'
  *
  * Vì vậy: không có 800 file JSON nào bị chép sang KeyTrain, không có máy chủ,
  * và app vẫn chạy hẳn khi mất mạng.
+ *
+ * ## Kho đổi thì phải nạp lại
+ *
+ * Module ảo được Vite giữ trong bộ nhớ, nên sửa kho bên PianoBrain mà không báo
+ * gì thì trình duyệt vẫn đọc bản cũ **cho tới khi khởi động lại dev server**.
+ * Chuyện đó đã đánh lừa một lần thật: rà xong 28 item gam thành `validated`,
+ * test bên terminal xanh hết, mà app vẫn báo "kho chưa có gam" cho cả bốn hợp
+ * âm — vì trong trình duyệt chúng vẫn đang là `draft`.
+ *
+ * `configureServer` bên dưới trông chừng thư mục kho: đổi một file JSON là
+ * module ảo bị bỏ, trang tự nạp lại. Rà một item xong nhìn app là thấy ngay.
  */
 export const PIANOBRAIN_KNOWLEDGE = 'virtual:pianobrain-knowledge'
 
@@ -55,6 +66,27 @@ export function pianobrainKnowledge(keyTrainRoot: string): Plugin {
   return {
     name: 'pianobrain-knowledge',
     resolveId: (id) => (id === PIANOBRAIN_KNOWLEDGE ? resolved : null),
+
+    configureServer(server) {
+      const watched = [path.join(root, 'knowledge'), path.join(root, 'sources')]
+      for (const dir of watched) {
+        if (fs.existsSync(dir)) server.watcher.add(dir)
+      }
+
+      const refresh = (file: string) => {
+        if (!file.endsWith('.json')) return
+        if (!watched.some((dir) => file.startsWith(dir))) return
+
+        const mod = server.moduleGraph.getModuleById(resolved)
+        if (mod) server.moduleGraph.invalidateModule(mod)
+        server.ws.send({ type: 'full-reload' })
+        server.config.logger.info(`  kho PianoBrain đổi → nạp lại (${path.basename(file)})`)
+      }
+
+      server.watcher.on('change', refresh)
+      server.watcher.on('add', refresh)
+      server.watcher.on('unlink', refresh)
+    },
     load(id) {
       if (id !== resolved) return null
       if (!fs.existsSync(path.join(root, 'knowledge'))) {

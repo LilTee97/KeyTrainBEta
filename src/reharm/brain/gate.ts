@@ -13,16 +13,32 @@ import type { KnowledgeItem } from './index'
  * Mức `derived` và `invented` vẫn hiện trong tab chat và trong danh sách gợi ý,
  * kèm nhãn "chờ rà" — đọc thì được, nghe thì không.
  *
- * ## Vì sao mặc định là `extracted` chứ không phải `validated`
+ * ## Vì sao mặc định vẫn là `extracted` chứ không phải `validated`
  *
- * Cả 11 item của thầy Kingsley trong kho hiện đều là `extracted` + `status:
- * "draft"`, tức đã rút từ video thật nhưng chưa ai rà lại. Siết cửa xuống
- * `validated` thì **toàn bộ** câu lót, dạo đầu và kết bài của Kingsley tắt
- * tiếng — không còn gì để nghe. Chỗ phân biệt đáng giá nằm ở `origin` (có thầy
- * thật hay không), còn `status` nói về việc rà soát nội bộ.
+ * Tình trạng rà soát bên PianoBrain, tính theo thầy:
  *
- * Muốn siết thì đổi đúng một chỗ: `DEFAULT_SOUND_MODE`. Nhưng cách đúng hơn là
- * rà 11 item kia bên PianoBrain cho thành `validated`.
+ * | nguồn | đã rà | còn draft |
+ * |---|---|---|
+ * | hai-joseph | 634 | 103 |
+ * | jazz-scales | 28 | 76 |
+ * | kingsley | **0** | 11 |
+ * | pianote | **0** | 27 |
+ * | charlie-tran | **0** | 16 |
+ * | mack-grout | **0** | 13 |
+ * | peter-martin | **0** | 3 |
+ *
+ * Siết hằng số này xuống `validated` là tắt tiếng **toàn bộ** câu lót của thầy
+ * Kingsley, walking bass của Pianote và mấy nguồn còn lại — những thứ đang chạy
+ * tốt. Nên chỗ phân biệt đáng giá vẫn là `origin` (có thầy thật hay không).
+ *
+ * ## Cách siết đúng: siết tới đâu rà tới đó
+ *
+ * Bộ gam jazz đã rà xong 28 item mà bộ chọn gam dùng tới, nên **nó tự siết lấy
+ * mình**: `brain/chordScale.ts` gọi `scaleFor` với `requireValidated: true`, và
+ * gam nào thêm sau mà chưa rà thì tự im. Không phải đợi cả kho.
+ *
+ * Muốn siết hằng số này thì rà nốt Kingsley và Pianote trước —
+ * `npm run review:jazz` bên PianoBrain là khuôn để làm chuyện đó.
  */
 export type SoundMode =
   /** Mặc định: phải rút từ bài giảng có thật. */
