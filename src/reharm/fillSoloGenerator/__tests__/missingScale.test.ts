@@ -13,31 +13,38 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
  * ngũ cung của thầy Hải, qua `rule-hai-triad-pentatonic` (Tập 2 bài 2, đã rà).
  * `sus2`, `6`, `add9` mượn cùng ngũ cung ấy.
  *
- * Còn trắng ở đường phát tiếng: `sus4` và `m6` (ngũ cung không chứa nốt làm nên
- * tính cách của chúng), `dim`, và cả `sus2` / `6` / `add9` — mấy chất này chỉ
- * được nối bằng một luật `derived`, mà `derived` thì theo luật kho **không bao
- * giờ được `validated`**, nên cửa siết bên KeyTrain không cho qua.
+ * `sus2` / `6` / `add9` **đã kêu**. Trước đây chúng im vì cửa siết đọc `status`
+ * của **luật**, mà luật nối chúng với ngũ cung là `derived` — và `derived` thì
+ * theo luật kho không bao giờ được `validated`. Cửa nay tách đôi: **bộ nốt** vẫn
+ * bắt buộc `extracted` + `validated`, còn **đường đi** thì được suy. Nói "add9
+ * dùng ngũ cung Trưởng" không phải bịa lời thầy — ngũ cung ấy thầy dạy thật,
+ * người rà đối chiếu thật, và đường nối suy ra bằng phép đếm nốt.
  *
- * Chỗ đúng để làm với chúng là **không làm gì** — không mượn Mixolydian hay
- * Lydian rồi gắn cho một thầy chưa từng dạy nó.
+ * Còn trắng: `sus4`, `m6`, `dim`. Không phải vì kho thiếu nốt — kho có 17 tới 30
+ * gam đã rà chứa đủ nốt cho mỗi chất ấy — mà vì **chưa ai viết đường đi** cho
+ * chúng. Và chọn đường phải chọn theo *chức năng*: `sus4` đi với Mixolydian vì
+ * nó là hợp âm át treo, không phải vì Major Bebop tình cờ cũng có nốt Fa.
+ *
+ * Chừng nào chưa có đường thì **không làm gì** — không mượn bừa một gam gần
+ * giống rồi gắn cho một thầy chưa từng dạy nó.
  */
 const KEY = { tonic: 0 as const, scale: 'major' as const }
 const chord = (symbol: string) => parseChordInput(symbol).chords[0]
 
-/** Chất hợp âm kho vẫn chưa có gam nào. */
-const GAPS = ['Csus4', 'Cm6', 'Cdim', 'Csus2', 'C6', 'Cadd9']
+/** Chất hợp âm chưa ai viết đường đi tới gam. */
+const GAPS = ['Csus4', 'Cm6', 'Cdim']
 
-/** Chất hợp âm giờ ĐÃ có gam, qua ngũ cung của thầy Hải. */
-const COVERED = ['C', 'Am', 'F', 'G', 'Dm', 'Em']
+/** Chất hợp âm ĐÃ có gam, qua ngũ cung của thầy Hải. */
+const COVERED = ['C', 'Am', 'F', 'G', 'Dm', 'Em', 'Csus2', 'C6', 'Cadd9']
 
 describe('kho không có gam thì nói không có', () => {
-  it('sus4, m6, dim, sus2, 6, add9 vẫn trả null qua cửa siết', () => {
+  it('sus4, m6, dim vẫn trả null qua cửa siết', () => {
     for (const symbol of GAPS) {
       expect(scaleForChord(chord(symbol)), `${symbol} không được có gam`).toBeNull()
     }
   })
 
-  it('hợp âm ba nốt trưởng và thứ giờ có ngũ cung của thầy Hải', () => {
+  it('hợp âm ba nốt và họ add9/sus2/6 đều có ngũ cung của thầy Hải', () => {
     for (const symbol of COVERED) {
       const scale = scaleForChord(chord(symbol))
       expect(scale, `${symbol} phải có gam`).not.toBeNull()

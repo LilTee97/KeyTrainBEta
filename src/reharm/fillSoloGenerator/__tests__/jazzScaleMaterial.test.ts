@@ -95,9 +95,26 @@ describe('bộ chọn gam của kho', () => {
     expect(dominant!.length).toBeGreaterThanOrEqual(7)
   })
 
-  it('hợp âm kho chưa có gam thì trả null, không bịa', () => {
+  it('hợp âm chưa ai viết đường đi thì trả null, không bịa', () => {
+    /*
+      `Cadd9` từng nằm ở đây. Nó ra khỏi danh sách không phải vì kho có thêm gam
+      nào, mà vì **cửa siết tách đôi**: bộ nốt vẫn bắt buộc có người rà, còn
+      đường đi thì được suy. Ngũ cung Trưởng thầy dạy thật và đã rà thật; nối
+      `add9` vào đó là phép đếm nốt, không phải bịa lời thầy.
+
+      `Csus4` ở lại, vì chưa ai viết đường đi cho nó — không phải vì thiếu nốt.
+    */
     expect(scaleForChord(chord('Csus4'))).toBeNull()
-    expect(scaleForChord(chord('Cadd9'))).toBeNull()
+    expect(scaleForChord(chord('Cm6'))).toBeNull()
+    expect(scaleForChord(chord('Cdim'))).toBeNull()
+  })
+
+  it('add9 kêu được, và kêu bằng ngũ cung của thầy chứ không phải gam bịa', () => {
+    const scale = scaleForChord(chord('Cadd9'))
+    expect(scale, 'add9 phải có gam').not.toBeNull()
+    expect(scale!.length, 'phải là ngũ cung 5 nốt').toBe(5)
+    // Ngũ cung Trưởng: bậc 1-2-3-5-6.
+    expect([...scale!].sort((a, b) => a - b)).toEqual([0, 2, 4, 7, 9])
   })
 
   it('gam luôn chứa đủ nốt của hợp âm', () => {
