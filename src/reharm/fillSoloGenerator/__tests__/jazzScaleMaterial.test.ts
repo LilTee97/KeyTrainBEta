@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { generateSolo } from '../soloGenerator'
 import { interludeMaterial } from '../soloVocabulary'
 import { parseChordInput } from '../../input/chordInputParser'
-import { jazzScaleFor } from '../../brain/jazzScale'
+import { scaleForChord } from '../../brain/chordScale'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 import type { ParsedChord } from '../../types'
 
@@ -72,24 +72,37 @@ describe('khe gam jazz đã thông', () => {
 
 describe('bộ chọn gam của kho', () => {
   it('kho trả đúng gam cho từng chất hợp âm', () => {
-    const lydian = jazzScaleFor(chord('Cmaj7'))
+    const lydian = scaleForChord(chord('Cmaj7'))
     expect(lydian, 'kho chưa nối được').not.toBeNull()
     expect(lydian).toContain(FS)
 
-    const bebop = jazzScaleFor(chord('C7'))
-    expect(bebop?.length).toBe(8)
-    expect(bebop).toContain(B)
-    expect(bebop).toContain(BB)
+    /*
+      Gam vang ra cho C7 **đổi theo tiến độ rà**, nên đừng khoá con số.
+
+      Kho biết cả Mixolydian lẫn Bebop Dominant. Cái nào được chọn phụ thuộc item
+      nào đã có người đối chiếu video — ingest thêm bài là phạm vi rà nở ra, và
+      gam tám bậc quay lại khi mấy item mới được rà. Khoá cứng "8 nốt" là bắt
+      test đỏ mỗi lần kho lớn lên, dù nhạc không sai chỗ nào.
+
+      Thứ luôn đúng: có gam, và gam ấy chứa đủ nốt của C7.
+    */
+    const dominant = scaleForChord(chord('C7'))
+    expect(dominant, 'C7 phải có gam').not.toBeNull()
+    for (const tone of [C, E, G, BB]) {
+      expect(dominant, `C7 thiếu nốt ${tone}`).toContain(tone)
+    }
+    // Bậc 7 tự nhiên là nốt riêng của gam bebop; có thì tốt, chưa có thì chờ rà.
+    expect(dominant!.length).toBeGreaterThanOrEqual(7)
   })
 
   it('hợp âm kho chưa có gam thì trả null, không bịa', () => {
-    expect(jazzScaleFor(chord('Csus4'))).toBeNull()
-    expect(jazzScaleFor(chord('Cadd9'))).toBeNull()
+    expect(scaleForChord(chord('Csus4'))).toBeNull()
+    expect(scaleForChord(chord('Cadd9'))).toBeNull()
   })
 
   it('gam luôn chứa đủ nốt của hợp âm', () => {
     for (const symbol of ['Cmaj7', 'C7', 'Cm7', 'Cm7b5', 'Cdim7', 'Ebmaj7']) {
-      const scale = jazzScaleFor(chord(symbol))
+      const scale = scaleForChord(chord(symbol))
       if (!scale) continue
       const parsed = chord(symbol)
       for (const tone of parsed.quality.intervals) {
@@ -101,7 +114,7 @@ describe('bộ chọn gam của kho', () => {
 })
 
 describe('mặc định không đổi tiếng — item kho còn draft', () => {
-  const notes = (noteSource: 'chordTone' | 'jazzScale') =>
+  const notes = (noteSource: 'chordTone' | 'storeScale') =>
     new Set(
       generateSolo(parseChordInput('Cmaj7 C7 Fmaj7 G7').chords, {
         beatsPerChord: 4,
@@ -110,7 +123,7 @@ describe('mặc định không đổi tiếng — item kho còn draft', () => {
         take: 3,
         noteSource,
         interlude: true,
-        jazzScale: jazzScaleFor,
+        storeScale: scaleForChord,
       }).map((n) => ((n.note % 12) + 12) % 12),
     )
 
@@ -132,13 +145,13 @@ describe('mặc định không đổi tiếng — item kho còn draft', () => {
       key: KEY,
       take: 3,
       interlude: true,
-      jazzScale: jazzScaleFor,
+      storeScale: scaleForChord,
     })
     expect(wired.map((n) => n.note)).toEqual(plain.map((n) => n.note))
   })
 
   it('chọn gam jazz thì câu chạy mở ra nốt ngoài nốt hợp âm', () => {
-    const jazz = notes('jazzScale')
+    const jazz = notes('storeScale')
     const plain = notes('chordTone')
     // Fa thăng của C Lydian trên Cmaj7 — nốt mà bản cũ không thể có.
     expect(jazz.has(FS)).toBe(true)
@@ -161,10 +174,10 @@ describe('câu lót giữa lời không đụng tới', () => {
       key: KEY,
       take: 1,
       interlude: false,
-      jazzScale: jazzScaleFor,
+      storeScale: scaleForChord,
     }
     const chords = parseChordInput('Cmaj7 C7 Fmaj7 G7').chords
-    expect(generateSolo(chords, { ...args, noteSource: 'jazzScale' }).map((n) => n.note)).toEqual(
+    expect(generateSolo(chords, { ...args, noteSource: 'storeScale' }).map((n) => n.note)).toEqual(
       generateSolo(chords, { ...args, noteSource: 'chordTone' }).map((n) => n.note),
     )
   })

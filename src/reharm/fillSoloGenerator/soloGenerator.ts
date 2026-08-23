@@ -4,6 +4,7 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import { assignFingers, capStack } from './fingering'
+import { applyFeel, type SoloFeel } from './soloFeel'
 import type { TimelineEvent } from '../style/types'
 import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
@@ -94,7 +95,7 @@ export type SoloNoteSource =
    * nốt này — chỗ đó giọng hát là giai điệu, thêm #11 và b9 vào là giành chỗ
    * của người hát.
    */
-  | 'jazzScale'
+  | 'storeScale'
 
 export interface NoteSourceOption {
   id: SoloNoteSource
@@ -196,15 +197,20 @@ export interface SoloOptions {
   /**
    * Hỏi thang âm cho một hợp âm — cửa duy nhất để gam jazz của kho vào câu nhạc.
    *
-   * **Mặc định không có.** Toàn bộ item gam trong kho đang ở `status: "draft"`,
-   * tức đã rút từ video thật nhưng chưa ai đối chiếu lại. Draft thì được tra,
-   * được đọc, nhưng không được tự thành tiếng đàn — nên bên gọi phải chủ động
-   * đưa hàm này vào, không có đường nào bật ngầm.
+   * **Mặc định không có.** Gam là một lựa chọn của người đệm, không phải thứ
+   * bật ngầm — bên gọi phải chủ động đưa hàm này vào. Phần lọc "đã có người rà
+   * hay chưa" nằm bên trong hàm ấy, xem `../brain/chordScale.ts`.
    *
    * Trả `null` cho hợp âm kho chưa có gam; khi đó câu chạy quay về nốt hợp âm
-   * như cũ. Xem `../brain/jazzScale.ts`.
+   * như cũ. Xem `../brain/chordScale.ts`.
    */
-  jazzScale?: (chord: ParsedChord) => readonly PitchClass[] | null
+  storeScale?: (chord: ParsedChord) => readonly PitchClass[] | null
+  /**
+   * Cách chia thời gian của câu chạy, theo điệu đang chọn.
+   *
+   * Bỏ trống là móc đơn đều — đúng bản cũ, và đúng cho ballad. Xem `soloFeel.ts`.
+   */
+  feel?: SoloFeel
 }
 
 /**
@@ -730,7 +736,19 @@ export function generateFillLine(
           : ((mainIndex + take) * 5 + 3) % 2 === 0
             ? 'up'
             : 'down'
-    const steps = 2 + (((mainIndex + take) * 3) % 3)
+    /*
+      Số nốt dẫn vào nốt đích: 2 hoặc 3, tức câu fill dài 3 hoặc 4 nốt. Dài hơn
+      là lấn vào chỗ người hát — xem `guideToneFill.test.ts`.
+
+      Bản trước viết `((mainIndex + take) * 3) % 3`: nhân ba rồi chia lấy dư ba
+      thì **luôn bằng không**, nên số nốt đứng im ở 2 và lượt phát chỉ đổi được
+      mỗi hướng đi. Bốn lượt liên tiếp vì thế chỉ ra hai câu khác nhau.
+
+      Đổi **hai lượt một lần**, chứ không đổi mỗi lượt: hướng đi vốn đã lật theo
+      chẵn lẻ của lượt, nên cho số nốt lật cùng nhịp thì hai thứ dính nhau và
+      vẫn chỉ ra hai hình. Lệch nhịp thì bốn lượt ra đủ bốn hình.
+    */
+    const steps = 2 + (Math.floor((mainIndex + take) / 2) % 2)
     const line: MidiNote[] = [landing]
     for (let step = 0; step < steps; step += 1) {
       line.unshift(stepInScale(line[0], approachFrom === 'up' ? 'down' : 'up', tones))
@@ -800,7 +818,8 @@ export function generateSolo(
     endWithRun = false,
     interlude = true,
     range,
-    jazzScale,
+    storeScale,
+    feel = 'straight',
   } = options
 
   const soloLow = range?.low ?? SOLO_LOW
@@ -818,7 +837,7 @@ export function generateSolo(
       cửa sau, dù từng ô đã lọc sạch.
     */
     const source =
-      interlude && noteSource === 'jazzScale'
+      interlude && noteSource === 'storeScale'
         ? /*
              Vùng chung phải mở theo đúng gam đang dùng.
 
@@ -827,7 +846,7 @@ export function generateSolo(
              chín giáng của gam altered — bị chặn ở cửa sau, và câu chạy quay về
              y hệt bản nốt hợp âm.
           */
-          (jazzScale?.(chord) ?? chordTonesStrict(chord))
+          (storeScale?.(chord) ?? chordTonesStrict(chord))
         : interlude && noteSource === 'chordTone'
           ? chordTonesStrict(chord)
           : chordMaterial(chord)
@@ -916,11 +935,24 @@ export function generateSolo(
       : chordBeats
 
     if (endWithRun && index === spans.length - 1) {
+      /*
+        Dựng câu chạy NGAY TRONG khung tầm, đừng dựng ra rồi gập lại.
+
+        `octaveRun` vốn dựng từ quãng tám thứ ba lên hai quãng tám. Bước ép tầm
+        ở cuối hàm này rồi kéo mọi nốt lọt ra ngoài về quãng tám gần nhất — nên
+        một câu leo đều C4 lên C6 ra thành D5 E5 rồi tụt xuống E4 leo tiếp, và
+        tới G5 lại rơi ngược về A4. Nghe như câu bị gãy hai chỗ, mà không tầng
+        nào cố ý gãy nó.
+
+        Trừ hai nửa cung mỗi đầu cho khớp `bounds` phía dưới: khớp rồi thì bước
+        ép tầm không còn gì để sửa, và câu giữ nguyên đường leo.
+      */
       for (const note of octaveRun({
         chord,
         startBeat: start,
         beats: chordBeats,
         scale: tones,
+        range: { low: (soloLow + 2) as MidiNote, high: (soloCeiling - 2) as MidiNote },
       })) {
         result.push({
           note: note.note,
@@ -944,9 +976,30 @@ export function generateSolo(
         chạm nốt trên rồi nốt dưới mới vào nốt đích — ngón chromatic nghe rõ
         nhất mà nốt đích vẫn là nốt hợp âm nên hoà âm không lung lay.
       */
-      const opener = index % 4 === 2 ? getLick('enclosure') : getLick('sweep')
-      const sweep = opener ?? getLick('sweep')
-      const swept = sweep?.build({
+      /*
+        Bốn ngón mở câu thay phiên nhau, không phải hai.
+
+        Bản trước viết cứng đúng hai mẫu — cú quét và cụm bao vây — nên hai mẫu
+        thêm sau này **không bao giờ chạy ở chỗ mở câu**: `chooseLick` chỉ được
+        gọi tới ở ô kết câu, mà ô kết câu thì luôn lấy mẫu vai `ending`. Đo ra
+        mới thấy: `scale-run` và `bebop-pair` nằm trong vòng xoay mà không lần
+        nào được chọn.
+
+        Xoay theo **số cặp ô cộng số lượt**. Chỉ ô chẵn đi vào nhánh này, nên
+        lấy `index % 4` thì mãi mãi chỉ ra hai giá trị; và một vòng giang tấu
+        bốn ô chỉ có hai ô mở câu, nên xoay theo riêng số ô thì hai mẫu mới vẫn
+        không tới lượt. Cộng số lượt vào thì lượt sau đổi ngón — đúng cách một
+        người đệm thật chơi lại cùng một vòng.
+
+        Lượt đầu giữ nguyên thứ tự cũ (quét rồi bao vây) để đoạn giang tấu nghe
+        lần đầu vẫn đúng như đã nghe duyệt.
+
+        Mẫu nào tự rút lui — `bebop-pair` trên hợp âm không phải át, `scale-run`
+        trên bậc thang nốt hợp âm — thì lùi về cú quét, rồi mới tới câu rải.
+      */
+      const openerOrder = ['sweep', 'enclosure', 'scale-run', 'bebop-pair'] as const
+      const wanted = openerOrder[(Math.floor(index / 2) + round) % openerOrder.length]
+      const context = {
         chord,
         next: spans[index + 1]?.chord ?? null,
         startBeat: start,
@@ -957,8 +1010,12 @@ export function generateSolo(
         scaleTones: tones,
         previousShape,
         notesPerBeat,
-        material: materialFor(chord, noteSource, null, [], tones, interlude, jazzScale),
-      })
+        material: materialFor(chord, noteSource, null, [], tones, interlude, storeScale),
+      }
+      const swept =
+        [getLick(wanted), getLick('sweep')]
+          .map((lick) => lick?.build(context))
+          .find((built) => built && built.notes.length > 0) ?? undefined
       const line =
         swept && swept.notes.length > 0
           ? swept.notes.map((note) => ({
@@ -1053,7 +1110,7 @@ export function generateSolo(
         ].filter((entry): entry is ParsedChord => entry !== undefined),
         tones,
         interlude,
-        jazzScale,
+        storeScale,
       ),
     }
 
@@ -1133,14 +1190,34 @@ export function generateSolo(
     while (prev.note - curr.note > 14) curr.note = (curr.note + 12) as MidiNote
   }
 
-  if (tones.size > 0 && round > 0) {
-    const ladder = ladderOf([...tones], soloLow, soloCeiling)
-    if (ladder.length > 1) {
-      for (const note of ordered) {
-        if (locked(note.startBeat)) continue
-        const at = nearestStep(ladder, note.note)
-        note.note = ladder[(at + round) % ladder.length]!
-      }
+  /*
+    Lượt sau dịch cả câu lên mấy bậc, để nghe lại không ra y hệt.
+
+    Dịch trên **bậc thang của chính hợp âm đang vang**, không phải trên bậc thang
+    gộp của cả đoạn. Bản trước gộp, và gộp là hỏng: vùng chung của vòng
+    `C Am F G` chính là cả gam Đô trưởng, nên dịch xong thì ô hợp âm Đô ra nốt
+    Fa và Si — hai nốt không nằm trong ngũ cung Đô mà thầy dạy. Gam chọn cho
+    từng hợp âm bị xoá sạch ở bước cuối, sau khi mọi tầng trên đã chọn đúng.
+
+    Đo trên vòng `C Am F G`, lượt 2: nốt chính ô 1 ra `C E F G B` trong khi ngũ
+    cung là `C D E G A`.
+  */
+  if (round > 0) {
+    for (const note of ordered) {
+      if (locked(note.startBeat)) continue
+
+      const span = spans.find(
+        (entry) =>
+          note.startBeat + 1e-6 >= entry.start && note.startBeat < entry.start + entry.beats,
+      )
+      const pool = span
+        ? materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale)
+        : [...tones]
+      const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
+      if (ladder.length <= 1) continue
+
+      const at = nearestStep(ladder, note.note)
+      note.note = ladder[(at + round) % ladder.length]!
     }
   }
 
@@ -1168,7 +1245,7 @@ export function generateSolo(
           note.startBeat < entry.start + entry.beats,
       )
       const pool = span
-        ? materialFor(span.chord, noteSource, null, [], tones, interlude, jazzScale).filter((tone) =>
+        ? materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale).filter((tone) =>
             tones.has(tone),
           )
         : [...tones]
@@ -1182,6 +1259,224 @@ export function generateSolo(
       const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
       note.note = ladder[nearestStep(ladder, note.note)] ?? note.note
     }
+  }
+
+
+  /*
+    Nối hơi qua chỗ giáp ô — và hạ cánh vào nốt hợp âm của ô mới.
+
+    Mỗi ô hợp âm tự chọn mẫu câu và tự dựng nốt trong phạm vi ô mình, nên chỗ
+    nối hai ô là chỗ hướng đi bị đặt lại. Đo trước khi sửa: câu bẻ hướng ngay
+    vạch nhịp 55 %, trong khi ở giữa ô chỉ 30 % — vạch nhịp gần gấp đôi chỗ khác
+    về khả năng làm câu quay đầu. Người đàn thật không thế: câu bebop chạy lên
+    năm sáu nốt, vắt qua vạch nhịp, rơi vào nốt hợp âm của ô sau rồi mới quay.
+
+    Sửa ở đây chứ không sửa trong từng mẫu câu. Mẫu kẹp nửa cung và mẫu bao vây
+    **cố ý** quay đầu — chúng chạm nốt trên rồi nốt dưới rồi mới vào nốt đích,
+    đó là cả ngón đàn. Ép hướng vào lúc dựng thì mất sạch ngón ấy. Chỗ giáp ô
+    thì khác: không mẫu nào cố ý bẻ hướng ở đó, nó bẻ chỉ vì mẫu sau không biết
+    mẫu trước vừa đi đường nào.
+
+    Hai nốt bị động tới, không hơn: nốt rơi đúng phách đầu ô sau, và nốt liền
+    sau nó. Số nốt không đổi, chỗ nghỉ không đổi — chỉ cao độ đổi.
+  */
+  {
+    const CHAN_BUOC = 4
+    const QUANG_TAM = 12
+    const seamNotes = ordered.filter((note) => !note.isGrace && !note.ornament)
+
+    /*
+      Bắt đầu từ ô THỨ HAI. Ô đầu bài không có chỗ giáp nào để nối, nên động vào
+      nó là thừa — và không phải vô hại: ô mở câu có hình riêng của nó (rải lên
+      rồi gam xuống), dịch cả cụm trên bậc thang gam thì hình rải bị san phẳng.
+    */
+    for (let index = 1; index < spans.length; index += 1) {
+      const { chord, start, beats } = spans[index]
+      if (locked(start)) continue
+
+      const at = seamNotes.findIndex((note) => note.startBeat + 1e-6 >= start)
+      if (at < 0 || at >= seamNotes.length) continue
+
+      const dau = seamNotes[at]!
+      if (dau.startBeat >= start + beats) continue
+
+      /*
+        Hướng để nối tiếp lấy từ hai nốt cuối ô trước. Ô đầu bài thì chưa có gì
+        để nối, và đuôi ô trước lặp lại một nốt thì cũng không nói lên hướng nào
+        — hai trường hợp ấy vẫn phải hạ cánh, chỉ là hạ cánh không kèm hướng.
+      */
+      const huong = at >= 2 ? Math.sign(seamNotes[at - 1]!.note - seamNotes[at - 2]!.note) : 0
+      const moc = at >= 1 ? seamNotes[at - 1]!.note : dau.note
+
+      /*
+        Không có hướng quá khứ thì lấy hướng tương lai.
+
+        Đuôi ô trước kết bằng nốt lặp thì không nói lên hướng nào. Nhưng vẫn hạ
+        cánh được — nhìn xem câu sắp tới đi lên hay đi xuống, rồi đặt nốt hạ cánh
+        **lùi về phía ngược lại**, để câu ấy còn đường mà chạy. Đặt bừa một nốt
+        hợp âm gần nhất thì nốt hạ cánh đứng chắn ngay trước mặt câu sau: đo được
+        hạ cánh lên 83 % mà câu bẻ hướng ở vạch nhịp tăng từ 20 % lên 37 %.
+      */
+      const sapToi = seamNotes[at + 1]
+      const huongSau =
+        sapToi && sapToi.startBeat < start + beats ? Math.sign(sapToi.note - dau.note) : 0
+      const chieuTim = huong !== 0 ? huong : -huongSau
+      if (chieuTim === 0) continue
+
+      const pool = materialFor(chord, noteSource, null, [], tones, interlude, storeScale)
+      const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
+      if (ladder.length <= 1) continue
+
+      /*
+        Nốt hạ cánh: đi tiếp theo hướng cũ tới nốt hợp âm đầu tiên của ô MỚI.
+
+        Giới hạn bốn bậc thang. Xa hơn thì không còn là nối hơi mà là nhảy quãng,
+        và cú nhảy ấy phá luôn thế ngón mà `assignFingers` vừa xếp.
+
+        Xếp sẵn nhiều ứng viên chứ không chốt một cái: cú dịch phải kéo được cả ô
+        đi theo, mà không phải chỗ nào cũng còn đủ bậc thang để kéo. Ứng viên đầu
+        không kê được thì thử cái sau, thay vì bỏ luôn cả ô.
+      */
+      const chordTones = new Set<number>(chordToneNames(chord))
+      const from = nearestStep(ladder, moc)
+      const ungVien: MidiNote[] = []
+      const gom = (chieu: number, chan: number) => {
+        if (chieu === 0) return
+        for (let step = 1; step <= chan; step += 1) {
+          const to = from + chieu * step
+          if (to < 0 || to >= ladder.length) return
+          const pitch = ((ladder[to]! % 12) + 12) % 12
+          if (chordTones.has(pitch) && !ungVien.includes(ladder[to]!)) ungVien.push(ladder[to]!)
+        }
+      }
+      /*
+        Đang có đà thì KHÔNG được quay phía kia.
+
+        Ứng viên phía ngược chỉ dành cho chỗ vốn không có đà — đuôi ô trước lặp
+        nốt, chẳng có hơi nào để giữ. Cho nó dùng cả ở chỗ đang có đà thì hạ cánh
+        đẹp lên nhưng câu bẻ hướng ngay vạch nhịp vọt lên 50 %: máy chọn cú quay
+        đầu chỉ vì phía ấy tình cờ có nốt hợp âm gần hơn. Đó đúng là thứ cần chữa.
+      */
+      gom(chieuTim, CHAN_BUOC)
+      if (huong === 0) gom(-chieuTim, 2)
+      if (ungVien.length === 0) continue
+
+      /*
+        Thử cú dịch NHẸ NHẤT trước.
+
+        Ứng viên vốn xếp theo khoảng cách tới nốt mốc — tức theo chỗ hạ cánh nghe
+        thuận nhất. Nhưng thứ quyết định cú dịch có kê được hay không là **quãng
+        đường cả ô phải đi**, mà quãng ấy tính từ nốt đầu ô chứ không từ nốt mốc.
+        Xếp theo khoảng cách tới mốc thì 37 trên 63 cú dịch bị loại vì đuôi ô
+        trượt khỏi bậc thang — loại oan, vì một ứng viên khác cùng hướng chỉ cần
+        dịch một hai bậc là vừa.
+      */
+      const goc = nearestStep(ladder, dau.note)
+      ungVien.sort(
+        (a, b) =>
+          Math.abs(nearestStep(ladder, a) - goc) - Math.abs(nearestStep(ladder, b) - goc),
+      )
+
+      for (const landing of ungVien) {
+        const buoc = nearestStep(ladder, landing) - nearestStep(ladder, dau.note)
+        if (buoc === 0) break
+
+        /*
+          Thử trước, nhận sau — và nhận thì nhận **cả cụm**.
+
+          Dịch nửa cụm là tự tay bẻ hình mẫu câu. Nên dựng cả bộ nốt mới trước,
+          kiểm hai đầu nối, rồi mới ghi đè.
+        */
+        const bac: number[] = []
+        let tron = true
+        for (let k = at; k < seamNotes.length; k += 1) {
+          const note = seamNotes[k]!
+          if (note.startBeat >= start + beats) break
+          if (locked(note.startBeat)) {
+            tron = false
+            break
+          }
+          bac.push(nearestStep(ladder, note.note))
+        }
+        if (!tron || bac.length === 0) continue
+
+        /*
+          Cả cụm dịch **cùng một quãng đường**, và quãng ấy bị bậc thang bó lại.
+
+          Bản trước để nốt nào trượt khỏi thang thì đứng yên tại chỗ. Nửa cụm dịch
+          nửa cụm đứng là tự tay bẻ hình mẫu câu, và nó đẻ ra đúng cú nhảy 15 nửa
+          cung đo được ở tầm ballad — tầm ấy chỉ rộng 22 nửa cung nên thang ngắn,
+          trượt thang là chuyện thường.
+
+          Bó biên độ lại thì hình giữ nguyên từng bước một; chỉ có điều nốt hạ
+          cánh có thể không tới được đúng nốt hợp âm đã chọn. Ứng viên sau lo
+          việc ấy — còn hình mẫu câu thì không ứng viên nào cứu lại được.
+        */
+        /*
+          Nốt nào trượt khỏi bậc thang thì đứng yên — nhưng chỉ khi cụm vẫn đàn
+          được. Tầm ballad chỉ rộng 22 nửa cung nên thang ngắn, trượt thang là
+          chuyện thường; nửa cụm dịch nửa cụm đứng thì hình mẫu câu méo đi và
+          giữa cụm mọc ra một bước nhảy. Nên kiểm ngay dưới đây, méo quá thì thôi.
+        */
+        const moi = bac.map((b, i) => {
+          const to = b + buoc
+          return to < 0 || to >= ladder.length ? seamNotes[at + i]!.note : ladder[to]!
+        })
+
+        /*
+          Không bước nào trong cụm mới, kể cả hai đầu nối, được vượt một quãng
+          tám. Đây là luật của bàn tay, không phải của điệu nào — `playableOutput`
+          và `interludeSoloPlayable` đều canh nó.
+        */
+        let nhay = Math.abs(moi[0]! - seamNotes[at - 1]!.note) > QUANG_TAM
+        for (let i = 1; i < moi.length && !nhay; i += 1) {
+          nhay = Math.abs(moi[i]! - moi[i - 1]!) > QUANG_TAM
+        }
+        if (nhay) continue
+
+        /*
+          Đầu ra kiểm luôn, không chờ ô sau.
+
+          Bản trước chỉ kiểm khi nốt kế tiếp bị khoá, tin rằng ô sau đi qua đây
+          rồi sẽ tự nhích lại cho vừa. Nó không phải lúc nào cũng nhích được —
+          bậc thang của ô sau có thể đã cạn — và chỗ ấy để lại một bước 15 nửa
+          cung. Cụm nào tạo ra bước nhảy thì không nhận, dù nhận được thì hạ cánh
+          đẹp hơn: tay không với tới thì hạ cánh đẹp cũng vô nghĩa.
+        */
+        const keTiep = seamNotes[at + moi.length]
+        if (keTiep && Math.abs(keTiep.note - moi[moi.length - 1]!) > QUANG_TAM) continue
+
+        for (let k = 0; k < moi.length; k += 1) seamNotes[at + k]!.note = moi[k]!
+        break
+      }
+    }
+
+    /*
+      Lưới an toàn: không bước nào quá một quãng tám.
+
+      Dịch cả cụm giữ được hình bên trong ô nhưng có thể giãn chỗ nối ra quá tầm
+      tay. Kéo bằng quãng tám nên lớp cao độ không đổi — nốt hạ cánh vẫn đúng là
+      nốt hợp âm nó vừa chọn. Kéo nốt nào **dời được**: nốt khoá thì phải kéo nốt
+      bên kia.
+    */
+    for (let k = 1; k < seamNotes.length; k += 1) {
+      const truoc = seamNotes[k - 1]!
+      const nay = seamNotes[k]!
+      for (let lan = 0; lan < 3 && Math.abs(nay.note - truoc.note) > QUANG_TAM; lan += 1) {
+        const len = nay.note < truoc.note
+        const dich = (note: SoloNote, buoc: number) => {
+          const to = (note.note + buoc) as MidiNote
+          if (to < soloLow || to > soloCeiling) return false
+          note.note = to
+          return true
+        }
+        const xong = locked(nay.startBeat)
+          ? dich(truoc, len ? -QUANG_TAM : QUANG_TAM)
+          : dich(nay, len ? QUANG_TAM : -QUANG_TAM)
+        if (!xong) break
+      }
+    }
+
   }
 
   /*
@@ -1293,7 +1588,7 @@ export function generateSolo(
     )
     if (!span) return note
 
-    const pool = materialFor(span.chord, noteSource, null, [], tones, interlude, jazzScale)
+    const pool = materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale)
     const ladder = ladderOf(pool, bounds.low, bounds.high)
     const step = ladder.indexOf(note.note)
     const next = step >= 0 ? ladder[step + 1] ?? ladder[step - 1] : undefined
@@ -1321,7 +1616,38 @@ export function generateSolo(
     ...run,
   ]
 
-  const lined = capStack(withGrace).sort((a, b) => a.startBeat - b.startBeat)
+  /*
+    Feel áp **sau khi cao độ đã chốt, trước khi gán ngón**: nó chỉ dời chỗ nốt
+    rơi, mà số ngón thì đọc theo thứ tự thời gian — gán trước rồi mới dời là số
+    ngón kể sai thứ tự.
+  */
+  const lined = applyFeel(capStack(withGrace), feel).sort((a, b) => a.startBeat - b.startBeat)
+
+  /*
+    Kéo lại bước nào vượt một quãng tám — **sau cùng**, khi không còn ai bỏ nốt nữa.
+
+    Chỗ nối hơi qua vạch nhịp bên trên đã tự kiểm để không đẻ ra bước nhảy. Nhưng
+    hai bước sau nó — `noRepeat` bỏ nốt lặp, `capStack` cắt cụm ba nốt còn hai —
+    **bỏ đi nốt ở giữa**, và hai nốt còn lại thành hàng xóm của nhau. Đo được một
+    bước 15 nửa cung sinh ra đúng như vậy: không tầng nào đặt nó xuống, nó lộ ra
+    khi tầng khác dọn chỗ.
+
+    Kéo bằng quãng tám nên lớp cao độ không đổi: nốt hạ cánh vẫn đúng nốt hợp âm
+    nó đã chọn. Nốt khoá — câu chạy kết bài — thì kéo nốt bên kia.
+  */
+  const chinh = lined.filter((note) => !note.isGrace && !note.ornament)
+  for (let k = 1; k < chinh.length; k += 1) {
+    const truoc = chinh[k - 1]!
+    const nay = chinh[k]!
+    for (let lan = 0; lan < 3 && Math.abs(nay.note - truoc.note) > 12; lan += 1) {
+      const doi = locked(nay.startBeat) ? truoc : nay
+      const huong = doi === nay ? (nay.note < truoc.note ? 12 : -12) : nay.note < truoc.note ? -12 : 12
+      const to = (doi.note + huong) as MidiNote
+      if (to < soloLow || to > soloCeiling) break
+      doi.note = to
+    }
+  }
+
   const clipped = lined.map((note) => {
     let duration = note.durationBeats
     for (const other of lined) {
@@ -1455,19 +1781,19 @@ function materialFor(
   alts: readonly ParsedChord[] = [],
   pool?: ReadonlySet<PitchClass>,
   interlude = false,
-  jazzScale?: (chord: ParsedChord) => readonly PitchClass[] | null,
+  storeScale?: (chord: ParsedChord) => readonly PitchClass[] | null,
 ): PitchClass[] {
   /*
     Giang tấu đi theo bậc ưu tiên riêng: nốt hợp âm trước, rồi mới ngũ cung, rồi
     mới thang âm của giọng — và **không** tự thêm bậc chín. Người dùng tự chọn
     ngũ cung hay màu blues thì tôn lựa chọn ấy, không ép về nốt hợp âm.
   */
-  if (interlude && (noteSource === 'chordTone' || noteSource === 'jazzScale')) {
+  if (interlude && (noteSource === 'chordTone' || noteSource === 'storeScale')) {
     /*
       Gam jazz chỉ vào khi người dùng chọn đúng nguồn nốt ấy. Đưa nó vào ngầm là
       để một tầng kiến thức còn draft tự thành tiếng đàn — xem `../brain/gate.ts`.
     */
-    const extra = noteSource === 'jazzScale' ? (jazzScale?.(chord) ?? undefined) : undefined
+    const extra = noteSource === 'storeScale' ? (storeScale?.(chord) ?? undefined) : undefined
     const layered = interludeMaterial(chord, key, extra)
     const clipped = pool ? layered.filter((tone) => pool.has(tone)) : layered
     if (clipped.length >= 3) return clipped

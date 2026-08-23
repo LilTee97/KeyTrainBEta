@@ -131,6 +131,15 @@ export function arpeggioRun(options: {
   maxBeats: number
   /** Bắt đầu từ phách này thay vì dồn vào cuối ô. */
   fromBeat?: number
+  /**
+   * Dồn cả câu về tay phải.
+   *
+   * Chạy nối hai đoạn hát thì **vắt qua cả hai tay** — đó là cách người ta chơi
+   * thật. Nhưng câu kết dạo đầu và câu kết giang tấu thì tay trái đã nghỉ hẳn
+   * để nhường chỗ, nên để nó thò xuống nửa trái bàn phím là hai tay tranh nhau
+   * một câu.
+   */
+  rightHandOnly?: boolean
   key?: SongKey | null
 }): RunNote[] {
   const {
@@ -196,7 +205,10 @@ export function arpeggioRun(options: {
     note,
     startBeat: start + index * step,
     durationBeats: step * 0.9,
-    hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
+    hand:
+      options.rightHandOnly || note >= HAND_SPLIT
+        ? ('right' as const)
+        : ('left' as const),
   }))
 }
 
@@ -206,8 +218,10 @@ export function octaveRun(options: {
   startBeat: number
   beats: number
   scale?: ReadonlySet<PitchClass>
+  /** Tầm tay phải được phép chạy. Bỏ trống thì lấy Đô quãng 4 tới Đô quãng 6. */
+  range?: { low: MidiNote; high: MidiNote }
 }): RunNote[] {
-  const { chord, startBeat, beats, scale } = options
+  const { chord, startBeat, beats, scale, range } = options
   if (beats <= 0) return []
 
   const cores = new Set(
@@ -219,9 +233,32 @@ export function octaveRun(options: {
     scale && scale.size > 0 ? scale : cores
   if (pool.size === 0) return []
 
-  const root = normalizePitchClass(chord.root)
-  const low = (48 + root) as MidiNote
-  const high = (low + 24) as MidiNote
+  /*
+    Câu chạy kết đoạn là **của tay phải**, và nó leo lên phía phải bàn phím.
+
+    Bản trước dựng từ `48 + nốt gốc` — tức quanh Đô quãng 3 — rồi chia tay theo
+    cao độ, nên nửa đầu câu rơi xuống tay trái. Nghe ra là hai tay tranh nhau
+    một câu, mà tay trái lúc ấy đã nghỉ hẳn để nhường chỗ. Trên piano roll thì
+    thấy rõ: một chuỗi nốt xanh (tay trái) nối vào một chuỗi nốt hồng.
+
+    Người đệm thật kết đoạn bằng cách đẩy câu **lên**, về phía phải đàn, để nó
+    hở ra rồi ca sĩ vào. Nên dựng từ đáy tầm tay phải và leo hết hai quãng tám
+    còn lại, không đụng tới nửa trái bàn phím.
+  */
+  const bottom = range?.low ?? (60 as MidiNote)
+  const ceiling = range?.high ?? (84 as MidiNote)
+
+  /*
+    Dùng TRỌN khung, không bắt câu khởi từ nốt gốc.
+
+    Khởi từ nốt gốc nghe gọn hơn, nhưng nốt gốc gần nhất trong khung có khi nằm
+    cao gần trần — trên hợp âm Đô với trần Sol quãng 5 thì câu chỉ còn quãng
+    năm để leo, mà việc của nó là leo hẳn một quãng tám về phía phải. Bắt đầu từ
+    đáy khung thì lúc nào cũng đủ đường.
+  */
+  const low = bottom
+  const high = Math.min(low + 24, ceiling) as MidiNote
+
   const line: MidiNote[] = []
   for (let note = low; note <= high; note += 1) {
     if (pool.has(normalizePitchClass(note))) line.push(note)
@@ -236,6 +273,8 @@ export function octaveRun(options: {
     note,
     startBeat: startBeat + index * step,
     durationBeats: step * 0.9,
-    hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
+    // Tay phải, không xét cao độ: câu chạy kết đoạn là của tay phải theo
+    // định nghĩa, và lúc ấy tay trái đã nghỉ hẳn để nhường chỗ.
+    hand: 'right' as const,
   }))
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LICKS } from '../soloVocabulary'
 import { parseChordInput } from '../../input/chordInputParser'
-import { jazzScaleFor } from '../../brain/jazzScale'
+import { scaleForChord } from '../../brain/chordScale'
 import type { MidiNote, PitchClass } from '../../../shared/musicTheory/types'
 
 /**
@@ -31,7 +31,7 @@ const build = (symbol: string, from: number) => {
     scaleTones: new Set<PitchClass>([0, 2, 4, 5, 7, 9, 11] as PitchClass[]),
     previousShape: [],
     notesPerBeat: 2,
-    material: (jazzScaleFor(chord) ?? []) as PitchClass[],
+    material: (scaleForChord(chord) ?? []) as PitchClass[],
   }).notes.map((note) => note.note)
 }
 

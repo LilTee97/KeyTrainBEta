@@ -394,7 +394,7 @@ describe('nguồn nốt cho câu solo', () => {
       có gam. Xếp nó vào hàng nút này là nói bốn thứ cùng loại.
     */
     expect(NOTE_SOURCE_OPTIONS).toHaveLength(3)
-    expect(NOTE_SOURCE_OPTIONS.map((o) => o.id)).not.toContain('jazzScale')
+    expect(NOTE_SOURCE_OPTIONS.map((o) => o.id)).not.toContain('storeScale')
     for (const option of NOTE_SOURCE_OPTIONS) {
       expect(option.description.length, option.id).toBeGreaterThan(0)
       expect(option.label.length, option.id).toBeGreaterThan(0)

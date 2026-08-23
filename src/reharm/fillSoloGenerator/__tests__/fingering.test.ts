@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { assignFingers, capStack, nextFinger } from '../fingering'
 import { generateSolo } from '../soloGenerator'
 import { parseChordInput } from '../../input/chordInputParser'
-import { jazzScaleFor } from '../../brain/jazzScale'
+import { scaleForChord } from '../../brain/chordScale'
 import { BALLAD_SOLO_RANGE } from '../../style/balladFamily'
 import type { MidiNote } from '../../../shared/musicTheory/types'
 
@@ -20,9 +20,9 @@ const line = (take: number, range?: { low: number; high: number }) =>
     density: 'dense',
     key: KEY,
     take,
-    noteSource: 'jazzScale',
+    noteSource: 'storeScale',
     interlude: true,
-    jazzScale: jazzScaleFor,
+    storeScale: scaleForChord,
     ...(range ? { range: range as { low: MidiNote; high: MidiNote } } : {}),
   })
 

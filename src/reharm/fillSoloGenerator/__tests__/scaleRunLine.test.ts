@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { LICKS } from '../soloVocabulary'
 import { generateSolo } from '../soloGenerator'
 import { parseChordInput } from '../../input/chordInputParser'
-import { jazzScaleFor } from '../../brain/jazzScale'
+import { scaleForChord } from '../../brain/chordScale'
 import type { MidiNote, PitchClass } from '../../../shared/musicTheory/types'
 import type { SoloNote } from '../soloGenerator'
 
@@ -23,7 +23,7 @@ import type { SoloNote } from '../soloGenerator'
 const KEY = { tonic: 0 as const, scale: 'major' as const }
 const TAKES = 12
 
-function line(noteSource: 'chordTone' | 'chordPentatonic' | 'jazzScale', take: number): SoloNote[] {
+function line(noteSource: 'chordTone' | 'chordPentatonic' | 'storeScale', take: number): SoloNote[] {
   return generateSolo(parseChordInput('Dm7 G7 Cmaj7 Cmaj7').chords, {
     beatsPerChord: 4,
     density: 'dense',
@@ -31,7 +31,7 @@ function line(noteSource: 'chordTone' | 'chordPentatonic' | 'jazzScale', take: n
     take,
     noteSource,
     interlude: true,
-    jazzScale: jazzScaleFor,
+    storeScale: scaleForChord,
   }).filter((note) => !note.isGrace && !note.ornament)
 }
 
@@ -123,44 +123,53 @@ describe('mẫu câu chạy dọc gam', () => {
 describe('đường nét cả đoạn giang tấu', () => {
   it('mạch đi một chiều dài hơn hẳn bản cũ', () => {
     // Bản cũ: 1,7 nốt cho cả ba nguồn nốt.
-    expect(averageRun('jazzScale')).toBeGreaterThan(2.2)
+    expect(averageRun('storeScale')).toBeGreaterThan(2.2)
     expect(averageRun('chordPentatonic')).toBeGreaterThan(2.0)
   })
 
   it('gam jazz: quá nửa số bước là liền bậc', () => {
     // Bản cũ 29 % trên nốt hợp âm, 55 % trên gam jazz.
-    expect(stepShare('jazzScale', (gap) => gap <= 2)).toBeGreaterThan(0.6)
+    expect(stepShare('storeScale', (gap) => gap <= 2)).toBeGreaterThan(0.6)
   })
 
-  it('bước quá một quãng tám là chuyện hiếm, không phải chuyện thường', () => {
+  it('không bước nào quá một quãng tám', () => {
     /*
-      Đích là **không bước nào** quá một quãng tám: quá thì tay phải nhấc lên và
-      đặt lại, làm được ở nốt trắng đầu câu chứ không làm được giữa chuỗi móc kép.
-      Hiện chưa tới đích: còn khoảng 0,3 % số bước vượt quãng tám, dồn ở nguồn
-      nốt hợp âm.
+      Đo trên **nốt tay thật bấm**, tức tính cả nốt tô điểm.
 
-      Chỗ đẻ ra chúng **không nằm trong mẫu câu** mà nằm ở bước xếp lại quãng
-      tám cuối bộ sinh: bước ấy đặt mỗi nốt vào quãng tám gần một nốt neo, và
-      nốt neo trôi khi nốt chính với nốt tô điểm xen kẽ nhau. Sửa chỗ đó là một
-      việc riêng.
+      Bản đo trước lọc bỏ nốt tô điểm rồi đếm khoảng cách giữa hai nốt còn lại,
+      ra 0,3 % số bước vượt quãng tám — và kết luận sai. Nốt tô điểm là một
+      tiếng đàn thật, nó nằm giữa hai nốt chính và chính nó bắc cầu cho tay:
+      Fa4 rồi Sol5 nghe như nhảy mười bốn nửa cung, nhưng tay đi qua một nốt ở
+      giữa. Đếm trên dãy đã lọc là đếm một câu nhạc không có thật.
 
-      Khoá lại ở mức 1 % để nếu có ai làm cú nhảy thành chuyện thường thì test
-      đỏ ngay, còn 0,3 % hiện tại thì không bị chặn oan.
+      Chỉ nốt láy được bỏ ra: nó vuốt sát ngay trước nốt chính, cùng một ngón.
     */
     let over = 0
     let total = 0
-    for (const source of ['chordTone', 'chordPentatonic', 'jazzScale'] as const) {
+    let worst = 0
+    for (const source of ['chordTone', 'chordPentatonic', 'storeScale'] as const) {
       for (let take = 0; take < TAKES; take += 1) {
-        const notes = line(source, take)
+        const notes = generateSolo(parseChordInput('Dm7 G7 Cmaj7 Cmaj7').chords, {
+          beatsPerChord: 4,
+          density: 'dense',
+          key: KEY,
+          take,
+          noteSource: source,
+          interlude: true,
+          storeScale: scaleForChord,
+        }).filter((note) => !note.isGrace)
+
         for (let at = 1; at < notes.length; at += 1) {
           const sameBar =
             Math.floor(notes[at].startBeat / 4) === Math.floor(notes[at - 1].startBeat / 4)
           if (!sameBar) continue
+          const gap = Math.abs(notes[at].note - notes[at - 1].note)
           total += 1
-          if (Math.abs(notes[at].note - notes[at - 1].note) > 12) over += 1
+          if (gap > worst) worst = gap
+          if (gap > 12) over += 1
         }
       }
     }
-    expect(over / total, `${over}/${total} bước vượt quãng tám`).toBeLessThan(0.01)
+    expect(over, `${over}/${total} bước vượt quãng tám, xa nhất ${worst}`).toBe(0)
   })
 })
