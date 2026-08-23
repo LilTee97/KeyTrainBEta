@@ -73,7 +73,13 @@ export function phraseChords(
  *
  * Một phách thôi, không phải một ô. Kéo dài cả ô thì nó thành một hợp âm của
  * vòng, và cái vòng bốn ô vốn đã trọn vẹn lại bị đèo thêm một đuôi.
+ *
+ * Lấy **bảng màu hút mạnh**, không lấy bảng quay đầu. Bảng quay đầu mở đầu bằng
+ * `9sus4` — màu chữ ký của thầy, và ở chỗ quay đầu nó đúng, vì quay đầu là để đi
+ * tiếp. Nhưng `9sus4` thay quãng ba bằng quãng bốn, tức xoá đúng nốt cảm, nốt
+ * duy nhất muốn đi lên nửa cung vào chủ âm. Hợp âm báo mà mất nốt cảm thì nó
+ * không hút nhẹ — nó không hút, và ca sĩ không biết mình vào ở đâu.
  */
 export function cueChord(target: ParsedChord | null | undefined) {
-  return target ? pullChordFor(target) : null
+  return target ? pullChordFor(target, { strong: true }) : null
 }

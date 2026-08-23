@@ -19,6 +19,22 @@ import type { TimelineEvent } from './types'
  * cuối ô đứng cạnh nốt gốc ô sau, không nhảy. Đây là hình đệm ballad quen thuộc
  * chứ không phải walking bass jazz đi liền bậc — walking bass đã có riêng cho
  * điệu ballad theo Pianote, xem `../brain/walkingBass.ts`.
+ *
+ * ## Vì sao quãng 4 và quãng 5, không phải quãng 3
+ *
+ * Hình này khớp một luật thứ hai, độc lập với bản ký âm: thầy Hải, Tập 1 bài 9
+ * mốc `18:36-22:36` (`tap-01-bai-09-lesson-id-0009-05`, `validated`) — *"hòa âm
+ * cho giai điệu dân ca ngũ cung nên ưu tiên hòa âm quãng 4, hoặc kết hợp quãng 4
+ * và quãng 5 xếp chồng, để giữ màu mộc mạc và thoát khỏi tiếng hòa âm tam diện
+ * kiểu phương Tây."*
+ *
+ * Từ khi hợp âm ba nốt lấy ngũ cung của thầy làm chất liệu chạy (xem
+ * `rule-hai-triad-pentatonic` bên PianoBrain), luật ấy áp đúng vào đây. Đo trên
+ * vòng `C Am F G`: tuyến trầm đi -5, +5, -5 nửa cung và **không chồng nốt nào**,
+ * tức không có một quãng ba nào — đã đúng luật sẵn, không phải sửa.
+ *
+ * Ai định đổi hình này sang chồng quãng ba cho "dày" thì đọc lại đoạn trên: dày
+ * lên là mất đúng cái màu thầy bảo phải giữ.
  */
 
 /** Tầm tay trái ở đoạn giang tấu, đọc từ bản ký âm: 36-52. */

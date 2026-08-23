@@ -113,12 +113,12 @@ import { brainPassingSuggestions } from './brain/passing'
 import { brainPhrase } from './brain/phrase'
 import { walkingBassLine } from './brain/walkingBass'
 import { teacherBadge } from './brain/badge'
-import { jazzScaleFor } from './brain/jazzScale'
+import { scaleForChord, scaleGaps } from './brain/chordScale'
+import { soloFeelFor } from './fillSoloGenerator/soloFeel'
 import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
 import { plainForInterlude } from './style/interludeChords'
-import { OUTRO_LEAD_BARS, cueChord, phraseChords } from './style/phraseChords'
-import { cueStrike, slowClose } from './style/phraseCue'
-import { arpeggioRun } from './fillSoloGenerator/leadIn'
+import { cueChord, phraseChords } from './style/phraseChords'
+import { buildPhraseSection } from './style/phraseSection'
 import { interludeBassLine } from './style/interludeBass'
 import {
   hasChorusVariant,
@@ -571,11 +571,11 @@ export function ReharmHome() {
    *
    * Mặc định **tắt**. Toàn bộ item gam trong kho còn `status: "draft"` — đã rút
    * từ video thật nhưng chưa ai xem lại để đối chiếu, nên không được tự thành
-   * tiếng đàn. Xem `brain/gate.ts` và `brain/jazzScale.ts`.
+   * tiếng đàn. Xem `brain/gate.ts` và `brain/chordScale.ts`.
    */
-  const [jazzScales, setJazzScales] = useState(false)
+  const [storeScales, setStoreScales] = useState(false)
   /** Nguồn nốt thật sự đưa cho bộ sinh câu: công tắc gam jazz đè lên lựa chọn kia. */
-  const soloNoteSource: SoloNoteSource = jazzScales ? 'jazzScale' : noteSource
+  const soloNoteSource: SoloNoteSource = storeScales ? 'storeScale' : noteSource
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -945,6 +945,17 @@ export function ReharmHome() {
     })
   }, [reharm.final, reharm.colored, colorEdits, slashEdits])
 
+  /*
+    Hợp âm nào trong bài mà kho chưa có gam.
+
+    Bật công tắc gam jazz rồi nghe không khác gì thì người dùng tưởng app hỏng,
+    chứ không đoán được là kho thiếu. Đếm ra rồi in thẳng dưới ô tick.
+  */
+  const missingScales = useMemo(
+    () => (storeScales ? scaleGaps(withPassing) : []),
+    [storeScales, withPassing],
+  )
+
   /**
    * Từ phách delay trở đi không quạt điệu — chạy ngón thay thế, không chờ hết ô.
    */
@@ -1197,7 +1208,7 @@ export function ReharmHome() {
           : chord,
       )
       const pull = nextFirst
-        ? pullChordFor(nextFirst.chord, last.chord)
+        ? pullChordFor(nextFirst.chord, { avoid: last.chord })
         : null
       const pullHit = pull
         ? renderPattern(
@@ -1270,7 +1281,9 @@ export function ReharmHome() {
               // Đoạn giang tấu: nốt theo bậc ưu tiên riêng, không lấy màu Khá.
               interlude: true,
               // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
-              jazzScale: jazzScaleFor,
+              storeScale: scaleForChord,
+              // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
+              feel: soloFeelFor(styleId),
               // Điệu ballad thì hạ trần câu solo cho khớp tay người đệm.
               ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
             }),
@@ -1584,7 +1597,9 @@ export function ReharmHome() {
         // Câu solo chỉ chơi ở đoạn không lời, nên đi theo bậc ưu tiên giang tấu.
         interlude: true,
         // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
-        jazzScale: jazzScaleFor,
+        storeScale: scaleForChord,
+        // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
+        feel: soloFeelFor(styleId),
         ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
       })
   }, [
@@ -1598,7 +1613,54 @@ export function ReharmHome() {
     reharm.key,
     phraseSpin,
     ballad,
+    // Đổi điệu là đổi cách chia nhịp câu chạy — phải dựng lại.
+    styleId,
   ])
+
+  /**
+   * Sinh câu cho **một vòng hợp âm bất kỳ** — dùng đúng cách của đoạn giang tấu.
+   *
+   * Đoạn dạo đầu và đoạn kết trước đây lấy nốt từ `brainPhrase`: một câu ngắn
+   * do luật Kingsley soạn, hay nhưng chỉ có mấy hình cố định, và không đi qua
+   * gam của kho. Người dùng nghe đoạn giang tấu rồi bảo áp dụng cùng cách sinh
+   * nốt cho hai đoạn kia — nên chúng gọi chung một hàm với thân bài: cùng gam,
+   * cùng mẫu câu, cùng cách chia nhịp theo điệu.
+   *
+   * `endWithRun` bật sẵn: cả hai đoạn đều kết bằng một câu chạy tay phải leo
+   * lên phía phải đàn, đúng chỗ tai người nghe chờ một cú đẩy trước khi vào.
+   */
+  const phraseSolo = useCallback(
+    (chords: readonly ParsedChord[], spin: number) =>
+      soloToTimeline(
+        generateSolo(chords, {
+          beatsPerChord: chordBeats,
+          direction: soloDirection,
+          density: soloDensity,
+          graceDensity,
+          key: reharm.key,
+          noteSource: soloNoteSource,
+          chordsPerPhrase,
+          take: spin + phraseSpin + playSpin.current,
+          endWithRun: true,
+          interlude: true,
+          storeScale: scaleForChord,
+          feel: soloFeelFor(styleId),
+          ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
+        }),
+      ),
+    [
+      chordBeats,
+      soloDirection,
+      soloDensity,
+      graceDensity,
+      reharm.key,
+      soloNoteSource,
+      chordsPerPhrase,
+      phraseSpin,
+      ballad,
+      styleId,
+    ],
+  )
 
   /**
    * Độ dài một lượt vòng hợp âm, tính theo **số hợp âm** chứ không theo nốt
@@ -1674,7 +1736,7 @@ export function ReharmHome() {
       fillDensity,
       graceDensity,
       noteSource,
-      jazzScales,
+      jazzScales: storeScales,
       chordsPerPhrase,
     }),
     [
@@ -1714,7 +1776,7 @@ export function ReharmHome() {
       fillDensity,
       graceDensity,
       noteSource,
-      jazzScales,
+      storeScales,
       chordsPerPhrase,
     ],
   )
@@ -1789,7 +1851,8 @@ export function ReharmHome() {
     setGraceDensity((saved.graceDensity ?? 'sparse') as GraceDensity)
     setNoteSource(saved.noteSource as SoloNoteSource)
     // Bài lưu từ trước khi có công tắc này thì mặc định tắt, đúng luật draft.
-    setJazzScales(saved.jazzScales === true)
+    // Khoá lưu giữ tên cũ `jazzScales` để bài lưu từ trước vẫn đọc được.
+    setStoreScales(saved.jazzScales === true)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -1905,7 +1968,7 @@ export function ReharmHome() {
       )
       if (!last || !target) return null
 
-      const pull = pullChordFor(target.chord, last.chord)
+      const pull = pullChordFor(target.chord, { avoid: last.chord })
       if (!pull) return null
 
       /*
@@ -1977,112 +2040,34 @@ export function ReharmHome() {
           /*
             Đoạn dạo đầu và đoạn kết chơi **cùng điệu với thân bài**.
 
-            Bộ não chỉ soạn nốt tay phải — sus2 lên bậc ba, rải ngược add2. Nếu
-            chỉ phát bấy nhiêu thì đoạn dạo là một dòng nốt bay lơ lửng, không
-            có bass đỡ bên dưới, nghe như ai đó tập gam. Nên chỗ này quạt điệu
-            đang chọn trên đúng vòng hợp âm mà não dùng, rồi mới chồng nốt não
-            lên trên.
-
-            Não im — kho chưa có luật Kingsley nào khớp — thì vẫn còn nguyên
-            phần đệm, đoạn dạo không bị mất tiếng.
+            Câu tay phải dựng bằng cùng bộ sinh nốt với đoạn giang tấu. Nếu chỉ
+            phát bấy nhiêu thì đoạn dạo là một dòng nốt bay lơ lửng, không có
+            bass đỡ bên dưới, nghe như ai đó tập gam. Nên chỗ này quạt điệu đang
+            chọn trên đúng vòng hợp âm ấy, rồi mới chồng câu lên trên.
           */
           phrase: (kind) => {
-            const opening = recolored.find((chord) => !chord.passing) ?? null
-            const chords = phraseChords(kind, reharm.key)
-            if (chords.length === 0) return brainPhrase({ kind, key: reharm.key })
-
-            const beatsEach = chords.map(() => chordBeats)
-            const backing = renderPattern(
-              voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }),
-              style,
-              { beatsPerChord: chordBeats, beatsEach },
-            )
-
             /*
-              Nốt của não bắt đầu ở đâu.
+              Phần ráp nằm ở `style/phraseSection.ts`.
 
-              Dạo đầu: ngay ô 1. Kết bài: sau ô dẫn bậc V, vì câu rải ngược của
-              não dựng trên bậc I — đặt nó lên ô bậc V là hai tay chơi hai hợp
-              âm khác nhau.
+              Trước đây nó nằm ngay trong đây, tức trong thân một component React
+              — không test nào gọi tới được. Và chính chỗ ấy sinh ra lỗi đè nốt ở
+              đoạn kết mà không lưới nào bắt: bộ test cũ chỉ kiểm phần đệm, còn
+              thứ tai nghe là phần đệm cộng câu ngẫu hứng cộng hợp âm báo, sau
+              khi đã ráp.
             */
-            const offset = kind === 'outro' ? OUTRO_LEAD_BARS * chordBeats : 0
-            const melody = brainPhrase({
+            const built = buildPhraseSection({
               kind,
               key: reharm.key,
-              beatsPerMeasure: chordBeats,
+              style,
+              beatsPerChord: chordBeats,
+              dropRoot,
+              opening: recolored.find((chord) => !chord.passing) ?? null,
+              solo: (chords) => phraseSolo(chords, kind === 'outro' ? 1 : 0),
+              // Ballad thì rải ngón hợp âm báo cho mềm, điệu khác thì dặm một lượt.
+              rollCue: ballad,
             })
-            const voiced = (melody?.events ?? []).map((event) => ({
-              ...event,
-              startBeat: event.startBeat + offset,
-            }))
-
-            const roundBeats = chords.length * chordBeats
-
-            /*
-              Vòng dạo đầu chạy **trọn** rồi mới tới một phách hợp âm báo.
-
-              Ô cuối của vòng được chạy ngón, y như ô cuối đoạn giang tấu: chuỗi
-              nốt đều dẫn thẳng tới vạch nhịp thì ca sĩ vào đúng phách dễ hơn hẳn
-              so với đếm thầm trong khoảng lặng.
-            */
-            const cueOf = kind === 'intro' ? cueChord(opening) : null
-            const lengthBeats = roundBeats + (cueOf ? 1 : 0)
-
-            const closingRun =
-              kind === 'intro'
-                ? arpeggioRun({
-                    chord: chords[chords.length - 1],
-                    octaves: 2,
-                    endBeat: roundBeats,
-                    maxBeats: Math.min(2, chordBeats),
-                    fromBeat: roundBeats - Math.min(2, chordBeats),
-                  }).map((note) => ({
-                    notes: [note.note],
-                    startBeat: note.startBeat,
-                    durationBeats: note.durationBeats,
-                    // Câu chạy đóng vòng dạo là ngón tay phải, kể cả nốt thấp.
-                    hand: 'right' as const,
-                    velocity: 80,
-                    grace: false,
-                  }))
-                : []
-
-            /*
-              Hợp âm báo nâng lên tầm tay phải.
-
-              `voiceLeadTwoHands` cho một hợp âm đứng lẻ thì đặt nó khá thấp —
-              đo ra Rê quãng tám 3 tới La quãng tám 3, tức chồng lên đúng chỗ
-              tay trái đang giữ bass. Đây là tiếng báo cho ca sĩ, nó phải nổi
-              lên trên chứ không lẫn vào bè trầm.
-            */
-            const cueVoicing = voiceLeadTwoHands([cueOf ?? opening ?? chords[0]], {
-              dropRootFromRightHand: dropRoot,
-            })[0].right.map((note) => {
-              let pitch: number = note
-              while (pitch < 60) pitch += 12
-              while (pitch > 84) pitch -= 12
-              return pitch as typeof note
-            })
-
-            const cue = cueOf
-              ? cueStrike(cueVoicing, roundBeats, {
-                  // Ballad thì rải ngón cho mềm, điệu khác thì dặm một lượt.
-                  roll: ballad,
-                })
-              : []
-            /*
-              Kết thì **cả hai tay cùng chậm lại**, không riêng giai điệu.
-
-              Giãn mỗi nốt não mà phần đệm vẫn quạt đủ lực thì nghe như người
-              hát ngân còn ban nhạc chưa biết bài sắp hết.
-            */
-            const whole = [...backing, ...voiced]
-            const events =
-              kind === 'outro'
-                ? slowClose(whole, lengthBeats)
-                : [...whole, ...closingRun, ...cue]
-
-            return { events, lengthBeats }
+            if (!built) return brainPhrase({ kind, key: reharm.key })
+            return built
           },
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
@@ -2117,6 +2102,9 @@ export function ReharmHome() {
       songSources,
 
       interludeWindow,
+      // Dạo đầu và kết bài dựng bằng hàm này; đổi mật độ hay đổi điệu là phải
+      // dựng lại, không thì hai đoạn ấy giữ nguyên câu của lần chọn trước.
+      phraseSolo,
       buildEnding,
       buildRepeatEnding,
       varyOnRepeat,
@@ -3260,22 +3248,32 @@ export function ReharmHome() {
             */}
             <label
               className="mt-2 flex items-center gap-2 text-xs text-dim"
-              title="Đoạn không lời chạy đúng thang âm của chất hợp âm, lấy từ 13 bài giảng jazz trong kho PianoBrain: Lydian cho maj7, Bebop Dominant cho hợp âm át, Altered cho át biến âm, Melodic Minor cho m(maj7), Whole Tone cho 7#5. Hợp âm ba nốt, sus và add9 thì kho chưa có gam — những hợp âm đó giữ nguyên nốt hợp âm. Câu lót chen giữa lời không đổi."
+              title="Đoạn không lời chạy đúng thang âm của chất hợp âm, lấy từ kho PianoBrain. Hợp âm bảy jazz: Lydian cho maj7, Bebop Dominant cho hợp âm át, Altered cho át biến âm, Melodic Minor cho m(maj7), Whole Tone cho 7#5, Diminished cho dim7 — 13 bài giảng jazz, đã đối chiếu video. Hợp âm ba nốt trưởng và thứ: ngũ cung thầy Hải dạy ở Tập 1 bài 9, dựng trên chính nốt gốc hợp âm nên không lạc giọng. Còn sus4, m6 thì kho chưa có gam — giữ nguyên nốt hợp âm. Câu lót chen giữa lời không đổi."
             >
               <input
                 type="checkbox"
-                checked={jazzScales}
-                onChange={(event) => setJazzScales(event.target.checked)}
+                checked={storeScales}
+                onChange={(event) => setStoreScales(event.target.checked)}
                 className="accent-teal-key"
               />
-              Gam jazz của kho
-              <span className="font-mono text-[10px] text-amber-key/70">chờ rà</span>
+              Gam của kho
             </label>
 
-            {jazzScales && (
+            {storeScales && (
               <p className="mt-1 text-[10px] leading-snug text-dim/80">
-                Chỉ đổi đoạn không lời. Mọi item gam còn ở trạng thái draft — đã
-                rút từ video thật nhưng chưa ai xem lại để đối chiếu.
+                Chỉ đổi đoạn không lời. Hợp âm bảy jazz lấy gam của nguồn Jazz
+                Scales; hợp âm ba nốt lấy ngũ cung thầy Hải dạy ở Tập 1 bài 9.
+                {missingScales.length > 0 && (
+                  <>
+                    {' '}
+                    <span className="text-amber-key/80">
+                      Kho chưa có gam cho {missingScales.length} hợp âm trong bài (
+                      {missingScales.slice(0, 6).join(', ')}
+                      {missingScales.length > 6 ? '…' : ''}) — mấy hợp âm đó giữ
+                      nguyên nốt hợp âm.
+                    </span>
+                  </>
+                )}
               </p>
             )}
 

@@ -394,7 +394,7 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
       gốc thì đổi màu mỗi lần. Rải lại đúng màu vừa nghe thì thành đánh lặp.
     */
     const plan = turnaroundInto(chord('Cadd9'), 2, chord('G13'))!
-    const pull = pullChordFor(chord('Cadd9'), plan.chords.at(-2))!
+    const pull = pullChordFor(chord('Cadd9'), { avoid: plan.chords.at(-2) })!
 
     expect(plan.chords.at(-2)!.quality.id).toBe('13')
     expect(pull.quality.id).not.toBe('13')
@@ -425,7 +425,7 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
       thì bậc năm của Am chính là E — và màu chọn cho hợp âm đích thứ ra đúng
       E7b9 mà tài liệu ghi. Đây là chỗ đối chiếu luật với nguồn.
     */
-    const pull = pullChordFor(chord('Am'), chord('Em7'))!
+    const pull = pullChordFor(chord('Am'), { avoid: chord('Em7') })!
 
     expect(pull.symbol).toBe('E7b9')
   })
@@ -438,7 +438,7 @@ describe('hợp âm rải mở cửa cho đoạn sau', () => {
   it('tránh được màu trùng thì vẫn còn màu khác để dùng', () => {
     for (const id of ['9sus4', '13', '7b9']) {
       const avoid = { ...chord('G7'), quality: chord(`G${id}`).quality }
-      const pull = pullChordFor(chord('C'), avoid)!
+      const pull = pullChordFor(chord('C'), { avoid })!
 
       expect(pull.quality.id).not.toBe(id)
     }
@@ -521,7 +521,7 @@ describe('cụm quay đầu trải hai ô nhịp', () => {
 
   it('câu rải chiếm nửa đầu ô thứ hai, nửa sau để trống', () => {
     const plan = turnaroundInto(chord('Cadd9'), 2, chord('G13'))!
-    const pull = pullChordFor(chord('Cadd9'), plan.chords.at(-2))!
+    const pull = pullChordFor(chord('Cadd9'), { avoid: plan.chords.at(-2) })!
     const run = arpeggioRun({
       chord: pull,
       octaves: 2,

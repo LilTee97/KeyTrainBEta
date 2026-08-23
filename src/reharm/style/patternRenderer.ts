@@ -348,13 +348,29 @@ function renderWithCell(
   const totalBeats = starts[starts.length - 1] + durations[durations.length - 1]
   const events: TimelineEvent[] = []
 
-  /** Hợp âm nào đang vang tại một thời điểm, khi chúng dài ngắn khác nhau. */
-  const voicingAt = (beat: number) => {
+  /** Hợp âm thứ mấy đang vang tại một thời điểm, khi chúng dài ngắn khác nhau. */
+  const indexAt = (beat: number) => {
     for (let index = starts.length - 1; index >= 0; index -= 1) {
-      if (beat >= starts[index] - 0.0001) return voicings[index]
+      if (beat >= starts[index] - 0.0001) return index
     }
-    return voicings[0]
+    return 0
   }
+  const voicingAt = (beat: number) => voicings[indexAt(beat)]
+
+  /*
+    Hợp âm **ngắn hơn một ô nhịp** phải nghe ra được nốt gốc của nó.
+
+    Đó gần như luôn là hợp âm lướt: nó chen vào giữa hai hợp âm chính và cả lý
+    do nó tồn tại là **bước đi của bè trầm**. Mẫu tiết tấu thì không biết chuyện
+    ấy — nó cứ chạy theo ô của mình, và nếu ô rơi trúng chỗ đánh quãng năm thì
+    hợp âm lướt chỉ vang lên bằng quãng năm. Đo trên `pop-1` với vòng có chèn
+    ii-V phụ: hợp âm lướt gốc Mi chỉ phát ra nốt Si, tức bước bass biến mất và
+    người nghe không hiểu vì sao có hợp âm ấy.
+
+    Chỉ ép **tiếng bass đầu tiên** của ô ngắn. Mấy tiếng sau vẫn theo mẫu, nên
+    tiết tấu của điệu không suy suyển.
+  */
+  const rootForced = new Set<number>()
 
   /*
     Bước nhảy lấy theo **ô nhịp đang dùng**, không phải theo ô nhịp mặc định.
@@ -421,7 +437,18 @@ function renderWithCell(
           hand === 'left' ? raw : voicing.left,
           hand === 'right' ? raw : voicing.right,
         )
-        const notes = hand === 'left' ? split.left : split.right
+        let notes = hand === 'left' ? split.left : split.right
+
+        if (hand === 'left') {
+          const index = indexAt(startBeat)
+          // Ngắn hơn ô nhịp của chính mẫu đang chạy, chứ không phải một con số cứng.
+          const short = durations[index] < (cellAt?.(startBeat) ?? fallback!).lengthBeats - EPSILON
+          if (short && !rootForced.has(index)) {
+            rootForced.add(index)
+            const bass = voicing.left.length > 0 ? Math.min(...voicing.left) : undefined
+            if (bass !== undefined && !notes.includes(bass)) notes = [bass]
+          }
+        }
         const handScale = hand === 'left' ? LEFT_HAND_SCALE : 1
 
         if (notes.length > 0) near = notes[notes.length - 1]
@@ -596,12 +623,42 @@ export function renderPattern(
     : events
   const muted = muteWindows?.length ? applyMuteWindows(dropped, muteWindows) : dropped
 
-  return clipToChords(muted, starts)
-    .map((event) => ({
+  return holdUntilStruckAgain(
+    clipToChords(muted, starts).map((event) => ({
       ...event,
       notes: event.notes.map((note) => clampToHandRegister(note, event.hand)),
-    }))
-    .sort((a, b) => a.startBeat - b.startBeat)
+    })),
+  ).sort((a, b) => a.startBeat - b.startBeat)
+}
+
+/**
+ * Không tiếng nào được **còn ngân khi chính phím ấy bị gõ lại**.
+ *
+ * Trên đàn thật, gõ lại một phím đang giữ thì búa chưa về chỗ và phím không kêu
+ * lại; trong MIDI thì tiếng trước bị cắt ngang hoặc kẹt luôn. Đây là luật của
+ * cây đàn, không phải của một điệu nào, nên nó đứng ở đây — sau khi mọi ô nhịp
+ * đã dựng xong — chứ không phải sửa trong từng mẫu tiết tấu.
+ *
+ * Đo ra trên điệu valse: ô `oom-pah-pah` cho tiếng "pah" phách 1 ngân 1,29
+ * phách trong khi "pah" sau rơi đúng phách 2 — chồng 0,29 phách, lần nào cũng
+ * chồng, ở mọi ô nhịp của mọi bài valse.
+ *
+ * Chỉ cắt khi **cùng một tay** và **trùng cao độ**. Hai tay chồng nhau là hoà
+ * âm; hai cao độ khác nhau chồng nhau là legato. Cả hai đều đúng, không đụng.
+ */
+export function holdUntilStruckAgain(events: readonly TimelineEvent[]): TimelineEvent[] {
+  const order = [...events].sort((a, b) => a.startBeat - b.startBeat)
+
+  return order.map((event) => {
+    let duration = event.durationBeats
+    for (const other of order) {
+      if (other === event || other.hand !== event.hand) continue
+      const room = other.startBeat - event.startBeat
+      if (room <= EPSILON || room >= duration) continue
+      if (other.notes.some((note) => event.notes.includes(note))) duration = room
+    }
+    return duration === event.durationBeats ? event : { ...event, durationBeats: duration }
+  })
 }
 
 function applyMuteWindows(

@@ -154,20 +154,67 @@ export function turnaroundInto(
  * - `13` — bậc năm nới rộng, phần 12.2 gọi là biến hoá màu trên cùng một gốc.
  * - `7b9` — bậc năm căng, phần 7 dùng cho chỗ dẫn về hợp âm thứ.
  */
+/*
+  Bảng màu **quay đầu giữa bài**: đi tiếp, không phải đẩy ai vào.
+
+  Hợp âm đích thứ thì bỏ hẳn màu treo: treo xoá mất quãng ba, tức xoá luôn cái
+  làm nên màu thứ của chỗ sắp về.
+*/
+const PULL_PALETTE = {
+  minor: ['7b9', '7#5', '13'],
+  major: ['9sus4', '13', '7b9'],
+} as const
+
+/*
+  Bảng màu **hút mạnh**: dùng ở chỗ có đúng một việc là đẩy người hát vào.
+
+  Hợp âm ở đó phải đủ **quãng ba trưởng và quãng bảy thứ** — cặp tam cung ấy mới
+  là lực kéo — rồi mới tính tới màu. Đo trên bậc năm là Sol:
+
+    G9sus4 = G C D F A     KHÔNG có B  -> mất nốt cảm, không hút
+    G7b9   = G B D F Ab    đủ cả hai, cộng sức căng
+    G7     = G B D F       đủ cả hai, trơn
+    G7#5   = G B Eb F      đủ cả hai, Eb báo trước màu thứ
+    G13    = G B D F A     đủ cả hai nhưng nghe đã yên vị
+
+  `7b9` đứng đầu cả hai: nó giữ nguyên quãng năm nên vẫn đứng vững như một hợp âm
+  át thật, đủ nốt cảm và tam cung, cộng b9 làm sức căng.
+
+  Đích **thứ** cho `7#5` đứng nhì, vì nốt Eb trong G7#5 chính là quãng ba thứ của
+  chỗ sắp về — nó báo trước màu thứ. Đích **trưởng** thì Eb ấy đâm vào quãng ba
+  trưởng của đích, nên đẩy `7#5` xuống cuối và để `7` trơn làm cái đỡ sạch sẽ.
+
+  `13` không có mặt: về lý nó vẫn hút, nhưng nốt 13 làm hợp âm nghe **đã yên vị
+  rồi** — đúng thứ không nên có ở chỗ phải đẩy người ta đi.
+*/
+const STRONG_PALETTE = {
+  minor: ['7b9', '7#5', '7'],
+  major: ['7b9', '7', '7#5'],
+} as const
+
+export interface PullOptions {
+  /** Hợp âm bậc năm vừa vang trong cụm; tránh trùng màu với nó. */
+  avoid?: ParsedChord | null
+  /**
+   * Lấy bảng màu hút mạnh thay vì bảng quay đầu.
+   *
+   * Hai công việc khác nhau nên hai bảng, còn phần dựng thì chung: cùng dựng
+   * trên bậc năm, cùng né màu vừa nghe, cùng chạy hết bảng rồi trả null. Tách
+   * thành hai hàm là hai chỗ phải sửa mỗi lần bộ dựng hợp âm đổi.
+   */
+  strong?: boolean
+}
+
 export function pullChordFor(
   target: ParsedChord,
-  /** Hợp âm bậc năm vừa vang trong cụm; tránh trùng màu với nó. */
-  avoid?: ParsedChord,
+  options: PullOptions = {},
 ): ParsedChord | null {
+  const { avoid, strong } = options
   const root = normalizePitchClass(target.root + 7) as PitchClass
   const minor = isMinorish(target)
 
-  /*
-    Xếp theo thứ tự ưu tiên, rồi lấy màu đầu tiên khác màu vừa nghe. Hợp âm
-    đích thứ thì bỏ hẳn màu treo: treo xoá mất quãng ba, tức xoá luôn cái làm
-    nên màu thứ của chỗ sắp về.
-  */
-  const palette = minor ? ['7b9', '7#5', '13'] : ['9sus4', '13', '7b9']
+  const table = strong ? STRONG_PALETTE : PULL_PALETTE
+  const palette = minor ? table.minor : table.major
   const used = avoid?.root === root ? avoid.quality.id : null
 
   for (const id of palette) {
@@ -219,7 +266,7 @@ export function varyRepeatEndings(
     const target = next[ranges[index + 1].from]
     if (!last || !target) continue
 
-    const pull = pullChordFor(target, last)
+    const pull = pullChordFor(target, { avoid: last })
     if (!pull || pull.symbol === last.symbol) continue
 
     next[range.to] = pull

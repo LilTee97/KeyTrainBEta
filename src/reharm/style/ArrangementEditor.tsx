@@ -190,9 +190,15 @@ export function ArrangementEditor({
                   title="Hết dạo đầu thì vào bài ngay hay chừa cho ca sĩ một nhịp lấy hơi"
                   className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
                 >
-                  {[0, 1].map((beats) => (
+                  {/*
+                    Nghỉ hai phách là **nửa ô nhịp**: đủ để ca sĩ lấy hơi mà chưa
+                    đứt mạch. Ô của bước giang tấu ngay dưới đã có tới bốn phách;
+                    ở đây hai là đủ, vì hết dạo đầu mà im trọn một ô thì người
+                    hát mất luôn chỗ bám nhịp.
+                  */}
+                  {[0, 1, 2].map((beats) => (
                     <option key={beats} value={beats}>
-                      {beats === 0 ? 'xong vào ngay' : 'xong nghỉ 1 phách'}
+                      {beats === 0 ? 'xong vào ngay' : `xong nghỉ ${beats} phách`}
                     </option>
                   ))}
                 </select>

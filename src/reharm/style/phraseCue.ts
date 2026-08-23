@@ -97,7 +97,7 @@ export function slowClose(
 
   const finalBeat = Math.max(...inLastBar.map((event) => event.startBeat))
 
-  return events.map((event) => {
+  const stretched = events.map((event) => {
     if (event.startBeat < lastBarFrom) return event
 
     // Càng về cuối càng giãn: nốt chót ngân hết phần còn lại của đoạn.
@@ -110,6 +110,28 @@ export function slowClose(
         : event.durationBeats * spread,
       velocity: Math.max(40, Math.round(event.velocity * (isFinal ? 0.8 : 0.9))),
     }
+  })
+
+  /*
+    Giãn xong phải **cắt lại chỗ đụng chính mình**.
+
+    Kéo dài một tiếng tới lúc chính phím ấy được gõ lại là chuyện không đàn được:
+    trên đàn thật búa chưa về chỗ nên phím không kêu lại, còn trong MIDI thì
+    tiếng trước bị cắt ngang hoặc kẹt luôn. Đo trên bossa và slow rock: nốt Đô
+    quãng tám 4 bị gõ lại khi còn đang ngân, ở đúng ô nhịp cuối bài.
+
+    Chỉ cắt khi **cùng một tay** và **trùng cao độ**. Hai tay chồng nhau là hoà
+    âm, không phải lỗi; hai cao độ khác nhau cũng vậy.
+  */
+  return stretched.map((event) => {
+    let duration = event.durationBeats
+    for (const other of stretched) {
+      if (other === event || other.hand !== event.hand) continue
+      const room = other.startBeat - event.startBeat
+      if (room <= 1e-6 || room >= duration) continue
+      if (other.notes.some((note) => event.notes.includes(note))) duration = room
+    }
+    return duration === event.durationBeats ? event : { ...event, durationBeats: duration }
   })
 }
 
