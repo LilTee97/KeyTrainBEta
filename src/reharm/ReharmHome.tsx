@@ -952,8 +952,22 @@ export function ReharmHome() {
     chứ không đoán được là kho thiếu. Đếm ra rồi in thẳng dưới ô tick.
   */
   const missingScales = useMemo(
-    () => (storeScales ? scaleGaps(withPassing) : []),
-    [storeScales, withPassing],
+    () => (storeScales ? scaleGaps(withPassing, reharm.key) : []),
+    [storeScales, withPassing, reharm.key],
+  )
+
+  /*
+    Hỏi não kèm **giọng của bài**.
+
+    Não cần giọng để chọn bậc thể cho hợp âm ba nốt mở rộng: trong giọng Đô thì
+    `Am(add9)` chạy La thứ tự nhiên còn `Dm(add9)` chạy Rê Dorian. Cùng một chất
+    hợp âm, hai nốt gốc, hai gam khác nhau — cái quyết định là bậc của hợp âm
+    trong giọng, thứ chỉ bên này biết. Không nói thì não đành im, vì im còn hơn
+    kêu lạc giọng.
+  */
+  const storeScaleInKey = useCallback(
+    (chord: ParsedChord) => scaleForChord(chord, reharm.key),
+    [reharm.key],
   )
 
   /**
@@ -1281,7 +1295,7 @@ export function ReharmHome() {
               // Đoạn giang tấu: nốt theo bậc ưu tiên riêng, không lấy màu Khá.
               interlude: true,
               // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
-              storeScale: scaleForChord,
+              storeScale: storeScaleInKey,
               // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
               feel: soloFeelFor(styleId),
               // Điệu ballad thì hạ trần câu solo cho khớp tay người đệm.
@@ -1597,7 +1611,7 @@ export function ReharmHome() {
         // Câu solo chỉ chơi ở đoạn không lời, nên đi theo bậc ưu tiên giang tấu.
         interlude: true,
         // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
-        storeScale: scaleForChord,
+        storeScale: storeScaleInKey,
         // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
         feel: soloFeelFor(styleId),
         ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
@@ -1643,7 +1657,7 @@ export function ReharmHome() {
           take: spin + phraseSpin + playSpin.current,
           endWithRun: true,
           interlude: true,
-          storeScale: scaleForChord,
+          storeScale: storeScaleInKey,
           feel: soloFeelFor(styleId),
           ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
         }),

@@ -1,8 +1,24 @@
 import { scaleFor } from '@pianobrain/mrhai/scaleFor.js'
 import { brain, brainReady } from './index'
 import { formatChordSymbol } from '../../shared/musicTheory/chordDetection'
+import { pitchClassName } from '../../shared/musicTheory/pitch'
 import type { PitchClass } from '../../shared/musicTheory/types'
+import type { SongKey } from '../fillSoloGenerator/soloVocabulary'
 import type { ParsedChord } from '../types'
+
+/**
+ * Giọng của bài, viết theo lối bộ não đọc được: `"C"`, `"Am"`.
+ *
+ * Não cần giọng để chọn **bậc thể** cho hợp âm ba nốt mở rộng. Cùng một chất,
+ * hai nốt gốc, hai gam khác nhau: trong giọng Đô thì `Am(add9)` chạy La thứ tự
+ * nhiên còn `Dm(add9)` chạy Rê Dorian — Dorian trên La cho Fa thăng, Aeolian
+ * trên Rê cho Si giáng, cả hai đều lạc giọng. Không nói giọng cho não thì nó
+ * đành im, vì im còn hơn kêu lạc.
+ */
+function keyText(key: SongKey | null | undefined): string | null {
+  if (!key) return null
+  return `${pitchClassName(key.tonic, 'flat')}${key.scale === 'minor' ? 'm' : ''}`
+}
 
 /**
  * Hỏi não: **hợp âm này chạy trên thang âm nào**.
@@ -33,11 +49,15 @@ import type { ParsedChord } from '../types'
  * Trả về `null` khi kho chưa có gam cho chất hợp âm này — và đó là phần lớn
  * hợp âm của nhạc pop: hợp âm ba nốt, sus, add9 đều chưa có nguồn nào dạy gam.
  */
-export function scaleForChord(chord: ParsedChord): PitchClass[] | null {
+export function scaleForChord(
+  chord: ParsedChord,
+  key?: SongKey | null,
+): PitchClass[] | null {
   if (!brainReady()) return null
   try {
     const answer = scaleFor(formatChordSymbol(chord.root, chord.quality), brain(), {
       requireValidated: true,
+      key: keyText(key),
     })
     const pitches = answer.best?.pitch_classes
     return pitches && pitches.length > 0 ? (pitches as PitchClass[]) : null
@@ -57,10 +77,13 @@ export function scaleForChord(chord: ParsedChord): PitchClass[] | null {
  *
  * Trả về ký hiệu hợp âm, không trùng lặp, theo đúng thứ tự gặp trong bài.
  */
-export function scaleGaps(chords: readonly ParsedChord[]): string[] {
+export function scaleGaps(
+  chords: readonly ParsedChord[],
+  key?: SongKey | null,
+): string[] {
   const gaps: string[] = []
   for (const chord of chords) {
-    if (scaleForChord(chord)) continue
+    if (scaleForChord(chord, key)) continue
     const symbol = formatChordSymbol(chord.root, chord.quality)
     if (!gaps.includes(symbol)) gaps.push(symbol)
   }
@@ -70,11 +93,13 @@ export function scaleGaps(chords: readonly ParsedChord[]): string[] {
 /** Tên gam và mốc nguồn, để giao diện dẫn được thầy nào dạy chỗ này. */
 export function scaleCredit(
   chord: ParsedChord,
+  key?: SongKey | null,
 ): { label: string; itemId: string; sourceId: string; locator: string | null } | null {
   if (!brainReady()) return null
   try {
     const best = scaleFor(formatChordSymbol(chord.root, chord.quality), brain(), {
       requireValidated: true,
+      key: keyText(key),
     }).best
     if (!best) return null
     return {
