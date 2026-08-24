@@ -13,7 +13,6 @@ import {
   isVoicingMatched,
   PALETTE_HINTS,
   parseNamed,
-  drillScaleVoicing,
   type DrillPalette,
   type DrillSkill,
 } from './chordDrillEngine'
