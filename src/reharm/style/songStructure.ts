@@ -1,4 +1,5 @@
 import type { TimelineEvent } from './types'
+import { LEFT_HAND_HIGH } from '../voicingGenerator/handSplitVoicing'
 
 /**
  * Cấu trúc bài hát, và chỗ đặt đoạn giang tấu.
@@ -256,6 +257,33 @@ const OCTAVE_BASS_FLOOR = 28
  * bề rộng tay trái ở đoạn giang tấu rộng hơn hẳn đoạn hát (bài *Mơ*: 15.9 lên
  * 20.6 nửa cung), và ô nhịp 41 của bài đó bass đúng là chồng quãng tám `A1+A2`.
  */
+/**
+ * Nốt tay trái nằm hẳn trong vùng tay phải thì **nhãn tay ấy sai**, không phải
+ * cao độ sai.
+ *
+ * Người dùng chụp được cảnh này: giữa câu solo tay phải có mấy nốt mang màu tay
+ * trái đứng ở Sol quãng tám 4. Không bàn tay trái nào vừa giữ bass Rê quãng tám
+ * 2 vừa với lên đó, và trên bản nhạc luyện ngón thì nó chỉ sai một ngón tay.
+ *
+ * Quét mọi điệu, bốn giọng, ba tầng tiếng — đệm hát, giang tấu, walking bass —
+ * không tầng nào hiện tại sinh ra nốt như vậy; trần tay trái khoá ở Sol quãng
+ * tám 3 và mọi đường đều tôn trọng nó. Nhưng luật thì rõ dù thủ phạm chưa rõ,
+ * nên chặn ở chỗ mọi tầng đổ về thay vì canh từng tầng một.
+ *
+ * Chỉ đổi **nhãn tay**, không đổi cao độ: ai đặt nốt lên đó là cố ý cho nó vang
+ * ở đó, chỉ có điều đó là việc của tay phải. Và chỉ đổi khi **cả cụm** nằm trên
+ * trần — cụm có nốt trầm thì vẫn là tay trái thật, dời nhãn đi là hỏng bè trầm.
+ */
+export function fixHandByRegister(
+  events: readonly TimelineEvent[],
+): TimelineEvent[] {
+  return events.map((event) =>
+    event.hand === 'left' && Math.min(...event.notes) > LEFT_HAND_HIGH
+      ? { ...event, hand: 'right' as const }
+      : event,
+  )
+}
+
 export function interludeAccompaniment(
   events: readonly TimelineEvent[],
 ): TimelineEvent[] {
@@ -340,7 +368,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
   }
 
   return {
-    events: events.sort((a, b) => a.startBeat - b.startBeat),
+    events: fixHandByRegister(events).sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
     segments,

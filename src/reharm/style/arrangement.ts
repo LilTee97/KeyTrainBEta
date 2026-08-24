@@ -1,6 +1,6 @@
 import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
-import { interludeAccompaniment } from './songStructure'
+import { fixHandByRegister, interludeAccompaniment } from './songStructure'
 import type { TimelineEvent } from './types'
 
 /**
@@ -492,7 +492,9 @@ export function buildArrangedSong(
   }
 
   return {
-    events: events.sort((a, b) => a.startBeat - b.startBeat),
+    // Nốt tay trái nằm hẳn trên vùng tay phải thì nhãn tay ấy sai — xem
+    // `fixHandByRegister`. Chặn ở đây, chỗ mọi tầng tiếng đổ về.
+    events: fixHandByRegister(events).sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
     segments,

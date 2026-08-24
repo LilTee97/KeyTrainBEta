@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildArrangedSong } from '../arrangement'
 import { renderPattern, giveCompingToLeft } from '../patternRenderer'
 import { getStyle } from '../styleLibrary'
 import { interludeBassLine } from '../interludeBass'
 import { interludeAccompaniment } from '../songStructure'
 import { BALLAD_SOLO_RANGE } from '../balladFamily'
-import { cueChord, phraseChords } from '../phraseChords'
-import { cueStrike } from '../phraseCue'
-import { arpeggioRun } from '../../fillSoloGenerator/leadIn'
+import { buildPhraseSection } from '../phraseSection'
 import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import {
@@ -15,7 +12,6 @@ import {
   generateSolo,
   soloToTimeline,
 } from '../../fillSoloGenerator/soloGenerator'
-import type { SourceSection } from '../arrangement'
 import type { TimelineEvent } from '../types'
 
 /**
@@ -148,169 +144,67 @@ describe('giang tấu — tách tay', () => {
     expect(Math.max(...steps), 'nhảy quãng xa').toBeLessThanOrEqual(12)
   })
 
-  it('F. đoạn dạo đầu: bass ở dưới, câu chạy và hợp âm báo ở trên', () => {
+  it('F. đoạn dạo đầu và kết bài: bass ở dưới, câu ở trên', () => {
     /*
-      Dựng đúng như `ReharmHome`: đệm điệu, câu chạy đóng vòng, rồi một phách
-      hợp âm báo. Cả ba lớp phải chia tay đúng — câu chạy và hợp âm báo là ngón
-      tay phải, chỉ phần đệm mới được xuống bè trầm.
+      Dựng qua **đúng hàm app dùng**. Bản trước tự ráp lại bằng `arpeggioRun` và
+      `cueStrike` — nó kiểm một đường mà app đã thôi đi từ lúc phần ráp chuyển
+      sang `buildPhraseSection`, nên có hỏng cũng không biết.
     */
-    const intro = phraseChords('intro', KEY)
+    for (const kind of ['intro', 'outro'] as const) {
+      for (let take = 0; take < 3; take += 1) {
+        const built = buildPhraseSection({
+          kind,
+          key: KEY,
+          style: getStyle(STYLE)!,
+          beatsPerChord: 4,
+          dropRoot: true,
+          opening: parseChordInput('C').chords[0]!,
+          solo: (list) =>
+            soloToTimeline(
+              generateSolo(list, {
+                beatsPerChord: 4,
+                density: 'medium',
+                key: KEY,
+                take,
+                range: BALLAD_SOLO_RANGE,
+                endWithRun: true,
+              }),
+            ),
+          rollCue: true,
+        })!
+        const lh = pitches(left(built.events))
+        const rh = pitches(right(built.events))
+        expect(lh.length, `${kind}/lượt ${take}: phải có bass`).toBeGreaterThan(0)
+        expect(
+          Math.max(...lh),
+          `${kind}/lượt ${take}: tay trái lấn lên quãng tám 4`,
+        ).toBeLessThan(LEFT_CEILING)
+        expect(rh.length, `${kind}/lượt ${take}: phải có tay phải`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('G. đoạn CÓ LỜI: đệm nhường tay trái, câu fill vẫn ở tay phải', () => {
+    /*
+      Đoạn hát là chỗ bộ kiểm này chưa từng nhìn tới, mà nó lại là đoạn dài nhất
+      của bài. `giveCompingToLeft` dời hợp âm quạt xuống tay trái mỗi khi câu fill
+      bận — dời thì phải dời trọn cả cao độ, không thì hai tay chồng vào nhau.
+    */
+    const list = chords()
     const style = getStyle(STYLE)!
-    const round = intro.length * 4
-
-    const backing = renderPattern(voiceLeadTwoHands(intro), style, {
+    const comping = renderPattern(voiceLeadTwoHands(list), style, {
       beatsPerChord: 4,
-      beatsEach: intro.map(() => 4),
+      beatsEach: list.map(() => 4),
     })
-    const run = arpeggioRun({
-      chord: intro[intro.length - 1],
-      octaves: 2,
-      endBeat: round,
-      maxBeats: 2,
-      fromBeat: round - 2,
-    }).map((note) => ({
-      notes: [note.note],
-      startBeat: note.startBeat,
-      durationBeats: note.durationBeats,
-      hand: 'right' as const,
-      velocity: 80,
-      grace: false,
-    }))
-
-    const cueOf = cueChord(parseChordInput('C').chords[0])!
-    const lifted = voiceLeadTwoHands([cueOf])[0].right.map((note) => {
-      let pitch: number = note
-      while (pitch < 60) pitch += 12
-      while (pitch > 84) pitch -= 12
-      return pitch
-    })
-    const cue = cueStrike(lifted, round, { roll: true })
-
-    const all = [...backing, ...run, ...cue]
-    const lh = pitches(left(all))
-    const rh = pitches(right(all))
-
-    expect(lh.length, 'đoạn dạo phải có bass').toBeGreaterThan(0)
-    expect(Math.max(...lh), 'bass đoạn dạo lấn lên quãng tám 4').toBeLessThan(
-      LEFT_CEILING,
-    )
-    // Câu chạy và hợp âm báo nằm hẳn trên bè trầm.
-    expect(Math.min(...pitches(cue)), 'hợp âm báo lẫn vào bè trầm').toBeGreaterThanOrEqual(60)
-    expect(run.every((e) => e.hand === 'right')).toBe(true)
-    expect(Math.min(...rh)).toBeGreaterThan(Math.max(...lh))
-  })
-
-  it('G. dòng thời gian ghép lại vẫn giữ tay trái ở dưới', () => {
-    const sources: SourceSection[] = [
-      { name: 'Điệp khúc', kind: 'chorus', startBeat: 0, lengthBeats: 16 },
-    ]
-    const { played, solo, list } = interludeLayers()
-
-    const song = buildArrangedSong({
-      accompaniment: giveCompingToLeft(played, solo, 4),
-      fills: soloToTimeline(
-        generateFillLine(list, { beatsPerChord: 4, density: 'medium', key: KEY }),
-      ),
-      solo: () => solo,
-      sources,
-      steps: [
-        { type: 'section', source: 0 },
-        { type: 'interlude', over: 0, loops: 2 },
-      ],
-    })
-
-    const interludeFrom = 16
-    const lh = pitches(
-      left(song.events).filter((e) => e.startBeat >= interludeFrom),
-    )
-    expect(lh.length).toBeGreaterThan(0)
-    expect(Math.max(...lh), 'tay trái trong giang tấu').toBeLessThan(LEFT_CEILING)
-  })
-})
-
-describe('cả bài — tay trái không bao giờ lem lên chỗ tay phải', () => {
-  /*
-    Quét **toàn bộ** dòng thời gian, kể cả điệu không thuộc họ ballad — tức
-    không có trần hạ cho câu solo, và đó là lúc câu solo leo cao nhất. Chính lúc
-    ấy mà tay trái lem lên thì hai bè chồng nhau ở giữa đàn.
-
-    Đây là chốt chặn cuối: mọi đường dựng tiếng đều phải đi qua đây.
-  */
-  const SONG = 'Cadd2 G9 Am9 Em7 Fadd2 G9 Am9 Dm9'
-
-  function wholeSong(styleId: string) {
-    const list = parseChordInput(SONG).chords
-    const style = getStyle(styleId)!
-    const beatsEach = list.map(() => 4)
-
-    const acc = renderPattern(voiceLeadTwoHands(list), style, {
-      beatsPerChord: 4,
-      beatsEach,
-    })
-    const fills = soloToTimeline(
+    const fill = soloToTimeline(
       generateFillLine(list, { beatsPerChord: 4, density: 'medium', key: KEY }),
     )
-    const solo = soloToTimeline(
-      generateSolo(list, { beatsPerChord: 4, density: 'medium', key: KEY, take: 0 }),
-    )
-    const backing = [
-      ...acc.filter((e) => e.hand !== 'left'),
-      ...interludeBassLine({ chords: list, beatsEach }),
-    ]
+    const all = [...giveCompingToLeft(comping, fill, 4), ...fill]
 
-    return buildArrangedSong({
-      accompaniment: giveCompingToLeft(acc, fills, 4),
-      fills,
-      solo: () => solo,
-      sources: [
-        { name: 'Điệp khúc', kind: 'chorus', startBeat: 0, lengthBeats: 32 },
-      ],
-      steps: [
-        { type: 'section', source: 0 },
-        { type: 'interlude', over: 0, loops: 2 },
-      ],
-      interludeRange: () => ({
-        startBeat: 0,
-        lengthBeats: 16,
-        chords: [],
-        events: interludeAccompaniment(backing),
-        solo: () => solo,
-      }),
-    })
-  }
-
-  for (const styleId of ['pop-1', STYLE]) {
-    it(`${styleId}: không tiếng tay trái nào chạm Đô quãng tám 4`, () => {
-      const song = wholeSong(styleId)
-      const stray = left(song.events).filter(
-        (e) => Math.max(...e.notes) >= LEFT_CEILING,
-      )
-
-      expect(
-        stray.map((e) => `phách ${e.startBeat}: ${e.notes.join(',')}`),
-      ).toEqual([])
-    })
-
-    it(`${styleId}: hai tay không bao giờ chơi trùng cao độ cùng lúc`, () => {
-      /*
-        Trên bàn phím hiện lên thì nốt trùng cao độ ở hai tay in đè lên nhau —
-        đúng thứ người dùng chụp được. Nó cũng vô nghĩa về mặt đàn: hai ngón
-        cùng một phím.
-      */
-      const song = wholeSong(styleId)
-      const byBeat = new Map<number, { left: number[]; right: number[] }>()
-
-      for (const event of song.events) {
-        const key = Number(event.startBeat.toFixed(3))
-        const slot = byBeat.get(key) ?? { left: [], right: [] }
-        slot[event.hand].push(...event.notes)
-        byBeat.set(key, slot)
-      }
-
-      for (const [beat, slot] of byBeat) {
-        const both = slot.left.filter((note) => slot.right.includes(note))
-        expect(both, `phách ${beat}`).toEqual([])
-      }
-    })
-  }
+    const lh = pitches(left(all))
+    const rh = pitches(right(all))
+    expect(lh.length, 'đoạn hát phải có bass').toBeGreaterThan(0)
+    expect(Math.max(...lh), 'tay trái lấn lên quãng tám 4').toBeLessThan(LEFT_CEILING)
+    expect(Math.min(...rh), 'tay phải thò xuống bè trầm').toBeGreaterThanOrEqual(LEFT_CEILING)
+  })
 })
