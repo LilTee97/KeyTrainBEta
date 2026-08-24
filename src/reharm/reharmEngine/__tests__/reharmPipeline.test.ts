@@ -587,12 +587,12 @@ describe('đổi hợp âm kết trên lời', () => {
 })
 
 describe('xoay màu cùng gốc trên đường ống', () => {
-  it('C C C C ra Cadd2 CM7 C6 CM7 trên lời', () => {
+  it('C C C C chia đôi gốc / màu: add2 rồi maj7', () => {
     const result = reharmonize(chords('C C C C'))
     expect(result.colored.map((chord) => chord.symbol)).toEqual([
       'Cadd2',
+      'Cadd2',
       'Cmaj7',
-      'C6',
       'Cmaj7',
     ])
   })

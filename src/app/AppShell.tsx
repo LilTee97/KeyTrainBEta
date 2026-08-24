@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { armAudioOnFirstGesture } from '../shared/audio/audioEngine'
 import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
+import { ChordDrillHome } from '../reharm/chordDrill/ChordDrillHome'
 import { PracticeHome } from '../reharm/PracticeHome'
 import { ReharmHome } from '../reharm/ReharmHome'
 import { MrHaiPanel } from '../reharm/brain/MrHaiPanel'
@@ -21,6 +22,7 @@ import { MidiDebugPanel } from './debug/MidiDebugPanel'
 const TABS = [
   { id: 'reharm', label: 'Tái hòa âm' },
   { id: 'practice', label: 'Luyện đệm' },
+  { id: 'chords', label: 'Học hợp âm' },
   { id: 'mr-hai', label: 'Mr Hải' },
   { id: 'metronome', label: 'Nhịp' },
   { id: 'debug', label: 'Gỡ lỗi' },
@@ -78,6 +80,7 @@ export function AppShell() {
       </div>
 
       {tab === 'practice' && <PracticeHome />}
+      {tab === 'chords' && <ChordDrillHome />}
       {tab === 'mr-hai' && <MrHaiPanel />}
       {tab === 'metronome' && <MetronomePanel />}
       {tab === 'debug' && <MidiDebugPanel />}

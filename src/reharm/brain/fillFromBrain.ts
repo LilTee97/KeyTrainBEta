@@ -62,6 +62,8 @@ export interface BrainFillRequest {
   key: { tonic: PitchClass; scale: ScaleType } | null
   /** Mức nguồn gốc tối thiểu để được thành tiếng. Xem `gate.ts`. */
   mode?: SoundMode
+  /** Lượt phát — cùng công thức Kingsley, khác quãng tám / nhịp. */
+  take?: number
 }
 
 export function brainFill(request: BrainFillRequest): SoloNote[] | null {
@@ -122,5 +124,50 @@ export function brainFill(request: BrainFillRequest): SoloNote[] | null {
     notes.push({ note: rh.midi, startBeat, durationBeats: duration * 0.9, isGrace: false })
   }
 
-  return notes.length > 0 ? notes : null
+  return notes.length > 0 ? varyKingsley(notes, request.take ?? 0) : null
+}
+
+/** Đổi hình câu: mỗi lượt một hướng / quãng tám / độ dài khác hẳn. */
+export function varyKingsley(notes: readonly SoloNote[], take: number): SoloNote[] {
+  const main = notes.filter((note) => !note.isGrace)
+  if (main.length === 0) return [...notes]
+  const flavor = ((take % 6) + 6) % 6
+  const asMidi = (value: number) => value as SoloNote['note']
+
+  if (flavor === 0) return [...notes]
+
+  if (flavor === 1) {
+    const pitches = main.map((note) => note.note)
+    const rev = [...pitches].reverse()
+    let at = 0
+    return notes.map((note) =>
+      note.isGrace ? note : { ...note, note: asMidi(rev[at++]!) },
+    )
+  }
+
+  if (flavor === 2) {
+    return notes.map((note) =>
+      note.note >= 60 ? { ...note, note: asMidi(note.note - 12) } : note,
+    )
+  }
+
+  if (flavor === 3) {
+    return notes.map((note) =>
+      note.note <= 76 ? { ...note, note: asMidi(note.note + 12) } : note,
+    )
+  }
+
+  if (flavor === 4) {
+    const first = Math.min(...main.map((note) => note.startBeat))
+    const last = Math.max(...main.map((note) => note.startBeat))
+    return notes.map((note) =>
+      note.isGrace
+        ? note
+        : { ...note, startBeat: first + (last - note.startBeat) },
+    )
+  }
+
+  const keep = main.slice(-2)
+  const cut = keep[0]!.startBeat
+  return notes.filter((note) => note.isGrace || note.startBeat >= cut - 1e-6)
 }

@@ -541,6 +541,7 @@ export function generateFillLine(
       chord: ParsedChord
       next: ParsedChord
       chordStartBeat: number
+      take?: number
     }) => readonly SoloNote[] | null
   },
 ): SoloNote[] {
@@ -697,6 +698,7 @@ export function generateFillLine(
         chord: chords[index],
         next,
         chordStartBeat: fillStarts[index],
+        take,
       })
       if (fromBrain) {
         result.push(...fromBrain)
@@ -997,7 +999,14 @@ export function generateSolo(
         Mẫu nào tự rút lui — `bebop-pair` trên hợp âm không phải át, `scale-run`
         trên bậc thang nốt hợp âm — thì lùi về cú quét, rồi mới tới câu rải.
       */
-      const openerOrder = ['sweep', 'enclosure', 'scale-run', 'bebop-pair'] as const
+      const openerOrder = [
+        'sweep',
+        'sweep',
+        'enclosure',
+        'sweep',
+        'scale-run',
+        'bebop-pair',
+      ] as const
       const wanted = openerOrder[(Math.floor(index / 2) + round) % openerOrder.length]
       const context = {
         chord,
@@ -1951,11 +1960,11 @@ function chooseLick(choice: LickChoice): Lick {
       cả ô 1 lẫn ô 3 đều bốc trúng cú quét, tức bốn ô nghe hai lần một ngón.
     */
     const opening = chordIndex % 4
-    if (opening === 0 && sweep) return fit(sweep)
-    if (opening === 2 && chromatic.length > 0) {
+    if ((opening === 0 || opening === 1) && sweep) return fit(sweep)
+    if (opening === 2 && chromatic.length > 0 && mix(13) % 3 === 0) {
       return fit(chromatic[mix(13) % chromatic.length])
     }
-    if (sweep && mix(9) % 5 !== 0) return fit(sweep)
+    if (sweep && mix(9) % 3 !== 0) return fit(sweep)
     return fit(runners[mix(11) % runners.length])
   }
   if (positionInPhrase === 2) {

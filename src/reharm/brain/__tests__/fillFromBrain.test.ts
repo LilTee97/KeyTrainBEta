@@ -57,6 +57,23 @@ describe('câu lót hỏi não Kingsley', () => {
     )
   })
 
+  it('mỗi lượt take ra hình Kingsley khác nhau', () => {
+    const chords = parseChordInput('C Am').chords
+    const shapes = [0, 1, 2, 3].map((take) =>
+      (brainFill({
+        chord: chords[0]!,
+        next: chords[1]!,
+        chordStartBeat: 0,
+        key: C_MAJOR,
+        take,
+      }) ?? [])
+        .map((note) => `${note.startBeat}:${note.note}`)
+        .join(' '),
+    )
+    expect(shapes.every((shape) => shape.length > 0)).toBe(true)
+    expect(new Set(shapes).size).toBeGreaterThanOrEqual(4)
+  })
+
   it('não hụt luật thì vẫn có câu fill, không im tiếng', () => {
     // Không giọng nào -> não trả null ngay từ cửa.
     const notes = generateFillLine(parseChordInput('C Am F G').chords, {

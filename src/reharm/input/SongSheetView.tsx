@@ -8,6 +8,7 @@ import {
   SECTION_KIND_COLORS,
   SECTION_KIND_LABELS,
   flattenLines,
+  layoutAnchors,
 } from './songSheet'
 import type { SongSectionKind } from './songTextParser'
 import { readSetting } from '../../shared/persistence/localSettings'
@@ -93,6 +94,9 @@ interface SongSheetViewProps {
   onToggleRun?: (chordIndex: number) => void
   colorHintAt?: (chordIndex: number) => string | null
   onCycleColor?: (chordIndex: number) => void
+  heldMutedAt?: (chordIndex: number) => boolean
+  heldBusyAt?: (chordIndex: number) => boolean
+  onToggleHeldMute?: (chordIndex: number) => void
   /**
    * Hợp âm này có đang là **mốc chuyển đoạn** không, và chơi ô nối thế nào.
    *
@@ -176,6 +180,9 @@ export function SongSheetView({
   onToggleRun,
   colorHintAt,
   onCycleColor,
+  heldMutedAt,
+  heldBusyAt,
+  onToggleHeldMute,
   transitionAt,
   onToggleTransition,
   onSetTransition,
@@ -453,6 +460,16 @@ export function SongSheetView({
               ? () => onCycleColor(menu.chordIndex)
               : undefined
           }
+          heldMuted={heldMutedAt?.(menu.chordIndex) ?? false}
+          heldBusy={heldBusyAt?.(menu.chordIndex) ?? false}
+          onToggleHeldMute={
+            onToggleHeldMute
+              ? () => {
+                  onToggleHeldMute(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
           slashHint={slashHintAt?.(menu.chordIndex) ?? null}
           onToggleSlash={
             onToggleSlash
@@ -490,6 +507,9 @@ export function ChordContextMenu({
   onToggleRun,
   colorHint,
   onCycleColor,
+  heldMuted,
+  heldBusy,
+  onToggleHeldMute,
   slashHint,
   onToggleSlash,
   transition,
@@ -516,6 +536,9 @@ export function ChordContextMenu({
   onToggleRun?: () => void
   colorHint?: string | null
   onCycleColor?: () => void
+  heldMuted?: boolean
+  heldBusy?: boolean
+  onToggleHeldMute?: () => void
   slashHint?: string | null
   onToggleSlash?: () => void
   /** Đang là mốc chuyển đoạn không, và chơi ô nối thế nào. */
@@ -730,6 +753,26 @@ export function ChordContextMenu({
               </div>
             </>
           )}
+        </>
+      )}
+
+      {onToggleHeldMute && (heldBusy || heldMuted) && (
+        <>
+          <div className="my-1 border-t border-line" />
+          <button
+            type="button"
+            onClick={onToggleHeldMute}
+            className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
+          >
+            <span className="text-amber-key">
+              {heldMuted ? 'Bật lại xoay màu cùng gốc' : 'Bỏ màu xoay (chỉ hợp âm gốc)'}
+            </span>
+            <span className="text-[10px] text-dim">
+              {heldMuted
+                ? 'Cadd2 → maj7 → 6 trở lại'
+                : 'Không chồng Cadd2 / maj7 trên cùng một chỗ'}
+            </span>
+          </button>
         </>
       )}
 
@@ -1022,11 +1065,12 @@ function AnchorRow({
   onSeek?: (chordIndex: number) => void
   bindMenu?: (chordIndex: number) => LongPressHandlers
 }) {
-  const clusters: { offset: number; items: SheetAnchor[] }[] = []
-  for (const anchor of line.anchors) {
+  const placed = layoutAnchors(line.anchors)
+  const clusters: { column: number; items: SheetAnchor[] }[] = []
+  for (const { anchor, column } of placed) {
     const last = clusters.at(-1)
-    if (last && last.offset === anchor.charOffset) last.items.push(anchor)
-    else clusters.push({ offset: anchor.charOffset, items: [anchor] })
+    if (last && last.column === column) last.items.push(anchor)
+    else clusters.push({ column, items: [anchor] })
   }
 
   return (
@@ -1034,13 +1078,13 @@ function AnchorRow({
       <div className="relative min-h-[1.5em]">
         {clusters.map((cluster) => (
           <span
-            key={cluster.offset}
+            key={cluster.column}
             className="absolute top-0 whitespace-nowrap"
-            style={{ left: `${cluster.offset}ch` }}
+            style={{ left: `${cluster.column}ch` }}
           >
             {cluster.items.map((anchor, index) => (
               <ChordLabel
-                key={`${cluster.offset}-${index}`}
+                key={`${cluster.column}-${index}`}
                 lead={index > 0}
                 anchor={anchor}
                 active={anchor.chordIndex === activeIndex}

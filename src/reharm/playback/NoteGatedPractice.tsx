@@ -21,6 +21,7 @@ import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { PracticeHand } from './noteGatedPlaybackEngine'
@@ -209,6 +210,13 @@ export function NoteGatedPractice({
           {progress.done}/{progress.total} chặng
         </span>
       </div>
+      {step?.symbol && (
+        <p className="mb-2 text-sm font-semibold text-amber-key">
+          {scaleLabelForSymbol(step.symbol)
+            ? `Gam: ${scaleLabelForSymbol(step.symbol)}`
+            : `Hợp âm ${step.symbol}`}
+        </p>
+      )}
 
       {/*
         Nút cắm đàn đặt ngay đây, cạnh chỗ dùng tới nó. Bàn phím ảo và phím máy

@@ -1041,7 +1041,7 @@ const pentatonicSweep: Lick = {
     const perOctave = ladder.findIndex((note) => note >= ladder[0] + 12)
     const cellSize = perOctave > 0 ? Math.min(perOctave, 8) : 4
     const sweep: MidiNote[] = []
-    for (let octave = 0; octave < 4; octave += 1) {
+    for (let octave = 0; octave < 6; octave += 1) {
       for (let index = 0; index < cellSize; index += 1) {
         const note = ladder[index + octave * cellSize]
         if (note === undefined || note > high) break
@@ -1050,7 +1050,7 @@ const pentatonicSweep: Lick = {
     }
     if (sweep.length === 0) return { notes: [], shape: [] }
 
-    const runBeats = beats * 0.6
+    const runBeats = beats * 0.8
     const holdBeats = beats - runBeats
     const step = runBeats / sweep.length
 

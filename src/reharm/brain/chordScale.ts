@@ -66,6 +66,30 @@ export function scaleForChord(
   }
 }
 
+/** Tên gam kho chọn cho hợp âm, để hiện khi giang tấu / rải. */
+export function scaleLabelForSymbol(
+  symbol: string,
+  key?: SongKey | null,
+): string | null {
+  if (!brainReady()) return null
+  try {
+    const answer = scaleFor(symbol, brain(), {
+      requireValidated: true,
+      key: keyText(key),
+    })
+    return answer.best?.label ?? answer.best?.name ?? null
+  } catch {
+    return null
+  }
+}
+
+export function scaleLabelForChord(
+  chord: ParsedChord,
+  key?: SongKey | null,
+): string | null {
+  return scaleLabelForSymbol(formatChordSymbol(chord.root, chord.quality), key)
+}
+
 /**
  * Những hợp âm trong bài mà kho **chưa có gam** cho chúng.
  *

@@ -179,6 +179,9 @@ interface ChordOverviewProps {
   onToggleRun?: (chordIndex: number) => void
   colorHintAt?: (chordIndex: number) => string | null
   onCycleColor?: (chordIndex: number) => void
+  heldMutedAt?: (chordIndex: number) => boolean
+  heldBusyAt?: (chordIndex: number) => boolean
+  onToggleHeldMute?: (chordIndex: number) => void
   slashHintAt?: (chordIndex: number) => string | null
   onToggleSlash?: (chordIndex: number) => void
   transitionAt?: (chordIndex: number) => TransitionOption | null
@@ -196,6 +199,8 @@ export function ChordOverview({
   applyCount = 0,
   activeBeat,
   onSeekBeat,
+  leadIn,
+  leadOut,
   showToolbar = true,
   onPlay,
   onPause,
@@ -218,6 +223,9 @@ export function ChordOverview({
   onToggleRun,
   colorHintAt,
   onCycleColor,
+  heldMutedAt,
+  heldBusyAt,
+  onToggleHeldMute,
   slashHintAt,
   onToggleSlash,
   transitionAt,
@@ -311,6 +319,21 @@ export function ChordOverview({
         Chuột phải vào đúng phách để chèn 2-5-1 / fill tại phách đó.
       </p>
 
+      {(leadIn || leadOut) && (
+        <div className="mb-2 flex flex-col gap-1 text-xs">
+          {leadIn && leadIn.chords.length > 0 && (
+            <p className="font-mono text-amber-key">
+              {leadIn.label}: {leadIn.chords.join('  ')}
+            </p>
+          )}
+          {leadOut && leadOut.chords.length > 0 && (
+            <p className="font-mono text-amber-key">
+              {leadOut.label}: {leadOut.chords.join('  ')}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="overflow-auto rounded-lg border border-line bg-black/30 p-1">
         {Array.from(
           { length: Math.ceil(shown.length / cellsPerRow) },
@@ -327,10 +350,7 @@ export function ChordOverview({
                 .map((symbol, offset) => {
                   const beat = row * cellsPerRow + offset
                   const start =
-                    beat === 0 ||
-                    shown[beat] !== shown[beat - 1] ||
-                    (chordIndexAt !== undefined &&
-                      chordIndexAt(beat) !== chordIndexAt(beat - 1))
+                    beat === 0 || shown[beat] !== shown[beat - 1]
                   const barStart = beat % meter === 0
                   const chordIndex = chordIndexAt?.(beat) ?? null
                   const press =
@@ -462,6 +482,16 @@ export function ChordOverview({
           onCycleColor={
             onCycleColor
               ? () => onCycleColor(menu.chordIndex)
+              : undefined
+          }
+          heldMuted={heldMutedAt?.(menu.chordIndex) ?? false}
+          heldBusy={heldBusyAt?.(menu.chordIndex) ?? false}
+          onToggleHeldMute={
+            onToggleHeldMute
+              ? () => {
+                  onToggleHeldMute(menu.chordIndex)
+                  setMenu(null)
+                }
               : undefined
           }
           slashHint={slashHintAt?.(menu.chordIndex) ?? null}

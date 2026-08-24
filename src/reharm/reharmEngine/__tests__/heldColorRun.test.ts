@@ -6,19 +6,19 @@ import { colorSequence } from '../staticVoicingRules'
 const list = (text: string) => colorSequence(parseChordInput(text).chords)
 
 describe('xoay màu khi cùng gốc ngân nhiều ô', () => {
-  it('dựng lại đúng C → CM7 → C6 → CM7 của tài liệu', () => {
+  it('chia đôi với gốc: nửa đầu add2, nửa sau maj7', () => {
     const varied = varyHeldColors(list('C C C C'), {
       beatsOf: () => 4,
     })
 
     expect(varied.map((chord) => chord.symbol)).toEqual([
       'Cadd2',
+      'Cadd2',
       'Cmaj7',
-      'C6',
       'Cmaj7',
     ])
     expect(varied.every((chord) => chord.holdRun)).toBe(true)
-    expect(varied[0].heldLabel).toBe('Cadd2 → Cmaj7 → C6 → Cmaj7')
+    expect(varied[0].heldLabel).toBe('Cadd2 → Cmaj7')
   })
 
   it('gốc khác thì ngắt dãy', () => {
@@ -55,6 +55,15 @@ describe('xoay màu khi cùng gốc ngân nhiều ô', () => {
     )
     expect(varied.every((chord) => !chord.holdRun)).toBe(true)
   })
+
+  it('chuột phải bỏ xoay thì giữ hợp âm gốc, không chồng Cadd2/maj7', () => {
+    const varied = varyHeldColors(list('C C C C'), {
+      beatsOf: () => 4,
+      skipHeldAt: new Set([0]),
+    })
+    expect(varied.every((chord) => !chord.heldLabel)).toBe(true)
+    expect(new Set(varied.map((chord) => chord.symbol)).size).toBe(1)
+  })
 })
 
 describe('tách ô khi phát', () => {
@@ -64,6 +73,6 @@ describe('tách ô khi phát', () => {
 
     expect(exploded.map((chord) => chord.symbol)).toEqual(['Cadd2', 'Cmaj7'])
     expect(exploded.map((chord) => chord.beats)).toEqual([4, 4])
-    expect(exploded[1].passing).toBe(true)
+    expect(exploded[1].passing).toBeFalsy()
   })
 })

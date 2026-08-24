@@ -149,12 +149,21 @@ export const DEFAULT_MAX_HAND_NOTES = 4
  * hợp âm — đây là lối đệm quen thuộc nhất, và nốt gốc nhân đôi ở hai tay nghe
  * bình thường.
  */
-export function leftHandNoteCount(chordSize: number): number {
+export function leftHandNoteCount(
+  chordSize: number,
+  share: 'comp' | 'drill' = 'comp',
+): number {
+  if (share === 'drill') {
+    if (chordSize <= 3) return 1
+    if (chordSize <= 5) return 2
+    return 3
+  }
   if (chordSize <= 4) return 1
   return Math.floor(chordSize / 2)
 }
 
 export interface TwoHandOptions extends ChooseVoicingOptions {
+  leftHandShare?: 'comp' | 'drill'
   /**
    * Bỏ nốt gốc ở tay phải khi tay trái đã giữ nó.
    *
@@ -169,7 +178,8 @@ export function voiceLeadTwoHands(
   chords: readonly ParsedChord[],
   options: TwoHandOptions = {},
 ): TwoHandVoicing[] {
-  const { dropRootFromRightHand = false, ...voicingOptions } = options
+  const { dropRootFromRightHand = false, leftHandShare = 'comp', ...voicingOptions } =
+    options
 
   // Hợp âm ít nốt thì tay phải bấm trọn, nên vẫn dẫn bè được như cũ.
   const rightVoicings = voiceLeadSequence(chords, voicingOptions)
@@ -179,9 +189,9 @@ export function voiceLeadTwoHands(
     const bassNote = bassNoteFor(chord)
 
     // Hợp âm dày: xếp chồng từ nốt bass rồi cắt đôi cho hai tay.
-    if (leftHandNoteCount(chordSize) > 1) {
+    if (leftHandNoteCount(chordSize, leftHandShare) > 1) {
       const stacked = fitStackedChord(bassNote, chord)
-      const leftCount = leftHandNoteCount(chordSize)
+      const leftCount = leftHandNoteCount(chordSize, leftHandShare)
 
       const split = settleHands(
         stacked.slice(0, leftCount),

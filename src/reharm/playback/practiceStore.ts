@@ -67,6 +67,8 @@ export interface PracticeSong {
   /** Lưới hợp âm đã tái hòa âm, từng phách. */
   perBeat: string[]
   meter: 3 | 4
+  leadIn?: { label: string; chords: readonly string[] }
+  leadOut?: { label: string; chords: readonly string[] }
 }
 
 /**

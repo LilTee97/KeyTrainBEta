@@ -4,10 +4,10 @@ import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 
 /**
- * Xoay màu khi cùng gốc ngân nhiều ô — kỹ thuật 5 cấp ô nhịp.
+ * Xoay màu khi cùng gốc ngân: **chia đôi** với hợp âm gốc.
  *
- * Tài liệu mục 12.2: `C → CM7 → C6 → CM7`. Ô đầu giữ màu người dùng chọn,
- * các ô sau luân phiên hai màu còn lại trên bánh `add2 / maj7 / 6`.
+ * Nửa đầu giữ màu đang có. Nửa sau một nấc trên bánh add2 / maj7 / 6.
+ * Không trải cả bánh trên bốn ô — tránh Cadd2 Cadd2 rồi chồng chữ.
  */
 
 const WHEEL = ['add9', 'maj7', '6'] as const
@@ -21,12 +21,17 @@ function isRestingMajor(chord: ParsedChord): boolean {
   return intervals.includes(4) && !intervals.includes(10)
 }
 
-function heldQuality(startId: string, index: number): string {
-  if (index === 0) return WHEEL.includes(startId as (typeof WHEEL)[number])
-    ? startId
-    : WHEEL[0]
-  const rest = WHEEL.filter((id) => id !== (WHEEL.includes(startId as (typeof WHEEL)[number]) ? startId : WHEEL[0]))
-  return rest[(index - 1) % rest.length]
+function startQuality(startId: string): string {
+  return WHEEL.includes(startId as (typeof WHEEL)[number]) ? startId : WHEEL[0]
+}
+
+function nextQuality(startId: string): string {
+  const start = startQuality(startId)
+  return WHEEL[(WHEEL.indexOf(start as (typeof WHEEL)[number]) + 1) % WHEEL.length]
+}
+
+function qualityAt(startId: string, offset: number, run: number): string {
+  return offset < Math.ceil(run / 2) ? startQuality(startId) : nextQuality(startId)
 }
 
 function retone(chord: ParsedChord, qualityId: string): ParsedChord {
@@ -46,6 +51,8 @@ function retone(chord: ParsedChord, qualityId: string): ParsedChord {
 export interface HeldColorOptions {
   beatsOf: (index: number) => number
   beatsPerMeasure?: number
+  /** Ô đã chuột phải bỏ xoay màu — giữ đúng hợp âm gốc. */
+  skipHeldAt?: ReadonlySet<number>
 }
 
 /**
@@ -77,17 +84,39 @@ export function varyHeldColors(
 
     const run = end - index
     const startId = head.quality.id
+    const skipped = options.skipHeldAt
+      ? Array.from({ length: run }, (_, offset) => index + offset).some((at) =>
+          options.skipHeldAt!.has(at),
+        )
+      : false
+
+    if (skipped) {
+      index = end
+      continue
+    }
 
     if (run >= 2) {
       const labels: string[] = []
       for (let offset = 0; offset < run; offset += 1) {
         next[index + offset] = {
-          ...retone(next[index + offset], heldQuality(startId, offset)),
+          ...retone(next[index + offset], qualityAt(startId, offset, run)),
           holdRun: true,
         }
         labels.push(next[index + offset].symbol)
       }
-      const heldLabel = labels.join(' → ')
+      const unique = [...new Set(labels)]
+      if (unique.length < 2) {
+        for (let offset = 0; offset < run; offset += 1) {
+          next[index + offset] = {
+            ...next[index + offset],
+            holdRun: undefined,
+            heldLabel: undefined,
+          }
+        }
+        index = end
+        continue
+      }
+      const heldLabel = unique.join(' → ')
       for (let offset = 0; offset < run; offset += 1) {
         next[index + offset] = { ...next[index + offset], heldLabel }
       }
@@ -99,15 +128,17 @@ export function varyHeldColors(
     if (bars >= 2) {
       const qualities: string[] = []
       const labels: string[] = []
-      for (let offset = 0; offset < bars; offset += 1) {
-        const qualityId = heldQuality(startId, offset)
-        qualities.push(qualityId)
+      qualities.push(startQuality(startId), nextQuality(startId))
+      for (const qualityId of qualities) {
         labels.push(retone(head, qualityId).symbol)
       }
-      next[index] = {
-        ...retone(head, qualities[0]),
-        heldLabel: labels.join(' → '),
-        heldQualities: qualities,
+      const unique = [...new Set(labels)]
+      if (unique.length >= 2) {
+        next[index] = {
+          ...retone(head, qualities[0]),
+          heldLabel: labels.join(' → '),
+          heldQualities: qualities,
+        }
       }
     }
 
@@ -126,7 +157,7 @@ export function explodeHeldBars(
 
   for (const chord of chords) {
     const qualities = chord.heldQualities
-    if (!qualities || qualities.length < 2) {
+    if (!qualities || qualities.length < 2 || new Set(qualities).size < 2) {
       out.push(chord)
       continue
     }
@@ -134,11 +165,11 @@ export function explodeHeldBars(
     const total = chord.beats ?? beatsPerChord
     const each = total / qualities.length
 
-    for (const [offset, qualityId] of qualities.entries()) {
+    for (const qualityId of qualities) {
       out.push({
         ...retone(chord, qualityId),
         beats: each,
-        passing: offset > 0 ? true : chord.passing,
+        passing: chord.passing,
         heldLabel: undefined,
         heldQualities: undefined,
         holdRun: undefined,

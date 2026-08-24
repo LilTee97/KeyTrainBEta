@@ -58,6 +58,7 @@ import {
   buildSongSheet,
   resectionSheet,
   sectionChordRanges,
+  attachPhraseToSheet,
 } from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
 import { parseSongText } from './input/songTextParser'
@@ -113,7 +114,7 @@ import { brainPassingSuggestions } from './brain/passing'
 import { brainPhrase } from './brain/phrase'
 import { walkingBassLine } from './brain/walkingBass'
 import { teacherBadge } from './brain/badge'
-import { scaleForChord, scaleGaps } from './brain/chordScale'
+import { scaleForChord, scaleGaps, scaleLabelForChord } from './brain/chordScale'
 import { soloFeelFor } from './fillSoloGenerator/soloFeel'
 import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
 import { plainForInterlude } from './style/interludeChords'
@@ -454,6 +455,7 @@ export function ReharmHome() {
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
   const [phraseSpin, setPhraseSpin] = useState(0)
   const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
+  const [mutedHeld, setMutedHeld] = useState<ReadonlySet<number>>(new Set())
   const [slashEdits, setSlashEdits] = useState<Record<number, boolean>>({})
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   /** Bật dẫn bè hay để thế bấm mộc, dùng để nghe đối chiếu. */
@@ -505,7 +507,7 @@ export function ReharmHome() {
    * thành chỗ nghỉ, nên hình câu ra `mở → nghỉ → giữa → kết` — đúng phrasing
    * `pianoimprovnotes.md` mục 4 mô tả.
    */
-  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('medium')
+  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('dense')
 
   /**
    * Mật độ **chỗ chêm câu fill**, tách hẳn khỏi mật độ nốt câu nhạc.
@@ -756,6 +758,7 @@ export function ReharmHome() {
       sectionRanges: rawSectionRanges,
       beatsPerMeasure: style.beatsPerMeasure,
       key: parsedKey,
+      skipHeldAt: mutedHeld,
     })
 
     /*
@@ -797,6 +800,7 @@ export function ReharmHome() {
       acceptedPassing: chosen,
       beatsPerChord: chordBeats,
       chordBeats: halvedBeats,
+      skipHeldAt: mutedHeld,
     })
 
     return {
@@ -820,6 +824,7 @@ export function ReharmHome() {
     passingKeep,
     chordBeats,
     halvedBeats,
+    mutedHeld,
   ])
 
   const recolored = useMemo(
@@ -1013,11 +1018,26 @@ export function ReharmHome() {
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
   const sheet = useMemo(() => {
     if (!pastedSong) return null
-    return resectionSheet(
+    const base = resectionSheet(
       buildSongSheet(pastedSong, recolored, withPassing),
       sectionMarks,
     )
-  }, [pastedSong, recolored, withPassing, sectionMarks])
+    const playOrder = arrangement ?? []
+    const intro = playOrder.some((step) => step.type === 'intro')
+      ? [
+          ...phraseChords('intro', reharm.key).map((chord) => chord.symbol),
+          ...(cueChord(recolored.find((chord) => !chord.passing) ?? null)
+            ? [
+                `${cueChord(recolored.find((chord) => !chord.passing) ?? null)!.symbol} (báo)`,
+              ]
+            : []),
+        ]
+      : []
+    const outro = playOrder.some((step) => step.type === 'outro')
+      ? phraseChords('outro', reharm.key).map((chord) => chord.symbol)
+      : []
+    return attachPhraseToSheet(base, intro, outro)
+  }, [pastedSong, recolored, withPassing, sectionMarks, arrangement, reharm.key])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
 
@@ -1484,6 +1504,15 @@ export function ReharmHome() {
     [reharm.colored, colorEdits, slashEdits],
   )
 
+  const toggleHeldMute = useCallback((chordIndex: number) => {
+    setMutedHeld((current) => {
+      const next = new Set(current)
+      if (next.has(chordIndex)) next.delete(chordIndex)
+      else next.add(chordIndex)
+      return next
+    })
+  }, [])
+
   const toggleSlash = useCallback((chordIndex: number) => {
     setSlashEdits((current) => {
       const painted = reharm.colored[chordIndex]
@@ -1563,7 +1592,12 @@ export function ReharmHome() {
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
           brainFill: brainFillsOn
-            ? (request) => brainFill({ ...request, key: reharm.key })
+            ? (request) =>
+                brainFill({
+                  ...request,
+                  key: reharm.key,
+                  take: playSpin.current,
+                })
             : undefined,
         }),
       ),
@@ -1854,11 +1888,7 @@ export function ReharmHome() {
     setMinorColor(saved.minorColor as MinorChordColor)
     setDominantColor(saved.dominantColor as DominantChordColor)
 
-    setSoloDensity(
-      saved.soloDensity === 'sparse'
-        ? 'medium'
-        : (saved.soloDensity as OrnamentDensity),
-    )
+    setSoloDensity(saved.soloDensity === 'sparse' ? 'sparse' : 'dense')
     // Bài lưu từ trước khi tách thì câu fill dùng chung mật độ với câu nhạc.
     setFillDensity((saved.fillDensity ?? saved.soloDensity) as OrnamentDensity)
     // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
@@ -2168,6 +2198,14 @@ export function ReharmHome() {
     return mainIndex >= 0 ? mainIndex : null
   }, [looping, sheet, positionBeats, song, withPassing, chordBeats])
 
+  const soloScaleLabel = useMemo(() => {
+    const idx = activeChordIndex ?? selectedIndex
+    if (idx === null) return null
+    const chord = recolored.filter((item) => !item.passing)[idx]
+    if (!chord) return null
+    return scaleLabelForChord(chord, reharm.key)
+  }, [activeChordIndex, selectedIndex, recolored, reharm.key])
+
 
   const timeline = song.events
   const loopLengthBeats = song.totalBeats
@@ -2189,6 +2227,25 @@ export function ReharmHome() {
       beatsPerChord: chordBeats,
       perBeat: reharmPerBeat,
       meter: style.beatsPerMeasure === 3 ? 3 : 4,
+      leadIn: steps.some((step) => step.type === 'intro')
+        ? {
+            label: 'Dạo đầu',
+            chords: [
+              ...phraseChords('intro', reharm.key).map((c) => c.symbol),
+              ...(cueChord(recolored.find((c) => !c.passing) ?? null)
+                ? [
+                    `${cueChord(recolored.find((c) => !c.passing) ?? null)!.symbol} (báo)`,
+                  ]
+                : []),
+            ],
+          }
+        : undefined,
+      leadOut: steps.some((step) => step.type === 'outro')
+        ? {
+            label: 'Kết bài',
+            chords: phraseChords('outro', reharm.key).map((c) => c.symbol),
+          }
+        : undefined,
     })
   }, [
     setPracticeSong,
@@ -2199,6 +2256,9 @@ export function ReharmHome() {
     chordBeats,
     reharmPerBeat,
     style.beatsPerMeasure,
+    steps,
+    reharm.key,
+    recolored,
   ])
 
   useEffect(() => {
@@ -2555,6 +2615,12 @@ export function ReharmHome() {
         ))}
       </div>
 
+      {soloScaleLabel && (
+        <p className="text-sm font-semibold text-amber-key">
+          Gam giang tấu: {soloScaleLabel}
+        </p>
+      )}
+
       {reharmPerBeat.length > 0 && (
         <ChordOverview
           perBeat={reharmPerBeat}
@@ -2666,6 +2732,11 @@ export function ReharmHome() {
           onToggleRun={toggleRun}
           colorHintAt={colorHintAt}
           onCycleColor={cycleColor}
+          heldMutedAt={(chordIndex) => mutedHeld.has(chordIndex)}
+          heldBusyAt={(chordIndex) =>
+            Boolean(reharm.colored[chordIndex]?.heldLabel)
+          }
+          onToggleHeldMute={toggleHeldMute}
           slashHintAt={slashHintAt}
           onToggleSlash={toggleSlash}
           onSetChordSpan={(chordIndex, span, scope) =>
@@ -3016,6 +3087,11 @@ export function ReharmHome() {
             onToggleRun={toggleRun}
             colorHintAt={colorHintAt}
             onCycleColor={cycleColor}
+            heldMutedAt={(chordIndex) => mutedHeld.has(chordIndex)}
+            heldBusyAt={(chordIndex) =>
+              Boolean(reharm.colored[chordIndex]?.heldLabel)
+            }
+            onToggleHeldMute={toggleHeldMute}
             slashHintAt={slashHintAt}
             onToggleSlash={toggleSlash}
             toolbar={

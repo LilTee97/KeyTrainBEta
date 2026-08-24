@@ -93,6 +93,8 @@ export function PracticeHome() {
               onCycleColor={grid?.onCycleColor}
               slashHintAt={grid?.slashHintAt}
               onToggleSlash={grid?.onToggleSlash}
+              leadIn={song.leadIn}
+              leadOut={song.leadOut}
               transitionAt={grid?.transitionAt}
               onToggleTransition={grid?.onToggleTransition}
               onSetTransition={grid?.onSetTransition}

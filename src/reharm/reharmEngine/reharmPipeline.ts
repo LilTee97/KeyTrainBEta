@@ -81,6 +81,8 @@ export interface ReharmOptions extends ColorOptions {
   sectionRanges?: readonly RepeatSectionRange[]
   /** Một ô nhịp dài mấy phách — để biết một hợp âm ngân mấy ô. */
   beatsPerMeasure?: number
+  /** Bỏ xoay màu cùng gốc ở các ô này. */
+  skipHeldAt?: ReadonlySet<number>
 }
 
 export interface ReharmResult {
@@ -200,6 +202,7 @@ export function reharmonize(
       : varyHeldColors(painted, {
           beatsOf: (index) => chordBeats?.[index] ?? beatsPerChord,
           beatsPerMeasure,
+          skipHeldAt: options.skipHeldAt,
         })
   const colored =
     varyOnRepeat && sectionRanges && sectionRanges.length > 0

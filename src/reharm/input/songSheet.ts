@@ -88,9 +88,8 @@ export function buildSongSheet(
   // Đếm riêng, vì chỉ neo nào đọc được mới có mặt trong vòng hợp âm.
   let chordIndex = 0
 
-  const convertLine = (line: SongLine): SheetLine => ({
-    lyric: line.lyric,
-    anchors: line.chords.flatMap((anchor): SheetAnchor[] => {
+  const convertLine = (line: SongLine): SheetLine => {
+    const raw = line.chords.flatMap((anchor): SheetAnchor[] => {
       if (anchor.chord === null) {
         return [
           {
@@ -119,11 +118,7 @@ export function buildSongSheet(
         ...lead,
         {
           symbol: aligned
-            ? (reharmonized[index]?.holdRun
-                ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
-                : (reharmonized[index]?.heldLabel ??
-                  reharmonized[index]?.symbol ??
-                  anchor.chord.symbol))
+            ? (reharmonized[index]?.symbol ?? anchor.chord.symbol)
             : anchor.chord.symbol,
           charOffset: anchor.charOffset,
           chordIndex: index,
@@ -132,8 +127,22 @@ export function buildSongSheet(
           holdRun: reharmonized[index]?.holdRun,
         },
       ]
-    }),
-  })
+    })
+    const anchors: SheetAnchor[] = []
+    for (const anchor of raw) {
+      const prev = anchors[anchors.length - 1]
+      if (
+        prev &&
+        !anchor.passing &&
+        !prev.passing &&
+        prev.symbol === anchor.symbol
+      ) {
+        continue
+      }
+      anchors.push(anchor)
+    }
+    return { lyric: line.lyric, anchors }
+  }
 
   return {
     sections: song.sections.map((section) => ({
@@ -354,6 +363,50 @@ export interface SectionChordRange {
  * Đoạn không có hợp âm nào bị bỏ qua — thường là dòng tiêu đề hoặc lời không
  * kèm hợp âm, không có gì để chơi.
  */
+/** Gắn dạo đầu / kết bài lên bản lời — không đánh số vào vòng chính. */
+export function attachPhraseToSheet(
+  sheet: SongSheet,
+  intro: readonly string[],
+  outro: readonly string[],
+): SongSheet {
+  const sections = [...sheet.sections]
+  if (intro.length > 0) {
+    sections.unshift({
+      name: 'Dạo đầu',
+      kind: 'intro',
+      lines: [
+        {
+          lyric: '',
+          anchors: intro.map((symbol, at) => ({
+            symbol,
+            charOffset: at * 10,
+            chordIndex: null,
+            broken: false,
+          })),
+        },
+      ],
+    })
+  }
+  if (outro.length > 0) {
+    sections.push({
+      name: 'Kết bài',
+      kind: 'outro',
+      lines: [
+        {
+          lyric: '',
+          anchors: outro.map((symbol, at) => ({
+            symbol,
+            charOffset: at * 10,
+            chordIndex: null,
+            broken: false,
+          })),
+        },
+      ],
+    })
+  }
+  return { ...sheet, sections }
+}
+
 export function sectionChordRanges(sheet: SongSheet): SectionChordRange[] {
   const ranges: SectionChordRange[] = []
 
