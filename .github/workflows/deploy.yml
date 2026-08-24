@@ -26,26 +26,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Não sống repo riêng. Không có nó thì tsc không tìm thấy @pianobrain.
       - uses: actions/checkout@v4
+        with:
+          path: KeyTrain
+
+      - uses: actions/checkout@v4
+        with:
+          repository: LilTee97/PianoBrain
+          path: PianoBrain
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: KeyTrain/package-lock.json
 
       - run: npm ci
+        working-directory: KeyTrain
 
       - run: npm run build
+        working-directory: KeyTrain
         env:
           # Pages phục vụ trang ở .../tên-repo/ chứ không phải gốc tên miền.
           BASE_PATH: /${{ github.event.repository.name }}/
+          PIANOBRAIN_ROOT: ${{ github.workspace }}/PianoBrain
 
       # Không có tệp này thì Pages chạy Jekyll và bỏ qua thư mục bắt đầu bằng _
-      - run: touch dist/.nojekyll
+      - run: touch KeyTrain/dist/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: KeyTrain/dist
 
   deploy:
     needs: build
