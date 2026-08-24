@@ -1959,6 +1959,8 @@ function chooseLick(choice: LickChoice): Lick {
     return fit(runners[mix(11) % runners.length])
   }
   if (positionInPhrase === 2) {
+    const giua = middles.filter((lick) => lick.id !== 'echo')
+    if (giua.length > 0) return fit(giua[mix(19) % giua.length])
     return fit(openers.find((lick) => lick.id === 'chord-tone') ?? fallbackLick())
   }
 
