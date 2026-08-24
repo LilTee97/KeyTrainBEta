@@ -40,6 +40,9 @@ describe('gam của kho, hỏi kèm giọng', () => {
       expect(scaleForChord(chord(symbol), C_MAJOR), symbol).toBeNull()
     }
     expect(scaleForChord(chord('Bdim'), C_MAJOR), 'Bdim Locrian đã rà').not.toBeNull()
+    const passing = scaleForChord(chord('C#dim'), C_MAJOR)
+    expect(passing, 'C#dim lướt phải có gam giảm').not.toBeNull()
+    expect(passing!.some((pc) => !TRONG_GIONG_C.has(pc))).toBe(true)
   })
 
   it('hợp âm ba nốt trơn không đổi gì: ngũ cung vốn không lạc bao giờ', () => {
