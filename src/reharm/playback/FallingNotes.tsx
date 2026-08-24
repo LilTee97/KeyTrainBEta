@@ -126,13 +126,9 @@ export function FallingNotes({
         </div>
         <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
       </div>
-      <div className="rounded-b-lg border border-line bg-black/50 px-3 py-2 text-center">
-        <div className="font-sans text-2xl font-bold tracking-wide text-amber-key">
-          {symbol || '—'}
-        </div>
-        <div className="mt-0.5 font-sans text-sm text-cream/80">
-          {gam ? `Gam: ${gam}` : ' '}
-        </div>
+      <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1 text-center">
+        <span className="font-sans text-lg font-bold text-amber-key">{symbol || '—'}</span>
+        {gam ? <span className="font-sans text-xs text-cream/80">Gam: {gam}</span> : null}
       </div>
     </div>
   )
