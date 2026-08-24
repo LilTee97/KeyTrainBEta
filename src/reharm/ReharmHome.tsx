@@ -61,7 +61,7 @@ import {
   attachPhraseToSheet,
 } from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
-import { parseSongText } from './input/songTextParser'
+import { insertChordAfter, parseSongText } from './input/songTextParser'
 import type { SongSnapshot } from './persistence/songSnapshot'
 import { PROGRESSION_PRESETS } from './input/progressionPresets'
 import { SongLibrary } from './persistence/SongLibrary'
@@ -71,10 +71,7 @@ import type {
   ApproachDirection,
   OrnamentDensity,
 } from './fillSoloGenerator/graceNoteOrnamenter'
-import {
-  DENSITY_OPTIONS,
-  PHRASE_DENSITY_OPTIONS,
-} from './fillSoloGenerator/graceNoteOrnamenter'
+import { DENSITY_OPTIONS } from './fillSoloGenerator/graceNoteOrnamenter'
 import type {
   GraceDensity,
   SoloNoteSource,
@@ -120,7 +117,7 @@ import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
 import { plainForInterlude } from './style/interludeChords'
 import { cueChord, phraseChords } from './style/phraseChords'
 import { buildPhraseSection } from './style/phraseSection'
-import { interludeBassLine } from './style/interludeBass'
+import { interludeLeftHand } from './style/interludeBass'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -207,6 +204,34 @@ function shiftIndexSet(
   for (const index of values) {
     if (delta < 0 && index === at) continue
     next.add(index >= at ? index + delta : index)
+  }
+  return next
+}
+
+function shiftSlotKeys(
+  keys: readonly string[],
+  at: number,
+  delta: 1 | -1,
+): string[] {
+  return keys.flatMap((key) => {
+    const cut = key.indexOf(':')
+    const index = Number(key.slice(0, cut))
+    if (delta < 0 && index === at) return []
+    return [`${index >= at ? index + delta : index}${key.slice(cut)}`]
+  })
+}
+
+function shiftSlotRecord(
+  table: Record<string, number>,
+  at: number,
+  delta: 1 | -1,
+): Record<string, number> {
+  const next: Record<string, number> = {}
+  for (const [key, value] of Object.entries(table)) {
+    const cut = key.indexOf(':')
+    const index = Number(key.slice(0, cut))
+    if (delta < 0 && index === at) continue
+    next[`${index >= at ? index + delta : index}${key.slice(cut)}`] = value
   }
   return next
 }
@@ -501,15 +526,6 @@ export function ReharmHome() {
    */
   const soloDirection: ApproachDirection = 'mixed'
   /**
-   * Mật độ nốt câu nhạc, mặc định **thưa**.
-   *
-   * Đi cùng câu dài bốn hợp âm bên dưới: ở mức thưa, vị trí thứ hai của câu tự
-   * thành chỗ nghỉ, nên hình câu ra `mở → nghỉ → giữa → kết` — đúng phrasing
-   * `pianoimprovnotes.md` mục 4 mô tả.
-   */
-  const [soloDensity, setSoloDensity] = useState<OrnamentDensity>('dense')
-
-  /**
    * Mật độ **chỗ chêm câu fill**, tách hẳn khỏi mật độ nốt câu nhạc.
    *
    * Hai thứ này ở hai chỗ khác nhau của bài: câu fill chêm vào đoạn **có lời**,
@@ -561,8 +577,8 @@ export function ReharmHome() {
     setWalkingBass(false)
     setBrainFills(false)
   }, [ballad])
-  /** Mật độ nốt láy, tách riêng khỏi mật độ nốt của câu nhạc. */
-  const [graceDensity, setGraceDensity] = useState<GraceDensity>('sparse')
+  /** Mật độ nốt láy — giang tấu mặc định tắt, câu chạy đã đủ dày. */
+  const [graceDensity, setGraceDensity] = useState<GraceDensity>('none')
   const [noteSource, setNoteSource] = useState<SoloNoteSource>('chordTone')
   /**
    * Lấy thang âm jazz từ kho PianoBrain cho đoạn không lời.
@@ -571,11 +587,10 @@ export function ReharmHome() {
    * dựng nốt từ chính hợp âm và luôn có tiếng, còn công tắc này đọc kho, chỉ
    * chạy ở đoạn không lời, và im lặng trên hợp âm nào kho chưa có gam.
    *
-   * Mặc định **tắt**. Toàn bộ item gam trong kho còn `status: "draft"` — đã rút
-   * từ video thật nhưng chưa ai xem lại để đối chiếu, nên không được tự thành
-   * tiếng đàn. Xem `brain/gate.ts` và `brain/chordScale.ts`.
+   * Mặc định **bật**. Hợp âm nào kho chưa có gam thì báo dưới ô tick, và chỗ
+   * đó giữ nốt hợp âm.
    */
-  const [storeScales, setStoreScales] = useState(false)
+  const [storeScales, setStoreScales] = useState(true)
   /** Nguồn nốt thật sự đưa cho bộ sinh câu: công tắc gam jazz đè lên lựa chọn kia. */
   const soloNoteSource: SoloNoteSource = storeScales ? 'storeScale' : noteSource
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
@@ -646,6 +661,44 @@ export function ReharmHome() {
       chords: transposeChords(parsed.chords, effectiveTranspose, soundingStyle),
     }),
     [parsed, effectiveTranspose, soundingStyle],
+  )
+
+  const duplicateChord = useCallback(
+    (index: number, beats: 2 | 4) => {
+      const source = parsed.chords[index]
+      if (!source) return
+      const copy = { ...source }
+      const list = [
+        ...parsed.chords.slice(0, index + 1),
+        copy,
+        ...parsed.chords.slice(index + 1),
+      ]
+      const from = index + 1
+      setInput(list.map((chord) => chord.symbol).join(' '))
+      setPastedSong((song) =>
+        song ? insertChordAfter(song, index, copy) : song,
+      )
+      setImportedBeats((table) => {
+        const next = shiftRecord(table, from, 1)
+        next[from] = beats
+        return next
+      })
+      setPairedChords((set) => {
+        const next = shiftIndexSet(set, from, 1)
+        next.delete(index)
+        return next
+      })
+      setMutedFills((set) => shiftIndexSet(set, from, 1))
+      setExtraFills((set) => shiftIndexSet(set, from, 1))
+      setExtraRuns((set) => shiftIndexSet(set, from, 1))
+      setMutedHeld((set) => shiftIndexSet(set, from, 1))
+      setColorEdits((table) => shiftRecord(table, from, 1))
+      setSlashEdits((table) => shiftRecord(table, from, 1))
+      setTransitionEdits((table) => shiftRecord(table, from, 1))
+      setAcceptedPassing((keys) => shiftSlotKeys(keys, from, 1))
+      setPassingKeep((table) => shiftSlotRecord(table, from, 1))
+    },
+    [parsed.chords],
   )
 
   /** Khoá định danh một gợi ý, để nhớ người dùng đã bật cái nào. */
@@ -1242,7 +1295,7 @@ export function ReharmHome() {
           : chord,
       )
       const pull = nextFirst
-        ? pullChordFor(nextFirst.chord, { avoid: last.chord })
+        ? pullChordFor(nextFirst.chord, { avoid: last.chord, strong: true })
         : null
       const pullHit = pull
         ? renderPattern(
@@ -1260,52 +1313,54 @@ export function ReharmHome() {
         lengthBeats: last.start + last.beats - first.start,
         chords: picked,
         /*
-          Tay trái đoạn giang tấu **rải ngón** thay vì giữ một nốt bass.
-
-          Tay phải đã bỏ hẳn mẫu đệm để lên chạy giai điệu, nên nếu tay trái
-          cũng chỉ đặt một nốt mỗi ô thì cả đoạn rỗng ruột. Bản ký âm Hồng Kông
-          1 cho 5,5 lần tay trái vào mỗi ô nhịp ở đoạn giang tấu — bốn nốt rải
-          một ô nằm đúng trong khoảng đó. Xem `style/interludeBass.ts`.
+          Tay trái: ballad thì rải ngón (Hồng Kông 1). Bossa / swing / valse
+          giữ đúng mẫu của điệu — rải đều làm bossa nghe ra ballad.
         */
-        events: [
-          ...renderPattern(
+        events: (() => {
+          const beatsEach = picked.map((span) => span.beats)
+          const backing = renderPattern(
             voiceLeadTwoHands(windowChords, {
               dropRootFromRightHand: dropRoot,
             }),
             style,
-            {
-              beatsPerChord: chordBeats,
-              beatsEach: picked.map((span) => span.beats),
-            },
-          ).filter((event) => event.hand !== 'left'),
-          ...interludeBassLine({
-            chords: windowChords,
-            beatsEach: picked.map((span) => span.beats),
-          }),
-        ],
-        lastEvents: [
-          ...renderPattern(
+            { beatsPerChord: chordBeats, beatsEach },
+          )
+          return [
+            ...backing.filter((event) => event.hand !== 'left'),
+            ...interludeLeftHand({
+              chords: windowChords,
+              beatsEach,
+              styleId: style.id,
+              styleLeft: backing.filter((event) => event.hand === 'left'),
+            }),
+          ]
+        })(),
+        lastEvents: (() => {
+          const beatsEach = head.map((span) => span.beats)
+          const backing = renderPattern(
             voiceLeadTwoHands(headChords, {
               dropRootFromRightHand: dropRoot,
             }),
             style,
-            {
-              beatsPerChord: chordBeats,
-              beatsEach: head.map((span) => span.beats),
-            },
-          ).filter((event) => event.hand !== 'left'),
-          ...interludeBassLine({
-            chords: headChords,
-            beatsEach: head.map((span) => span.beats),
-          }),
-        ],
+            { beatsPerChord: chordBeats, beatsEach },
+          )
+          return [
+            ...backing.filter((event) => event.hand !== 'left'),
+            ...interludeLeftHand({
+              chords: headChords,
+              beatsEach,
+              styleId: style.id,
+              styleLeft: backing.filter((event) => event.hand === 'left'),
+            }),
+          ]
+        })(),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
           soloToTimeline(
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
               beatsPerChord: chordBeats,
               direction: soloDirection,
-              density: soloDensity,
+              density: 'medium',
               graceDensity,
               key: reharm.key,
               noteSource: soloNoteSource,
@@ -1332,7 +1387,6 @@ export function ReharmHome() {
       dropRoot,
       style,
       soloDirection,
-      soloDensity,
       graceDensity,
       reharm.key,
       soloNoteSource,
@@ -1631,7 +1685,7 @@ export function ReharmHome() {
     const args = {
       beatsPerChord: chordBeats,
       direction: soloDirection,
-      density: soloDensity,
+      density: 'medium' as const,
       graceDensity,
       key: reharm.key,
       noteSource: soloNoteSource,
@@ -1654,7 +1708,6 @@ export function ReharmHome() {
     withPassing,
     chordBeats,
     soloDirection,
-    soloDensity,
     graceDensity,
     soloNoteSource,
     chordsPerPhrase,
@@ -1678,18 +1731,18 @@ export function ReharmHome() {
    * lên phía phải đàn, đúng chỗ tai người nghe chờ một cú đẩy trước khi vào.
    */
   const phraseSolo = useCallback(
-    (chords: readonly ParsedChord[], spin: number) =>
+    (chords: readonly ParsedChord[], spin: number, endWithRun = true) =>
       soloToTimeline(
         generateSolo(chords, {
           beatsPerChord: chordBeats,
           direction: soloDirection,
-          density: soloDensity,
+          density: 'medium',
           graceDensity,
           key: reharm.key,
           noteSource: soloNoteSource,
           chordsPerPhrase,
           take: spin + phraseSpin + playSpin.current,
-          endWithRun: true,
+          endWithRun,
           interlude: true,
           storeScale: storeScaleInKey,
           feel: soloFeelFor(styleId),
@@ -1699,7 +1752,6 @@ export function ReharmHome() {
     [
       chordBeats,
       soloDirection,
-      soloDensity,
       graceDensity,
       reharm.key,
       soloNoteSource,
@@ -1780,7 +1832,7 @@ export function ReharmHome() {
       majorColor,
       minorColor,
       dominantColor,
-      soloDensity,
+      soloDensity: 'medium',
       fillDensity,
       graceDensity,
       noteSource,
@@ -1820,7 +1872,6 @@ export function ReharmHome() {
       majorColor,
       minorColor,
       dominantColor,
-      soloDensity,
       fillDensity,
       graceDensity,
       noteSource,
@@ -1888,15 +1939,14 @@ export function ReharmHome() {
     setMinorColor(saved.minorColor as MinorChordColor)
     setDominantColor(saved.dominantColor as DominantChordColor)
 
-    setSoloDensity(saved.soloDensity === 'sparse' ? 'sparse' : 'dense')
     // Bài lưu từ trước khi tách thì câu fill dùng chung mật độ với câu nhạc.
     setFillDensity((saved.fillDensity ?? saved.soloDensity) as OrnamentDensity)
     // Bài lưu từ trước khi tách ô chỉnh thì chưa có mục này.
-    setGraceDensity((saved.graceDensity ?? 'sparse') as GraceDensity)
+    setGraceDensity((saved.graceDensity ?? 'none') as GraceDensity)
     setNoteSource(saved.noteSource as SoloNoteSource)
     // Bài lưu từ trước khi có công tắc này thì mặc định tắt, đúng luật draft.
     // Khoá lưu giữ tên cũ `jazzScales` để bài lưu từ trước vẫn đọc được.
-    setStoreScales(saved.jazzScales === true)
+    setStoreScales(saved.jazzScales !== false)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -2106,9 +2156,9 @@ export function ReharmHome() {
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
-              solo: (chords) => phraseSolo(chords, kind === 'outro' ? 1 : 0),
-              // Ballad thì rải ngón hợp âm báo cho mềm, điệu khác thì dặm một lượt.
-              rollCue: ballad,
+              solo: (chords) =>
+                phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
+              rollCue: kind === 'outro' || ballad,
             })
             if (!built) return brainPhrase({ kind, key: reharm.key })
             return built
@@ -2326,6 +2376,7 @@ export function ReharmHome() {
       onToggleTransition: markTransition,
       onSetTransition: (chordIndex, run) =>
         setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
+      onDuplicateChord: duplicateChord,
       onRemoveChord: (index) => {
         const list = parsed.chords.filter((_, i) => i !== index)
         if (list.length === 0) return
@@ -2371,6 +2422,7 @@ export function ReharmHome() {
     acceptedPassing,
     passingKeep,
     passingGroups,
+    duplicateChord,
   ])
 
   /*
@@ -2751,6 +2803,7 @@ export function ReharmHome() {
                 : removeSimilarChordPairs(current, recolored, chordIndex)
             })
           }
+          onDuplicateChord={duplicateChord}
           onRemoveChord={(index) => {
             const list = parsed.chords.filter((_, i) => i !== index)
             if (list.length === 0) return
@@ -3116,6 +3169,7 @@ export function ReharmHome() {
                 </button>
               </div>
             }
+            onDuplicateChord={duplicateChord}
             onSetChordSpan={(chordIndex, span, scope) =>
               setPairedChords((current) => {
                 // Chỉ chỗ vừa bấm, hay mọi chỗ trong bài có cùng cặp hợp âm.
@@ -3272,34 +3326,8 @@ export function ReharmHome() {
           </div>
 
           {/*
-            Bỏ ô chọn "Chiều nốt láy". Xen kẽ là mặc định và cũng là lựa chọn
-            đúng gần như mọi lúc — láy toàn từ dưới lên hay toàn từ trên xuống
-            nghe ra ngay là máy đánh. Giữ lại một ô mà ai cũng để nguyên chỉ
-            làm khung điều khiển dài thêm.
+            Bỏ ô chọn mật độ nốt giang tấu. Ô 1 / ô 3 / ô 4 tự quyết mật độ.
           */}
-
-          <div>
-            <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-              Mật độ nốt câu nhạc
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {PHRASE_DENSITY_OPTIONS.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setSoloDensity(option.id)}
-                  title={option.description}
-                  className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    soloDensity === option.id
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div>
             <h4

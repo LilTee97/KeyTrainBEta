@@ -26,7 +26,11 @@ import type { TimelineEvent } from './types'
  * Đặt thành trọn một ô nhịp thì **bỏ hẳn cụm quay đầu**: cách nhau cả ô im
  * lặng thì câu dẫn chẳng dẫn vào đâu.
  */
-export const DEFAULT_REST_AFTER = 0
+/** Hết giang tấu: nghỉ hai phách rồi mới vào đoạn sau. */
+export const DEFAULT_REST_AFTER = 2
+
+/** Hết dạo đầu: nghỉ một ô cho ca sĩ lấy hơi, rồi mới vào bài. */
+export const DEFAULT_INTRO_REST = 4
 
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 0.001
@@ -88,10 +92,8 @@ export type ArrangementStep =
       /**
        * Im mấy phách sau đoạn dạo đầu, trước khi bài hát vào.
        *
-       * Hai lối đệm đều có người dùng thật: **vào ngay** (0 phách) thì hợp âm
-       * báo nối thẳng vào câu hát, gọn và dứt khoát; **nghỉ một phách** thì
-       * chừa cho ca sĩ một nhịp lấy hơi. Bỏ trống là vào ngay.
-       */
+        * Bỏ trống = nghỉ bốn phách (một ô): ca sĩ lấy hơi rồi vào.
+        */
       restAfter?: number
     }
   | {
@@ -317,7 +319,7 @@ export function buildArrangedSong(
     turnaround,
     interludeRange,
     phrase,
-    restAfterInterlude = 0,
+    restAfterInterlude = DEFAULT_REST_AFTER,
     beatsPerMeasure = 4,
     ending,
     repeatEnding,
@@ -415,7 +417,9 @@ export function buildArrangedSong(
         nó nằm ngoài `lengthBeats` nên không kéo dài đoạn dạo, chỉ đẩy chỗ bài
         hát bắt đầu ra sau.
       */
-      cursor += lengthBeats + (step.type === 'intro' ? (step.restAfter ?? 0) : 0)
+      cursor +=
+        lengthBeats +
+        (step.type === 'intro' ? (step.restAfter ?? DEFAULT_INTRO_REST) : 0)
       continue
     }
 

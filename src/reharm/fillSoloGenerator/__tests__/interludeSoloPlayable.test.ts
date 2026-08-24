@@ -134,6 +134,54 @@ describe('tầm tay đệm hát', () => {
   })
 })
 
+describe('bốn ô giang tấu', () => {
+  const line = (take: number) =>
+    mainNotes(
+      soloToTimeline(
+        generateSolo(parseChordInput('C Am F G').chords, {
+          beatsPerChord: 4,
+          chordsPerPhrase: 4,
+          key: KEY,
+          take,
+          interlude: true,
+        }),
+      ),
+    )
+  const bar = (events: ReturnType<typeof line>, from: number) =>
+    events.filter((e) => e.startBeat >= from && e.startBeat < from + 4)
+
+  it('ô 1 quét nhiều nốt, ô 2 có tiếng, ô 3 chạy dày', () => {
+    for (let take = 0; take < TAKES; take += 1) {
+      const events = line(take)
+      expect(bar(events, 0).length, `lượt ${take} ô 1`).toBeGreaterThan(6)
+      expect(bar(events, 4).length, `lượt ${take} ô 2`).toBeGreaterThan(1)
+      expect(bar(events, 8).length, `lượt ${take} ô 3`).toBeGreaterThan(5)
+    }
+  })
+
+  it('ô 4 chơi tự do, không phải câu chạy hai quãng tám', () => {
+    for (let take = 0; take < TAKES; take += 1) {
+      expect(bar(line(take), 12).length, `lượt ${take}`).toBeGreaterThan(0)
+    }
+  })
+
+  it('hết giang tấu chạy ngón dày', () => {
+    const events = mainNotes(
+      soloToTimeline(
+        generateSolo(parseChordInput('C Am F G').chords, {
+          beatsPerChord: 4,
+          chordsPerPhrase: 4,
+          key: KEY,
+          take: 0,
+          interlude: true,
+          endWithRun: true,
+        }),
+      ),
+    )
+    expect(bar(events, 12).length).toBeGreaterThan(6)
+  })
+})
+
 describe('câu đi liền mạch', () => {
   it('trong một ô, không bước nào quá một quãng tám', () => {
     for (const [take, events] of takes(BALLAD_SOLO_RANGE).entries()) {

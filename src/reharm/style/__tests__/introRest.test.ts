@@ -56,9 +56,9 @@ const build = (restAfter?: number) =>
   })
 
 describe('chỗ nghỉ sau đoạn dạo đầu', () => {
-  it('mặc định vào ngay: bài hát bắt đầu ngay sau đoạn dạo', () => {
+  it('mặc định nghỉ bốn phách trước khi bài hát vào', () => {
     const verse = build().sections.find((s) => s.kind === 'verse')
-    expect(verse?.startBeat).toBe(4)
+    expect(verse?.startBeat).toBe(8)
   })
 
   it('chọn nghỉ một phách thì bài hát lùi đúng một phách', () => {
@@ -74,7 +74,7 @@ describe('chỗ nghỉ sau đoạn dạo đầu', () => {
       khúc**, không đọc `startBeat` của đoạn. Con số trong `sections` có thể đúng
       trong khi tiếng đàn vẫn tràn sang — mà thứ ca sĩ nghe là tiếng đàn.
     */
-    for (const rest of [0, 1, 2]) {
+    for (const rest of [0, 1, 2, 4]) {
       const song = build(rest)
       const verse = song.sections.find((s) => s.kind === 'verse')!
       const truoc = song.events.filter((e) => e.startBeat < verse.startBeat)
@@ -92,9 +92,9 @@ describe('chỗ nghỉ sau đoạn dạo đầu', () => {
     }
   })
 
-  it('chọn 0 phách thì giống hệt mặc định', () => {
-    expect(build(0).sections.find((s) => s.kind === 'verse')?.startBeat).toBe(
-      build().sections.find((s) => s.kind === 'verse')?.startBeat,
+  it('bỏ trống thì giống nghỉ bốn phách', () => {
+    expect(build().sections.find((s) => s.kind === 'verse')?.startBeat).toBe(
+      build(4).sections.find((s) => s.kind === 'verse')?.startBeat,
     )
   })
 
@@ -103,7 +103,7 @@ describe('chỗ nghỉ sau đoạn dạo đầu', () => {
       Nghỉ là khoảng im giữa hai đoạn. Cộng nó vào độ dài đoạn dạo thì đoạn dạo
       dài ra trên mọi thứ đọc `sections` — thanh tiến độ, chỗ tua, nhãn đoạn.
     */
-    for (const rest of [0, 1, 2]) {
+    for (const rest of [0, 1, 2, 4]) {
       const intro = build(rest).sections[0]
       expect(intro.lengthBeats, `nghỉ ${rest}`).toBe(4)
     }

@@ -51,6 +51,7 @@ export interface PracticeGrid {
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   onRemoveChord?: (index: number) => void
+  onDuplicateChord?: (index: number, beats: 2 | 4) => void
 }
 
 export interface PracticeSong {

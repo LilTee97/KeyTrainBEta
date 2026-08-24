@@ -277,3 +277,42 @@ export function parseSongText(text: string): ParsedSong {
     warnings,
   }
 }
+
+/** Chèn một bản sao hợp âm ngay sau vị trí `at`. */
+export function insertChordAfter(
+  song: ParsedSong,
+  at: number,
+  chord: ParsedChord,
+): ParsedSong {
+  let n = 0
+  const sections = song.sections.map((section) => ({
+    ...section,
+    lines: section.lines.map((line) => ({
+      ...line,
+      chords: line.chords.flatMap((anchor) => {
+        if (anchor.chord === null) return [anchor]
+        const i = n
+        n += 1
+        return i === at
+          ? [
+              anchor,
+              {
+                source: chord.source,
+                charOffset: anchor.charOffset,
+                chord,
+              },
+            ]
+          : [anchor]
+      }),
+    })),
+  }))
+  return {
+    ...song,
+    sections,
+    chords: [
+      ...song.chords.slice(0, at + 1),
+      chord,
+      ...song.chords.slice(at + 1),
+    ],
+  }
+}

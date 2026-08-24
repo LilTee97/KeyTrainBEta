@@ -52,7 +52,7 @@ function noteCount(kind: PlaceOptions['kind'], beats: number): number {
   const packed = Math.max(1, Math.round(beats / gridOf(kind)))
   return kind === 'fill'
     ? Math.max(3, Math.min(6, packed))
-    : Math.max(4, Math.min(8, packed))
+    : Math.max(4, Math.min(12, packed))
 }
 
 /** Lấy hình interval, cắt/nối cho đủ số nốt. */

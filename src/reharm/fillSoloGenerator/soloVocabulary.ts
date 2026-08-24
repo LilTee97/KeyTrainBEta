@@ -820,8 +820,12 @@ const scaleRun: Lick = {
     const ladder = ladderOf(material, low, high)
     if (!isStepwiseLadder(ladder)) return { notes: [], shape: [] }
 
-    const count = Math.max(4, Math.min(8, Math.round(beats * notesPerBeat)))
-    if (ladder.length < count) return { notes: [], shape: [] }
+    const cap = notesPerBeat >= 3 ? 12 : 8
+    const count = Math.max(
+      4,
+      Math.min(cap, ladder.length, Math.round(beats * notesPerBeat)),
+    )
+    if (count < 4) return { notes: [], shape: [] }
 
     const top = ladder.length - 1
     const start = clampStep(ladder, nearestStep(ladder, from))
@@ -1019,7 +1023,7 @@ const pentatonicSweep: Lick = {
   minBeats: 2,
   roles: ['opener'],
   inRotation: true,
-  build: ({ startBeat, beats, low, high, material, scaleTones }) => {
+  build: ({ startBeat, beats, low, high, material, scaleTones, notesPerBeat }) => {
     const pad = [...material]
     for (const tone of scaleTones) {
       if (pad.length >= 4) break
@@ -1050,7 +1054,16 @@ const pentatonicSweep: Lick = {
     }
     if (sweep.length === 0) return { notes: [], shape: [] }
 
-    const runBeats = beats * 0.8
+    const want = Math.max(sweep.length, Math.round(beats * notesPerBeat))
+    let tip = sweep[sweep.length - 1]!
+    while (sweep.length < want) {
+      const next = ladder.find((note) => note > tip)
+      if (next === undefined || next > high) break
+      sweep.push(next)
+      tip = next
+    }
+
+    const runBeats = notesPerBeat >= 3 ? beats * 0.95 : beats * 0.8
     const holdBeats = beats - runBeats
     const step = runBeats / sweep.length
 

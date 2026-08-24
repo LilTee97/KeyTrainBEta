@@ -38,6 +38,8 @@ export interface BuildStepsOptions {
   hand?: PracticeHand
   /** Số phách mỗi hợp âm chiếm, dùng để tra hợp âm nào đang vang. */
   beatsPerChord: number
+  /** Tên hợp âm tại một phách — bài đã sắp thì không còn đều `beatsPerChord`. */
+  symbolAt?: (beat: number) => string
 }
 
 /**
@@ -51,7 +53,7 @@ export function buildGatedSteps(
   voicings: readonly TwoHandVoicing[],
   options: BuildStepsOptions,
 ): GatedStep[] {
-  const { hand = 'both', beatsPerChord } = options
+  const { hand = 'both', beatsPerChord, symbolAt } = options
 
   /*
     Bỏ nốt láy khỏi các chặng chờ.
@@ -105,7 +107,13 @@ export function buildGatedSteps(
         ),
         leftNotes,
         rightNotes,
-        symbol: voicings[chordIndex]?.symbol ?? '',
+        symbol:
+          symbolAt?.(startBeat) ||
+          voicings[
+            ((chordIndex % Math.max(1, voicings.length)) + Math.max(1, voicings.length)) %
+              Math.max(1, voicings.length)
+          ]?.symbol ||
+          '',
       }
     })
     .filter((step) => step.notes.length > 0)

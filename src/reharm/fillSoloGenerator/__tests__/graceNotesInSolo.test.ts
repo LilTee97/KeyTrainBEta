@@ -26,6 +26,7 @@ const solo = (
     density,
     graceDensity,
     key: C_MAJOR,
+    interlude: false,
   })
 
 describe('nốt láy trong câu solo', () => {

@@ -161,9 +161,9 @@ describe('đoạn dạo đầu và đoạn kết', () => {
       steps: [{ type: 'intro' }, { type: 'section', source: 0 }],
       phrase: (kind) => brainPhrase({ kind, key: C_MAJOR }),
     })
-    // Đoạn hát bị đẩy lùi đúng bằng độ dài đoạn dạo.
+    // Đoạn hát lùi bằng độ dài dạo cộng nghỉ mặc định bốn phách.
     const verse = song.sections.find((s) => s.kind === 'verse')
-    expect(verse?.startBeat).toBe(made.lengthBeats)
+    expect(verse?.startBeat).toBe(made.lengthBeats + 4)
     expect(song.events.some((e) => e.startBeat < made.lengthBeats)).toBe(true)
   })
 

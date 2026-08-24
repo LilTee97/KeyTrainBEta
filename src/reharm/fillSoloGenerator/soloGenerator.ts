@@ -812,7 +812,7 @@ export function generateSolo(
   const {
     beatsPerChord,
     density = 'medium',
-    graceDensity = 'sparse',
+    graceDensity = 'none',
     direction = 'mixed',
     noteSource = 'chordTone',
     chordsPerPhrase = 2,
@@ -870,8 +870,15 @@ export function generateSolo(
     tức đổi **chất liệu câu nhạc**, không phải đổi độ cao và độ dày. Việc đó
     danh sách mẫu câu xoay theo lượt đã làm đủ.
   */
+  const bossaPack = interlude && feel === 'bossa'
   const notesPerBeat =
-    density === 'sparse' ? 0.8 : density === 'dense' ? 2.2 : 1.4
+    (density === 'sparse'
+      ? 0.8
+      : density === 'dense'
+        ? interlude
+          ? 1.5
+          : 2.2
+        : 1.4) + (bossaPack ? 0.6 : 0)
 
   /*
     Câu solo chạy trên **vòng hợp âm chính**, bỏ qua hợp âm lướt.
@@ -932,11 +939,41 @@ export function generateSolo(
       Nghỉ lấy hơi ở cuối mỗi câu. `pianoimprovnotes.md` mục 4 nói thẳng: cần
       khoảng nghỉ để lấy hơi giữa các câu.
     */
-    const playBeats = isPhraseEnd
-      ? Math.max(chordBeats / 2, chordBeats - REST_BEATS)
-      : chordBeats
+    const playBeats =
+      isPhraseEnd && !interlude
+        ? Math.max(chordBeats / 2, chordBeats - REST_BEATS)
+        : chordBeats
 
-    if (endWithRun && index === spans.length - 1) {
+    if (endWithRun && index === spans.length - 1 && interlude) {
+      const room = Math.max(1.5, playBeats)
+      const run = arpeggioRun({
+        chord,
+        octaves: 2,
+        endBeat: start + room,
+        maxBeats: room,
+        fromBeat: start,
+        noteChoices: [0.25, 0.125],
+        rightHandOnly: true,
+      })
+      const cap = Math.max(8, Math.min(14, Math.round(room * 4)))
+      const line = run.length > cap ? run.slice(0, cap) : run
+      for (const note of line) {
+        let pitch = note.note
+        while (pitch > soloCeiling) pitch -= 12
+        while (pitch < soloLow) pitch += 12
+        result.push({
+          note: pitch as MidiNote,
+          startBeat: note.startBeat,
+          durationBeats: note.durationBeats,
+          isGrace: false,
+          hand: 'right',
+        })
+      }
+      positionInPhrase += 1
+      continue
+    }
+
+    if (endWithRun && index === spans.length - 1 && !interlude) {
       /*
         Dựng câu chạy NGAY TRONG khung tầm, đừng dựng ra rồi gập lại.
 
@@ -1007,7 +1044,10 @@ export function generateSolo(
         'scale-run',
         'bebop-pair',
       ] as const
-      const wanted = openerOrder[(Math.floor(index / 2) + round) % openerOrder.length]
+      const wanted =
+        interlude && index === 0
+          ? 'sweep'
+          : openerOrder[(Math.floor(index / 2) + round) % openerOrder.length]
       const context = {
         chord,
         next: spans[index + 1]?.chord ?? null,
@@ -1018,7 +1058,7 @@ export function generateSolo(
         high,
         scaleTones: tones,
         previousShape,
-        notesPerBeat,
+        notesPerBeat: interlude && index === 0 ? (bossaPack ? 8 : 6) : notesPerBeat,
         material: materialFor(chord, noteSource, null, [], tones, interlude, storeScale),
       }
       const swept =
@@ -1063,20 +1103,80 @@ export function generateSolo(
     }
 
     if (positionInPhrase === 2 && index !== spans.length - 1) {
+      /*
+        Ô 3 giang tấu: chạy chromatic hoặc tự do, kín ô.
+        Chỗ khác: vài nốt rồi nghỉ.
+      */
+      if (interlude) {
+        const pick = round % 2 === 0 ? 'enclosure' : 'scale-run'
+        const context = {
+          chord,
+          next: spans[index + 1]?.chord ?? null,
+          startBeat: start,
+          beats: playBeats,
+          from,
+          low,
+          high,
+          scaleTones: tones,
+          previousShape,
+          notesPerBeat: bossaPack ? 7 : 5,
+          material: materialFor(
+            chord,
+            noteSource,
+            null,
+            [],
+            tones,
+            interlude,
+            storeScale,
+          ),
+        }
+        const built =
+          [getLick(pick), getLick('scale-run'), getLick('enclosure')]
+            .map((lick) => lick?.build(context))
+            .find((line) => line && line.notes.length >= 5) ?? undefined
+        const line =
+          built && built.notes.length >= 5
+            ? built.notes.map((note) => ({
+                note: note.note,
+                startBeat: note.startBeat,
+                durationBeats: note.durationBeats,
+                isGrace: false,
+                hand: 'right' as const,
+              }))
+            : placeLick({
+                chord,
+                next: spans[index + 1]?.chord,
+                startBeat: start,
+                beats: playBeats,
+                take: round + index + 5,
+                kind: 'run',
+              }).map((note) => ({
+                note: note.note,
+                startBeat: note.startBeat,
+                durationBeats: note.durationBeats,
+                isGrace: false,
+                hand: 'right' as const,
+              }))
+        result.push(...line)
+        if (line.length > 0) from = line[line.length - 1]!.note
+        positionInPhrase += 1
+        continue
+      }
+      const runBeats = Math.min(2, playBeats)
       for (const note of placeLick({
         chord,
         next: spans[index + 1]?.chord,
         startBeat: start,
-        beats: playBeats,
+        beats: runBeats,
         take: round + index + 5,
-        kind: 'run',
+        kind: 'fill',
       })) {
         result.push({
           note: note.note,
           startBeat: note.startBeat,
           durationBeats: note.durationBeats,
           isGrace: false,
-          hand: note.hand,
+          hand: 'right',
         })
       }
       positionInPhrase += 1
@@ -1093,6 +1193,7 @@ export function generateSolo(
       density,
       take: round,
       resolving: resolvesUpFourth(chord, spans[index + 1]?.chord ?? null),
+      interlude,
     })
 
     const context = {
@@ -1105,10 +1206,7 @@ export function generateSolo(
       high,
       scaleTones: tones,
       previousShape,
-      notesPerBeat:
-        positionInPhrase === 2 && !isPhraseEnd
-          ? notesPerBeat * 2
-          : notesPerBeat,
+      notesPerBeat: interlude && isPhraseEnd ? 0.7 : notesPerBeat,
       material: materialFor(
         chord,
         noteSource,
@@ -1536,6 +1634,10 @@ export function generateSolo(
   const bounds = { low: asked.low + 2, high: asked.high - 2 }
   let anchor: MidiNote | null = null
   const bounded = single.map((note) => {
+    if (locked(note.startBeat)) {
+      anchor = note.note
+      return note
+    }
     const outside = note.note < bounds.low || note.note > bounds.high
     const leap = anchor !== null && Math.abs(note.note - anchor) > 12
     if (!outside && !leap) {
@@ -1619,7 +1721,7 @@ export function generateSolo(
   const withGrace = [
     ...addGraceNotes(free, {
       direction,
-      density: graceDensity,
+      density: interlude ? 'none' : graceDensity,
       tones,
     }),
     ...run,
@@ -1630,7 +1732,9 @@ export function generateSolo(
     rơi, mà số ngón thì đọc theo thứ tự thời gian — gán trước rồi mới dời là số
     ngón kể sai thứ tự.
   */
-  const lined = applyFeel(capStack(withGrace), feel).sort((a, b) => a.startBeat - b.startBeat)
+  const lined = applyFeel(capStack(withGrace), feel).sort(
+    (a, b) => a.startBeat - b.startBeat,
+  )
 
   /*
     Kéo lại bước nào vượt một quãng tám — **sau cùng**, khi không còn ai bỏ nốt nữa.
@@ -1841,6 +1945,7 @@ interface LickChoice {
   /** Hợp âm thứ mấy trong vòng — ô 1 quét, ô 3 chạy nửa cung. */
   chordIndex: number
   phrase: number
+  interlude?: boolean
   positionInPhrase: number
   isPhraseEnd: boolean
   playBeats: number
@@ -1929,8 +2034,12 @@ function chooseLick(choice: LickChoice): Lick {
     )
   }
 
-  // Mật độ thưa thì thỉnh thoảng nghỉ hẳn một hợp âm cho câu nhạc thoáng.
-  if (density === 'sparse' && positionInPhrase === 1) {
+  // Thưa: nghỉ một hợp âm. Giang tấu ô 2 chơi tự do, không nghỉ.
+  if (
+    !choice.interlude &&
+    (density === 'sparse' || (density === 'medium' && !choice.resolving)) &&
+    positionInPhrase === 1
+  ) {
     return fit(licksFor('rest')[0])
   }
 

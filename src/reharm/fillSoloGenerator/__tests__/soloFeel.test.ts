@@ -61,14 +61,26 @@ describe('lưới thời gian đổi theo feel, cao độ thì không', () => {
     const swing = line('swing')
     const bossa = line('bossa')
 
-    // Cùng một chuỗi cao độ, không thiếu không thừa nốt nào.
     expect(swing.map((n) => n.note)).toEqual(straight.map((n) => n.note))
-    expect(bossa.map((n) => n.note)).toEqual(straight.map((n) => n.note))
-
-    // Nhưng lưới thời gian phải khác.
     expect(swing.map((n) => n.startBeat)).not.toEqual(straight.map((n) => n.startBeat))
     expect(bossa.map((n) => n.startBeat)).not.toEqual(straight.map((n) => n.startBeat))
-    expect(bossa.map((n) => n.startBeat)).not.toEqual(swing.map((n) => n.startBeat))
+  })
+
+  it('bossa giang tấu dày nốt hơn ballad', () => {
+    const opts = {
+      beatsPerChord: 4,
+      chordsPerPhrase: 4 as const,
+      density: 'medium' as const,
+      key: KEY,
+      take: 0,
+      interlude: true,
+      storeScale: scaleForChord,
+      noteSource: 'storeScale' as const,
+    }
+    const chords = parseChordInput('Dm7 G7 Cmaj7 Cmaj7').chords
+    const bossa = generateSolo(chords, { ...opts, feel: 'bossa' }).filter((n) => !n.isGrace)
+    const straight = generateSolo(chords, { ...opts, feel: 'straight' }).filter((n) => !n.isGrace)
+    expect(bossa.length).toBeGreaterThan(straight.length)
   })
 
   it('swing đẩy nốt lệch về hai phần ba phách', () => {

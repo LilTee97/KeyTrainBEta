@@ -108,6 +108,8 @@ interface SongSheetViewProps {
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   slashHintAt?: (chordIndex: number) => string | null
   onToggleSlash?: (chordIndex: number) => void
+  /** Nhân đôi hợp âm ngay sau chỗ này, chọn 2 hoặc 4 phách. */
+  onDuplicateChord?: (index: number, beats: 2 | 4) => void
   toolbar?: ReactNode
 }
 
@@ -188,6 +190,7 @@ export function SongSheetView({
   onSetTransition,
   slashHintAt,
   onToggleSlash,
+  onDuplicateChord,
   toolbar,
 }: SongSheetViewProps) {
   const container = useRef<HTMLDivElement>(null)
@@ -479,6 +482,14 @@ export function SongSheetView({
                 }
               : undefined
           }
+          onDuplicate={
+            onDuplicateChord
+              ? (beats) => {
+                  onDuplicateChord(menu.chordIndex, beats)
+                  setMenu(null)
+                }
+              : undefined
+          }
         />
       )}
     </div>
@@ -516,6 +527,7 @@ export function ChordContextMenu({
   canMarkTransition,
   onToggleTransition,
   onSetTransition,
+  onDuplicate,
   onDelete,
 }: {
   menu: ChordMenu
@@ -546,6 +558,7 @@ export function ChordContextMenu({
   canMarkTransition: boolean
   onToggleTransition?: () => void
   onSetTransition?: (run: TransitionOption) => void
+  onDuplicate?: (beats: 2 | 4) => void
   onDelete?: () => void
 }) {
   const applied = passing.filter((option) => option.appliedHere)
@@ -1026,6 +1039,27 @@ export function ChordContextMenu({
               ))}
             </>
           )}
+        </>
+      )}
+
+      {onDuplicate && (
+        <>
+          <div className="my-1 border-t border-line" />
+          <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+            Nhân đôi hợp âm
+          </p>
+          <div className="flex gap-1 px-2.5 py-1">
+            {([2, 4] as const).map((beats) => (
+              <button
+                key={beats}
+                type="button"
+                onClick={() => onDuplicate(beats)}
+                className="flex-1 rounded border border-line bg-white/4 px-2 py-1 text-xs text-cream hover:bg-white/8"
+              >
+                {beats} phách
+              </button>
+            ))}
+          </div>
         </>
       )}
 

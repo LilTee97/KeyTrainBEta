@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseSongText } from '../songTextParser'
+import { insertChordAfter, parseSongText } from '../songTextParser'
 
 describe('nhận diện định dạng', () => {
   it('hợp âm trong ngoặc vuông giữa dòng là ChordPro', () => {
@@ -191,5 +191,23 @@ describe('những kiểu text lộn xộn hay gặp', () => {
     expect(song.sections).toEqual([])
     expect(song.chords).toEqual([])
     expect(song.warnings).toEqual([])
+  })
+})
+
+describe('nhân đôi hợp âm', () => {
+  it('chèn bản sao ngay sau chỗ chọn', () => {
+    const song = parseSongText('C Am F G')
+    const copy = song.chords[0]!
+    const next = insertChordAfter(song, 0, copy)
+    expect(next.chords.map((chord) => chord.symbol)).toEqual([
+      'C',
+      'C',
+      'Am',
+      'F',
+      'G',
+    ])
+    const anchors = next.sections[0]!.lines[0]!.chords
+    expect(anchors).toHaveLength(5)
+    expect(anchors[0]!.source).toBe(anchors[1]!.source)
   })
 })

@@ -21,7 +21,6 @@ import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
-import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { PracticeHand } from './noteGatedPlaybackEngine'
@@ -42,6 +41,8 @@ export interface NoteGatedPracticeProps {
   timeline: readonly TimelineEvent[]
   voicings: readonly TwoHandVoicing[]
   beatsPerChord: number
+  /** Lưới hợp âm theo phách nguồn — để ghi tên hợp âm đúng khi bài đã sắp. */
+  perBeat?: readonly string[]
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -61,12 +62,12 @@ export function NoteGatedPractice({
   timeline,
   voicings,
   beatsPerChord,
+  perBeat = [],
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
   const bpm = useMetronomeStore((state) => state.bpm)
   const looping = usePlaybackStore((state) => state.looping)
-  const positionBeats = usePlaybackStore((state) => state.positionBeats)
   const transport = usePracticeStore((state) => state.transport)
 
   useLiveSound()
@@ -99,8 +100,21 @@ export function NoteGatedPractice({
   }
 
   const steps = useMemo(
-    () => buildGatedSteps(timeline, voicings, { hand, beatsPerChord }),
-    [timeline, voicings, hand, beatsPerChord],
+    () =>
+      buildGatedSteps(timeline, voicings, {
+        hand,
+        beatsPerChord,
+        symbolAt: (beat) => {
+          const src = transport?.sourceBeat?.(beat)
+          if (src != null) {
+            const name = perBeat[Math.max(0, Math.floor(src))]
+            if (name) return name
+          }
+          const name = perBeat[Math.max(0, Math.floor(beat))]
+          return name ?? ''
+        },
+      }),
+    [timeline, voicings, hand, beatsPerChord, perBeat, transport],
   )
 
   /** Dải phím dựa theo kích thước đàn MIDI thật người dùng đang cắm. */
@@ -114,6 +128,17 @@ export function NoteGatedPractice({
     Nếu bài có nốt ngoài range đàn thì vẫn cố gắng hiển thị nhưng có thể bị cắt.
   */
   const range = keyboardRange
+  const fallRange = useMemo(() => {
+    let low = range.low
+    let high = range.high
+    for (const step of steps) {
+      for (const note of step.notes) {
+        if (note < low) low = note
+        if (note > high) high = note
+      }
+    }
+    return { low, high }
+  }, [steps, range])
 
   const [session, setSession] = useState(() => startGatedSession(steps))
 
@@ -210,14 +235,6 @@ export function NoteGatedPractice({
           {progress.done}/{progress.total} chặng
         </span>
       </div>
-      {step?.symbol && (
-        <p className="mb-2 text-sm font-semibold text-amber-key">
-          {scaleLabelForSymbol(step.symbol)
-            ? `Gam: ${scaleLabelForSymbol(step.symbol)}`
-            : `Hợp âm ${step.symbol}`}
-        </p>
-      )}
-
       {/*
         Nút cắm đàn đặt ngay đây, cạnh chỗ dùng tới nó. Bàn phím ảo và phím máy
         tính vẫn chơi được mà không cần kết nối gì — đàn MIDI chỉ là một nguồn
@@ -470,25 +487,17 @@ export function NoteGatedPractice({
           onBpm={setBpm}
         />
 
-        {(active || looping) && (
-          <FallingNotes
-            steps={steps}
-            index={session.currentIndex}
-            nowBeat={looping ? positionBeats : undefined}
-            lowNote={range.low}
-            highNote={range.high}
-            chord={
-              looping
-                ? [...steps].reverse().find((entry) => entry.startBeat <= positionBeats)
-                    ?.symbol
-                : step?.symbol
-            }
-          />
-        )}
+        <FallingNotes
+          steps={steps}
+          index={session.currentIndex}
+          live={looping}
+          lowNote={fallRange.low}
+          highNote={fallRange.high}
+        />
 
         <OnScreenPiano
-          lowNote={range.low}
-          highNote={range.high}
+          lowNote={fallRange.low}
+          highNote={fallRange.high}
           leftHandNotes={hitting.left}
           rightHandNotes={hitting.right}
         />

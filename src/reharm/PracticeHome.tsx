@@ -99,12 +99,14 @@ export function PracticeHome() {
               onToggleTransition={grid?.onToggleTransition}
               onSetTransition={grid?.onSetTransition}
               onRemoveChord={grid?.onRemoveChord}
+              onDuplicateChord={grid?.onDuplicateChord}
             />
           )}
           <NoteGatedPractice
             timeline={song.timeline}
             voicings={song.voicings}
             beatsPerChord={song.beatsPerChord}
+            perBeat={song.perBeat}
           />
         </>
       ) : (

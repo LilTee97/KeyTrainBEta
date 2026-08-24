@@ -7,6 +7,7 @@ import { buildArrangedSong } from '../arrangement'
 import { renderPattern } from '../patternRenderer'
 import { buildSongTimeline, getSongForm } from '../songStructure'
 import { getStyle } from '../styleLibrary'
+import { interludeLeftHand } from '../interludeBass'
 import type { TimelineEvent } from '../types'
 
 function build(styleId: string, beatsPerChord = 4) {
@@ -133,6 +134,40 @@ describe('phần đệm đoạn giang tấu', () => {
       expect(phase('interlude')).toEqual(phase('verse'))
     },
   )
+
+  it('bossa giữ bass đảo phách, không rải đều như ballad', () => {
+    const chords = parseChordInput('C Am F G').chords
+    const beatsEach = chords.map(() => 4)
+    const style = getStyle('bossa-nova-1')!
+    const styleLeft = renderPattern(
+      voiceLeadTwoHands(chords, { dropRootFromRightHand: true }),
+      style,
+      { beatsPerChord: 4, beatsEach },
+    ).filter((event) => event.hand === 'left')
+    const bass = interludeLeftHand({
+      chords,
+      beatsEach,
+      styleId: 'bossa-nova-1',
+      styleLeft,
+    })
+    const phases = bass.map((event) => Number((event.startBeat % 4).toFixed(2)))
+    expect(phases.slice(0, 4)).not.toEqual([0, 1, 2, 3])
+    expect(phases.some((beat) => beat % 1 !== 0)).toBe(true)
+  })
+
+  it('ballad giang tấu vẫn rải gốc-5-8-5', () => {
+    const chords = parseChordInput('C Am F G').chords
+    const beatsEach = chords.map(() => 4)
+    const bass = interludeLeftHand({
+      chords,
+      beatsEach,
+      styleId: 'pop-1',
+      styleLeft: [],
+    })
+    expect(
+      bass.slice(0, 4).map((event) => Number(event.startBeat.toFixed(2))),
+    ).toEqual([0, 1, 2, 3])
+  })
 
   it('đoạn giang tấu vẫn dài đúng bằng đoạn có lời', () => {
     const { song } = build('pop-1')

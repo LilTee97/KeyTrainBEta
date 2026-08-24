@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { ArrangementStep, SourceSection } from './arrangement'
-import { DEFAULT_REST_AFTER, stepLabel } from './arrangement'
+import {
+  DEFAULT_INTRO_REST,
+  DEFAULT_REST_AFTER,
+  stepLabel,
+} from './arrangement'
 import type { EndingMode } from './endingChord'
 import { useFlipIntoView } from '../../shared/ui/useFlipIntoView'
 import { useLongPress } from '../../shared/ui/useLongPress'
@@ -183,7 +187,7 @@ export function ArrangementEditor({
                   đúng cách bước giang tấu đang làm.
                 */
                 <select
-                  value={step.restAfter ?? 0}
+                  value={step.restAfter ?? DEFAULT_INTRO_REST}
                   onChange={(event) =>
                     setIntroRest(index, Number(event.target.value))
                   }
@@ -191,12 +195,9 @@ export function ArrangementEditor({
                   className="rounded-md border border-line bg-white/6 px-2 py-0.5 text-xs text-cream"
                 >
                   {/*
-                    Nghỉ hai phách là **nửa ô nhịp**: đủ để ca sĩ lấy hơi mà chưa
-                    đứt mạch. Ô của bước giang tấu ngay dưới đã có tới bốn phách;
-                    ở đây hai là đủ, vì hết dạo đầu mà im trọn một ô thì người
-                    hát mất luôn chỗ bám nhịp.
+                    Nghỉ bốn phách là **một ô nhịp**: ca sĩ lấy hơi rồi vào.
                   */}
-                  {[0, 1, 2].map((beats) => (
+                  {[0, 1, 2, 4].map((beats) => (
                     <option key={beats} value={beats}>
                       {beats === 0 ? 'xong vào ngay' : `xong nghỉ ${beats} phách`}
                     </option>
@@ -337,6 +338,7 @@ export function ArrangementEditor({
                 bài đứng lại chờ phần ngẫu hứng.
               */
               loops: 2,
+              restAfter: DEFAULT_REST_AFTER,
             })
           }
           className="rounded-lg border border-teal-key/50 bg-teal-key/10 px-2.5 py-1 text-xs text-teal-key hover:bg-teal-key/20"
@@ -352,7 +354,9 @@ export function ArrangementEditor({
         */}
         <button
           type="button"
-          onClick={() => onChange([{ type: 'intro' }, ...steps])}
+          onClick={() =>
+            onChange([{ type: 'intro', restAfter: DEFAULT_INTRO_REST }, ...steps])
+          }
           title="Chèn đoạn dạo đầu vào trước bài. Bộ não chọn vòng và nốt theo luật thầy Kingsley: sus2 hoặc sus4 giải về bậc ba."
           className="rounded-lg border border-amber-key/50 bg-amber-key/10 px-2.5 py-1 text-xs text-amber-key hover:bg-amber-key/20"
         >

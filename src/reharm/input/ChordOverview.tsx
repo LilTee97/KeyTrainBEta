@@ -188,6 +188,7 @@ interface ChordOverviewProps {
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   onRemoveChord?: (index: number) => void
+  onDuplicateChord?: (index: number, beats: 2 | 4) => void
 }
 
 export function ChordOverview({
@@ -232,6 +233,7 @@ export function ChordOverview({
   onToggleTransition,
   onSetTransition,
   onRemoveChord,
+  onDuplicateChord,
 }: ChordOverviewProps) {
   const [shift, setShift] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -499,6 +501,14 @@ export function ChordOverview({
             onToggleSlash
               ? () => {
                   onToggleSlash(menu.chordIndex)
+                  setMenu(null)
+                }
+              : undefined
+          }
+          onDuplicate={
+            onDuplicateChord
+              ? (beats) => {
+                  onDuplicateChord(menu.chordIndex, beats)
                   setMenu(null)
                 }
               : undefined

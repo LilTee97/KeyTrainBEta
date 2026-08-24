@@ -155,6 +155,7 @@ describe('generateSolo — cấu trúc câu nhạc', () => {
     const solo = generateSolo(chords(LONG), {
       ...options,
       chordsPerPhrase: 2,
+      interlude: false,
     })
     const mains = solo.filter((note) => !note.isGrace)
 
@@ -231,6 +232,7 @@ describe('generateSolo — cấu trúc câu nhạc', () => {
       ...options,
       chordsPerPhrase: 2,
       density: 'medium',
+      interlude: false,
     })
     const mains = solo.filter((note) => !note.isGrace)
     const last = mains[mains.length - 1]
@@ -271,8 +273,16 @@ describe('generateSolo — cấu trúc câu nhạc', () => {
   })
 
   it('mật độ dày sinh nhiều nốt hơn mật độ thưa', () => {
-    const dense = generateSolo(chords(LONG), { ...options, density: 'dense' })
-    const sparse = generateSolo(chords(LONG), { ...options, density: 'sparse' })
+    const dense = generateSolo(chords(LONG), {
+      ...options,
+      density: 'dense',
+      interlude: false,
+    })
+    const sparse = generateSolo(chords(LONG), {
+      ...options,
+      density: 'sparse',
+      interlude: false,
+    })
 
     expect(dense.length).toBeGreaterThan(sparse.length)
   })
@@ -342,6 +352,7 @@ describe('nguồn nốt cho câu solo', () => {
       beatsPerChord: 4,
       noteSource: 'blues',
       density: 'dense',
+      interlude: false,
     })
 
     const blueNotes = solo.filter((note) => {
@@ -527,6 +538,8 @@ describe('soloToTimeline', () => {
     const solo = generateSolo(chords('C Am F G Em Dm G7 C'), {
       beatsPerChord: 4,
       density: 'dense',
+      graceDensity: 'dense',
+      interlude: false,
       key: { tonic: 0, scale: 'major' },
     })
     const timeline = soloToTimeline(solo)

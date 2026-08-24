@@ -90,7 +90,7 @@ describe('Licky', () => {
       kind: 'run',
     })
     expect(two.length).toBe(8)
-    expect(four.length).toBe(8)
+    expect(four.length).toBe(12)
   })
 
   it('sáng tạo khác clone', () => {

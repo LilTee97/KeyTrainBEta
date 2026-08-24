@@ -79,7 +79,7 @@ export function buildPhraseSection(
     lại bị đèo thêm một đuôi.
   */
   const cueOf = kind === 'intro' ? cueChord(opening) : null
-  const lengthBeats = roundBeats + (cueOf ? 1 : 0)
+  const lengthBeats = roundBeats + (cueOf || kind === 'outro' ? 1 : 0)
 
   /*
     Hợp âm báo nâng lên tầm tay phải.
@@ -98,18 +98,30 @@ export function buildPhraseSection(
     return pitch as typeof note
   })
 
-  const cue = cueOf
-    ? cueStrike(cueVoicing, roundBeats, { roll: rollCue === true })
-    : []
+  const lastChord = chords[chords.length - 1]!
+  const rollVoicing = voiceLeadTwoHands([lastChord], {
+    dropRootFromRightHand: dropRoot,
+  })[0]!.right.map((note) => {
+    let pitch: number = note
+    while (pitch < 60) pitch += 12
+    while (pitch > 84) pitch -= 12
+    return pitch as typeof note
+  })
 
   /*
-    Kết thì **cả hai tay cùng chậm lại**, không riêng giai điệu. Giãn mỗi nốt của
-    câu mà phần đệm vẫn quạt đủ lực thì nghe như người hát ngân còn ban nhạc chưa
-    biết bài sắp hết.
+    Intro và outro cùng một kiểu kết: một phách sau vòng, nốt hợp âm rơi lần
+    lượt từ dưới lên (roll), nốt trên cùng đúng vạch.
   */
+  const cue =
+    kind === 'intro' && cueOf
+      ? cueStrike(cueVoicing, roundBeats, { roll: rollCue === true })
+      : kind === 'outro'
+        ? cueStrike(rollVoicing, roundBeats, { roll: true, beats: 1 })
+        : []
+
   const whole = [...backing, ...voiced]
   const ghep =
-    kind === 'outro' ? slowClose(whole, lengthBeats) : [...whole, ...cue]
+    kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
 
   /*
     Cắt đuôi nốt đang ngân **sau khi đã ráp**, không chỉ trong từng tầng.

@@ -46,7 +46,7 @@ const doan = (kind: 'intro' | 'outro', styleId: string, take = 0) =>
           noteSource: 'storeScale',
           interlude: true,
           storeScale: scaleForChord,
-          endWithRun: true,
+          endWithRun: kind !== 'outro',
         }),
       ),
     rollCue: styleId.includes('ballad') || styleId.includes('slow'),
@@ -115,6 +115,19 @@ describe('đoạn dạo đầu và đoạn kết, sau khi đã ráp', () => {
           note.notes.length,
           `${styleId} @ phách ${note.startBeat}: tay phải quạt ${note.notes.length} nốt`,
         ).toBe(1)
+      }
+    }
+  })
+
+  it('đoạn kết kết bằng roll hợp âm chủ', () => {
+    for (const styleId of STYLES) {
+      const events = phai(doan('outro', styleId).events)
+      const last = Math.max(...events.map((e) => e.startBeat))
+      const roll = events.filter((e) => last - e.startBeat < 0.3)
+      expect(roll.length, styleId).toBeGreaterThanOrEqual(2)
+      const starts = roll.map((e) => e.startBeat).sort((a, b) => a - b)
+      for (let at = 1; at < starts.length; at += 1) {
+        expect(starts[at], styleId).toBeGreaterThan(starts[at - 1])
       }
     }
   })

@@ -62,6 +62,22 @@ describe('buildGatedSteps', () => {
     expect(steps[steps.length - 1].symbol).toBe('G7')
   })
 
+  it('tên hợp âm theo phách thật, không chia đều beatsPerChord', () => {
+    const chords = voicings('C Am F G')
+    const events = renderPattern(chords, BALLAD, {
+      beatsPerChord: 4,
+      beatsEach: [2, 2, 4, 4],
+    })
+    const table = ['C', 'C', 'Am', 'Am', 'F', 'F', 'F', 'F', 'G', 'G', 'G', 'G']
+    const steps = buildGatedSteps(events, chords, {
+      beatsPerChord: 4,
+      symbolAt: (beat) => table[Math.max(0, Math.floor(beat))] ?? '',
+    })
+    expect(steps[0]?.symbol).toBe('C')
+    const late = steps.find((step) => step.startBeat >= 4)
+    expect(late?.symbol).toBe('F')
+  })
+
   it('lọc riêng tay trái thì chỉ còn nốt tay trái', () => {
     const steps = stepsFor('Dm7 G7', 'left')
 

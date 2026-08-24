@@ -150,6 +150,7 @@ function build(steps: Parameters<typeof buildArrangedSong>[0]['steps']) {
     sources,
     steps,
     turnaround: fakeTurn,
+    restAfterInterlude: 0,
   })
 }
 
@@ -198,6 +199,7 @@ describe('ghép câu quay đầu vào cuối giang tấu', () => {
       solo: () => [],
       sources,
       steps,
+      restAfterInterlude: 0,
     })
 
     expect(withTurn.totalBeats).toBe(without.totalBeats)

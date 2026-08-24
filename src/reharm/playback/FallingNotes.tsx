@@ -1,18 +1,16 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import { buildKeyboardLayout, keyPlacement } from '../../shared/midi/onScreenPiano/layout'
 import { midiToName } from '../../shared/musicTheory/pitch'
 import { getPlaybackBeats } from '../../shared/audio/audioEngine'
+import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { GatedStep } from './noteGatedPlaybackEngine'
 
 /**
  * Nốt rơi xuống bàn phím, kiểu Synthesia.
  *
- * Khi đang phát theo đồng hồ: `requestAnimationFrame` đọc phách từ Transport
- * rồi chỉ sửa `transform` — không render lại React mỗi khung. 60fps trên
- * Chrome PC và Android.
- *
- * Chế độ chờ nốt: đứng yên theo chặng, không cần đồng hồ.
+ * Tên hợp âm / gam nằm **dưới** khung (không overlay). Overlay + overflow-hidden
+ * + textContent từ rAF bị React ghi đè mỗi phách — Android mất chữ.
  */
 
 const LOOK_AHEAD_BEATS = 8
@@ -24,42 +22,55 @@ function noteY(away: number): number {
 }
 
 function inWindow(away: number): boolean {
-  return away >= -0.2 && away <= LOOK_AHEAD_BEATS + 0.2
+  return away >= -0.5 && away <= LOOK_AHEAD_BEATS + 1
+}
+
+function symbolAtBeat(steps: readonly GatedStep[], beat: number): string {
+  if (steps.length === 0) return ''
+  for (let at = steps.length - 1; at >= 0; at -= 1) {
+    if (steps[at]!.startBeat <= beat + 1e-6) return steps[at]!.symbol
+  }
+  return steps[0]!.symbol
 }
 
 interface FallingNotesProps {
   steps: readonly GatedStep[]
   index: number
-  nowBeat?: number | null
+  live?: boolean
   lowNote: MidiNote
   highNote: MidiNote
-  chord?: string
 }
 
 export function FallingNotes({
   steps,
   index,
-  nowBeat,
+  live = false,
   lowNote,
   highNote,
-  chord,
 }: FallingNotesProps) {
-  const live = nowBeat !== undefined && nowBeat !== null
   const layer = useRef<HTMLDivElement>(null)
+  const bucketRef = useRef(0)
+  const [bucket, setBucket] = useState(0)
   const layout = buildKeyboardLayout(lowNote, highNote)
-  const origin = live ? nowBeat : steps[index]?.startBeat
-  if (origin === undefined) return null
-
-  const upcoming = steps.filter((step) => inWindow(step.startBeat - origin))
+  const parked = steps[index]?.startBeat
+  if (parked === undefined && !live) return null
 
   useEffect(() => {
     if (!live) return
     const root = layer.current
     if (!root) return
+    const start = Math.max(0, Math.floor(getPlaybackBeats()))
+    bucketRef.current = start
+    setBucket(start)
 
     let frame = 0
     const tick = () => {
       const now = getPlaybackBeats()
+      const nextBucket = Math.max(0, Math.floor(now))
+      if (nextBucket !== bucketRef.current) {
+        bucketRef.current = nextBucket
+        setBucket(nextBucket)
+      }
       for (const el of root.children) {
         if (!(el instanceof HTMLElement) || el.dataset.start === undefined) continue
         const away = Number(el.dataset.start) - now
@@ -70,51 +81,59 @@ export function FallingNotes({
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [live, upcoming])
+  }, [live, steps])
+
+  const origin = live ? bucket : (parked ?? 0)
+  const upcoming = steps.filter((step) => inWindow(step.startBeat - origin))
+  const symbol = live ? symbolAtBeat(steps, origin) : (steps[index]?.symbol ?? '')
+  const gam = symbol ? scaleLabelForSymbol(symbol) : null
 
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
-      style={{ height: HEIGHT }}
-      role="img"
-      aria-label={`Nốt sắp tới: ${upcoming[0]?.notes
-        .map((note) => midiToName(note))
-        .join(' ')}`}
-    >
-      {chord && (
-        <div className="pointer-events-none absolute top-2 right-3 z-10 font-serif text-4xl font-bold tracking-wide text-amber-key drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
-          {chord}
+    <div>
+      <div
+        className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
+        style={{ height: HEIGHT }}
+        role="img"
+        aria-label={symbol ? `Hợp âm ${symbol}` : 'Nốt sắp tới'}
+      >
+        <div ref={layer} className="absolute inset-0">
+          {upcoming.map((step) =>
+            step.notes.map((note) => {
+              const place = keyPlacement(layout, note)
+              if (!place) return null
+              const away = step.startBeat - origin
+              const isLeft = step.leftNotes.includes(note)
+              return (
+                <div
+                  key={`${step.startBeat}-${note}`}
+                  data-start={step.startBeat}
+                  hidden={!inWindow(away)}
+                  style={{
+                    left: `${place.left}%`,
+                    width: `${place.width}%`,
+                    height: NOTE_H,
+                    transform: `translate3d(0,${noteY(away)}px,0)`,
+                  }}
+                  className={`absolute top-0 flex items-center justify-center rounded text-[9px] font-semibold ${
+                    isLeft ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
+                  } ${!live && step.startBeat === parked ? 'ring-2 ring-cream' : 'opacity-70'}`}
+                >
+                  {midiToName(note)}
+                </div>
+              )
+            }),
+          )}
         </div>
-      )}
-      <div ref={layer} className="absolute inset-0">
-        {upcoming.map((step, position) =>
-          step.notes.map((note) => {
-            const place = keyPlacement(layout, note)
-            if (!place) return null
-            const away = step.startBeat - origin
-            const isLeft = step.leftNotes.includes(note)
-            return (
-              <div
-                key={`${step.startBeat}-${note}`}
-                data-start={step.startBeat}
-                style={{
-                  left: `${place.left}%`,
-                  width: `${place.width}%`,
-                  height: NOTE_H,
-                  transform: `translate3d(0,${noteY(away)}px,0)`,
-                  willChange: live ? 'transform' : undefined,
-                }}
-                className={`absolute top-0 flex items-center justify-center rounded text-[9px] font-semibold ${
-                  isLeft ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
-                } ${position === 0 ? 'ring-2 ring-cream' : 'opacity-70'}`}
-              >
-                {midiToName(note)}
-              </div>
-            )
-          }),
-        )}
+        <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
       </div>
-      <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
+      <div className="rounded-b-lg border border-line bg-black/50 px-3 py-2 text-center">
+        <div className="font-sans text-2xl font-bold tracking-wide text-amber-key">
+          {symbol || '—'}
+        </div>
+        <div className="mt-0.5 font-sans text-sm text-cream/80">
+          {gam ? `Gam: ${gam}` : ' '}
+        </div>
+      </div>
     </div>
   )
 }

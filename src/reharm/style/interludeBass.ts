@@ -1,6 +1,7 @@
 import { chordPitchClasses } from '../../shared/musicTheory/chordDefinitions'
 import type { ParsedChord } from '../types'
 import type { MidiNote } from '../../shared/musicTheory/types'
+import { isBalladStyle } from './balladFamily'
 import type { TimelineEvent } from './types'
 
 /**
@@ -16,9 +17,9 @@ import type { TimelineEvent } from './types'
  * nằm đúng trong khoảng đó, và vẫn giữ tay trái ở tầm trầm 36-52 như bản nhạc.
  *
  * Hình rải là **gốc - quãng 5 - quãng 8 - quãng 5**: đi lên rồi quay về, nên nốt
- * cuối ô đứng cạnh nốt gốc ô sau, không nhảy. Đây là hình đệm ballad quen thuộc
- * chứ không phải walking bass jazz đi liền bậc — walking bass đã có riêng cho
- * điệu ballad theo Pianote, xem `../brain/walkingBass.ts`.
+ * cuối ô đứng cạnh nốt gốc ô sau, không nhảy. Đây là hình đệm **ballad**, chỉ
+ * dùng khi điệu thuộc họ ballad. Bossa / swing / valse giữ nguyên tiết tấu tay
+ * trái của điệu — rải đều bốn nốt một ô làm bossa nghe ra ballad.
  *
  * ## Vì sao quãng 4 và quãng 5, không phải quãng 3
  *
@@ -122,4 +123,18 @@ export function interludeBassLine(
   }
 
   return events
+}
+
+/**
+ * Tay trái đoạn giang tấu: ballad thì rải, điệu khác giữ đúng mẫu của điệu.
+ */
+export function interludeLeftHand(options: {
+  chords: readonly ParsedChord[]
+  beatsEach: readonly number[]
+  styleId: string
+  styleLeft: readonly TimelineEvent[]
+}): TimelineEvent[] {
+  return isBalladStyle(options.styleId)
+    ? interludeBassLine(options)
+    : [...options.styleLeft]
 }
