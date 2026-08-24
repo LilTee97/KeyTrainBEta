@@ -36,9 +36,10 @@ describe('gam của kho, hỏi kèm giọng', () => {
 
   it('hợp âm MƯỢN vẫn im, dù đã nói giọng', () => {
     // Em(add9) và Am6 đều cần Fa thăng — không nằm trong giọng Đô.
-    for (const symbol of ['Em(add9)', 'Am6', 'Bdim']) {
+    for (const symbol of ['Em(add9)', 'Am6']) {
       expect(scaleForChord(chord(symbol), C_MAJOR), symbol).toBeNull()
     }
+    expect(scaleForChord(chord('Bdim'), C_MAJOR), 'Bdim Locrian đã rà').not.toBeNull()
   })
 
   it('hợp âm ba nốt trơn không đổi gì: ngũ cung vốn không lạc bao giờ', () => {
@@ -55,7 +56,6 @@ describe('gam của kho, hỏi kèm giọng', () => {
     const khong = scaleGaps(chords)
     const co = scaleGaps(chords, C_MAJOR)
     expect(co.length, `${khong.join()} -> ${co.join()}`).toBeLessThan(khong.length)
-    // Bdim vẫn thiếu thật: bậc thể của nó là Locrian, kho chưa có bản đã rà.
-    expect(co).toContain('Bdim')
+    expect(co).not.toContain('Bdim')
   })
 })
