@@ -3,7 +3,6 @@ import type { MidiNote } from '../../shared/musicTheory/types'
 import { buildKeyboardLayout, keyPlacement } from '../../shared/midi/onScreenPiano/layout'
 import { midiToName } from '../../shared/musicTheory/pitch'
 import { getPlaybackBeats } from '../../shared/audio/audioEngine'
-import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { GatedStep } from './noteGatedPlaybackEngine'
 
 /**
@@ -39,6 +38,7 @@ interface FallingNotesProps {
   live?: boolean
   lowNote: MidiNote
   highNote: MidiNote
+  onSymbol?: (symbol: string) => void
 }
 
 export function FallingNotes({
@@ -47,6 +47,7 @@ export function FallingNotes({
   live = false,
   lowNote,
   highNote,
+  onSymbol,
 }: FallingNotesProps) {
   const layer = useRef<HTMLDivElement>(null)
   const bucketRef = useRef(0)
@@ -86,16 +87,18 @@ export function FallingNotes({
   const origin = live ? bucket : (parked ?? 0)
   const upcoming = steps.filter((step) => inWindow(step.startBeat - origin))
   const symbol = live ? symbolAtBeat(steps, origin) : (steps[index]?.symbol ?? '')
-  const gam = symbol ? scaleLabelForSymbol(symbol) : null
+
+  useEffect(() => {
+    onSymbol?.(symbol)
+  }, [symbol, onSymbol])
 
   return (
-    <div>
-      <div
-        className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
-        style={{ height: HEIGHT }}
-        role="img"
-        aria-label={symbol ? `Hợp âm ${symbol}` : 'Nốt sắp tới'}
-      >
+    <div
+      className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
+      style={{ height: HEIGHT }}
+      role="img"
+      aria-label={symbol ? `Hợp âm ${symbol}` : 'Nốt sắp tới'}
+    >
         <div ref={layer} className="absolute inset-0">
           {upcoming.map((step) =>
             step.notes.map((note) => {
@@ -124,12 +127,7 @@ export function FallingNotes({
             }),
           )}
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
-      </div>
-      <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1 text-center">
-        <span className="font-sans text-lg font-bold text-amber-key">{symbol || '—'}</span>
-        {gam ? <span className="font-sans text-xs text-cream/80">Gam: {gam}</span> : null}
-      </div>
+      <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
     </div>
   )
 }

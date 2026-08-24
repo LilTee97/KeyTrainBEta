@@ -21,6 +21,7 @@ import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { PracticeHand } from './noteGatedPlaybackEngine'
@@ -78,6 +79,7 @@ export function NoteGatedPractice({
   const [active, setActive] = useState(false)
 
   const [keyboardKeys, setKeyboardKeys] = useState(() => readSetting('midiKeyboardKeys'))
+  const [nowSymbol, setNowSymbol] = useState('')
 
   /*
     Mức bù lệch: lấy con số đã dò nếu có, không thì theo máy.
@@ -224,6 +226,8 @@ export function NoteGatedPractice({
       </div>
     )
   }
+
+  const nowGam = nowSymbol ? scaleLabelForSymbol(nowSymbol) : null
 
   return (
     <div className="rounded-xl border border-line bg-black/25 p-4">
@@ -493,6 +497,7 @@ export function NoteGatedPractice({
           live={looping}
           lowNote={fallRange.low}
           highNote={fallRange.high}
+          onSymbol={setNowSymbol}
         />
 
         <OnScreenPiano
@@ -501,6 +506,11 @@ export function NoteGatedPractice({
           leftHandNotes={hitting.left}
           rightHandNotes={hitting.right}
         />
+
+        <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
+          <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
+          {nowGam ? <span className="font-sans text-xs text-cream/80">Gam: {nowGam}</span> : null}
+        </div>
 
         <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
           <span className="flex items-center gap-1.5">
