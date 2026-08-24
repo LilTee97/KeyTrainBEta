@@ -18,11 +18,14 @@ import {
   type DrillSkill,
 } from './chordDrillEngine'
 import {
+  buildArpFromScale,
   buildArpRun,
   nextNoteHit,
+  SCALE_CATALOG,
   type ArpHand,
   type ArpKind,
   type ArpMode,
+  type ScaleCatalogId,
 } from './arpRun'
 
 /**
@@ -38,6 +41,7 @@ export function ChordDrillHome() {
   const [scale, setScale] = useState<'major' | 'minor'>('major')
   const [palette, setPalette] = useState<DrillPalette>('basic')
   const [skill, setSkill] = useState<DrillSkill>('chords')
+  const [scaleId, setScaleId] = useState<ScaleCatalogId>('major')
   const [arpKind, setArpKind] = useState<ArpKind>('chord')
   const [arpHand, setArpHand] = useState<ArpHand>('both')
   const [arpFingers, setArpFingers] = useState<3 | 4>(3)
@@ -63,16 +67,25 @@ export function ChordDrillHome() {
     return []
   }, [kind, raw, tonic, scale, palette])
 
+  const pickedScale = SCALE_CATALOG.find((item) => item.id === scaleId) ?? SCALE_CATALOG[0]!
+
   const voicings = useMemo(() => {
-    if (skill === 'scale') return [drillScaleVoicing(tonic, scale)]
+    if (skill === 'scale') {
+      const run = buildArpFromScale(tonic, pickedScale.pcs, pickedScale.label, 'both')
+      return [{ left: run.left, right: run.right, symbol: `${tonicText} ${pickedScale.label}` }]
+    }
     return drillVoicings(chords)
-  }, [skill, chords, tonic, scale])
+  }, [skill, chords, tonic, tonicText, pickedScale])
 
   const arpChord = chords[arpMode === 'single' ? Math.min(index, Math.max(0, chords.length - 1)) : index] ?? null
-  const arp = useMemo(
-    () => (skill === 'arp' && arpChord ? buildArpRun(arpChord, arpKind, arpHand) : null),
-    [skill, arpChord, arpKind, arpHand],
-  )
+  const arp = useMemo(() => {
+    if (skill !== 'arp') return null
+    if (arpKind === 'scale') {
+      return buildArpFromScale(tonic, pickedScale.pcs, `${tonicText} ${pickedScale.label}`, arpHand)
+    }
+    if (!arpChord) return null
+    return buildArpRun(arpChord, arpKind, arpHand)
+  }, [skill, arpChord, arpKind, arpHand, tonic, tonicText, pickedScale])
   const current = voicings[index] ?? null
   const chord = skill === 'scale' ? null : chords[index] ?? null
   const scored = useRef(false)
@@ -178,6 +191,40 @@ export function ChordDrillHome() {
           </button>
         ))}
       </div>
+
+      {(skill === 'scale' || (skill === 'arp' && arpKind === 'scale')) && (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-dim">Tone</span>
+            {['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'].map((note) => (
+              <button
+                key={note}
+                type="button"
+                onClick={() => setTonicText(note)}
+                className={`rounded px-2 py-1 font-mono text-xs ${
+                  tonicText === note ? 'bg-amber-key text-ink' : 'bg-white/7 text-dim'
+                }`}
+              >
+                {note}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {SCALE_CATALOG.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setScaleId(item.id)}
+                className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                  scaleId === item.id ? 'bg-amber-key text-ink' : 'bg-white/7 text-dim'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label className="flex flex-col gap-1 text-sm">
         Vòng
@@ -291,7 +338,7 @@ export function ChordDrillHome() {
         </div>
       )}
 
-      {(kind === 'degrees' || skill === 'scale') && (
+      {kind === 'degrees' && skill === 'chords' && (
         <div className="flex flex-wrap items-end gap-3 text-sm">
           <label className="flex flex-col gap-1">
             Tone chủ
@@ -351,10 +398,14 @@ export function ChordDrillHome() {
 
       <MidiConnect />
 
-      {skill === 'arp' && arp && arpChord ? (
+      {skill === 'arp' && arp ? (
         <div className="rounded-xl bg-white/5 px-4 py-3">
-          <p className="font-mono text-2xl text-amber-key">{arpChord.symbol}</p>
-          <p className="text-sm text-amber-key">{arp.scaleName}</p>
+          <p className="font-mono text-2xl text-amber-key">
+            {arpKind === 'scale' ? arp.scaleName : (arpChord?.symbol ?? arp.scaleName)}
+          </p>
+          {arpKind !== 'scale' && (
+            <p className="text-sm text-amber-key">{arp.scaleName}</p>
+          )}
           <p className="text-xs text-dim">
             Lần {repAt + 1}/{reps} · ngón {arpFingers} ·{' '}
             {arpMode === 'loop' ? `${index + 1}/${chords.length}` : 'một hợp âm'}

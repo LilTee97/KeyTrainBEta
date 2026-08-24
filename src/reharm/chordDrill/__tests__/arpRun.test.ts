@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseNamed } from '../chordDrillEngine'
-import { buildArpRun, nextNoteHit } from '../arpRun'
+import { buildArpFromScale, buildArpRun, nextNoteHit, SCALE_CATALOG } from '../arpRun'
 
 describe('rải arpeggio', () => {
   it('tay phải lên rồi về, tay trái xuống rồi về', () => {
@@ -18,6 +18,15 @@ describe('rải arpeggio', () => {
     const pcs = new Set(run.right.map((note) => note % 12))
     expect(pcs.size).toBe(12)
     expect(run.scaleName).toBe('Chromatic')
+  })
+
+  it('chọn Dorian trên D thì có F và B', () => {
+    const dorian = SCALE_CATALOG.find((item) => item.id === 'dorian')!
+    const run = buildArpFromScale(2, dorian.pcs, 'D Dorian', 'right')
+    const pcs = new Set(run.right.map((note) => note % 12))
+    expect(pcs.has(5)).toBe(true)
+    expect(pcs.has(11)).toBe(true)
+    expect(run.scaleName).toBe('D Dorian')
   })
 
   it('theo gam thì vẫn rải được và có tên', () => {
