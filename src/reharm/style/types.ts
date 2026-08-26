@@ -80,6 +80,21 @@ export interface StylePattern {
   bpm: number
   feel: Feel
   /**
+   * Phần trường độ thật sự kêu. Bỏ trống thì dùng mặc định 0.92.
+   *
+   * Trên 1 là **chồng tiếng**, cố ý: giữ phím cũ quá nốt mới một chút, đúng cách
+   * tay người đàn legato. Khít bằng 0 vẫn nghe ra khe vì nhả đúng khoảnh khắc
+   * gõ thì đàn có một cái hụt. Không sợ nhoè: `holdUntilStruckAgain` vẫn cắt
+   * chỗ cùng tay cùng cao độ, `clipToChords` vẫn cắt ở chỗ đổi hợp âm.
+   *
+   * `renderPattern` xén bớt độ ngân của mọi tiếng để hai hợp âm liền nhau không
+   * chồng tiếng. Con số ấy vốn chỉ là tuỳ chọn lúc dựng, nên **không đi theo
+   * điệu**: điệu soạn ở PatternTester nghe liền mạch, xuất sang đây lại hở một
+   * khoảng nhỏ trước mỗi tiếng kế. Điệu nào cần nối sát thì tự mang con số của
+   * nó. Điệu cũ không có trường này nên nghe y như trước.
+   */
+  releaseRatio?: number
+  /**
    * Điệu này đã được xác nhận trực tiếp từ video của kênh hay chưa.
    *
    * Tài liệu nguồn tự phân biệt rõ điệu đã xem tận mắt với điệu chỉ liệt kê

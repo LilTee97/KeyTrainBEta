@@ -573,7 +573,7 @@ export function renderPattern(
   const {
     beatsPerChord = pattern.beatsPerMeasure,
     beatsEach,
-    releaseRatio = 0.92,
+    releaseRatio = pattern.releaseRatio ?? 0.92,
     barsWithoutComping,
     muteWindows,
     cellAt,
