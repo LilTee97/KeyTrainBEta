@@ -27,7 +27,14 @@ const MIN_HAND_GAP = 7
 
 /**
  * Đưa hai tay ra hai bên: trái dưới phải, khe ≥ 5 độ, không xa quá 2 quãng tám.
- * Trái tràn thì hạ trái trước, không đẩy phải lên chồng thêm.
+ *
+ * Chạm khe thì **nâng tay phải trước**, hạ tay trái chỉ khi phải không lên được.
+ *
+ * Trước đây làm ngược — hạ trái trước — và nó phá thế 1-5 mở rộng của bè trầm.
+ * Am bấm La quãng 8 thứ 2 với bậc năm Mi quãng 8 thứ 3 chỉ cách tay phải 5 nửa
+ * cung, nên tay trái bị kéo tụt xuống Mi quãng 8 thứ 2: bậc năm rơi **dưới** nốt
+ * gốc, tai nghe ra hợp âm đã đảo. Bè trầm là chỗ định nghĩa hoà âm, tay phải chỉ
+ * là màu — nên khi hai bên tranh chỗ thì bè trầm giữ chỗ, tay phải nhường.
  */
 export function settleHands(
   left: readonly MidiNote[],
@@ -44,11 +51,25 @@ export function settleHands(
     const topLeft = Math.max(...low)
     const bottomRight = Math.min(...high)
     if (bottomRight - topLeft < MIN_HAND_GAP) {
+      /*
+        Nâng tay phải trước — nhưng chỉ khi nâng xong hai tay còn với tới nhau.
+
+        Nâng nguyên một quãng tám mà bè trầm đang nằm sâu thì hai tay dang quá
+        `MAX_HAND_SPAN`, và bản đệm thành thứ không ai chơi nổi: đo trên điệu
+        ballad tự do của thầy Hải, nâng vô điều kiện làm vỡ cả hai phép kiểm
+        "nốt cùng vang cách nhau trong một quãng tám" và "không bước nào quá một
+        quãng tám". Nên nâng có điều kiện, đụng trần thì bè trầm nhường.
+      */
+      const raised = Math.max(...high) + 12
+      if (raised <= 84 && raised - Math.min(...low) <= MAX_HAND_SPAN) {
+        high = high.map((note) => (note + 12) as MidiNote)
+        continue
+      }
       if (Math.min(...low) - 12 >= LEFT_HAND_LOW) {
         low = low.map((note) => (note - 12) as MidiNote)
         continue
       }
-      if (Math.max(...high) + 12 <= 84) {
+      if (raised <= 84) {
         high = high.map((note) => (note + 12) as MidiNote)
         continue
       }

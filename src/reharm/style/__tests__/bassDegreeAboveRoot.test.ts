@@ -83,16 +83,28 @@ describe('bè trầm đi lên từ nốt gốc', () => {
   })
 
   /*
-    Giới hạn còn lại, ghi ra để ai đọc test biết nó là **luật khác**, không phải
-    lỗi ở đây: `settleHands` giữ khoảng cách tối thiểu 7 nửa cung giữa nốt cao
-    nhất tay trái và nốt thấp nhất tay phải. Thế bấm Am mà tay phải bắt đầu ở La
-    quãng 8 thứ 3 thì bậc năm Mi quãng 8 thứ 3 chỉ cách 5 nửa cung, nên tay trái
-    bị đẩy xuống một quãng tám. Muốn thế 1-5 mở rộng ở đây thì phải nâng thế bấm
-    tay phải, không phải sửa `degreeTone`.
+    Tay phải thấp thì **tay phải nhường**, không phải bè trầm nhường.
+
+    `settleHands` giữ khoảng cách tối thiểu 7 nửa cung giữa hai tay. Thế bấm Am
+    mà tay phải bắt đầu ở La quãng 8 thứ 3 thì bậc năm Mi quãng 8 thứ 3 chỉ cách
+    5 nửa cung — chật. Trước đây chỗ chật ấy được giải bằng cách **hạ tay trái**
+    xuống một quãng tám, và thế là bậc năm rơi dưới nốt gốc. Nay nâng tay phải
+    lên, bè trầm giữ nguyên thế 1-5: bè trầm định nghĩa hoà âm, tay phải chỉ là
+    màu, nên khi tranh chỗ thì màu nhường.
+
+    Nâng vẫn có điều kiện — xem test dưới.
   */
-  it('tay phải quá thấp thì hai tay bị tách ra, bậc năm tụt xuống', () => {
+  it('tay phải quá thấp thì nâng tay phải, bè trầm giữ thế 1-5', () => {
     const am: TwoHandVoicing = { left: [45], right: [57, 60, 64], symbol: 'Am' }
     const [root, fifth] = bassLine(am, 2)
-    expect(fifth).toBeLessThan(root)
+    expect(fifth - root).toBe(7)
   })
+
+  /*
+    Nâng vẫn có điều kiện: nâng nguyên một quãng tám mà bè trầm nằm sâu thì hai
+    tay dang quá MAX_HAND_SPAN và bản đệm thành thứ không ai chơi nổi. Ca ấy bè
+    trầm phải nhường lại, và `freeBalladPlayable.test.ts` đã canh sẵn — hai phép
+    kiểm "nốt cùng vang cách nhau trong một quãng tám" và "không bước nào quá một
+    quãng tám" vỡ ngay nếu ai gỡ điều kiện đó đi. Không dựng lại ca đó ở đây.
+  */
 })
