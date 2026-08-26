@@ -119,15 +119,20 @@ const DEGREE_CHAIN: Readonly<Record<number, readonly (readonly number[])[]>> = {
   3: [[10, 11], [7, 6, 8]],
 }
 
+const LEFT_ARPEGGIO_LOW = 36
+const LEFT_ARPEGGIO_HIGH = 60
+
 function degreeTone(
   notes: readonly MidiNote[],
   rootPc: number,
   toneIndex: number,
   semitones = 0,
   near?: MidiNote,
+  soundingNotes: readonly MidiNote[] = notes,
+  register?: { low: number; high: number },
 ): MidiNote {
   const floor = notes[0]
-  const sounding = new Set(notes.map((note) => ((note % 12) + 12) % 12))
+  const sounding = new Set(soundingNotes.map((note) => ((note % 12) + 12) % 12))
 
   /*
     Nốt gốc **không bao giờ lùi**. Nó có thể vắng mặt ở tay phải — thế bấm rút
@@ -147,11 +152,42 @@ function degreeTone(
       }
       if (found !== null) break
     }
-    pitchClass = found ?? rootPc
+    const ideal = DEGREE_CHAIN[toneIndex]?.[0]?.[0] ?? 0
+    pitchClass = found ?? (rootPc + ideal) % 12
   }
 
-  const step = (((pitchClass - (floor % 12)) % 12) + 12) % 12
-  const placed = floor + step + semitones
+  const baseFloor = register?.low ?? floor
+  const step = (((pitchClass - (baseFloor % 12)) % 12) + 12) % 12
+  const placed = baseFloor + step + semitones
+
+  /*
+    Bè trầm **đi lên từ nốt gốc**, không bám quãng tám gần nốt vừa chơi.
+
+    Luật "quãng tám gần nhất" ở dưới viết cho câu rải tay phải, nơi cái cần là
+    hai nốt liền nhau đừng nhảy cóc. Áp nó cho bè trầm thì hỏng hoà âm: từ La
+    quãng tám 2, bậc năm Mi có hai chỗ đứng — Mi trầm hơn (cách 5 nửa cung) và
+    Mi cao hơn (cách 7). Luật gần nhất chọn Mi TRẦM, tức bậc năm nằm **dưới**
+    nốt gốc. Tai nghe ra hợp âm đã đảo, như đổi sang hợp âm khác, chứ không nghe
+    ra bè trầm của hợp âm cũ. Đo trên Am: A2(45) ra E2(40), đi xuống quãng bốn.
+
+    Thế 1-5-8-10 của đệm hát đi **lên**: gốc, rồi bậc năm trên gốc, rồi quãng
+    tám, rồi bậc mười. Đã đối chiếu với video Slow Rock bài 9 của thầy Đức Thịnh
+    (nguồn `duc-thinh-bai-09-slow-rock` bên PianoBrain): bè trầm đi lên một quãng
+    năm, không đi xuống một quãng bốn.
+
+    `floor` là nốt bass thật của thế bấm, nên nó là mốc neo. Chọn quãng tám thấp
+    nhất còn **nằm trên** mốc ấy. Chỉ áp khi có `register` — tức chỉ tay trái;
+    tay phải giữ nguyên luật cũ.
+  */
+  if (register && toneIndex > 0) {
+    let above: number | null = null
+    for (let octave = -4; octave <= 4; octave += 1) {
+      const candidate = placed - semitones + octave * 12
+      if (candidate <= floor || candidate > register.high) continue
+      if (above === null || candidate < above) above = candidate
+    }
+    if (above !== null) return (above + semitones) as MidiNote
+  }
 
   if (near === undefined) return placed as MidiNote
 
@@ -174,12 +210,15 @@ function degreeTone(
     là quãng ba đi xuống hoá thành bước chín nửa cung đi lên. Lọc sẵn ở đây thì
     không có gì để kéo.
   */
+  const low = register?.low ?? RIGHT_ARPEGGIO_LOW
+  const high = register?.high ?? RIGHT_ARPEGGIO_HIGH
+  const target = near ?? placed
   const base = placed - semitones
   let best: number | null = null
   for (let octave = -4; octave <= 4; octave += 1) {
     const candidate = base + octave * 12
-    if (candidate < RIGHT_ARPEGGIO_LOW || candidate > RIGHT_ARPEGGIO_HIGH) continue
-    if (best === null || Math.abs(candidate - near) < Math.abs(best - near)) {
+    if (candidate < low || candidate > high) continue
+    if (best === null || Math.abs(candidate - target) < Math.abs(best - target)) {
       best = candidate
     }
   }
@@ -204,14 +243,28 @@ function notesForVoice(
   }[],
   rootPc?: number,
   near?: MidiNote,
+  soundingNotes?: readonly MidiNote[],
+  register?: { low: number; high: number },
 ): MidiNote[] {
   if (notes.length === 0) return []
   if (tones?.length) {
-    return tones.map((spec) =>
-      spec.fromRoot && rootPc !== undefined
-        ? degreeTone(notes, rootPc, spec.toneIndex, spec.semitones ?? 0, near)
-        : pickTone(notes, spec.toneIndex, spec.semitones ?? 0),
-    )
+    let here = near
+    return tones.map((spec) => {
+      const note =
+        spec.fromRoot && rootPc !== undefined
+          ? degreeTone(
+              notes,
+              rootPc,
+              spec.toneIndex,
+              spec.semitones ?? 0,
+              here,
+              soundingNotes ?? notes,
+              register,
+            )
+          : pickTone(notes, spec.toneIndex, spec.semitones ?? 0)
+      here = note
+      return note
+    })
   }
   if (toneIndex !== undefined) {
     return [pickTone(notes, toneIndex)]
@@ -432,11 +485,15 @@ function renderWithCell(
           hit.tones,
           rootPc,
           near,
+          [...voicing.left, ...voicing.right],
+          hand === 'left'
+            ? { low: LEFT_ARPEGGIO_LOW, high: LEFT_ARPEGGIO_HIGH }
+            : undefined,
         )
         const split = settleHands(
-          hand === 'left' ? raw : voicing.left,
-          hand === 'right' ? raw : voicing.right,
-        )
+              hand === 'left' ? raw : voicing.left,
+              hand === 'right' ? raw : voicing.right,
+            )
         let notes = hand === 'left' ? split.left : split.right
 
         if (hand === 'left') {
