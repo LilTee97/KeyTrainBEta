@@ -3,6 +3,7 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { getStyle } from '../../style/styleLibrary'
 import { generateSolo } from '../soloGenerator'
 import { LONG_INTERLUDE_BARS, interludeDensity, pulseForStyle, soloFeelFor } from '../soloFeel'
+import { chooseChorusLoop } from '../../style/interludeLoop'
 
 /*
   Đoạn giang tấu dài bao nhiêu thì câu solo dày bấy nhiêu.
@@ -92,5 +93,35 @@ describe('độ dài giang tấu quyết định mật độ câu solo', () => {
   it('giang tấu mặc định của app thuộc phía cầu nối', () => {
     expect(interludeDensity(4)).toBe('sparse')
     expect(interludeDensity(8)).toBe('sparse')
+  })
+})
+
+/*
+  Chuỗi nối: người dùng chọn giang tấu mượn mấy hợp âm -> ra bao nhiêu ô nhịp
+  -> ra mật độ câu solo.
+
+  Bốn hợp âm — mặc định, và là con số người dùng chọn bằng tai sau khi bác bản
+  mượn nguyên vòng — ra 4 ô, tức luôn ở phía cầu nối. Mười sáu hợp âm mới đủ
+  dài để luật nói được điều gì.
+*/
+describe('độ dài giang tấu chọn được, và nó dẫn tới mật độ', () => {
+  const song = parseChordInput(
+    'Am Dm G C F Bm7b5 E7 Am Dm G C F E7 Am Dm E7',
+  ).chords
+
+  it.each([4, 8, 12, 16])('mượn %s hợp âm thì cửa sổ đúng bấy nhiêu', (size) => {
+    const window = chooseChorusLoop(song, size)!
+    expect(window.to - window.from + 1).toBe(size)
+  })
+
+  it('không đòi nhiều hơn số hợp âm bài có', () => {
+    const window = chooseChorusLoop(song.slice(0, 5), 16)!
+    expect(window.to - window.from + 1).toBe(5)
+  })
+
+  /* Một hợp âm một ô nhịp: bốn hợp âm là cầu nối, mười sáu là bản độc tấu. */
+  it('bốn hợp âm ra cầu nối, mười sáu ra độc tấu', () => {
+    expect(interludeDensity(4)).toBe('sparse')
+    expect(interludeDensity(16)).toBe('medium')
   })
 })

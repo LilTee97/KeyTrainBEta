@@ -105,6 +105,8 @@ export interface SongSnapshot {
   phraseScaleId?: string | null
   /** Rút hợp âm đoạn không lời về chất cơ bản. Bỏ trống là bật. */
   plainPhrase?: boolean
+  /** Giang tấu mượn mấy hợp âm của bài. Bỏ trống là 4. */
+  interludeChords?: number
   chordsPerPhrase: number
 }
 

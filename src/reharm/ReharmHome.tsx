@@ -97,7 +97,11 @@ import {
 } from './reharmEngine/keyDetection'
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
-import { interludeDensity, pulseForStyle } from './fillSoloGenerator/soloFeel'
+import {
+  LONG_INTERLUDE_BARS,
+  interludeDensity,
+  pulseForStyle,
+} from './fillSoloGenerator/soloFeel'
 
 /** Mục "mỗi hợp âm một gam" trong khung chọn gam đoạn không lời. */
 const MULTI_SCALE = 'multi'
@@ -175,7 +179,25 @@ import type { LickyMode } from './licky/types'
  * Bốn là độ dài tai nhận ra được một vòng tuần hoàn mà chưa kịp chán — mượn
  * trọn cả đoạn thì giang tấu dài lê thê.
  */
-const INTERLUDE_CHORDS = 4
+/**
+ * Giang tấu mượn mấy hợp âm của bài. Mặc định **bốn** — không đổi.
+ *
+ * Bốn là con số người dùng chọn bằng tai sau khi bác bản mượn nguyên vòng:
+ * "dài lê thê, và hết vòng thì đoạn hát nhảy vào đột ngột chẳng có gì báo
+ * trước" — xem `style/interludeLoop.ts`. Nên đây là mặc định GIỮ NGUYÊN, còn
+ * các mức dài hơn là lựa chọn để nghe thử, không phải để thay.
+ *
+ * Vì sao có mức dài: đo trên bảy bản ký âm của Cà Pháo thì đoạn từ 18 ô trở
+ * lên mới được viết thành một bản độc tấu, còn từ 11 ô trở xuống anh ấy coi là
+ * cầu nối và đi qua bằng chính kết cấu đoạn hát. Bốn hợp âm ra 4-8 ô nhịp —
+ * luôn ở phía cầu nối, nên luật `interludeDensity` không bao giờ có chỗ nói.
+ *
+ * Lưu ý điều đã học lần trước: nếu đoạn dài vẫn nghe lê thê thì rất có thể
+ * không phải tại độ dài, mà tại câu solo bị dập từ hình lick có sẵn nên không
+ * có hình dáng đi đâu về đâu. Chỗ ấy là việc của bộ sinh câu, không sửa ở đây.
+ */
+const INTERLUDE_LENGTHS = [4, 8, 12, 16] as const
+const DEFAULT_INTERLUDE_CHORDS = 4
 
 
 /**
@@ -619,6 +641,10 @@ export function ReharmHome() {
    * người ta muốn giữ nguyên bảng màu.
    */
   const [plainPhrase, setPlainPhrase] = useState(true)
+  /** Giang tấu mượn mấy hợp âm của bài. Xem `INTERLUDE_LENGTHS`. */
+  const [interludeChords, setInterludeChords] = useState<number>(
+    DEFAULT_INTERLUDE_CHORDS,
+  )
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -1428,13 +1454,13 @@ export function ReharmHome() {
         chords: loopChords,
         key: reharm.key,
         nextChord: nextFirst?.chord,
-        size: INTERLUDE_CHORDS,
+        size: interludeChords,
       })
-      const window = fromBrain ?? chooseChorusLoop(loopChords, INTERLUDE_CHORDS)
+      const window = fromBrain ?? chooseChorusLoop(loopChords, interludeChords)
       const picked = (
         window
           ? chorus.slice(window.from, window.to + 1)
-          : chorus.slice(0, INTERLUDE_CHORDS)
+          : chorus.slice(0, interludeChords)
       ).map((entry) => ({ ...entry.span, chord: plainAt(entry.main, entry.span.chord) }))
       const first = picked[0]
       const last = picked[picked.length - 1]
@@ -1558,6 +1584,7 @@ export function ReharmHome() {
       graceDensity,
       reharm.key,
       plainPhrase,
+      interludeChords,
       phraseNoteSource,
       phraseScale,
       phrasePulse,
@@ -2079,6 +2106,7 @@ export function ReharmHome() {
       jazzScales: storeScales,
       phraseScaleId,
       plainPhrase,
+      interludeChords,
       chordsPerPhrase,
     }),
     [
@@ -2198,6 +2226,7 @@ export function ReharmHome() {
     */
     setPhraseScaleId(saved.phraseScaleId ?? null)
     setPlainPhrase(saved.plainPhrase !== false)
+    setInterludeChords(saved.interludeChords ?? DEFAULT_INTERLUDE_CHORDS)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -3633,6 +3662,52 @@ export function ReharmHome() {
                 </div>
               </div>
             )}
+
+            <div className="mt-3">
+              <h4 className="mb-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Giang tấu mượn mấy hợp âm
+              </h4>
+              <p className="mb-1 text-[10px] text-dim">
+                Đo trên bản ký âm người thật: đoạn từ <b>18 ô trở lên</b> mới
+                được viết thành một bản độc tấu; từ 11 ô trở xuống là cầu nối,
+                đi qua bằng chính kết cấu đoạn hát.
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                {INTERLUDE_LENGTHS.map((count) => {
+                  const bars = Math.round(
+                    (count * chordBeats) / Math.max(1, phrasePulseBar),
+                  )
+                  return (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setInterludeChords(count)}
+                      title={
+                        bars >= LONG_INTERLUDE_BARS
+                          ? `${bars} ô — đủ dài cho một bản độc tấu`
+                          : `${bars} ô — vẫn là một cầu nối`
+                      }
+                      className={`rounded-lg border px-3 py-1.5 text-xs ${
+                        interludeChords === count
+                          ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                          : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                      }`}
+                    >
+                      {count} hợp âm{' '}
+                      <span className="text-dim">
+                        ≈{bars} ô{bars >= LONG_INTERLUDE_BARS ? ' · độc tấu' : ''}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              {interludeChords !== DEFAULT_INTERLUDE_CHORDS && (
+                <p className="mt-1 text-[10px] text-dim">
+                  Mặc định là 4. Bản mượn nguyên vòng từng bị bác vì nghe lê thê
+                  — nếu vẫn thấy vậy thì nhiều khả năng do câu solo, không do độ dài.
+                </p>
+              )}
+            </div>
 
             <label className="mt-2 flex items-center gap-2 text-xs text-dim">
               <input
