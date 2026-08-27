@@ -96,6 +96,11 @@ import {
   orderedKeys,
 } from './reharmEngine/keyDetection'
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
+import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
+import { pulseForStyle } from './fillSoloGenerator/soloFeel'
+
+/** Mục "mỗi hợp âm một gam" trong khung chọn gam đoạn không lời. */
+const MULTI_SCALE = 'multi'
 import { reharmonize } from './reharmEngine/reharmPipeline'
 import type {
   ColorIntensity,
@@ -117,7 +122,6 @@ import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
 import { plainForInterlude } from './style/interludeChords'
 import { cueChord, phraseChords } from './style/phraseChords'
 import { buildPhraseSection } from './style/phraseSection'
-import { interludeLeftHand } from './style/interludeBass'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -142,6 +146,7 @@ import {
 import {
   eventsForHand,
   giveCompingToLeft,
+  yieldToFill,
   renderPattern,
 } from './style/patternRenderer'
 import {
@@ -475,6 +480,7 @@ export function ReharmHome() {
   const [mutedFills, setMutedFills] = useState<ReadonlySet<number>>(new Set())
   const [extraFills, setExtraFills] = useState<ReadonlySet<number>>(new Set())
   const [extraRuns, setExtraRuns] = useState<ReadonlySet<number>>(new Set())
+  const [fillRests, setFillRests] = useState<Record<number, number>>({})
   const [lickyFills, setLickyFills] = useState(true)
   const [lickyRuns, setLickyRuns] = useState(false)
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
@@ -593,6 +599,26 @@ export function ReharmHome() {
   const [storeScales, setStoreScales] = useState(true)
   /** Nguồn nốt thật sự đưa cho bộ sinh câu: công tắc gam jazz đè lên lựa chọn kia. */
   const soloNoteSource: SoloNoteSource = storeScales ? 'storeScale' : noteSource
+  /**
+   * Gam cho **đoạn không lời**: dạo đầu, kết bài, giang tấu.
+   *
+   * `null` là lối **nhiều gam** — mỗi hợp âm một gam, đổi theo hoà âm, đúng lối
+   * jazz và đúng hành vi cũ. Chọn một mục là chuyển sang lối **một gam**: một
+   * thang âm chạy suốt cả vòng, mặc kệ hợp âm đổi, đúng lối pop / rock / blues.
+   *
+   * Hai lối không thay được nhau nên không gộp thành một thanh trượt. Đề xuất
+   * gam nằm ở `style/phraseScale.ts`, chấm điểm theo chính vòng hợp âm của bài.
+   */
+  const [phraseScaleId, setPhraseScaleId] = useState<string | null>(null)
+  /**
+   * Rút hợp âm đoạn không lời về chất cơ bản trước khi dựng câu.
+   *
+   * Bật sẵn: giang tấu vốn đã rút gọn từ trước, và đoạn dạo giờ mượn hợp âm của
+   * bài nên thừa hưởng đúng vấn đề ấy — chồng `add9`, `9sus4`, `13` lên nền solo
+   * thì nốt ngoài giọng nhiều tới mức câu chạy nghe lạc. Tắt được, vì có bài
+   * người ta muốn giữ nguyên bảng màu.
+   */
+  const [plainPhrase, setPlainPhrase] = useState(true)
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -691,6 +717,7 @@ export function ReharmHome() {
       setMutedFills((set) => shiftIndexSet(set, from, 1))
       setExtraFills((set) => shiftIndexSet(set, from, 1))
       setExtraRuns((set) => shiftIndexSet(set, from, 1))
+      setFillRests((table) => shiftRecord(table, from, 1))
       setMutedHeld((set) => shiftIndexSet(set, from, 1))
       setColorEdits((table) => shiftRecord(table, from, 1))
       setSlashEdits((table) => shiftRecord(table, from, 1))
@@ -987,21 +1014,30 @@ export function ReharmHome() {
   /** Vòng hợp âm về mặt cách bấm — thứ tay thật sự chơi. */
   const withPassing = useMemo(() => {
     let main = -1
-    return reharm.final.map((chord) => {
+    const painted = reharm.final.map((chord) => {
       if (chord.passing) return chord
       main += 1
-      const painted = colorEdits[main]
+      const next = colorEdits[main]
         ? withQuality(chord, colorEdits[main])
         : chord
-      if (slashEdits[main] === true) return toSlashChord(painted) ?? painted
+      if (slashEdits[main] === true) return toSlashChord(next) ?? next
       if (slashEdits[main] === false) {
         const base = reharm.colored[main]
-        if (!base) return painted
+        if (!base) return next
         return colorEdits[main] ? withQuality(base, colorEdits[main]) : base
       }
-      return painted
+      return next
     })
-  }, [reharm.final, reharm.colored, colorEdits, slashEdits])
+    if (Object.keys(fillRests).length === 0) return painted
+    main = -1
+    return painted.map((chord) => {
+      if (chord.passing) return chord
+      main += 1
+      const rest = fillRests[main] ?? 0
+      if (rest <= 0) return chord
+      return { ...chord, beats: beatsOf(chord, chordBeats) + rest }
+    })
+  }, [reharm.final, reharm.colored, colorEdits, slashEdits, fillRests, chordBeats])
 
   /*
     Hợp âm nào trong bài mà kho chưa có gam.
@@ -1042,8 +1078,19 @@ export function ReharmHome() {
       const to = span.start + span.beats
       if (from < to) windows.push({ from, to })
     }
+    for (const [key, rest] of Object.entries(fillRests)) {
+      if (rest <= 0) continue
+      const main = Number(key)
+      if (transitions.has(main)) continue
+      const span = spans[main]
+      if (!span) continue
+      const from = span.start + span.beats - rest
+      if (from < span.start + span.beats) {
+        windows.push({ from, to: span.start + span.beats })
+      }
+    }
     return windows
-  }, [transitions, withPassing, chordBeats])
+  }, [transitions, withPassing, chordBeats, fillRests])
 
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
@@ -1069,6 +1116,116 @@ export function ReharmHome() {
   )
 
   /** Bản nhạc: lời bài hát với hợp âm đã tái hoà âm ghi trên đầu. */
+  /** Vòng hợp âm chính của bài — bỏ hợp âm lướt, chúng mượn phách chứ không có ô riêng. */
+  const mainSongChords = useMemo(
+    () => recolored.filter((chord) => !chord.passing),
+    [recolored],
+  )
+
+  /**
+   * Gam đề xuất, chấm điểm theo **chính vòng hợp âm của bài**.
+   *
+   * Không phải một danh sách gam chung chung: mỗi mục kèm tỉ lệ nốt hợp âm của
+   * vòng mà gam ấy phủ được, nên người đệm thấy ngay gam nào ít va vào hoà âm.
+   */
+  const scaleChoices = useMemo(
+    () => suggestScales(mainSongChords, reharm.key),
+    [mainSongChords, reharm.key],
+  )
+
+  /**
+   * Gam mặc định của điệu đang chọn.
+   *
+   * Họ slow rock lấy **gam Blues**. Thầy Đức Thịnh nói mẫu đệm slow rock của
+   * thầy "thực ra là điệu Blues nhưng không đánh nốt Blues", và nốt còn thiếu
+   * là bậc năm giáng — item `duc-thinh-not-blues-la-bac-5-giang` bên PianoBrain.
+   * Tiết tấu đã là Blues sẵn; đoạn không lời là chỗ bè giai điệu rảnh nhất để
+   * nốt blue ấy vào. Người dùng chọn gam khác thì lựa chọn của người dùng thắng.
+   */
+  const autoPhraseScale = useMemo(() => {
+    if (prefersBlues(style)) return bluesChoice(reharm.key)
+    /*
+      Bốn họ slow rock / bolero / bossa / ballad mặc định ngẫu hứng trên **một
+      gam**, lấy gam khớp nhất với vòng của bài.
+
+      Trước đây chúng rơi về nguồn nốt `chordTone`, tức nốt hợp âm ở mọi chỗ. Đo
+      trên bốn bản ký âm của Cà Pháo thì lối ấy lệch hẳn: người thật đặt nốt hợp
+      âm khoảng 52-67% số lần ở phách mạnh, còn app đặt 100% — và app rải hợp âm
+      thuần 35-60% số câu trong khi người thật chỉ 5%. Xem `phraseScale.ts`.
+    */
+    if (!prefersSingleScale(style)) return null
+    return scaleChoices[0] ?? null
+  }, [style, reharm.key, scaleChoices])
+
+  /** Gam thật sự đưa cho bộ sinh câu. `null` là lối nhiều gam. */
+  const phraseScale = useMemo(() => {
+    // `'multi'` là lối nhiều gam do người dùng chọn tay, khác với `null` là để tự.
+    if (phraseScaleId === MULTI_SCALE) return null
+    if (phraseScaleId === null) return autoPhraseScale
+    return (
+      scaleChoices.find((choice) => choice.id === phraseScaleId) ??
+      bluesChoice(reharm.key)
+    )
+  }, [phraseScaleId, autoPhraseScale, scaleChoices, reharm.key])
+
+  /*
+    Đoạn không lời có nguồn nốt RIÊNG, không dùng chung với câu solo thân bài.
+
+    Thân bài chạy dưới giọng hát, nên nó phải nhường: nốt hợp âm là đủ. Đoạn
+    không lời thì nhạc cụ là giai điệu chính, và đó mới là chỗ một gam xuyên
+    suốt nghe ra câu nhạc.
+  */
+  const phraseNoteSource: SoloNoteSource = phraseScale
+    ? 'keyPentatonic'
+    : soloNoteSource
+
+  /*
+    Mạch của điệu, cho câu solo đoạn không lời neo vào.
+
+    Ba họ slow rock / bolero / bossa nova có tiết tấu **là** danh tính của điệu:
+    nghe hai phách là nhận ra. Trước đây câu solo ba đoạn không lời chạy móc đơn
+    đều xuyên qua chúng — tay phải đi một đằng, tay trái gõ một nẻo, nên không
+    ra một câu solo có bass và giai điệu mà ra hai người chơi hai bài.
+
+    Lấy chỗ gõ từ chính `cell` của điệu, không dựng bảng riêng: điệu chép từ
+    video về sau là tự có mạch, không phải nhớ cập nhật thêm chỗ nào.
+  */
+  const phrasePulse = useMemo(() => pulseForStyle(styleId), [styleId])
+  const phrasePulseBar = style.beatsPerMeasure * (style.gridUnit ?? 1)
+
+  /*
+    Ký hiệu hợp âm đoạn dạo, tính **một lần** rồi dùng cho cả bản lời lẫn lưới.
+
+    Trước đây bản lời và lưới hợp âm mỗi bên tự gọi `phraseChords` một lượt. Hai
+    chỗ gọi thì có ngày lệch nhau — và đã lệch thật: bản lời đổi sang hợp âm mượn
+    của bài còn lưới vẫn kêu vòng dựng theo bậc, cùng một đoạn dạo mà hai chỗ ghi
+    hai vòng khác nhau.
+  */
+  const phraseOpening = useMemo(
+    () => recolored.find((chord) => !chord.passing) ?? null,
+    [recolored],
+  )
+
+  const introSymbols = useMemo(() => {
+    const cue = cueChord(phraseOpening)
+    return [
+      ...phraseChords('intro', reharm.key, {
+        songChords: mainSongChords,
+        plain: plainPhrase,
+      }).map((chord) => chord.symbol),
+      ...(cue ? [`${cue.symbol} (báo)`] : []),
+    ]
+  }, [reharm.key, mainSongChords, plainPhrase, phraseOpening])
+
+  const outroSymbols = useMemo(
+    () =>
+      phraseChords('outro', reharm.key, {
+        songChords: mainSongChords,
+        plain: plainPhrase,
+      }).map((chord) => chord.symbol),
+    [reharm.key, mainSongChords, plainPhrase],
+  )
+
   const sheet = useMemo(() => {
     if (!pastedSong) return null
     const base = resectionSheet(
@@ -1076,19 +1233,8 @@ export function ReharmHome() {
       sectionMarks,
     )
     const playOrder = arrangement ?? []
-    const intro = playOrder.some((step) => step.type === 'intro')
-      ? [
-          ...phraseChords('intro', reharm.key).map((chord) => chord.symbol),
-          ...(cueChord(recolored.find((chord) => !chord.passing) ?? null)
-            ? [
-                `${cueChord(recolored.find((chord) => !chord.passing) ?? null)!.symbol} (báo)`,
-              ]
-            : []),
-        ]
-      : []
-    const outro = playOrder.some((step) => step.type === 'outro')
-      ? phraseChords('outro', reharm.key).map((chord) => chord.symbol)
-      : []
+    const intro = playOrder.some((step) => step.type === 'intro') ? introSymbols : []
+    const outro = playOrder.some((step) => step.type === 'outro') ? outroSymbols : []
     return attachPhraseToSheet(base, intro, outro)
   }, [pastedSong, recolored, withPassing, sectionMarks, arrangement, reharm.key])
 
@@ -1254,9 +1400,17 @@ export function ReharmHome() {
         chorus.push({ span, main })
       }
 
-      /** Hợp âm gốc của một ô, đã rút về màu cơ bản. */
-      const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord =>
-        plainForInterlude(sequence.chords[mainIndex] ?? fallback)
+      /*
+        Hợp âm gốc của một ô, rút về màu cơ bản **nếu người dùng còn bật**.
+
+        Trước đây bước rút gọn là bắt buộc. Nó đúng cho phần lớn bài, nhưng có
+        bài người ta cố ý muốn giang tấu giữ nguyên bảng màu — nên nó thành một
+        ô tick, chung với đoạn dạo, để ba đoạn không lời cùng theo một luật.
+      */
+      const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord => {
+        const raw = sequence.chords[mainIndex] ?? fallback
+        return plainPhrase ? plainForInterlude(raw) : raw
+      }
       if (chorus.length === 0) return null
 
       /*
@@ -1313,8 +1467,18 @@ export function ReharmHome() {
         lengthBeats: last.start + last.beats - first.start,
         chords: picked,
         /*
-          Tay trái: ballad thì rải ngón (Hồng Kông 1). Bossa / swing / valse
-          giữ đúng mẫu của điệu — rải đều làm bossa nghe ra ballad.
+          Giang tấu chơi **đúng điệu đang chọn**, cả hai tay, không thay gì.
+
+          Bản trước thay tay trái bằng một câu rải ballad (hình gốc-5-8-5 của
+          *Hồng Kông 1*) cho mọi điệu thuộc họ ballad — mà họ ấy có cả
+          `slow-rock-2` và `hai-slow-rock`. Kết quả: chọn slow rock, tới giang
+          tấu thì tay trái chuyển sang rải ballad, nghe ra một điệu khác. Người
+          dùng bác thẳng: đoạn dạo đầu, kết bài và giang tấu bắt buộc chơi theo
+          điệu đã chọn, áp dụng cho mọi điệu.
+
+          Đánh đổi đã biết: điệu nào tay trái thưa thì giang tấu cũng thưa theo,
+          không còn được câu rải bốn nốt đắp vào. Đó là cái giá của việc giữ
+          đúng điệu, và nó là lựa chọn của người đệm chứ không phải của app.
         */
         events: (() => {
           const beatsEach = picked.map((span) => span.beats)
@@ -1325,15 +1489,7 @@ export function ReharmHome() {
             style,
             { beatsPerChord: chordBeats, beatsEach },
           )
-          return [
-            ...backing.filter((event) => event.hand !== 'left'),
-            ...interludeLeftHand({
-              chords: windowChords,
-              beatsEach,
-              styleId: style.id,
-              styleLeft: backing.filter((event) => event.hand === 'left'),
-            }),
-          ]
+          return backing
         })(),
         lastEvents: (() => {
           const beatsEach = head.map((span) => span.beats)
@@ -1344,15 +1500,7 @@ export function ReharmHome() {
             style,
             { beatsPerChord: chordBeats, beatsEach },
           )
-          return [
-            ...backing.filter((event) => event.hand !== 'left'),
-            ...interludeLeftHand({
-              chords: headChords,
-              beatsEach,
-              styleId: style.id,
-              styleLeft: backing.filter((event) => event.hand === 'left'),
-            }),
-          ]
+          return backing
         })(),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
@@ -1363,7 +1511,11 @@ export function ReharmHome() {
               density: 'medium',
               graceDensity,
               key: reharm.key,
-              noteSource: soloNoteSource,
+              noteSource: phraseNoteSource,
+              ...(phraseScale ? { singleScale: phraseScale.pitchClasses } : {}),
+              ...(phrasePulse.length > 0
+                ? { pulse: phrasePulse, pulseBar: phrasePulseBar }
+                : {}),
               chordsPerPhrase,
               take: take + phraseSpin + playSpin.current,
               endWithRun: lastLoop === true,
@@ -1389,6 +1541,11 @@ export function ReharmHome() {
       soloDirection,
       graceDensity,
       reharm.key,
+      plainPhrase,
+      phraseNoteSource,
+      phraseScale,
+      phrasePulse,
+      phrasePulseBar,
       soloNoteSource,
       chordsPerPhrase,
       phraseSpin,
@@ -1506,6 +1663,14 @@ export function ReharmHome() {
       else next.delete(chordIndex)
       return next
     })
+    if (on) {
+      setFillRests((current) => {
+        if (!(chordIndex in current)) return current
+        const next = { ...current }
+        delete next[chordIndex]
+        return next
+      })
+    }
   }, [transitions, extraFills, fillEligible, mutedFills])
 
   const cycleColor = useCallback(
@@ -1603,6 +1768,12 @@ export function ReharmHome() {
       next.delete(chordIndex)
       return next
     })
+    setFillRests((current) => {
+      if (!(chordIndex in current)) return current
+      const next = { ...current }
+      delete next[chordIndex]
+      return next
+    })
   }, [transitions])
 
   const toggleRun = useCallback((chordIndex: number) => {
@@ -1620,7 +1791,33 @@ export function ReharmHome() {
       else next.add(chordIndex)
       return next
     })
-  }, [transitions])
+    if (extraRuns.has(chordIndex)) {
+      setFillRests((current) => {
+        if (!(chordIndex in current)) return current
+        const next = { ...current }
+        delete next[chordIndex]
+        return next
+      })
+    }
+  }, [transitions, extraRuns])
+
+  const fillRestAt = useCallback(
+    (chordIndex: number) => fillRests[chordIndex] ?? 0,
+    [fillRests],
+  )
+
+  const setFillRest = useCallback((chordIndex: number, beats: number) => {
+    setFillRests((current) => {
+      if (beats <= 0) {
+        if (!(chordIndex in current)) return current
+        const next = { ...current }
+        delete next[chordIndex]
+        return next
+      }
+      if (current[chordIndex] === beats) return current
+      return { ...current, [chordIndex]: beats }
+    })
+  }, [])
 
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useCallback(
@@ -1653,6 +1850,11 @@ export function ReharmHome() {
           extraRuns: new Set(
             [...extraRuns].filter((index) => !transitions.has(index)),
           ),
+          fillRests: new Map(
+            Object.entries(fillRests)
+              .filter(([, beats]) => beats > 0)
+              .map(([index, beats]) => [Number(index), beats]),
+          ),
           lickyFills,
           lickyRuns,
           lickyMode,
@@ -1679,6 +1881,7 @@ export function ReharmHome() {
       mutedFills,
       extraFills,
       extraRuns,
+      fillRests,
       lickyFills,
       lickyRuns,
       lickyMode,
@@ -1752,7 +1955,11 @@ export function ReharmHome() {
           density: 'medium',
           graceDensity,
           key: reharm.key,
-          noteSource: soloNoteSource,
+          noteSource: phraseNoteSource,
+          ...(phraseScale ? { singleScale: phraseScale.pitchClasses } : {}),
+          ...(phrasePulse.length > 0
+            ? { pulse: phrasePulse, pulseBar: phrasePulseBar }
+            : {}),
           chordsPerPhrase,
           take: spin + phraseSpin + playSpin.current,
           endWithRun,
@@ -1767,7 +1974,10 @@ export function ReharmHome() {
       soloDirection,
       graceDensity,
       reharm.key,
-      soloNoteSource,
+      phraseNoteSource,
+      phraseScale,
+      phrasePulse,
+      phrasePulseBar,
       chordsPerPhrase,
       phraseSpin,
       ballad,
@@ -1819,6 +2029,7 @@ export function ReharmHome() {
       mutedFills: [...mutedFills],
       extraFills: [...extraFills],
       extraRuns: [...extraRuns],
+      fillRests,
       colorEdits,
       slashEdits,
       lickyFills,
@@ -1850,6 +2061,8 @@ export function ReharmHome() {
       graceDensity,
       noteSource,
       jazzScales: storeScales,
+      phraseScaleId,
+      plainPhrase,
       chordsPerPhrase,
     }),
     [
@@ -1863,6 +2076,7 @@ export function ReharmHome() {
       mutedFills,
       extraFills,
       extraRuns,
+      fillRests,
       colorEdits,
       slashEdits,
       lickyFills,
@@ -1916,6 +2130,7 @@ export function ReharmHome() {
     setMutedFills(new Set(saved.mutedFills))
     setExtraFills(new Set(saved.extraFills ?? []))
     setExtraRuns(new Set(saved.extraRuns ?? []))
+    setFillRests(saved.fillRests ?? {})
     setColorEdits(saved.colorEdits ?? {})
     setSlashEdits(saved.slashEdits ?? {})
     setLickyFills(saved.lickyFills ?? true)
@@ -1960,6 +2175,13 @@ export function ReharmHome() {
     // Bài lưu từ trước khi có công tắc này thì mặc định tắt, đúng luật draft.
     // Khoá lưu giữ tên cũ `jazzScales` để bài lưu từ trước vẫn đọc được.
     setStoreScales(saved.jazzScales !== false)
+    /*
+      Bài lưu từ trước không có hai khoá này. `undefined` phải rơi về ĐÚNG mặc
+      định của bản mới — để tự, và có rút gọn — chứ không phải về `null` nghĩa
+      khác: bài cũ mở ra vẫn nghe như bài cũ.
+    */
+    setPhraseScaleId(saved.phraseScaleId ?? null)
+    setPlainPhrase(saved.plainPhrase !== false)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -1998,6 +2220,7 @@ export function ReharmHome() {
     setMutedFills(new Set())
     setExtraFills(new Set())
     setExtraRuns(new Set())
+    setFillRests({})
     setColorEdits({})
     setPhraseSpin(0)
     setTransitionEdits({})
@@ -2129,10 +2352,9 @@ export function ReharmHome() {
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
         return buildArrangedSong({
-          accompaniment: giveCompingToLeft(
-            accompaniment,
+          accompaniment: yieldToFill(
+            giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
             fills(pass),
-            style.beatsPerMeasure,
           ),
           fills: (take) => fills(take + pass * 11),
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
@@ -2169,6 +2391,8 @@ export function ReharmHome() {
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
+              songChords: mainSongChords,
+              plainChords: plainPhrase,
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
               rollCue: kind === 'outro' || ballad,
@@ -2184,10 +2408,9 @@ export function ReharmHome() {
       }
 
       return buildSongTimeline({
-        accompaniment: giveCompingToLeft(
-          accompaniment,
+        accompaniment: yieldToFill(
+          giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
           fills(pass),
-          style.beatsPerMeasure,
         ),
         fills,
         solo: (take) => soloToTimeline(soloTake(take)),
@@ -2273,6 +2496,27 @@ export function ReharmHome() {
   const timeline = song.events
   const loopLengthBeats = song.totalBeats
 
+  /**
+   * Ký hiệu hợp âm đoạn giang tấu, để hiện thành dải trên lưới.
+   *
+   * Gọi thẳng `interludeWindow` — đúng hàm mà dòng thời gian dùng — chứ không
+   * dựng lại phép chọn khoảng. Ba bản sao của phép tính hợp âm đoạn dạo vừa
+   * lệch nhau một lần rồi; không đẻ thêm bản thứ hai của phép này.
+   *
+   * `interludeWindow` tự tìm đoạn điệp khúc bên trong, nên truyền đoạn nào vào
+   * cũng ra cùng một khoảng khi bài có điệp khúc.
+   */
+  const interludeSymbols = useMemo(() => {
+    if (!songSources || songSources.length === 0) return []
+    if (!steps.some((step) => step.type === 'interlude')) return []
+    const over =
+      songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
+      songSources[0]!
+    return (
+      interludeWindow(over, null)?.chords.map((span) => span.chord.symbol) ?? []
+    )
+  }, [songSources, steps, interludeWindow])
+
   /*
     Đăng bài đang mở lên kho dùng chung, để tab Luyện đệm lấy về.
 
@@ -2291,24 +2535,14 @@ export function ReharmHome() {
       perBeat: reharmPerBeat,
       meter: style.beatsPerMeasure === 3 ? 3 : 4,
       leadIn: steps.some((step) => step.type === 'intro')
-        ? {
-            label: 'Dạo đầu',
-            chords: [
-              ...phraseChords('intro', reharm.key).map((c) => c.symbol),
-              ...(cueChord(recolored.find((c) => !c.passing) ?? null)
-                ? [
-                    `${cueChord(recolored.find((c) => !c.passing) ?? null)!.symbol} (báo)`,
-                  ]
-                : []),
-            ],
-          }
+        ? { label: 'Dạo đầu', chords: introSymbols }
         : undefined,
       leadOut: steps.some((step) => step.type === 'outro')
-        ? {
-            label: 'Kết bài',
-            chords: phraseChords('outro', reharm.key).map((c) => c.symbol),
-          }
+        ? { label: 'Kết bài', chords: outroSymbols }
         : undefined,
+      ...(interludeSymbols.length > 0
+        ? { interlude: { label: 'Giang tấu', chords: interludeSymbols } }
+        : {}),
     })
   }, [
     setPracticeSong,
@@ -2322,6 +2556,9 @@ export function ReharmHome() {
     steps,
     reharm.key,
     recolored,
+    introSymbols,
+    outroSymbols,
+    interludeSymbols,
   ])
 
   useEffect(() => {
@@ -2381,6 +2618,8 @@ export function ReharmHome() {
       onToggleFill: toggleFill,
       runAt,
       onToggleRun: toggleRun,
+      fillRestAt,
+      onSetFillRest: setFillRest,
       colorHintAt,
       onCycleColor: cycleColor,
       slashHintAt,
@@ -2400,6 +2639,7 @@ export function ReharmHome() {
         setMutedFills((set) => shiftIndexSet(set, index, -1))
         setExtraFills((set) => shiftIndexSet(set, index, -1))
         setExtraRuns((set) => shiftIndexSet(set, index, -1))
+        setFillRests((table) => shiftRecord(table, index, -1))
         setColorEdits((table) => shiftRecord(table, index, -1))
         setSlashEdits((table) => shiftRecord(table, index, -1))
         setTransitionEdits((table) => shiftRecord(table, index, -1))
@@ -2425,6 +2665,8 @@ export function ReharmHome() {
     toggleFill,
     runAt,
     toggleRun,
+    fillRestAt,
+    setFillRest,
     colorHintAt,
     cycleColor,
     slashHintAt,
@@ -2696,24 +2938,19 @@ export function ReharmHome() {
           */
           leadIn={
             steps.some((step) => step.type === 'intro')
-              ? {
-                  label: 'Dạo đầu',
-                  chords: [
-                    ...phraseChords('intro', reharm.key).map((c) => c.symbol),
-                    ...(cueChord(recolored.find((c) => !c.passing) ?? null)
-                      ? [
-                          `${cueChord(recolored.find((c) => !c.passing) ?? null)!.symbol} (báo)`,
-                        ]
-                      : []),
-                  ],
-                }
+              ? { label: 'Dạo đầu', chords: introSymbols }
+              : undefined
+          }
+          interlude={
+            interludeSymbols.length > 0
+              ? { label: 'Giang tấu', chords: interludeSymbols }
               : undefined
           }
           leadOut={
             steps.some((step) => step.type === 'outro')
               ? {
                   label: 'Kết bài',
-                  chords: phraseChords('outro', reharm.key).map((c) => c.symbol),
+                  chords: outroSymbols,
                 }
               : undefined
           }
@@ -2795,6 +3032,8 @@ export function ReharmHome() {
           onToggleFill={toggleFill}
           runAt={runAt}
           onToggleRun={toggleRun}
+          fillRestAt={fillRestAt}
+          onSetFillRest={setFillRest}
           colorHintAt={colorHintAt}
           onCycleColor={cycleColor}
           heldMutedAt={(chordIndex) => mutedHeld.has(chordIndex)}
@@ -3151,6 +3390,8 @@ export function ReharmHome() {
             onToggleFill={toggleFill}
             runAt={runAt}
             onToggleRun={toggleRun}
+            fillRestAt={fillRestAt}
+            onSetFillRest={setFillRest}
             colorHintAt={colorHintAt}
             onCycleColor={cycleColor}
             heldMutedAt={(chordIndex) => mutedHeld.has(chordIndex)}
@@ -3306,6 +3547,87 @@ export function ReharmHome() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <h4
+              className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
+              title="Dạo đầu, kết bài và giang tấu là đoạn không có lời — nhạc cụ là giai điệu chính, nên chúng có nguồn nốt riêng, không dùng chung với câu solo chạy dưới giọng hát."
+            >
+              Gam cho dạo đầu / kết bài / giang tấu
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setPhraseScaleId(MULTI_SCALE)}
+                title="Mỗi hợp âm một gam, đổi theo hoà âm. Lối jazz."
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  phraseScale === null
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                Nhiều gam
+              </button>
+              {autoPhraseScale && (
+                <button
+                  type="button"
+                  onClick={() => setPhraseScaleId(null)}
+                  title="Điệu slow rock lấy gam Blues: thầy Đức Thịnh nói mẫu đệm slow rock thực ra là điệu Blues, chỉ thiếu nốt blue ở bậc năm giáng."
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    phraseScaleId === null
+                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  Tự động — {autoPhraseScale.label}
+                </button>
+              )}
+            </div>
+
+            {phraseScale !== null && (
+              <div className="mt-2">
+                <p className="mb-1 text-[10px] text-dim">
+                  Một gam chạy suốt cả vòng. Đề xuất chấm theo chính vòng hợp âm
+                  của bài — số phần trăm là phần nốt hợp âm mà gam ấy phủ được.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {scaleChoices.map((choice) => (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      onClick={() => setPhraseScaleId(choice.id)}
+                      title={
+                        choice.missing.length > 0
+                          ? `Không có nốt: ${choice.missing.join(' ')}`
+                          : 'Phủ trọn mọi nốt hợp âm của vòng'
+                      }
+                      className={`rounded-lg border px-3 py-1.5 text-xs ${
+                        phraseScale.id === choice.id
+                          ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                          : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                      }`}
+                    >
+                      {choice.label}{' '}
+                      <span className="text-dim">
+                        {Math.round(choice.fit * 100)}%
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <label className="mt-2 flex items-center gap-2 text-xs text-dim">
+              <input
+                type="checkbox"
+                checked={plainPhrase}
+                onChange={(event) => setPlainPhrase(event.target.checked)}
+              />
+              <span title="Rút add9, 9sus4, 13, hợp âm giảm về chất cơ bản trước khi dựng câu. Màu hợp âm là thứ của đoạn có lời; đoạn ngẫu hứng cần nền trơn để câu chạy không nghe lạc.">
+                Rút gọn hợp âm đoạn không lời
+              </span>
+            </label>
           </div>
 
           <div>

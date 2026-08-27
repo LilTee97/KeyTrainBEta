@@ -1,4 +1,7 @@
 import { chordAtDegree } from '../../shared/musicTheory/scales'
+import { normalizePitchClass } from '../../shared/musicTheory/pitch'
+import { chooseInterludeWindow, pullStrength } from './interludeLoop'
+import { plainForInterlude } from './interludeChords'
 import { pullChordFor } from './turnaround'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
@@ -32,8 +35,102 @@ const DEGREES: Readonly<Record<'intro' | 'outro', readonly number[]>> = {
 /** Ô đầu của đoạn kết là ô dẫn, nốt của não bắt đầu từ ô sau. */
 export const OUTRO_LEAD_BARS = 1
 
+export interface PhraseChordOptions {
+  /**
+   * Vòng hợp âm **thật của bài**. Có thì đoạn dạo mượn từ đây.
+   *
+   * Không có thì rơi về bảng bậc bên dưới — luồng gõ vòng hợp âm trơn không có
+   * bài nào để mượn.
+   */
+  songChords?: readonly ParsedChord[]
+  /**
+   * Rút hợp âm về chất cơ bản trước khi dùng, như đoạn giang tấu vẫn làm.
+   *
+   * Đoạn dạo là chỗ ngẫu hứng: tai bám vào đường giai điệu chứ không bám vào
+   * màu hợp âm, nên chồng `add9`, `9sus4`, `13` lên nền solo thì câu chạy nghe
+   * lạc. Xem `interludeChords.ts`.
+   */
+  plain?: boolean
+}
+
+/** Bỏ hợp âm lướt: chúng mượn phách của hợp âm trước, không phải ô của vòng. */
+const mainChords = (chords: readonly ParsedChord[]) =>
+  chords.filter((chord) => !chord.passing)
+
 /**
- * Dựng hợp âm cho đoạn dạo, theo giọng của bài.
+ * Hợp âm chủ của bài, nhặt trong chính vòng của bài.
+ *
+ * Không dựng hợp âm chủ từ giọng, vì dựng thì ra hợp âm ba nốt trơn: bài đang
+ * chạy `Am(add9)` mà đoạn kết đậu xuống `Am` trần là đổi màu ngay ở chỗ người
+ * nghe chú ý nhất. Lấy **hợp âm cuối bài** nếu nó đúng nốt gốc chủ âm, vì đó là
+ * chỗ bài vốn đã đậu xuống; không thì lấy hợp âm đầu tiên trong vòng khớp nốt
+ * gốc ấy.
+ */
+function tonicChordOf(
+  chords: readonly ParsedChord[],
+  key: { tonic: PitchClass; scale: ScaleType },
+): ParsedChord | null {
+  if (chords.length === 0) return null
+  const last = chords[chords.length - 1]!
+  if (last.root === key.tonic) return last
+  return chords.find((chord) => chord.root === key.tonic) ?? null
+}
+
+/**
+ * Vòng hợp âm của đoạn dạo, **mượn từ bài**.
+ *
+ * Dạo đầu lấy một khoảng bốn hợp âm liên tiếp trong vòng, chọn khoảng nào có
+ * hợp âm cuối hút mạnh nhất về hợp âm mở bài — đúng bộ chọn mà đoạn giang tấu
+ * đang dùng (`chooseInterludeWindow`), nên hai đoạn nghe ra cùng một bài.
+ *
+ * Kết bài giữ hình ba ô như cũ — một ô dẫn rồi hai ô đậu lại — nhưng cả ba ô
+ * đều là hợp âm có thật trong bài: ô dẫn là hợp âm trong vòng hút mạnh nhất về
+ * hợp âm chủ, hai ô sau là chính hợp âm chủ của bài, giữ nguyên màu.
+ */
+function borrowedChords(
+  kind: 'intro' | 'outro',
+  key: { tonic: PitchClass; scale: ScaleType },
+  songChords: readonly ParsedChord[],
+): ParsedChord[] {
+  const main = mainChords(songChords)
+  if (main.length === 0) return []
+
+  if (kind === 'intro') {
+    const window = chooseInterludeWindow(main, main[0]!, 4)
+    return window ? main.slice(window.from, window.to + 1) : []
+  }
+
+  const tonic = tonicChordOf(main, key) ?? main[main.length - 1]!
+
+  /*
+    Ô dẫn: hợp âm trong bài hút mạnh nhất về hợp âm chủ.
+
+    Loại chính hợp âm chủ ra — đứng yên một chỗ thì không có gì báo là sắp kết.
+    Hoà điểm thì lấy hợp âm ĐỨNG TRƯỚC hợp âm chủ trong bài, vì đó là chỗ tai đã
+    quen nghe dẫn vào chủ âm suốt cả bài.
+  */
+  let lead: ParsedChord | null = null
+  let bestPull = -1
+  main.forEach((chord, at) => {
+    if (normalizePitchClass(chord.root - tonic.root) === 0) return
+    const before = main[(at + 1) % main.length]
+    const pull = pullStrength(chord, tonic) + (before === tonic ? 0.5 : 0)
+    if (pull > bestPull) {
+      bestPull = pull
+      lead = chord
+    }
+  })
+
+  return lead ? [lead, tonic, tonic] : [tonic, tonic, tonic]
+}
+
+/**
+ * Dựng hợp âm cho đoạn dạo.
+ *
+ * Có vòng của bài thì **mượn từ bài**; không thì quy về bảng bậc. Bảng bậc là
+ * đường lui chứ không phải đường chính: nó chỉ biết giọng, nên bài chạy
+ * `Am(add9) - Dm9 - Cadd2 - Em7` mà đoạn dạo lại kêu `C - G - Am - F`, nghe ra
+ * là hai bài khác nhau dán cạnh nhau.
  *
  * Giọng thứ quy về giọng trưởng song song, cùng lý do như mọi chỗ khác dùng bậc
  * của kho: các bậc `I - V - vi - IV` được đánh số theo giọng trưởng.
@@ -41,8 +138,16 @@ export const OUTRO_LEAD_BARS = 1
 export function phraseChords(
   kind: 'intro' | 'outro',
   key: { tonic: PitchClass; scale: ScaleType } | null,
+  options: PhraseChordOptions = {},
 ): ParsedChord[] {
   if (!key) return []
+
+  const borrowed = options.songChords
+    ? borrowedChords(kind, key, options.songChords)
+    : []
+  if (borrowed.length > 0) {
+    return options.plain ? borrowed.map(plainForInterlude) : [...borrowed]
+  }
 
   const tonic: PitchClass =
     key.scale === 'minor' ? (((key.tonic + 3) % 12) as PitchClass) : key.tonic
@@ -60,7 +165,7 @@ export function phraseChords(
     })
   }
 
-  return out
+  return options.plain ? out.map(plainForInterlude) : out
 }
 
 /**

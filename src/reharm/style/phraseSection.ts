@@ -28,6 +28,15 @@ export interface PhraseSectionOptions {
   solo: (chords: readonly ParsedChord[]) => readonly TimelineEvent[]
   /** Rải ngón hợp âm báo thay vì dặm một lượt — dành cho họ ballad. */
   rollCue?: boolean
+  /**
+   * Vòng hợp âm thật của bài — đoạn dạo mượn hợp âm từ đây thay vì dựng theo bậc.
+   *
+   * Xem `phraseChords.ts`. Bỏ trống thì vẫn dựng theo bậc như cũ, đúng cho
+   * luồng gõ vòng hợp âm trơn: ở đó không có bài nào để mượn.
+   */
+  songChords?: readonly ParsedChord[]
+  /** Rút hợp âm đoạn dạo về chất cơ bản, như đoạn giang tấu vẫn làm. */
+  plainChords?: boolean
 }
 
 export interface PhraseSection {
@@ -38,10 +47,23 @@ export interface PhraseSection {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
-  const { kind, key, style, beatsPerChord, dropRoot, opening, solo, rollCue } =
-    options
+  const {
+    kind,
+    key,
+    style,
+    beatsPerChord,
+    dropRoot,
+    opening,
+    solo,
+    rollCue,
+    songChords,
+    plainChords,
+  } = options
 
-  const chords = phraseChords(kind, key)
+  const chords = phraseChords(kind, key, {
+    ...(songChords ? { songChords } : {}),
+    ...(plainChords ? { plain: true } : {}),
+  })
   if (chords.length === 0) return null
 
   const beatsEach = chords.map(() => beatsPerChord)

@@ -45,6 +45,8 @@ export interface SongSnapshot {
   /** Các chỗ tự chêm fill ngoài mật độ. Bỏ trống = bài cũ. */
   extraFills?: number[]
   extraRuns?: number[]
+  /** Thêm mấy phách im sau câu Licky fill/run. Bỏ trống = bài cũ, không nghỉ. */
+  fillRests?: Record<number, number>
   colorEdits?: Record<number, string>
   slashEdits?: Record<number, boolean>
   lickyFills?: boolean
@@ -96,6 +98,13 @@ export interface SongSnapshot {
    * coi là tắt, đúng luật "item còn draft không tự thành tiếng".
    */
   jazzScales?: boolean
+  /**
+   * Gam cho đoạn không lời. `'multi'` là mỗi hợp âm một gam; bỏ trống là để tự
+   * (điệu slow rock tự lấy gam Blues).
+   */
+  phraseScaleId?: string | null
+  /** Rút hợp âm đoạn không lời về chất cơ bản. Bỏ trống là bật. */
+  plainPhrase?: boolean
   chordsPerPhrase: number
 }
 

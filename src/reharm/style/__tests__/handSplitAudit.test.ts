@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { renderPattern, giveCompingToLeft } from '../patternRenderer'
 import { getStyle } from '../styleLibrary'
-import { interludeBassLine } from '../interludeBass'
 import { interludeAccompaniment } from '../songStructure'
 import { BALLAD_SOLO_RANGE } from '../balladFamily'
 import { buildPhraseSection } from '../phraseSection'
@@ -53,10 +52,8 @@ function interludeLayers() {
     beatsPerChord: 4,
     beatsEach,
   })
-  const backing = [
-    ...comping.filter((e) => e.hand !== 'left'),
-    ...interludeBassLine({ chords: list, beatsEach }),
-  ]
+  // Giang tấu chơi đúng điệu đang chọn, cả hai tay — không thay tay trái nữa.
+  const backing = comping
   const solo = soloToTimeline(
     generateSolo(list, {
       beatsPerChord: 4,

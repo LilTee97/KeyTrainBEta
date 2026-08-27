@@ -9,7 +9,6 @@ import { renderPattern } from '../patternRenderer'
 import { getStyle } from '../styleLibrary'
 import { phraseChords } from '../phraseChords'
 import { slowClose } from '../phraseCue'
-import { interludeBassLine } from '../interludeBass'
 import type { TimelineEvent } from '../types'
 
 /**
@@ -131,8 +130,9 @@ describe('mọi tiếng đều đàn được', () => {
     for (const styleId of STYLES) {
       out.push([`${styleId} thân bài`, backing('C Am F G Em Dm G7 C', styleId)])
     }
-    const inter = parseChordInput('Dm7 G7 Cmaj7 Cmaj7').chords
-    out.push(['bass giang tấu', interludeBassLine({ chords: inter, beatsEach: inter.map(() => 4) })])
+    for (const styleId of STYLES) {
+      out.push([`${styleId} giang tấu`, backing('Dm7 G7 Cmaj7 Cmaj7', styleId)])
+    }
     return out
   }
 
@@ -150,12 +150,20 @@ describe('mọi tiếng đều đàn được', () => {
     }
   })
 
+  /*
+    Giang tấu giờ chơi đúng mẫu của điệu, nên luật này áp cho tay trái của CHÍNH
+    điệu ấy — không còn một tuyến trầm riêng để đo.
+  */
   it('tay trái đoạn giang tấu không leo lên vùng tay phải', () => {
-    const inter = parseChordInput('Dm7 G7 Cmaj7 Cmaj7 Ebmaj7 Bbm7').chords
-    const bass = interludeBassLine({ chords: inter, beatsEach: inter.map(() => 4) })
-    for (const event of bass) {
-      for (const note of event.notes) {
-        expect(note, `bass @${event.startBeat}`).toBeLessThan(60)
+    for (const styleId of STYLES) {
+      const bass = backing('Dm7 G7 Cmaj7 Cmaj7 Ebmaj7 Bbm7', styleId).filter(
+        (event) => event.hand === 'left',
+      )
+      expect(bass.length, styleId).toBeGreaterThan(0)
+      for (const event of bass) {
+        for (const note of event.notes) {
+          expect(note, `${styleId} bass @${event.startBeat}`).toBeLessThan(60)
+        }
       }
     }
   })

@@ -147,15 +147,28 @@ describe('không chồng ba nốt tay phải một phách', () => {
 })
 
 describe('tầm ballad', () => {
-  it('trần hạ xuống Fa quãng tám 5', () => {
-    expect(BALLAD_SOLO_RANGE).toEqual({ low: 55, high: 77 })
+  /*
+    Sàn nâng từ 55 lên 58 — đổi có chủ ý, không phải test bị nới.
+
+    55 trùng đúng `LEFT_REGISTER_TOP`, trần tay trái của cả app: hai tay được
+    phép rơi vào cùng một phím, và ở đoạn giang tấu thì cả hai cùng kêu. Trước
+    đây chỗ ấy không lộ vì giang tấu thay tay trái bằng một tuyến trầm riêng
+    trần 52. Nay giang tấu bắt buộc chơi đúng điệu đang chọn, nên khoảng cách
+    giữa hai bè phải do chính hai tầm này chừa ra.
+  */
+  it('sàn đứng trên trần tay trái, trần vẫn ở Fa quãng tám 5', () => {
+    expect(BALLAD_SOLO_RANGE).toEqual({ low: 58, high: 77 })
+    // Trần tay trái là 55; ba nửa cung là quãng ba thứ, đủ để tai tách bè.
+    expect(BALLAD_SOLO_RANGE.low - 55).toBeGreaterThanOrEqual(3)
   })
 
-  it('câu ballad nằm trọn trong Sol quãng tám 3 tới Fa quãng tám 5', () => {
+  it('câu ballad nằm trọn trong tầm đã khai', () => {
     for (let take = 0; take < 8; take += 1) {
       for (const note of line(take, BALLAD_SOLO_RANGE)) {
-        expect(note.note, `lượt ${take} @ phách ${note.startBeat}`).toBeGreaterThanOrEqual(55)
-        expect(note.note, `lượt ${take} @ phách ${note.startBeat}`).toBeLessThanOrEqual(77)
+        expect(note.note, `lượt ${take} @ phách ${note.startBeat}`)
+          .toBeGreaterThanOrEqual(BALLAD_SOLO_RANGE.low)
+        expect(note.note, `lượt ${take} @ phách ${note.startBeat}`)
+          .toBeLessThanOrEqual(BALLAD_SOLO_RANGE.high)
       }
     }
   })

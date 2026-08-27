@@ -6,6 +6,7 @@ import {
   ladderOf,
   nearestStep,
 } from '../fillSoloGenerator/soloVocabulary'
+import { scaleTones } from '../reharmEngine/keyDetection'
 import type { ParsedChord } from '../types'
 import { brainLickPhrases } from '../brain/lickyPhrases'
 import library from './phrases.json'
@@ -163,26 +164,45 @@ function land(
  */
 function bassWalk(
   ladder: readonly MidiNote[],
-  fromPc: number,
   toPc: number,
   count: number,
+  low: number,
 ): MidiNote[] {
-  const at = (pc: number, from: number, step: number) => {
-    for (let i = from; i >= 0 && i < ladder.length; i += step) {
-      if (ladder[i]! % 12 === pc) return i
-    }
-    return -1
-  }
-  const start = at(fromPc, 0, 1)
-  if (start < 0) return []
-  let end = at(toPc, start + 1, 1)
-  if (end < 0) end = at(toPc, start - 1, -1)
-  if (end < 0) return []
+  if (ladder.length === 0 || count <= 0) return []
+
+  /*
+    Nốt đích đứng đúng chỗ **phần đệm sẽ đặt nó**: sàn tầm trầm cộng bậc.
+
+    Bản trước dò nốt đích bằng cách đi LÊN từ nốt gốc hợp âm đang chơi, nên nốt
+    đích rơi ở lần xuất hiện nào cao hơn nốt gốc ấy. Đo trên La thứ sang Fa:
+    nốt gốc La đặt ở A2, chỗ Fa đầu tiên cao hơn nó là F3, và hai bậc dẫn hoá
+    thành Đô quãng 3 với Mi quãng 3 — đúng thang, đúng hướng, mà nghe ra giai
+    điệu chứ không ra bè trầm. Neo vào sàn thì câu dẫn ở lại dưới trầm.
+  */
+  const target = low + ((((toPc - (low % 12)) % 12) + 12) % 12)
+  let end = ladder.findIndex((note) => note >= target)
+  if (end < 0) end = ladder.length - 1
 
   const out: MidiNote[] = []
-  for (let k = 0; k < count; k += 1) {
-    const t = count === 1 ? 0 : k / (count - 1)
-    out.push(ladder[Math.round(start + (end - start) * t)]!)
+
+  // Đủ chỗ phía dưới thì bò LÊN vào nốt đích — hướng mặc định của câu dẫn bass.
+  if (end - count >= 0) {
+    for (let k = count; k >= 1; k -= 1) out.push(ladder[end - k]!)
+    return out
+  }
+
+  /*
+    Nốt đích nằm sát sàn thì đi XUỐNG vào nó, lấy bậc phía trên.
+
+    Bản trước bỏ cuộc ở đây (`return []`), và `placeLick` lặng lẽ rơi về bộ vẽ
+    câu lót giai điệu — bộ ấy neo ở `ANCHOR` quãng tám 5, nên "câu chạy bass"
+    phát ra tiếng cao hơn cả tay phải. Đi xuống vẫn là câu dẫn đàng hoàng, và nó
+    luôn có lời giải; im lặng đổi sang một bè khác thì không.
+  */
+  for (let k = count; k >= 1; k -= 1) {
+    const step = end + k
+    if (step >= ladder.length) return []
+    out.push(ladder[step]!)
   }
   return out
 }
@@ -234,19 +254,57 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
     âm kế**. Thang chung dựng từ mỗi hợp âm đang chơi, nên nốt đích thường không
     nằm trong đó — La sang Rê thì Rê vắng mặt, và đường dẫn không có chỗ để kết.
   */
-  const walked = walk && next
-    ? bassWalk(
-        ladderOf(
-          [...new Set([...material, normalizePitchClass(next.root)])],
-          low,
-          high,
+  /*
+    Câu chạy bass đi theo **bậc của giọng**, không theo nốt hợp âm.
+
+    Thang dựng từ nốt hợp âm chỉ có ba tới bốn cao độ, nên dưới nốt đích thường
+    không còn đủ hai bậc để dẫn vào — và đó chính là chỗ bản trước bỏ cuộc. Bè
+    trầm đi bộ thì vốn đi liền bậc của giọng; lấy trọn bảy bậc vừa đúng lối chơi
+    vừa luôn đủ chỗ. Không biết giọng thì đành quay về chất liệu hợp âm.
+  */
+  const walkLadder = walk && next
+    ? ladderOf(
+        /*
+          Bỏ **nốt gốc hợp âm đang chơi** ra khỏi thang.
+
+          Mẫu đệm vừa gõ nó ở phách mạnh; câu dẫn gõ lại là một ô nhịp bốn tiếng
+          bass mà chỉ hai cao độ, nghe ra cụm dày chứ không ra đường dẫn. Nốt
+          đích thì giữ, vì câu dẫn cần một chỗ để kết vào.
+        */
+        [...new Set([
+          ...(key ? [...scaleTones(key.tonic, key.scale)] : material),
+          normalizePitchClass(next.root),
+        ])].filter(
+          (pitch) => pitch !== normalizePitchClass(chord.root) ||
+            pitch === normalizePitchClass(next.root),
         ),
-        normalizePitchClass(chord.root),
-        normalizePitchClass(next.root),
-        count,
+        low,
+        high,
       )
     : []
-  const pitches = walked.length > 0 ? walked : paint(intervals, ladder, startAt)
+  const walked =
+    walk && next
+      ? bassWalk(walkLadder, normalizePitchClass(next.root), count, low)
+      : []
+  /*
+    Xin câu chạy bass mà không dựng được thì **vẫn phải ra tiếng trầm**.
+
+    `paint` là bộ vẽ câu lót giai điệu: nó neo quanh `ANCHOR` quãng tám 5 và
+    không biết gì về tầm bass. Rơi về nó mà không kẹp lại thì hai nốt "bass"
+    phát ra cao hơn cả tay phải — người dùng nghe ra ngay.
+  */
+  const painted = paint(intervals, ladder, startAt)
+  const pitches =
+    walked.length > 0
+      ? walked
+      : walk
+        ? painted.map((note) => {
+            let pitch: number = note
+            while (pitch > high) pitch -= 12
+            while (pitch < low) pitch += 12
+            return pitch as MidiNote
+          })
+        : painted
   // Đường bè trầm đã kết đúng nốt gốc hợp âm sau rồi, không cho `land` đổi nữa.
   if (walked.length === 0 && pitches.length > 0) {
     pitches[pitches.length - 1] = land(
@@ -277,7 +335,8 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
         ? Math.max(grid, startBeat + beats - at) * 0.95
         : grid * 0.9,
       isGrace: false as const,
-      hand: note < HAND_SPLIT ? ('left' as const) : ('right' as const),
+      // Câu chạy bass luôn là tay trái: nó là bè trầm, không phải một dòng giai điệu.
+      hand: walk || note < HAND_SPLIT ? ('left' as const) : ('right' as const),
     }
   })
 }

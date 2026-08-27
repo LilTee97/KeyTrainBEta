@@ -128,3 +128,122 @@ export function applyFeel<T extends TimedNote>(
     return duration === note.durationBeats ? note : { ...note, durationBeats: duration }
   })
 }
+
+/**
+ * Mạch của điệu: **chính những chỗ mẫu đệm gõ** trong một ô nhịp.
+ *
+ * Ba khuôn `straight` / `swing` / `bossa` ở trên đổi chỗ rơi của nốt theo một
+ * quy ước chung của cả dòng nhạc. Nó đủ cho ballad và jazz, nhưng sai chỗ với
+ * ba họ điệu có tiết tấu riêng rõ rệt:
+ *
+ * - **Slow rock 6/8** rơi vào `straight`, tức móc đơn đều — câu chạy đi đều tăm
+ *   tắp qua một mẫu đệm gõ ở phách 1, 3, 4, 6. Hai bè không gặp nhau chỗ nào.
+ * - **Bolero** khai `syncopated-3-3-2` nên bị gán khuôn **bossa**, mà tiết tấu
+ *   thật của nó là Pùng-Pắp ở phách 1-and, 2, 3-and, 4-and — không phải 3-3-2.
+ *   Mượn nhầm idiom của một dòng nhạc khác.
+ * - **Bossa** thì khuôn đúng, nhưng nó chỉ nghiêng nốt lệch, không neo câu vào
+ *   chỗ tay trái đảo phách.
+ *
+ * Không cần dựng thêm khuôn thứ tư cho từng họ: mỗi điệu **đã tự khai chỗ gõ**
+ * của nó trong `cell`. Lấy đúng chỗ ấy làm mạch thì câu chạy khớp với bất kỳ
+ * điệu nào, kể cả điệu chép từ video về sau, mà không phải nhớ cập nhật bảng.
+ *
+ * Trả về chỗ gõ đã quy về **nốt đen** và về **một ô nhịp**, tăng dần, không lặp.
+ */
+export function cellPulseOf(styleId: string | undefined | null): number[] {
+  const style = styleId ? getStyle(styleId) : null
+  if (!style?.cell) return []
+  const grid = style.gridUnit ?? 1
+  const bar = style.beatsPerMeasure * grid
+  const beats = [...style.cell.left, ...style.cell.right].map(
+    (hit) => Number((((hit.beat * grid) % bar + bar) % bar).toFixed(3)),
+  )
+  return [...new Set(beats)].sort((a, b) => a - b)
+}
+
+/**
+ * Điệu nào cho câu solo **neo vào mạch của mẫu đệm**.
+ *
+ * Ba họ người dùng chỉ đích danh: slow rock, bolero, bossa nova. Đây là ba họ
+ * mà tiết tấu *là* danh tính của điệu — nghe hai phách là nhận ra — nên câu solo
+ * chạy lệch mạch thì lộ ra ngay là hai người chơi hai bài.
+ *
+ * Không bật cho mọi điệu, vì với ballad và swing thì câu chạy đi **ngược** mạch
+ * đệm mới là chỗ hay: bè giai điệu lấp vào chỗ tay trái để trống. Bật cả loạt
+ * là đổi tiếng của những điệu đang chạy tốt mà không ai yêu cầu.
+ */
+export function soloLocksToCell(styleId: string | undefined | null): boolean {
+  const family = (styleId ? getStyle(styleId)?.family : null) ?? ''
+  return /slow-rock|bolero|bossa/i.test(family)
+}
+
+/**
+ * Mạch mà điệu này **thật sự** dùng: rỗng nếu điệu không thuộc diện neo.
+ *
+ * Gộp `soloLocksToCell` với `cellPulseOf` làm một cửa duy nhất, để bên gọi
+ * không phải tự ghép hai điều kiện. Ghép ở hai nơi thì có ngày hai nơi lệch
+ * nhau — và lúc ấy app neo một đằng, lưới test đo một nẻo.
+ */
+export function pulseForStyle(styleId: string | undefined | null): number[] {
+  return soloLocksToCell(styleId) ? cellPulseOf(styleId) : []
+}
+
+/** Nốt lệch mạch trong khoảng này thì bị kéo về mạch; xa hơn thì để yên. */
+const SNAP_WINDOW = 0.34
+
+/**
+ * Kéo nốt về mạch của điệu.
+ *
+ * Chỉ kéo nốt **gần** một chỗ gõ — trong vòng một phần ba nốt đen. Nốt nằm giữa
+ * hai chỗ gõ là nốt nối, và nốt nối mới là thứ làm câu nhạc chạy; kéo hết mọi
+ * nốt về mạch thì câu solo hoá thành một bản sao của mẫu đệm, gõ cùng lúc cùng
+ * chỗ, và tai nghe ra một bè dày chứ không ra hai bè.
+ *
+ * Không dồn hai nốt vào một chỗ: chỗ đã có nốt rồi thì nốt sau đứng nguyên.
+ */
+export function snapToPulse<T extends TimedNote>(
+  notes: readonly T[],
+  pulse: readonly number[],
+  beatsPerBar: number,
+): T[] {
+  if (pulse.length === 0 || beatsPerBar <= 0) return [...notes]
+
+  const taken = new Set<string>()
+  const key = (beat: number) => beat.toFixed(3)
+  const out: T[] = []
+
+  for (const note of notes) {
+    const bar = Math.floor(note.startBeat / beatsPerBar) * beatsPerBar
+    const inBar = note.startBeat - bar
+
+    let best: number | null = null
+    for (const beat of [...pulse, beatsPerBar]) {
+      const distance = Math.abs(beat - inBar)
+      if (distance > SNAP_WINDOW) continue
+      if (best === null || distance < Math.abs(best - inBar)) best = beat
+    }
+
+    if (best === null) {
+      taken.add(key(note.startBeat))
+      out.push(note)
+      continue
+    }
+
+    const moved = bar + best
+    if (taken.has(key(moved))) {
+      taken.add(key(note.startBeat))
+      out.push(note)
+      continue
+    }
+
+    taken.add(key(moved))
+    out.push({
+      ...note,
+      startBeat: moved,
+      // Giữ nguyên chỗ kết thúc, để nốt không thò qua nốt sau.
+      durationBeats: Math.max(0.05, note.startBeat + note.durationBeats - moved),
+    })
+  }
+
+  return out.sort((a, b) => a.startBeat - b.startBeat)
+}

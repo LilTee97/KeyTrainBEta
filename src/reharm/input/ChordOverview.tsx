@@ -144,6 +144,15 @@ interface ChordOverviewProps {
   leadIn?: { label: string; chords: readonly string[] }
   /** Hợp âm đoạn kết, hiện thành dải riêng phía dưới lưới. */
   leadOut?: { label: string; chords: readonly string[] }
+  /**
+   * Hợp âm đoạn giang tấu.
+   *
+   * Giang tấu mượn một khoảng bốn hợp âm **trong chính vòng của bài**, nên bốn
+   * hợp âm ấy vốn đã nằm đâu đó trên lưới. Vẫn hiện thành dải riêng, vì thứ
+   * người đệm cần biết là **khoảng nào** được mượn — nhìn lưới thân bài thì
+   * không thấy được.
+   */
+  interlude?: { label: string; chords: readonly string[] }
   meter: 3 | 4
   bpm: number
   onBpm?: (bpm: number) => void
@@ -177,6 +186,8 @@ interface ChordOverviewProps {
   onToggleFill?: (chordIndex: number) => void
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
+  fillRestAt?: (chordIndex: number) => number
+  onSetFillRest?: (chordIndex: number, beats: number) => void
   colorHintAt?: (chordIndex: number) => string | null
   onCycleColor?: (chordIndex: number) => void
   heldMutedAt?: (chordIndex: number) => boolean
@@ -201,6 +212,7 @@ export function ChordOverview({
   activeBeat,
   onSeekBeat,
   leadIn,
+  interlude,
   leadOut,
   showToolbar = true,
   onPlay,
@@ -222,6 +234,8 @@ export function ChordOverview({
   onToggleFill,
   runAt,
   onToggleRun,
+  fillRestAt,
+  onSetFillRest,
   colorHintAt,
   onCycleColor,
   heldMutedAt,
@@ -321,11 +335,16 @@ export function ChordOverview({
         Chuột phải vào đúng phách để chèn 2-5-1 / fill tại phách đó.
       </p>
 
-      {(leadIn || leadOut) && (
+      {(leadIn || leadOut || interlude) && (
         <div className="mb-2 flex flex-col gap-1 text-xs">
           {leadIn && leadIn.chords.length > 0 && (
             <p className="font-mono text-amber-key">
               {leadIn.label}: {leadIn.chords.join('  ')}
+            </p>
+          )}
+          {interlude && interlude.chords.length > 0 && (
+            <p className="font-mono text-amber-key">
+              {interlude.label}: {interlude.chords.join('  ')}
             </p>
           )}
           {leadOut && leadOut.chords.length > 0 && (
@@ -478,6 +497,12 @@ export function ChordOverview({
                   onToggleRun(menu.chordIndex)
                   setMenu(null)
                 }
+              : undefined
+          }
+          fillRest={fillRestAt?.(menu.chordIndex) ?? 0}
+          onSetFillRest={
+            onSetFillRest
+              ? (beats) => onSetFillRest(menu.chordIndex, beats)
               : undefined
           }
           colorHint={colorHintAt?.(menu.chordIndex) ?? null}

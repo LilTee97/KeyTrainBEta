@@ -43,6 +43,8 @@ export interface PracticeGrid {
   onToggleFill?: (chordIndex: number) => void
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
+  fillRestAt?: (chordIndex: number) => number
+  onSetFillRest?: (chordIndex: number, beats: number) => void
   colorHintAt?: (chordIndex: number) => string | null
   onCycleColor?: (chordIndex: number) => void
   slashHintAt?: (chordIndex: number) => string | null
@@ -70,6 +72,8 @@ export interface PracticeSong {
   meter: 3 | 4
   leadIn?: { label: string; chords: readonly string[] }
   leadOut?: { label: string; chords: readonly string[] }
+  /** Hợp âm đoạn giang tấu — khoảng bốn hợp âm được mượn từ vòng của bài. */
+  interlude?: { label: string; chords: readonly string[] }
 }
 
 /**

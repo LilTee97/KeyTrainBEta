@@ -404,7 +404,7 @@ describe('nguồn nốt cho câu solo', () => {
       nó đọc kho, chỉ chạy ở đoạn không lời, và im lặng trên hợp âm nào kho chưa
       có gam. Xếp nó vào hàng nút này là nói bốn thứ cùng loại.
     */
-    expect(NOTE_SOURCE_OPTIONS).toHaveLength(3)
+    expect(NOTE_SOURCE_OPTIONS).toHaveLength(4)
     expect(NOTE_SOURCE_OPTIONS.map((o) => o.id)).not.toContain('storeScale')
     for (const option of NOTE_SOURCE_OPTIONS) {
       expect(option.description.length, option.id).toBeGreaterThan(0)

@@ -7,7 +7,6 @@ import { buildArrangedSong } from '../arrangement'
 import { renderPattern } from '../patternRenderer'
 import { buildSongTimeline, getSongForm } from '../songStructure'
 import { getStyle } from '../styleLibrary'
-import { interludeLeftHand } from '../interludeBass'
 import type { TimelineEvent } from '../types'
 
 function build(styleId: string, beatsPerChord = 4) {
@@ -135,39 +134,24 @@ describe('phần đệm đoạn giang tấu', () => {
     },
   )
 
-  it('bossa giữ bass đảo phách, không rải đều như ballad', () => {
-    const chords = parseChordInput('C Am F G').chords
-    const beatsEach = chords.map(() => 4)
-    const style = getStyle('bossa-nova-1')!
-    const styleLeft = renderPattern(
-      voiceLeadTwoHands(chords, { dropRootFromRightHand: true }),
-      style,
-      { beatsPerChord: 4, beatsEach },
-    ).filter((event) => event.hand === 'left')
-    const bass = interludeLeftHand({
-      chords,
-      beatsEach,
-      styleId: 'bossa-nova-1',
-      styleLeft,
-    })
-    const phases = bass.map((event) => Number((event.startBeat % 4).toFixed(2)))
-    expect(phases.slice(0, 4)).not.toEqual([0, 1, 2, 3])
-    expect(phases.some((beat) => beat % 1 !== 0)).toBe(true)
-  })
+  /*
+    Giang tấu chơi **đúng điệu đang chọn**, không đổi sang điệu khác.
 
-  it('ballad giang tấu vẫn rải gốc-5-8-5', () => {
-    const chords = parseChordInput('C Am F G').chords
-    const beatsEach = chords.map(() => 4)
-    const bass = interludeLeftHand({
-      chords,
-      beatsEach,
-      styleId: 'pop-1',
-      styleLeft: [],
-    })
-    expect(
-      bass.slice(0, 4).map((event) => Number(event.startBeat.toFixed(2))),
-    ).toEqual([0, 1, 2, 3])
-  })
+    Bản trước thay tay trái đoạn giang tấu bằng một câu rải ballad cho mọi điệu
+    thuộc họ ballad — mà họ ấy có cả `slow-rock-2` và `hai-slow-rock`. Chọn slow
+    rock thì tới giang tấu tay trái hoá thành rải ballad. Hai test cũ ở chỗ này
+    khoá đúng hành vi ấy lại ("ballad giang tấu vẫn rải gốc-5-8-5"); người dùng
+    bác luật đó, nên chúng được thay chứ không phải được nới.
+
+    Danh sách dưới đây có slow rock chính vì thế: nó là ca hỏng đã báo.
+  */
+  it.each(['slow-rock-2', 'hai-slow-rock', 'hai-pop-ballad'] as const)(
+    '%s: giang tấu giữ nguyên tay trái của điệu, không đổi sang rải ballad',
+    (styleId) => {
+      const { song } = build(styleId)
+      expect(bassPhases(song, 'interlude')).toEqual(bassPhases(song, 'verse'))
+    },
+  )
 
   it('đoạn giang tấu vẫn dài đúng bằng đoạn có lời', () => {
     const { song } = build('pop-1')

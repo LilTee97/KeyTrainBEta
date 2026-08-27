@@ -21,6 +21,7 @@ export const BALLAD_FAMILY_IDS: readonly string[] = [
   'hai-pop-ballad',
   'hai-pop-ballad-chorus',
   'hai-slow-rock',
+  'hai-slow-rock-chorus',
   'hai-ballad-dan-ca',
   /* Biến tấu KeyTrain dựng từ Pop Ballad (Hải) — vẫn là ballad. */
   'hai-pop-ballad-free',
@@ -64,4 +65,19 @@ export function isBalladStyle(styleId: string | undefined | null): boolean {
  *
  * Dòng nhạc nào cần cao hơn thì bên gọi truyền `range` riêng.
  */
-export const BALLAD_SOLO_RANGE = { low: 55, high: 77 } as const
+/*
+  Sàn nâng từ Son quãng tám 3 (55) lên **Si giáng quãng tám 3 (58)**.
+
+  55 là đúng `LEFT_REGISTER_TOP` — trần tay trái của cả app. Để sàn câu solo
+  bằng trần tay trái nghĩa là hai tay được phép rơi vào **cùng một phím**, và ở
+  đoạn giang tấu thì cả hai đang kêu cùng lúc. Đo trên `hai-pop-ballad-free`:
+  tay trái lên tới 55, nốt thấp nhất của câu solo cũng 55.
+
+  Trước đây chỗ này không lộ ra, vì giang tấu thay tay trái bằng một tuyến trầm
+  riêng trần 52, tự nó chừa sẵn khoảng cách. Bỏ tuyến ấy đi — giang tấu phải
+  chơi đúng điệu đang chọn — thì khoảng cách phải do chính hai tầm này chừa.
+
+  Ba nửa cung là quãng ba thứ: đủ để tai tách được bè, và vẫn còn hơn một quãng
+  tám rưỡi cho câu chạy.
+*/
+export const BALLAD_SOLO_RANGE = { low: 58, high: 77 } as const

@@ -4,7 +4,7 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import { assignFingers, capStack } from './fingering'
-import { applyFeel, type SoloFeel } from './soloFeel'
+import { applyFeel, snapToPulse, type SoloFeel } from './soloFeel'
 import type { TimelineEvent } from '../style/types'
 import { beatsOf, chordStarts, mainChordSpans, totalBeatsOf } from '../chordTiming'
 import type { ParsedChord } from '../types'
@@ -24,6 +24,7 @@ import {
   inKeyMaterial,
   interludeMaterial,
   keepInKey,
+  keyPentatonic,
   ladderOf,
   licksFor,
   nearestStep,
@@ -89,6 +90,13 @@ export type SoloNoteSource =
   /** Ngũ cung của hợp âm cộng nốt blue ở quãng năm giảm. */
   | 'blues'
   /**
+   * Ngũ cung của giọng bài hát, giữ nguyên xuyên suốt mọi hợp âm.
+   *
+   * Phù hợp bài pop/rock/blues khi mọi hợp âm cùng giọng. Không cần đổi gam
+   * theo từng hợp âm — ngũ cung giọng vẫn khớp phần lớn hoà âm.
+   */
+  | 'keyPentatonic'
+  /**
    * Thang âm jazz lấy từ kho PianoBrain, theo đúng chất hợp âm đang vang.
    *
    * Chỉ có tác dụng ở **đoạn không lời**. Câu lót chen giữa lời không đọc nguồn
@@ -121,6 +129,12 @@ export const NOTE_SOURCE_OPTIONS: readonly NoteSourceOption[] = [
     label: 'Màu blues',
     description:
       'Ngũ cung của hợp âm cộng nốt blue ở quãng năm giảm, tạo cảm giác căng rồi giải toả.',
+  },
+  {
+    id: 'keyPentatonic',
+    label: 'Một gam xuyên suốt',
+    description:
+      'Ngũ cung của giọng bài hát, giữ nguyên xuyên suốt mọi hợp âm. Phù hợp pop/rock/blues — không cần đổi gam theo từng hợp âm.',
   },
 ]
 
@@ -205,6 +219,31 @@ export interface SoloOptions {
    * như cũ. Xem `../brain/chordScale.ts`.
    */
   storeScale?: (chord: ParsedChord) => readonly PitchClass[] | null
+  /**
+   * **Gam nào** cho lối chơi một gam xuyên suốt, dạng lớp cao độ tuyệt đối.
+   *
+   * Chỉ có tác dụng khi `noteSource` là `keyPentatonic`. Bỏ trống thì vẫn là
+   * ngũ cung của giọng như trước — đó là hành vi cũ, và là mặc định đúng.
+   *
+   * Tách ra thành tham số vì "một gam xuyên suốt" trước đây đóng cứng vào ngũ
+   * cung giọng, không chọn được: cùng một bài, ngũ cung thứ, Dorian và Blues
+   * cho ba màu khác hẳn nhau, mà người đệm không có cách nào nói mình muốn màu
+   * nào. Bộ đề xuất nằm ở `../style/phraseScale.ts`.
+   */
+  singleScale?: readonly PitchClass[]
+  /**
+   * **Mạch của điệu** — chỗ mẫu đệm gõ trong một ô nhịp, tính bằng nốt đen.
+   *
+   * Có thì câu chạy neo vào đó: nốt nào rơi gần một chỗ gõ sẽ bị kéo về đúng
+   * chỗ ấy, còn nốt nằm giữa hai chỗ gõ thì để yên — đó là nốt nối, và nốt nối
+   * mới là thứ làm câu nhạc chạy. Bỏ trống thì câu chạy đi như cũ.
+   *
+   * Dùng cho ba họ điệu mà tiết tấu chính là danh tính của điệu: slow rock,
+   * bolero, bossa nova. Xem `cellPulseOf` và `soloLocksToCell` ở `soloFeel.ts`.
+   */
+  pulse?: readonly number[]
+  /** Độ dài một ô nhịp của `pulse`, tính bằng nốt đen. */
+  pulseBar?: number
   /**
    * Cách chia thời gian của câu chạy, theo điệu đang chọn.
    *
@@ -549,6 +588,8 @@ export function generateFillLine(
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
     extraRuns?: ReadonlySet<number>
+    /** Thêm mấy phách im sau câu Licky fill/run. Ô đang chơi giữ nguyên. */
+    fillRests?: ReadonlyMap<number, number>
     /**
      * Hỏi bộ não PianoBrain hình câu lót ở một chỗ, thay cho câu ba nốt đi liền
      * bậc dựng sẵn ở đây.
@@ -582,6 +623,7 @@ export function generateFillLine(
     lickyFills = true,
     extraFills,
     extraRuns,
+    fillRests,
     brainFill,
     vocal,
   } = options
@@ -607,6 +649,9 @@ export function generateFillLine(
   const singingAt = (mainIndex: number): boolean =>
     vocal !== undefined && vocal.has(mainIndex)
 
+  /** Ô đã có câu lót — lượt dặm hợp âm ở cuối hàm phải tránh những ô này. */
+  const filled = new Set<number>()
+
   for (const { index, mainIndex } of fillPositions(chords, {
     density,
     skip: skipFills,
@@ -621,6 +666,8 @@ export function generateFillLine(
   })) {
     // Biết ca sĩ đang hát ở ô này thì bỏ qua, kể cả chỗ chuyển đoạn.
     if (singingAt(mainIndex)) continue
+
+    filled.add(index)
 
     const next = chords[(index + 1) % chords.length]
     const chordEnd = fillStarts[index] + beatsOf(chords[index], beatsPerChord)
@@ -682,16 +729,41 @@ export function generateFillLine(
       continue
     }
 
-    const start =
-      chordEnd - Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2)
+    const chordBeatsHere = beatsOf(chords[index], beatsPerChord)
+    const rest = Math.min(
+      fillRests?.get(mainIndex) ?? 0,
+      Math.max(0, chordBeatsHere - 0.5),
+    )
+    const playBeats = chordBeatsHere - rest
+    const lickEnd = chordEnd - rest
+    const fillLen = Math.min(
+      fillBeats,
+      playBeats / 2,
+      Math.max(0.25, playBeats),
+    )
+    const start = lickEnd - fillLen
+
+    /*
+      **Hợp âm chia đôi không chạy bass.**
+
+      Ô nhịp mang hai hợp âm thì mỗi hợp âm chỉ được nửa ô. Nhét thêm hai nốt
+      bass dẫn vào nửa ấy là bè trầm gõ bốn lần trong nửa ô nhịp — nghe ra một
+      cụm dồn, không ra một đường dẫn, và nó giẫm lên đúng chỗ hợp âm thứ hai
+      vừa vào. Nửa ô nhịp tự nó đã là một cú chuyển rồi, không cần ai dẫn nữa.
+
+      Chỉ chặn ở điệu **có** chạy bass (slow rock, nhịp kép). Điệu khác không
+      khai `fillBassChance` nên không đi qua cửa này.
+    */
+    const splitChord = chordBeatsHere < beatsPerChord - 0.001
+    if (splitChord && fillBassChance > 0) continue
 
     if (extraRuns?.has(mainIndex)) {
-      const runBeats = Math.min(2, beatsOf(chords[index], beatsPerChord))
+      const runBeats = Math.min(2, Math.max(0.25, playBeats))
       result.push(
         ...placeLick({
           chord: chords[index],
           next,
-          startBeat: chordEnd - runBeats,
+          startBeat: lickEnd - runBeats,
           beats: runBeats,
           take: mainIndex + take,
           mode: lickyMode,
@@ -707,7 +779,7 @@ export function generateFillLine(
           chord: chords[index],
           next,
           startBeat: start,
-          beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+          beats: fillLen,
           take: mainIndex + take,
           mode: lickyMode,
           kind: 'fill',
@@ -737,7 +809,7 @@ export function generateFillLine(
           chord: chords[index],
           next,
           startBeat: start,
-          beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+          beats: fillLen,
           take: mainIndex + take,
           mode: lickyMode,
           kind: 'fill',
@@ -793,7 +865,7 @@ export function generateFillLine(
         chord: chords[index],
         next,
         startBeat: start,
-        beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+        beats: fillLen,
         take: mainIndex + take,
         mode: lickyMode,
         kind: 'fill',
@@ -869,13 +941,13 @@ export function generateFillLine(
     const GRID = 0.25
     let runLength = Math.max(
       GRID,
-      Math.floor(fillBeats / (line.length + 1) / GRID) * GRID,
+      Math.floor(fillLen / (line.length + 1) / GRID) * GRID,
     )
-    let holdLength = fillBeats - runLength * (line.length - 1)
+    let holdLength = fillLen - runLength * (line.length - 1)
 
     // Quãng fill quá ngắn để giữ được nốt nào: chia đều, thà đều còn hơn hụt.
     if (holdLength < runLength) {
-      runLength = fillBeats / line.length
+      runLength = fillLen / line.length
       holdLength = runLength
     }
 
@@ -905,17 +977,26 @@ export function generateFillLine(
     Lượt riêng, không đụng `fillPositions`: hàm đó có lý lẽ riêng và từng sửa
     một lỗi về ô cuối đoạn — chen thêm điều kiện vào là mời lỗi ấy quay lại.
 
+    **Ô nào đã có câu lót thì không dặm.** Hai thứ này loại trừ nhau: bật câu lót
+    thì chỗ ấy là câu chạy bass, chọn vòng lướt thì chỗ ấy là hai cú dặm hợp âm.
+    Chồng cả hai lên một ô là vừa chạy vừa dặm — dày và lẫn, mất cả hai ý.
+
+    `fillPositions` vốn đã bỏ qua ô bị chia ngắn nên hai tập gần như không giao
+    nhau. Vẫn chặn tường minh ở đây, vì "gần như" không phải là một đảm bảo, và
+    luật này là luật về nhạc chứ không phải hệ quả tình cờ của một hàm khác.
+
     Chỉ chạy cho điệu đã khai `fillBassChance`, tức nhịp mẫu số 8. Điệu 4/4
     không đổi một nốt.
   */
   if (fillBassChance > 0) {
     let at = 0
-    chords.forEach((chord) => {
+    chords.forEach((chord, index) => {
       const span = beatsOf(chord, beatsPerChord)
       const chordEnd = at + span
       at = chordEnd
       // Chỉ ô bị chia ngắn — đó là dấu của hợp âm lướt.
       if (span >= beatsPerChord - 0.001) return
+      if (filled.has(index)) return
       const window = Math.min(fillBeats, span)
       const stab = window / 2
       // Ba nốt đặc trưng, đặt quanh giữa tầm giai điệu cho hai tay khỏi đụng.
@@ -961,6 +1042,18 @@ export function generateSolo(
     interlude = true,
     range,
     storeScale,
+    /*
+      `key` chỉ dùng cho lối **một gam xuyên suốt**.
+
+      Mọi chỗ gọi `materialFor` bên dưới cố ý truyền `null` vào ô giọng: nốt của
+      chính hợp âm không đi qua bộ lọc giọng, vì hợp âm mượn thì gần như nốt nào
+      cũng bị cắt. Lối một gam thì ngược hẳn — nó KHÔNG hỏi hợp âm, nó lấy trọn
+      một thang âm, nên nó cần giọng.
+    */
+    key = null,
+    singleScale,
+    pulse,
+    pulseBar,
     feel = 'straight',
   } = options
 
@@ -971,28 +1064,38 @@ export function generateSolo(
   if (chords.length === 0) return []
 
   const tones = new Set<PitchClass>()
-  for (const chord of chords) {
-    if (chord.passing) continue
-    /*
-      Vùng nốt chung của cả đoạn cũng phải theo bậc ưu tiên giang tấu, vì nó là
-      bộ lọc cuối cùng: để `chordMaterial` dựng vùng này thì bậc chín lọt vào từ
-      cửa sau, dù từng ô đã lọc sạch.
-    */
-    const source =
-      interlude && noteSource === 'storeScale'
-        ? /*
-             Vùng chung phải mở theo đúng gam đang dùng.
 
-             Nó là bộ lọc CUỐI: dựng nó bằng nốt hợp âm rồi mới cắt gam jazz qua
-             nó thì đúng những nốt làm nên chất jazz — Fa thăng của Lydian, bậc
-             chín giáng của gam altered — bị chặn ở cửa sau, và câu chạy quay về
-             y hệt bản nốt hợp âm.
-          */
-          (storeScale?.(chord) ?? chordTonesStrict(chord))
-        : interlude && noteSource === 'chordTone'
-          ? chordTonesStrict(chord)
-          : chordMaterial(chord)
-    for (const tone of source) tones.add(tone)
+  /*
+    Một gam xuyên suốt: vùng nốt chung là ngũ cung giọng, không cần lặp hợp âm.
+  */
+  if (noteSource === 'keyPentatonic' && (singleScale?.length || key)) {
+    for (const tone of singleScale?.length ? singleScale : keyPentatonic(key!)) {
+      tones.add(tone)
+    }
+  } else {
+    for (const chord of chords) {
+      if (chord.passing) continue
+      /*
+        Vùng nốt chung của cả đoạn cũng phải theo bậc ưu tiên giang tấu, vì nó là
+        bộ lọc cuối cùng: để `chordMaterial` dựng vùng này thì bậc chín lọt vào từ
+        cửa sau, dù từng ô đã lọc sạch.
+      */
+      const source =
+        interlude && noteSource === 'storeScale'
+          ? /*
+               Vùng chung phải mở theo đúng gam đang dùng.
+
+               Nó là bộ lọc CUỐI: dựng nó bằng nốt hợp âm rồi mới cắt gam jazz qua
+               nó thì đúng những nốt làm nên chất jazz — Fa thăng của Lydian, bậc
+               chín giáng của gam altered — bị chặn ở cửa sau, và câu chạy quay về
+               y hệt bản nốt hợp âm.
+            */
+            (storeScale?.(chord) ?? chordTonesStrict(chord))
+          : interlude && noteSource === 'chordTone'
+            ? chordTonesStrict(chord)
+            : chordMaterial(chord)
+      for (const tone of source) tones.add(tone)
+    }
   }
   const phraseChords = Math.max(1, chordsPerPhrase)
   const round = Math.max(0, Math.floor(take))
@@ -1199,7 +1302,7 @@ export function generateSolo(
         scaleTones: tones,
         previousShape,
         notesPerBeat: interlude && index === 0 ? (bossaPack ? 8 : 6) : notesPerBeat,
-        material: materialFor(chord, noteSource, null, [], tones, interlude, storeScale),
+        material: materialFor(chord, noteSource, key, [], tones, interlude, storeScale, singleScale),
       }
       const swept =
         [getLick(wanted), getLick('sweep')]
@@ -1263,11 +1366,12 @@ export function generateSolo(
           material: materialFor(
             chord,
             noteSource,
-            null,
+            key,
             [],
             tones,
             interlude,
             storeScale,
+            singleScale,
           ),
         }
         const built =
@@ -1350,7 +1454,7 @@ export function generateSolo(
       material: materialFor(
         chord,
         noteSource,
-        null,
+        key,
         [
           spans[index + 1]?.chord,
           spans[index - 1]?.chord,
@@ -1358,6 +1462,7 @@ export function generateSolo(
         tones,
         interlude,
         storeScale,
+        singleScale,
       ),
     }
 
@@ -1458,7 +1563,7 @@ export function generateSolo(
           note.startBeat + 1e-6 >= entry.start && note.startBeat < entry.start + entry.beats,
       )
       const pool = span
-        ? materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale)
+        ? materialFor(span.chord, noteSource, key, [], tones, interlude, storeScale, singleScale)
         : [...tones]
       const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
       if (ladder.length <= 1) continue
@@ -1492,7 +1597,7 @@ export function generateSolo(
           note.startBeat < entry.start + entry.beats,
       )
       const pool = span
-        ? materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale).filter((tone) =>
+        ? materialFor(span.chord, noteSource, key, [], tones, interlude, storeScale, singleScale).filter((tone) =>
             tones.has(tone),
           )
         : [...tones]
@@ -1570,7 +1675,7 @@ export function generateSolo(
       const chieuTim = huong !== 0 ? huong : -huongSau
       if (chieuTim === 0) continue
 
-      const pool = materialFor(chord, noteSource, null, [], tones, interlude, storeScale)
+      const pool = materialFor(chord, noteSource, key, [], tones, interlude, storeScale, singleScale)
       const ladder = ladderOf(pool.length > 0 ? pool : [...tones], soloLow, soloCeiling)
       if (ladder.length <= 1) continue
 
@@ -1839,7 +1944,7 @@ export function generateSolo(
     )
     if (!span) return note
 
-    const pool = materialFor(span.chord, noteSource, null, [], tones, interlude, storeScale)
+    const pool = materialFor(span.chord, noteSource, key, [], tones, interlude, storeScale, singleScale)
     const ladder = ladderOf(pool, bounds.low, bounds.high)
     const step = ladder.indexOf(note.note)
     const next = step >= 0 ? ladder[step + 1] ?? ladder[step - 1] : undefined
@@ -1872,9 +1977,17 @@ export function generateSolo(
     rơi, mà số ngón thì đọc theo thứ tự thời gian — gán trước rồi mới dời là số
     ngón kể sai thứ tự.
   */
-  const lined = applyFeel(capStack(withGrace), feel).sort(
-    (a, b) => a.startBeat - b.startBeat,
-  )
+  /*
+    Neo vào mạch của điệu **sau** khi đã áp khuôn nhịp.
+
+    Thứ tự này quan trọng: khuôn (`swing`, `bossa`) là quy ước chung của cả dòng
+    nhạc, còn mạch là chỗ gõ thật của chính điệu đang chơi. Neo trước rồi mới áp
+    khuôn thì khuôn lại đẩy nốt ra khỏi mạch vừa neo xong.
+  */
+  const shaped = applyFeel(capStack(withGrace), feel)
+  const lined = (
+    pulse?.length ? snapToPulse(shaped, pulse, pulseBar ?? 4) : shaped
+  ).sort((a, b) => a.startBeat - b.startBeat)
 
   /*
     Kéo lại bước nào vượt một quãng tám — **sau cùng**, khi không còn ai bỏ nốt nữa.
@@ -1941,23 +2054,6 @@ const GRACE_MIN_NOTE = 0.5
  */
 const GRACE_MIN_ROOM = 0.125
 
-/**
- * Gắn nốt láy vào câu nhạc — kỹ thuật số 4 trong năm kỹ thuật của phong cách.
- *
- * `graceNoteOrnamenter.ts` đã dựng sẵn luật chọn nốt láy từ lâu nhưng **chưa
- * ai gọi tới**: ô "Mật độ nốt láy" trên giao diện thật ra chỉ điều khiển mật
- * độ nốt của câu solo. Chỗ này nối lại cho đúng cái tên.
- *
- * ## Nốt láy vang **trước** phách, không đẩy nốt chính đi
- *
- * Đây là chỗ bản đầu làm sai. Nó cắt đoạn đầu của nốt chính cho nốt láy, nên
- * nốt chính bị dời sang phách 0,125 — cả câu nhạc trôi khỏi lưới nốt kép và
- * nghe lệch với nhịp đệm.
- *
- * Đúng ra nốt láy là **cái vuốt vào phách**: nó vang ở khe ngay trước, còn nốt
- * chính vẫn rơi đúng chỗ của nó. Chỗ cho nốt láy lấy từ **đuôi nốt đứng
- * trước** — trên đàn thật thì ngón vừa nhả nốt cũ ra là vuốt luôn vào nốt mới.
- */
 function addGraceNotes(
   line: readonly SoloNote[],
   options: {
@@ -2035,6 +2131,7 @@ function materialFor(
   pool?: ReadonlySet<PitchClass>,
   interlude = false,
   storeScale?: (chord: ParsedChord) => readonly PitchClass[] | null,
+  singleScale?: readonly PitchClass[],
 ): PitchClass[] {
   /*
     Giang tấu đi theo bậc ưu tiên riêng: nốt hợp âm trước, rồi mới ngũ cung, rồi
@@ -2051,6 +2148,16 @@ function materialFor(
     const clipped = pool ? layered.filter((tone) => pool.has(tone)) : layered
     if (clipped.length >= 3) return clipped
     if (layered.length > 0) return layered
+  }
+
+  /*
+    Một gam xuyên suốt: ngũ cung lấy từ giọng bài hát, không phụ thuộc hợp âm.
+    Phù hợp pop/rock/blues — mọi hợp âm cùng giọng nên ngũ cung giọng vẫn khớp.
+    Nếu không có key thì lùi về ngũ cung hợp âm.
+  */
+  if (noteSource === 'keyPentatonic' && (singleScale?.length || key)) {
+    const raw = singleScale?.length ? [...singleScale] : keyPentatonic(key!)
+    return raw.length > 0 ? raw : chordPentatonic(chord)
   }
 
   const raw =
