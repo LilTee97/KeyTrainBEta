@@ -120,6 +120,7 @@ const DEGREE_CHAIN: Readonly<Record<number, readonly (readonly number[])[]>> = {
 }
 
 const LEFT_ARPEGGIO_LOW = 36
+/** Trần mặc định của câu rải tay trái. Điệu khai `leftHandTop` thì nới riêng. */
 const LEFT_ARPEGGIO_HIGH = 60
 
 function degreeTone(
@@ -179,11 +180,29 @@ function degreeTone(
     nhất còn **nằm trên** mốc ấy. Chỉ áp khi có `register` — tức chỉ tay trái;
     tay phải giữ nguyên luật cũ.
   */
-  if (register && toneIndex > 0) {
+  if (register) {
+    /*
+      Mốc neo là **nốt gốc của chính câu rải**, không phải nốt đáy thế bấm.
+
+      Hai chỗ ấy hay lệch nhau: dẫn giọng đặt thế bấm Fa ở Fa quãng tám 3, trong
+      khi câu rải mở bằng Fa quãng tám 2 (`register.low` + bậc). Neo vào thế bấm
+      thì bậc năm phải nằm trên Fa quãng tám 3 — ra Đô quãng tám 4, cách nốt gốc
+      của câu rải một quãng mười hai. Câu rải đứt làm đôi.
+
+      Nốt gốc cũng phải đi qua đây. Trước đây `toneIndex === 0` rơi xuống luật
+      "quãng tám gần nốt vừa chơi" viết cho tay phải, nên dấu `+` (cao hơn một
+      quãng tám) bị cộng lên trên một quãng tám đã bị nắn — bậc 8 của La thứ ra
+      La quãng tám 4, cao hơn hai quãng tám.
+    */
+    const rootStep = (((rootPc - (baseFloor % 12)) % 12) + 12) % 12
+    const rootPlaced = baseFloor + rootStep
+    if (toneIndex === 0) return (rootPlaced + semitones) as MidiNote
     let above: number | null = null
     for (let octave = -4; octave <= 4; octave += 1) {
       const candidate = placed - semitones + octave * 12
-      if (candidate <= floor || candidate > register.high) continue
+      // Xét nốt CUỐI CÙNG, đã cộng dấu quãng tám — nếu không thì bậc mười lọt
+      // cửa này rồi mới vượt trần, và bước kẹp ở cuối gấp nó xuống.
+      if (candidate <= rootPlaced || candidate + semitones > register.high) continue
       if (above === null || candidate < above) above = candidate
     }
     if (above !== null) return (above + semitones) as MidiNote
@@ -487,7 +506,7 @@ function renderWithCell(
           near,
           [...voicing.left, ...voicing.right],
           hand === 'left'
-            ? { low: LEFT_ARPEGGIO_LOW, high: LEFT_ARPEGGIO_HIGH }
+            ? { low: LEFT_ARPEGGIO_LOW, high: pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH }
             : undefined,
         )
         const split = settleHands(
@@ -697,6 +716,20 @@ export function renderPattern(
         releaseRatio,
       )
 
+  /*
+    Điệu nào tay trái RẢI thì trần tay trái nới tới trần câu rải.
+
+    Theo đúng lối đã làm cho tay phải ở `RIGHT_ARPEGGIO_HIGH`: chọn nốt trong
+    tầm nào thì kẹp theo đúng tầm ấy, không thì bước kẹp phá mất bước chọn.
+
+    Chỉ nới cho điệu nào **tự khai dấu quãng tám** (`semitones` từ 12 trở lên).
+    Luật chung của app là tay trái không vượt Son quãng tám 3 — hai tay không
+    dùng chung quãng — và luật ấy đúng cho gần hết điệu. Thế 1-5-8-10 là ngoại
+    lệ có thật, vì bậc mười tự nó đã cao hơn nốt gốc mười lăm nửa cung; điệu nào
+    không đòi bậc 8 thì không có lý do gì được nới.
+  */
+  const leftTop = pattern.leftHandTop
+
   const dropped = barsWithoutComping?.size
     ? dropLastMeasure(
         events,
@@ -711,7 +744,9 @@ export function renderPattern(
   return holdUntilStruckAgain(
     clipToChords(muted, starts).map((event) => ({
       ...event,
-      notes: event.notes.map((note) => clampToHandRegister(note, event.hand)),
+      notes: event.notes.map((note) =>
+        clampToHandRegister(note, event.hand, leftTop),
+      ),
     })),
   ).sort((a, b) => a.startBeat - b.startBeat)
 }
@@ -836,6 +871,39 @@ function overlaps(
  * Khi tay phải đang chạy fill / improvise / chạy ngón: bỏ quạt hợp âm tay phải,
  * chuyển khối đó sang tay trái (hạ vào dải bass).
  */
+/**
+ * Phần đệm **nhường chỗ** cho câu lót khi hai bên rơi trùng một tay, một phách.
+ *
+ * `holdUntilStruckAgain` chỉ cắt khi trùng **cùng cao độ**: hai nốt khác nhau
+ * cùng tay cùng lúc thì nó cho qua, vì hai cao độ chồng nhau bình thường là hợp
+ * âm. Ở bè trầm thì không: người dùng đã bác thẳng kiểu tay trái bấm một chùm
+ * nốt bass khi chạy — "bàn tay người sao đánh được".
+ *
+ * Đúng ca gặp phải: slow rock có cú gõ bass ở phách 6, mà câu chạy bass cũng
+ * đặt nốt thứ hai đúng phách 6. Câu lót là thứ được chọn cho chỗ ấy, nên nó
+ * thắng; cú gõ của mẫu đệm lui.
+ *
+ * Chỉ xét **tay trái**: chỗ chồng của tay phải đã có `giveCompingToLeft` lo, và
+ * nó lo bằng cách chuyển tay chứ không bằng cách bỏ tiếng.
+ */
+export function yieldToFill(
+  accompaniment: readonly TimelineEvent[],
+  fill: readonly TimelineEvent[],
+  epsilon = 0.02,
+): TimelineEvent[] {
+  if (fill.length === 0) return [...accompaniment]
+  const taken = fill
+    .filter((event) => event.hand === 'left')
+    .map((event) => event.startBeat)
+  if (taken.length === 0) return [...accompaniment]
+
+  return accompaniment.filter(
+    (event) =>
+      event.hand !== 'left' ||
+      !taken.some((beat) => Math.abs(beat - event.startBeat) <= epsilon),
+  )
+}
+
 export function giveCompingToLeft(
   accompaniment: readonly TimelineEvent[],
   melody: readonly TimelineEvent[],
@@ -843,10 +911,22 @@ export function giveCompingToLeft(
 ): TimelineEvent[] {
   if (melody.length === 0) return [...accompaniment]
 
+  /*
+    Chỉ nhường khi câu lót nằm ở **tay phải**.
+
+    Luật này viết cho câu lót giai điệu: tay phải bận chạy câu thì nó không quạt
+    được nữa, nên phần quạt lui về tay trái. Câu chạy **bè trầm** thì ngược hẳn
+    — tay phải đang rảnh, còn tay trái mới là tay bận. Không phân biệt thì slow
+    rock ra cảnh tay trái vừa bấm hợp âm ba nốt vừa chạy hai nốt bass cùng lúc,
+    trong khi tay phải không có gì để làm. Đo trên La thứ: `A2,C3,E3` ở phách 4
+    chồng lên `F2` và `E2` của câu chạy.
+  */
   return accompaniment.map((event) => {
     if (event.hand !== 'right') return event
-    const busy = melody.some((line) =>
-      overlaps(event, line.startBeat, line.startBeat + line.durationBeats),
+    const busy = melody.some(
+      (line) =>
+        line.hand === 'right' &&
+        overlaps(event, line.startBeat, line.startBeat + line.durationBeats),
     )
     if (!busy) return event
 

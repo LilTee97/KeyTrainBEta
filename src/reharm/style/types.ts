@@ -129,6 +129,24 @@ export interface StylePattern {
    */
   fillBassChance?: number
   /**
+   * Trần tay trái của riêng điệu này, tính bằng số MIDI. Bỏ trống là trần chung.
+   *
+   * Trần chung là Son quãng tám 3 (55): hai tay không dùng chung quãng, tay trái
+   * không trèo lên chỗ tay phải. Luật ấy đúng cho thế bấm, và đúng cho gần hết
+   * điệu — kể cả điệu bè trầm có dấu quãng tám, vì bậc 8 của chúng vẫn bị kẹp
+   * xuống và không ai thấy thiếu.
+   *
+   * Thế **1-5-8-10** thì không lọt: bậc mười tự nó đã cao hơn nốt gốc mười lăm
+   * nửa cung, mà cửa sổ từ sàn tay trái tới trần chung chỉ rộng mười chín — nên
+   * chỉ vài giọng vừa, còn Fa, Si giáng, Si thì bậc đỉnh bị gấp xuống một quãng
+   * tám và câu rải đang đi lên thì sụp.
+   *
+   * Là khai báo của từng điệu chứ không phải luật mới, vì nới trần cho mọi điệu
+   * có dấu quãng tám là đổi tiếng của cả thư viện OneMotion — bè trầm Pop 1
+   * đang chơi nốt gốc hai lần sẽ hoá thành nốt gốc rồi bậc 8.
+   */
+  leftHandTop?: number
+  /**
    * Phần trường độ thật sự kêu. Bỏ trống thì dùng mặc định 0.92.
    *
    * Trên 1 là **chồng tiếng**, cố ý: giữ phím cũ quá nốt mới một chút, đúng cách

@@ -459,6 +459,18 @@
               "fromRoot": true
             }
           ]
+        },
+        {
+          "beat": 5,
+          "durationBeats": 1.0,
+          "velocityScale": 0.55,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 2,
+              "fromRoot": true
+            }
+          ]
         }
       ],
       "right": [
@@ -467,18 +479,128 @@
           "durationBeats": 3.1,
           "velocityScale": 0.85,
           "voice": "chord"
+        }
+      ]
+    },
+    "note": "Rà bằng tai theo ingest/phieu-ra-slow-rock-duc-thinh.md bên PianoBrain; item gốc acc-slow-rock-duc-thinh-mau-3. Bốn cú gõ: phách 1, 3, 4, 6. Bass trái legato 3 móc đơn mỗi nốt nên bè trầm liền mạch cả ô nhịp. Hợp âm phách 3 KÉO LÊ chừng 1/8 móc đơn (beat 2.1, không phải 2.0) — đó chính là cái giật cục của mẫu, nó đến từ tương phản 2.1 với 0.9 chứ không từ một cú đẩy sớm. Phách 6 lướt nhẹ, dẫn sang ô sau; trong video khoảng trên 3/4 số ô mới có, ở đây chép cố định. Bậc 5 tay trái nằm TRÊN nốt gốc, đúng 7 nửa cung, đã đo ở sáu giọng — degreeTone giờ neo bậc vào nốt gốc của câu rải chứ không vào nốt đáy thế bấm. Bỏ hợp âm phách 6: hợp âm phách 4 ngân trọn tới vạch nhịp, nhường nửa sau ô nhịp cho câu chạy bass. Phách 6 trả lại ô nhịp, nhưng là BASS tay trái chứ không phải hợp âm tay phải (hợp âm ở đó đã bỏ vì nó gõ đè lên nốt bass thứ hai của câu chạy). Bậc 5, rất nhẹ, đánh lướt dẫn sang phách 1 ô sau — đúng chỗ bản chép ghi 'đánh lướt nhẹ, nảy về phách 1 ô nhịp kế'. Khi có câu chạy bass thì phần đệm nhường chỗ, xem yieldToFill.",
+    "gridUnit": 0.5,
+    "fillBeats": 1.0,
+    "fillMaxNotes": 2
+  },
+  {
+    "id": "slow-rock-duc-thinh-1",
+    "name": "Slow Rock mẫu 1 — tay trái rải 1-5-8-10-8-5",
+    "family": "slow-rock-duc-thinh",
+    "familyName": "Slow Rock (Đức Thịnh)",
+    "variant": 1,
+    "timeSignature": "6/8",
+    "beatsPerMeasure": 6,
+    "bpm": 101,
+    "feel": "straight-block-chord",
+    "releaseRatio": 1.05,
+    "verified": true,
+    "sourceVideos": [
+      "kOwriZhpo6Y @ 01:25-04:24 — PIANO ĐỆM HÁT Bài 9, Đức Thịnh"
+    ],
+    "cell": {
+      "lengthBeats": 6,
+      "left": [
+        {
+          "beat": 0,
+          "durationBeats": 1.0,
+          "velocityScale": 1.0,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 0,
+              "fromRoot": true
+            }
+          ]
+        },
+        {
+          "beat": 1,
+          "durationBeats": 1.0,
+          "velocityScale": 0.7,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 2,
+              "fromRoot": true
+            }
+          ]
+        },
+        {
+          "beat": 2,
+          "durationBeats": 1.0,
+          "velocityScale": 0.7,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 0,
+              "fromRoot": true,
+              "semitones": 12
+            }
+          ]
+        },
+        {
+          "beat": 3,
+          "durationBeats": 1.0,
+          "velocityScale": 0.85,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 1,
+              "fromRoot": true,
+              "semitones": 12
+            }
+          ]
+        },
+        {
+          "beat": 4,
+          "durationBeats": 1.0,
+          "velocityScale": 0.7,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 0,
+              "fromRoot": true,
+              "semitones": 12
+            }
+          ]
         },
         {
           "beat": 5,
-          "durationBeats": 1,
-          "velocityScale": 0.45,
+          "durationBeats": 1.0,
+          "velocityScale": 0.7,
+          "voice": "bottom",
+          "tones": [
+            {
+              "toneIndex": 2,
+              "fromRoot": true
+            }
+          ]
+        }
+      ],
+      "right": [
+        {
+          "beat": 0,
+          "durationBeats": 3.0,
+          "velocityScale": 0.85,
+          "voice": "chord"
+        },
+        {
+          "beat": 3,
+          "durationBeats": 3.0,
+          "velocityScale": 0.75,
           "voice": "chord"
         }
       ]
     },
-    "note": "Rà bằng tai theo ingest/phieu-ra-slow-rock-duc-thinh.md bên PianoBrain; item gốc acc-slow-rock-duc-thinh-mau-3. Bốn cú gõ: phách 1, 3, 4, 6. Bass trái legato 3 móc đơn mỗi nốt nên bè trầm liền mạch cả ô nhịp. Hợp âm phách 3 KÉO LÊ chừng 1/8 móc đơn (beat 2.1, không phải 2.0) — đó chính là cái giật cục của mẫu, nó đến từ tương phản 2.1 với 0.9 chứ không từ một cú đẩy sớm. Phách 6 lướt nhẹ, dẫn sang ô sau; trong video khoảng trên 3/4 số ô mới có, ở đây chép cố định. LƯU Ý: bậc 5 tay trái phải nằm TRÊN nốt gốc, nhưng degreeTone hiện chọn quãng tám gần nhất nên chơi ra Mi trầm hơn La — sai hướng, chờ sửa.",
+    "note": "Cờ verified ở đây là cờ CHƠI ĐƯỢC của thư viện điệu (có nguồn video, có mẫu tiết tấu), không phải trạng thái duyệt của kho. Item gốc bên PianoBrain vẫn là draft. BẢN DỰNG, item gốc acc-slow-rock-duc-thinh-mau-1 bên PianoBrain còn ở draft — chưa ai rà bằng tai, phiếu rà ở ingest/phieu-ra-slow-rock-duc-thinh-mau-1.md. Tay trái rải đủ 6 móc đơn, đi lên rồi về, đỉnh bậc 10 rơi đúng phách 4; tay phải dậm giữ ở phách 1 và 4. Hai chỗ là LỰA CHỌN khi dựng chứ không phải lời thầy: (1) bpm 101 mượn của mẫu 3 — số đã đo — vì con số 75 của bản chép máy chính là số nó ghi sai cho mẫu 3; (2) fillBassChance 0 vì sáu móc đơn tay trái đã kín cả ô nhịp, câu chạy bass không còn chỗ đứng — ngược hẳn mẫu 3, nơi nửa sau ô nhịp bè trầm rảnh. Khai leftHandTop 64: thế 1-5-8-10 vượt trần tay trái chung (55) ở phần lớn giọng, vì bậc mười cách nốt gốc mười lăm nửa cung.",
     "gridUnit": 0.5,
     "fillBeats": 1.0,
-    "fillMaxNotes": 2
+    "fillMaxNotes": 2,
+    "fillBassChance": 0,
+    "leftHandTop": 64
   }
 ]

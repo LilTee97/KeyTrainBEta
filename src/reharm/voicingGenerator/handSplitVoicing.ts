@@ -89,20 +89,69 @@ export function settleHands(
     break
   }
 
-  return { left: low, right: high }
+  /*
+    Mỗi bàn tay chỉ bấm **trong một quãng tám**.
+
+    Bàn tay người với được chừng ấy. Thế bấm rộng hơn thì trên giấy vẫn là hợp
+    âm đúng, mà ngồi vào đàn là không bấm nổi — và `MAX_HAND_SPAN` không chặn
+    được: nó đo từ nốt thấp nhất tay trái tới nốt cao nhất tay phải, nên một bàn
+    tay dang mười lăm nửa cung vẫn lọt nếu tay kia đứng sát.
+
+    Nốt nào vượt quá thì **hạ quãng tám** cho lọt, chứ không bỏ đi — hợp âm giữ
+    nguyên chất, chỉ đổi thế. Hai nốt gấp về trùng nhau thì còn một: một bàn tay
+    không bấm cùng một phím hai lần.
+  */
+  const foldToOctave = (notes: readonly MidiNote[]): MidiNote[] => {
+    if (notes.length < 2) return [...notes]
+    const floor = Math.min(...notes)
+    const folded = notes.map((note) => {
+      let pitch = note
+      while (pitch - floor > 12) pitch -= 12
+      while (pitch < floor) pitch += 12
+      return pitch as MidiNote
+    })
+    return [...new Set(folded)].sort((a, b) => a - b) as MidiNote[]
+  }
+
+  /*
+    Hợp âm dang quá **hai quãng tám** thì chia đều cho hai tay.
+
+    Hai quãng tám là chỗ hai bàn tay cộng lại còn với tới. Quá đó thì dồn hết
+    vào một bên là hỏng; cắt đôi theo cao độ, nửa dưới tay trái nửa trên tay
+    phải, mỗi bên tự lọt vào quãng tám của mình.
+  */
+  const all = [...low, ...high].sort((a, b) => a - b)
+  if (all.length > 1 && all[all.length - 1]! - all[0]! > MAX_HAND_SPAN) {
+    const mid = Math.ceil(all.length / 2)
+    low = all.slice(0, mid)
+    high = all.slice(mid)
+  }
+
+  return { left: foldToOctave(low), right: foldToOctave(high) }
 }
 
 /** Trần tay trái / sàn tay phải — hai bên phím, không dùng chung quãng. */
 const LEFT_REGISTER_TOP = 55
 const RIGHT_REGISTER_FLOOR = 60
 
+/**
+ * Kéo một nốt về tầm của bàn tay đang chơi.
+ *
+ * `leftTop` để mở trần tay trái cho **câu rải**. Trần 55 là trần của một THẾ
+ * BẤM: năm ngón bấm cùng lúc thì tay trái không được trèo lên chỗ tay phải.
+ * Câu rải mỗi lúc một nốt, và thế 1-5-8-10 của đệm hát bắt buộc phải trèo —
+ * bậc mười của Fa quãng tám 2 là La quãng tám 3, đã trên trần ấy. Kẹp nó về 55
+ * là hạ nguyên một quãng tám, câu rải mất bậc 8 lẫn bậc 10 và bò trong một
+ * quãng năm.
+ */
 export function clampToHandRegister(
   note: MidiNote,
   hand: 'left' | 'right',
+  leftTop: number = LEFT_REGISTER_TOP,
 ): MidiNote {
   if (hand === 'left') {
     let pitch = note
-    while (pitch > LEFT_REGISTER_TOP) pitch -= 12
+    while (pitch > leftTop) pitch -= 12
     while (pitch < LEFT_HAND_LOW) pitch += 12
     return pitch as MidiNote
   }
