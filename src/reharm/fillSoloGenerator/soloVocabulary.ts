@@ -311,6 +311,32 @@ export function chordBlues(chord: ParsedChord): PitchClass[] {
   return steps.map((step) => ((chord.root + step) % 12) as PitchClass)
 }
 
+/**
+ * Ngũ cung của **giọng bài hát**, giữ nguyên xuyên suốt mọi hợp âm.
+ *
+ * Phù hợp khi mọi hợp âm cùng giọng (pop, rock, blues). Trưởng thì ngũ cung
+ * trưởng, thứ thì ngũ cung thứ — không phụ thuộc hợp âm đang vang.
+ */
+export function keyPentatonic(
+  key: { tonic: PitchClass; scale: ScaleType },
+): PitchClass[] {
+  const isMinor = key.scale === 'minor'
+  const steps = isMinor ? [0, 3, 5, 7, 10] : [0, 2, 4, 7, 9]
+  return steps.map((step) => ((key.tonic + step) % 12) as PitchClass)
+}
+
+/**
+ * Gam blues của **giọng bài hát** — ngũ cung thứ cộng nốt blue (quãng 5 giảm).
+ *
+ * Dùng xuyên suốt bài blues, rock, pop có chất blues.
+ */
+export function keyBlues(
+  key: { tonic: PitchClass; scale: ScaleType },
+): PitchClass[] {
+  const steps = [0, 3, 5, 6, 7, 10]
+  return steps.map((step) => ((key.tonic + step) % 12) as PitchClass)
+}
+
 /** Bậc thang mọi nốt dùng được trong tầm, xếp tăng dần. */
 export function ladderOf(
   pitchClasses: readonly PitchClass[],
