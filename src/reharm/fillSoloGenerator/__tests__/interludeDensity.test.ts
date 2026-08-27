@@ -61,23 +61,27 @@ describe('độ dài giang tấu quyết định mật độ câu solo', () => {
   })
 
   /*
-    KHUYẾT TẬT ĐÃ BIẾT, ghi lại chứ chưa sửa được.
+    SỬA ĐƯỢC MỘT NỬA, ghi lại phần còn lại.
 
-    Luật ở trên chọn `sparse` hay `medium` đúng theo độ dài đoạn, nhưng ở NHÁNH
-    GIANG TẤU thì `density` hiện **không có tác dụng gì**. Đo trên vòng
-    `Am Dm E7 Am`, tám lượt: `sparse`, `medium` và `dense` cho ra không chỉ cùng
-    số nốt mà cùng TỪNG NỐT MỘT — chuỗi cao độ và mốc thời gian trùng khít.
+    Gốc đã tìm ra và sửa: lick `enclosure` — thứ dựng phần lớn câu giang tấu —
+    KHÔNG nhận `notesPerBeat` một lần nào, nên nó luôn ra đúng chín nốt bất kể
+    mật độ. Trước khi sửa, `sparse` và `medium` cho ra từng nốt trùng khít.
 
-    Đã lần theo hai nhánh đóng cứng `notesPerBeat` (`interlude && index === 0`
-    và nhánh lick `enclosure` / `scale-run`) và sửa thử cả hai: không đổi một
-    nốt nào, tức đường chạy thật nằm ở chỗ khác chưa tìm ra. Hai lần sửa ấy đã
-    gỡ bỏ, không để lại mã không làm gì.
+    Sửa xong thì mật độ CÓ tác dụng, nhưng chỉ khoảng 4%. Người thật chênh
+    30-60% giữa đoạn ngắn và đoạn dài. Phần còn lại của số nốt do chính HÌNH
+    LICK quyết định — mỗi lick có độ dài riêng, không phải một tham số — nên
+    nút mật độ không với tới được.
 
-    Ngày nào tìm ra và sửa được thì test này ĐỎ. Lúc ấy hãy thay nó bằng phép đo
-    thật: đoạn dài phải ra nhiều nốt hơn đoạn ngắn rõ rệt.
+    Đây là cùng một gốc với chuyện rải hợp âm quá nhiều: câu được dập từ một
+    hình có sẵn, rồi mới đi hỏi hoàn cảnh. Muốn điều khiển được mật độ thì câu
+    phải được DỰNG theo số nốt cần, tức bộ sinh cọc-và-nối ở bước 3.
   */
-  it('CHƯA SỬA ĐƯỢC: mật độ vô hiệu ở nhánh giang tấu', () => {
-    expect(noteCount(4)).toBe(noteCount(20))
+  it('mật độ có tác dụng, nhưng chưa đủ để nghe ra', () => {
+    const short = noteCount(4)
+    const long = noteCount(20)
+    expect(long).toBeGreaterThan(short)
+    // Còn xa mục tiêu: người thật chênh 30-60%.
+    expect(long / short).toBeLessThan(1.3)
   })
 
   /*

@@ -1233,15 +1233,33 @@ const enclosure: Lick = {
   minBeats: 2,
   roles: ['middle'],
   inRotation: true,
-  build: ({ startBeat, beats, from, low, high, material }) => {
+  build: ({ startBeat, beats, from, low, high, material, notesPerBeat }) => {
     const ladder = ladderOf(material, low, high)
     if (ladder.length === 0) return { notes: [], shape: [] }
 
     const sign = directionFrom(from, low, high)
-    const targets = walkSteps(ladder, nearestStep(ladder, from), [
+    const walked = walkSteps(ladder, nearestStep(ladder, from), [
       2 * sign,
       1 * sign,
     ])
+
+    /*
+      Bớt nốt ĐÍCH khi câu cần thưa, đừng bớt ba nốt của chính hình kẹp.
+
+      Hình này là ba nốt cho một đích: trên, dưới, rồi vào đích. Cắt trong ba
+      nốt ấy là hỏng hình — nó không còn kẹp nữa. Chỗ co giãn được là SỐ ĐÍCH:
+      một đích vẫn là một câu kẹp đàng hoàng, ba đích là một chuỗi.
+
+      Trước đây `build` không nhận `notesPerBeat` một lần nào, nên lick này ra
+      đúng chín nốt bất kể mật độ. Nó chạy ở nhánh giang tấu, và đó chính là lý
+      do nút chỉnh mật độ ở đoạn giang tấu không có tác dụng gì: đo ra `sparse`,
+      `medium` và `dense` cho ra từng nốt trùng khít.
+
+      Chia đôi để mức `medium` giữ nguyên ba đích như cũ — bài đang chạy không
+      đổi một nốt nào; chỉ `sparse` mới rút bớt.
+    */
+    const room = Math.round((beats * notesPerBeat) / 2)
+    const targets = walked.slice(0, Math.max(1, Math.min(walked.length, room)))
 
     const notes: LickNote[] = []
     // Mỗi nốt đích chiếm ba suất: trên, dưới, rồi chính nó.
