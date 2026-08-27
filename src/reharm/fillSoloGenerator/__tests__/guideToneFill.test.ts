@@ -18,6 +18,7 @@ const fillAt = (text: string, at: number) => {
   const chords = parseChordInput(text).chords
 
   return generateFillLine(chords, {
+    lickyFills: false,
     beatsPerChord: 4,
     density: 'dense',
     key: C_MAJOR,

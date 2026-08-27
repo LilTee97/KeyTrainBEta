@@ -435,6 +435,9 @@ describe('nguồn nốt cho câu solo', () => {
 
 describe('câu fill — chêm ở cuối hợp âm để dẫn sang hợp âm sau', () => {
   const options = {
+    // Nhóm này kiểm đường guide-tone: kết vào nốt dẫn, đi liền bậc. Sổ Licky
+    // không hứa hai điều ấy, mà nay nó là mặc định — nên phải khai rõ ở đây.
+    lickyFills: false,
     beatsPerChord: 4,
     key: { tonic: 0, scale: 'major' as const },
     density: 'dense' as const,

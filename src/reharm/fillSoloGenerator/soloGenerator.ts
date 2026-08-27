@@ -486,10 +486,31 @@ export interface TransitionRun {
   delayBeats?: number
 }
 
+/** Tầm câu chạy bass: trùng tầm tay trái của `handSplitVoicing`. */
+const BASS_RUN_RANGE = { low: 36, high: 55 }
+
+/*
+  Rút thăm **cố định theo chỗ**, không phải ngẫu nhiên thật.
+
+  Cùng một ô nhịp trong cùng một lượt phải luôn ra cùng một kiểu câu lót, nếu
+  không thì bấm phát lại là bài đổi khác và không ai rà được. `take` đổi giữa các
+  lượt nên bài vẫn không lặp y hệt.
+*/
+function drawsBass(chance: number, seed: number): boolean {
+  if (chance <= 0) return false
+  if (chance >= 1) return true
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453
+  return x - Math.floor(x) < chance
+}
+
 export function generateFillLine(
   chords: readonly ParsedChord[],
   options: SoloOptions & {
     fillBeats?: number
+    /** Trần số nốt của câu lót; điệu khai thì theo điệu. */
+    fillMaxNotes?: number
+    /** Tỉ lệ câu lót chạy bè trầm, 0 tới 1. Bỏ trống là 0. */
+    fillBassChance?: number
     /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
     skipFills?: ReadonlySet<number>
     /** Các hợp âm mà câu hát kết thúc ở đó; xem `fillPositions`. */
@@ -548,6 +569,8 @@ export function generateFillLine(
   const {
     beatsPerChord,
     fillBeats = Math.min(1.5, beatsPerChord / 2),
+    fillMaxNotes,
+    fillBassChance = 0,
     direction = 'mixed',
     density = 'medium',
     key = null,
@@ -556,6 +579,7 @@ export function generateFillLine(
     sectionEnds,
     take = 0,
     lickyMode = 'clone',
+    lickyFills = true,
     extraFills,
     extraRuns,
     brainFill,
@@ -688,6 +712,39 @@ export function generateFillLine(
           mode: lickyMode,
           kind: 'fill',
           key,
+          ...(fillMaxNotes !== undefined ? { maxNotes: fillMaxNotes } : {}),
+          ...(drawsBass(fillBassChance, mainIndex + take)
+            ? { register: BASS_RUN_RANGE, bassWalk: true }
+            : {}),
+        }),
+      )
+      continue
+    }
+
+    /*
+      Điệu khai `fillBass` thì **mọi** câu lót là chạy bè trầm, không riêng chỗ
+      người dùng tự đánh dấu.
+
+      Nhánh `extraFills` ở trên chỉ chạy cho ô người dùng bấm thêm. Câu lót tự
+      động thì rơi xuống `guideToneInto` bên dưới — một đường dẫn giai điệu dựng
+      tay, không đi qua sổ Licky, nên nó vẫn ra câu tay phải dù điệu đã khai chạy
+      bass. Chặn ở đây, trước cả `brainFill`, vì với slow rock thì chỗ nối hai ô
+      nhịp thuộc về bè trầm chứ không phải chỗ để chen câu.
+    */
+    if (drawsBass(fillBassChance, mainIndex + take)) {
+      result.push(
+        ...placeLick({
+          chord: chords[index],
+          next,
+          startBeat: start,
+          beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+          take: mainIndex + take,
+          mode: lickyMode,
+          kind: 'fill',
+          key,
+          register: BASS_RUN_RANGE,
+          bassWalk: true,
+          ...(fillMaxNotes !== undefined ? { maxNotes: fillMaxNotes } : {}),
         }),
       )
       continue
@@ -704,6 +761,47 @@ export function generateFillLine(
         result.push(...fromBrain)
         continue
       }
+    }
+
+    /*
+      Ô nào **máy tự chấm** câu lót cũng đi qua sổ Licky, không riêng ô người
+      dùng bấm thêm.
+
+      Trước đây chỉ `extraFills` mới qua sổ; câu lót tự động rơi thẳng xuống
+      `guideToneInto` bên dưới — một đường dẫn dựng tay, luôn ra cùng một dáng.
+      Nghe cả bài thì lộ ra ngay là máy.
+
+      Đặt SAU `brainFill`: kiến thức trích từ thầy trong PianoBrain phải được
+      dùng trước sổ Licky. Sổ chỉ lấp chỗ kho chưa có.
+
+      Công tắc `lickyFills` **bật sẵn**: chỗ nào có câu lót thì đó là câu Licky.
+      Tắt nó đi thì rơi về câu lót `guideToneInto`
+      bên dưới, thứ có những đảm bảo mà sổ Licky
+      không có: kết vào **nốt dẫn** rồi ngân trọn sang hợp âm sau, đi **liền
+      bậc** không nhảy quãng, nốt kết không đổi qua các lượt. Đó là đường chắc
+      chắn hơn nhưng cũng đều đặn hơn — nghe cả bài thì lộ ra là máy.
+
+      Test nào canh mấy đảm bảo ấy nay phải **tự khai `lickyFills: false`**, vì
+      chúng đang kiểm đường guide-tone chứ không kiểm mặc định.
+
+      Công tắc này trước nay **chết**: `ReharmHome` truyền vào nhưng không dòng
+      nào đọc. Đây là chỗ nối nó vào, và nay nó bật sẵn.
+    */
+    if (lickyFills) {
+      result.push(
+      ...placeLick({
+        chord: chords[index],
+        next,
+        startBeat: start,
+        beats: Math.min(fillBeats, beatsOf(chords[index], beatsPerChord) / 2),
+        take: mainIndex + take,
+        mode: lickyMode,
+        kind: 'fill',
+        key,
+          ...(fillMaxNotes !== undefined ? { maxNotes: fillMaxNotes } : {}),
+        }),
+      )
+      continue
     }
 
     /*
@@ -792,6 +890,48 @@ export function generateFillLine(
         durationBeats: last ? length : length * 0.9,
         isGrace: false,
       })
+    })
+  }
+
+  /*
+    Ô nhịp có **vòng hai-năm lướt** thì dặm hai cú hợp âm, **thay cho** câu chạy
+    bass.
+
+    `fillPositions` bỏ qua những ô này: hợp âm bị chia ngắn nên nửa sau không
+    còn trống cho câu fill. Nhưng bỏ trống hẳn cũng phí — chỗ ấy chính là chỗ
+    hợp âm lướt vừa vào, và đệm hát thì đánh dấu nó bằng hai cú dặm ở hai ô lưới
+    cuối chứ không phải bằng một câu chạy.
+
+    Lượt riêng, không đụng `fillPositions`: hàm đó có lý lẽ riêng và từng sửa
+    một lỗi về ô cuối đoạn — chen thêm điều kiện vào là mời lỗi ấy quay lại.
+
+    Chỉ chạy cho điệu đã khai `fillBassChance`, tức nhịp mẫu số 8. Điệu 4/4
+    không đổi một nốt.
+  */
+  if (fillBassChance > 0) {
+    let at = 0
+    chords.forEach((chord) => {
+      const span = beatsOf(chord, beatsPerChord)
+      const chordEnd = at + span
+      at = chordEnd
+      // Chỉ ô bị chia ngắn — đó là dấu của hợp âm lướt.
+      if (span >= beatsPerChord - 0.001) return
+      const window = Math.min(fillBeats, span)
+      const stab = window / 2
+      // Ba nốt đặc trưng, đặt quanh giữa tầm giai điệu cho hai tay khỏi đụng.
+      const centre = ((MELODY_LOW + MELODY_HIGH) / 2) as MidiNote
+      const tones = targetPitchClasses(chord, 3).map((pc) => nearestNote(pc, centre))
+      for (const step of [0, 1]) {
+        for (const note of tones) {
+          result.push({
+            note,
+            startBeat: chordEnd - window + step * stab,
+            durationBeats: stab * 0.9,
+            isGrace: false,
+            hand: 'right',
+          })
+        }
+      }
     })
   }
 

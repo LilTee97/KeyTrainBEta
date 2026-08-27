@@ -15,6 +15,7 @@ const C_MAJOR = { tonic: 0 as const, scale: 'major' as const }
 
 const fill = (take: number) =>
   generateFillLine(parseChordInput(CHORDS).chords, {
+    lickyFills: false,
     beatsPerChord: 4,
     density: 'dense',
     key: C_MAJOR,
@@ -61,6 +62,7 @@ describe('biến tấu câu fill theo lượt', () => {
     // Chọn tay thì phải thắng phần tự biến tấu
     const up = (take: number) =>
       generateFillLine(parseChordInput(CHORDS).chords, {
+        lickyFills: false,
         beatsPerChord: 4,
         density: 'dense',
         direction: 'below',

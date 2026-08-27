@@ -426,7 +426,7 @@
     "variant": 3,
     "timeSignature": "6/8",
     "beatsPerMeasure": 6,
-    "bpm": 75,
+    "bpm": 101,
     "feel": "swing",
     "releaseRatio": 1.0,
     "verified": true,
@@ -438,7 +438,7 @@
       "left": [
         {
           "beat": 0,
-          "durationBeats": 3,
+          "durationBeats": 2.0,
           "velocityScale": 1,
           "voice": "bottom",
           "tones": [
@@ -449,9 +449,9 @@
           ]
         },
         {
-          "beat": 3,
-          "durationBeats": 3,
-          "velocityScale": 0.85,
+          "beat": 2,
+          "durationBeats": 0.9,
+          "velocityScale": 0.7,
           "voice": "bottom",
           "tones": [
             {
@@ -463,19 +463,22 @@
       ],
       "right": [
         {
-          "beat": 2.1,
-          "durationBeats": 0.8,
-          "velocityScale": 0.7,
+          "beat": 2.9,
+          "durationBeats": 3.1,
+          "velocityScale": 0.85,
           "voice": "chord"
         },
         {
           "beat": 5,
-          "durationBeats": 0.8,
+          "durationBeats": 1,
           "velocityScale": 0.45,
           "voice": "chord"
         }
       ]
     },
-    "note": "Rà bằng tai theo ingest/phieu-ra-slow-rock-duc-thinh.md bên PianoBrain; item gốc acc-slow-rock-duc-thinh-mau-3. Bốn cú gõ: phách 1, 3, 4, 6. Bass trái legato 3 móc đơn mỗi nốt nên bè trầm liền mạch cả ô nhịp. Hợp âm phách 3 KÉO LÊ chừng 1/8 móc đơn (beat 2.1, không phải 2.0) — đó chính là cái giật cục của mẫu, nó đến từ tương phản 2.1 với 0.9 chứ không từ một cú đẩy sớm. Phách 6 lướt nhẹ, dẫn sang ô sau; trong video khoảng trên 3/4 số ô mới có, ở đây chép cố định. LƯU Ý: bậc 5 tay trái phải nằm TRÊN nốt gốc, nhưng degreeTone hiện chọn quãng tám gần nhất nên chơi ra Mi trầm hơn La — sai hướng, chờ sửa."
+    "note": "Rà bằng tai theo ingest/phieu-ra-slow-rock-duc-thinh.md bên PianoBrain; item gốc acc-slow-rock-duc-thinh-mau-3. Bốn cú gõ: phách 1, 3, 4, 6. Bass trái legato 3 móc đơn mỗi nốt nên bè trầm liền mạch cả ô nhịp. Hợp âm phách 3 KÉO LÊ chừng 1/8 móc đơn (beat 2.1, không phải 2.0) — đó chính là cái giật cục của mẫu, nó đến từ tương phản 2.1 với 0.9 chứ không từ một cú đẩy sớm. Phách 6 lướt nhẹ, dẫn sang ô sau; trong video khoảng trên 3/4 số ô mới có, ở đây chép cố định. LƯU Ý: bậc 5 tay trái phải nằm TRÊN nốt gốc, nhưng degreeTone hiện chọn quãng tám gần nhất nên chơi ra Mi trầm hơn La — sai hướng, chờ sửa.",
+    "gridUnit": 0.5,
+    "fillBeats": 1.0,
+    "fillMaxNotes": 2
   }
 ]

@@ -80,6 +80,55 @@ export interface StylePattern {
   bpm: number
   feel: Feel
   /**
+   * Một ô lưới của mẫu đáng **mấy nốt đen**. Bỏ trống là 1.
+   *
+   * Đây là cần gạt tách **tốc độ mẫu đệm** khỏi **tốc độ mọi thứ khác**. Kéo BPM
+   * thì câu fill, câu solo, câu lick nhanh lên theo — nhiều khi không muốn vậy.
+   * `gridUnit` chỉ co ô nhịp của mẫu; fill và solo dựng ở `fillSoloGenerator` và
+   * `phraseSection`, tính bằng nốt đen, nên đứng yên.
+   *
+   * Nhịp mẫu số 8 về lý thuyết là 0.5 (một ô lưới = móc đơn). Nhưng nó là số
+   * thực, chỉnh được tự do — đó mới là chỗ dùng được: dò cho khớp video mà không
+   * phải đụng tới BPM.
+   *
+   * Vì sao là tuỳ chọn chứ không suy từ `timeSignature`: mấy điệu 6/8 có sẵn
+   * (Flamenco, Slow Rock 6/8 của thầy Hải) vốn soạn theo quy ước nốt đen và BPM
+   * của chúng đã chọn để bù. Suy tự động là phá cả ba.
+   */
+  gridUnit?: number
+  /**
+   * Câu lót chiếm mấy **nốt đen** cuối mỗi hợp âm. Bỏ trống thì
+   * `generateFillLine` tự chọn `min(1.5, beatsPerChord / 2)`.
+   *
+   * Mặc định ấy hợp với 4/4. Với nhịp kép nó ăn quá rộng: ô nhịp 6/8 dài 3 nốt
+   * đen thì fill chiếm 1.5 — tức **ba ô lưới cuối**, bắt đầu ngay từ phách 4.
+   * Slow rock thì câu lót thuộc về **phách 6**, một ô lưới thôi, để nó là câu
+   * dẫn qua vạch nhịp chứ không phải nửa ô nhịp.
+   *
+   * Điệu tự khai con số của nó, không suy hộ điệu khác — Flamenco và Slow Rock
+   * 6/8 của thầy Hải không khai nên giữ nguyên hành vi cũ.
+   */
+  fillBeats?: number
+  /**
+   * Câu lót nhiều nhất mấy nốt. Bỏ trống thì `placeLick` tự chọn 3-6.
+   *
+   * Nhịp kép chia nhỏ dày, nên nhồi 5-6 nốt vào một ô lưới là câu chạy nghe gấp
+   * gáp và tranh chỗ với giọng hát, thay vì dẫn êm vào ô nhịp sau.
+   */
+  fillMaxNotes?: number
+  /**
+   * Tỉ lệ câu lót chạy ở **bè trầm** thay vì bè giai điệu, 0 tới 1.
+   *
+   * Bỏ trống thì suy từ nhịp: **0.8 cho nhịp mẫu số 8**, 0 cho còn lại. Slow
+   * rock và các điệu 6/8 khác đều thế: nửa sau ô nhịp tay phải còn giữ hợp âm
+   * ngân, bè trầm mới là bè còn chỗ trống — nên câu lót thuộc về bè trầm.
+   *
+   * Là tỉ lệ chứ không phải công tắc, vì đệm hát mà câu lót nào cũng y một kiểu
+   * thì thành máy. Hai phần mười còn lại vẫn ra câu lót giai điệu, đủ để tai
+   * không đoán trước được. Điệu nào muốn chắc chắn thì tự khai 1 hoặc 0.
+   */
+  fillBassChance?: number
+  /**
    * Phần trường độ thật sự kêu. Bỏ trống thì dùng mặc định 0.92.
    *
    * Trên 1 là **chồng tiếng**, cố ý: giữ phím cũ quá nốt mới một chút, đúng cách

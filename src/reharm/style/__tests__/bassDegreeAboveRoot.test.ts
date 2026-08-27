@@ -29,6 +29,7 @@ function twoBassNotes(toneIndex: number): StylePattern {
     bpm: 75,
     feel: 'swing',
     verified: true,
+    note: 'fixture cho test',
     cell: {
       lengthBeats: 6,
       left: [

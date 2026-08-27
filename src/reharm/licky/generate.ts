@@ -155,6 +155,38 @@ function land(
 /**
  * Đặt câu Licky: hình nốt từ sổ, cao độ bám hợp âm đang vang, đủ nốt theo phách.
  */
+/**
+ * Đường bè trầm từ nốt gốc hợp âm này tới nốt gốc hợp âm kế, chia đều `count` nốt.
+ *
+ * Ưu tiên **bò lên**: tìm chỗ đứng của nốt đích ở phía trên chỗ xuất phát. Không
+ * còn chỗ nào trên thang thì mới lùi xuống chỗ gần nhất bên dưới.
+ */
+function bassWalk(
+  ladder: readonly MidiNote[],
+  fromPc: number,
+  toPc: number,
+  count: number,
+): MidiNote[] {
+  const at = (pc: number, from: number, step: number) => {
+    for (let i = from; i >= 0 && i < ladder.length; i += step) {
+      if (ladder[i]! % 12 === pc) return i
+    }
+    return -1
+  }
+  const start = at(fromPc, 0, 1)
+  if (start < 0) return []
+  let end = at(toPc, start + 1, 1)
+  if (end < 0) end = at(toPc, start - 1, -1)
+  if (end < 0) return []
+
+  const out: MidiNote[] = []
+  for (let k = 0; k < count; k += 1) {
+    const t = count === 1 ? 0 : k / (count - 1)
+    out.push(ladder[Math.round(start + (end - start) * t)]!)
+  }
+  return out
+}
+
 export function placeLick(options: PlaceOptions): PlacedNote[] {
   const {
     chord,
@@ -165,10 +197,17 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
     mode = 'clone',
     kind,
     key = null,
+    maxNotes,
+    register,
+    bassWalk: walk,
   } = options
   if (beats <= 0) return []
 
-  const count = noteCount(kind, beats)
+  const count = maxNotes
+    ? Math.max(1, Math.min(maxNotes, noteCount(kind, beats)))
+    : noteCount(kind, beats)
+  const low = register?.low ?? LOW
+  const high = register?.high ?? HIGH
   let intervals = shape(
     pick(kind, mode === 'create' ? take + 19 : take),
     count,
@@ -179,7 +218,7 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
   }
 
   const material = [...new Set(inKeyMaterial(chord, key))]
-  const ladder = ladderOf(material, LOW, HIGH)
+  const ladder = ladderOf(material, low, high)
   const root = (ANCHOR + normalizePitchClass(chord.root)) as MidiNote
   const startAt =
     ladder[
@@ -190,8 +229,26 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
   if (scramble(take + 5) % 2 === 1) {
     intervals = intervals.map((interval) => -interval)
   }
-  const pitches = paint(intervals, ladder, startAt)
-  if (pitches.length > 0) {
+  /*
+    Đường bass có **thang riêng**: chất liệu hợp âm đang chơi **cộng nốt gốc hợp
+    âm kế**. Thang chung dựng từ mỗi hợp âm đang chơi, nên nốt đích thường không
+    nằm trong đó — La sang Rê thì Rê vắng mặt, và đường dẫn không có chỗ để kết.
+  */
+  const walked = walk && next
+    ? bassWalk(
+        ladderOf(
+          [...new Set([...material, normalizePitchClass(next.root)])],
+          low,
+          high,
+        ),
+        normalizePitchClass(chord.root),
+        normalizePitchClass(next.root),
+        count,
+      )
+    : []
+  const pitches = walked.length > 0 ? walked : paint(intervals, ladder, startAt)
+  // Đường bè trầm đã kết đúng nốt gốc hợp âm sau rồi, không cho `land` đổi nữa.
+  if (walked.length === 0 && pitches.length > 0) {
     pitches[pitches.length - 1] = land(
       chord,
       next,
@@ -200,7 +257,16 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
     )
   }
 
-  const grid = gridOf(kind)
+  /*
+    Khai `maxNotes` thì **giãn đều số nốt ấy trên cả khung**, không dùng lưới cố
+    định nữa.
+
+    `FILL_GRID` cố định 0.25 nốt đen là lưới của câu lót giai điệu, nơi cái cần
+    là nốt chạy dày. Câu chạy bass thì ngược: hai nốt bass, mỗi nốt một ô lưới,
+    rơi đúng hai phách cuối. Ép chúng vào lưới 0.25 là dồn cả hai vào nửa ô đầu
+    rồi bỏ trống nửa sau.
+  */
+  const grid = maxNotes && pitches.length > 0 ? beats / pitches.length : gridOf(kind)
   return pitches.map((note, index) => {
     const at = startBeat + index * grid
     const last = index === pitches.length - 1

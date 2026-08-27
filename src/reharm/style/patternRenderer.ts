@@ -627,8 +627,9 @@ export function renderPattern(
   pattern: StylePattern,
   options: RenderOptions = {},
 ): TimelineEvent[] {
+  const grid = pattern.gridUnit ?? 1
   const {
-    beatsPerChord = pattern.beatsPerMeasure,
+    beatsPerChord = pattern.beatsPerMeasure * grid,
     beatsEach,
     releaseRatio = pattern.releaseRatio ?? 0.92,
     barsWithoutComping,
@@ -638,6 +639,33 @@ export function renderPattern(
   } = options
 
   if (voicings.length === 0) return []
+
+  /*
+    Quy ô nhịp của mẫu về **nốt đen** trước khi dựng. Mọi thứ hạ nguồn — mốc hợp
+    âm, cắt độ ngân, xếp lịch — đều tính bằng nốt đen.
+
+    Co ở đây, không co ở `cellAt`: `cellAt` trả về ô nhịp của điệu khác khi đổi
+    đoạn, mà điệu ấy có `gridUnit` riêng. Chưa gặp trường hợp đó nên chưa đi trước.
+  */
+  const scaled: StylePattern =
+    grid === 1 || !pattern.cell
+      ? pattern
+      : {
+          ...pattern,
+          cell: {
+            lengthBeats: pattern.cell.lengthBeats * grid,
+            left: pattern.cell.left.map((h) => ({
+              ...h,
+              beat: h.beat * grid,
+              durationBeats: h.durationBeats * grid,
+            })),
+            right: pattern.cell.right.map((h) => ({
+              ...h,
+              beat: h.beat * grid,
+              durationBeats: h.durationBeats * grid,
+            })),
+          },
+        }
 
   // Thời lượng từng hợp âm, và phách bắt đầu tính dồn từ đó.
   const durations = voicings.map(
@@ -650,10 +678,10 @@ export function renderPattern(
     cursor += beats
   }
 
-  const events = pattern.cell || cellAt
+  const events = scaled.cell || cellAt
     ? renderWithCell(
         voicings,
-        pattern,
+        scaled,
         durations,
         starts,
         releaseRatio,

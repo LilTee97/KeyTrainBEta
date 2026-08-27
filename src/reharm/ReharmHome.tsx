@@ -475,7 +475,7 @@ export function ReharmHome() {
   const [mutedFills, setMutedFills] = useState<ReadonlySet<number>>(new Set())
   const [extraFills, setExtraFills] = useState<ReadonlySet<number>>(new Set())
   const [extraRuns, setExtraRuns] = useState<ReadonlySet<number>>(new Set())
-  const [lickyFills, setLickyFills] = useState(false)
+  const [lickyFills, setLickyFills] = useState(true)
   const [lickyRuns, setLickyRuns] = useState(false)
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
   const [phraseSpin, setPhraseSpin] = useState(0)
@@ -1630,6 +1630,19 @@ export function ReharmHome() {
           breaths,
           sectionEnds: transitions,
           beatsPerChord: chordBeats,
+          // Điệu nào khai chỗ đứng của câu lót thì theo nó; không khai thì để
+          // `generateFillLine` tự chọn như cũ.
+          ...(style.fillBeats !== undefined ? { fillBeats: style.fillBeats } : {}),
+          ...(style.fillMaxNotes !== undefined ? { fillMaxNotes: style.fillMaxNotes } : {}),
+          /*
+            Nhịp mẫu số 8 — slow rock và họ hàng — thì câu lót thuộc về bè trầm.
+            Suy từ nhịp chứ không bắt điệu tự khai, vì đây là luật của cả họ nhịp
+            kép, không phải sở thích của một điệu. Điệu nào muốn khác thì khai
+            `fillBassChance` để đè lên.
+          */
+          fillBassChance:
+            style.fillBassChance ??
+            (style.timeSignature.endsWith('/8') ? 0.8 : 0),
           direction: soloDirection,
           density: fillDensity,
           key: reharm.key,
@@ -1905,7 +1918,7 @@ export function ReharmHome() {
     setExtraRuns(new Set(saved.extraRuns ?? []))
     setColorEdits(saved.colorEdits ?? {})
     setSlashEdits(saved.slashEdits ?? {})
-    setLickyFills(saved.lickyFills ?? false)
+    setLickyFills(saved.lickyFills ?? true)
     setLickyRuns(saved.lickyRuns ?? false)
     setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)

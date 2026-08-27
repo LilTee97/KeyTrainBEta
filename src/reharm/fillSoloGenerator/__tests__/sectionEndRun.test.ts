@@ -29,6 +29,9 @@ const mark = (index: number, octaves = 2, restBeats = 2) =>
 
 const fill = (sectionEnds?: ReadonlyMap<number, TransitionRun>) =>
   generateFillLine(chords(), {
+    // Kiểm câu fill giữa đoạn phải ngắn và kết ở nốt dẫn — đó là đường
+    // guide-tone, không phải mặc định Licky.
+    lickyFills: false,
     beatsPerChord: 4,
     density: 'medium',
     key: C_MAJOR,
