@@ -97,7 +97,7 @@ import {
 } from './reharmEngine/keyDetection'
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
-import { pulseForStyle } from './fillSoloGenerator/soloFeel'
+import { interludeDensity, pulseForStyle } from './fillSoloGenerator/soloFeel'
 
 /** Mục "mỗi hợp âm một gam" trong khung chọn gam đoạn không lời. */
 const MULTI_SCALE = 'multi'
@@ -1462,6 +1462,16 @@ export function ReharmHome() {
       const head = picked.slice(0, -1)
       const headChords = windowChords.slice(0, -1)
 
+      /*
+        Đoạn giang tấu dài bao nhiêu Ô NHỊP — con số quyết định câu solo dày hay
+        thưa. Xem `interludeDensity`.
+
+        KHÔNG nhân với số lượt lặp: chạy lại đúng bốn ô ấy lần thứ hai vẫn là
+        cùng một cầu nối nghe hai lần, không thành một bản độc tấu.
+      */
+      const interludeBars =
+        (last.start + last.beats - first.start) / Math.max(1, phrasePulseBar)
+
       return {
         startBeat: first.start,
         lengthBeats: last.start + last.beats - first.start,
@@ -1508,7 +1518,13 @@ export function ReharmHome() {
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
               beatsPerChord: chordBeats,
               direction: soloDirection,
-              density: 'medium',
+              /*
+                Độ dài đoạn chọn mật độ — xem `interludeDensity`. LƯU Ý: ở nhánh
+                giang tấu, `density` hiện chưa có tác dụng (đo ra `sparse` và
+                `medium` cho từng nốt trùng khít). Vẫn truyền vào để ngày lever
+                ấy được sửa thì luật có hiệu lực ngay, không phải nhớ nối lại.
+              */
+              density: interludeDensity(interludeBars),
               graceDensity,
               key: reharm.key,
               noteSource: phraseNoteSource,

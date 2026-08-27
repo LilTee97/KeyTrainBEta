@@ -247,3 +247,45 @@ export function snapToPulse<T extends TimedNote>(
 
   return out.sort((a, b) => a.startBeat - b.startBeat)
 }
+
+/**
+ * Đoạn không lời dài bao nhiêu thì câu solo dày bấy nhiêu.
+ *
+ * Đo trên bảy bản ký âm của Cà Pháo (`tools/sheet/profile.py` bên PianoBrain,
+ * item `ca-phao-cau-solo-tren-vong-hop-am`). Sáu đoạn giang tấu, tách hoàn hảo
+ * theo ĐỘ DÀI — và thể loại không giải thích được gì, cả bossa lẫn ballad đều
+ * nằm ở cả hai bên:
+ *
+ * | ô nhịp | so với đoạn hát |
+ * |---|---|
+ * | 9, 10, 10 | thưa hơn 3-6% |
+ * | 11 | dày hơn 6% |
+ * | 18 | dày hơn 65% |
+ * | 20 | dày hơn 31% |
+ *
+ * Từ 18 ô trở lên anh ấy viết một bản độc tấu; từ 11 ô trở xuống anh ấy coi đó
+ * là cầu nối và đi qua bằng chính kết cấu đoạn hát. Ranh giới nằm đâu đó giữa
+ * 11 và 18 ô — chưa có điểm dữ liệu nào ở giữa, nên `LONG_INTERLUDE_BARS` là
+ * một con số CHỌN trong khoảng ấy, không phải một con số đo được.
+ *
+ * ## Vì sao không phải công tắc bật / tắt
+ *
+ * Bản đầu của luật này định làm: đoạn ngắn thì **không sinh câu solo**, giữ mẫu
+ * đệm chạy tiếp. Sai, vì hai bên không so được trực tiếp.
+ *
+ * Ở bản ký âm của Cà Pháo, tay phải LUÔN chơi giai điệu — đoạn hát cũng là tay
+ * phải hát. "Giữ nguyên kết cấu" ở đó nghĩa là vẫn có giai điệu, chỉ không bận
+ * rộn thêm. Ở KeyTrain thì tay phải đang quạt hợp âm, vì người hát mới là giai
+ * điệu; "giữ nguyên kết cấu" thành ra **không có giai điệu nào cả**, và đoạn
+ * giang tấu hoá thành một khoảng trống. Không phải thứ số liệu nói.
+ *
+ * Nên chỗ dịch đúng là **mật độ**: đoạn ngắn được một câu thưa, đoạn dài được
+ * một câu dày. Tỉ lệ nốt giữa `sparse` và `medium` là 0,8 so với 1,4 mỗi phách
+ * — chênh 75%, nằm đúng khoảng chênh lệch đo được ở người thật (31-65%).
+ */
+export const LONG_INTERLUDE_BARS = 14
+
+/** Câu solo đoạn giang tấu nên dày cỡ nào, theo độ dài đoạn tính bằng ô nhịp. */
+export function interludeDensity(bars: number): 'sparse' | 'medium' {
+  return bars >= LONG_INTERLUDE_BARS ? 'medium' : 'sparse'
+}
