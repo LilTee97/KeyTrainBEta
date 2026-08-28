@@ -656,10 +656,19 @@ export function ReharmHome() {
    * rock và pop vào hẳn khoảng hình câu; bolero còn lệch vì có cặp cọc cách
    * nhau nửa phách.
    *
-   * Vẫn để tắt được: số liệu nói bộ nào gần người thật hơn, không nói bộ nào
-   * hay hơn. Chỗ ấy là tai người nghe.
+   * MẶC ĐỊNH TẮT. Người dùng nghe thử và bác: "các đoạn solo giờ nghe loạn quá."
+   *
+   * Số liệu nói nó gần người thật hơn ở ba chỉ số bề mặt, nhưng ba chỉ số ấy đo
+   * CHẤT LIỆU chứ không đo CẤU TRÚC. Đo tiếp thì thấy chỗ hỏng: câu của bộ này
+   * chỉ có **3 cỡ nhịp khác nhau**, trong khi người thật dùng 7 tới 22 và sổ mẫu
+   * Licky dùng 6. Mọi quyết định trong bộ này là về cao độ; nhịp thì luôn chia
+   * đều khoảng trống giữa hai cọc. Một dòng nốt đều tăm tắp thì tai không tách
+   * được câu, và đó là thứ nghe ra thành "loạn".
+   *
+   * Giữ lại để so, không bỏ: phần đóng cọc theo hoà âm và nhịp của điệu vẫn
+   * đúng. Thứ thiếu là nhịp của chính câu nhạc.
    */
-  const [lineSolo, setLineSolo] = useState(true)
+  const [lineSolo, setLineSolo] = useState(false)
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -2264,7 +2273,7 @@ export function ReharmHome() {
     setPhraseScaleId(saved.phraseScaleId ?? null)
     setPlainPhrase(saved.plainPhrase !== false)
     setInterludeChords(saved.interludeChords ?? DEFAULT_INTERLUDE_CHORDS)
-    setLineSolo(saved.lineSolo !== false)
+    setLineSolo(saved.lineSolo === true)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
