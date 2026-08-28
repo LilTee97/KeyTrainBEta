@@ -173,3 +173,70 @@ describe('khoảng còn hở, chưa đóng được', () => {
     expect(off.length, 'nếu chỗ này hết lệch thì bỏ test và cập nhật ghi chú').toBeGreaterThan(0)
   })
 })
+
+/*
+  BA CHỈ SỐ NHỊP, thêm sau khi một bản dựng hỏng lọt lưới.
+
+  Bộ sinh cọc-và-nối đạt 16 trên 24 chỉ số cũ rồi bị tai người dùng bác thẳng
+  là "loạn". Sáu chỉ số cũ đều đo CHẤT LIỆU — cỡ bước, tỉ lệ nốt hợp âm, độ dài
+  hơi — không cái nào đo NHỊP. Đo lại mới thấy:
+
+  |               | cỡ nhịp | móc đơn | im lặng |
+  |---------------|---------|---------|---------|
+  | người thật    | 7-22    | 25-74%  | có      |
+  | sổ mẫu Licky  | 6-10    | 0-38%   | 6-8%    |
+  | cọc-và-nối    | 3-4     | 14-39%  | **0%**  |
+
+  Không một chỗ nghỉ nào trong cả đoạn: chỗ "thở" của bộ ấy chỉ bỏ nốt nối, còn
+  cọc vẫn gõ đều nên khe không bao giờ đủ rộng.
+*/
+describe('thước phải đo được cả nhịp', () => {
+  const line = (gaps: number[]) => {
+    let at = 0
+    const notes = [{ startBeat: 0, note: 60 }]
+    for (const gap of gaps) {
+      at += gap
+      notes.push({ startBeat: at, note: 60 + notes.length })
+    }
+    return profileLine({ notes, chords: parseChordInput('C').chords, beatsPerChord: 64 })
+  }
+
+  it('đếm đúng số cỡ nhịp khác nhau', () => {
+    expect(line([0.5, 0.5, 0.5]).rhythmSizes).toBe(1)
+    expect(line([0.5, 1, 0.25, 0.5]).rhythmSizes).toBe(3)
+  })
+
+  it('đo đúng tỉ lệ móc đơn', () => {
+    expect(line([0.5, 0.5, 1, 1]).eighthShare).toBeCloseTo(0.5, 5)
+  })
+
+  it('khe rộng tính là im lặng', () => {
+    expect(line([0.5, 0.5, 0.5]).silence).toBeCloseTo(0, 5)
+    expect(line([0.5, 4, 0.5]).silence).toBeGreaterThan(0.4)
+  })
+
+  /*
+    Chỉ số lặp hình phải nhìn CẢ NHỊP. Bản trước chỉ đếm trùng cao độ nên nó nói
+    dối: bộ cọc-và-nối đo ra 60% — trong khoảng người thật — mà con số ấy bị
+    thổi phồng vì chỉ có ba cỡ nhịp. Ba cỡ nhịp thì trùng hình là đương nhiên,
+    và đó là ĐỀU ĐẶN chứ không phải motif.
+  */
+  it('lặp hình đếm cả nhịp, không chỉ cao độ', () => {
+    const sameNotes = [60, 62, 64, 66, 60, 62, 64, 66]
+    const even = profileLine({
+      notes: sameNotes.map((note, at) => ({ startBeat: at * 0.5, note })),
+      chords: parseChordInput('C').chords,
+      beatsPerChord: 64,
+    })
+    const varied = profileLine({
+      notes: sameNotes.map((note, at) => ({
+        startBeat: at < 4 ? at * 0.5 : 2 + (at - 4) * 0.25,
+        note,
+      })),
+      chords: parseChordInput('C').chords,
+      beatsPerChord: 64,
+    })
+    // Cùng dãy cao độ; bản nhịp đều lặp nhiều hơn hẳn bản nhịp đổi.
+    expect(even.motifReuse).toBeGreaterThan(varied.motifReuse)
+  })
+})

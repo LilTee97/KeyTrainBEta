@@ -35,6 +35,28 @@ export interface LineProfile {
   chordToneOnPulse: number
   /** Tỉ lệ nốt hợp âm trong những nốt rơi NGOÀI mạch. */
   chordToneOffPulse: number
+  /**
+   * Bao nhiêu **cỡ nhịp khác nhau** xuất hiện trong câu.
+   *
+   * Chỉ số này thêm sau, vì thiếu nó mà cả một bản dựng hỏng lọt lưới: bộ sinh
+   * cọc-và-nối đạt 16 trên 24 chỉ số cũ rồi bị tai bác thẳng là "loạn". Đo lại
+   * mới thấy nó chỉ có BA cỡ nhịp, còn người thật dùng bảy tới hai mươi hai.
+   * Thước không đo nhịp thì nhịp tự do hỏng.
+   */
+  rhythmSizes: number
+  /** Tỉ lệ nốt là móc đơn — cỡ nhịp trụ cột của người thật, quanh 53%. */
+  eighthShare: number
+  /** Tỉ lệ thời gian KHÔNG có nốt nào vào. */
+  silence: number
+  /**
+   * Tỉ lệ chỗ dùng lại một hình đã xuất hiện, tính trên **cao độ VÀ nhịp**.
+   *
+   * Bản trước chỉ đếm trùng hình mà không nhìn nhịp, nên nó **nói dối**: bộ sinh
+   * cọc-và-nối đo ra 60% — nằm trong khoảng người thật — nhưng con số ấy bị
+   * thổi phồng chính vì nhịp đơn điệu. Ba cỡ nhịp thì trùng hình là đương nhiên,
+   * và đó là sự ĐỀU ĐẶN chứ không phải motif.
+   */
+  motifReuse: number
 }
 
 export interface ProfileInput {
@@ -52,6 +74,8 @@ const BREATH = 0.5
 const LEAP = 12
 /** Câu ngắn hơn ngần này thì không đủ để nói nó có hình gì. */
 const MIN_RUN = 4
+/** Khe từ ngần này trở lên là chỗ NGHỈ, không tính vào thời gian đang kêu. */
+const BREATH_GAP = 1.5
 
 /** Cắt dòng nốt thành từng hơi. */
 function breaths(
@@ -135,7 +159,40 @@ export function profileLine(input: ProfileInput): LineProfile {
     }
   }
 
+  /* Nhịp: khoảng cách giữa hai nốt liền nhau, làm tròn về lưới quen thuộc. */
+  const sorted = [...notes].sort((a, b) => a.startBeat - b.startBeat)
+  const gaps: number[] = []
+  for (let at = 1; at < sorted.length; at += 1) {
+    const gap = sorted[at]!.startBeat - sorted[at - 1]!.startBeat
+    // Làm tròn về 1/12 nốt đen: đủ mịn cho cả chùm ba lẫn móc kép.
+    if (gap > 0 && gap <= 4) gaps.push(Math.round(gap * 12) / 12)
+  }
+  const eighths = gaps.filter((gap) => Math.abs(gap - 0.5) < 1e-6).length
+  const span = sorted.length > 1 ? sorted[sorted.length - 1]!.startBeat - sorted[0]!.startBeat : 0
+  const sounding = gaps.reduce((sum, gap) => sum + Math.min(gap, BREATH_GAP), 0)
+
+  /* Hình lặp: đếm theo CẢ cao độ lẫn nhịp — xem chú thích ở `motifReuse`. */
+  const shapes = new Map<string, number>()
+  for (let at = 0; at + 3 < sorted.length; at += 1) {
+    const key = [0, 1, 2]
+      .map((step) => {
+        const from = sorted[at + step]!
+        const to = sorted[at + step + 1]!
+        return `${to.note - from.note}@${(to.startBeat - from.startBeat).toFixed(2)}`
+      })
+      .join('|')
+    shapes.set(key, (shapes.get(key) ?? 0) + 1)
+  }
+  const shapeTotal = [...shapes.values()].reduce((sum, count) => sum + count, 0) || 1
+  const reused = [...shapes.values()]
+    .filter((count) => count > 1)
+    .reduce((sum, count) => sum + count, 0)
+
   return {
+    rhythmSizes: new Set(gaps).size,
+    eighthShare: gaps.length === 0 ? 0 : eighths / gaps.length,
+    silence: span <= 0 ? 0 : Math.max(0, 1 - sounding / span),
+    motifReuse: reused / shapeTotal,
     runs: kinds.length,
     scale: kinds.filter((k) => k === 'scale').length / total,
     arpeggio: kinds.filter((k) => k === 'arpeggio').length / total,
@@ -160,6 +217,15 @@ export function profileLine(input: ProfileInput): LineProfile {
  * với hay; nó nghĩa là giống một người đệm mà người dùng chọn để học.
  */
 export const CA_PHAO_RANGE = {
+  /**
+   * Cỡ nhịp khác nhau: đo được 7 tới 22 tuỳ bài.
+   *
+   * Đây là chỉ số bắt được lỗi mà 24 chỉ số cũ để lọt. Lấy mép dưới làm sàn —
+   * dưới bảy cỡ thì câu nghe ra một dòng đều tăm tắp, không tách được câu.
+   */
+  rhythmSizes: [7, 22],
+  /** Móc đơn là cỡ trụ cột: 53% trên cả bảy bài, từng bài 25-74%. */
+  eighthShare: [0.25, 0.74],
   scale: [0.06, 0.22],
   arpeggio: [0.02, 0.11],
   mixed: [0.68, 0.82],
@@ -176,8 +242,9 @@ export const within = (value: number, range: readonly [number, number]) =>
 export function describeProfile(profile: LineProfile): string {
   const pct = (x: number) => `${Math.round(x * 100)}%`
   return (
-    `${profile.runs} câu · gam ${pct(profile.scale)} · rải ${pct(profile.arpeggio)} · ` +
-    `trộn ${pct(profile.mixed)} · dài ${profile.medianRunLength} nốt · ` +
-    `nốt hợp âm ${pct(profile.chordToneOnPulse)} trên mạch / ${pct(profile.chordToneOffPulse)} ngoài`
+    `${profile.rhythmSizes} cỡ nhịp · móc đơn ${pct(profile.eighthShare)} · ` +
+    `lặng ${pct(profile.silence)} · lặp ${pct(profile.motifReuse)} · ` +
+    `gam ${pct(profile.scale)} · rải ${pct(profile.arpeggio)} · trộn ${pct(profile.mixed)} · ` +
+    `dài ${profile.medianRunLength} · hợp âm ${pct(profile.chordToneOnPulse)}/${pct(profile.chordToneOffPulse)}`
   )
 }
