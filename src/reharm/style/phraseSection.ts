@@ -3,7 +3,8 @@ import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
-import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
+import { holdUntilStruckAgain } from './patternRenderer'
+import { soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose } from './phraseCue'
 
@@ -86,11 +87,20 @@ export function buildPhraseSection(
     Dạo đầu thì vẫn quạt cả hai tay: ở đó câu ngẫu hứng đi cùng phần đệm để dựng
     khí thế, chứ không phải để tiễn bài đi.
   */
-  const backing = renderPattern(
-    voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }),
-    style,
-    { beatsPerChord, beatsEach },
-  ).filter((event) => kind !== 'outro' || event.hand !== 'right')
+  /*
+    Tay trái gánh trọn mẫu đệm, tay phải chỉ còn giai điệu.
+
+    Trước đây đoạn dạo quạt cả hai tay rồi chồng câu ngẫu hứng lên trên — ba
+    tầng cùng lúc, mà tầng quạt tay phải giẫm đúng chỗ câu solo đang chạy. Và
+    tay trái thì chỉ chơi phần bass của một mẫu đệm hai tay: đo trên bolero ra
+    hai cú gõ mỗi ô, đi vỏn vẹn bảy nửa cung. Người dùng nghe ra là "solo khá
+    đơn điệu" trước khi tôi đo được.
+
+    Nay chia lại đúng như người thật chơi: tay phải giai điệu, tay trái mẫu đệm
+    đầy đủ trải hai quãng tám. Xem `soloLeftHand.ts` — nhịp vẫn lấy từ chính ô
+    nhịp của điệu đang chọn, nên luật "đoạn không lời chơi đúng điệu" còn nguyên.
+  */
+  const backing = soloLeftHand({ chords, beatsEach, style })
 
   const voiced = solo(chords)
   const roundBeats = chords.length * beatsPerChord

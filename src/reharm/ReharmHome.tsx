@@ -47,6 +47,7 @@ import {
 } from './transpose'
 import { SongImport } from './input/SongImport'
 import { ChordOverview } from './input/ChordOverview'
+import { soloLeftHand } from './style/soloLeftHand'
 import { expandToBeats } from './input/chromaMatch'
 import { listToBeatTable } from './input/importedTrack'
 import { SongTextInput } from './input/SongTextInput'
@@ -1512,32 +1513,22 @@ export function ReharmHome() {
           dùng bác thẳng: đoạn dạo đầu, kết bài và giang tấu bắt buộc chơi theo
           điệu đã chọn, áp dụng cho mọi điệu.
 
-          Đánh đổi đã biết: điệu nào tay trái thưa thì giang tấu cũng thưa theo,
-          không còn được câu rải bốn nốt đắp vào. Đó là cái giá của việc giữ
-          đúng điệu, và nó là lựa chọn của người đệm chứ không phải của app.
+          Nhưng CHIA VIỆC giữa hai tay thì đổi: tay phải bỏ hẳn phần quạt để
+          lên chạy giai điệu, và tay trái gánh trọn mẫu đệm thay nó — trải hai
+          quãng tám thay vì quanh quẩn một quãng năm. Nhịp vẫn lấy từ chính ô
+          nhịp của điệu đang chọn, nên luật ở trên còn nguyên; thứ đổi là AI
+          chơi phần nào, không phải chơi điệu gì. Xem `style/soloLeftHand.ts`.
         */
-        events: (() => {
-          const beatsEach = picked.map((span) => span.beats)
-          const backing = renderPattern(
-            voiceLeadTwoHands(windowChords, {
-              dropRootFromRightHand: dropRoot,
-            }),
-            style,
-            { beatsPerChord: chordBeats, beatsEach },
-          )
-          return backing
-        })(),
-        lastEvents: (() => {
-          const beatsEach = head.map((span) => span.beats)
-          const backing = renderPattern(
-            voiceLeadTwoHands(headChords, {
-              dropRootFromRightHand: dropRoot,
-            }),
-            style,
-            { beatsPerChord: chordBeats, beatsEach },
-          )
-          return backing
-        })(),
+        events: soloLeftHand({
+          chords: windowChords,
+          beatsEach: picked.map((span) => span.beats),
+          style,
+        }),
+        lastEvents: soloLeftHand({
+          chords: headChords,
+          beatsEach: head.map((span) => span.beats),
+          style,
+        }),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
           soloToTimeline(

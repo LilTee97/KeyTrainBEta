@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { buildPhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
+import { patternOnsets } from '../soloLeftHand'
 
 /*
   Dạo đầu, kết bài và giang tấu chơi **đúng điệu đang chọn** — mọi điệu.
@@ -30,22 +31,19 @@ const STYLES = [
 ] as const
 
 /**
- * Chỗ gõ tay trái mà chính ô nhịp của điệu khai, quy về **một ô nhịp**.
+ * Chỗ gõ tay trái mà điệu đòi ở ĐOẠN KHÔNG LỜI.
  *
- * Chia dư cho độ dài ô nhịp vì có điệu khai ô nhịp dài hơn một ô: bossa dài hai
- * ô (`lengthBeats` 8 trên nhịp 4/4), nên bảng bậc của nó liệt kê tới phách 7,5.
- * Không chia dư thì so một tập bốn chỗ với một tập tám chỗ, mà thật ra chúng là
- * cùng một tiết tấu lặp hai lượt.
+ * Không phải bảng bậc tay trái của ô nhịp: ở đoạn không lời, tay phải bỏ phần
+ * quạt để lên chạy giai điệu và **tay trái gánh trọn mẫu đệm** — cả phần tay
+ * phải để lại. Xem `soloLeftHand.ts`. Trước đây test này so với riêng bảng bậc
+ * tay trái, tức khoá đúng cái kết cấu mà người dùng vừa bảo là quá thưa: bolero
+ * hai cú gõ mỗi ô, đi vỏn vẹn bảy nửa cung.
+ *
+ * Thứ phải giữ vẫn nguyên: nhịp lấy từ CHÍNH điệu đang chọn, không mượn điệu
+ * khác. Đó là điều test này canh, và nó không đổi.
  */
 function cellLeftBeats(styleId: string): number[] {
-  const style = getStyle(styleId)!
-  const grid = style.gridUnit ?? 1
-  const bar = style.beatsPerMeasure * grid
-  return [
-    ...new Set(
-      style.cell!.left.map((hit) => Number(((hit.beat * grid) % bar).toFixed(3))),
-    ),
-  ].sort((a, b) => a - b)
+  return patternOnsets(getStyle(styleId)!)
 }
 
 function phraseLeftBeats(styleId: string, kind: 'intro' | 'outro'): number[] {
