@@ -67,13 +67,30 @@ describe('bảng ghép phiên khúc - điệp khúc', () => {
     }
   })
 
-  it('đoạn điệp khúc ra bản điệp khúc, đoạn khác ra bản chính', () => {
+  it('đoạn điệp khúc ra bản điệp khúc, phiên khúc ra bản chính', () => {
     for (const [verse, chorus] of Object.entries(CHORUS_PAIRS)) {
       expect(resolveStyleForSection(verse, 'chorus')).toBe(chorus)
       expect(resolveStyleForSection(verse, 'verse')).toBe(verse)
-      // Giang tấu là chỗ nghỉ giữa hai lần cao trào, không phải cao trào.
-      expect(resolveStyleForSection(verse, 'interlude')).toBe(verse)
     }
+  })
+
+  /*
+    Giang tấu MẶC ĐỊNH là chỗ nghỉ giữa hai lần cao trào, không phải cao trào.
+
+    Bolero trữ tình là ngoại lệ, và là ngoại lệ có khai báo: đặc tả của chính nó
+    gộp hai đoạn — "Chorus / Giang tấu: phách 1, 3 dậm octave bass; phách 2, 4
+    rải móc đơn liên tục, Forte". Ngoại lệ phải khai từng điệu một, không cho cả
+    bảng cùng đổi — ballad và slow rock của thầy Hải chưa ai bảo giang tấu phải
+    lên cao trào.
+  */
+  it('giang tấu giữ bản chính, trừ điệu có khai báo riêng', () => {
+    for (const verse of Object.keys(CHORUS_PAIRS)) {
+      if (verse === 'bolero-linh-nhi') continue
+      expect(resolveStyleForSection(verse, 'interlude'), verse).toBe(verse)
+    }
+    expect(resolveStyleForSection('bolero-linh-nhi', 'interlude')).toBe(
+      'bolero-linh-nhi-chorus',
+    )
   })
 
   it('bấm sẵn bản điệp khúc thì phiên khúc vẫn tự lùi về bản chính', () => {

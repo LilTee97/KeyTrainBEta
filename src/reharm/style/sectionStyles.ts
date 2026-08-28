@@ -19,7 +19,22 @@ import type { SectionKind } from './songStructure'
 export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'hai-pop-ballad': 'hai-pop-ballad-chorus',
   'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
+  'hai-slow-rock': 'hai-slow-rock-chorus',
+  'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
 }
+
+/**
+ * Điệu nào dùng bản CAO TRÀO cho cả **giang tấu**, không chỉ điệp khúc.
+ *
+ * Mặc định giang tấu tính như phiên khúc — nó là chỗ nghỉ giữa hai lần cao
+ * trào. Bảng này là chỗ nói ngược lại, và phải khai báo từng điệu một.
+ *
+ * Bolero trữ tình vào đây vì đặc tả của chính nó gộp hai đoạn: "Chorus / Giang
+ * tấu — phách 1, 3 dậm octave bass; phách 2, 4 rải móc đơn liên tục, Forte".
+ * Không cho cả bảng `CHORUS_PAIRS` cùng đổi: ballad và slow rock của thầy Hải
+ * chưa ai bảo giang tấu phải lên cao trào, và có test đang khoá đúng chỗ ấy.
+ */
+const INTERLUDE_AS_CHORUS: readonly string[] = ['bolero-linh-nhi']
 
 /** Bản điệp khúc trỏ ngược về bản phiên khúc, để rời điệp khúc thì quay lại. */
 const VERSE_OF: Readonly<Record<string, string>> = Object.fromEntries(
@@ -42,8 +57,9 @@ export function hasChorusVariant(styleId: string): boolean {
  * nào trên bảng chọn cũng ra kết quả như nhau — bấm "điệp khúc" rồi nghe cả bài
  * thì phiên khúc vẫn tự lùi về bản phiên khúc.
  *
- * Đoạn giang tấu tính như phiên khúc: nó là chỗ nghỉ giữa hai lần cao trào, chứ
- * không phải cao trào.
+ * Đoạn giang tấu MẶC ĐỊNH tính như phiên khúc: nó là chỗ nghỉ giữa hai lần cao
+ * trào, chứ không phải cao trào. Điệu nào muốn ngược lại thì khai báo trong
+ * `INTERLUDE_AS_CHORUS` — từng điệu một, không đổi cả bảng.
  */
 export function resolveStyleForSection(
   styleId: string,
@@ -51,7 +67,10 @@ export function resolveStyleForSection(
 ): string {
   const id = canonical(styleId)
   const verse = VERSE_OF[id] ?? id
-  if (section !== 'chorus') return verse
+  const wantsChorus =
+    section === 'chorus' ||
+    (section === 'interlude' && INTERLUDE_AS_CHORUS.includes(verse))
+  if (!wantsChorus) return verse
   return CHORUS_PAIRS[verse] ?? verse
 }
 
