@@ -47,7 +47,8 @@ import {
 } from './transpose'
 import { SongImport } from './input/SongImport'
 import { ChordOverview } from './input/ChordOverview'
-import { soloLeftHand } from './style/soloLeftHand'
+import { accentBeats, soloLeftHand } from './style/soloLeftHand'
+import { buildLine, lineToTimeline } from './fillSoloGenerator/lineBuilder'
 import { expandToBeats } from './input/chromaMatch'
 import { listToBeatTable } from './input/importedTrack'
 import { SongTextInput } from './input/SongTextInput'
@@ -80,6 +81,7 @@ import type {
 } from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
+  SOLO_RANGE,
   fillPositions,
   generateFillLine,
   generateSolo,
@@ -646,6 +648,18 @@ export function ReharmHome() {
   const [interludeChords, setInterludeChords] = useState<number>(
     DEFAULT_INTERLUDE_CHORDS,
   )
+  /**
+   * Dựng câu solo đoạn không lời bằng **cọc và nối** thay cho sổ mẫu Licky.
+   *
+   * Chấm bằng `styleProfile` trên corpus Cà Pháo, mười sáu lượt, bốn điệu: bộ
+   * mới ra 16 trên 24 chỉ số nằm trong khoảng người thật, sổ mẫu ra 4. Slow
+   * rock và pop vào hẳn khoảng hình câu; bolero còn lệch vì có cặp cọc cách
+   * nhau nửa phách.
+   *
+   * Vẫn để tắt được: số liệu nói bộ nào gần người thật hơn, không nói bộ nào
+   * hay hơn. Chỗ ấy là tai người nghe.
+   */
+  const [lineSolo, setLineSolo] = useState(true)
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -1220,6 +1234,33 @@ export function ReharmHome() {
   const phrasePulse = useMemo(() => pulseForStyle(styleId), [styleId])
   const phrasePulseBar = style.beatsPerMeasure * (style.gridUnit ?? 1)
 
+  /**
+   * Câu solo đoạn không lời dựng bằng **cọc và nối**, nếu bật và có gam.
+   *
+   * Trả `null` khi chưa đủ điều kiện, để bên gọi lui về sổ mẫu như cũ. Bộ này
+   * cần MỘT gam để làm ao nốt; lối "mỗi hợp âm một gam" thì không có ao chung
+   * nào, và đó là lúc sổ mẫu vẫn là đường duy nhất.
+   */
+  const builtLine = useCallback(
+    (list: readonly ParsedChord[], spin: number) => {
+      if (!lineSolo || !phraseScale) return null
+      const anchors = accentBeats(style)
+      if (anchors.length === 0) return null
+      const line = buildLine({
+        chords: list,
+        beatsPerChord: chordBeats,
+        barBeats: phrasePulseBar,
+        anchors,
+        scale: phraseScale.pitchClasses,
+        range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+        take: spin + phraseSpin + playSpin.current,
+      })
+      return line.length > 0 ? lineToTimeline(line) : null
+    },
+    [lineSolo, phraseScale, style, chordBeats, phrasePulseBar, ballad, phraseSpin],
+  )
+
+
   /*
     Ký hiệu hợp âm đoạn dạo, tính **một lần** rồi dùng cho cả bản lời lẫn lưới.
 
@@ -1531,6 +1572,7 @@ export function ReharmHome() {
         }),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
+          builtLine(lastLoop ? lastLoopChords : windowChords, take) ??
           soloToTimeline(
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
               beatsPerChord: chordBeats,
@@ -1576,6 +1618,8 @@ export function ReharmHome() {
       reharm.key,
       plainPhrase,
       interludeChords,
+      lineSolo,
+      builtLine,
       phraseNoteSource,
       phraseScale,
       phrasePulse,
@@ -1982,6 +2026,7 @@ export function ReharmHome() {
    */
   const phraseSolo = useCallback(
     (chords: readonly ParsedChord[], spin: number, endWithRun = true) =>
+      builtLine(chords, spin) ??
       soloToTimeline(
         generateSolo(chords, {
           beatsPerChord: chordBeats,
@@ -2016,6 +2061,7 @@ export function ReharmHome() {
       phraseSpin,
       ballad,
       styleId,
+      builtLine,
     ],
   )
 
@@ -2218,6 +2264,7 @@ export function ReharmHome() {
     setPhraseScaleId(saved.phraseScaleId ?? null)
     setPlainPhrase(saved.plainPhrase !== false)
     setInterludeChords(saved.interludeChords ?? DEFAULT_INTERLUDE_CHORDS)
+    setLineSolo(saved.lineSolo !== false)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -3699,6 +3746,27 @@ export function ReharmHome() {
                 </p>
               )}
             </div>
+
+            <label className="mt-3 flex items-center gap-2 text-xs text-dim">
+              <input
+                type="checkbox"
+                checked={lineSolo}
+                onChange={(event) => setLineSolo(event.target.checked)}
+                disabled={!phraseScale}
+              />
+              <span
+                title={
+                  phraseScale
+                    ? 'Dựng câu bằng cách đóng cọc ở cú gõ mạnh của điệu rồi nối giữa hai cọc bằng bậc của gam, thay cho việc bốc một hình quãng có sẵn trong sổ mẫu.'
+                    : 'Cần chọn MỘT gam thì mới dựng được — lối nhiều gam không có ao nốt chung.'
+                }
+              >
+                Dựng câu bằng cọc và nối{' '}
+                <span className="text-dim">
+                  {phraseScale ? '(thay sổ mẫu Licky)' : '— cần chọn một gam'}
+                </span>
+              </span>
+            </label>
 
             <label className="mt-2 flex items-center gap-2 text-xs text-dim">
               <input

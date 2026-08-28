@@ -1,6 +1,7 @@
 import { chordTonesStrict, ladderOf } from './soloVocabulary'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import type { TimelineEvent } from '../style/types'
 
 /**
  * Dựng một câu nhạc bằng cách **đóng cọc rồi nối**, thay cho dập hình có sẵn.
@@ -410,3 +411,23 @@ export function buildLine(options: LineOptions): LineNote[] {
 
 /** Số nốt liền nhau nhiều nhất trước khi câu cần một chỗ nghỉ. */
 export const LONGEST_BREATH = BREATH_AFTER
+
+/**
+ * Đổi câu dựng được thành tiếng đàn.
+ *
+ * Nốt CỌC đánh nặng hơn nốt nối: cọc là chỗ câu phải có mặt, nối chỉ là đường
+ * đi tới đó. Chênh lệch nhỏ thôi — nghe ra hình câu, không nghe ra hai lớp.
+ */
+export function lineToTimeline(
+  line: readonly LineNote[],
+  velocity = 72,
+): TimelineEvent[] {
+  return line.map((note) => ({
+    notes: [note.note],
+    startBeat: note.startBeat,
+    durationBeats: note.durationBeats,
+    hand: 'right' as const,
+    velocity: Math.round(note.anchor ? velocity * 1.08 : velocity * 0.9),
+    grace: false,
+  }))
+}

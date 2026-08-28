@@ -107,6 +107,8 @@ export interface SongSnapshot {
   plainPhrase?: boolean
   /** Giang tấu mượn mấy hợp âm của bài. Bỏ trống là 4. */
   interludeChords?: number
+  /** Dựng câu solo đoạn không lời bằng cọc và nối. Bỏ trống là bật. */
+  lineSolo?: boolean
   chordsPerPhrase: number
 }
 

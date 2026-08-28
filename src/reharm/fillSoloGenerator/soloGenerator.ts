@@ -61,6 +61,9 @@ const EPSILON = 1e-6
  */
 const SOLO_LOW: MidiNote = 62
 const SOLO_HIGH: MidiNote = 79
+
+/** Tầm câu solo mặc định. Điệu ballad có tầm riêng, xem `style/balladFamily.ts`. */
+export const SOLO_RANGE = { low: SOLO_LOW, high: SOLO_HIGH } as const
 /** Nâng cho câu lẻ trong cùng một lượt. */
 const PHRASE_LIFT = 5
 /** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */
