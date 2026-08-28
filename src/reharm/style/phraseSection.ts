@@ -4,7 +4,7 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
-import { soloLeftHand } from './soloLeftHand'
+import { avoidMelodyClash, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose } from './phraseCue'
 
@@ -151,7 +151,11 @@ export function buildPhraseSection(
         ? cueStrike(rollVoicing, roundBeats, { roll: true, beats: 1 })
         : []
 
-  const whole = [...backing, ...voiced]
+  /*
+    Tay trái nhường phím khi trùng với giai điệu — xem `avoidMelodyClash`.
+    Chồng TẦM thì được, chồng PHÍM cùng lúc thì không.
+  */
+  const whole = [...avoidMelodyClash(backing, voiced), ...voiced]
   const ghep =
     kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
 

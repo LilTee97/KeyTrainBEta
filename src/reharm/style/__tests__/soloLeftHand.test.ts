@@ -81,10 +81,14 @@ describe('tay trái gánh mẫu đệm ở đoạn không lời', () => {
     }
   })
 
-  /* Luật của app: tay trái không chạm quãng tám 4. */
-  it.each(STYLES)('%s: nằm dưới Đô quãng tám 4', (styleId) => {
+  /*
+    Luật "tay trái không chạm Đô quãng tám 4" đã BỎ, theo yêu cầu người dùng và
+    theo số đo: hai tay của Cà Pháo chồng tầm 3-12 nửa cung ở đoạn giang tấu.
+    Thứ còn giữ là tầm tay người với tới được.
+  */
+  it.each(STYLES)('%s: nằm trong tầm một bàn tay trái với tới', (styleId) => {
     for (const note of build(styleId).events.flatMap((event) => event.notes)) {
-      expect(note).toBeLessThan(60)
+      expect(note).toBeLessThanOrEqual(64)
       expect(note).toBeGreaterThanOrEqual(36)
     }
   })

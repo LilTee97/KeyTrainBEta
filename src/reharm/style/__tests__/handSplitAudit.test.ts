@@ -172,11 +172,37 @@ describe('giang tấu — tách tay', () => {
         const lh = pitches(left(built.events))
         const rh = pitches(right(built.events))
         expect(lh.length, `${kind}/lượt ${take}: phải có bass`).toBeGreaterThan(0)
+        expect(rh.length, `${kind}/lượt ${take}: phải có tay phải`).toBeGreaterThan(0)
+
+        /*
+          Luật "tay trái không chạm Đô quãng tám 4" ĐÃ BỎ ở đoạn không lời.
+
+          Người dùng bỏ nó, và số đo đứng về phía họ: trên bản ký âm của Cà Pháo
+          thì hai tay CHỒNG TẦM ở đoạn giang tấu — trần tay trái cao hơn sàn tay
+          phải 3 tới 12 nửa cung ở bốn trên sáu bài. Bàn tay người chia nhau
+          khoảng giữa đàn; ràng buộc thật là hai tay không cùng bấm MỘT PHÍM
+          MỘT LÚC, không phải hai tầm rời hẳn nhau.
+
+          Nên chỗ này đổi từ đo TẦM sang đo VA CHẠM.
+        */
         expect(
           Math.max(...lh),
-          `${kind}/lượt ${take}: tay trái lấn lên quãng tám 4`,
-        ).toBeLessThan(LEFT_CEILING)
-        expect(rh.length, `${kind}/lượt ${take}: phải có tay phải`).toBeGreaterThan(0)
+          `${kind}/lượt ${take}: tay trái vượt tầm với`,
+        ).toBeLessThanOrEqual(64)
+
+        const clash = built.events
+          .filter((event) => event.hand === 'left')
+          .flatMap((event) =>
+            built.events
+              .filter(
+                (other) =>
+                  other.hand === 'right' &&
+                  Math.abs(other.startBeat - event.startBeat) < 0.02 &&
+                  other.notes.some((note) => event.notes.includes(note)),
+              )
+              .map((other) => `${event.startBeat}:${other.notes.join()}`),
+          )
+        expect(clash, `${kind}/lượt ${take}: hai tay bấm trùng phím`).toEqual([])
       }
     }
   })

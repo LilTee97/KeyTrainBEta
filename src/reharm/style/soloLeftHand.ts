@@ -46,19 +46,27 @@ import { chordPitchClasses } from '../../shared/musicTheory/chordDefinitions'
  */
 
 /**
- * Trần tay trái khi nó gánh mẫu đệm: **ngay dưới Đô quãng tám 4**.
+ * Trần tay trái khi nó gánh mẫu đệm.
  *
- * Cho tầm đi 23 nửa cung, gần đúng hai quãng tám, và đó là ĐÁY khoảng đo được
- * ở người thật (23-40). Không nới thêm vì luật của app là tay trái không chạm
- * quãng tám 4 — `handSplitAudit` giữ chỗ ấy.
+ * Luật cũ của app: tay trái không chạm Đô quãng tám 4. Người dùng bỏ luật ấy,
+ * và số đo đứng về phía họ — trên bản ký âm của Cà Pháo, hai tay CHỒNG TẦM ở
+ * đoạn giang tấu: trần tay trái cao hơn sàn tay phải 3 tới 12 nửa cung ở bốn
+ * trên sáu bài.
  *
- * Đáng ghi lại: đo trên bản ký âm của Cà Pháo thì hai tay anh ấy CHỒNG TẦM ở
- * đoạn giang tấu — trần tay trái cao hơn sàn tay phải từ 3 tới 12 nửa cung ở
- * bốn trên sáu bài. Người chơi thật chia nhau khoảng giữa đàn; ràng buộc thật
- * là hai tay không cùng bấm một phím một lúc, không phải hai tầm rời hẳn nhau.
- * Nới trần theo hướng ấy là một việc riêng, cần nghe kỹ, chưa làm ở đây.
+ * | | trần tay trái | sàn tay phải |
+ * |---|---|---|
+ * | Hồng Kông 1 | 64 | 60 |
+ * | Người hãy quên | 62 | 57 |
+ * | Bèo dạt mây trôi | 63 | 60 |
+ * | Kém duyên | 70 | 58 |
+ *
+ * Ràng buộc thật của người chơi là **hai tay không cùng bấm một phím một lúc**,
+ * không phải hai tầm rời hẳn nhau. Bàn tay người chia nhau khoảng giữa đàn.
+ *
+ * 64 là trung vị hơi lệch lên của số đo trên. Cho tầm đi 28 nửa cung, nằm giữa
+ * khoảng 23-40 của người thật, thay vì 23 khi còn bị Đô quãng tám 4 chặn.
  */
-const SOLO_LEFT_TOP = 59
+const SOLO_LEFT_TOP = 64
 
 export interface SoloLeftHandOptions {
   chords: readonly ParsedChord[]
@@ -180,4 +188,43 @@ export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
   })
 
   return events
+}
+
+/**
+ * Tay trái **nhường một quãng tám** khi trùng phím với giai điệu.
+ *
+ * Bỏ luật "tay trái không chạm Đô quãng tám 4" thì hai tầm chồng nhau, và chồng
+ * tầm là chuyện bình thường — người chơi thật vẫn vậy. Thứ KHÔNG bình thường là
+ * hai tay cùng bấm một phím vào cùng một lúc: trên đàn thật thì một ngón chặn
+ * ngón kia, trong MIDI thì tiếng trước bị cắt ngang hoặc kẹt luôn.
+ *
+ * Giai điệu thắng, vì nó là thứ người nghe đang theo. Tay trái là nốt rải nên
+ * hạ một quãng tám vẫn đúng cao độ của hợp âm, chỉ đổi tầng — không mất gì.
+ *
+ * CHƯA PHỦ ĐOẠN GIANG TẤU. Đoạn dạo đầu và kết bài ráp cả hai bè trong
+ * `buildPhraseSection` nên gọi được hàm này; giang tấu thì phần đệm và câu solo
+ * đi hai đường rồi mới gặp nhau trong `buildArrangedSong`, chỗ ấy chưa có móc
+ * để chen vào. Đo ra 1 va chạm trên 32 lượt — thấp, nhưng không phải không.
+ */
+export function avoidMelodyClash(
+  left: readonly TimelineEvent[],
+  melody: readonly TimelineEvent[],
+  low = LEFT_HAND_LOW,
+): TimelineEvent[] {
+  if (melody.length === 0) return [...left]
+
+  return left.map((event) => {
+    const busy = new Set(
+      melody
+        .filter((line) => Math.abs(line.startBeat - event.startBeat) < 0.02)
+        .flatMap((line) => line.notes),
+    )
+    if (busy.size === 0 || !event.notes.some((note) => busy.has(note))) return event
+
+    const moved = event.notes.map((note) => {
+      const down = note - 12
+      return (down >= low && !busy.has(down as MidiNote) ? down : note) as MidiNote
+    })
+    return { ...event, notes: moved }
+  })
 }
