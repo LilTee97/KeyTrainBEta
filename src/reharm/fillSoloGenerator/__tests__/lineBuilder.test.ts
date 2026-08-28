@@ -6,6 +6,7 @@ import { bluesChoice, suggestScales } from '../../style/phraseScale'
 import { generateSolo } from '../soloGenerator'
 import { pulseForStyle, soloFeelFor } from '../soloFeel'
 import { buildLine } from '../lineBuilder'
+import { ladderOf } from '../soloVocabulary'
 import { CA_PHAO_RANGE, profileLine, within, type LineProfile } from '../styleProfile'
 
 /*
@@ -110,14 +111,54 @@ describe('bộ sinh nhịp-trước', () => {
   })
 
   /*
-    Lặp hình phải là motif THẬT — câu đáp lặp lại hình nhịp câu hỏi, đổi cao độ.
+    Lặp hình rơi vào khoảng người thật MÀ KHÔNG ép câu đáp lặp câu hỏi.
 
-    Bản trước cũng đo ra 60%, nằm trong khoảng người thật, nhưng con số ấy nói
-    dối: nó chỉ có ba cỡ nhịp nên trùng hình là đương nhiên. Chỉ số đã sửa để
-    đếm cả nhịp lẫn cao độ, và giờ 37-41% là lặp có chủ ý.
+    Đã có lúc bộ này lặp y nguyên hình nhịp của câu trước cho câu sau. Luật ấy
+    nghe rất có lý nhưng đo ra không có: trên bảy bản ký âm, hai câu liền nhau
+    giống nhau 42% còn hai câu BẤT KỲ trong bài cũng đã giống nhau 44%. Vốn ô
+    nhịp hẹp nên phép so trùng nào cũng ra số cao — không có nền so sánh thì
+    phát biểu kiểu này lúc nào cũng "đúng".
+
+    Rút mới mỗi câu, cùng một vốn ô nhịp, thì mức trùng tự rơi vào khoảng.
   */
   it.each(STYLES)('%s: lặp hình đúng khoảng người thật', (styleId) => {
     expect(within(score(styleId, 'moi').motifReuse, CA_PHAO_RANGE.motifReuse)).toBe(true)
+  })
+
+  it('không ép câu sau lặp hình nhịp câu trước', () => {
+    const { chords, bar, scale, anchors } = setup('pop-1')
+    const line = buildLine({
+      chords, beatsPerChord: bar, barBeats: bar, anchors, scale,
+      range: { low: 60, high: 84 }, take: 2,
+    })
+    const phrase = (n: number) =>
+      line
+        .filter((note) => note.startBeat >= n * bar * 4 && note.startBeat < (n + 1) * bar * 4)
+        .map((note) => (note.startBeat % (bar * 4)).toFixed(3))
+        .join()
+    expect(phrase(0).length).toBeGreaterThan(0)
+    expect(phrase(1)).not.toBe(phrase(0))
+  })
+
+  /*
+    VÌ SAO KHÔNG KÉO NỐT NỐI VỀ NỐT HỢP ÂM ĐƯỢC.
+
+    Nốt nối của bộ này chỉ 40-45% là nốt hợp âm, người thật 49-62%. Cách chữa
+    hiển nhiên là trong cùng một cỡ bước thì ngả về nốt hợp âm — nhưng trên gam
+    bảy nốt thì trong mỗi cỡ chỉ có ĐÚNG MỘT nốt, nên không có gì để chọn.
+
+    Đã viết thật một lượt và ba giá trị lực kéo cho ra kết quả trùng khít từng
+    chữ số. Test này giữ lại lý do, để lần sau khỏi viết lại đoạn code chết ấy.
+  */
+  it('trên gam bảy nốt, mỗi cỡ bước chỉ có đúng một nốt', () => {
+    const { scale } = setup('pop-1')
+    const ladder = ladderOf(scale, 60, 84)
+    for (let at = 0; at + 2 < ladder.length; at += 1) {
+      expect(ladder[at + 1]! - ladder[at]!).toBeGreaterThanOrEqual(1)
+      expect(ladder[at + 1]! - ladder[at]!).toBeLessThanOrEqual(2)
+      expect(ladder[at + 2]! - ladder[at]!).toBeGreaterThanOrEqual(3)
+      expect(ladder[at + 2]! - ladder[at]!).toBeLessThanOrEqual(4)
+    }
   })
 
   it.each(STYLES)('%s: câu dài đúng một hơi người thật', (styleId) => {

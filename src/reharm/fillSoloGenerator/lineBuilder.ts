@@ -130,6 +130,7 @@ const JITTER = 0.22
  */
 const MAX_ANCHOR_LEAP = 4
 
+
 const hash = (seed: number) => {
   const x = Math.sin(seed * 12.9898) * 43758.5453
   return x - Math.floor(x)
@@ -177,25 +178,24 @@ function phraseRhythm(beats: number, seed: number): number[] {
 }
 
 /**
- * Nhịp của cả đoạn: câu hỏi rút hình mới, **câu đáp lặp lại hình câu trước**.
+ * Nhịp của cả đoạn: mỗi câu rút một hình mới.
  *
- * Lặp nhịp mà đổi cao độ là cách người ta làm cho một đoạn nghe có chủ ý thay
- * vì nghe như một chuỗi nốt đúng hoà âm. Bản trước không có chỗ nào lặp có chủ
- * ý cả: chỉ số "lặp hình" 60% của nó là hệ quả của việc chỉ có ba cỡ nhịp, tức
- * là ĐỀU ĐẶN chứ không phải motif.
+ * KHÔNG cho câu đáp lặp lại hình nhịp của câu hỏi, dù luật ấy nghe rất có lý.
+ * Đo trên bảy bản ký âm thì không có: hai câu liền nhau giống nhau 42%, mà hai
+ * câu BẤT KỲ trong bài cũng đã giống nhau 44% — vốn ô nhịp hẹp nên phép so
+ * trùng nào cũng ra số cao. Thử ở bốn cỡ cửa sổ, không cỡ nào tách khỏi nền.
+ *
+ * Bản trước lặp y nguyên hình câu trước, tức làm mạnh hơn hẳn mọi thứ đo được
+ * — và chỗ mạnh quá ấy tự nó thành đều đều. Rút mới mỗi câu thì mức trùng tự
+ * rơi về đúng chỗ người thật, vì nó cùng một vốn ô nhịp.
  */
 function rhythmTrack(total: number, barBeats: number, take: number): number[] {
   const phraseBeats = Math.max(barBeats, barBeats * PHRASE_BARS)
   const onsets: number[] = []
-  let previous: number[] = []
 
   for (let phrase = 0; phrase * phraseBeats < total - 1e-6; phrase += 1) {
     const start = phrase * phraseBeats
-    const answers = phrase % 2 === 1 && previous.length > 0
-    const shape = answers
-      ? previous
-      : phraseRhythm(Math.min(phraseBeats, total - start), take * 53 + phrase)
-    previous = shape
+    const shape = phraseRhythm(Math.min(phraseBeats, total - start), take * 53 + phrase)
     for (const at of shape) {
       if (start + at < total - 1e-6) onsets.push(start + at)
     }
@@ -461,31 +461,26 @@ export function buildLine(options: LineOptions): LineNote[] {
     const dir = need === 0 ? (hash(take + index) < 0.5 ? 1 : -1) : Math.sign(need)
 
     /*
-      LUÂN PHIÊN bước hẹp và bước rộng, không rút thăm từng bước.
+      LUÂN PHIÊN bước hẹp và bước rộng, và **đếm lại từ đầu sau mỗi cọc**.
 
-      Rút thăm độc lập thì một câu sáu nốt rất dễ lệch hẳn về một phía do may
-      rủi: để 0,38 ra 57-68% câu gam thuần, nâng lên 0,5 thì gam xuống còn
-      39-46% nhưng rải vọt lên 19-30% — đổi thái cực này lấy thái cực kia. Người
-      thật 68-82% pha trộn, nghĩa là câu nào của họ cũng có cả hai cỡ bước.
-    */
-    /*
-      Luân phiên đếm theo vị trí TRONG CÂU, không theo cả đoạn.
+      Rút thăm độc lập từng bước thì một câu sáu nốt rất dễ lệch hẳn về một phía
+      do may rủi: để 0,38 ra 57-68% câu gam thuần, nâng lên 0,5 thì gam xuống
+      còn 39-46% nhưng rải vọt lên 19-30% — đổi thái cực này lấy thái cực kia.
+      Người thật 68-82% pha trộn, tức câu nào của họ cũng có cả hai cỡ bước.
 
-      Cái thước chấm từng câu một, và câu bây giờ chỉ dài bốn tới bảy nốt. Đếm
-      theo cả đoạn thì mỗi lần sang câu mới, pha luân phiên rơi vào đâu là do
-      may rủi — câu bốn nốt mà lệch pha một bước là ba trên bốn bước cùng cỡ,
-      tức thước gọi ngay là "thuần".
-    */
-    /*
-      Luân phiên hẹp / rộng, và **đếm lại từ đầu sau mỗi cọc**.
+      Đếm theo cả đoạn cũng không được: câu bây giờ chỉ dài bốn tới bảy nốt, mỗi
+      lần sang câu mới thì pha luân phiên rơi vào đâu là do may rủi, và câu bốn
+      nốt lệch pha một bước là ba trên bốn bước cùng cỡ — thước gọi ngay là
+      "thuần".
 
       Cọc chọn nốt hợp âm, mà nốt hợp âm cách nhau quãng ba, nên bước cọc-sang-
-      cọc gần như luôn rộng. Đếm liền một mạch thì pha luân phiên rơi vào đâu là
-      do may rủi, và câu ngắn nào gặp pha xấu là ra hai bước rộng liền — đo ra
-      16-20% câu rải thuần, người thật chỉ 2-11%.
+      cọc gần như luôn rộng. Đếm lại từ cọc thì bước ngay sau cọc luôn hẹp.
 
-      Đếm lại từ cọc thì bước ngay sau cọc luôn hẹp: nhảy xong thì bước lại, đúng
-      luật cũ của hoà âm, và cũng là chỗ nốt treo giải quyết.
+      KHÔNG ngả thêm về nốt hợp âm được nữa, dù nốt nối của bộ này chỉ 40-45% là
+      nốt hợp âm còn người thật 49-62%. Trên gam bảy nốt, một bậc thang LUÔN là
+      1-2 nửa cung và hai bậc LUÔN là 3-4 — đã kiểm. Nghĩa là trong một cỡ bước
+      chỉ có đúng một nốt, không có gì để chọn. Muốn kéo tỉ lệ ấy lên thì phải
+      trả bằng cỡ bước, mà cỡ bước thì đang nằm trong khoảng người thật.
     */
     alt += 1
     const turn = alt % 2 === 0
