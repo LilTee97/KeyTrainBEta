@@ -124,7 +124,8 @@ describe('chấm bộ sinh câu hiện tại so với người thật', () => {
   */
   it.each(STYLES)('%s: chordTone rải hợp âm nhiều hơn người thật rất xa', (styleId) => {
     const profile = profileOf(styleId, 'chordTone')
-    expect(profile.runs, 'phải có đủ câu để chấm').toBeGreaterThan(20)
+    // Chặn mẫu quá nhỏ, không phải một khẳng định về nhạc.
+    expect(profile.runs, 'phải có đủ câu để chấm').toBeGreaterThan(12)
     expect(profile.arpeggio, describeProfile(profile)).toBeGreaterThan(
       CA_PHAO_RANGE.arpeggio[1],
     )

@@ -48,11 +48,29 @@ const onPulse = (beats: readonly number[], pulse: readonly number[]) =>
   beats.filter((beat) => pulse.some((step) => Math.abs(step - beat) < 0.02)).length
 
 describe('câu solo neo vào mạch của điệu', () => {
-  it.each(LOCKED)('%s: phần lớn nốt rơi đúng chỗ mẫu đệm gõ', (styleId) => {
+  /*
+    Neo vào mạch, nhưng KHÔNG neo vào mọi cú gõ.
+
+    Bản trước đòi từ 70% số nốt trở lên rơi đúng mạch. Lúc ấy mạch là toàn bộ
+    chỗ gõ của ô nhịp và tay trái chưa gánh mẫu đệm, nên đòi vậy là hợp lý.
+
+    Từ khi tay trái gánh trọn mẫu đệm ở đoạn không lời thì mạch và cú gõ tay
+    trái trùng nhau, và "phần lớn nốt rơi đúng mạch" hoá thành "mỗi nốt giai
+    điệu nhân đôi một tiếng bass" — đo ra tới 99% ở bossa. Người dùng nghe ra
+    là dồn nốt rối tai.
+
+    Người thật để **32-73%** số nốt tay phải rơi trúng cú gõ tay trái; quá nửa
+    còn lại rơi vào KHE giữa hai cú. Đó mới là hai tay cài vào nhau. Nên mạch
+    của giai điệu giờ chỉ lấy những cú gõ MẠNH, và test đo một KHOẢNG chứ không
+    đo một sàn.
+  */
+  it.each(LOCKED)('%s: neo vào mạch nhưng không nhân đôi bè trầm', (styleId) => {
     const pulse = cellPulseOf(styleId)
     expect(pulse.length, 'điệu phải khai được mạch').toBeGreaterThan(0)
     const beats = onsets(styleId, true)
-    expect(onPulse(beats, pulse) / beats.length).toBeGreaterThanOrEqual(0.7)
+    const rate = onPulse(beats, pulse) / beats.length
+    expect(rate, 'quá thưa thì mất mạch').toBeGreaterThanOrEqual(0.25)
+    expect(rate, 'quá dày thì giai điệu thành bóng của bè trầm').toBeLessThanOrEqual(0.85)
   })
 
   it.each(LOCKED)('%s: neo rồi thì khớp hơn lúc chưa neo', (styleId) => {

@@ -1,4 +1,5 @@
 import { getStyle } from '../style/styleLibrary'
+import { accentBeats } from '../style/soloLeftHand'
 
 /**
  * Cách chia thời gian của câu chạy, theo điệu đang chọn.
@@ -153,12 +154,15 @@ export function applyFeel<T extends TimedNote>(
 export function cellPulseOf(styleId: string | undefined | null): number[] {
   const style = styleId ? getStyle(styleId) : null
   if (!style?.cell) return []
-  const grid = style.gridUnit ?? 1
-  const bar = style.beatsPerMeasure * grid
-  const beats = [...style.cell.left, ...style.cell.right].map(
-    (hit) => Number((((hit.beat * grid) % bar + bar) % bar).toFixed(3)),
-  )
-  return [...new Set(beats)].sort((a, b) => a - b)
+  /*
+    Chỉ những cú gõ MẠNH, không phải mọi cú.
+
+    Bản trước lấy trọn chỗ gõ của ô nhịp. Từ khi tay trái gánh trọn mẫu đệm ở
+    đoạn không lời thì hai bên trùng nhau hoàn toàn, và giai điệu hoá thành cái
+    bóng của bè trầm: đo ra 51-99% nốt tay phải đè đúng một tiếng bass. Người
+    thật để 32-73%, tức quá nửa số nốt rơi vào KHE giữa hai cú gõ.
+  */
+  return accentBeats(style)
 }
 
 /**
@@ -208,8 +212,16 @@ export function snapToPulse<T extends TimedNote>(
 ): T[] {
   if (pulse.length === 0 || beatsPerBar <= 0) return [...notes]
 
-  const taken = new Set<string>()
+  /*
+    Chỗ đã có nốt — kể cả nốt CHƯA xử lý.
+
+    Bản trước chỉ ghi những nốt đã đi qua, nên một nốt kéo về mạch có thể đáp
+    đúng chỗ một nốt phía sau còn đang đứng nguyên. Hai nốt trùng khít một thời
+    điểm, và nếu chúng cách nhau hơn một quãng tám thì mọi phép đo hình câu coi
+    đó là chỗ đứt — đo ra 0 câu chạy trên cả một đoạn.
+  */
   const key = (beat: number) => beat.toFixed(3)
+  const taken = new Set<string>(notes.map((note) => key(note.startBeat)))
   const out: T[] = []
 
   for (const note of notes) {
@@ -224,18 +236,17 @@ export function snapToPulse<T extends TimedNote>(
     }
 
     if (best === null) {
-      taken.add(key(note.startBeat))
       out.push(note)
       continue
     }
 
     const moved = bar + best
     if (taken.has(key(moved))) {
-      taken.add(key(note.startBeat))
       out.push(note)
       continue
     }
 
+    taken.delete(key(note.startBeat))
     taken.add(key(moved))
     out.push({
       ...note,

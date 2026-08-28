@@ -77,30 +77,138 @@ export interface SoloLeftHandOptions {
   top?: number
 }
 
+export interface Strike {
+  /** Chỗ gõ trong một ô nhịp, quy về nốt đen. */
+  beat: number
+  durationBeats: number
+  /** Hệ số cường độ của chính ô nhịp điệu ấy. */
+  velocityScale: number
+  /** Nốt chèn thêm để lấp phách trống, không phải cú gõ của điệu. */
+  filler: boolean
+}
+
+/** Chỗ gõ nào gần nhau hơn ngần này thì coi là một — đừng gõ chồng. */
+const SAME_HIT = 0.2
+
 /**
- * Chỗ gõ của mẫu đệm trong một ô nhịp, **gộp cả hai tay**, quy về nốt đen.
+ * Một bàn tay trái gõ nhiều nhất bấy nhiêu lần mỗi ô nhịp.
  *
- * Nhịp kép (mẫu số 8) thì lấy **trọn mọi phách**, không chỉ những chỗ ô nhịp
- * gõ. Slow rock 6/8 là sáu phách, và ở đoạn không lời thì cả sáu phải nghe
- * thấy — người dùng ra luật ấy. Mẫu đệm chỉ gõ bốn trong sáu chỗ vì hai chỗ
- * kia là chỗ NGHỈ dành cho giọng hát; không có ai hát thì chỗ nghỉ ấy hết lý
- * do tồn tại, và bỏ trống hai phách trong sáu là đúng chỗ đoạn solo nghe hụt.
+ * Đo trên bản ký âm của Cà Pháo, đoạn giang tấu: **3,4 tới 5,8** cú gõ mỗi ô.
+ * Gộp cả hai tay của ô nhịp bossa ra tám — gấp rưỡi người thật, và tám cú gõ
+ * kín hết tám móc đơn thì giai điệu không còn khe nào để lách: đo ra 79% nốt
+ * tay phải đè đúng tiếng bass, trong khi người thật chỉ 32-73%.
+ *
+ * Sáu là trần: vừa đủ cho nhịp kép sáu phách, vừa sát mép trên của số đo.
  */
-export function patternOnsets(style: StylePattern): number[] {
+const MAX_STRIKES = 6
+
+/**
+ * Cú gõ của mẫu đệm trong một ô nhịp, **gộp cả hai tay, giữ nguyên tính cách**.
+ *
+ * Giữ nguyên nghĩa là giữ cả ba thứ: chỗ rơi, trường độ, và độ nhấn. Bản trước
+ * chỉ lấy danh sách chỗ rơi rồi làm phẳng hai thứ kia — và với nhịp kép còn
+ * thay hẳn bằng một lưới đều tăm tắp. Trên mẫu Slow Rock 3 của thầy Đức Thịnh
+ * thì đó là xoá mất đúng cái làm nên mẫu ấy:
+ *
+ *   ô nhịp thật    0 (ngân 1,0)  ·  1 (0,45)  ·  1,45 (1,55)  ·  2,5 (0,5)
+ *   bản trước      0 · 0,5 · 1 · 1,5 · 2 · 2,5   — mất 1,45, trường độ phẳng
+ *
+ * Phách 4 vào SỚM ở 1,45 chính là chỗ giật cục của mẫu; đẩy nó về 1,5 là biến
+ * mẫu ấy thành một cái máy đếm nhịp. Người dùng nghe ra ngay: "tay trái vẫn
+ * chưa đánh được giống tiết tấu của điệu như khi đánh hai tay."
+ *
+ * NỐT CHÈN. Nhịp kép cần nghe đủ sáu phách ở đoạn không lời — hai phách mẫu
+ * đệm bỏ trống vốn là chỗ nghỉ dành cho giọng hát, mà ở đây không có ai hát.
+ * Nhưng chèn là **thêm vào chỗ còn trống**, không phải thay cả hàng: chỗ nào
+ * đã có cú gõ thật thì để yên, kể cả khi nó lệch lưới như 1,45. Nốt chèn đánh
+ * nhẹ hẳn để cú gõ của điệu vẫn nổi lên trên.
+ */
+export function patternStrikes(style: StylePattern): Strike[] {
   if (!style.cell) return []
   const grid = style.gridUnit ?? 1
   const bar = style.beatsPerMeasure * grid
 
-  if (style.timeSignature.endsWith('/8')) {
-    return Array.from({ length: style.beatsPerMeasure }, (_, at) =>
-      Number((at * grid).toFixed(3)),
-    )
+  const out: Strike[] = []
+  for (const hit of [...style.cell.left, ...style.cell.right]) {
+    const beat = Number(((((hit.beat * grid) % bar) + bar) % bar).toFixed(3))
+    const already = out.find((other) => Math.abs(other.beat - beat) < SAME_HIT)
+    const strike: Strike = {
+      beat,
+      durationBeats: Math.max(0.05, hit.durationBeats * grid),
+      velocityScale: hit.velocityScale ?? 1,
+      filler: false,
+    }
+    // Hai tay cùng gõ một chỗ thì giữ cú nặng hơn — tay trái chỉ chơi một nốt.
+    if (!already) out.push(strike)
+    else if (strike.velocityScale > already.velocityScale) {
+      Object.assign(already, strike)
+    }
   }
 
-  const beats = [...style.cell.left, ...style.cell.right].map((hit) =>
-    Number(((((hit.beat * grid) % bar) + bar) % bar).toFixed(3)),
-  )
-  return [...new Set(beats)].sort((a, b) => a - b)
+  if (style.timeSignature.endsWith('/8')) {
+    for (let at = 0; at < style.beatsPerMeasure; at += 1) {
+      const beat = Number((at * grid).toFixed(3))
+      if (out.some((strike) => Math.abs(strike.beat - beat) < SAME_HIT)) continue
+      out.push({ beat, durationBeats: grid, velocityScale: 0.45, filler: true })
+    }
+  }
+
+  /*
+    Quá dày thì bỏ bớt cú NHẸ nhất — giữ hình tiết tấu, bỏ chỗ đệm thêm. Hoà
+    mức nhấn thì cú muộn hơn bị bỏ trước, vì chỗ sớm trong ô nhịp là chỗ tai
+    bám vào.
+  */
+  const kept =
+    out.length <= MAX_STRIKES
+      ? out
+      : [...out]
+          .sort((a, b) => b.velocityScale - a.velocityScale || a.beat - b.beat)
+          .slice(0, MAX_STRIKES)
+
+  return kept.sort((a, b) => a.beat - b.beat)
+}
+
+/** Chỗ gõ, chỉ lấy vị trí — để lưới test so mạch. */
+export function patternOnsets(style: StylePattern): number[] {
+  return patternStrikes(style).map((strike) => strike.beat)
+}
+
+/**
+ * Chỗ gõ **MẠNH** của điệu — nơi giai điệu tay phải neo vào.
+ *
+ * Tay phải không neo vào mọi cú gõ, chỉ neo vào những cú nặng. Đo trên bản ký
+ * âm của Cà Pháo, đoạn giang tấu: chỉ **32-73%** số nốt tay phải rơi trúng một
+ * cú gõ tay trái, quá nửa còn lại rơi vào khe giữa hai cú.
+ *
+ * Đó là chỗ khác nhau giữa hai tay CÀI VÀO NHAU và hai tay GÕ CHỒNG. Tay trái
+ * giữ mạch, tay phải hát qua các khe — nghe thoáng dù nhiều nốt hơn. Đo trên
+ * app trước khi sửa: 51-99% nốt tay phải đè đúng tiếng bass, bossa tới 99%,
+ * tức mỗi nốt giai điệu nhân đôi một cú gõ. Người dùng nghe ra là "dồn nốt rối
+ * tai" và tưởng do quá nhiều nốt — thật ra tay phải của app còn thưa hơn người
+ * thật một nửa; cái sai nằm ở CHỖ RƠI, không ở số lượng.
+ *
+ * Lấy những cú từ trung vị độ nhấn trở lên, và không lấy nốt chèn — nốt chèn
+ * sinh ra để lấp phách trống, nó không phải chỗ tai chờ đợi.
+ */
+export function accentBeats(style: StylePattern): number[] {
+  const strikes = patternStrikes(style).filter((strike) => !strike.filler)
+  if (strikes.length === 0) return []
+
+  /*
+    Lấy NỬA MẠNH NHẤT, không lấy "từ trung vị trở lên".
+
+    Nhiều điệu lặp lại đúng một mức nhấn cho phần lớn cú gõ — bolero là 1 · 0,7 ·
+    0,7 · 0,9 · 0,7 · 0,7, nên trung vị rơi vào 0,7 và "từ trung vị trở lên" giữ
+    lại cả sáu, tức không cắt được gì. Lấy nửa trên thì luôn cắt đúng một nửa.
+
+    Hoà mức nhấn thì cú đứng trước thắng: chỗ sớm hơn trong ô nhịp bao giờ cũng
+    là chỗ tai bám vào trước.
+  */
+  const strong = [...strikes]
+    .sort((a, b) => b.velocityScale - a.velocityScale || a.beat - b.beat)
+    .slice(0, Math.max(2, Math.ceil(strikes.length / 2)))
+
+  return strong.map((strike) => strike.beat).sort((a, b) => a - b)
 }
 
 /**
@@ -111,8 +219,7 @@ export function patternOnsets(style: StylePattern): number[] {
  */
 function ladder(chord: ParsedChord, low: number, high: number): MidiNote[] {
   const tones = new Set(chordPitchClasses(chord.root, chord.quality))
-  const bass = chord.bass ?? chord.root
-  tones.add(((bass % 12) + 12) % 12)
+  tones.add((((chord.bass ?? chord.root) % 12) + 12) % 12)
 
   const out: MidiNote[] = []
   for (let note = low; note <= high; note += 1) {
@@ -125,8 +232,11 @@ function ladder(chord: ParsedChord, low: number, high: number): MidiNote[] {
  * Hình đi lên rồi về, đúng `count` bước, trải hết thang.
  *
  * Trải hết chứ không đi từng bậc liền: thang một hợp âm trong hai quãng tám có
- * chừng bảy tám bậc, mà một ô nhịp chỉ có hai tới sáu cú gõ — đi từng bậc thì
+ * chừng bảy tám bậc, mà một ô nhịp chỉ có bốn tới tám cú gõ — đi từng bậc thì
  * chỉ bò được nửa dưới và tầm đi teo lại đúng chỗ đang muốn mở ra.
+ *
+ * Đi lên rồi VỀ chứ không lên mãi: nốt cuối ô phải đứng cạnh nốt gốc ô sau, nếu
+ * không thì mỗi vạch nhịp là một cú nhảy.
  */
 function upAndBack(steps: number, count: number): number[] {
   if (count <= 1) return [0]
@@ -134,7 +244,8 @@ function upAndBack(steps: number, count: number): number[] {
   // Đỉnh rơi vào khoảng hai phần ba câu: lên thong thả, về nhanh hơn.
   const peak = Math.max(1, Math.round((count - 1) * 0.66))
   for (let at = 0; at < count; at += 1) {
-    const ratio = at <= peak ? at / peak : (count - 1 - at) / Math.max(1, count - 1 - peak)
+    const ratio =
+      at <= peak ? at / peak : (count - 1 - at) / Math.max(1, count - 1 - peak)
     out.push(Math.round(ratio * (steps - 1)))
   }
   return out
@@ -142,8 +253,8 @@ function upAndBack(steps: number, count: number): number[] {
 
 export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
   const { chords, beatsEach, style } = options
-  const onsets = patternOnsets(style)
-  if (onsets.length === 0 || chords.length === 0) return []
+  const strikes = patternStrikes(style)
+  if (strikes.length === 0 || chords.length === 0) return []
 
   const grid = style.gridUnit ?? 1
   const bar = style.beatsPerMeasure * grid
@@ -163,24 +274,33 @@ export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
       Ô nhịp ngắn hơn một ô của điệu thì chỉ lấy những cú gõ còn nằm trong nó —
       hợp âm chia đôi vẫn phải nghe ra là nửa ô, không phải một ô bị bóp.
     */
-    const hits: number[] = []
+    const hits: Strike[] = []
     for (let at = 0; at < beats - 1e-6; at += bar) {
-      for (const onset of onsets) {
-        if (at + onset < beats - 1e-6) hits.push(at + onset)
+      for (const strike of strikes) {
+        if (at + strike.beat < beats - 1e-6) {
+          hits.push({ ...strike, beat: at + strike.beat })
+        }
       }
     }
-    if (hits.length === 0) hits.push(0)
+    if (hits.length === 0) hits.push({ ...strikes[0]!, beat: 0 })
 
     const shape = upAndBack(steps.length, hits.length)
-    hits.forEach((offset, at) => {
-      const next = hits[at + 1] ?? beats
+    hits.forEach((strike, at) => {
+      /*
+        Trường độ giữ theo ô nhịp của điệu, nhưng không thò qua cú gõ kế —
+        tay trái chỉ có một ngón cho một nốt.
+      */
+      const next = hits[at + 1]?.beat ?? beats
       events.push({
         notes: [steps[Math.min(steps.length - 1, shape[at]!)]!],
-        startBeat: cursor + offset,
-        durationBeats: Math.max(0.05, (next - offset) * 0.92),
+        startBeat: cursor + strike.beat,
+        durationBeats: Math.max(
+          0.05,
+          Math.min(strike.durationBeats, next - strike.beat) * 0.95,
+        ),
         hand: 'left',
-        // Phách đầu ô nặng hơn: nó vẫn là chỗ hợp âm đổi.
-        velocity: offset % bar < 1e-6 ? 86 : 70,
+        // Độ nhấn của chính ô nhịp điệu ấy, không phải một con số phẳng.
+        velocity: Math.max(28, Math.min(110, Math.round(88 * strike.velocityScale))),
       })
     })
 

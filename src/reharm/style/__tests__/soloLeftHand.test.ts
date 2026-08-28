@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { chordPitchClasses } from '../../../shared/musicTheory/chordDefinitions'
 import { getStyle } from '../styleLibrary'
-import { patternOnsets, soloLeftHand } from '../soloLeftHand'
+import { accentBeats, patternOnsets, patternStrikes, soloLeftHand } from '../soloLeftHand'
 
 /*
   Tay trái gánh trọn mẫu đệm ở đoạn không lời.
@@ -105,5 +105,61 @@ describe('tay trái gánh mẫu đệm ở đoạn không lời', () => {
     const half = soloLeftHand({ chords, beatsEach: [bar / 2, bar / 2], style })
     expect(half.length).toBeLessThan(full.length)
     expect(half.every((event) => event.startBeat < bar)).toBe(true)
+  })
+})
+
+/*
+  Hai tay CÀI vào nhau, không GÕ CHỒNG.
+
+  Đo trên bản ký âm của Cà Pháo, đoạn giang tấu: chỉ 32-73% số nốt tay phải rơi
+  trúng một cú gõ tay trái — quá nửa còn lại rơi vào khe giữa hai cú. Đó là chỗ
+  khác nhau giữa hai bè cài vào nhau và hai bè đè lên nhau.
+
+  App trước khi sửa: 51-99%, bossa tới 99% — mỗi nốt giai điệu nhân đôi một
+  tiếng bass. Người dùng nghe ra là "dồn nốt rối tai" và tưởng do quá nhiều
+  nốt; thật ra tay phải của app còn THƯA HƠN người thật một nửa (tỉ lệ phải trên
+  trái 0,6-1,0 so với 1,9-2,8). Cái sai nằm ở chỗ rơi, không ở số lượng.
+*/
+describe('giai điệu neo vào cú gõ mạnh, không vào mọi cú', () => {
+  it.each(STYLES)('%s: chỗ neo là tập con của chỗ gõ', (styleId) => {
+    const style = getStyle(styleId)!
+    const all = patternOnsets(style)
+    const accents = accentBeats(style)
+    expect(accents.length).toBeGreaterThanOrEqual(2)
+    expect(accents.length).toBeLessThanOrEqual(all.length)
+    for (const beat of accents) expect(all).toContain(beat)
+  })
+
+  /*
+    Trần sáu cú gõ mỗi ô: đo trên người thật ra 3,4-5,8. Gộp cả hai tay của ô
+    nhịp bossa ra tám, kín hết tám móc đơn, và giai điệu hết khe để lách.
+  */
+  it.each(STYLES)('%s: không quá sáu cú gõ mỗi ô nhịp', (styleId) => {
+    expect(patternOnsets(getStyle(styleId)!).length).toBeLessThanOrEqual(6)
+  })
+
+  /*
+    Mẫu Slow Rock 3 của thầy Đức Thịnh: phách 4 vào SỚM ở 1,45, không phải 1,5.
+    Đó là chỗ giật cục của mẫu, và người dùng đã nắn nó bằng tai. Bản trước của
+    hàm này thay cả hàng bằng một lưới đều tăm tắp và xoá mất nó.
+  */
+  it('giữ chỗ vào sớm 1,45 của thầy Đức Thịnh', () => {
+    expect(patternOnsets(getStyle('slow-rock-duc-thinh-3')!)).toContain(1.45)
+  })
+
+  it('giữ trường độ và độ nhấn của chính ô nhịp điệu', () => {
+    const strikes = patternStrikes(getStyle('slow-rock-duc-thinh-3')!)
+    const real = strikes.filter((strike) => !strike.filler)
+    // Bốn cú gõ thật, mỗi cú một trường độ khác nhau — không bị làm phẳng.
+    expect(new Set(real.map((strike) => strike.durationBeats)).size).toBeGreaterThan(2)
+    expect(new Set(real.map((strike) => strike.velocityScale)).size).toBeGreaterThan(2)
+    // Nốt chèn phải nhẹ hơn mọi cú gõ thật.
+    const filler = strikes.filter((strike) => strike.filler)
+    expect(filler.length).toBe(2)
+    for (const one of filler) {
+      expect(one.velocityScale).toBeLessThan(
+        Math.min(...real.map((strike) => strike.velocityScale)),
+      )
+    }
   })
 })
