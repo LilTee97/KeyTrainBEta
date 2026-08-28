@@ -3766,11 +3766,11 @@ export function ReharmHome() {
               <span
                 title={
                   phraseScale
-                    ? 'Dựng câu bằng cách đóng cọc ở cú gõ mạnh của điệu rồi nối giữa hai cọc bằng bậc của gam, thay cho việc bốc một hình quãng có sẵn trong sổ mẫu.'
+                    ? 'Dựng nhịp trước: rút hình nhịp trong vốn đo được của Cà Pháo, để chỗ nghỉ cuối mỗi câu, câu đáp lặp lại hình nhịp câu hỏi; xong mới đặt cao độ. Thay cho việc bốc một hình quãng có sẵn trong sổ mẫu.'
                     : 'Cần chọn MỘT gam thì mới dựng được — lối nhiều gam không có ao nốt chung.'
                 }
               >
-                Dựng câu bằng cọc và nối{' '}
+                Dựng câu bằng nhịp trước{' '}
                 <span className="text-dim">
                   {phraseScale ? '(thay sổ mẫu Licky)' : '— cần chọn một gam'}
                 </span>
