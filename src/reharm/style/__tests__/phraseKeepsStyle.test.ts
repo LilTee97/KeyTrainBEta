@@ -33,17 +33,16 @@ const STYLES = [
 /**
  * Chỗ gõ tay trái mà điệu đòi ở ĐOẠN KHÔNG LỜI.
  *
- * Không phải bảng bậc tay trái của ô nhịp: ở đoạn không lời, tay phải bỏ phần
- * quạt để lên chạy giai điệu và **tay trái gánh trọn mẫu đệm** — cả phần tay
- * phải để lại. Xem `soloLeftHand.ts`. Trước đây test này so với riêng bảng bậc
- * tay trái, tức khoá đúng cái kết cấu mà người dùng vừa bảo là quá thưa: bolero
- * hai cú gõ mỗi ô, đi vỏn vẹn bảy nửa cung.
+ * Phần TAY TRÁI của ô nhịp, cộng nốt chèn cho nhịp kép. Đã có một lượt gộp cả
+ * phần tay phải vào đây, vì tay trái chơi riêng phần mình thì thưa; người dùng
+ * bác lối ấy — để tay trái đảm nhiệm toàn bộ pattern điệu đệm trong lúc solo là
+ * không đúng. Chỗ thưa ra được lấp bằng luật mật độ, xem `interlockHands`.
  *
  * Thứ phải giữ vẫn nguyên: nhịp lấy từ CHÍNH điệu đang chọn, không mượn điệu
  * khác. Đó là điều test này canh, và nó không đổi.
  */
 function cellLeftBeats(styleId: string): number[] {
-  return patternOnsets(getStyle(styleId)!)
+  return patternOnsets(getStyle(styleId)!, 'left')
 }
 
 function phraseLeftBeats(styleId: string, kind: 'intro' | 'outro'): number[] {

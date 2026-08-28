@@ -1,6 +1,7 @@
 import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { fixHandByRegister, interludeAccompaniment } from './songStructure'
+import { interlockHands } from './soloLeftHand'
 import type { TimelineEvent } from './types'
 
 /**
@@ -472,12 +473,29 @@ export function buildArrangedSong(
 
       const backing =
         last && range.lastEvents ? range.lastEvents : range.events
+
+      /*
+        Hai tay CÀI VÀO NHAU, không cùng nói một lúc.
+
+        Đây là chỗ duy nhất phần đệm giang tấu và câu solo gặp nhau: phần đệm
+        dựng sẵn từ trước, còn câu solo mới sinh ra ở đúng dòng này theo `take`.
+        Nên phép nhường nhau theo mật độ phải đặt ở đây, không đặt được lúc dựng
+        phần đệm. Xem `interlockHands`.
+      */
+      const line = range.solo ? range.solo(take, last) : null
+      const woven =
+        backing && line
+          ? interlockHands(interludeAccompaniment(backing), line, beatsPerMeasure)
+          : null
+
       events.push(
-        ...(backing
-          ? place(interludeAccompaniment(backing), at, length)
-          : slice(forInterlude, range.startBeat, length, at)),
-        ...(range.solo
-          ? place(range.solo(take, last), at, length)
+        ...(woven
+          ? place(woven.left, at, length)
+          : backing
+            ? place(interludeAccompaniment(backing), at, length)
+            : slice(forInterlude, range.startBeat, length, at)),
+        ...(line
+          ? place(woven ? woven.melody : line, at, length)
           : slice(solo(take), range.startBeat, length, at)),
       )
       take += 1

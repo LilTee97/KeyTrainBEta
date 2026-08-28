@@ -4,7 +4,7 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
-import { avoidMelodyClash, soloLeftHand } from './soloLeftHand'
+import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose } from './phraseCue'
 
@@ -88,17 +88,17 @@ export function buildPhraseSection(
     khí thế, chứ không phải để tiễn bài đi.
   */
   /*
-    Tay trái gánh trọn mẫu đệm, tay phải chỉ còn giai điệu.
+    Tay phải giai điệu, tay trái mẫu đệm — nhưng CÀI VÀO NHAU, không cùng nói.
 
     Trước đây đoạn dạo quạt cả hai tay rồi chồng câu ngẫu hứng lên trên — ba
-    tầng cùng lúc, mà tầng quạt tay phải giẫm đúng chỗ câu solo đang chạy. Và
-    tay trái thì chỉ chơi phần bass của một mẫu đệm hai tay: đo trên bolero ra
-    hai cú gõ mỗi ô, đi vỏn vẹn bảy nửa cung. Người dùng nghe ra là "solo khá
-    đơn điệu" trước khi tôi đo được.
+    tầng cùng lúc, mà tầng quạt tay phải giẫm đúng chỗ câu solo đang chạy. Sửa
+    lượt một: bỏ tầng quạt, tay trái gánh trọn mẫu đệm. Người dùng nghe rồi bác
+    tiếp — để tay trái đảm nhiệm toàn bộ pattern điệu đệm trong lúc solo là
+    không đúng.
 
-    Nay chia lại đúng như người thật chơi: tay phải giai điệu, tay trái mẫu đệm
-    đầy đủ trải hai quãng tám. Xem `soloLeftHand.ts` — nhịp vẫn lấy từ chính ô
-    nhịp của điệu đang chọn, nên luật "đoạn không lời chơi đúng điệu" còn nguyên.
+    Nay tay trái vẫn dựng từ mẫu đệm của chính điệu đang chọn, nhưng bao nhiêu
+    phần trong đó thực sự kêu lên thì tuỳ tay phải đang bận tới đâu — xem
+    `interlockHands`. Luật "đoạn không lời chơi đúng điệu" còn nguyên.
   */
   const backing = soloLeftHand({ chords, beatsEach, style })
 
@@ -155,7 +155,8 @@ export function buildPhraseSection(
     Tay trái nhường phím khi trùng với giai điệu — xem `avoidMelodyClash`.
     Chồng TẦM thì được, chồng PHÍM cùng lúc thì không.
   */
-  const whole = [...avoidMelodyClash(backing, voiced), ...voiced]
+  const woven = interlockHands(backing, voiced, style.beatsPerMeasure * (style.gridUnit ?? 1))
+  const whole = [...avoidMelodyClash(woven.left, woven.melody), ...woven.melody]
   const ghep =
     kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
 

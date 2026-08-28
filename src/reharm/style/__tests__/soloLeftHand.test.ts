@@ -5,12 +5,20 @@ import { getStyle } from '../styleLibrary'
 import { accentBeats, patternOnsets, patternStrikes, soloLeftHand } from '../soloLeftHand'
 
 /*
-  Tay trái gánh trọn mẫu đệm ở đoạn không lời.
+  Tay trái ở đoạn không lời: chơi PHẦN CỦA MÌNH, và ĐI chứ không đứng.
 
-  Đo trên bảy bản ký âm của Cà Pháo, tay trái ở đoạn giang tấu: 4,9-6,0 cú gõ
-  mỗi ô, tầm đi 23-40 nửa cung, 1,04-1,20 nốt mỗi lần gõ. Tay trái của app
-  trước khi sửa: bolero 2,0 cú gõ đi 7 nửa cung, bossa 4,0 đi 12, slow rock
-  3,0 đi 16 — nó ĐẶT nốt chứ không ĐI.
+  Có một lượt trước đây tay trái gõ trọn mẫu đệm — gộp cả phần tay phải — vì đo
+  ra nó quá thưa so với người thật (bolero 2,0 cú gõ mỗi ô so với 4,9-6,0 của Cà
+  Pháo). Người dùng nghe rồi bác: để tay trái đảm nhiệm toàn bộ pattern điệu đệm
+  trong lúc solo là không đúng.
+
+  Nay chia lại: tay trái chơi đúng phần tay trái của mẫu đệm, còn chỗ thưa ra thì
+  lấp bằng luật mật độ — chèn nốt rải vào đúng những khe tay phải đang nghỉ hoặc
+  đang ngân. Xem `interlockHands` và `interlockHands.test.ts`.
+
+  Thứ KHÔNG đổi, vì nó đến từ số đo chứ không từ thiết kế: tầm đi hai quãng tám
+  (Cà Pháo 23-40 nửa cung, app cũ 7-16 — nó ĐẶT nốt chứ không ĐI), và nhịp kép
+  phải nghe đủ sáu phách.
 */
 
 const STYLES = [
@@ -39,28 +47,36 @@ describe('tay trái gánh mẫu đệm ở đoạn không lời', () => {
     expect(Math.max(...notes) - Math.min(...notes)).toBeGreaterThanOrEqual(23)
   })
 
-  it.each(STYLES)('%s: gõ ít nhất bốn lần mỗi ô nhịp', (styleId) => {
-    const { events, chords } = build(styleId)
-    expect(events.length / chords.length).toBeGreaterThanOrEqual(4)
-  })
-
   /*
     Luật người dùng đã ra và không đổi: đoạn không lời chơi đúng điệu đang chọn.
-    Tay trái nhận thêm phần tay phải bỏ lại, KHÔNG mượn tiết tấu của điệu khác.
+    Nhưng chỉ chơi PHẦN TAY TRÁI của điệu ấy, không ôm luôn phần tay phải.
   */
-  it.each(STYLES)('%s: gõ đúng mạch của chính điệu ấy', (styleId) => {
+  it.each(STYLES)('%s: gõ đúng mạch tay trái của chính điệu ấy', (styleId) => {
     const { events, bar } = build(styleId)
     const beats = [
       ...new Set(events.map((event) => Number((event.startBeat % bar).toFixed(3)))),
     ].sort((a, b) => a - b)
-    expect(beats).toEqual(patternOnsets(getStyle(styleId)!))
+    expect(beats).toEqual(patternOnsets(getStyle(styleId)!, 'left'))
+  })
+
+  /*
+    Chốt lại đúng chỗ người dùng bác: có ít nhất một điệu mà phần tay phải của
+    mẫu đệm KHÔNG lọt sang tay trái. Nếu hai con số bằng nhau ở mọi điệu thì lối
+    gánh trọn đã lẻn về.
+  */
+  it('không ôm phần tay phải của mẫu đệm sang tay trái', () => {
+    const thinner = STYLES.filter((styleId) => {
+      const style = getStyle(styleId)!
+      return patternOnsets(style, 'left').length < patternOnsets(style, 'both').length
+    })
+    expect(thinner.length).toBeGreaterThan(0)
   })
 
   /* Nhịp kép: sáu phách phải nghe thấy đủ sáu, không phải bốn. */
   it.each(['slow-rock-duc-thinh-3', 'hai-slow-rock', 'slow-rock-2'] as const)(
     '%s: nhịp 6/8 gõ đủ sáu phách',
     (styleId) => {
-      expect(patternOnsets(getStyle(styleId)!)).toHaveLength(6)
+      expect(patternOnsets(getStyle(styleId)!, 'left')).toHaveLength(6)
     },
   )
 
@@ -143,8 +159,15 @@ describe('giai điệu neo vào cú gõ mạnh, không vào mọi cú', () => {
     Đó là chỗ giật cục của mẫu, và người dùng đã nắn nó bằng tai. Bản trước của
     hàm này thay cả hàng bằng một lưới đều tăm tắp và xoá mất nó.
   */
+  /*
+    Chỗ giật cục 1,45 là hợp âm tay PHẢI của mẫu (ô nhịp ghi beat 2,9 × lưới
+    0,5). Tay trái không gõ nó nữa, nhưng mạch nhấn thì vẫn tính cả hai tay —
+    nên giai điệu vẫn neo vào đúng chỗ ấy. Tính cách của mẫu chuyển sang tay
+    phải, không mất đi.
+  */
   it('giữ chỗ vào sớm 1,45 của thầy Đức Thịnh', () => {
     expect(patternOnsets(getStyle('slow-rock-duc-thinh-3')!)).toContain(1.45)
+    expect(accentBeats(getStyle('slow-rock-duc-thinh-3')!)).toContain(1.45)
   })
 
   it('giữ trường độ và độ nhấn của chính ô nhịp điệu', () => {

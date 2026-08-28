@@ -123,13 +123,14 @@ const MAX_STRIKES = 6
  * đã có cú gõ thật thì để yên, kể cả khi nó lệch lưới như 1,45. Nốt chèn đánh
  * nhẹ hẳn để cú gõ của điệu vẫn nổi lên trên.
  */
-export function patternStrikes(style: StylePattern): Strike[] {
+export function patternStrikes(style: StylePattern, hands: 'both' | 'left' = 'both'): Strike[] {
   if (!style.cell) return []
   const grid = style.gridUnit ?? 1
   const bar = style.beatsPerMeasure * grid
 
   const out: Strike[] = []
-  for (const hit of [...style.cell.left, ...style.cell.right]) {
+  const source = hands === 'left' ? style.cell.left : [...style.cell.left, ...style.cell.right]
+  for (const hit of source) {
     const beat = Number(((((hit.beat * grid) % bar) + bar) % bar).toFixed(3))
     const already = out.find((other) => Math.abs(other.beat - beat) < SAME_HIT)
     const strike: Strike = {
@@ -169,8 +170,8 @@ export function patternStrikes(style: StylePattern): Strike[] {
 }
 
 /** Chỗ gõ, chỉ lấy vị trí — để lưới test so mạch. */
-export function patternOnsets(style: StylePattern): number[] {
-  return patternStrikes(style).map((strike) => strike.beat)
+export function patternOnsets(style: StylePattern, hands: 'both' | 'left' = 'both'): number[] {
+  return patternStrikes(style, hands).map((strike) => strike.beat)
 }
 
 /**
@@ -253,7 +254,22 @@ function upAndBack(steps: number, count: number): number[] {
 
 export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
   const { chords, beatsEach, style } = options
-  const strikes = patternStrikes(style)
+  /*
+    CHỈ phần tay trái của mẫu đệm, không gộp cả phần tay phải.
+
+    Có một lượt trước đây gộp cả hai tay, vì tay trái chơi riêng phần mình thì
+    thưa quá — bolero hai cú gõ mỗi ô. Người dùng nghe rồi bác: để tay trái đảm
+    nhiệm toàn bộ pattern điệu đệm trong lúc solo là không đúng.
+
+    Chỗ thưa ra được lấp bằng luật 2 của `interlockHands` — tay trái chèn nốt
+    rải vào đúng những khe tay phải đang ngân dài hoặc đang nghỉ. Lấp theo tay
+    phải thì hai bè nhường nhau; lấp bằng cách gõ luôn phần tay phải của mẫu
+    đệm thì hai bè cùng nói một lúc.
+
+    Nốt chèn cho nhịp kép vẫn còn: slow rock ở đoạn không lời phải nghe đủ sáu
+    phách bên tay trái, đó là yêu cầu riêng và nó không đổi.
+  */
+  const strikes = patternStrikes(style, 'left')
   if (strikes.length === 0 || chords.length === 0) return []
 
   const grid = style.gridUnit ?? 1
@@ -308,6 +324,130 @@ export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
   })
 
   return events
+}
+
+/** Từ ngần này nốt mỗi phách trở lên là tay phải đang chạy dày (móc kép). */
+const DENSE_RIGHT = 4
+/** Nốt tay phải ngân từ ngần này trở lên là chỗ tay trái được lấp vào. */
+const LONG_RIGHT = 2
+/** Nốt tay phải rơi trong ngần này quanh vạch nhịp thì kéo về đúng vạch. */
+const DOWNBEAT_PULL = 0.25
+
+/**
+ * Hai tay **cài vào nhau theo mật độ**, thay vì tay trái gánh trọn mẫu đệm.
+ *
+ * Bản trước cho tay trái chơi đủ mọi cú gõ của mẫu đệm suốt đoạn solo. Người
+ * dùng bác: để tay trái đảm nhiệm toàn bộ pattern điệu đệm trong lúc solo là
+ * không đúng. Đúng là vậy — đoạn solo không phải đoạn đệm bị úp thêm một giai
+ * điệu lên trên; hai tay phải nhường nhau chứ không cùng nói một lúc.
+ *
+ * Ba luật, quyết theo từng khe giữa hai cú gõ tay trái:
+ *
+ * 1. **Tay phải chạy dày** (từ 4 nốt mỗi phách, tức móc kép) -> tay trái BỎ cú
+ *    gõ ấy và để nốt trước ngân dài. Hai bè cùng dày thì đục dải tần.
+ * 2. **Tay phải ngân dài hoặc nghỉ** -> tay trái CHÈN thêm nốt rải lấp chỗ
+ *    trống, lấy luôn cao độ của cú gõ kế tiếp nên vẫn là nốt của hợp âm.
+ * 3. **Vạch nhịp** -> cú gõ tay trái không bao giờ bị bỏ, và nốt giai điệu rơi
+ *    sát vạch được kéo về đúng vạch để hai tay gõ cùng lúc. Đây là chỗ neo
+ *    nhịp; mọi thứ khác nhường nhau được, chỗ này thì không.
+ *
+ * Luật "đoạn không lời chơi đúng điệu đã chọn" vẫn nguyên: chỗ gõ, trường độ và
+ * độ nhấn vẫn của chính điệu ấy. Cái đổi là BAO NHIÊU phần trong đó thực sự
+ * kêu lên, tuỳ tay phải đang bận tới đâu.
+ */
+export function interlockHands(
+  left: readonly TimelineEvent[],
+  melody: readonly TimelineEvent[],
+  barBeats: number,
+): { left: TimelineEvent[]; melody: TimelineEvent[] } {
+  /*
+    Không có tay phải thì không có gì để nhường. "Tay phải nghỉ" ở luật 2 nghĩa
+    là nghỉ GIỮA một câu đang chạy, không phải cả đoạn không có ai chơi — đoạn
+    dạo đầu tắt câu solo thì mẫu đệm phải kêu nguyên vẹn.
+  */
+  if (left.length === 0 || melody.length === 0) {
+    return { left: [...left], melody: [...melody] }
+  }
+
+  const hits = [...left].sort((a, b) => a.startBeat - b.startBeat)
+  const onDownbeat = (beat: number) => {
+    const rel = ((beat % barBeats) + barBeats) % barBeats
+    return Math.min(rel, barBeats - rel) < 0.05
+  }
+
+  /* Luật 3 — kéo nốt giai điệu sát vạch về đúng vạch. */
+  const pulled = melody.map((note) => {
+    if (onDownbeat(note.startBeat)) return note
+    const bar = Math.round(note.startBeat / barBeats) * barBeats
+    if (Math.abs(note.startBeat - bar) > DOWNBEAT_PULL) return note
+    if (melody.some((other) => onDownbeat(other.startBeat) && Math.abs(other.startBeat - bar) < 0.05)) {
+      return note
+    }
+    return { ...note, startBeat: bar }
+  })
+
+  const kept: { event: TimelineEvent; held: boolean; fill: boolean }[] = []
+  hits.forEach((event, index) => {
+    const next = hits[index + 1]?.startBeat ?? event.startBeat + barBeats
+    const room = Math.max(0.25, next - event.startBeat)
+    const inside = pulled.filter(
+      (note) => note.startBeat >= event.startBeat - 1e-6 && note.startBeat < next - 1e-6,
+    )
+
+    if (onDownbeat(event.startBeat)) {
+      kept.push({ event, held: false, fill: false })
+      return
+    }
+    if (inside.length / room >= DENSE_RIGHT) return // luật 1: bỏ, nhường dải tần
+    const airy =
+      inside.length === 0 || inside.some((note) => note.durationBeats >= LONG_RIGHT)
+    kept.push({ event, held: false, fill: airy }) // luật 2
+  })
+
+  const out: TimelineEvent[] = []
+  kept.forEach((slot, index) => {
+    const next = kept[index + 1]
+    const until = next?.event.startBeat ?? slot.event.startBeat + slot.event.durationBeats
+    const room = until - slot.event.startBeat
+    /*
+      Cú gõ bị bỏ vì tay phải dày thì nốt trước phải NGÂN bù vào, không thì chỗ
+      ấy hoá ra im lặng. Luật của người dùng là "giữ một nốt bass", không phải
+      "bỏ tay trái".
+    */
+    const dropped = next !== undefined && room > slot.event.durationBeats + 1e-6
+    out.push({
+      ...slot.event,
+      durationBeats: Math.max(
+        0.05,
+        dropped ? room * 0.98 : Math.min(slot.event.durationBeats, room),
+      ),
+    })
+
+    if (!slot.fill || next === undefined || room < 1) return
+    /*
+      RẢI vào chỗ trống, không chỉ một nốt.
+
+      Luật của người dùng ghi là "trigger arpeggio fill-in". Khe rộng bao nhiêu
+      thì chèn bấy nhiêu nốt, nhiều nhất ba — quá ba thì chính tay trái lại thành
+      bè dày, đúng thứ luật 1 đang tránh.
+
+      Cao độ lấy luân phiên hai cú gõ ở hai đầu khe: cả hai đã là nốt của hợp âm
+      và đã nằm trong hình rải, nên chèn vào giữa là kéo dài chính hình ấy chứ
+      không đẻ ra một tầng mới. Đánh nhẹ hơn để cú gõ thật vẫn nổi lên trên.
+    */
+    const count = Math.min(3, Math.floor(room))
+    for (let step = 1; step <= count; step += 1) {
+      const from = step % 2 === 1 ? next.event : slot.event
+      out.push({
+        ...from,
+        startBeat: slot.event.startBeat + (room * step) / (count + 1),
+        durationBeats: Math.max(0.05, (room / (count + 1)) * 0.9),
+        velocity: Math.max(24, Math.round(from.velocity * 0.7)),
+      })
+    }
+  })
+
+  return { left: out.sort((a, b) => a.startBeat - b.startBeat), melody: pulled }
 }
 
 /**
