@@ -92,6 +92,14 @@ const REST_GAP = 0.75
  */
 const JITTER = 0.22
 
+/**
+ * Hai cọc liền nhau cách nhau nhiều nhất bấy nhiêu nửa cung trước khi bị phạt.
+ *
+ * Bốn nửa cung là một quãng ba trưởng — vẫn nằm trong hai cỡ bước mà người thật
+ * dùng. Xa hơn thì thành bước nhảy, và bước nhảy kéo câu ra khỏi vùng pha trộn.
+ */
+const MAX_ANCHOR_LEAP = 4
+
 const hash = (seed: number) => {
   const x = Math.sin(seed * 12.9898) * 43758.5453
   return x - Math.floor(x)
@@ -118,6 +126,81 @@ function arc(at: number, total: number, take: number): number {
   const peak = 0.55 + hash(take + 3) * 0.25
   const ratio = at / (total - 1)
   return ratio <= peak ? ratio / peak : (1 - ratio) / Math.max(0.01, 1 - peak)
+}
+
+/** Cửa sổ để đo cân bằng — cỡ một hơi của người thật. */
+const WINDOW = 5
+/**
+ * Nghiêng quá mức này về một cỡ bước thì nắn.
+ *
+ * Thấp hơn ngưỡng 0,6 mà bộ đo dùng để gọi một câu là "thuần", để có biên. Nắn
+ * đúng ở 0,6 thì mọi câu nằm sát mép và một chút may rủi là rơi qua phía kia.
+ */
+const TILT = 0.5
+
+const sizeOf = (gap: number) => (gap === 0 ? 'lap' : gap <= 2 ? 'buoc' : gap <= 4 ? 'ba' : 'xa')
+
+/**
+ * Nắn cho **mỗi cửa sổ năm bước đều có cả hai cỡ**.
+ *
+ * Phép phân loại của cái thước chấm theo CỬA SỔ, không theo đoạn: một câu được
+ * gọi là gam thuần khi từ 60% số bước trở lên là liền bậc. Nắn ở mức từng đoạn
+ * nối thì không đủ, vì câu chạy vắt qua nhiều cọc và những bước quanh cọc không
+ * ai nắn — đo ra cọc sang cọc trung bình 3,7 nửa cung, một nửa là nhảy xa.
+ *
+ * Nên nắn ở mức từng NỐT: đi tới đâu ngó lại năm bước vừa qua, nghiêng hẳn về
+ * một cỡ thì kéo bước tới về cỡ kia. Chỉ dịch MỘT bậc thang, và chỉ khi nốt mới
+ * vẫn nằm trong gam — nên câu không đổi hướng, chỉ đổi bề rộng bước.
+ *
+ * Không nắn nốt đầu: nó là chỗ câu bắt đầu, không có bước nào trước nó.
+ */
+function balanceSteps(line: LineNote[], ladder: readonly MidiNote[]): LineNote[] {
+  if (line.length < 3 || ladder.length < 3) return line
+
+  const out = [...line]
+  const recent: string[] = []
+
+  for (let at = 1; at < out.length; at += 1) {
+    const previous = out[at - 1]!
+    const note = out[at]!
+    const share = (kind: string) =>
+      recent.length === 0 ? 0 : recent.filter((one) => one === kind).length / recent.length
+
+    const size = sizeOf(Math.abs(note.note - previous.note))
+
+    /*
+      Chỉ nắn khi cửa sổ NGHIÊNG HẲN về một cỡ. Nghiêng về liền bậc thì kéo một
+      bước sang quãng ba, và ngược lại.
+
+      Đã thử kéo luôn cả bước NHẢY XA về quãng ba — nghe có lý vì bước nhảy
+      không thuộc cỡ nào và nó cắt câu làm đôi. Đo ra tệ hơn hẳn: 16 trên 24 chỉ
+      số tụt xuống 9, vì mọi bước nhảy hoá thành quãng ba và tỉ lệ rải vọt lên
+      19-44%. Bước nhảy thưa thớt hoá ra là thứ giữ cho hai cỡ kia không chiếm
+      hết chỗ. Để nguyên.
+    */
+    const want =
+      size === 'buoc' && share('buoc') >= TILT
+        ? 'ba'
+        : size === 'ba' && share('ba') >= TILT
+          ? 'buoc'
+          : null
+
+    if (want !== null) {
+      const rung = ladder.indexOf(note.note)
+      for (const move of [1, -1]) {
+        const candidate = ladder[rung + move]
+        if (candidate === undefined) continue
+        if (sizeOf(Math.abs(candidate - previous.note)) !== want) continue
+        out[at] = { ...note, note: candidate }
+        break
+      }
+    }
+
+    recent.push(sizeOf(Math.abs(out[at]!.note - previous.note)))
+    if (recent.length > WINDOW) recent.shift()
+  }
+
+  return out
 }
 
 export function buildLine(options: LineOptions): LineNote[] {
@@ -148,6 +231,7 @@ export function buildLine(options: LineOptions): LineNote[] {
     Nốt hợp âm, và là nốt hợp âm gần chỗ hình vòm đang đi tới nhất. Không chọn
     nốt gần nốt trước nhất: làm vậy thì câu bò tại chỗ và cả đoạn phẳng lì.
   */
+  const pitchedSoFar: { beat: number; chord: ParsedChord; note: MidiNote }[] = []
   const pitched = posts.map((post, index) => {
     const tones = new Set(chordTonesStrict(post.chord))
     const inChord = ladder.filter((note) =>
@@ -183,7 +267,33 @@ export function buildLine(options: LineOptions): LineNote[] {
     const outside = ladder.filter((note) => !inChord.includes(note))
     const wantsColour = hash(take * 17 + index * 5) < 0.45 && outside.length > 0
     const pool = wantsColour ? outside : inChord.length > 0 ? inChord : ladder
-    return { ...post, note: pool[nearest(pool, want)]! }
+
+    /*
+      Cọc theo vòm, NHƯNG không nhảy cóc khỏi cọc trước.
+
+      Chọn thuần theo vòm thì hai cọc liền nhau cách trung bình 3,7 nửa cung và
+      một nửa số bước là nhảy xa — đo trên chính bộ này. Bước nhảy xa không phải
+      liền bậc mà cũng không phải quãng ba, nên nó kéo câu ra khỏi vùng "pha
+      trộn" mà người thật ở (68-82%).
+
+      Phạt phần vượt quá một quãng ba: vòm vẫn dẫn hướng, nhưng chỗ nào vòm đòi
+      nhảy quá xa thì lấy nốt gần hơn trong cùng ao. Phạt chứ không cấm — cả câu
+      không có một bước rộng nào thì lại phẳng.
+    */
+    const previous = pitchedSoFar[pitchedSoFar.length - 1]
+    let best = pool[0]!
+    let bestCost = Infinity
+    for (const note of pool) {
+      const leap = previous === undefined ? 0 : Math.abs(note - previous.note)
+      const cost = Math.abs(note - want) + 1.6 * Math.max(0, leap - MAX_ANCHOR_LEAP)
+      if (cost < bestCost) {
+        bestCost = cost
+        best = note
+      }
+    }
+    const chosen = { ...post, note: best }
+    pitchedSoFar.push(chosen)
+    return chosen
   })
 
   /*
@@ -291,7 +401,7 @@ export function buildLine(options: LineOptions): LineNote[] {
   })
 
   /* Trường độ: ngân tới nốt kế, nốt cuối ngân tới hết đoạn. */
-  const sorted = out.sort((a, b) => a.startBeat - b.startBeat)
+  const sorted = balanceSteps(out.sort((a, b) => a.startBeat - b.startBeat), ladder)
   return sorted.map((note, index) => {
     const next = sorted[index + 1]?.startBeat ?? total
     return { ...note, durationBeats: Math.max(0.05, (next - note.startBeat) * 0.92) }

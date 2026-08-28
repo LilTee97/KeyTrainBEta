@@ -117,8 +117,35 @@ describe('bộ sinh cọc-và-nối', () => {
     expect(shapeMiss(score(styleId, 'moi'))).toBeLessThan(shapeMiss(score(styleId, 'licky')))
   })
 
-  it.each(STYLES)('%s: chưa vào khoảng — còn việc để làm', (styleId) => {
-    expect(shapeMiss(score(styleId, 'moi'))).toBeGreaterThan(0)
+  /*
+    HAI ĐIỆU ĐÃ VÀO HẲN KHOẢNG, sau lượt nắn cỡ bước theo cửa sổ.
+
+    |              | gam | rải | trộn |
+    |--------------|-----|-----|------|
+    | người thật   | 6-22% | 2-11% | 68-82% |
+    | slow rock 3  | 18% | 9%  | 73% |
+    | pop-1        | 21% | 10% | 68% |
+  */
+  it.each(['slow-rock-duc-thinh-3', 'pop-1'] as const)(
+    '%s: hình câu vào hẳn khoảng người thật',
+    (styleId) => {
+      expect(shapeMiss(score(styleId, 'moi'))).toBe(0)
+    },
+  )
+
+  /*
+    BOLERO CÒN LỆCH: 35% gam · 22% rải · 43% trộn.
+
+    Nguyên nhân nằm ở chỗ đóng cọc, không ở đường nối. Cú gõ mạnh của bolero rơi
+    vào phách 0 · 0,5 · 2, tức có một cặp cọc chỉ cách nhau NỬA PHÁCH. Khe ấy
+    không đủ chỗ cho một nốt nối nào, nên mỗi ô nhịp có một bước cọc-sang-cọc
+    trần trụi mà lượt nắn không với tới.
+
+    Ngày nào chỗ này hết lệch thì test đỏ, và lúc ấy gộp bolero vào lưới trên.
+  */
+  it('bolero còn lệch vì có cặp cọc cách nhau nửa phách', () => {
+    expect(shapeMiss(score('bolero-1', 'moi'))).toBeGreaterThan(0)
+    expect(accentBeats(getStyle('bolero-1')!)).toContain(0.5)
   })
 
   it('mỗi lượt cho một đường khác nhau', () => {
