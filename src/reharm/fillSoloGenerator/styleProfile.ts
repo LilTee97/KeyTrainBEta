@@ -226,6 +226,13 @@ export const CA_PHAO_RANGE = {
   rhythmSizes: [7, 22],
   /** Móc đơn là cỡ trụ cột: 53% trên cả bảy bài, từng bài 25-74%. */
   eighthShare: [0.25, 0.74],
+  /*
+    Đo lại trên bảy bản ký âm bằng CHÍNH chỉ số đã sửa (khoá theo cả nhịp lẫn
+    cao độ), không lấy con số cũ: khoá đổi thì khoảng đo cũng đổi. Hai đầu là
+    Yêu xa 14% và Yêu là tha thứ 66% — chênh nhau bốn lần rưỡi, nên đây là
+    khoảng rất rộng và một bộ sinh lọt vào giữa chưa nói lên nhiều.
+  */
+  motifReuse: [0.14, 0.66],
   scale: [0.06, 0.22],
   arpeggio: [0.02, 0.11],
   mixed: [0.68, 0.82],
