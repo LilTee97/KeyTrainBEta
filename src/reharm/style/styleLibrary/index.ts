@@ -82,21 +82,18 @@ const BOLERO_STYLES: StylePattern[] = [
     hợp âm đảo phách. Hai điệu này khác nhau về loài, không phải hai biến thể
     của một thứ — nên thêm vào, không sửa đè.
 
-    Đặc tả người dùng đưa vào, đọc từ video *Đừng Xa Em Đêm Nay — Linh Nhi Piano
-    Solo*. Đây là bản ĐỘC TẤU: tay phải giữ giai điệu suốt bài, nên ô nhịp không
-    có phần tay phải nào — đúng câu "tuyệt đối không dậm chát chát liên tục làm
-    đục dải tần" trong đặc tả. Hệ quả cần biết: chọn điệu này thì đoạn có lời
-    cũng chỉ nghe tay trái, chỗ trống để dành cho người hát.
+    Đặc tả đọc từ video *Đừng Xa Em Đêm Nay — Linh Nhi Piano Solo* (Gemini,
+    lần 2). Bản độc tấu: tay phải giữ giai điệu, ô nhịp không có tay phải.
 
-    CHƯA AI ĐỐI CHIẾU BẰNG TAI. Mốc thời gian và bậc rải là do Gemini xem video
-    rồi ghi lại; tôi không mở được video. Cờ `verified` ở đây nghĩa là "chép từ
-    một video có thật, có mốc" — đúng như mọi điệu khác trong thư viện, kể cả
-    Slow Rock của thầy Đức Thịnh chép cùng đường ấy. Chỗ ghi mức tin cậy thật là
-    item bên PianoBrain, và nó để `draft`.
+    Verse: 1 (đen) · 5 (đen) · 8+10 giữ hai phách. Gemini gọi đó là mẫu chủ đạo
+    ("bấm giữ phách 3-4"). Ô hai hợp âm chơi đúng nửa đầu — 1 rồi 5 — nhờ
+    `isSplitAwareStyle`. Bậc 9 là nốt màu từng ô, không nhét vào cell.
+
+    CHƯA ĐỐI CHIẾU BẰNG TAI.
   */
   {
     id: 'bolero-linh-nhi',
-    name: 'Bolero trữ tình — rải 1-5-8-10-9',
+    name: 'Bolero trữ tình — rải 1-5-8+10',
     family: 'bolero-linh-nhi',
     familyName: 'Bolero trữ tình',
     variant: 1,
@@ -109,39 +106,24 @@ const BOLERO_STYLES: StylePattern[] = [
     cell: {
       lengthBeats: 4,
       left: [
-        // Phách 1: nốt gốc, nốt đen.
         { beat: 0, durationBeats: 1, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
-        // Phách 2: bậc 5 rồi bậc 8, hai móc đơn.
-        { beat: 1, durationBeats: 0.5, velocityScale: 0.6, tones: [{ toneIndex: 2, fromRoot: true }] },
-        {
-          beat: 1.5,
-          durationBeats: 0.5,
-          velocityScale: 0.6,
-          tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }],
-        },
-        // Phách 3: bậc 10 — bậc ba nâng một quãng tám — nốt đen.
+        { beat: 1, durationBeats: 1, velocityScale: 0.65, tones: [{ toneIndex: 2, fromRoot: true }] },
         {
           beat: 2,
-          durationBeats: 1,
-          velocityScale: 0.8,
-          tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }],
+          durationBeats: 2,
+          velocityScale: 0.75,
+          tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }],
         },
-        /*
-          Phách 4: đặc tả ghi "bậc 9 HOẶC bậc 5". Lấy bậc 5 nâng quãng tám: bậc 9
-          không phải nốt của hợp âm, mà tay trái ở đây đang giữ hoà âm — nốt màu
-          là việc của tay phải. Đây là chỗ đặc tả cho chọn, không phải chỗ tôi
-          tự ý đổi.
-        */
         {
-          beat: 3,
-          durationBeats: 0.5,
-          velocityScale: 0.5,
-          tones: [{ toneIndex: 2, fromRoot: true, semitones: 12 }],
+          beat: 2,
+          durationBeats: 2,
+          velocityScale: 0.75,
+          tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }],
         },
       ],
       right: [],
     },
-    note: 'Bolero trữ tình (Linh Nhi): tay trái rải 1-5-8-10-9 mỗi ô, không dập hợp âm. Bản độc tấu nên ô nhịp không có phần tay phải.',
+    note: 'Bolero trữ tình (Linh Nhi): tay trái 1-5 rồi 8+10 giữ phách 3-4. Bản độc tấu, không dập hợp âm tay phải.',
     /*
       Nới trần tay trái, đúng cửa mà `patternRenderer` mở cho thế 1-5-8-10.
 
@@ -155,21 +137,15 @@ const BOLERO_STYLES: StylePattern[] = [
   },
 
   /*
-    Bản CAO TRÀO của điệu trên — dùng cho điệp khúc VÀ giang tấu.
+    Cao trào — điệp khúc VÀ giang tấu. Gemini lần 2: tám móc đơn một ô, sóng
+    1-5-8-10-12-10-8-5, quãng tám bass chỉ phách 1. Nốt 9/11 trong video là
+    nốt lót theo hợp âm, cell giữ nốt hợp âm cho mọi giọng.
 
-    Đặc tả gộp hai đoạn ấy làm một: "Chorus / Giang tấu — phách 1, 3 dậm octave
-    bass trầm sâu; phách 2, 4 rải chuỗi móc đơn liên tục (1-5-8-9), dynamic
-    Forte". Khác hẳn phiên khúc: phiên khúc là một đường rải mảnh, cao trào là
-    quãng tám nện xen với rải dồn.
-
-    Đây cũng là chỗ sửa lại cách hiểu cũ của tôi. Người dùng bác lối "tay trái
-    gánh trọn mẫu đệm ở đoạn solo", và tôi đã đọc thành "tay trái phải mỏng đi".
-    Đọc kỹ đặc tả thì không phải: cái sai là chơi NGUYÊN mẫu đoạn hát, còn đoạn
-    giang tấu có kết cấu riêng và kết cấu ấy NẶNG hơn.
+    Ô hai hợp âm: nửa đầu đúng 1-5-8-10, nhờ `isSplitAwareStyle`.
   */
   {
     id: 'bolero-linh-nhi-chorus',
-    name: 'Bolero trữ tình — cao trào (octave bass)',
+    name: 'Bolero trữ tình — cao trào (arpeggio 8 nốt)',
     family: 'bolero-linh-nhi',
     familyName: 'Bolero trữ tình',
     variant: 2,
@@ -182,51 +158,66 @@ const BOLERO_STYLES: StylePattern[] = [
     cell: {
       lengthBeats: 4,
       left: [
-        // Phách 1 và 3: quãng tám bass, hai nốt cùng lúc.
         {
           beat: 0,
-          durationBeats: 1,
+          durationBeats: 0.5,
           velocityScale: 1,
           tones: [
             { toneIndex: 0, fromRoot: true },
             { toneIndex: 0, fromRoot: true, semitones: 12 },
           ],
         },
-        // Phách 2: rải móc đơn 5 -> 8.
-        { beat: 1, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 0.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true }] },
         {
-          beat: 1.5,
+          beat: 1,
           durationBeats: 0.5,
           velocityScale: 0.75,
           tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }],
         },
         {
-          beat: 2,
-          durationBeats: 1,
-          velocityScale: 0.95,
-          tones: [
-            { toneIndex: 0, fromRoot: true },
-            { toneIndex: 0, fromRoot: true, semitones: 12 },
-          ],
-        },
-        // Phách 4: rải móc đơn 10 -> 9, dẫn sang ô sau.
-        {
-          beat: 3,
+          beat: 1.5,
           durationBeats: 0.5,
           velocityScale: 0.8,
           tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }],
         },
         {
-          beat: 3.5,
+          beat: 2,
           durationBeats: 0.5,
-          velocityScale: 0.75,
+          velocityScale: 0.85,
           tones: [{ toneIndex: 2, fromRoot: true, semitones: 12 }],
         },
+        {
+          beat: 2.5,
+          durationBeats: 0.5,
+          velocityScale: 0.8,
+          tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }],
+        },
+        {
+          beat: 3,
+          durationBeats: 0.5,
+          velocityScale: 0.75,
+          tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }],
+        },
+        { beat: 3.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true }] },
       ],
       right: [],
     },
-    note: 'Bolero trữ tình cao trào (Linh Nhi): octave bass phách 1 & 3, rải móc đơn phách 2 & 4, Forte. Dùng cho cả điệp khúc lẫn giang tấu.',
-    leftHandTop: 64,
+    note: 'Bolero trữ tình cao trào (Linh Nhi): tám móc đơn 1-5-8-10-12-10-8-5, octave bass phách 1. Điệp khúc và giang tấu.',
+    /*
+      Trần 67 chứ không 64 như bản phiên khúc.
+
+      Sóng cao trào lên tới bậc 12, cách nốt gốc 19 nửa cung. Nốt gốc đặt trong
+      khoảng 36-47 tuỳ giọng, nên đỉnh sóng chạm 66 ở giọng Si. Để trần 64 thì
+      đúng HAI giọng gãy — Si giáng cần 65, Si cần 66 — và chỗ gãy không phải
+      một nốt sai lạc mà là đỉnh sóng gấp ngược xuống, nghe ra ngay.
+
+      Phiên khúc giữ 64: đỉnh nó chỉ tới bậc 10, cao nhất là 62.
+
+      67 chồng lên tầm giai điệu, và điều đó chấp nhận được ở đây: ô nhịp này
+      không có phần tay phải, còn va chạm với câu solo thì `avoidMelodyClash` lo.
+      Đo trên bản ký âm của Cà Pháo, trần tay trái đoạn giang tấu là 62-70.
+    */
+    leftHandTop: 67,
   },
 ]
 

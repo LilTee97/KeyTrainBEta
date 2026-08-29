@@ -509,10 +509,53 @@ function renderWithCell(
             ? { low: LEFT_ARPEGGIO_LOW, high: pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH }
             : undefined,
         )
-        const split = settleHands(
+        /*
+          Chỉ dãn hai tay khi CÓ hai tay.
+
+          `settleHands` giữ cho hai bàn tay không chồng lên nhau: chạm nhau thì
+          nâng tay phải, nâng không được thì hạ tay trái một quãng tám. Nó viết
+          cho mẫu đệm hai tay, nơi cả hai cùng bấm.
+
+          Điệu nào ô nhịp KHÔNG có phần tay phải thì tay phải không bấm gì cả —
+          `voicing.right` chỉ là thế bấm dựng sẵn, không phải tiếng đang kêu. Dãn
+          theo nó là né một cái bóng, và cái giá phải trả là hoà âm:
+
+            Bolero trữ tình trên A7 — câu rải đòi bậc 5 ở Mi quãng tám 3 (52).
+            Thế bấm tay phải của A7 nằm thấp (La quãng tám 3 = 57), cách 5 nửa
+            cung, dưới ngưỡng 7. Nâng tay phải thì hai tay dang 27 nửa cung,
+            vượt tầm với. Nên tay trái bị hạ xuống Mi quãng tám 2 = 40 — **dưới**
+            nốt gốc La quãng tám 2 = 45. Bậc năm nằm dưới nốt gốc, đúng thứ mà
+            chú thích dài trong `degreeTone` nói là phải chặn.
+
+          Va chạm với câu solo tay phải là chuyện khác và đã có `avoidMelodyClash`
+          lo; nó so với nốt ĐANG kêu chứ không so với một thế bấm không ai bấm.
+        */
+        /*
+          Câu RẢI của tay trái cũng không cho dãn.
+
+          `degreeTone` đã đặt nó trong đúng tầm tay trái đã khai (`register`) và
+          đã bắt nó nằm trên nốt gốc. `settleHands` chỉ có thể phá hai điều ấy,
+          không thêm được gì: nó không biết bậc nào là bậc nào, nó chỉ thấy hai
+          con số gần nhau.
+
+          Đo trên hai điệu Slow Rock của thầy Đức Thịnh — hai điệu CÓ tay phải,
+          nên cờ `twoHanded` không với tới: hợp âm bảy giọng cao bị hạ xuống dưới
+          nốt gốc ở bốn giọng (Lab7, La7, Sib7, Si7). Cùng một cơ chế với A7 của
+          bolero.
+
+          Khoảng cách hai tay hẹp lại còn 5 nửa cung thay vì 7 — ngưỡng ấy là
+          mức cho thoải mái, không phải luật. Bậc năm nằm dưới nốt gốc thì là
+          hỏng hoà âm. Đổi cái sau lấy cái trước là đúng chiều.
+        */
+        const twoHanded =
+          (pattern.cell?.right.length ?? 0) > 0 &&
+          !(hand === 'left' && (hit.tones?.length ?? 0) > 0)
+        const split = twoHanded
+          ? settleHands(
               hand === 'left' ? raw : voicing.left,
               hand === 'right' ? raw : voicing.right,
             )
+          : { left: hand === 'left' ? [...raw] : [...voicing.left], right: [...voicing.right] }
         let notes = hand === 'left' ? split.left : split.right
 
         if (hand === 'left') {
