@@ -29,10 +29,9 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
  * Mặc định giang tấu tính như phiên khúc — nó là chỗ nghỉ giữa hai lần cao
  * trào. Bảng này là chỗ nói ngược lại, và phải khai báo từng điệu một.
  *
- * Bolero trữ tình vào đây vì đặc tả của chính nó gộp hai đoạn: "Chorus / Giang
- * tấu — phách 1, 3 dậm octave bass; phách 2, 4 rải móc đơn liên tục, Forte".
- * Không cho cả bảng `CHORUS_PAIRS` cùng đổi: ballad và slow rock của thầy Hải
- * chưa ai bảo giang tấu phải lên cao trào, và có test đang khoá đúng chỗ ấy.
+ * Bolero trữ tình vào đây vì đặc tả gộp điệp khúc và giang tấu làm một kết cấu
+ * (arpeggio tám móc đơn). Không cho cả bảng `CHORUS_PAIRS` cùng đổi: ballad và
+ * slow rock của thầy Hải chưa ai bảo giang tấu phải lên cao trào.
  */
 const INTERLUDE_AS_CHORUS: readonly string[] = ['bolero-linh-nhi']
 
@@ -82,14 +81,15 @@ export function resolveStyleForSection(
  * hai vừa vào — nghe thành hợp âm mới bị đánh bằng nhịp yếu của hợp âm cũ, còn
  * nốt gốc của nó thì không được nhấn lần nào.
  *
- * Với hai điệu rải tự do dưới đây, mỗi nửa ô được mở một ô nhịp riêng: hợp âm
- * nào cũng có phách mạnh của chính nó ở đầu nửa, rồi rải trong bốn nửa-phách
- * của nửa đó. Hai nửa không dính nhau.
- *
- * Chỉ hai điệu này, vì đây là cách chơi riêng của chúng. Điệu khác giữ nguyên
- * cách cũ.
+ * Mỗi nửa ô mở một ô nhịp riêng: hợp âm nào cũng có phách mạnh của chính nó.
+ * Bolero Linh Nhi: nửa ô chỉ chơi 1-5 (verse) hoặc 1-5-8-10 (chorus).
  */
-const SPLIT_AWARE = new Set(['hai-pop-ballad-free', 'hai-pop-ballad-free-chorus'])
+const SPLIT_AWARE = new Set([
+  'hai-pop-ballad-free',
+  'hai-pop-ballad-free-chorus',
+  'bolero-linh-nhi',
+  'bolero-linh-nhi-chorus',
+])
 
 export function isSplitAwareStyle(styleId: string): boolean {
   return SPLIT_AWARE.has(canonical(styleId))

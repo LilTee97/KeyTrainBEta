@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { fixHandByRegister } from '../songStructure'
-import { LEFT_HAND_HIGH } from '../../voicingGenerator/handSplitVoicing'
 import type { MidiNote } from '../../../shared/musicTheory/types'
 import type { TimelineEvent } from '../types'
 
@@ -40,9 +39,9 @@ describe('nhãn tay phải khớp vùng phím', () => {
     expect(kept.hand).toBe('left')
   })
 
-  it('đúng trên trần thì chưa đổi — trần là nốt tay trái vẫn với tới', () => {
-    expect(fixHandByRegister([at([LEFT_HAND_HIGH], 'left')])[0].hand).toBe('left')
-    expect(fixHandByRegister([at([LEFT_HAND_HIGH + 1], 'left')])[0].hand).toBe('right')
+  it('C4 còn tay trái; trên C4 mới đổi — rải Slow Rock thầy Hải lên tới bậc 10', () => {
+    expect(fixHandByRegister([at([60], 'left')])[0].hand).toBe('left')
+    expect(fixHandByRegister([at([61], 'left')])[0].hand).toBe('right')
   })
 
   it('không đụng gì tới tay phải', () => {

@@ -1,6 +1,7 @@
-import { styleFamilies } from './styleLibrary'
+import { styleFamilies, removeStyle, getVisibleStyles } from './styleLibrary'
 import { isBalladStyle } from './balladFamily'
 import type { StylePattern } from './types'
+import { useEffect, useRef, useState } from 'react'
 
 interface StylePickerProps {
   styles: readonly StylePattern[]
@@ -16,10 +17,14 @@ function meterRank(ts: string): number {
 }
 
 export function StylePicker({
-  styles,
   selectedId,
   onSelect,
 }: StylePickerProps) {
+  const [, setRefreshKey] = useState(0)
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const styles = getVisibleStyles()
   const selected = styles.find((style) => style.id === selectedId) ?? styles[0]
   const meters = [
     ...new Set(styles.map((style) => style.timeSignature)),
@@ -28,6 +33,19 @@ export function StylePicker({
   const familyStyles = styles.filter(
     (style) => style.family === selected?.family,
   )
+
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [menu])
+
+  async function deleteStyle(id: string) {
+    await removeStyle(id)
+    setMenu(null)
+    setRefreshKey((k) => k + 1)
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -42,22 +60,19 @@ export function StylePicker({
             <div className="flex flex-wrap gap-2">
               {families.map((entry) => {
                 const active = entry.styles.some((style) => style.id === selectedId)
-                /*
-                  Họ ballad tô màu ngọc, các họ khác giữ màu hổ phách.
-
-                  Không phải để cho đẹp: chỉ ở họ ballad mới hiện ra công tắc
-                  walking bass, câu lót Kingsley và mật độ theo đoạn. Nhìn màu
-                  là biết bấm vào đâu thì có thêm lựa chọn, khỏi phải thử từng
-                  nút rồi đoán vì sao chỗ này có chỗ kia không.
-                */
                 const ballad = entry.styles.some((style) => isBalladStyle(style.id))
                 return (
                   <button
                     key={`${meter}-${entry.family}`}
                     type="button"
                     onClick={() => onSelect(entry.styles[0].id)}
+                    onContextMenu={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setMenu({ id: entry.styles[0].id, x: e.clientX, y: e.clientY })
+                    }}
                     title={entry.styles[0].note}
-                    className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    className={`cursor-context-menu rounded-lg border px-3 py-1.5 text-xs ${
                       active
                         ? ballad
                           ? 'border-teal-key bg-teal-key/20 text-teal-key'
@@ -88,18 +103,34 @@ export function StylePicker({
               key={style.id}
               type="button"
               onClick={() => onSelect(style.id)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setMenu({ id: style.id, x: e.clientX, y: e.clientY })
+              }}
               title={style.note}
-              className={`rounded-md border px-2 py-1 font-mono text-[11px] ${
-                style.id === selectedId
-                  ? isBalladStyle(style.id)
-                    ? 'border-teal-key bg-teal-key/25 text-teal-key'
-                    : 'border-amber-key bg-amber-key/20 text-amber-key'
-                  : 'border-line bg-white/3 text-dim hover:bg-white/8'
-              }`}
+              className="cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] border-line bg-white/3 text-dim hover:bg-white/8"
             >
               {style.name}
             </button>
           ))}
+        </div>
+      )}
+
+      {menu && (
+        <div
+          ref={menuRef}
+          style={{ position: 'fixed', left: menu.x, top: menu.y }}
+          className="z-50 rounded-md border border-line bg-zinc-900 p-1 text-xs shadow-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => deleteStyle(menu.id)}
+            className="block w-full rounded px-3 py-1.5 text-left text-red-400 hover:bg-red-500/15"
+          >
+            Xóa điệu
+          </button>
         </div>
       )}
     </div>

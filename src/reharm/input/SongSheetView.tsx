@@ -92,6 +92,8 @@ interface SongSheetViewProps {
   onToggleFill?: (chordIndex: number) => void
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
+  fillRestAt?: (chordIndex: number) => number
+  onSetFillRest?: (chordIndex: number, beats: number) => void
   colorHintAt?: (chordIndex: number) => string | null
   onCycleColor?: (chordIndex: number) => void
   heldMutedAt?: (chordIndex: number) => boolean
@@ -180,6 +182,8 @@ export function SongSheetView({
   onToggleFill,
   runAt,
   onToggleRun,
+  fillRestAt,
+  onSetFillRest,
   colorHintAt,
   onCycleColor,
   heldMutedAt,
@@ -457,6 +461,12 @@ export function SongSheetView({
                 }
               : undefined
           }
+          fillRest={fillRestAt?.(menu.chordIndex) ?? 0}
+          onSetFillRest={
+            onSetFillRest
+              ? (beats) => onSetFillRest(menu.chordIndex, beats)
+              : undefined
+          }
           colorHint={colorHintAt?.(menu.chordIndex) ?? null}
           onCycleColor={
             onCycleColor
@@ -516,6 +526,8 @@ export function ChordContextMenu({
   onToggleFill,
   run,
   onToggleRun,
+  fillRest,
+  onSetFillRest,
   colorHint,
   onCycleColor,
   heldMuted,
@@ -546,6 +558,8 @@ export function ChordContextMenu({
   onToggleFill?: () => void
   run?: boolean | null
   onToggleRun?: () => void
+  fillRest?: number
+  onSetFillRest?: (beats: number) => void
   colorHint?: string | null
   onCycleColor?: () => void
   heldMuted?: boolean
@@ -851,6 +865,35 @@ export function ChordContextMenu({
                 Câu chạy ngón từ sổ Licky
               </span>
             </button>
+          )}
+          {onSetFillRest && (fill === true || run === true) && !transition && (
+            <>
+              <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+                Thêm nghỉ sau câu
+              </p>
+              <div className="flex gap-1 px-2.5 py-1">
+                {(
+                  [
+                    [0, 'Không'],
+                    [1, '1 phách'],
+                    [2, '2 phách'],
+                  ] as const
+                ).map(([beats, label]) => (
+                  <button
+                    key={beats}
+                    type="button"
+                    onClick={() => onSetFillRest(beats)}
+                    className={`flex-1 rounded border px-2 py-1 text-xs ${
+                      (fillRest ?? 0) === beats
+                        ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </>
       ) : null}

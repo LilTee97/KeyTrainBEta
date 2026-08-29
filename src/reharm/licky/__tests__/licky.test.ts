@@ -115,6 +115,25 @@ describe('Licky', () => {
     )
   })
 
+  it('nghỉ 2 phách thì chèn sau câu fill, không cắt ô đang chơi', () => {
+    const chords = parseChordInput('C Am F G').chords.map((chord, index) =>
+      index === 1 ? { ...chord, beats: 6 } : chord,
+    )
+    const line = generateFillLine(chords, {
+      beatsPerChord: 4,
+      density: 'sparse',
+      extraFills: new Set([1]),
+      lickyFills: true,
+      fillRests: new Map([[1, 2]]),
+    })
+    expect(line.some((note) => note.startBeat >= 6 && note.startBeat < 8)).toBe(
+      true,
+    )
+    expect(line.every((note) => note.startBeat < 8 || note.startBeat >= 10)).toBe(
+      true,
+    )
+  })
+
   it('Licky Fills chêm được vào ô đủ phách', () => {
     const chords = parseChordInput('C Am F G').chords
     const line = generateFillLine(chords, {

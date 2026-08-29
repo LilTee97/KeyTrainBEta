@@ -4,6 +4,9 @@ import { resolveStyleForSection } from '../sectionStyles'
 import { ALL_STYLES, getStyle, isPlayable } from '../styleLibrary'
 import { ONEMOTION_STYLES } from '../styleLibrary/onemotion'
 import { brain } from '../../brain'
+import { parseChordInput } from '../../input/chordInputParser'
+import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
+import { renderPattern } from '../patternRenderer'
 
 /**
  * Mười lăm tiết điệu Tập 6 của thầy Hải là thứ **thêm vào**: bấm phát được, và
@@ -112,6 +115,30 @@ describe('15 tiết điệu Tập 6 của thầy Hải', () => {
     expect(getStyle('hai-waltz')!.timeSignature).toBe('3/4')
   })
 
+  it('Slow Rock phiên khúc rải tay trái 1-5-8-9-10-9, không quạt hai tay', () => {
+    const style = getStyle('hai-slow-rock')!
+    expect(style.timeSignature).toBe('6/8')
+    expect(HAI_BORROWED_CELLS['hai-slow-rock']).toBeUndefined()
+    expect(style.cell!.left).toHaveLength(6)
+    expect(style.cell!.right).toHaveLength(1)
+
+    const chords = parseChordInput('Cmaj7 Am7 Fmaj7 G7').chords
+    const events = renderPattern(voiceLeadTwoHands(chords), style, {
+      beatsPerChord: 6,
+    })
+    const left = events
+      .filter((event) => event.hand === 'left' && event.startBeat < 6)
+      .sort((a, b) => a.startBeat - b.startBeat)
+      .map((event) => ((event.notes[0]! % 12) + 12) % 12)
+    expect(left).toEqual([0, 7, 0, 2, 4, 2])
+
+    const am = events
+      .filter((event) => event.hand === 'left' && event.startBeat >= 6 && event.startBeat < 12)
+      .sort((a, b) => a.startBeat - b.startBeat)
+      .map((event) => ((event.notes[0]! % 12) + 12) % 12)
+    expect(am).toEqual([9, 4, 9, 11, 0, 11])
+  })
+
   it('nhịp của Fox, Slow Rock, March đúng như kho ghi', () => {
     expect(getStyle('hai-fox')!.timeSignature).toBe('2/4')
     expect(getStyle('hai-slow-rock')!.timeSignature).toBe('6/8')
@@ -130,5 +157,7 @@ describe('15 tiết điệu Tập 6 của thầy Hải', () => {
     // Kho chưa tách mẫu theo đoạn cho Rumba: không đổi hộ người học.
     expect(resolveStyleForSection('hai-rumba', 'chorus')).toBe('hai-rumba')
     expect(resolveStyleForSection('pop-1', 'chorus')).toBe('pop-1')
+    expect(resolveStyleForSection('hai-slow-rock', 'chorus')).toBe('hai-slow-rock-chorus')
+    expect(resolveStyleForSection('hai-slow-rock-chorus', 'verse')).toBe('hai-slow-rock')
   })
 })

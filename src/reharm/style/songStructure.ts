@@ -1,5 +1,4 @@
 import type { TimelineEvent } from './types'
-import { LEFT_HAND_HIGH } from '../voicingGenerator/handSplitVoicing'
 
 /**
  * Cấu trúc bài hát, và chỗ đặt đoạn giang tấu.
@@ -278,7 +277,7 @@ export function fixHandByRegister(
   events: readonly TimelineEvent[],
 ): TimelineEvent[] {
   return events.map((event) =>
-    event.hand === 'left' && Math.min(...event.notes) > LEFT_HAND_HIGH
+    event.hand === 'left' && Math.min(...event.notes) > 60
       ? { ...event, hand: 'right' as const }
       : event,
   )

@@ -197,7 +197,7 @@ export function ArrangementEditor({
                   {/*
                     Nghỉ bốn phách là **một ô nhịp**: ca sĩ lấy hơi rồi vào.
                   */}
-                  {[0, 1, 2, 4].map((beats) => (
+                  {[0, 1, 2, 3, 4].map((beats) => (
                     <option key={beats} value={beats}>
                       {beats === 0 ? 'xong vào ngay' : `xong nghỉ ${beats} phách`}
                     </option>

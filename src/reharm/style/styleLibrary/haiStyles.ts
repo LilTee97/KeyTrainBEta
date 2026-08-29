@@ -62,6 +62,7 @@ interface HaiDef {
    * lẽ biến thành "biến tấu".
    */
   variation?: true
+  cell?: RhythmCell
   note: string
 }
 
@@ -270,29 +271,59 @@ const DEFS: HaiDef[] = [
   },
   {
     /*
-      Bài 03. Kho: nhịp 6/8, sáu phách móc đơn chia hai cụm, phách 1 mạnh nhất
-      và phách 4 mạnh vừa. Mẫu 1 rải tay trái theo bậc 1-5-8-9-10-9.
-
-      Mượn ô nhịp `slow-rock-2` của OneMotion, đúng khung 6/8 nhấn 1 và 4 ấy.
-      Bậc 9 và 10 của thầy thì ô nhịp không viết được: `toneIndex` đếm theo nốt
-      của hợp âm (gốc, ba, năm, bảy) chứ không đếm theo bậc thang âm, nên không
-      trỏ tới bậc 9 được. Ghi ra đây để sau này ai mở rộng định dạng ô nhịp thì
-      biết chỗ còn thiếu.
+      Bài 03, Mẫu 1 (phiên khúc). Kho: tay trái rải 1-5-8-9-10-9 sáu móc đơn;
+      tay phải giữ hợp âm. Ví dụ Cmaj7: C2 G2 C3 D3 E3 D3 / B3 C4 E4 G4.
     */
     id: 'hai-slow-rock',
-    name: 'Slow Rock (Hải)',
+    name: 'Slow Rock (Hải) — phiên khúc',
     family: 'hai-slow-rock',
     familyName: 'Slow Rock (Hải)',
     variant: 1,
     ts: '6/8',
     bar: 6,
     bpm: 66,
-    map: 'slow-rock-2',
+    cStep: 6,
+    bStep: 1,
+    chord: 'x',
+    bass: '1r 3r 1r+ 1rn+ 2r+ 1rn+',
     from: [
       'tap-06-bai-03-rule-slow-rock-meter-6-8',
       'tap-06-bai-03-hai-piano-course-001-lesson-03-003',
     ],
-    note: 'Slow Rock 6/8 của thầy Hải — mượn ô nhịp Slow Rock có sẵn (nhấn phách 1 và 4). Mẫu rải 1-5-8-9-10-9 của thầy chưa viết được: ô nhịp chỉ trỏ được tới nốt trong hợp âm, không tới bậc 9 và 10.',
+    note: 'Slow Rock 6/8 của thầy Hải, mẫu phiên khúc — tay trái rải 1-5-8-9-10-9, tay phải giữ hợp âm.',
+  },
+  {
+    /*
+      Bài 03, Mẫu 2 (điệp khúc). Kho: tay trái 1.. 5 8.. 5 (C2 ngân, G2, C3 ngân, G2).
+    */
+    id: 'hai-slow-rock-chorus',
+    name: 'Slow Rock (Hải) — điệp khúc',
+    family: 'hai-slow-rock',
+    familyName: 'Slow Rock (Hải)',
+    variant: 2,
+    ts: '6/8',
+    bar: 6,
+    bpm: 66,
+    from: [
+      'tap-06-bai-03-hai-piano-course-001-lesson-03-005',
+      'tap-06-bai-03-rule-slow-rock-dynamic-layering',
+    ],
+    cell: {
+      lengthBeats: 6,
+      right: [{ beat: 0, durationBeats: 5.5, velocityScale: 0.88 }],
+      left: [
+        { beat: 0, durationBeats: 1.9, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 2, durationBeats: 0.9, velocityScale: 0.85, tones: [{ toneIndex: 2, fromRoot: true }] },
+        {
+          beat: 3,
+          durationBeats: 1.9,
+          velocityScale: 1,
+          tones: [{ toneIndex: 0, semitones: 12, fromRoot: true }],
+        },
+        { beat: 5, durationBeats: 0.9, velocityScale: 0.85, tones: [{ toneIndex: 2, fromRoot: true }] },
+      ],
+    },
+    note: 'Slow Rock 6/8 của thầy Hải, mẫu điệp khúc — tay trái nhấn 1 và 8, chêm 5; tay phải giữ hợp âm.',
   },
   {
     /*
@@ -590,15 +621,17 @@ export const HAI_STYLES: readonly StylePattern[] = DEFS.map((def) => ({
   sourceVideos: def.variation
     ? ['KeyTrain: biến tấu dựng từ Pop Ballad (Hải), không phải sheet thầy Hải']
     : def.from.map((id) => `PianoBrain: ${id}`),
-  cell: def.map
-    ? borrowedCell(def.map)
-    : cellFromArps(
-        def.chord ?? '',
-        def.bass ?? '',
-        def.cStep ?? 0.25,
-        def.bStep ?? 0.25,
-        def.bar ?? 4,
-      ),
+  cell: def.cell
+    ? def.cell
+    : def.map
+      ? borrowedCell(def.map)
+      : cellFromArps(
+          def.chord ?? '',
+          def.bass ?? '',
+          def.cStep ?? 0.25,
+          def.bStep ?? 0.25,
+          def.bar ?? 4,
+        ),
   note: def.note,
 }))
 

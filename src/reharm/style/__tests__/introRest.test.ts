@@ -74,7 +74,7 @@ describe('chỗ nghỉ sau đoạn dạo đầu', () => {
       khúc**, không đọc `startBeat` của đoạn. Con số trong `sections` có thể đúng
       trong khi tiếng đàn vẫn tràn sang — mà thứ ca sĩ nghe là tiếng đàn.
     */
-    for (const rest of [0, 1, 2, 4]) {
+    for (const rest of [0, 1, 2, 3, 4]) {
       const song = build(rest)
       const verse = song.sections.find((s) => s.kind === 'verse')!
       const truoc = song.events.filter((e) => e.startBeat < verse.startBeat)
@@ -103,7 +103,7 @@ describe('chỗ nghỉ sau đoạn dạo đầu', () => {
       Nghỉ là khoảng im giữa hai đoạn. Cộng nó vào độ dài đoạn dạo thì đoạn dạo
       dài ra trên mọi thứ đọc `sections` — thanh tiến độ, chỗ tua, nhãn đoạn.
     */
-    for (const rest of [0, 1, 2, 4]) {
+    for (const rest of [0, 1, 2, 3, 4]) {
       const intro = build(rest).sections[0]
       expect(intro.lengthBeats, `nghỉ ${rest}`).toBe(4)
     }

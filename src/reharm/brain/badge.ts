@@ -22,6 +22,7 @@ const TEACHER_LABELS: Record<string, string> = {
   'peter-martin': 'Peter Martin',
   'mack-grout': 'Mack Grout',
   'charlie-tran': 'Charlie Trần',
+  'piano-dem-hat': 'Đức Thịnh',
 }
 
 /** Nhãn của app khi đề xuất không đi qua kho. */

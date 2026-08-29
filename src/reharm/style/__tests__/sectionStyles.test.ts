@@ -77,11 +77,9 @@ describe('bảng ghép phiên khúc - điệp khúc', () => {
   /*
     Giang tấu MẶC ĐỊNH là chỗ nghỉ giữa hai lần cao trào, không phải cao trào.
 
-    Bolero trữ tình là ngoại lệ, và là ngoại lệ có khai báo: đặc tả của chính nó
-    gộp hai đoạn — "Chorus / Giang tấu: phách 1, 3 dậm octave bass; phách 2, 4
-    rải móc đơn liên tục, Forte". Ngoại lệ phải khai từng điệu một, không cho cả
-    bảng cùng đổi — ballad và slow rock của thầy Hải chưa ai bảo giang tấu phải
-    lên cao trào.
+     Bolero trữ tình là ngoại lệ, và là ngoại lệ có khai báo: đặc tả gộp điệp
+     khúc và giang tấu. Ngoại lệ phải khai từng điệu một, không cho cả bảng cùng
+     đổi — ballad và slow rock của thầy Hải chưa ai bảo giang tấu phải lên cao trào.
   */
   it('giang tấu giữ bản chính, trừ điệu có khai báo riêng', () => {
     for (const verse of Object.keys(CHORUS_PAIRS)) {
@@ -204,6 +202,8 @@ describe('hợp âm chia đôi: mỗi nửa ô một hợp âm, mỗi nửa mộ
   it('hai điệu rải tự do đều mở ô mới ở giữa ô, điệu khác thì không', () => {
     expect(isSplitAwareStyle(FREE)).toBe(true)
     expect(isSplitAwareStyle(FREE_CHORUS)).toBe(true)
+    expect(isSplitAwareStyle('bolero-linh-nhi')).toBe(true)
+    expect(isSplitAwareStyle('bolero-linh-nhi-chorus')).toBe(true)
     for (const id of ['hai-pop-ballad', 'pop-1', 'hai-tango']) {
       expect(isSplitAwareStyle(id), id).toBe(false)
     }

@@ -57,3 +57,13 @@ Ba điệu vẫn trống (chưa có trên OneMotion): Bolero, Cha Cha Cha, March
 Tab "Tái hòa âm" hiện có mười một mục xếp dọc, người dùng phải kéo nhiều mới tới phần luyện đệm. Đã có lần người dùng không tìm thấy mục luyện đệm vì nó nằm quá sâu.
 
 **Hướng xử lý:** tách phần luyện tập ra tab riêng, hoặc gom các mục cài đặt vào khu thu gọn được.
+
+---
+
+## 6. Rà hết điệu thầy Hải — kho có thì phải chơi
+
+**Đã chốt 24/8/2026:** điệu học từ video phải vào KeyTrain **đủ mẫu**. Muốn bỏ chi tiết nào thì hỏi người dùng, không tự cắt.
+
+Việc còn lại: so từng điệu `(Hải)` trong `haiStyles.ts` với item PianoBrain `hai-joseph`. Chỗ nào kho có mẫu (rải, nhấn phách, cao trào) mà KeyTrain đang mượn OneMotion / bỏ bậc / chỉ chơi một mẫu — viết lại cell cho đúng, như đã làm với Slow Rock 1-5-8-9-10-9.
+
+Slow Rock Mẫu 3 (móc kép cao trào, `tap-06-bai-03-...-006`) chưa viết: kho chỉ ví dụ `1-5-8-9` ở phách 1 + fill tay phải, chưa đủ từng nốt cả ô. Hỏi trước khi đoán.

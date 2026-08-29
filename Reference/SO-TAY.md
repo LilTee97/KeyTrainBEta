@@ -438,3 +438,10 @@ UI: mốc chuyển đoạn không gạch chân fill/run; menu Licky ẩn. Đánh
 Slash từng hợp âm: `slashEdits[i] = true/false`, menu chỉ hiện khi `toSlashChord` được hoặc đang có bass. Không phụ thuộc nút slash cả bài.
 
 Phát + BPM nằm **đầu khung lời**. Tab Luyện đệm: tên hợp âm lớn, vàng, `z-10` lơ lửng đáy khung nốt rơi (ngay trên dải phím), không lẫn nốt.
+
+### Khôi phục điệu đã xóa trong KeyTrain
+
+Điệu xóa lưu vào `localStorage` key `keytrain-deleted-styles` (mảng ID). Khôi phục bằng Console:
+```
+localStorage.removeItem('keytrain-deleted-styles'); location.reload()
+```

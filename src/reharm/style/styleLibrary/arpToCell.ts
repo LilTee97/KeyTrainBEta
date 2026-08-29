@@ -18,10 +18,11 @@ function parseTones(
 ): { toneIndex: number; semitones?: number; fromRoot?: boolean }[] | undefined {
   if (/x/i.test(token) || !/[1-9]/.test(token)) return undefined
   const tones: { toneIndex: number; semitones?: number; fromRoot?: boolean }[] = []
-  for (const part of token.matchAll(/([1-9])([f+r]*)/g)) {
+  for (const part of token.matchAll(/([1-9])([f+rn]*)/g)) {
     let semitones = 0
     if (part[2].includes('+')) semitones += 12
     if (part[2].includes('f')) semitones += 7
+    if (part[2].includes('n')) semitones += 2
     tones.push({
       toneIndex: Number(part[1]) - 1,
       ...(semitones ? { semitones } : {}),
