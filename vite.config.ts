@@ -97,12 +97,22 @@ export default defineConfig({
         cần biết tới. Quan trọng hơn: file đang tải về bị Windows khoá lại, mà
         Vite cố theo dõi file bị khoá thì nhận lỗi EBUSY và **sập cả máy chủ**.
         Chuyện này đã xảy ra hai lần khi có người lưu tài liệu vào thẳng đây.
+
+        Lần thứ ba đến từ một chỗ khác: `basic_pitch_transcription.mid` nằm ngay
+        gốc dự án, không nằm trong `Reference/`, và bị chương trình khác giữ.
+        Nên chặn theo ĐUÔI FILE luôn, không chỉ theo thư mục — bản nhạc và file
+        tiếng là dữ liệu, chúng không cần nạp nóng, mà chúng lại đúng là loại
+        file hay bị phần mềm khác mở và khoá.
       */
       ignored: [
         '**/Reference/**',
         '**/*.crdownload',
         '**/*.part',
         '**/*.tmp',
+        '**/*.mid',
+        '**/*.midi',
+        '**/*.mxl',
+        '**/*.musicxml',
       ],
     },
   },
