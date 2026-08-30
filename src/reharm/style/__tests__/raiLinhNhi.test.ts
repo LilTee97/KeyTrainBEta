@@ -84,7 +84,18 @@ describe('tay phải giang tấu bám vào tay trái', () => {
       const ca = mocGo(left, right).filter((v) => v.l.length && v.r.length)
       return ca.filter((v) => v.r.some((x) => v.l.some((y) => (x - y) % 12 === 0))).length / ca.length
     })
-    expect(ti).toBeGreaterThan(0.35)
+    /*
+      NGƯỠNG HẠ TỪ 0,35 XUỐNG 0,28, và đây là một ĐÁNH ĐỔI có chủ ý.
+
+      Người dùng yêu cầu tăng hẳn số câu chạy trong giang tấu. Câu chạy ghi đè
+      cao độ bằng bậc thang của gam, nên mỗi câu chạy là một đoạn tay phải KHÔNG
+      nhân bản lớp cao độ tay trái. Nhiều câu chạy thì tất yếu ít nhân bản hơn:
+      đo ra 47% (bản gốc) xuống 32%.
+
+      Không thể vừa nhiều câu chạy vừa giữ 47% — hai thứ ăn vào cùng một quỹ
+      nốt. Người dùng đã chọn câu chạy, nên ghi con số thật ra đây.
+    */
+    expect(ti).toBeGreaterThan(0.28)
     expect(ti).toBeLessThan(0.65)
   })
 
@@ -127,7 +138,8 @@ describe('tay phải giang tấu bám vào tay trái', () => {
       }
       return [...at.values()].filter((v) => v > 1).length / at.size
     })
-    expect(ti).toBeGreaterThan(0.25)
+    // Cùng một đánh đổi: câu chạy thay chỗ của nốt chồng, 36% xuống 18%.
+    expect(ti).toBeGreaterThan(0.14)
     expect(ti).toBeLessThan(0.5)
   })
 
@@ -385,8 +397,13 @@ describe('chuỗi liền bậc', () => {
         (a, b) => a + b,
         0,
       ) / 12
+    /*
+      Trần nâng từ 7 lên 10 theo yêu cầu người dùng: bản gốc có 5 chuỗi mỗi
+      mười ô, còn đây đẩy lên hẳn. Đó là LỰA CHỌN PHỐI KHÍ, không phải số đo —
+      và nó đổi lấy phần nhân bản với nốt chồng, xem hai test ở trên.
+    */
     expect(soChuoi).toBeGreaterThan(3)
-    expect(soChuoi).toBeLessThan(7)
+    expect(soChuoi).toBeLessThan(10)
   })
 
   it('có chuỗi dài hơn ba nốt', () => {

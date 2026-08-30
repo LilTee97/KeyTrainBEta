@@ -167,9 +167,10 @@ const CHUOI_MOI_O = 1
  * ngay sau đó chôn mất. Một lần thì tai không kịp nhận ra.
  *
  * Thêm câu chạy ngắn rải trong đoạn. Bản gốc chỉ chạy một lần trên CẢ BÀI, nên
- * đây là LỰA CHỌN PHỐI KHÍ theo yêu cầu người dùng, không phải số đo.
+ * đây là LỰA CHỌN PHỐI KHÍ theo yêu cầu người dùng, không phải số đo. Người
+ * dùng đã yêu cầu tăng ba lần, nên đẩy lên 0,75 — tức phần lớn ô đều có.
  */
-const CHAY_THEM = 0.35
+const CHAY_THEM = 0.75
 const CHUOI_NGAN = 3
 const CHUOI_DAI = 7
 
@@ -427,10 +428,20 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     xuống rút thăm — bản gốc có cả hai.
   */
   const gam = options.scale
-  if (gam && gam.length >= 5) {
+  /*
+    KHÔNG gate bằng `gam`. Người dùng báo "chưa thấy thay đổi gì" về câu chạy,
+    và đây là lý do: cả phép chuỗi liền bậc lẫn khối câu chạy đều nằm trong
+    nhánh `if (gam)`, mà `phraseScale` chỉ có khi người dùng chọn MỘT gam. Lối
+    nhiều gam thì `gam` rỗng và không câu chạy nào được sinh.
+
+    Đúng cái bẫy vừa sập ở luật bước ngắn, lặp lại ở hai chỗ nữa. Không có gam
+    thì lấy nốt hợp âm làm thang — thưa hơn nhưng vẫn chạy được.
+  */
+  {
+    const khoGam = gam && gam.length >= 5 ? gam : chordTonesStrict(hopAm(0))
     const thang: MidiNote[] = []
     for (let note = range.low; note <= range.high; note += 1) {
-      if (gam.includes(lop(note))) thang.push(note as MidiNote)
+      if (khoGam.includes(lop(note))) thang.push(note as MidiNote)
     }
     const soO = Math.ceil((chords.length * beatsPerChord) / barBeats)
     for (let o = 0; o < soO; o += 1) {
@@ -449,9 +460,31 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       for (let at = 0; at < thang.length; at += 1) {
         if (Math.abs(thang[at]! - trong[tu]!.notes[0]!) < Math.abs(thang[bac]! - trong[tu]!.notes[0]!)) bac = at
       }
+      /*
+        Chuỗi liền bậc VẪN PHẢI TRÊN TAY TRÁI.
+
+        Khối này ghi đè cao độ bằng bậc thang của gam mà không ngó tay trái. Lúc
+        nó còn nằm trong nhánh `if (gam)` thì đường không truyền gam không chạy
+        tới, nên lỗi ngủ yên; mở gate ra là năm test khoá luật hai tay đỏ cùng
+        lúc, trong đó có luật cứng "không bao giờ bắt chéo" — đo ra khe âm 5.
+
+        Ba lượt sửa trước đó tôi nhắm nhầm khối câu chạy, và con số đỏ giống hệt
+        từng chữ số qua cả ba — dấu hiệu code chết mà lẽ ra tôi phải đọc ra sớm.
+
+        Nay mỗi nốt của chuỗi bị nâng lên trên trần tay trái đang vang; nâng
+        theo quãng tám nên chuỗi vẫn liền bậc, chỉ đổi tầng.
+      */
       for (let at = 0; at < dai; at += 1) {
         const buoc = Math.max(0, Math.min(thang.length - 1, bac + len * at))
-        trong[tu + at]!.notes = [thang[buoc]!]
+        const oNay = trong[tu + at]!
+        const traiTruoc = mocs.filter((one) => one <= oNay.startBeat)
+        const tranNay =
+          traiTruoc.length > 0
+            ? Math.max(...moc.get(traiTruoc[traiTruoc.length - 1]!)!)
+            : range.low
+        let chon = thang[buoc]!
+        while (chon < tranNay + KHE_HEP && chon + 12 <= range.high) chon = (chon + 12) as MidiNote
+        if (chon >= tranNay + KHE_HEP) oNay.notes = [chon]
       }
     }
   }
@@ -533,7 +566,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     phép chuỗi liền bậc nên nó đè lên, và đó là chủ ý: chạy móc kép nghe rõ hơn
     chuỗi móc đơn.
   */
-  if (gam && gam.length >= 5) {
+  {
     const soO2 = Math.ceil(tong / barBeats)
     for (let o = 1; o < soO2 - 2; o += 1) {
       if (hash(take * 107 + o * 23) >= CHAY_THEM) continue
@@ -541,7 +574,37 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       const truocDo = out
         .filter((e) => e.startBeat < tuChay)
         .sort((a, b) => b.startBeat - a.startBeat)[0]
-      const batDau = truocDo ? Math.min(...truocDo.notes) : range.low + 12
+
+      /*
+        Câu chạy chèn vào VẪN PHẢI TRÊN TAY TRÁI.
+
+        Bản đầu khởi hành từ nốt trước rồi cộng quãng, không ngó tay trái — và
+        khi đẩy tần suất lên thì nó cắt ngang bè trầm. Năm test khác đỏ cùng
+        lúc, trong đó có luật cứng "không bao giờ bắt chéo".
+
+        Nâng chỗ khởi hành lên trên trần tay trái đang vang; cả câu chạy đi lên
+        nên nâng nốt đầu là đủ.
+      */
+      /*
+        Lấy trần tay trái trên CẢ CỬA SỔ chạy, không phải ở điểm bắt đầu.
+
+        Bản trước chỉ né tay trái lúc mở câu. Nhưng mẫu rải của tay trái LEO LÊN
+        suốt ô, nên tới giữa câu chạy nó vượt lên trên và cắt ngang — đo ra khe
+        âm 5 nửa cung, tức bắt chéo thật. Hạ tần suất không cứu được vì lỗi
+        không nằm ở tần suất.
+      */
+      const trongCuaSo = mocs.filter((one) => one <= tuChay + 1 + 1e-6)
+      const tranLucChay =
+        trongCuaSo.length > 0
+          ? Math.max(
+              ...trongCuaSo
+                .slice(Math.max(0, trongCuaSo.length - 4))
+                .flatMap((one) => moc.get(one)!),
+            )
+          : range.low
+      const sanChay = Math.max(range.low, tranLucChay + KHE_HEP)
+      const goc3 = truocDo ? Math.min(...truocDo.notes) : range.low + 12
+      const batDau = Math.max(goc3, sanChay)
       const chord2 = hopAm(tuChay)
       const thu2 = !chordTonesStrict(chord2).includes(((chord2.root + 4) % 12) as PitchClass)
       const con2 = out.filter(

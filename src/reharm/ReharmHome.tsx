@@ -1306,37 +1306,80 @@ export function ReharmHome() {
     [recolored],
   )
 
+  /**
+   * Bản nhạc đã chia đoạn, CHƯA gắn ký hiệu đoạn dạo và kết.
+   *
+   * Tách ra khỏi `sheet` vì thứ tự khai báo: `sheet` cần `introSymbols`, mà
+   * `introSymbols` giờ cần biên đoạn để biết đâu là phiên khúc đâu là điệp
+   * khúc. Để chung một memo thì thành vòng, và JavaScript ném lỗi ngay lúc
+   * chạy chứ `tsc` không thấy — đúng loại lỗi đã gặp một lần trong phiên này.
+   */
+  const baseSheet = useMemo(() => {
+    if (!pastedSong) return null
+    return resectionSheet(
+      buildSongSheet(pastedSong, recolored, withPassing),
+      sectionMarks,
+    )
+  }, [pastedSong, recolored, withPassing, sectionMarks])
+
+  /**
+   * Hợp âm của riêng PHIÊN KHÚC và riêng ĐIỆP KHÚC.
+   *
+   * Người dùng đặt luật: dạo đầu mượn hợp âm phiên khúc, kết bài mượn của điệp
+   * khúc. Trước đây cả hai mượn từ CẢ BÀI nên ra gần giống nhau, và không đoạn
+   * nào báo trước được đoạn nó dẫn vào.
+   *
+   * Đọc thẳng `sectionChordRanges`, KHÔNG qua `songSources`: hàm ấy gộp mọi
+   * đoạn không phải giang tấu thành `verse`, nên nếu lấy từ đó thì danh sách
+   * điệp khúc luôn rỗng và âm thầm lui về cả bài — hỏng mà không ai thấy.
+   *
+   * Chưa chia đoạn thì lui về cả bài; thà giống nhau còn hơn rỗng.
+   */
+  const hopAmChoDoan = useCallback(
+    (kind: 'intro' | 'outro') => {
+      if (!baseSheet) return mainSongChords
+      const spans = mainChordSpans(withPassing, chordBeats)
+      const muon = kind === 'intro' ? 'verse' : 'chorus'
+      const rieng: ParsedChord[] = []
+      for (const range of sectionChordRanges(baseSheet)) {
+        if (range.kind !== muon) continue
+        for (let at = range.from; at <= range.to; at += 1) {
+          const span = spans[at]
+          if (span?.chord && !span.chord.passing) rieng.push(span.chord)
+        }
+      }
+      return rieng.length > 0 ? rieng : mainSongChords
+    },
+    [baseSheet, withPassing, chordBeats, mainSongChords],
+  )
+
   const introSymbols = useMemo(() => {
     const cue = cueChord(phraseOpening)
     return [
       ...phraseChords('intro', reharm.key, {
-        songChords: mainSongChords,
+        songChords: hopAmChoDoan('intro'),
         plain: plainPhrase,
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
     ]
-  }, [reharm.key, mainSongChords, plainPhrase, phraseOpening])
+  }, [reharm.key, hopAmChoDoan, plainPhrase, phraseOpening])
 
   const outroSymbols = useMemo(
     () =>
       phraseChords('outro', reharm.key, {
-        songChords: mainSongChords,
+        songChords: hopAmChoDoan('outro'),
         plain: plainPhrase,
       }).map((chord) => chord.symbol),
-    [reharm.key, mainSongChords, plainPhrase],
+    [reharm.key, hopAmChoDoan, plainPhrase],
   )
 
   const sheet = useMemo(() => {
-    if (!pastedSong) return null
-    const base = resectionSheet(
-      buildSongSheet(pastedSong, recolored, withPassing),
-      sectionMarks,
-    )
+    if (!baseSheet) return null
     const playOrder = arrangement ?? []
     const intro = playOrder.some((step) => step.type === 'intro') ? introSymbols : []
     const outro = playOrder.some((step) => step.type === 'outro') ? outroSymbols : []
-    return attachPhraseToSheet(base, intro, outro)
-  }, [pastedSong, recolored, withPassing, sectionMarks, arrangement, reharm.key])
+    return attachPhraseToSheet(baseSheet, intro, outro)
+  }, [baseSheet, arrangement, introSymbols, outroSymbols])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
 
@@ -2603,7 +2646,8 @@ export function ReharmHome() {
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
-              songChords: mainSongChords,
+              // Dạo đầu mượn hợp âm phiên khúc, kết bài mượn của điệp khúc.
+              songChords: hopAmChoDoan(kind),
               plainChords: plainPhrase,
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
