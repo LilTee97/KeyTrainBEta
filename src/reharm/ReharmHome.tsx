@@ -2543,6 +2543,7 @@ export function ReharmHome() {
           },
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
+          styleId: styleSolo.id,
           ending: buildEnding,
           repeatEnding: varyOnRepeat ? buildRepeatEnding : undefined,
         })

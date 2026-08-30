@@ -1,6 +1,7 @@
 import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { fixHandByRegister, interludeAccompaniment } from './songStructure'
+import { khongTiaTayTrai } from './hoDieu'
 import { interlockHands } from './soloLeftHand'
 import type { TimelineEvent } from './types'
 
@@ -297,6 +298,12 @@ export interface BuildArrangedSongOptions {
   restAfterInterlude?: number
   /** Một ô nhịp dài mấy phách, để biết thế nào là nghỉ trọn ô. */
   beatsPerMeasure?: number
+  /**
+   * Điệu đang chơi, để biết họ nào được giữ nguyên tay trái ở giang tấu.
+   *
+   * Bỏ trống thì tỉa như cũ — xem `khongTiaTayTrai`.
+   */
+  styleId?: string
 }
 
 /**
@@ -322,6 +329,7 @@ export function buildArrangedSong(
     phrase,
     restAfterInterlude = DEFAULT_REST_AFTER,
     beatsPerMeasure = 4,
+    styleId,
     ending,
     repeatEnding,
   } = options
@@ -485,7 +493,12 @@ export function buildArrangedSong(
       const line = range.solo ? range.solo(take, last) : null
       const woven =
         backing && line
-          ? interlockHands(interludeAccompaniment(backing), line, beatsPerMeasure)
+          ? interlockHands(
+              interludeAccompaniment(backing),
+              line,
+              beatsPerMeasure,
+              styleId ? khongTiaTayTrai(styleId) : false,
+            )
           : null
 
       events.push(

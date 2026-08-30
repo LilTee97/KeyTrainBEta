@@ -143,3 +143,26 @@ export function kieuChoDiepKhuc(kieuHat: string, chon?: string | null): string {
   if (chon && ho !== null && hoCuaDieu(chon) === ho) return chon
   return kieuHat
 }
+
+/**
+ * Họ nào KHÔNG cho tỉa tay trái ở đoạn không lời.
+ *
+ * Mặc định `interlockHands` rút bớt cú gõ tay trái khi tay phải chạy dày, để
+ * hai bè khỏi đục dải tần. Đo trên bản ký âm Linh Nhi thì người soạn KHÔNG làm
+ * thế: ở giang tấu tay phải vọt từ 6,8 lên 9,3 nốt mỗi ô — dày nhất bài — còn
+ * tay trái giữ nguyên 8,0, tầm y hệt 33-62.
+ *
+ * RANH GIỚI PHẢI SẮC. Người dùng từng bác lối "tay trái đảm nhiệm toàn bộ
+ * pattern điệu đệm trong lúc solo"; cái bị bác là tay trái gánh CẢ PHẦN TAY
+ * PHẢI của mẫu đệm. Cờ này chỉ nói: đừng tỉa phần của CHÍNH tay trái.
+ *
+ * Cỡ mẫu: MỘT bài, một người soạn, một đoạn mười ô. Chỉ mở cho họ bolero, và
+ * chỉ vì có số đo. Họ khác chưa đo thì chưa mở.
+ */
+const KHONG_TIA: readonly string[] = ['bolero']
+
+/** Điệu này có thuộc họ được giữ nguyên tay trái ở đoạn không lời không. */
+export function khongTiaTayTrai(styleId: string): boolean {
+  const ho = hoCuaDieu(styleId)
+  return ho !== null && KHONG_TIA.includes(ho)
+}

@@ -107,3 +107,40 @@ describe('hai tay cài vào nhau theo mật độ', () => {
     expect(left.map((event) => event.startBeat)).toEqual([0, 1, 2, 3])
   })
 })
+
+/*
+  KHÔNG TỈA TAY TRÁI — cờ đến từ số đo, không từ cảm tính.
+
+  Đo đoạn giang tấu bản ký âm Linh Nhi: tay phải vọt từ 6,8 lên 9,3 nốt mỗi ô,
+  dày nhất bài, còn tay trái GIỮ NGUYÊN 8,0 và tầm y hệt 33-62. Người soạn
+  không rút tay trái lại chút nào.
+
+  RANH GIỚI PHẢI SẮC, và đây là chỗ dễ trượt nhất. Người dùng từng bác lối "tay
+  trái đảm nhiệm toàn bộ pattern điệu đệm trong lúc solo" — cái bị bác là tay
+  trái gánh CẢ PHẦN TAY PHẢI của mẫu đệm. Cờ này chỉ nói: đừng tỉa phần của
+  CHÍNH tay trái. Test cuối khoá đúng ranh giới ấy.
+*/
+describe('giữ nguyên tay trái khi họ điệu yêu cầu', () => {
+  const dense = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75].map((at) => sing(at, 0.25))
+
+  it('mặc định vẫn tỉa như cũ', () => {
+    const { left } = interlockHands(PATTERN, dense, BAR)
+    expect(left.map((event) => event.startBeat)).not.toContain(1)
+  })
+
+  it('bật cờ thì giữ đủ cú gõ, dù tay phải chạy móc kép', () => {
+    const { left } = interlockHands(PATTERN, dense, BAR, true)
+    expect(left.map((event) => event.startBeat)).toEqual([0, 1, 2, 3])
+  })
+
+  it('luật 3 vẫn chạy: nốt sát vạch nhịp vẫn được kéo về vạch', () => {
+    const { melody } = interlockHands(PATTERN, [sing(0.15), sing(2)], BAR, true)
+    expect(melody[0]!.startBeat).toBe(0)
+  })
+
+  it('CỜ NÀY KHÔNG cho tay trái ôm thêm phần tay phải', () => {
+    // Vào bao nhiêu cú gõ thì ra bấy nhiêu, không hơn. Cờ chỉ TẮT phép tỉa.
+    const { left } = interlockHands(PATTERN, dense, BAR, true)
+    expect(left.length).toBe(PATTERN.length)
+  })
+})

@@ -4,6 +4,7 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
+import { khongTiaTayTrai } from './hoDieu'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose } from './phraseCue'
@@ -155,7 +156,12 @@ export function buildPhraseSection(
     Tay trái nhường phím khi trùng với giai điệu — xem `avoidMelodyClash`.
     Chồng TẦM thì được, chồng PHÍM cùng lúc thì không.
   */
-  const woven = interlockHands(backing, voiced, style.beatsPerMeasure * (style.gridUnit ?? 1))
+  const woven = interlockHands(
+    backing,
+    voiced,
+    style.beatsPerMeasure * (style.gridUnit ?? 1),
+    khongTiaTayTrai(style.id),
+  )
   const whole = [...avoidMelodyClash(woven.left, woven.melody), ...woven.melody]
   const ghep =
     kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]

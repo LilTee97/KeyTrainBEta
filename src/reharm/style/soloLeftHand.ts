@@ -360,6 +360,7 @@ export function interlockHands(
   left: readonly TimelineEvent[],
   melody: readonly TimelineEvent[],
   barBeats: number,
+  khongTia = false,
 ): { left: TimelineEvent[]; melody: TimelineEvent[] } {
   /*
     Không có tay phải thì không có gì để nhường. "Tay phải nghỉ" ở luật 2 nghĩa
@@ -399,7 +400,19 @@ export function interlockHands(
       kept.push({ event, held: false, fill: false })
       return
     }
-    if (inside.length / room >= DENSE_RIGHT) return // luật 1: bỏ, nhường dải tần
+    /*
+      `khongTia` TẮT luật 1, và nó đến từ số đo chứ không từ cảm tính.
+
+      Đo đoạn giang tấu bản ký âm Linh Nhi: tay phải vọt từ 6,8 lên 9,3 nốt mỗi
+      ô — dày nhất bài — còn tay trái GIỮ NGUYÊN 8,0, tầm y hệt 33-62. Người
+      soạn không rút tay trái lại chút nào.
+
+      RANH GIỚI PHẢI SẮC. Người dùng từng bác lối "tay trái đảm nhiệm toàn bộ
+      pattern điệu đệm trong lúc solo" — cái bị bác là tay trái gánh CẢ PHẦN TAY
+      PHẢI của mẫu đệm. Cờ này chỉ nói: đừng tỉa phần của CHÍNH tay trái. Hai
+      việc khác nhau, và `soloLeftHand` vẫn chỉ lấy `cell.left` như cũ.
+    */
+    if (!khongTia && inside.length / room >= DENSE_RIGHT) return // luật 1
     const airy =
       inside.length === 0 || inside.some((note) => note.durationBeats >= LONG_RIGHT)
     kept.push({ event, held: false, fill: airy }) // luật 2
