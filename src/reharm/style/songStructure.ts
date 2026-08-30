@@ -235,9 +235,6 @@ function shift(
   }))
 }
 
-/** Đáy của nốt bass nhân đôi — dưới nữa thì nghe đục chứ không dày thêm. */
-const OCTAVE_BASS_FLOOR = 28
-
 /**
  * Phần đệm dùng riêng cho đoạn giang tấu: **bỏ hẳn phần tay phải**.
  *
@@ -252,9 +249,30 @@ const OCTAVE_BASS_FLOOR = 28
  * lên tầm cao chơi giai điệu (trần cao độ tay phải nhảy từ khoảng 76 lên
  * 95-100). Tức là chỉ có một tay đổi việc, không phải cả hai.
  *
- * Bù lại, tay trái **nhân đôi nốt bass xuống một quãng tám** cho chắc nền —
- * bề rộng tay trái ở đoạn giang tấu rộng hơn hẳn đoạn hát (bài *Mơ*: 15.9 lên
- * 20.6 nửa cung), và ô nhịp 41 của bài đó bass đúng là chồng quãng tám `A1+A2`.
+ * Tay trái nhân đôi nốt bass xuống một quãng tám cho chắc nền — nhưng **chỉ
+ * khi bass đủ thưa để một bàn tay với được**.
+ *
+ * Số đo đứng sau phép nhân đôi: bề rộng tay trái ở giang tấu rộng hơn hẳn đoạn
+ * hát (bài *Mơ*: 15.9 lên 20.6 nửa cung), ô nhịp 41 bài ấy bass đúng là chồng
+ * quãng tám `A1+A2`.
+ *
+ * Số đo ấy không sai, nó chỉ HẸP HƠN chỗ nó từng bị đem đi dùng. Bản trước
+ * nhân đôi mọi điệu, và người dùng chụp màn hình đoạn solo bolero rồi bác:
+ * "hãy để tay trái chạy pattern bằng bass đơn giống như khi phiên/điệp khúc
+ * chứ đừng để bass đôi, vậy sẽ khó đánh lắm".
+ *
+ * Lý do vật lý, không phải thẩm mỹ: thế tay quãng tám là một khuôn cố định, và
+ * mẫu RẢI bắt khuôn ấy nhảy sang cao độ mới ở từng cú gõ. Bass thưa lặp lại
+ * quanh một nốt thì chồng quãng tám dễ; mẫu rải chín cú mỗi ô thì phải hai bàn
+ * tay.
+ *
+ * Đo khe giữa hai cú gõ tay trái trên cả thư viện điệu:
+ *
+ *   bolero-linh-nhi-2   9,0 cú mỗi ô   khe giữa 0,50 phách
+ *   slow-rock, rumba, tango, bossa, ballad, swing, waltz   khe giữa >= 1,00
+ *
+ * Hai nhóm tách hẳn, không điệu nào nằm giữa, nên ngưỡng đặt vào chỗ trống ấy.
+ * Bài bass thưa như *Hồng Kông 1* giữ nguyên bass đôi; chỉ mẫu rải mất nó.
  */
 /**
  * Nốt tay trái nằm hẳn trong vùng tay phải thì **nhãn tay ấy sai**, không phải
@@ -283,19 +301,44 @@ export function fixHandByRegister(
   )
 }
 
+/** Đáy của nốt bass nhân đôi — dưới nữa thì nghe đục chứ không dày thêm. */
+const OCTAVE_BASS_FLOOR = 28
+
+/**
+ * Khe tối thiểu giữa hai cú gõ tay trái để còn chồng được quãng tám, tính bằng
+ * phách. Đo ra 0,50 cho mẫu rải và >= 1,00 cho mọi mẫu bass khác, nên 0,75 rơi
+ * đúng vào chỗ trống giữa hai nhóm.
+ */
+const KHE_DU_CHONG = 0.75
+
+/** Mẫu bass này có thưa đủ để một bàn tay chồng quãng tám không. */
+function moTayChongDuoc(trai: readonly TimelineEvent[]): boolean {
+  const mocs = [...new Set(trai.map((event) => Number(event.startBeat.toFixed(4))))].sort(
+    (a, b) => a - b,
+  )
+  // Một cú gõ thì không có khe nào để mà chật.
+  if (mocs.length < 2) return true
+
+  const khe = mocs.slice(1).map((moc, at) => moc - mocs[at]!).sort((a, b) => a - b)
+  // Lấy khe GIỮA chứ không lấy khe nhỏ nhất: một cặp móc kép lẻ trong mẫu bass
+  // thưa không biến cả mẫu thành mẫu rải.
+  return khe[Math.floor(khe.length / 2)]! >= KHE_DU_CHONG
+}
+
 export function interludeAccompaniment(
   events: readonly TimelineEvent[],
 ): TimelineEvent[] {
-  return events
-    .filter((event) => event.hand === 'left')
-    .map((event) => {
-      const lowest = Math.min(...event.notes)
-      const doubled = lowest - 12
+  const trai = events.filter((event) => event.hand === 'left')
+  if (!moTayChongDuoc(trai)) return trai
 
-      return doubled >= OCTAVE_BASS_FLOOR
-        ? { ...event, notes: [doubled, ...event.notes] }
-        : event
-    })
+  return trai.map((event) => {
+    const lowest = Math.min(...event.notes)
+    const doubled = lowest - 12
+
+    return doubled >= OCTAVE_BASS_FLOOR
+      ? { ...event, notes: [doubled, ...event.notes] }
+      : event
+  })
 }
 
 /**

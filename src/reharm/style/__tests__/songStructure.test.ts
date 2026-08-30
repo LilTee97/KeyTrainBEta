@@ -180,7 +180,19 @@ describe('buildSongTimeline', () => {
     }
   })
 
-  it('tay trái ở giang tấu nhân đôi nốt bass xuống một quãng tám', () => {
+  /*
+    NHÂN ĐÔI BASS CHỈ KHI MỘT BÀN TAY VỚI ĐƯỢC.
+
+    Số đo đứng sau phép nhân đôi là thật: bài *Mơ* bề rộng tay trái 15,9 lên
+    20,6 nửa cung ở giang tấu, ô 41 bass đúng là chồng quãng tám `A1+A2`. Nhưng
+    bản trước áp nó cho MỌI điệu, và người dùng chụp màn hình đoạn solo bolero
+    rồi bác: "đừng để bass đôi như hình, vậy sẽ khó đánh lắm".
+
+    Lý do vật lý: thế tay quãng tám là khuôn cố định, mẫu RẢI bắt khuôn ấy nhảy
+    cao độ ở từng cú gõ. Đo cả thư viện — mẫu rải khe giữa 0,50 phách, mọi mẫu
+    bass khác >= 1,00, không điệu nào nằm giữa.
+  */
+  it('bass thưa thì VẪN nhân đôi xuống một quãng tám', () => {
     const song = build('two-then-interlude')
     const interlude = song.sections.find(
       (section) => section.kind === 'interlude',
@@ -213,6 +225,57 @@ describe('buildSongTimeline', () => {
     )!
 
     expect(bass.notes).toEqual([30])
+  })
+
+  /* Mẫu RẢI: tám cú gõ cách nhau nửa phách, đúng hình bolero Linh Nhi. */
+  const rai = () =>
+    buildSongTimeline({
+      accompaniment: Array.from({ length: 8 }, (_, at) =>
+        marker('accompaniment', at * 0.5, 'left', [48 + at]),
+      ),
+      fills: [],
+      solo: soloFor,
+      loopLengthBeats: 4,
+      form: getSongForm('two-then-interlude')!,
+    })
+
+  it('mẫu rải thì KHÔNG nhân đôi — một bàn tay không với nổi', () => {
+    const song = rai()
+    const interlude = song.sections.find(
+      (section) => section.kind === 'interlude',
+    )!
+
+    const trong = song.events.filter(
+      (event) =>
+        event.hand === 'left' &&
+        event.startBeat >= interlude.startBeat &&
+        event.startBeat < interlude.startBeat + interlude.lengthBeats,
+    )
+    expect(trong.length).toBeGreaterThan(0)
+    for (const event of trong) expect(event.notes.length).toBe(1)
+  })
+
+  /*
+    Và với mẫu rải, tay trái giang tấu phải ra ĐÚNG tay trái đoạn hát — đây là
+    ý "giống như khi phiên/điệp khúc" của người dùng, đo thẳng chứ không suy.
+  */
+  it('mẫu rải: tay trái giang tấu trùng khớp tay trái đoạn hát', () => {
+    const song = rai()
+    const doan = (kind: string) => {
+      const section = song.sections.find((one) => one.kind === kind)!
+      return song.events
+        .filter(
+          (event) =>
+            event.hand === 'left' &&
+            event.startBeat >= section.startBeat &&
+            event.startBeat < section.startBeat + section.lengthBeats,
+        )
+        .map(
+          (event) =>
+            `${(event.startBeat - section.startBeat).toFixed(3)}:${event.notes.join(',')}`,
+        )
+    }
+    expect(doan('interlude')).toEqual(doan('verse'))
   })
 
   it('mỗi lượt giang tấu chơi một đoạn khác nhau', () => {

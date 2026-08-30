@@ -128,18 +128,30 @@ describe('tay phải giang tấu bám vào tay trái', () => {
     expect(Math.min(...khe)).toBeGreaterThanOrEqual(9)
   })
 
-  it('chồng nốt đúng khoảng đo được', () => {
+  /*
+    ĐO NGOÀI CÂU CHẠY, và đây là chỗ sửa THƯỚC chứ không phải nới ngưỡng.
+
+    36% ở bản gốc đo trên đoạn giang tấu có ĐÚNG MỘT câu chạy trong cả 72 ô —
+    tức nó gần như là tỉ lệ của phần KHÔNG chạy. Đoạn sinh ra giờ có sáu câu
+    chạy, mà câu chạy vốn là bè đơn: 36 nốt đơn trên tổng 87 kéo tỉ lệ tổng
+    xuống 12% một cách máy móc. Đem con số ấy so với 36% là so hai thứ khác
+    nhau — đúng cái bẫy đã sập vài lần: so nhầm hai phép đo rồi tưởng thuật
+    toán hỏng.
+
+    Nên bỏ nốt móc kép ra khỏi cả tử lẫn mẫu, rồi mới so với bản gốc.
+  */
+  it('chồng nốt đúng khoảng đo được, tính ngoài câu chạy', () => {
     const ti = trungBinh((take) => {
       const { right } = dung(take)
       const at = new Map<number, number>()
       for (const e of right) {
+        if (e.durationBeats <= 0.26) continue
         const k = Number(e.startBeat.toFixed(3))
         at.set(k, (at.get(k) ?? 0) + e.notes.length)
       }
       return [...at.values()].filter((v) => v > 1).length / at.size
     })
-    // Cùng một đánh đổi: câu chạy thay chỗ của nốt chồng, 36% xuống 18%.
-    expect(ti).toBeGreaterThan(0.14)
+    expect(ti).toBeGreaterThan(0.25)
     expect(ti).toBeLessThan(0.5)
   })
 
@@ -429,106 +441,86 @@ describe('chuỗi liền bậc', () => {
 })
 
 /*
-  CỬA RA — ô cuối đoạn, hợp âm chồng dày để hút sang đoạn kế.
+  CỬA RA — BỘ NÀY KHÔNG DẶM HỢP ÂM NỮA. Chỉ TIẾNG BÁO mới được dặm.
 
-  Người dùng muốn cuối giang tấu có câu chạy cộng một hợp âm hút mạnh. Đo bản
-  gốc thì hai việc ấy nằm ở HAI Ô KHÁC NHAU, và ô cuối giang tấu KHÔNG chạy:
+  Bộ này từng chồng năm nốt vào vạch ô cuối làm chỗ đáp cho câu chạy, hình lấy
+  từ ô 53 và ô 71 bản ký âm. Số đo ấy đúng cho GIANG TẤU, nhưng đoạn dạo đầu và
+  đoạn kết chạy qua cùng bộ sinh nên lĩnh luôn cái khối ấy — rồi cuối đoạn còn
+  một tiếng báo nữa. Đo trên đoạn dạo `bolero-linh-nhi-2`: sáu nốt cùng rơi
+  phách 12, tiếng báo ở phách 15. Hai lần thông báo cho một lần chuyển đoạn.
 
-    ô 61, cuối giang tấu, hợp âm A (bậc V):
-      16 nốt tay phải — dày nhất bài — chồng 4 · 4 · 5 nốt ở phách 1&, 2, 3
-    ô 71, áp chót đoạn kết, hợp âm D7:
-      ngân 1,5 → chồng 3 nốt → 6 móc kép chạy lên → hạ cánh
+  Người dùng: "intro vẫn bị dặm hợp âm trước báo, hãy sửa để chỉ báo mới dặm
+  hợp âm."
 
-  Nên cửa ra là CHỒNG HỢP ÂM, rơi vào ô CUỐI; câu chạy giữ chỗ cũ ở ô áp chót.
-  Hai cử chỉ nối tiếp nhau đúng như bản gốc: chạy rồi mới chồng.
+  Ở giang tấu còn nặng hơn: từ lượt dời hợp âm báo về ngay sau câu chạy, khối
+  cửa ra và hợp âm báo rơi ĐÚNG CÙNG một phách — hai hợp âm khác nhau chồng lên
+  nhau. Nên chỗ đáp của câu chạy nay chính là tiếng báo, và tiếng báo dựng ở
+  ngoài bộ này (`ReharmHome` / `phraseSection`), không phải ở đây.
 */
 describe('cửa ra cuối đoạn', () => {
   const oCuoi = Math.floor((CHORDS.length * BAR - 1e-6) / BAR) * BAR
 
   /*
-    MỘT cú dặm rồi NGÂN, không lặp ba khối giống hệt.
+    NGƯỠNG LẤY TỪ SỐ ĐO, KHÔNG ĐOÁN. Quét tám lượt, đếm số nốt rơi cùng một
+    mốc trên cả đoạn: 513 mốc một nốt, 59 mốc hai nốt, KHÔNG mốc nào hơn.
 
-    Bản đầu chồng đúng bốn nốt ấy ba lần ở phách 1, 1&, 2 rồi im tới phách 3&.
-    Người dùng nghe ra: "dặm hợp âm rồi nghỉ rồi đánh thêm hợp âm báo vào, nghe
-    nó khựng lại rất dở". Đo ra đúng thế — ba khối y hệt nhau rồi một phách
-    rưỡi trống.
-
-    Cử chỉ báo hiệu phải là MỘT cú, đủ dày, rồi để nó vang — và nó đứng đúng
-    vạch nhịp để câu chạy đáp thẳng vào.
+    Mốc hai nốt là **chồng nốt** — nét đo được của chính phong cách này (36% ở
+    bản gốc), có suốt đoạn chứ không riêng ô cuối, nên đòi mọi mốc chỉ một nốt
+    là cấm luôn cả phong cách. Thứ người dùng nghe ra là khối năm sáu nốt.
   */
-  it('ô cuối có một cú chồng dày, đứng đúng vạch nhịp', () => {
+  it('ô cuối không có khối hợp âm nào dày hơn nét chồng nốt thường', () => {
     for (let take = 0; take < 8; take += 1) {
-      const chong = new Map<number, number>()
-      for (const e of dung(take).right) {
-        if (e.startBeat < oCuoi) continue
-        const k = Number((e.startBeat - oCuoi).toFixed(2))
-        chong.set(k, (chong.get(k) ?? 0) + e.notes.length)
+      const right = dung(take).right.filter((e) => e.startBeat >= oCuoi)
+      const moc = new Map<string, number>()
+      for (const e of right) {
+        const k = e.startBeat.toFixed(3)
+        moc.set(k, (moc.get(k) ?? 0) + e.notes.length)
       }
-      const day = [...chong.entries()].filter(([, n]) => n >= 4)
-      expect(day.length, `lượt ${take}`).toBeGreaterThanOrEqual(1)
-      for (const [at] of day) expect(at).toBe(0)
+      for (const [k, n] of moc) expect(n, `lượt ${take} @ ${k}`).toBeLessThanOrEqual(2)
     }
   })
 
-  it('cú chồng ấy NGÂN, không tắt ngay', () => {
+  /* Và cả đoạn cũng vậy: bộ này không dựng hợp âm dặm ở bất kỳ đâu. */
+  it('cả đoạn không mốc nào quá hai nốt', () => {
     for (let take = 0; take < 8; take += 1) {
-      const tai0 = dung(take).right.filter((e) => Math.abs(e.startBeat - oCuoi) < 1e-6)
-      const dai = Math.max(...tai0.map((e) => e.durationBeats))
-      expect(dai, `lượt ${take}`).toBeGreaterThan(BAR / 2)
+      const moc = new Map<string, number>()
+      for (const e of dung(take).right) {
+        const k = e.startBeat.toFixed(3)
+        moc.set(k, (moc.get(k) ?? 0) + e.notes.length)
+      }
+      for (const [k, n] of moc) expect(n, `lượt ${take} @ ${k}`).toBeLessThanOrEqual(2)
     }
   })
 
-  it('cú gõ chồng nằm trên tay trái tại chính lúc nó vang', () => {
+  /*
+    Câu chạy KHÔNG mất theo. Nó là cử chỉ người dùng đòi mãi mới có, và nó độc
+    lập với khối hợp âm vừa bỏ — bỏ nhầm cả hai thì lại quay về chỗ cũ.
+  */
+  it('câu chạy cuối đoạn vẫn còn nguyên', () => {
+    const k = khungChayNgon(CHORDS.length * BAR, BAR)!
+    for (let take = 0; take < 8; take += 1) {
+      const chay = dung(take).right.filter(
+        (e) => e.startBeat >= k.tu - 1e-6 && e.startBeat < k.den - 1e-6,
+      )
+      expect(chay.length, `lượt ${take}`).toBeGreaterThanOrEqual(5)
+    }
+  })
+
+  it('tay phải vẫn không bao giờ chui xuống dưới tay trái ở ô cuối', () => {
     for (let take = 0; take < 8; take += 1) {
       const { left, right } = dung(take)
       for (const e of right) {
         if (e.startBeat < oCuoi) continue
         const cungLuc = left.filter((one) => Math.abs(one.startBeat - e.startBeat) < 0.03)
         if (cungLuc.length === 0) continue
-        expect(Math.min(...e.notes)).toBeGreaterThan(Math.max(...cungLuc.flatMap((one) => one.notes)))
+        expect(Math.min(...e.notes)).toBeGreaterThan(
+          Math.max(...cungLuc.flatMap((one) => one.notes)),
+        )
       }
-    }
-  })
-
-  /*
-    ĐẶT TRƯỚC khối chạy ngón, không phải sau. Lần đầu tôi để nó sau và nó thành
-    CODE CHẾT: nhánh chạy ngón thoát ra bằng `return` sớm nên không bao giờ
-    chạy tới. Đo ra 0 nốt cửa ra — và nếu không lần theo `velocity` riêng thì
-    tưởng thuật toán sai chứ không phải luồng sai.
-  */
-  it('cửa ra và câu chạy cùng tồn tại, không cái nào nuốt cái nào', () => {
-    const k = khungChayNgon(CHORDS.length * BAR, BAR)!
-    for (let take = 0; take < 8; take += 1) {
-      const right = dung(take).right
-      const chay = right.filter((e) => e.startBeat >= k.tu - 1e-6 && e.startBeat < k.den - 1e-6)
-      const cuaRa = right.filter((e) => e.startBeat >= oCuoi)
-      expect(chay.length, `chạy, lượt ${take}`).toBeGreaterThanOrEqual(5)
-      expect(cuaRa.length, `cửa ra, lượt ${take}`).toBeGreaterThan(4)
     }
   })
 })
 
-/*
-  NỐT NHANH THÌ PHẢI ĐI BƯỚC NGẮN.
-
-  Người dùng nghe "giai điệu quá sai, nhiều nốt bị phô". Đo hoà âm thì SẠCH:
-  2% ngoài gam, 3% nghịch nửa cung với tay trái đang vang, 19% ngoài hợp âm ở
-  phách chẵn — bản gốc 42%, tức bản dựng còn thuận tai hơn bản gốc.
-
-  Không có nốt nào sai. Thứ sai là BƯỚC ĐI. In ra thì thấy:
-
-      86 · 86 · 81 · 78 · 54          tụt 24 nửa cung giữa chuỗi móc kép
-      71 · 59 · 62                    tụt 12
-      62 · 64 · 66 · 69 · 59 · 57     lên bốn nốt rồi rơi 10
-
-  Mọi nốt đều trong gam, nhưng nhảy hai quãng tám giữa một chuỗi móc kép thì
-  tai nghe như hỏng.
-
-  Và đây cũng là lý do người dùng "không thấy câu chạy nào": những cụm ấy nhanh
-  về NHỊP nhưng không thành HÌNH, nên không ai nghe ra là câu chạy. Phép đếm cũ
-  của tôi đếm khoảng cách thời gian mà không nhìn cao độ, nên báo 6 câu chạy
-  mỗi đoạn trong khi thật ra chỉ có đúng một — câu ở cửa ra.
-*/
 describe('nốt nhanh đi bước ngắn', () => {
   /*
     Bỏ Ô CỬA RA khỏi phép đo: ở đó câu chạy đáp thẳng vào một hợp âm chồng năm
@@ -597,5 +589,29 @@ describe('nốt nhanh đi bước ngắn', () => {
       }
       xet()
     }
+  })
+})
+
+/*
+  CÂU CHẠY CHÈN PHẢI DÀI BẰNG CÂU Ở CỬA RA.
+
+  Bản trước cắt câu chèn còn bốn nốt — gọn trong một phách — trong khi câu cửa
+  ra giữ đủ sáu. Người dùng báo đúng triệu chứng ấy: "vẫn chưa thấy phần chạy
+  nốt nào TRỪ cuối giang tấu". Bốn móc kép không vượt vạch phách thì lẫn vào
+  chính cặp móc kép của mẫu đệm bolero, không đọc ra là một câu.
+*/
+describe('câu chạy chèn giữa đoạn', () => {
+  it('chạy đủ sáu nốt, không bị cắt còn bốn', () => {
+    const { right } = dung(0)
+    const nhanh = right.filter((e) => e.durationBeats <= 0.26).map((e) => e.startBeat)
+    const cum: number[][] = []
+    for (const beat of nhanh) {
+      const cuoi = cum[cum.length - 1]
+      if (cuoi && Math.abs(beat - cuoi[cuoi.length - 1]!) <= 0.26) cuoi.push(beat)
+      else cum.push([beat])
+    }
+    const dai = cum.filter((one) => one.length >= 4)
+    expect(dai.length).toBeGreaterThanOrEqual(4)
+    for (const one of dai) expect(one.length).toBe(6)
   })
 })

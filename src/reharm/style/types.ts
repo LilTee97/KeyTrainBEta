@@ -56,6 +56,25 @@ export interface RhythmHit {
       semitones?: number
       fromRoot?: boolean
     }[]
+    /**
+     * NỐT VÀO SỚM: đánh hợp âm **kế tiếp** trước khi nó tới, và ngân xuyên qua
+     * vạch nhịp.
+     *
+     * Đây là cử chỉ làm nên chất bossa nova, và nó đo được: trên hai bản ký âm
+     * của Cà Pháo, mốc 3,5 (phách 4&) là vị trí DUY NHẤT có tiếng ngân vượt
+     * hẳn vạch nhịp — 12/13 lần ở phiên khúc *Người hãy quên em đi*, còn mọi
+     * mốc khác là 0 trên 9, 0 trên 12, 0 trên 10, không sót lần nào.
+     *
+     * Vì sao phải là một cờ riêng chứ không chỉ để `durationBeats` dài ra:
+     * `clipToChords` cắt mọi tiếng vang sang hợp âm sau, và cắt đúng — hợp âm
+     * cũ ngân đè lên hợp âm mới là sai hoà âm. Nốt vào sớm là NGOẠI LỆ duy
+     * nhất, vì hợp âm nó đánh chính là hợp âm sắp tới, không phải hợp âm cũ.
+     *
+     * Bản dựng trước bỏ qua chỗ này: nó để một cú dặm dài 0,5 phách ở mốc 3,5,
+     * dứt ĐÚNG vạch nhịp. Thành ra thêm một tiếng gõ chứ không kéo hoà âm tới
+     * sớm, và người dùng nghe ra ngay là không phải bossa.
+     */
+    som?: boolean
   }
 
 /** Mẫu tiết tấu lặp lại của một điệu. */
@@ -214,4 +233,13 @@ export interface TimelineEvent {
    * vuốt liền tay, không phải hai lần bấm.
    */
   grace?: boolean
+  /**
+   * Tiếng **vào sớm**: hoà âm của hợp âm kế tiếp, đánh trước khi nó tới.
+   *
+   * Đánh dấu để `clipToChords` chừa nó ra. Phép cắt ấy đúng cho mọi tiếng
+   * khác — hợp âm cũ ngân đè lên hợp âm mới là sai hoà âm — nhưng tiếng này
+   * đánh chính hợp âm sắp tới, nên cắt nó ở vạch hợp âm là xoá đúng cái làm
+   * nên cử chỉ. Xem `RhythmHit.som`.
+   */
+  som?: boolean
 }

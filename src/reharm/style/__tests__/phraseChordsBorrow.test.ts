@@ -69,3 +69,56 @@ describe('hợp âm đoạn dạo mượn từ bài', () => {
     expect(plain.map((c) => c.root)).toEqual(rich.map((c) => c.root))
   })
 })
+
+/*
+  DẠO ĐẦU CHƠI ĐÚNG VÒNG PHIÊN KHÚC.
+
+  Bản trước quét cả phiên khúc rồi chấm điểm chọn khoảng bốn hợp âm hút mạnh
+  nhất về hợp âm mở bài. Không ngẫu nhiên, nhưng cũng không phải vòng của bài:
+  khoảng thắng cuộc vắt qua hai lượt vòng được, nên dạo đầu ra một vòng không
+  đoạn nào trong bài từng chơi. Người dùng bác: dạo đầu phải dựng TRÊN vòng hợp
+  âm của phiên khúc.
+*/
+describe('dạo đầu dựng trên vòng phiên khúc', () => {
+  const VONG = parseChordInput('Am(add9) Fadd2 Cadd2 Em7').chords
+
+  it('chơi đúng vòng ấy, đúng thứ tự, không cắt không đảo', () => {
+    const intro = phraseChords('intro', KEY, {
+      songChords: chords(),
+      vongPhienKhuc: VONG,
+    })
+    expect(symbols(intro)).toEqual(['Am(add9)', 'Fadd2', 'Cadd2', 'Em7'])
+  })
+
+  it('vòng phiên khúc thắng phép chấm điểm cũ', () => {
+    const cu = phraseChords('intro', KEY, { songChords: chords() })
+    const moi = phraseChords('intro', KEY, {
+      songChords: chords(),
+      vongPhienKhuc: VONG,
+    })
+    expect(symbols(moi)).not.toEqual(symbols(cu))
+  })
+
+  it('vẫn rút về màu cơ bản khi được yêu cầu', () => {
+    const intro = phraseChords('intro', KEY, {
+      vongPhienKhuc: VONG,
+      plain: true,
+    })
+    // `plainForInterlude` rút add9 / 9sus4 / 13, nhưng GIỮ bảy: Em7 vẫn là Em7.
+    expect(symbols(intro)).toEqual(['Am', 'F', 'C', 'Em7'])
+  })
+
+  /* Chưa chia đoạn thì không có vòng phiên khúc — phải lui về lối cũ, không rỗng. */
+  it('không có vòng phiên khúc thì giữ nguyên lối cũ', () => {
+    const intro = phraseChords('intro', KEY, { songChords: chords(), vongPhienKhuc: [] })
+    expect(intro.length).toBeGreaterThan(0)
+  })
+
+  it('kết bài KHÔNG lấy vòng phiên khúc', () => {
+    const outro = phraseChords('outro', KEY, {
+      songChords: chords(),
+      vongPhienKhuc: VONG,
+    })
+    expect(symbols(outro)).not.toEqual(symbols(VONG))
+  })
+})

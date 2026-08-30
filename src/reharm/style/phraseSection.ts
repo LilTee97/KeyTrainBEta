@@ -1,14 +1,20 @@
 import type { ScaleType } from '../../shared/musicTheory/scales'
-import type { PitchClass } from '../../shared/musicTheory/types'
+import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
-import { khongTiaTayTrai, raiTheoTayTrai } from './hoDieu'
+import {
+  khongTiaTayTrai,
+  raiTheoTayTrai,
+  soloTuDoCaPhao,
+  thienVeCuaHo,
+} from './hoDieu'
+import { caPhaoSolo } from './caPhaoSolo'
 import { raiLinhNhi } from './raiLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
-import { cueStrike, slowClose } from './phraseCue'
+import { cueStrike, slowClose, tamBao } from './phraseCue'
 
 /**
  * Ráp một đoạn dạo đầu hoặc một đoạn kết.
@@ -36,8 +42,22 @@ export interface PhraseSectionOptions {
    * đều đi đường cũ, không đổi gì.
    */
   scale?: readonly PitchClass[]
-  /** Rải ngón hợp âm báo thay vì dặm một lượt — dành cho họ ballad. */
-  rollCue?: boolean
+  /**
+   * Số lượt, để mỗi lần chơi ra một câu khác — Y NHƯ GIANG TẤU.
+   *
+   * Thiếu nó thì lối bám tay trái nhận `take` mặc định 0, và dạo đầu với kết
+   * bài phát lại đúng một câu mỗi lần trong khi giang tấu thì đổi. Đường
+   * `solo` cũ đã tự xoay theo lượt từ trước, nên chỉ nhánh này bị kẹt.
+   */
+  take?: number
+  /**
+   * Tầm nốt tay phải. Bỏ trống thì dùng tầm rộng cũ của hai đoạn này.
+   *
+   * Có mặt ở đây để dạo đầu và kết bài nhận ĐÚNG tầm mà giang tấu đang dùng:
+   * bản trước đóng cứng đáy 57 trong khi giang tấu đi từ 62, nên cùng một bài
+   * cùng một điệu mà hai đoạn với xuống thấp hơn hẳn.
+   */
+  range?: { low: MidiNote; high: MidiNote }
   /**
    * Vòng hợp âm thật của bài — đoạn dạo mượn hợp âm từ đây thay vì dựng theo bậc.
    *
@@ -65,7 +85,7 @@ export function buildPhraseSection(
     dropRoot,
     opening,
     solo,
-    rollCue,
+    take,
     songChords,
     plainChords,
   } = options
@@ -121,60 +141,77 @@ export function buildPhraseSection(
     Đường cũ vẫn còn nguyên cho mọi điệu không khai lối này — `raiTheoTayTrai`
     trả `false` thì `solo` chạy y như trước.
   */
-  const voiced = raiTheoTayTrai(style.id)
+  const voiced = soloTuDoCaPhao(style.id)
+    ? caPhaoSolo({
+        chords,
+        beatsPerChord,
+        barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+        range: options.range ?? { low: 57, high: 95 },
+        take: take ?? 0,
+        ...(thienVeCuaHo(style.id) ? { thienVe: thienVeCuaHo(style.id)! } : {}),
+        left: backing,
+      })
+    : raiTheoTayTrai(style.id)
     ? raiLinhNhi({
         left: backing,
         chords,
         beatsPerChord,
         barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
         ...(options.scale ? { scale: options.scale } : {}),
-        range: { low: 57, high: 95 },
+        range: options.range ?? { low: 57, high: 95 },
+        ...(take !== undefined ? { take } : {}),
       })
     : solo(chords)
   const roundBeats = chords.length * beatsPerChord
 
   /*
-    Vòng dạo đầu chạy **trọn** rồi mới tới một phách hợp âm báo. Một phách thôi:
-    kéo dài cả ô thì nó thành một hợp âm của vòng, và vòng bốn ô vốn đã trọn vẹn
-    lại bị đèo thêm một đuôi.
+    HỢP ÂM BÁO NẰM TRONG VÒNG, KHÔNG ĐÈO THÊM MỘT PHÁCH.
+
+    Bản trước cộng một phách vào sau vòng dạo đầu để dặm hợp âm báo. Người dùng
+    nghe ra ngay: "ở intro có một nhịp dặm hợp âm trước khi kết đoạn nghe có vẻ
+    bị dư". Đúng — vòng bốn ô vốn đã trọn vẹn, cộng thêm một phách thì đoạn dạo
+    dài bốn ô lẻ một phách, và cái lẻ ấy nghe ra là một cú gõ thừa chứ không
+    phải một tiếng báo.
+
+    Nay hợp âm báo rơi vào phách CUỐI của chính vòng ấy. Vẫn báo được giờ vì nó
+    vẫn là tiếng cuối cùng trước khi người hát vào, mà đoạn dạo giữ đúng số ô.
+
+    Đoạn kết giữ nguyên một phách cộng thêm: ở đó cái đuôi ấy chính là chỗ bài
+    đậu xuống, không phải thứ chen vào giữa hai đoạn.
   */
   const cueOf = kind === 'intro' ? cueChord(opening) : null
-  const lengthBeats = roundBeats + (cueOf || kind === 'outro' ? 1 : 0)
+  const lengthBeats = roundBeats + (kind === 'outro' ? 1 : 0)
 
-  /*
-    Hợp âm báo nâng lên tầm tay phải.
-
-    `voiceLeadTwoHands` cho một hợp âm đứng lẻ thì đặt nó khá thấp — đo ra Rê
-    quãng tám 3 tới La quãng tám 3, tức chồng lên đúng chỗ tay trái đang giữ
-    bass. Đây là tiếng báo cho ca sĩ, nó phải nổi lên trên chứ không lẫn vào bè
-    trầm.
-  */
-  const cueVoicing = voiceLeadTwoHands([cueOf ?? opening ?? chords[0]], {
-    dropRootFromRightHand: dropRoot,
-  })[0].right.map((note) => {
-    let pitch: number = note
-    while (pitch < 60) pitch += 12
-    while (pitch > 84) pitch -= 12
-    return pitch as typeof note
-  })
+  const cueVoicing = tamBao(
+    voiceLeadTwoHands([cueOf ?? opening ?? chords[0]], {
+      dropRootFromRightHand: dropRoot,
+    })[0].right,
+  )
 
   const lastChord = chords[chords.length - 1]!
-  const rollVoicing = voiceLeadTwoHands([lastChord], {
-    dropRootFromRightHand: dropRoot,
-  })[0]!.right.map((note) => {
-    let pitch: number = note
-    while (pitch < 60) pitch += 12
-    while (pitch > 84) pitch -= 12
-    return pitch as typeof note
-  })
+  const rollVoicing = tamBao(
+    voiceLeadTwoHands([lastChord], { dropRootFromRightHand: dropRoot })[0]!.right,
+  )
 
   /*
     Intro và outro cùng một kiểu kết: một phách sau vòng, nốt hợp âm rơi lần
     lượt từ dưới lên (roll), nốt trên cùng đúng vạch.
   */
+  /*
+    HỢP ÂM BÁO CUỐI DẠO ĐẦU RẢI, KHÔNG DẶM — MỌI ĐIỆU.
+
+    Trước đây chỉ ballad mới rải, điệu khác dặm cả hợp âm một lượt. Đo trên
+    `pop-1`: một khối ba nốt rơi đúng phách áp chót rồi đoạn còn chạy tiếp một
+    phách, nên nó nghe ra một cú gõ chen vào giữa chứ không phải một tiếng báo
+    hết đoạn. Người dùng bảo "chỉ dặm hợp âm khi báo hết đoạn và dặm kiểu
+    outro", tức lấy đúng lối rải của đoạn kết cho mọi điệu.
+
+    `rollCue` mất chỗ dùng cuối cùng ở đây nên xoá hẳn: đoạn kết vốn đã luôn
+    rải, giờ đoạn dạo cũng vậy.
+  */
   const cue =
     kind === 'intro' && cueOf
-      ? cueStrike(cueVoicing, roundBeats, { roll: rollCue === true })
+      ? cueStrike(cueVoicing, roundBeats - 1, { roll: true })
       : kind === 'outro'
         ? cueStrike(rollVoicing, roundBeats, { roll: true, beats: 1 })
         : []
@@ -183,13 +220,79 @@ export function buildPhraseSection(
     Tay trái nhường phím khi trùng với giai điệu — xem `avoidMelodyClash`.
     Chồng TẦM thì được, chồng PHÍM cùng lúc thì không.
   */
-  const woven = interlockHands(
-    backing,
-    voiced,
-    style.beatsPerMeasure * (style.gridUnit ?? 1),
-    khongTiaTayTrai(style.id),
-  )
-  const whole = [...avoidMelodyClash(woven.left, woven.melody), ...woven.melody]
+  /*
+    ĐƯỜNG NÀO DỰNG TỪ TAY TRÁI THÌ ĐỪNG ĐỂ `interlockHands` NẮN LẠI TAY TRÁI.
+
+    `interlockHands` dựng theo Cà Pháo: tay phải cài vào KHE tay trái, nên nó
+    vừa tỉa bớt cú gõ khi tay phải dày, vừa CHÈN thêm nốt rải khi tay phải
+    nghỉ. Lối bám tay trái làm ngược — tay phải suy ra TỪ mốc gõ tay trái — nên
+    chồng hai phép lên nhau là nắn lại chính cái vừa dùng làm gốc.
+
+    `arrangement.ts` đã bỏ qua `interlockHands` cho họ bật cờ này ở đoạn giang
+    tấu, nhưng đoạn dạo đầu và kết bài đi qua đây thì chưa. Bolero không lộ vì
+    đường của nó DÀY (8,8 nốt mỗi ô) nên không để lại khe nào cho luật 2 chèn
+    vào; bossa thưa hơn (7,0 nốt trên một tay trái 4 mốc mỗi ô) nên lộ ngay —
+    tay trái bossa `[0, 1,5, 2, 3,5]` bị chèn thành `[0, 1,5, 2, 2,167, 2,667,
+    3,333, 3,5]`, tức thôi chơi bossa. Đó đúng là ca người dùng cấm: đoạn không
+    lời phải chơi đúng điệu đã chọn.
+
+    Cờ `khongTiaTayTrai` KHÔNG cứu được, và tôi thử rồi: nó chỉ tắt luật 1
+    (tỉa), còn luật 2 (chèn nốt lấp khe) chạy bất kể cờ. Nên phải bỏ hẳn phép
+    cài, đúng như `arrangement.ts` làm, chứ không phải chỉnh cờ.
+  */
+  const woven = raiTheoTayTrai(style.id) || soloTuDoCaPhao(style.id)
+    ? { left: backing, melody: voiced }
+    : interlockHands(
+        backing,
+        voiced,
+        style.beatsPerMeasure * (style.gridUnit ?? 1),
+        khongTiaTayTrai(style.id),
+      )
+  /*
+    Ô CHÓT ĐOẠN DẠO PHẢI SẠCH CHÙM NỐT, để tiếng báo đứng một mình.
+
+    Người dùng: "intro vẫn bị dặm hợp âm trước báo, hãy sửa để chỉ báo mới dặm
+    hợp âm." Lối solo tự do Cà Pháo có chùm ba nốt, và đo trên bản ký âm thì
+    chùm ấy CÓ mặt trong đoạn dạo thật — Bèo dạt 0,6 chùm mỗi ô, Yêu xa 0,6, Mơ
+    0,7, ngang với giang tấu của chính chúng. Nên không cấm chùm cả đoạn.
+
+    Chỉ dọn Ô CHÓT: đó là chỗ tiếng báo đứng, và một khối hợp âm ngay cạnh nó
+    là đúng thứ người dùng nghe ra thành "hai lần thông báo".
+  */
+  const melody =
+    kind === 'intro'
+      ? woven.melody.filter(
+          (e) => e.notes.length < 2 || e.startBeat < roundBeats - beatsPerChord + 1e-6,
+        )
+      : /*
+          ĐOẠN KẾT: rút chùm nốt còn MỘT nốt, giữ nguyên câu chạy.
+
+          Luật cũ ở đây có gốc từ một lỗi thật người dùng nghe ra: tay phải vừa
+          quạt hợp âm vừa chạy giai điệu, "không ai chơi vậy được, và nghe cũng
+          đục". Lối solo tự do có chùm ba nốt, và bản ký âm CÓ chùm ấy trong
+          đoạn kết thật (Bèo dạt 0,6 chùm mỗi ô, Kém duyên 0,7) — nhưng ở đây
+          nó rơi đúng vào chỗ luật cũ cấm.
+
+          Giữ luật cũ vì nó đến từ tai người dùng, và giữ đường nét bằng cách
+          rút chùm còn nốt trên cùng thay vì xoá cả cú gõ. Câu chạy — thứ làm
+          nên lối tự do — không đụng tới.
+        */
+        woven.melody
+          /*
+            PHÁCH CHÓT ĐOẠN KẾT ĐỂ TRỐNG cho cú rải hợp âm chủ.
+
+            Đo bản sinh ra: thang ngũ cung chạy tới phách 11,875 trong khi cú
+            rải kết đáp ở 11,84 tới 12 — hai cử chỉ đâm vào nhau, và mốc gõ
+            trùng nhau đúng chỗ tai chờ nghe bài đóng lại. Cùng lý do với ô chót
+            đoạn dạo: cử chỉ báo hiệu phải đứng một mình.
+          */
+          .filter((e) => e.startBeat < roundBeats - 1 - 1e-6)
+          .map((e) =>
+            e.notes.length > 1
+              ? { ...e, notes: [Math.max(...e.notes) as (typeof e.notes)[number]] }
+              : e,
+          )
+  const whole = [...avoidMelodyClash(woven.left, melody), ...melody]
   const ghep =
     kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
 

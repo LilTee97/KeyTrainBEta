@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { cueStrike } from '../phraseCue'
+import { khungChayNgon } from '../raiLinhNhi'
 import { cueChord } from '../phraseChords'
 import { pullChordFor } from '../turnaround'
 import { parseChordInput } from '../../input/chordInputParser'
@@ -73,5 +75,54 @@ describe('quay đầu giữa bài giữ nguyên lối của thầy', () => {
     const manh = pullChordFor(chord('C'), { strong: true })!
     expect(thuong.root).toBe(manh.root)
     expect(thuong.quality.id).not.toBe(manh.quality.id)
+  })
+})
+
+/*
+  HỢP ÂM BÁO ĐI SAU CÂU CHẠY NGÓN, KHÔNG ĐÈ LÊN NÓ.
+
+  Cuối giang tấu là một câu chạy sáu móc kép rồi tới hợp âm báo. Rải mặc định
+  đi NGƯỢC thời gian để nốt trên cùng rơi đúng mốc — đúng khi mốc là vạch nhịp,
+  sai khi mốc là chỗ câu chạy vừa dứt: cụm rải khi ấy đè lên nốt chót của câu
+  chạy, đục đúng chỗ vừa dọn sạch.
+
+  Người dùng bảo "gom cái báo vào sau phần chạy nốt cuối giang tấu rồi rải kiểu
+  outro" — nên hình rải giữ nguyên, chỉ dịch sang phải đúng bề rộng của nó.
+*/
+describe('rải hợp âm báo sau một mốc', () => {
+  const NOTES = [60, 64, 67, 72] as const
+  const MOC = 12
+
+  it('rải thường đáp XUỐNG mốc: có nốt đi trước mốc', () => {
+    const truoc = cueStrike(NOTES, MOC, { roll: true })
+    expect(Math.min(...truoc.map((e) => e.startBeat))).toBeLessThan(MOC)
+    // Nốt trên cùng vẫn rơi đúng mốc — đó là lý do tồn tại của lối rải ngược.
+    expect(Math.max(...truoc.map((e) => e.startBeat))).toBeCloseTo(MOC, 6)
+  })
+
+  it('rải `sau` thì KHÔNG nốt nào đi trước mốc', () => {
+    const sau = cueStrike(NOTES, MOC, { roll: true, sau: true })
+    for (const event of sau) expect(event.startBeat).toBeGreaterThanOrEqual(MOC - 1e-6)
+    expect(Math.min(...sau.map((e) => e.startBeat))).toBeCloseTo(MOC, 6)
+  })
+
+  it('hình rải không đổi, chỉ dịch chỗ', () => {
+    const truoc = cueStrike(NOTES, MOC, { roll: true })
+    const sau = cueStrike(NOTES, MOC, { roll: true, sau: true })
+    expect(sau.map((e) => e.notes)).toEqual(truoc.map((e) => e.notes))
+    expect(sau.map((e) => e.velocity)).toEqual(truoc.map((e) => e.velocity))
+    const lech = sau.map((e, at) => e.startBeat - truoc[at]!.startBeat)
+    for (const one of lech) expect(one).toBeCloseTo(lech[0]!, 9)
+  })
+
+  /*
+    Câu chạy dứt đúng vạch ô cuối; hợp âm báo phải nằm gọn trong ô ấy chứ không
+    tràn sang đoạn sau. Bốn nốt rải cách nhau nhiều nhất 0,08 phách nên cả cụm
+    rộng chưa tới một phần tư phách.
+  */
+  it('cụm rải nằm gọn trong ô sau câu chạy', () => {
+    const khung = khungChayNgon(40, 4)!
+    const sau = cueStrike(NOTES, khung.den, { roll: true, sau: true })
+    expect(Math.max(...sau.map((e) => e.startBeat))).toBeLessThan(khung.den + 1)
   })
 })

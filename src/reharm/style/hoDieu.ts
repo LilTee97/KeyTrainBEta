@@ -69,7 +69,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   bossa: {
     ten: 'Bossa Nova',
-    families: ['bossa', 'bossa-clave', 'hai-bossa-nova'],
+    families: ['bossa', 'bossa-clave', 'hai-bossa-nova', 'bossa-ca-phao'],
   },
   rumba: {
     ten: 'Rumba',
@@ -196,11 +196,132 @@ export function raiMoRongOGiangTau(styleId: string): boolean {
  * Họ nào bật cờ này thì đường giang tấu KHÔNG chạy qua `interlockHands` nữa —
  * luật ấy dựng theo Cà Pháo, nơi tay phải cài vào KHE của tay trái. Linh Nhi
  * làm ngược. Trộn hai phong cách là hỏng cả hai. Xem `raiLinhNhi.ts`.
+ *
+ * ## Vì sao BOSSA cũng bật, dù số đo bolero không nói gì về bossa
+ *
+ * Có một vòng đo dẫn tới câu "không" cho bossa: hai bản ký âm bossa của Cà
+ * Pháo cho thấy vào giang tấu hai tay RỜI RA (40% xuống 39% và 30%), ngược hẳn
+ * Linh Nhi (45% lên 55%). Nhưng người dùng nghe điệu dựng từ chính hai bản ký
+ * âm ấy rồi bác: "nghe không ra chất bossa nova". Bằng chứng dùng để nói
+ * "không" vì thế đáng ngờ đúng bằng cái điệu dựng ra từ nó, nên nó không còn
+ * đứng vững làm lý do cấm.
+ *
+ * Số đo còn lại, và nó nói cơ chế KHÔNG GÃY trên tay trái bossa:
+ *
+ *   bolero-linh-nhi-2   trái 9,0 nốt/ô   mốc chung 44%   bắt chéo 0   phách 1 100%
+ *   bossa-nova-1 / -2   trái 4,0 nốt/ô   mốc chung 32%   bắt chéo 0   phách 1 100%
+ *   hai-bossa-nova      trái 4,0 nốt/ô   mốc chung 32%   bắt chéo 0   phách 1 100%
+ *
+ * Độ khoá LỎNG HƠN, và lỏng đúng theo tỉ lệ tay trái thưa hơn — bộ này suy tay
+ * phải từ mốc gõ tay trái, nên ít mốc thì ít chỗ để khoá. Đó là hệ quả tính
+ * được, không phải hỏng: luật cứng "không bao giờ bắt chéo" và luật "phách 1
+ * luôn có nốt" vẫn giữ nguyên trên cả ba điệu.
+ *
+ * Tay trái vẫn chơi ĐÚNG mẫu bossa; chỉ cách dựng tay phải đổi. Không phải
+ * tráo họ điệu.
  */
-const RAI_THEO_TAY_TRAI: readonly string[] = ['bolero']
+const RAI_THEO_TAY_TRAI: readonly string[] = ['bolero', 'bossa']
+
+/**
+ * Điệu nào chơi CÂU SOLO TỰ DO kiểu Cà Pháo.
+ *
+ * Người dùng đọc hai bản ký âm rồi kết luận: ở đoạn solo, người soạn này bỏ
+ * hẳn mẫu đệm bossa, biến hoá tay phải và chơi tự do trên NỀN NHỊP của bài.
+ * Số đo đứng về phía từng ý một — xem `caPhaoSolo.ts`.
+ *
+ * Cờ này đứng TRƯỚC `raiTheoTayTrai`: với riêng điệu của Cà Pháo, kho có số đo
+ * trực tiếp về việc anh solo thế nào, và nó KHÔNG phải lối bám tay trái của
+ * Linh Nhi (mốc gõ chung ở giang tấu tụt còn 30-39%, tức hai tay rời ra). Các
+ * điệu bossa khác vẫn giữ lối bám tay trái như người dùng đã yêu cầu.
+ */
+const SOLO_TU_DO: readonly string[] = ['bossa-ca-phao']
+
+/**
+ * HỌ nào cũng chơi lối tự do ấy — mở theo SỐ ĐO, không theo cảm tính.
+ *
+ * Đo giang tấu cả bảy bản ký âm của Cà Pháo, đếm câu chạy ngón:
+ *
+ * | bài | thể loại | câu chạy | tay phải | mốc gõ chung |
+ * |-----|----------|----------|----------|--------------|
+ * | Hồng Kông 1 | bossa | 8 | 12,5/ô | 39% |
+ * | Bèo dạt mây trôi | **ballad** | **4** | 10,5/ô | 20% |
+ * | Yêu xa | **ballad** | **2** | 9,4/ô | 28% |
+ * | Người hãy quên em đi | bossa | 1 | 14,6/ô | 30% |
+ * | Kém duyên | ballad | 0 | 14,9/ô | 54% |
+ * | Mơ | slow rock | 0 | 9,5/ô | 33% |
+ *
+ * **Ballad được mở** vì lối này đo được ở hai trên bốn bài ballad, và ở *Bèo
+ * dạt mây trôi* nó còn ngoa hơn bossa: một câu 48 nốt trải 6 phách ở đoạn dạo,
+ * giang tấu có câu 27 nốt, trường độ xuống tới chùm năm và chùm sáu.
+ *
+ * **Slow rock KHÔNG mở.** *Mơ* là bài slow rock duy nhất trong kho và nó có 0
+ * câu chạy. Một bài thì chưa đủ để kết luận về cả họ, nhưng nó đủ để KHÔNG mở:
+ * bằng chứng duy nhất đang nói ngược.
+ *
+ * Ghi lại một ca ngược sáng để đừng ai tưởng "không có câu chạy" là "solo
+ * nhạt": *Kém duyên* không câu chạy nào nhưng tay phải DÀY NHẤT cả kho (14,9
+ * nốt/ô) và mốc gõ chung 54% — gấp đôi mấy bài kia. Bài ấy solo bằng cách hai
+ * tay khoá chặt vào nhau, gần lối Linh Nhi hơn lối tự do.
+ */
+const SOLO_TU_DO_HO: readonly string[] = ['ballad', 'slow-rock']
+
+/**
+ * Họ nào NGHIÊNG về thủ pháp nào trong lối solo tự do.
+ *
+ * Đo giang tấu sáu bài, tỉ lệ mốc gõ là nốt nhanh và số chùm nốt:
+ *
+ * | bài | thể loại | thủ pháp |
+ * |-----|----------|----------|
+ * | Bèo dạt mây trôi | ballad | chạy — 58% nhanh, 122 mốc đơn |
+ * | Yêu xa | ballad | trộn — 42% |
+ * | Kém duyên | ballad | chùm — 0% nhanh, 35 chùm ba |
+ * | Hồng Kông 1 | bossa | chạy |
+ * | Người hãy quên em đi | bossa | chùm |
+ * | **Mơ** | **slow rock** | **chùm — 9% nhanh, 6 chùm ba + 28 đôi** |
+ *
+ * Chỗ nghiêng là chuyện của TỪNG BÀI chứ không của thể loại — họ ballad chứa
+ * cả hai cực, họ bossa cũng vậy. Nên hai họ ấy để TRỘN.
+ *
+ * Slow rock thì khác, và đây là chỗ tôi đổi kết luận cũ. Lượt trước tôi nói
+ * KHÔNG mở cho slow rock vì *Mơ* có 0 câu chạy. Đếm kỹ hơn thì "0 câu chạy"
+ * không có nghĩa là "không ứng tấu": *Mơ* ứng tấu bằng CHÙM NỐT — 6 chùm ba và
+ * 28 chùm đôi trong giang tấu. Thủ pháp ấy đã nằm sẵn trong bộ. Nên mở, và
+ * nghiêng hẳn về chùm — bằng chứng duy nhất của họ này chỉ nói một chiều.
+ */
+const THIEN_VE: Readonly<Record<string, 'chay' | 'chum'>> = {
+  'slow-rock': 'chum',
+}
+
+/** Họ của điệu này nghiêng về thủ pháp nào; `undefined` là trộn. */
+export function thienVeCuaHo(styleId: string): 'chay' | 'chum' | undefined {
+  const ho = hoCuaDieu(styleId)
+  return ho !== null ? THIEN_VE[ho] : undefined
+}
+
+/** Điệu này có chơi câu solo tự do kiểu Cà Pháo không. */
+export function soloTuDoCaPhao(styleId: string): boolean {
+  const family = getStyle(styleId)?.family
+  if (family !== undefined && SOLO_TU_DO.includes(family)) return true
+  const ho = hoCuaDieu(styleId)
+  return ho !== null && SOLO_TU_DO_HO.includes(ho)
+}
 
 /** Giang tấu của điệu này có dựng tay phải bám vào tay trái không. */
 export function raiTheoTayTrai(styleId: string): boolean {
+  /*
+    MỘT ĐIỆU CHỈ THEO MỘT THẦY. Điệu nào đã có lối solo riêng của thầy nó thì
+    không đồng thời mang lối của thầy khác.
+
+    Người dùng đặt luật: mỗi lần học phong cách của ai thì phải tách hết khỏi
+    các thầy khác, và chỉ hoà hai phong cách khi họ yêu cầu đích danh.
+
+    Chặn ở ĐÂY chứ không ở từng chỗ gọi. Điệu bossa của Cà Pháo nằm trong họ
+    bossa, mà cả họ ấy đã bật lối bám tay trái của Linh Nhi — nên cờ này vẫn
+    trả `true` cho nó. Hiện mọi chỗ gọi đều kiểm `soloTuDoCaPhao` trước nên
+    chưa lộ, nhưng đó là dựa vào THỨ TỰ, và đoạn code mới nào quên thứ tự ấy sẽ
+    lặng lẽ dán luật Linh Nhi lên câu solo của Cà Pháo.
+  */
+  if (soloTuDoCaPhao(styleId)) return false
   const ho = hoCuaDieu(styleId)
   return ho !== null && RAI_THEO_TAY_TRAI.includes(ho)
 }

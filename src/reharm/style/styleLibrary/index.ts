@@ -312,6 +312,96 @@ const BOLERO_STYLES: StylePattern[] = [
     leftHandTop: 74,
     soloMaxStrikes: 9,
   },
+  /*
+    BOSSA NOVA CÀ PHÁO — bản dựng lại, sau khi bản đầu bị người dùng bác.
+
+    Bản đầu trộn TRUNG BÌNH hai bài rồi bỏ mất cử chỉ chính. Lần này đo kỹ hơn
+    ở ba chỗ, và cả ba đều đổi kết luận.
+
+    1. HAI BÀI KHÔNG GIỐNG NHAU, đừng trộn.
+       Tay trái *Hồng Kông 1* gõ gần như móc đơn đều (phiên khúc 0 · 0,5 · 1 ·
+       1,5 · 2 · 2,5 · 3, đều trên 0,5 lần mỗi ô). *Người hãy quên em đi* mới
+       có đảo phách thật: 0 · 1,5 · 2 · 3. Trộn hai cái thành một là ra một
+       mẫu không phải của bài nào. Bản này lấy *Người hãy quên em đi*.
+
+    2. TÁCH ĐƯỢC PHẦN QUẠT KHỎI GIAI ĐIỆU.
+       Bản đầu ghi "tay phải không đo được" rồi lấy hình quạt bossa chung. Sai:
+       bản ký âm không tách bè, NHƯNG có nốt chồng — mốc gõ từ hai nốt trở lên
+       là quạt hợp âm, mốc một nốt là giai điệu. Tách ra thì phần quạt phiên
+       khúc hiện rõ: 0 · 1 · 1,5 · 2 · 2,5 · 3,5, mạnh nhất ở 3,5.
+
+    3. CỬ CHỈ LÀM NÊN CHẤT BOSSA LÀ NỐT VÀO SỚM, VÀ BẢN ĐẦU ĐÃ GIẾT NÓ.
+       Đếm số lần một tiếng ngân VƯỢT HẲN vạch nhịp, theo từng vị trí:
+
+         mốc 3,5   12/13 (phiên khúc)   5/11 (điệp khúc)
+         mốc 3      0/3                  0/5
+         mốc 2,5    0/9                  0/10
+         mốc 0      0/12                 0/12
+
+       Chỉ mốc 3,5 làm việc ấy, và làm gần như mọi ô. Bản đầu có mốc 3,5 nhưng
+       để `durationBeats: 0.5` — dứt ĐÚNG vạch nhịp. Thành thêm một cú gõ chứ
+       không kéo hoà âm tới sớm. Nay nó mang cờ `som`: đánh thế bấm của hợp âm
+       KẾ TIẾP và không bị `clipToChords` cắt.
+  */
+  {
+    /*
+      ID KHÁC bản đầu, và có lý do chứ không phải để né.
+
+      Bản `bossa-ca-phao` đầu tiên bị người dùng nghe rồi bác — "nghe không ra
+      chất bossa nova" — và họ xoá nó trong app. Phép xoá ấy ghi id vào
+      `localStorage` làm bia mộ vĩnh viễn, nên bản dựng lại mang đúng id cũ thì
+      không bao giờ hiện lên, im lặng, không thông báo gì.
+
+      Bản này cũng thật sự là một điệu KHÁC: ô mẫu lấy từ một bài chứ không
+      trộn hai, phần quạt tách được khỏi giai điệu, và có thêm cử chỉ nốt vào
+      sớm mà bản đầu không có. Mang id riêng là ghi đúng chuyện đó.
+    */
+    id: 'bossa-ca-phao-som',
+    name: 'Bossa Ca Phao — bass dao phach, hop am vao som',
+    family: 'bossa-ca-phao',
+    familyName: 'Bossa Nova (ban ky am Ca Phao)',
+    variant: 1,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 110,
+    feel: 'syncopated-3-3-2',
+    verified: true,
+    sourceVideos: ['nguoihayquenemdi.mxl — Nguoi hay quen em di, phien khuc o 9-24'],
+    cell: {
+      lengthBeats: 4,
+      /*
+        Tay trái: mốc gõ đo được 1,00 · 0,94 · 1,00 · 0,69 lần mỗi ô, độ ngân
+        1,5 · 0,5 · 1 · 1. Quãng so với nốt trầm nhất trong ô: gốc · bậc 5 ·
+        quãng tám · quãng tám cộng bậc 5 — bass đi gốc-năm trèo lên hai quãng
+        tám, không dập một chỗ.
+      */
+      left: [
+        { beat: 0, durationBeats: 1.5, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 1.5, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 2, durationBeats: 1, velocityScale: 0.9, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 3, durationBeats: 1, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true, semitones: 12 }] },
+      ],
+      /*
+        Quạt hợp âm: 0 · 1 · 2 · 2,5 rồi NỐT VÀO SỚM ở 3,5 ngân qua vạch. Đo
+        được 4,4 cú quạt mỗi ô, mỗi cú 2-3 nốt.
+      */
+      right: [
+        { beat: 0, durationBeats: 1, velocityScale: 0.8, tones: [{ toneIndex: 1 }, { toneIndex: 2 }, { toneIndex: 3 }] },
+        { beat: 1, durationBeats: 0.5, velocityScale: 0.55, tones: [{ toneIndex: 1 }, { toneIndex: 2 }, { toneIndex: 3 }] },
+        { beat: 2, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 1 }, { toneIndex: 2 }, { toneIndex: 3 }] },
+        { beat: 2.5, durationBeats: 1, velocityScale: 0.6, tones: [{ toneIndex: 1 }, { toneIndex: 2 }, { toneIndex: 3 }] },
+        /*
+          Nốt vào sớm MỎNG hơn cú quạt phách 1, và đó là số đo: 20 cặp đo được,
+          cặp hay gặp nhất là (2 nốt vào sớm, 3 nốt ở phách 1), và 0/10 lần ở
+          phiên khúc trùng đúng thế bấm — người soạn đổi thế chứ không gõ lại y
+          hệt. Cùng tầm, lệch cao độ trung vị 0.
+        */
+        { beat: 3.5, durationBeats: 1, velocityScale: 0.85, som: true, tones: [{ toneIndex: 2 }, { toneIndex: 3 }] },
+      ],
+    },
+    note: 'Bass 1 · 2& · 3 · 4 di goc-nam len hai quang tam. Quat 1 · 2 · 3 · 3& roi HOP AM VAO SOM o 4&, ngan qua vach nhip — do duoc 12/13 o phien khuc Nguoi hay quen em di, va la vi tri DUY NHAT co tieng ngan vuot vach.',
+    leftHandTop: 64,
+  },
 ]
 
 /*
@@ -373,6 +463,29 @@ export function getStyle(id: string): StylePattern | undefined {
 
 export function getVisibleStyles(): readonly StylePattern[] {
   return ALL_STYLES.filter((style) => !hidden(style.id))
+}
+
+/**
+ * Điệu DỰNG SẴN đang bị bia mộ chôn — để giao diện còn có đường hiện lại.
+ *
+ * Bia mộ là vĩnh viễn và im lặng: xoá một điệu dựng sẵn rồi thì không có nút
+ * nào, không có thông báo nào đưa nó về. Đã cắn thật — người dùng xoá điệu
+ * bossa Cà Pháo, tôi dựng lại điệu ấy với ĐÚNG id cũ, và nó không bao giờ hiện
+ * lên. Người dùng phải tự hỏi "sao chưa thấy" chứ app không nói gì.
+ *
+ * Chỉ tính điệu có thật trong `ALL_STYLES`: id lạ trong `localStorage` — điệu
+ * tester đã gỡ khỏi file, hay điệu đổi tên — không phải thứ hiện lại được.
+ */
+export function hiddenBuiltIns(): StylePattern[] {
+  return ALL_STYLES.filter(
+    (style) => !removedThisSession.has(style.id) && deletedIds.has(style.id) && !TESTER_IDS.has(style.id),
+  )
+}
+
+/** Bỏ bia mộ cho những điệu dựng sẵn, hiện lại tất cả. */
+export function restoreHiddenStyles(): void {
+  for (const style of hiddenBuiltIns()) deletedIds.delete(style.id)
+  persistDeleted()
 }
 
 export async function removeStyle(id: string): Promise<boolean> {

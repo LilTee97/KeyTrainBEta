@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { buildPhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
+import { raiTheoTayTrai } from '../hoDieu'
 import { patternOnsets } from '../soloLeftHand'
 
 /*
@@ -88,5 +89,31 @@ describe('đoạn không lời chơi đúng điệu đã chọn', () => {
     expect(phraseLeftBeats('hai-slow-rock', 'intro')).not.toEqual(
       phraseLeftBeats('hai-pop-ballad', 'intro'),
     )
+  })
+})
+
+/*
+  BOSSA DÙNG LỐI BÁM TAY TRÁI CỦA LINH NHI, NHƯNG TAY TRÁI VẪN LÀ BOSSA.
+
+  Người dùng hỏi mở cơ chế ghép hai tay của Linh Nhi cho bossa. Đo trước khi
+  mở: bắt chéo 0, phách 1 100%, mốc chung 32% (bolero 44% — lỏng hơn đúng theo
+  tỉ lệ tay trái thưa hơn, 4 mốc mỗi ô so với 9).
+
+  Thứ phải khoá là luật cũ vẫn đứng: đổi cách dựng TAY PHẢI thì được, tay trái
+  vẫn phải gõ đúng ô nhịp của điệu đã chọn.
+*/
+describe('bossa bật lối bám tay trái mà không mất chất điệu', () => {
+  it('họ bossa có bật cờ bám tay trái', () => {
+    for (const id of ['bossa-nova-1', 'bossa-nova-2', 'hai-bossa-nova']) {
+      expect(raiTheoTayTrai(id), id).toBe(true)
+    }
+  })
+
+  it('tay trái bossa vẫn đúng ô nhịp của điệu ở cả dạo đầu lẫn kết bài', () => {
+    for (const id of ['bossa-nova-1', 'hai-bossa-nova']) {
+      for (const kind of ['intro', 'outro'] as const) {
+        expect(phraseLeftBeats(id, kind), `${id} / ${kind}`).toEqual(cellLeftBeats(id))
+      }
+    }
   })
 })

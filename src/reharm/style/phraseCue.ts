@@ -136,6 +136,23 @@ export function slowClose(
 }
 
 /**
+ * Nâng hợp âm báo lên tầm tay phải.
+ *
+ * `voiceLeadTwoHands` cho một hợp âm đứng lẻ thì đặt nó khá thấp — đo ra Rê
+ * quãng tám 3 tới La quãng tám 3, tức chồng lên đúng chỗ tay trái đang giữ
+ * bass. Đây là tiếng báo cho ca sĩ, nó phải nổi lên trên chứ không lẫn vào bè
+ * trầm.
+ */
+export function tamBao(notes: readonly MidiNote[]): MidiNote[] {
+  return notes.map((note) => {
+    let pitch: number = note
+    while (pitch < 60) pitch += 12
+    while (pitch > 84) pitch -= 12
+    return pitch as MidiNote
+  })
+}
+
+/**
  * Một phách hợp âm **báo**, đánh sau khi vòng dạo đầu đã chạy trọn.
  *
  * Hai cách đánh, và cách nào cũng có người dùng thật:
@@ -151,7 +168,7 @@ export function slowClose(
 export function cueStrike(
   notes: readonly MidiNote[],
   startBeat: number,
-  options: { roll: boolean; beats?: number },
+  options: { roll: boolean; beats?: number; sau?: boolean },
 ): TimelineEvent[] {
   if (notes.length === 0) return []
 
@@ -177,9 +194,20 @@ export function cueStrike(
   */
   const gap = Math.min(0.08, beats / (sorted.length * 3))
 
+  /*
+    `sau`: rải BẮT ĐẦU từ mốc thay vì đáp xuống mốc.
+
+    Mặc định rải ngược thời gian để nốt trên cùng rơi đúng phách — đúng cho hợp
+    âm báo cuối một vòng, nơi cái mốc là vạch nhịp. Nhưng khi hợp âm báo đi
+    ngay sau một câu chạy ngón thì mốc là chỗ câu chạy DỨT: rải ngược thì cụm
+    rải đè lên nốt chót của câu chạy, nghe đục đúng chỗ vừa dọn sạch. Dịch cả
+    cụm sang phải đúng bề rộng của nó là xong, hình rải không đổi.
+  */
+  const dich = options.sau ? (sorted.length - 1) * gap : 0
+
   return sorted.map((note, at) => ({
     notes: [note],
-    startBeat: startBeat - (sorted.length - 1 - at) * gap,
+    startBeat: startBeat + dich - (sorted.length - 1 - at) * gap,
     durationBeats: beats * 0.95 + (sorted.length - 1 - at) * gap,
     hand: 'right' as const,
     // Nốt trên cùng to nhất: đó là nốt tai bám vào để vào nhịp.

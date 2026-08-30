@@ -167,7 +167,6 @@ describe('giang tấu — tách tay', () => {
                 endWithRun: true,
               }),
             ),
-          rollCue: true,
         })!
         const lh = pitches(left(built.events))
         const rh = pitches(right(built.events))

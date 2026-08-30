@@ -51,6 +51,18 @@ export interface PhraseChordOptions {
    * lạc. Xem `interludeChords.ts`.
    */
   plain?: boolean
+  /**
+   * MỘT LƯỢT vòng hoà thanh của phiên khúc, đã bỏ hợp âm nửa ô.
+   *
+   * Có thì đoạn dạo chơi ĐÚNG vòng ấy. Người dùng đặt luật: dạo đầu dựng TRÊN
+   * vòng hợp âm của phiên khúc, đừng nhặt bừa vài hợp âm trong đoạn.
+   *
+   * Bản trước quét cả phiên khúc rồi chấm điểm chọn một khoảng bốn hợp âm hút
+   * mạnh nhất về hợp âm mở bài. Không phải ngẫu nhiên, nhưng cũng không phải
+   * vòng của bài: khoảng thắng cuộc có thể vắt qua hai lượt vòng, nên dạo đầu
+   * ra một vòng không đoạn nào trong bài từng chơi.
+   */
+  vongPhienKhuc?: readonly ParsedChord[]
 }
 
 /** Bỏ hợp âm lướt: chúng mượn phách của hợp âm trước, không phải ô của vòng. */
@@ -141,6 +153,15 @@ export function phraseChords(
   options: PhraseChordOptions = {},
 ): ParsedChord[] {
   if (!key) return []
+
+  /*
+    Vòng phiên khúc đi trước mọi phép chọn khác: đã biết vòng thật của bài thì
+    không có lý do gì đi chấm điểm để đoán lại nó.
+  */
+  if (kind === 'intro' && options.vongPhienKhuc && options.vongPhienKhuc.length > 0) {
+    const vong = mainChords(options.vongPhienKhuc)
+    if (vong.length > 0) return options.plain ? vong.map(plainForInterlude) : [...vong]
+  }
 
   const borrowed = options.songChords
     ? borrowedChords(kind, key, options.songChords)

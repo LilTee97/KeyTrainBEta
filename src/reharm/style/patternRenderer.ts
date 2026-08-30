@@ -485,7 +485,16 @@ function renderWithCell(
         if (startBeat >= until - EPSILON) continue
         if (inMuteWindow(startBeat, muteWindows)) continue
 
-        const voicing = voicingAt(startBeat)
+        /*
+          NỐT VÀO SỚM lấy thế bấm của hợp âm KẾ TIẾP.
+
+          Cả nghĩa của cử chỉ nằm ở đây: hoà âm tới sớm nửa phách rồi ngân
+          xuyên qua vạch. Vẫn đánh hợp âm cũ thì chỉ là thêm một cú gõ — đúng
+          chỗ bản dựng bossa trước hỏng. Không có hợp âm sau (cuối bài) thì lui
+          về hợp âm hiện tại, thà mất cử chỉ còn hơn mất tiếng.
+        */
+        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
+        const voicing = (sauDo !== undefined ? voicingAt(sauDo) : undefined) ?? voicingAt(startBeat)
         if (!voicing) continue
 
         const source = hand === 'right' ? voicing.right : voicing.left
@@ -580,6 +589,7 @@ function renderWithCell(
           velocity: clampVelocity(
             BASE_VELOCITY * (hit.velocityScale ?? 1) * handScale,
           ),
+          ...(hit.som && sauDo !== undefined ? { som: true } : {}),
         })
       }
     }
@@ -673,6 +683,9 @@ function clipToChords(
   starts: readonly number[],
 ): TimelineEvent[] {
   return events.map((event) => {
+    // Tiếng vào sớm đánh hợp âm SẮP TỚI, nên vạch hợp âm không phải ranh giới
+    // của nó. Xem `TimelineEvent.som`.
+    if (event.som) return event
     const nextStart = starts.find((start) => start > event.startBeat + EPSILON)
     if (nextStart === undefined) return event
 

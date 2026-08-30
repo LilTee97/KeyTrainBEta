@@ -144,3 +144,36 @@ describe('giữ nguyên tay trái khi họ điệu yêu cầu', () => {
     expect(left.length).toBe(PATTERN.length)
   })
 })
+
+/*
+  ĐƯỜNG DỰNG TỪ TAY TRÁI THÌ TAY TRÁI KHÔNG BỊ NẮN LẠI.
+
+  `interlockHands` dựng theo Cà Pháo: tay phải cài vào KHE tay trái. Lối bám
+  tay trái (`raiLinhNhi`) làm ngược — tay phải suy ra TỪ mốc gõ tay trái. Chồng
+  hai phép lên nhau là nắn lại chính cái vừa dùng làm gốc.
+
+  Lộ ra khi mở lối bám tay trái cho họ bossa: tay trái bossa gõ `[0, 1,5, 2,
+  3,5]` mà ra `[0, 1,5, 2, 2,167, 2,667, 3,333, 3,5]` ở đoạn dạo đầu — thôi
+  chơi bossa, đúng ca người dùng cấm.
+
+  Cờ `khongTia` KHÔNG cứu được: nó chỉ tắt luật 1 (tỉa), luật 2 (chèn nốt lấp
+  khe) chạy bất kể cờ. Bolero không lộ vì đường của nó dày nên không để khe nào
+  cho luật 2. Test dưới khoá đúng cái khe hở ấy.
+*/
+describe('cờ khongTia chỉ tắt luật 1, không tắt luật 2', () => {
+  it('bật cờ mà tay phải THƯA thì luật 2 VẪN chèn — đây là giới hạn của cờ', () => {
+    const thua = [sing(0, 3.5)]
+    const { left } = interlockHands(PATTERN, thua, BAR, true)
+    expect(left.length).toBeGreaterThan(PATTERN.length)
+  })
+
+  /*
+    Nên chỗ nào cần giữ nguyên tay trái thì phải BỎ HẲN phép cài, không phải
+    bật cờ. `phraseSection` và `arrangement` đều làm vậy cho họ bám tay trái.
+  */
+  it('bỏ hẳn phép cài thì tay trái ra đúng như vào', () => {
+    const thua = [sing(0, 3.5)]
+    const bo = { left: PATTERN, melody: thua }
+    expect(bo.left.map((one) => one.startBeat)).toEqual([0, 1, 2, 3])
+  })
+})

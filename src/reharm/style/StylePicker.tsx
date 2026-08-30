@@ -1,4 +1,10 @@
-import { styleFamilies, removeStyle, getVisibleStyles } from './styleLibrary'
+import {
+  styleFamilies,
+  removeStyle,
+  getVisibleStyles,
+  hiddenBuiltIns,
+  restoreHiddenStyles,
+} from './styleLibrary'
 import { isBalladStyle } from './balladFamily'
 import type { StylePattern } from './types'
 import { useEffect, useRef, useState } from 'react'
@@ -25,6 +31,7 @@ export function StylePicker({
   const menuRef = useRef<HTMLDivElement>(null)
 
   const styles = getVisibleStyles()
+  const daAn = hiddenBuiltIns()
   const selected = styles.find((style) => style.id === selectedId) ?? styles[0]
   const meters = [
     ...new Set(styles.map((style) => style.timeSignature)),
@@ -95,6 +102,28 @@ export function StylePicker({
           </div>
         )
       })}
+
+      {/*
+        ĐƯỜNG HIỆN LẠI cho điệu dựng sẵn đã xoá.
+
+        Bia mộ xoá điệu ghi vào `localStorage` là vĩnh viễn và im lặng. Đã cắn
+        thật: người dùng xoá điệu bossa Cà Pháo, tôi dựng lại đúng id ấy, và nó
+        không bao giờ hiện lên — người dùng phải tự hỏi "sao chưa thấy" chứ app
+        không nói gì. Một dòng nhỏ, chỉ hiện khi thật sự có điệu đang bị chôn.
+      */}
+      {daAn.length > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            restoreHiddenStyles()
+            setRefreshKey((k) => k + 1)
+          }}
+          className="self-start rounded-md border border-line px-2 py-1 font-mono text-[11px] text-dim hover:bg-white/8"
+          title={daAn.map((style) => style.name).join(', ')}
+        >
+          {daAn.length} điệu đang ẩn — hiện lại
+        </button>
+      )}
 
       {familyStyles.length > 1 && (
         <div className="flex flex-wrap gap-1.5">

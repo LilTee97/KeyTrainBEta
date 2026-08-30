@@ -119,6 +119,13 @@ import type {
 import { haiPalette } from './brain/haiPalette'
 import { brainFill } from './brain/fillFromBrain'
 import { brainInterludeWindow } from './brain/interlude'
+import { caPhaoSolo } from './style/caPhaoSolo'
+import {
+  doVongHoaThanh,
+  doiGiong,
+  motLuot,
+  type VongHoaThanh,
+} from './reharmEngine/sectionProgression'
 import { brainPassingSuggestions } from './brain/passing'
 import { brainPhrase } from './brain/phrase'
 import { walkingBassLine } from './brain/walkingBass'
@@ -128,6 +135,7 @@ import { soloFeelFor } from './fillSoloGenerator/soloFeel'
 import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
 import { plainForInterlude } from './style/interludeChords'
 import { cueChord, phraseChords } from './style/phraseChords'
+import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import {
   hasChorusVariant,
@@ -136,7 +144,13 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
-import { kieuChoSolo, raiMoRongOGiangTau, raiTheoTayTrai } from './style/hoDieu'
+import {
+  kieuChoSolo,
+  raiMoRongOGiangTau,
+  raiTheoTayTrai,
+  soloTuDoCaPhao,
+  thienVeCuaHo,
+} from './style/hoDieu'
 import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
@@ -437,6 +451,59 @@ function KeySelect({
         ))}
       </select>
     </label>
+  )
+}
+
+/**
+ * Bảng VÒNG HOÀ THANH: cả bài một dòng, mỗi đoạn một dòng.
+ *
+ * Bày ra vì phép dò mà không nói ra thì người dùng không kiểm được nó đúng hay
+ * sai — và đây là phép đoán, không phải sự thật: đoạn bốn hợp âm rất dễ chấm
+ * nhầm giọng. Chỗ nào app phân vân giữa hai giọng sát điểm thì nói thẳng là
+ * phân vân, thay vì quả quyết.
+ */
+function VongPanel({
+  caBai,
+  doan,
+}: {
+  caBai: VongHoaThanh
+  doan: readonly { name: string; kind: string; vong: VongHoaThanh }[]
+}) {
+  if (!caBai.key) return null
+
+  const dong = (
+    ten: string,
+    vong: VongHoaThanh,
+    doi: boolean,
+  ) => (
+    <div key={ten} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+      <span className="min-w-24 text-dim">{ten}</span>
+      <span className={doi ? 'font-semibold text-amber-key' : 'text-cream'}>
+        {vong.key?.label ?? '—'}
+        {vong.phanVan ? ' (chưa chắc)' : ''}
+        {doi ? ' — đổi giọng' : ''}
+      </span>
+      <span className="text-cream/80">{vong.roman.join(' - ')}</span>
+      {vong.ten && (
+        <span className="text-dim">
+          vòng {vong.ten}
+          {vong.lap > 0 ? '' : ' (không lặp)'}
+        </span>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="space-y-1 rounded-lg border border-line bg-white/4 p-3 text-xs">
+      <p className="text-xs font-semibold text-dim">Vòng hoà thanh</p>
+      {dong('Cả bài', caBai, false)}
+      {doan.map((one) =>
+        dong(one.name, one.vong, doiGiong(one.vong, caBai.key)),
+      )}
+      <p className="pt-1 text-[11px] text-dim">
+        Hợp âm chia đôi ô chỉ tính bậc cho hợp âm đầu cặp.
+      </p>
+    </div>
   )
 }
 
@@ -1353,16 +1420,47 @@ export function ReharmHome() {
     [baseSheet, withPassing, chordBeats, mainSongChords],
   )
 
+  /**
+   * VÒNG HOÀ THANH của cả bài và của từng đoạn.
+   *
+   * Dò RIÊNG cho mỗi đoạn, không lấy giọng cả bài truyền xuống — đó là chỗ bắt
+   * được điệp khúc chuyển giọng, ca mà bản trước đọc sai vai trò mọi hợp âm
+   * của đoạn ấy.
+   *
+   * Hợp âm nửa ô bị bỏ trước khi tính bậc, theo luật người dùng: cặp `Am - Em`
+   * chia đôi một ô thì chỉ `Am` được tính bậc. Xem `sectionProgression.ts`.
+   */
+  const vongHoaThanh = useMemo(() => {
+    const spans = mainChordSpans(withPassing, chordBeats)
+    const bar = style.beatsPerMeasure
+    const caBai = doVongHoaThanh(spans, bar)
+    const doan = baseSheet
+      ? sectionChordRanges(baseSheet).map((range) => ({
+          name: range.name,
+          kind: range.kind,
+          vong: doVongHoaThanh(spans.slice(range.from, range.to + 1), bar),
+        }))
+      : []
+    return { caBai, doan }
+  }, [baseSheet, withPassing, chordBeats, style.beatsPerMeasure])
+
+  /** Một lượt vòng của phiên khúc — hợp âm cho đoạn dạo đầu. */
+  const vongPhienKhuc = useMemo(() => {
+    const phien = vongHoaThanh.doan.find((one) => one.kind === 'verse')
+    return phien ? motLuot(phien.vong) : []
+  }, [vongHoaThanh])
+
   const introSymbols = useMemo(() => {
     const cue = cueChord(phraseOpening)
     return [
       ...phraseChords('intro', reharm.key, {
         songChords: hopAmChoDoan('intro'),
+        vongPhienKhuc,
         plain: plainPhrase,
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
     ]
-  }, [reharm.key, hopAmChoDoan, plainPhrase, phraseOpening])
+  }, [reharm.key, hopAmChoDoan, vongPhienKhuc, plainPhrase, phraseOpening])
 
   const outroSymbols = useMemo(
     () =>
@@ -1630,6 +1728,13 @@ export function ReharmHome() {
       /** Tay trái của một cửa sổ hợp âm — dùng lại ở cả phần đệm lẫn bộ rải. */
       const traiCua = (list: readonly ParsedChord[], beats: readonly number[]) => {
         const trai = soloLeftHand({ chords: list, beatsEach: beats, style: styleSolo })
+        /*
+          Cà Pháo KHÔNG buông tay trái trong lúc tay phải chạy — đo ô 51 bản ký
+          âm *Hồng Kông 1*: câu chạy chiếm từ offset 1,625 tới 3, mà tay trái
+          vẫn gõ ở 2 và 3 xuyên qua nó. Ngược hẳn ô 71 của Linh Nhi, nơi tay
+          trái im hẳn suốt câu chạy. Hai phong cách, hai luật.
+        */
+        if (soloTuDoCaPhao(styleSolo.id)) return trai
         if (!raiTheoTayTrai(styleSolo.id)) return trai
         /*
           BUÔNG TAY TRÁI trong lúc tay phải chạy ngón.
@@ -1672,13 +1777,31 @@ export function ReharmHome() {
           )
       }
 
-      const pullHit = pull
-        ? renderPattern(
-            voiceLeadTwoHands([pull], { dropRootFromRightHand: dropRoot }),
-            style,
-            { beatsPerChord: 1, beatsEach: [1] },
-          )
-        : []
+      /*
+        HỢP ÂM BÁO GOM VÀO NGAY SAU CÂU CHẠY, VÀ RẢI CHỨ KHÔNG DẶM.
+
+        Bản trước dựng nó bằng chính mẫu đệm rồi đóng vào PHÁCH CUỐI vòng giang
+        tấu. Giữa chỗ câu chạy dứt và cú gõ ấy còn trọn gần một ô, nên tai nghe
+        ra hai sự kiện rời: câu chạy kết thúc, im một quãng, rồi một cú dặm.
+        Người dùng gọi đúng tên: "dư một nhịp dặm hợp âm trước khi vào đoạn kế
+        tiếp", và bảo gom cái báo vào sau câu chạy rồi rải kiểu đoạn kết.
+
+        Nên nó đặt đúng chỗ câu chạy dứt — cùng `khungChayNgon` mà bên tay trái
+        dùng để buông tay, nên hai bên không thể lệch nhau — và rải bằng chính
+        hình rải của đoạn kết, dịch sang phải để cụm rải đi SAU câu chạy chứ
+        không đè lên nốt chót của nó.
+      */
+      const pullHit = (() => {
+        if (!pull) return []
+        const tong = picked.reduce((sum, one) => sum + one.beats, 0)
+        const khung = khungChayNgon(tong, phrasePulseBar)
+        const notes = tamBao(
+          voiceLeadTwoHands([pull], { dropRootFromRightHand: dropRoot })[0]!.right,
+        )
+        // Không có câu chạy (đoạn quá ngắn) thì đáp vào vạch ô cuối như cũ.
+        const moc = khung ? khung.den : Math.max(0, tong - phrasePulseBar)
+        return cueStrike(notes, moc, { roll: true, sau: khung !== null })
+      })()
 
       const head = picked.slice(0, -1)
       const headChords = windowChords.slice(0, -1)
@@ -1728,6 +1851,28 @@ export function ReharmHome() {
             trái đang giữ gì, rồi mới cài vào khe. Người dùng nghe ra ngay: "tay
             phải quá rời rạc với tay trái". Xem `raiLinhNhi.ts`.
           */
+          /*
+            CÂU SOLO TỰ DO kiểu Cà Pháo đứng TRƯỚC lối bám tay trái.
+
+            Với riêng điệu của Cà Pháo, kho có số đo trực tiếp về việc anh solo
+            thế nào — và nó không phải lối bám tay trái của Linh Nhi. Các điệu
+            bossa khác vẫn giữ lối bám ấy như người dùng đã yêu cầu.
+          */
+          (soloTuDoCaPhao(styleSolo.id)
+            ? caPhaoSolo({
+                chords: lastLoop ? lastLoopChords : windowChords,
+                beatsPerChord: chordBeats,
+                barBeats: phrasePulseBar,
+                range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+                take: take + phraseSpin + playSpin.current,
+                ...(thienVeCuaHo(styleSolo.id)
+                  ? { thienVe: thienVeCuaHo(styleSolo.id)! }
+                  : {}),
+                left: lastLoop
+                  ? traiCua(headChords, head.map((span) => span.beats))
+                  : traiCua(windowChords, picked.map((span) => span.beats)),
+              })
+            : null) ??
           (raiTheoTayTrai(styleSolo.id)
             ? raiLinhNhi({
                 left: lastLoop
@@ -2649,9 +2794,22 @@ export function ReharmHome() {
               // Dạo đầu mượn hợp âm phiên khúc, kết bài mượn của điệp khúc.
               songChords: hopAmChoDoan(kind),
               plainChords: plainPhrase,
+              /*
+                CÙNG CƠ CHẾ LẤY NỐT VÀ CÙNG PHÉP ĐỔI LƯỢT VỚI GIANG TẤU.
+
+                Lối bám tay trái ở hai đoạn này trước đây không nhận `take`, nên
+                nó lấy mặc định 0 và dạo đầu với kết bài phát lại đúng một câu
+                mỗi lần trong khi giang tấu thì đổi. Tầm nốt cũng lệch: giang
+                tấu đi từ 62, hai đoạn này đóng cứng 57.
+
+                Số lượt lấy ĐÚNG biểu thức mà `phraseSolo` dùng, để hai đường —
+                bám tay trái và sinh câu độc lập — xoay cùng nhịp chứ không mỗi
+                đường một kiểu.
+              */
+              take: (kind === 'outro' ? 1 : 0) + phraseSpin + playSpin.current,
+              range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
-              rollCue: kind === 'outro' || ballad,
             })
             if (!built) return brainPhrase({ kind, key: reharm.key })
             return built
@@ -2692,6 +2850,10 @@ export function ReharmHome() {
       // Dạo đầu và kết bài dựng bằng hàm này; đổi mật độ hay đổi điệu là phải
       // dựng lại, không thì hai đoạn ấy giữ nguyên câu của lần chọn trước.
       phraseSolo,
+      // Số lượt và tầm nốt của hai đoạn ấy giờ truyền thẳng, không qua
+      // `phraseSolo` nữa, nên phải khai riêng.
+      phraseSpin,
+      ballad,
       buildEnding,
       buildRepeatEnding,
       varyOnRepeat,
@@ -3184,6 +3346,8 @@ export function ReharmHome() {
           Gam giang tấu: {soloScaleLabel}
         </p>
       )}
+
+      <VongPanel caBai={vongHoaThanh.caBai} doan={vongHoaThanh.doan} />
 
       {reharmPerBeat.length > 0 && (
         <ChordOverview

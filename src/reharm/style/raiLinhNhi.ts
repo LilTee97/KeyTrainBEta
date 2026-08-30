@@ -171,6 +171,17 @@ const CHUOI_MOI_O = 1
  * dùng đã yêu cầu tăng ba lần, nên đẩy lên 0,75 — tức phần lớn ô đều có.
  */
 const CHAY_THEM = 0.75
+
+/*
+  ĐỘ DÀI MỘT CÂU CHẠY, tính bằng phách. Sáu nốt móc kép trải 1,5 phách.
+
+  Bản trước cắt câu chèn còn `.slice(0, 4)` — đúng MỘT phách — trong khi câu ở
+  cửa ra giữ đủ sáu nốt. Người dùng nghe ra chênh lệch ấy và báo đúng triệu
+  chứng: "vẫn chưa thấy phần chạy nốt nào TRỪ cuối giang tấu". Bốn móc kép gọn
+  trong một phách không đọc ra hình câu chạy, nó lẫn vào chính cặp móc kép của
+  mẫu đệm bolero. Sáu nốt vượt qua vạch phách thì mới nghe ra là một câu.
+*/
+const CHAY_DAI = 1.5
 const CHUOI_NGAN = 3
 const CHUOI_DAI = 7
 
@@ -195,21 +206,6 @@ const CHUOI_DAI = 7
  * Cả hai ô đều đứng trên hợp âm hút (bậc V và bậc V7). Chỗ ấy là của vòng hợp
  * âm, không phải của bộ này — bộ này chỉ dày lên đúng chỗ vòng đã hút sẵn.
  */
-/**
- * Cửa ra: MỘT cú dặm rồi ngân, không lặp ba khối giống hệt.
- *
- * Bản đầu chồng đúng bốn nốt ấy ba lần ở phách 1, 1&, 2 rồi im tới phách 3&.
- * Nghe ra là một khối tĩnh lặp lại rồi tắt — đúng cái người dùng gọi là "dặm
- * hợp âm rồi nghỉ". Cử chỉ báo hiệu phải là MỘT cú, đủ dày, rồi để nó vang.
- */
-const CUA_RA_CHONG = [5]
-/*
-  Chồng ngay TỪ VẠCH NHỊP. Bản gốc chồng ở phách 1&, 2, 3 — nhưng ở đó ô trước
-  vẫn đang chạy tiếp vào, còn bản dựng thì câu chạy vừa đáp xuống đúng vạch.
-  Để trống phách 1 thì có một khe ngay giữa hai cử chỉ, và đó là chỗ khựng.
-*/
-const CUA_RA_PHACH = [0]
-
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
 const KHE_HEP = 9
@@ -519,45 +515,25 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
   }
 
   /*
-    CỬA RA: ô cuối đoạn dày lên bằng hợp âm chồng, hút sang đoạn kế.
+    KHỐI HỢP ÂM CỬA RA: BỎ. Chỉ tiếng BÁO mới được dặm hợp âm.
 
-    ĐẶT TRƯỚC khối chạy ngón, không phải sau. Lần đầu tôi để nó sau và nó thành
-    code chết: nhánh chạy ngón thoát ra bằng `return con.sort(...)` nên không
-    bao giờ chạy tới đây. Đo ra 0 nốt cửa ra, và nếu không lần theo `velocity`
-    riêng thì tưởng là thuật toán sai chứ không phải luồng sai.
+    Bộ này từng chồng năm nốt vào vạch ô cuối làm chỗ đáp cho câu chạy, hình
+    lấy từ ô 53 và ô 71 bản ký âm. Nhưng đoạn dạo đầu và đoạn kết cũng chạy qua
+    chính bộ sinh này, nên chúng lĩnh luôn cái khối ấy — rồi cuối đoạn lại còn
+    một tiếng báo nữa. Đo trên đoạn dạo `bolero-linh-nhi-2`: sáu nốt cùng rơi
+    phách 12, rồi tiếng báo ở phách 15. Hai lần thông báo cho một lần chuyển
+    đoạn. Người dùng nghe ra: "intro vẫn bị dặm hợp âm trước báo, hãy sửa để
+    chỉ báo mới dặm hợp âm".
+
+    Ở giang tấu nó còn tệ hơn và lỗi ấy là của tôi: từ lượt dời hợp âm báo về
+    ngay sau câu chạy, khối cửa ra và hợp âm báo rơi ĐÚNG CÙNG một phách — hai
+    hợp âm khác nhau (hợp âm của ô, và hợp âm hút về đoạn sau) chồng lên nhau.
+
+    Một luật cho cả ba đoạn: câu chạy đáp vào TIẾNG BÁO, và tiếng báo là hợp âm
+    duy nhất được dặm. Ở giang tấu tiếng báo đã nằm sẵn đúng chỗ câu chạy dứt,
+    nên chỗ đáp không mất đi đâu cả; ở đoạn dạo thì câu chạy chảy tiếp vào mẫu
+    đệm, và hợp âm duy nhất là tiếng báo cuối đoạn.
   */
-  const oCuoi = Math.floor((tong - 1e-6) / barBeats) * barBeats
-  if (tong >= barBeats * 2) {
-    const chord = hopAm(oCuoi)
-    const tones = chordTonesStrict(chord)
-    const traiCuoi = mocs.filter((m) => m >= oCuoi)
-    const tranTrai =
-      traiCuoi.length > 0 ? Math.max(...traiCuoi.flatMap((m) => moc.get(m)!)) : range.low
-    const san = Math.max(range.low, tranTrai + KHE_HEP)
-
-    CUA_RA_PHACH.forEach((phach, at) => {
-      const luc = oCuoi + phach
-      if (luc >= tong) return
-      const soNot = CUA_RA_CHONG[at]!
-      // Xếp chồng từ dưới lên, mỗi nốt một bậc hợp âm — trải như bản gốc.
-      let duoiCung = san
-      for (let lop2 = 0; lop2 < soNot; lop2 += 1) {
-        const pc = tones[lop2 % tones.length]!
-        const note = datNot(pc, duoiCung, duoiCung, range.high)
-        if (note === null) break
-        out.push({
-          notes: [note],
-          startBeat: luc,
-          // Ngân dài: đây là chỗ đáp của câu chạy, không phải một cú dặm rồi tắt.
-          durationBeats: barBeats * 0.9,
-          hand: 'right',
-          velocity: 88,
-          grace: false,
-        })
-        duoiCung = note + 1
-      }
-    })
-  }
 
   /*
     CÂU CHẠY NGẮN rải trong đoạn, ngoài câu chạy ở cửa ra.
@@ -593,7 +569,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
         âm 5 nửa cung, tức bắt chéo thật. Hạ tần suất không cứu được vì lỗi
         không nằm ở tần suất.
       */
-      const trongCuaSo = mocs.filter((one) => one <= tuChay + 1 + 1e-6)
+      const trongCuaSo = mocs.filter((one) => one <= tuChay + CHAY_DAI + 1e-6)
       const tranLucChay =
         trongCuaSo.length > 0
           ? Math.max(
@@ -607,11 +583,21 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       const batDau = Math.max(goc3, sanChay)
       const chord2 = hopAm(tuChay)
       const thu2 = !chordTonesStrict(chord2).includes(((chord2.root + 4) % 12) as PitchClass)
+      /*
+        Dọn thêm MỘT MÓC KÉP mỗi đầu, không chỉ đúng khoảng câu chạy chiếm.
+
+        Trần tay trái có thể đẩy chỗ khởi hành lên cao hơn nốt liền trước. Nốt
+        lẻ ấy dính vào câu chạy thành một cụm móc kép liền mạch trải 19 nửa
+        cung — bước nhảy vào cộng 14 nửa cung trèo — trong khi câu chạy gốc chỉ
+        trèo 14. Đầu ra cũng vậy: nốt đứng đúng chỗ câu chạy vừa dứt dính luôn
+        vào cụm. Cho một khe thở mỗi đầu thì cụm về đúng hình của nó.
+      */
       const con2 = out.filter(
-        (e) => e.startBeat < tuChay - 1e-6 || e.startBeat >= tuChay + 1 - 1e-6,
+        (e) => e.startBeat < tuChay - CHAY_MOC - 1e-6 ||
+          e.startBeat >= tuChay + CHAY_DAI + CHAY_MOC - 1e-6,
       )
       out.length = 0
-      out.push(...con2, ...chayNgon(tuChay, batDau as MidiNote, thu2, range.high).slice(0, 4))
+      out.push(...con2, ...chayNgon(tuChay, batDau as MidiNote, thu2, range.high))
     }
   }
 

@@ -35,6 +35,7 @@ const doan = (kind: 'intro' | 'outro', styleId: string, take = 0) =>
     style: getStyle(styleId)!,
     beatsPerChord: 4,
     dropRoot: true,
+    take,
     opening: parseChordInput('Cmaj7').chords[0]!,
     solo: (chords) =>
       soloToTimeline(
@@ -49,7 +50,6 @@ const doan = (kind: 'intro' | 'outro', styleId: string, take = 0) =>
           endWithRun: kind !== 'outro',
         }),
       ),
-    rollCue: styleId.includes('ballad') || styleId.includes('slow'),
   })!
 
 const phai = (events: readonly TimelineEvent[]) =>
@@ -137,6 +137,121 @@ describe('đoạn dạo đầu và đoạn kết, sau khi đã ráp', () => {
     for (const styleId of STYLES) {
       const trai = doan('outro', styleId).events.filter((e) => e.hand === 'left')
       expect(trai.length, `${styleId}: đoạn kết mất hẳn tay trái`).toBeGreaterThan(0)
+    }
+  })
+})
+
+/*
+  HỢP ÂM BÁO KHÔNG ĐÈO THÊM MỘT PHÁCH VÀO ĐOẠN DẠO.
+
+  Bản trước cộng một phách sau vòng để dặm hợp âm báo, nên đoạn dạo dài bốn ô
+  LẺ MỘT PHÁCH. Người dùng nghe ra cái lẻ ấy: "ở intro có một nhịp dặm hợp âm
+  trước khi kết đoạn nghe có vẻ bị dư".
+
+  Đoạn kết thì giữ: ở đó cái đuôi chính là chỗ bài đậu xuống, không phải thứ
+  chen vào giữa hai đoạn.
+*/
+describe('đoạn dạo giữ đúng số ô', () => {
+  const VONG = 4
+  const PHACH = 4
+
+  it('dạo đầu dài đúng một vòng, không lẻ phách nào', () => {
+    for (const styleId of STYLES) {
+      const built = doan('intro', styleId)
+      expect(built.lengthBeats, styleId).toBe(VONG * PHACH)
+      expect(built.lengthBeats % PHACH, styleId).toBe(0)
+    }
+  })
+
+  it('hợp âm báo nằm TRONG vòng, không rơi ra ngoài', () => {
+    for (const styleId of STYLES) {
+      const built = doan('intro', styleId)
+      for (const event of built.events) {
+        expect(event.startBeat, styleId).toBeLessThan(built.lengthBeats)
+      }
+    }
+  })
+
+  /*
+    Đoạn kết mượn BA hợp âm — dẫn, chủ, chủ — chứ không phải bốn như đoạn dạo,
+    nên đừng khoá bằng con số tuyệt đối. Thứ phải giữ là phần LẺ: đúng một
+    phách đậu xuống sau khi vòng chạy trọn.
+  */
+  /*
+    Hợp âm báo RẢI, không dặm — và với mọi điệu, không riêng ballad.
+
+    Đo trên `pop-1` bản trước: một khối ba nốt rơi đúng phách áp chót rồi đoạn
+    còn chạy tiếp một phách, nên nó nghe ra cú gõ chen vào giữa chứ không phải
+    tiếng báo hết đoạn. Rải thì mỗi nốt đi một mình, nên không còn khối nào.
+  */
+  /*
+    NARROW LẠI so với bản đầu, và vì số đo chứ không vì test đỏ.
+
+    Bản đầu cấm MỌI cú gõ nhiều nốt trong đoạn dạo. Nó viết khi cú gõ nhiều nốt
+    duy nhất là chính hợp âm báo. Nhưng lối solo tự do Cà Pháo có chùm ba nốt,
+    và đo trên bản ký âm thì đoạn dạo của anh CÓ chùm ấy thật: Bèo dạt 0,6 chùm
+    mỗi ô, Yêu xa 0,6, Mơ 0,7 — ngang với giang tấu của chính chúng.
+
+    Cái người dùng bác là cú dặm CẠNH TRANH với tiếng báo, không phải chùm nốt
+    giữa câu. Nên luật đúng là: ô CHÓT sạch chùm, để tiếng báo đứng một mình.
+  */
+  it('ô chót đoạn dạo sạch chùm nốt, để tiếng báo đứng một mình', () => {
+    const PHACH = 4
+    for (const styleId of STYLES) {
+      const built = doan('intro', styleId)
+      for (const event of built.events) {
+        if (event.hand !== 'right') continue
+        if (event.startBeat < built.lengthBeats - PHACH) continue
+        expect(event.notes.length, `${styleId} @ ${event.startBeat}`).toBe(1)
+      }
+    }
+  })
+
+  it('tiếng báo là thứ CUỐI CÙNG của đoạn dạo, không sớm hơn', () => {
+    for (const styleId of STYLES) {
+      const built = doan('intro', styleId)
+      const cuoi = Math.max(...built.events.map((e) => e.startBeat))
+      // Nằm trong phách chót của vòng, không phải một phách chen ở giữa.
+      expect(cuoi, styleId).toBeGreaterThan(built.lengthBeats - PHACH)
+      expect(cuoi, styleId).toBeLessThan(built.lengthBeats)
+    }
+  })
+
+  it('đoạn kết vẫn giữ một phách đậu xuống', () => {
+    for (const styleId of STYLES) {
+      expect(doan('outro', styleId).lengthBeats % PHACH, styleId).toBe(1)
+    }
+  })
+})
+
+/*
+  DẠO ĐẦU VÀ KẾT BÀI ĐỔI CÂU MỖI LẦN CHƠI, Y NHƯ GIANG TẤU.
+
+  Lối bám tay trái ở hai đoạn này trước đây không nhận `take`, nên nó lấy mặc
+  định 0: giang tấu thì mỗi lượt một câu, còn dạo đầu và kết bài phát lại đúng
+  một câu mãi. Đường sinh câu độc lập đã tự xoay theo lượt từ trước, nên chỉ
+  nhánh bám tay trái bị kẹt — và đó đúng là nhánh của họ bolero.
+*/
+describe('đoạn dạo và đoạn kết đổi theo lượt', () => {
+  const van = (kind: 'intro' | 'outro', styleId: string, take: number) =>
+    doan(kind, styleId, take)
+      .events.filter((event) => event.hand === 'right')
+      .map((event) => `${event.startBeat.toFixed(3)}:${event.notes.join(',')}`)
+      .join('|')
+
+  it('sáu lượt ra sáu câu khác nhau, mọi điệu', () => {
+    for (const styleId of [...STYLES, 'bolero-linh-nhi-2']) {
+      for (const kind of ['intro', 'outro'] as const) {
+        const thay = new Set<string>()
+        for (let take = 0; take < 6; take += 1) thay.add(van(kind, styleId, take))
+        expect(thay.size, `${styleId} / ${kind}`).toBe(6)
+      }
+    }
+  })
+
+  it('cùng một lượt thì ra đúng một câu — đổi mới chứ không ngẫu nhiên', () => {
+    for (const styleId of [...STYLES, 'bolero-linh-nhi-2']) {
+      expect(van('intro', styleId, 3), styleId).toBe(van('intro', styleId, 3))
     }
   })
 })

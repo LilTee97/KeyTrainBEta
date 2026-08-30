@@ -1,7 +1,7 @@
 import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { fixHandByRegister, interludeAccompaniment } from './songStructure'
-import { khongTiaTayTrai, raiTheoTayTrai } from './hoDieu'
+import { khongTiaTayTrai, raiTheoTayTrai, soloTuDoCaPhao } from './hoDieu'
 import { interlockHands } from './soloLeftHand'
 import type { TimelineEvent } from './types'
 
@@ -497,7 +497,9 @@ export function buildArrangedSong(
         Pháo — tay phải cài vào KHE của tay trái, ngược hẳn. Xem `raiLinhNhi.ts`.
       */
       const woven =
-        backing && line && !(styleId && raiTheoTayTrai(styleId))
+        backing &&
+        line &&
+        !(styleId && (raiTheoTayTrai(styleId) || soloTuDoCaPhao(styleId)))
           ? interlockHands(
               interludeAccompaniment(backing),
               line,
@@ -523,8 +525,14 @@ export function buildArrangedSong(
           events.push({ ...event, startBeat: event.startBeat + at + played })
         }
       }
+      /*
+        Hợp âm báo mang sẵn MỐC RIÊNG trong vòng, không còn bị đóng vào phách
+        cuối. Bên dựng đặt nó ngay sau câu chạy ngón kết giang tấu; đóng cứng
+        vào phách cuối như bản trước thì nó tách hẳn khỏi câu chạy và nghe ra
+        một cú dặm thừa. Nên chỉ dịch theo vòng, giữ nguyên mốc bên trong.
+      */
       if (last && range.exit && range.exit.length > 0) {
-        events.push(...place(range.exit, at + loopBeats - 1, 2))
+        events.push(...place(range.exit, at, loopBeats))
       }
     }
 
