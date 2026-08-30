@@ -21,6 +21,23 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
   'hai-slow-rock': 'hai-slow-rock-chorus',
   'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
+  /*
+    Bolero rải: vòm thấp cho phiên khúc, vòm cao cho điệp khúc.
+
+    ĐÂY LÀ LỰA CHỌN KHI DỰNG, KHÔNG PHẢI SỐ ĐO. Đếm trên bản ký âm gốc thì vòm
+    thấp thắng ở MỌI đoạn — dạo đầu 5/2, phiên khúc 10/5, điệp khúc 12/6, giang
+    tấu 8/1. Vòm cao không phải dấu hiệu đoạn nào cả.
+
+    Cái thật sự gọi vòm cao ra là HOÀ ÂM: 12 trên 19 ô vòm cao rơi vào hợp âm
+    Rê, tức chủ âm của bài, còn vòm thấp thì dồn vào Fa thăng thứ và Si thứ.
+    Người soạn mở rộng tay trái đúng chỗ hoà âm vững nhất. Không phải chuyện
+    tầm tay: nốt gốc trung bình của hai vòm gần như nhau, 39,4 so với 42,1.
+
+    Ghép theo đoạn ở đây là để người dùng phối hai kiểu bolero trong một bài —
+    việc nhạc công vẫn làm, và người dùng đã yêu cầu. Nhưng nó là ý người dùng
+    chứ không phải thói quen đo được của người soạn, nên ghi rõ ra.
+  */
+  'bolero-linh-nhi-2': 'bolero-linh-nhi-2-chorus',
 }
 
 /**
@@ -34,6 +51,51 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
  * slow rock của thầy Hải chưa ai bảo giang tấu phải lên cao trào.
  */
 const INTERLUDE_AS_CHORUS: readonly string[] = ['bolero-linh-nhi']
+
+/**
+ * Điệu nào **mở vòm rộng trên CHỦ ÂM** — đổi theo hoà âm, không theo đoạn.
+ *
+ * Hai phép đổi trong file này khác hẳn nhau về bản chất, và trộn chúng là mất
+ * đúng chỗ đáng học:
+ *
+ * - `CHORUS_PAIRS` đổi theo ĐOẠN. Đó là quyết định phối khí của người dùng:
+ *   phiên khúc chơi kiểu này, điệp khúc chơi kiểu kia. Nhạc công vẫn làm vậy.
+ * - Bảng này đổi theo HOÀ ÂM. Đó là thói quen ĐO ĐƯỢC của người soạn.
+ *
+ * Số đo trên bản ký âm Linh Nhi, 70 ô có tay trái: 12 trên 19 ô dùng vòm cao
+ * rơi vào hợp âm Rê — chủ âm của bài. Vòm thấp thì dồn vào Fa thăng thứ (13 ô)
+ * và Si thứ (11 ô). Không phải chuyện tầm tay: nốt gốc trung bình của hai vòm
+ * gần như nhau, 39,4 so với 42,1.
+ *
+ * Và đếm theo ĐOẠN thì vòm thấp thắng ở mọi đoạn — dạo đầu 5/2, phiên khúc
+ * 10/5, điệp khúc 12/6, giang tấu 8/1. Nên phép đổi theo đoạn KHÔNG phải thứ
+ * người soạn làm; nó là thứ người dùng muốn. Giữ cả hai, ghi rõ cái nào là gì.
+ */
+const TONIC_PAIRS: Readonly<Record<string, string>> = {
+  'bolero-linh-nhi-2': 'bolero-linh-nhi-2-chorus',
+}
+
+/** Điệu này có mở vòm theo chủ âm không. */
+export function hasTonicVariant(styleId: string): boolean {
+  return canonical(styleId) in TONIC_PAIRS
+}
+
+/**
+ * Điệu nên dùng cho MỘT hợp âm, theo thói quen của người soạn.
+ *
+ * Hợp âm đang vang là chủ âm thì mở vòm rộng, không thì giữ vòm thấp. Điệu
+ * không có trong `TONIC_PAIRS` thì trả về chính nó — không đổi gì.
+ */
+export function resolveStyleForChord(
+  styleId: string,
+  chordRoot: number,
+  tonic: number,
+): string {
+  const id = canonical(styleId)
+  const goc = TONIC_PAIRS[id]
+  if (!goc) return id
+  return ((chordRoot % 12) + 12) % 12 === ((tonic % 12) + 12) % 12 ? goc : id
+}
 
 /** Bản điệp khúc trỏ ngược về bản phiên khúc, để rời điệp khúc thì quay lại. */
 const VERSE_OF: Readonly<Record<string, string>> = Object.fromEntries(

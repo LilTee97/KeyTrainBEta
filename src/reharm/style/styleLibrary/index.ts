@@ -219,6 +219,99 @@ const BOLERO_STYLES: StylePattern[] = [
     */
     leftHandTop: 67,
   },
+
+  /*
+    BOLERO RAI, do tu BAN KY AM THAT — khong phai tu loi mo ta.
+
+    Nguồn: bản piano do Linh Nhi soạn, người dùng đưa vào. 72 ô nhịp 4/4, và có
+    sẵn 80 ký hiệu hợp âm. Đây là hạng cao nhất kho từng có: hai tay tách sẵn
+    trên hai khuông, phách là số hữu tỉ chính xác, hoà âm cho trước chứ không
+    phải suy ngược từ tay trái như bảy bản Cà Pháo.
+
+    Đứng CẠNH cặp `bolero-linh-nhi` ở trên, không thay. Cặp ấy dựng từ một bản
+    đặc tả do Gemini viết sau khi xem video; cặp này có bản ký âm chống lưng.
+    Hai mức tin cậy khác nhau thì để người học thấy cả hai, đừng trộn.
+
+    MẪU ĐO ĐƯỢC — chín cú gõ mỗi ô, chữ ký nằm ở CẶP MÓC KÉP phách 1&:
+
+        phách 1     bậc 1    móc đơn
+        phách 1&    bậc 5    móc kép  ┐  hai nốt này làm nên mẫu
+        phách 1&½   bậc 8    móc kép  ┘
+        phách 2     bậc 10   móc đơn
+
+    Ba nốt đầu giống nhau ở mọi ô. Từ phách 2 rẽ làm HAI VÒM, và mỗi vòm giữ
+    riêng thành một điệu:
+
+        vòm THẤP  lên bậc 10 rồi về gốc         21 trên 70 ô
+        vòm CAO   trèo tới bậc 15 rồi hạ dần    13 trên 70 ô
+
+    Đếm chỗ gõ trên cả bài: phách 1 có ở 70/70 ô, phách 1& ở 69, cặp móc kép ở
+    49, phách 2 ở 70; phần đuôi ô thưa dần còn 55-66 ô.
+
+    Ô nhịp không có phần tay phải — bản độc tấu, tay phải giữ giai điệu.
+  */
+  {
+    id: 'bolero-linh-nhi-2',
+    name: 'Bolero rai — vom thap (1-5-8-10)',
+    family: 'bolero-linh-nhi-2',
+    familyName: 'Bolero rai (ban ky am)',
+    variant: 1,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 69,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['bien-tinh-linh-nhi-piano.mxl — ban ky am piano do Linh Nhi soan'],
+    cell: {
+      lengthBeats: 4,
+      left: [
+        { beat: 0, durationBeats: 0.5, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 0.5, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 0.75, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 1, durationBeats: 0.5, velocityScale: 0.85, tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }] },
+        { beat: 1.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 2, durationBeats: 0.5, velocityScale: 0.75, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 2.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 3, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 3.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true }] },
+      ],
+      right: [],
+    },
+    note: 'Bolero rai vom thap: 1-5-8-10 roi ve goc. Cap moc kep bac 5 va bac 8 o phach 1& la chu ky cua mau. Do tren 21/70 o cua ban ky am.',
+    leftHandTop: 67,
+    soloMaxStrikes: 9,
+  },
+  {
+    id: 'bolero-linh-nhi-2-chorus',
+    name: 'Bolero rai — vom cao (len bac 15)',
+    family: 'bolero-linh-nhi-2',
+    familyName: 'Bolero rai (ban ky am)',
+    variant: 2,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 69,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['bien-tinh-linh-nhi-piano.mxl — ban ky am piano do Linh Nhi soan'],
+    cell: {
+      lengthBeats: 4,
+      left: [
+        { beat: 0, durationBeats: 0.5, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 0.5, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 0.75, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 1, durationBeats: 0.5, velocityScale: 0.85, tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }] },
+        { beat: 1.5, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 2, fromRoot: true, semitones: 12 }] },
+        { beat: 2, durationBeats: 0.5, velocityScale: 0.9, tones: [{ toneIndex: 0, fromRoot: true, semitones: 24 }] },
+        { beat: 2.5, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 2, fromRoot: true, semitones: 12 }] },
+        { beat: 3, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }] },
+        { beat: 3.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+      ],
+      right: [],
+    },
+    note: 'Bolero rai vom cao: cung ba not dau voi vom thap, tu phach 2 treo len bac 15 roi ha dan. Do tren 13/70 o cua ban ky am.',
+    leftHandTop: 74,
+    soloMaxStrikes: 9,
+  },
 ]
 
 /*

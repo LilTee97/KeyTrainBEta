@@ -3,6 +3,8 @@ import {
   CHORUS_PAIRS,
   hasChorusVariant,
   isSplitAwareStyle,
+  hasTonicVariant,
+  resolveStyleForChord,
   resolveStyleForSection,
 } from '../sectionStyles'
 import { getStyle } from '../styleLibrary'
@@ -344,5 +346,46 @@ describe('hợp âm chia đôi: mỗi nửa ô một hợp âm, mỗi nửa mộ
     )
     expect(third.map((e) => e.startBeat - 4)).toContain(0)
     expect(third.map((e) => e.startBeat - 4)).toContain(2)
+  })
+})
+
+/*
+  HAI PHÉP ĐỔI, HAI BẢN CHẤT KHÁC NHAU.
+
+  Đổi theo ĐOẠN là quyết định phối khí của người dùng. Đổi theo HOÀ ÂM là thói
+  quen đo được của người soạn. Trộn chúng làm một là mất đúng chỗ đáng học.
+
+  Số đo trên bản ký âm Linh Nhi: 12 trên 19 ô dùng vòm cao rơi vào hợp âm Rê,
+  chủ âm của bài. Còn đếm theo đoạn thì vòm thấp thắng ở MỌI đoạn — nên đổi
+  theo đoạn không phải thứ người soạn làm.
+*/
+describe('đổi điệu theo hoà âm, khác với đổi theo đoạn', () => {
+  const RE = 2
+  const SI = 11
+
+  it('hợp âm chủ thì mở vòm rộng', () => {
+    expect(resolveStyleForChord('bolero-linh-nhi-2', RE, RE)).toBe('bolero-linh-nhi-2-chorus')
+  })
+
+  it('hợp âm khác chủ âm thì giữ vòm thấp', () => {
+    for (const root of [SI, 6, 9, 4]) {
+      expect(resolveStyleForChord('bolero-linh-nhi-2', root, RE), `goc ${root}`)
+        .toBe('bolero-linh-nhi-2')
+    }
+  })
+
+  it('điệu không khai vòm theo chủ âm thì không đổi gì', () => {
+    for (const id of ['pop-1', 'bolero-1', 'hai-pop-ballad']) {
+      expect(hasTonicVariant(id), id).toBe(false)
+      expect(resolveStyleForChord(id, RE, RE), id).toBe(id)
+    }
+    expect(hasTonicVariant('bolero-linh-nhi-2')).toBe(true)
+  })
+
+  it('hai phép đổi doc lập nhau', () => {
+    // Cùng một điệu: theo đoạn thì điệp khúc mới đổi, theo hoà âm thì chủ âm
+    // mới đổi. Hai câu hỏi khác nhau, hai câu trả lời khác nhau.
+    expect(resolveStyleForSection('bolero-linh-nhi-2', 'verse')).toBe('bolero-linh-nhi-2')
+    expect(resolveStyleForChord('bolero-linh-nhi-2', RE, RE)).toBe('bolero-linh-nhi-2-chorus')
   })
 })

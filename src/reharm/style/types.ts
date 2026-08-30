@@ -146,6 +146,19 @@ export interface StylePattern {
    * đang chơi nốt gốc hai lần sẽ hoá thành nốt gốc rồi bậc 8.
    */
   leftHandTop?: number
+
+  /**
+   * Trần số cú gõ tay trái ở đoạn solo, nếu điệu này cần nới.
+   *
+   * Mặc định 6, đo trên đoạn giang tấu của Cà Pháo (3,4-5,8 cú mỗi ô). Trần ấy
+   * để giai điệu còn khe mà lách. Bản ĐỘC TẤU thì khác: tay trái gánh cả phần
+   * đệm nên chín cú mỗi ô là thật, và cắt xuống sáu là cắt mất chữ ký — trên
+   * Bolero rải, phép cắt bỏ đúng cặp móc kép vì cặp ấy nhẹ nhất.
+   *
+   * Nới được vì chỗ giai điệu đã có `interlockHands` lo theo mật độ, tinh hơn
+   * hẳn một cái trần cứng.
+   */
+  soloMaxStrikes?: number
   /**
    * Phần trường độ thật sự kêu. Bỏ trống thì dùng mặc định 0.92.
    *

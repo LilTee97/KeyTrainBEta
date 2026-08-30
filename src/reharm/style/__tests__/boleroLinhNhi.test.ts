@@ -3,6 +3,7 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { renderPattern } from '../patternRenderer'
 import { resolveStyleForSection } from '../sectionStyles'
+import { patternOnsets, patternStrikes } from '../soloLeftHand'
 import { getStyle } from '../styleLibrary'
 
 /*
@@ -174,5 +175,101 @@ describe('bolero trữ tình — cao trào', () => {
       'bolero-linh-nhi-chorus',
     )
     expect(resolveStyleForSection('bolero-linh-nhi', 'verse')).toBe('bolero-linh-nhi')
+  })
+})
+
+/*
+  BOLERO RẢI, đo từ BẢN KÝ ÂM THẬT — hạng cao nhất kho từng có.
+
+  Bản piano do Linh Nhi soạn: 72 ô nhịp 4/4, hai tay tách sẵn trên hai khuông,
+  phách là số hữu tỉ chính xác, và có sẵn 80 ký hiệu hợp âm nên hoà âm là CHO
+  TRƯỚC chứ không phải suy ngược từ tay trái như bảy bản Cà Pháo.
+
+  Chín cú gõ mỗi ô. Chữ ký nằm ở cặp móc kép phách 1&: bậc 5 rồi bậc 8.
+*/
+describe('bolero rải — đo từ bản ký âm', () => {
+  const bac = (styleId: string, chord: string) => {
+    const events = renderPattern(
+      voiceLeadTwoHands(parseChordInput(chord).chords, {}),
+      getStyle(styleId)!,
+    )
+      .filter((event) => event.hand === 'left')
+      .sort((a, b) => a.startBeat - b.startBeat)
+    const goc = Math.min(...events[0]!.notes)
+    return events.map((event) => [event.startBeat, Math.min(...event.notes) - goc])
+  }
+
+  it('vòm thấp: 1-5-8-10 rồi về gốc, đúng mẫu đo được', () => {
+    // Đo trên bản ký âm: 0 +7 +12 +15/16 +12 +7 +12 +0 +7, thấy ở 21/70 ô.
+    expect(bac('bolero-linh-nhi-2', 'Bm')).toEqual([
+      [0, 0], [0.5, 7], [0.75, 12], [1, 15], [1.5, 12], [2, 7], [2.5, 12], [3, 0], [3.5, 7],
+    ])
+    // Hợp âm trưởng thì bậc 10 rộng thêm một nửa cung, phần còn lại y nguyên.
+    expect(bac('bolero-linh-nhi-2', 'D')[3]).toEqual([1, 16])
+  })
+
+  it('vòm cao: cùng ba nốt đầu, rồi trèo tới bậc 15', () => {
+    // Đo trên bản ký âm: 0 +7 +12 +15/16 +19 +24 +19 +15/16 +12, thấy ở 13/70 ô.
+    expect(bac('bolero-linh-nhi-2-chorus', 'Bm')).toEqual([
+      [0, 0], [0.5, 7], [0.75, 12], [1, 15], [1.5, 19], [2, 24], [2.5, 19], [3, 15], [3.5, 12],
+    ])
+  })
+
+  it('ba nốt đầu giống hệt nhau ở cả hai vòm', () => {
+    expect(bac('bolero-linh-nhi-2', 'Bm').slice(0, 3))
+      .toEqual(bac('bolero-linh-nhi-2-chorus', 'Bm').slice(0, 3))
+  })
+
+  /*
+    Cặp móc kép ở phách 1& là chữ ký. Bỏ nó đi thì mẫu này thành một mẫu rải
+    móc đơn đều bất kỳ — đo trên bản gốc, cặp ấy có ở 49 trên 70 ô.
+  */
+  it('giữ cặp móc kép ở phách 1&', () => {
+    for (const id of ['bolero-linh-nhi-2', 'bolero-linh-nhi-2-chorus'] as const) {
+      const cell = getStyle(id)!.cell!.left
+      const kep = cell.filter((hit) => hit.durationBeats === 0.25)
+      expect(kep.map((hit) => hit.beat), id).toEqual([0.5, 0.75])
+    }
+  })
+
+  it('đứng cạnh ba điệu bolero kia, không thay cái nào', () => {
+    for (const id of ['bolero-1', 'bolero-linh-nhi', 'bolero-linh-nhi-chorus']) {
+      expect(getStyle(id)?.id, id).toBe(id)
+    }
+  })
+})
+
+/*
+  ĐOẠN SOLO cũng phải giữ chữ ký của mẫu.
+
+  Trần mặc định sáu cú gõ mỗi ô — đo trên đoạn giang tấu của Cà Pháo — cắt mất
+  ba trong chín cú của mẫu này, và nó cắt đúng CẶP MÓC KÉP vì cặp ấy nhẹ nhất.
+  Mất cặp ấy thì Bolero rải thành một mẫu rải móc đơn đều bất kỳ.
+
+  Bản độc tấu thì chín cú mỗi ô là thật: tay trái gánh cả phần đệm. Nới được vì
+  chỗ giai điệu đã có `interlockHands` lo theo mật độ, tinh hơn một trần cứng.
+*/
+describe('bolero rải giữ được chữ ký ở đoạn solo', () => {
+  it.each(['bolero-linh-nhi-2', 'bolero-linh-nhi-2-chorus'] as const)(
+    '%s: giữ đủ chín cú gõ',
+    (styleId) => {
+      expect(patternOnsets(getStyle(styleId)!, 'left')).toEqual([
+        0, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 3.5,
+      ])
+    },
+  )
+
+  it.each(['bolero-linh-nhi-2', 'bolero-linh-nhi-2-chorus'] as const)(
+    '%s: cặp móc kép sống sót',
+    (styleId) => {
+      const kep = patternStrikes(getStyle(styleId)!, 'left').filter(
+        (strike) => strike.durationBeats < 0.3,
+      )
+      expect(kep.map((strike) => strike.beat)).toEqual([0.5, 0.75])
+    },
+  )
+
+  it('điệu không khai trần riêng vẫn bị cắt về sáu như cũ', () => {
+    expect(patternOnsets(getStyle('bossa-nova-1')!, 'left').length).toBeLessThanOrEqual(6)
   })
 })

@@ -132,6 +132,8 @@ import { buildPhraseSection } from './style/phraseSection'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
+  hasTonicVariant,
+  resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
@@ -1385,12 +1387,45 @@ export function ReharmHome() {
       return found?.kind ?? 'verse'
     }
 
-    const cellFor = (beat: number) => {
-      const resolved = getStyle(resolveStyleForSection(style.id, kindAt(beat)))
-      return resolved?.cell ?? style.cell
+    /** Hợp âm đang vang ở một mốc phách. */
+    const chordAt = (beat: number) => {
+      let at = 0
+      for (let index = 0; index < withPassing.length; index += 1) {
+        at += beatsEach[index] ?? chordBeats
+        if (beat < at - 0.001) return withPassing[index]
+      }
+      return withPassing[withPassing.length - 1]
     }
 
-    const swaps = hasChorusVariant(style.id) && songSources !== null
+    /*
+      HAI PHÉP ĐỔI ĐIỆU, chạy nối tiếp nhau, và chúng khác bản chất:
+
+      1. THEO ĐOẠN — quyết định phối khí của người dùng. Vào điệp khúc thì đổi
+         sang bản điệp khúc của chính điệu đang chọn. Người dùng chỉ bấm một
+         điệu; chuyện phiên khúc chơi khác điệp khúc là việc của phần đệm.
+
+      2. THEO HOÀ ÂM — thói quen ĐO ĐƯỢC của người soạn. Trên bản ký âm Linh
+         Nhi, vòm tay trái mở rộng đúng trên chủ âm: 12 trên 19 ô vòm cao rơi
+         vào hợp âm Rê, còn vòm thấp dồn vào Fa thăng thứ và Si thứ.
+
+      Thứ tự này có chủ ý: phép đổi theo đoạn chạy TRƯỚC, và nếu nó đã chọn bản
+      cao trào rồi thì phép theo hoà âm không đụng vào nữa (điệu cao trào không
+      có tên trong bảng chủ âm). Ý người dùng thắng thói quen của người soạn —
+      họ đang phối bài của họ, không phải chép lại bài của người khác.
+    */
+    const cellFor = (beat: number) => {
+      const theoDoan = resolveStyleForSection(style.id, kindAt(beat))
+      const goc = reharm.key?.tonic
+      const chord = chordAt(beat)
+      const chon =
+        goc !== undefined && goc !== null && chord
+          ? resolveStyleForChord(theoDoan, chord.root, goc)
+          : theoDoan
+      return getStyle(chon)?.cell ?? style.cell
+    }
+
+    const swaps =
+      (hasChorusVariant(style.id) || hasTonicVariant(style.id)) && songSources !== null
 
     /*
       Hợp âm chia đôi: mở ô nhịp mới ngay giữa ô.

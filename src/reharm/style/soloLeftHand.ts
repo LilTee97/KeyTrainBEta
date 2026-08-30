@@ -159,12 +159,13 @@ export function patternStrikes(style: StylePattern, hands: 'both' | 'left' = 'bo
     mức nhấn thì cú muộn hơn bị bỏ trước, vì chỗ sớm trong ô nhịp là chỗ tai
     bám vào.
   */
+  const tran = style.soloMaxStrikes ?? MAX_STRIKES
   const kept =
-    out.length <= MAX_STRIKES
+    out.length <= tran
       ? out
       : [...out]
           .sort((a, b) => b.velocityScale - a.velocityScale || a.beat - b.beat)
-          .slice(0, MAX_STRIKES)
+          .slice(0, tran)
 
   return kept.sort((a, b) => a.beat - b.beat)
 }
