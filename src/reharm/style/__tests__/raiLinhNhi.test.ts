@@ -180,11 +180,18 @@ describe('phách 1 và trọng số trong ô', () => {
     Tay trái thì đều tăm tắp 8-10 ở mọi vị trí, nên cái nhấp nhô này là của
     riêng tay phải — nó giữ thưa lúc mở ô rồi dồn lại về cuối ô.
   */
+  /*
+    Bỏ Ô CUỐI ra khỏi phép đếm: nó là ô cửa ra, có hình riêng — chồng hợp âm ở
+    phách 1& và 2, tức dồn vào nửa ĐẦU. Tính cả nó thì đang đo hai luật khác
+    nhau bằng một con số.
+  */
   it('nửa sau ô dày hơn nửa đầu', () => {
+    const oCuoi = Math.floor((CHORDS.length * BAR - 1e-6) / BAR) * BAR
     let dau = 0
     let sau = 0
     for (let take = 0; take < 12; take += 1) {
       for (const e of dung(take).right) {
+        if (e.startBeat >= oCuoi) continue
         if (e.startBeat % BAR < BAR / 2) dau += 1
         else sau += 1
       }
@@ -390,5 +397,75 @@ describe('chuỗi liền bậc', () => {
     const left = soloLeftHand({ chords: CHORDS, beatsEach: CHORDS.map(() => BAR), style: STYLE })
     const right = raiLinhNhi({ left, chords: CHORDS, beatsPerChord: BAR, barBeats: BAR, range: { low: 57, high: 95 } })
     expect(right.length).toBeGreaterThan(0)
+  })
+})
+
+/*
+  CỬA RA — ô cuối đoạn, hợp âm chồng dày để hút sang đoạn kế.
+
+  Người dùng muốn cuối giang tấu có câu chạy cộng một hợp âm hút mạnh. Đo bản
+  gốc thì hai việc ấy nằm ở HAI Ô KHÁC NHAU, và ô cuối giang tấu KHÔNG chạy:
+
+    ô 61, cuối giang tấu, hợp âm A (bậc V):
+      16 nốt tay phải — dày nhất bài — chồng 4 · 4 · 5 nốt ở phách 1&, 2, 3
+    ô 71, áp chót đoạn kết, hợp âm D7:
+      ngân 1,5 → chồng 3 nốt → 6 móc kép chạy lên → hạ cánh
+
+  Nên cửa ra là CHỒNG HỢP ÂM, rơi vào ô CUỐI; câu chạy giữ chỗ cũ ở ô áp chót.
+  Hai cử chỉ nối tiếp nhau đúng như bản gốc: chạy rồi mới chồng.
+*/
+describe('cửa ra cuối đoạn', () => {
+  const oCuoi = Math.floor((CHORDS.length * BAR - 1e-6) / BAR) * BAR
+
+  it('ô cuối có ba cú gõ chồng dày', () => {
+    for (let take = 0; take < 8; take += 1) {
+      const chong = new Map<number, number>()
+      for (const e of dung(take).right) {
+        if (e.startBeat < oCuoi) continue
+        const k = Number((e.startBeat - oCuoi).toFixed(2))
+        chong.set(k, (chong.get(k) ?? 0) + e.notes.length)
+      }
+      const day = [...chong.entries()].filter(([, n]) => n >= 4)
+      expect(day.length, `lượt ${take}`).toBeGreaterThanOrEqual(3)
+      // Đúng ba chỗ bản gốc chồng: phách 1&, phách 2, phách 3.
+      for (const [at] of day) expect([0.5, 1, 2]).toContain(at)
+    }
+  })
+
+  /*
+    So TỪNG MỐC GÕ, không so với trần tay trái cả ô.
+
+    Luật đo được là 0% số mốc có tay phải nằm dưới tay trái — đo tại từng thời
+    điểm. Bản đầu tôi so với nốt cao nhất của cả ô, nghiêm hơn hẳn luật thật:
+    tay trái leo lên 64 ở cuối ô thì một nốt tay phải ở 61 từ đầu ô bị tính là
+    bắt chéo, dù lúc nó vang thì tay trái còn ở dưới.
+  */
+  it('cú gõ chồng nằm trên tay trái tại chính lúc nó vang', () => {
+    for (let take = 0; take < 8; take += 1) {
+      const { left, right } = dung(take)
+      for (const e of right) {
+        if (e.startBeat < oCuoi) continue
+        const cungLuc = left.filter((one) => Math.abs(one.startBeat - e.startBeat) < 0.03)
+        if (cungLuc.length === 0) continue
+        expect(Math.min(...e.notes)).toBeGreaterThan(Math.max(...cungLuc.flatMap((one) => one.notes)))
+      }
+    }
+  })
+
+  /*
+    ĐẶT TRƯỚC khối chạy ngón, không phải sau. Lần đầu tôi để nó sau và nó thành
+    CODE CHẾT: nhánh chạy ngón thoát ra bằng `return` sớm nên không bao giờ
+    chạy tới. Đo ra 0 nốt cửa ra — và nếu không lần theo `velocity` riêng thì
+    tưởng thuật toán sai chứ không phải luồng sai.
+  */
+  it('cửa ra và câu chạy cùng tồn tại, không cái nào nuốt cái nào', () => {
+    const k = khungChayNgon(CHORDS.length * BAR, BAR)!
+    for (let take = 0; take < 8; take += 1) {
+      const right = dung(take).right
+      const chay = right.filter((e) => e.startBeat >= k.tu - 1e-6 && e.startBeat < k.den - 1e-6)
+      const cuaRa = right.filter((e) => e.startBeat >= oCuoi)
+      expect(chay.length, `chạy, lượt ${take}`).toBeGreaterThanOrEqual(5)
+      expect(cuaRa.length, `cửa ra, lượt ${take}`).toBeGreaterThan(8)
+    }
   })
 })

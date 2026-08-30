@@ -161,6 +161,30 @@ const CHUOI_MOI_O = 1
 const CHUOI_NGAN = 3
 const CHUOI_DAI = 7
 
+/**
+ * CỬA RA — ô cuối đoạn, hợp âm chồng dày để hút sang đoạn kế.
+ *
+ * Người dùng muốn cuối giang tấu có câu chạy ngón cộng một hợp âm hút mạnh,
+ * rải như đoạn kết, để báo sang phần sau. Đo bản gốc thì thấy hai việc ấy nằm
+ * ở HAI Ô KHÁC NHAU, và ô cuối giang tấu KHÔNG chạy ngón:
+ *
+ *   ô 61, cuối giang tấu, hợp âm A (bậc V):
+ *     16 nốt tay phải — dày nhất bài — chồng 4 · 4 · 5 nốt ở phách 1&, 2, 3
+ *     trải 17 nửa cung, tay trái vẫn gõ 11 nốt
+ *
+ *   ô 71, áp chót đoạn kết, hợp âm D7:
+ *     ngân 1,5 phách → chồng 3 nốt → 6 móc kép chạy lên → hạ cánh
+ *
+ * Nên cửa ra là CHỒNG HỢP ÂM chứ không phải chạy ngón, và nó rơi vào ô CUỐI.
+ * Câu chạy giữ nguyên chỗ cũ — ô áp chót — nên hai cử chỉ nối tiếp nhau đúng
+ * như bản gốc: chạy rồi mới chồng.
+ *
+ * Cả hai ô đều đứng trên hợp âm hút (bậc V và bậc V7). Chỗ ấy là của vòng hợp
+ * âm, không phải của bộ này — bộ này chỉ dày lên đúng chỗ vòng đã hút sẵn.
+ */
+const CUA_RA_CHONG = [4, 4, 5]
+const CUA_RA_PHACH = [0.5, 1, 2]
+
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
 const KHE_HEP = 9
@@ -421,6 +445,46 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       đúng lời người dùng: "tay phải giữ hợp âm", giữ chứ không ngừng.
     */
     trong[0]!.durationBeats = nuaO * 0.98
+  }
+
+  /*
+    CỬA RA: ô cuối đoạn dày lên bằng hợp âm chồng, hút sang đoạn kế.
+
+    ĐẶT TRƯỚC khối chạy ngón, không phải sau. Lần đầu tôi để nó sau và nó thành
+    code chết: nhánh chạy ngón thoát ra bằng `return con.sort(...)` nên không
+    bao giờ chạy tới đây. Đo ra 0 nốt cửa ra, và nếu không lần theo `velocity`
+    riêng thì tưởng là thuật toán sai chứ không phải luồng sai.
+  */
+  const oCuoi = Math.floor((tong - 1e-6) / barBeats) * barBeats
+  if (tong >= barBeats * 2) {
+    const chord = hopAm(oCuoi)
+    const tones = chordTonesStrict(chord)
+    const traiCuoi = mocs.filter((m) => m >= oCuoi)
+    const tranTrai =
+      traiCuoi.length > 0 ? Math.max(...traiCuoi.flatMap((m) => moc.get(m)!)) : range.low
+    const san = Math.max(range.low, tranTrai + KHE_HEP)
+
+    CUA_RA_PHACH.forEach((phach, at) => {
+      const luc = oCuoi + phach
+      if (luc >= tong) return
+      const soNot = CUA_RA_CHONG[at]!
+      // Xếp chồng từ dưới lên, mỗi nốt một bậc hợp âm — trải như bản gốc.
+      let duoiCung = san
+      for (let lop2 = 0; lop2 < soNot; lop2 += 1) {
+        const pc = tones[lop2 % tones.length]!
+        const note = datNot(pc, duoiCung, duoiCung, range.high)
+        if (note === null) break
+        out.push({
+          notes: [note],
+          startBeat: luc,
+          durationBeats: 0.45,
+          hand: 'right',
+          velocity: 84,
+          grace: false,
+        })
+        duoiCung = note + 1
+      }
+    })
   }
 
   const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
