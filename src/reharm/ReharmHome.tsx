@@ -136,6 +136,7 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
+import { kieuChoSolo } from './style/hoDieu'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -790,6 +791,18 @@ export function ReharmHome() {
    */
   const style = getStyle(styleId) ?? BALLAD
 
+  /*
+    Kiểu dùng cho CÂU SOLO — dạo đầu, giang tấu, kết bài.
+
+    Một họ điệu chứa nhiều kiểu đệm, và người chơi thật hay để phần hát một kiểu
+    còn câu solo một kiểu khác. Người dùng chưa chọn thì `kieuChoSolo` lấy kiểu
+    ưu tiên của họ; với Bolero đó là bản rải của Linh Nhi.
+
+    Luật cũ còn nguyên: `kieuChoSolo` chỉ trả về kiểu TRONG CÙNG HỌ, nên app
+    không bao giờ tự bước sang họ khác sau lưng người dùng. Xem `hoDieu.ts`.
+  */
+  const styleSolo = getStyle(kieuChoSolo(style.id)) ?? style
+
   /**
    * Số phách mỗi hợp âm chiếm.
    *
@@ -1255,7 +1268,7 @@ export function ReharmHome() {
   const builtLine = useCallback(
     (list: readonly ParsedChord[], spin: number) => {
       if (!lineSolo || !phraseScale) return null
-      const anchors = accentBeats(style)
+      const anchors = accentBeats(styleSolo)
       if (anchors.length === 0) return null
       const line = buildLine({
         chords: list,
@@ -1268,7 +1281,7 @@ export function ReharmHome() {
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
-    [lineSolo, phraseScale, style, chordBeats, phrasePulseBar, ballad, phraseSpin],
+    [lineSolo, phraseScale, styleSolo, chordBeats, phrasePulseBar, ballad, phraseSpin],
   )
 
 
@@ -1607,12 +1620,12 @@ export function ReharmHome() {
         events: soloLeftHand({
           chords: windowChords,
           beatsEach: picked.map((span) => span.beats),
-          style,
+          style: styleSolo,
         }),
         lastEvents: soloLeftHand({
           chords: headChords,
           beatsEach: head.map((span) => span.beats),
-          style,
+          style: styleSolo,
         }),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
@@ -1657,6 +1670,7 @@ export function ReharmHome() {
       songSources,
       dropRoot,
       style,
+      styleSolo,
       soloDirection,
       graceDensity,
       reharm.key,
@@ -2514,7 +2528,7 @@ export function ReharmHome() {
             const built = buildPhraseSection({
               kind,
               key: reharm.key,
-              style,
+              style: styleSolo,
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
