@@ -428,7 +428,18 @@ describe('chuỗi liền bậc', () => {
 describe('cửa ra cuối đoạn', () => {
   const oCuoi = Math.floor((CHORDS.length * BAR - 1e-6) / BAR) * BAR
 
-  it('ô cuối có ba cú gõ chồng dày', () => {
+  /*
+    MỘT cú dặm rồi NGÂN, không lặp ba khối giống hệt.
+
+    Bản đầu chồng đúng bốn nốt ấy ba lần ở phách 1, 1&, 2 rồi im tới phách 3&.
+    Người dùng nghe ra: "dặm hợp âm rồi nghỉ rồi đánh thêm hợp âm báo vào, nghe
+    nó khựng lại rất dở". Đo ra đúng thế — ba khối y hệt nhau rồi một phách
+    rưỡi trống.
+
+    Cử chỉ báo hiệu phải là MỘT cú, đủ dày, rồi để nó vang — và nó đứng đúng
+    vạch nhịp để câu chạy đáp thẳng vào.
+  */
+  it('ô cuối có một cú chồng dày, đứng đúng vạch nhịp', () => {
     for (let take = 0; take < 8; take += 1) {
       const chong = new Map<number, number>()
       for (const e of dung(take).right) {
@@ -437,25 +448,19 @@ describe('cửa ra cuối đoạn', () => {
         chong.set(k, (chong.get(k) ?? 0) + e.notes.length)
       }
       const day = [...chong.entries()].filter(([, n]) => n >= 4)
-      expect(day.length, `lượt ${take}`).toBeGreaterThanOrEqual(3)
-      /*
-        Chồng NGAY TỪ VẠCH NHỊP. Bản gốc chồng ở phách 1&, 2, 3 — nhưng ở đó ô
-        trước vẫn đang chạy tiếp vào, còn bản dựng thì câu chạy vừa đáp xuống
-        đúng vạch. Để trống phách 1 là để lại một khe ngay giữa hai cử chỉ, và
-        đó chính là chỗ khựng người dùng nghe ra.
-      */
-      for (const [at] of day) expect([0, 0.5, 1]).toContain(at)
+      expect(day.length, `lượt ${take}`).toBeGreaterThanOrEqual(1)
+      for (const [at] of day) expect(at).toBe(0)
     }
   })
 
-  /*
-    So TỪNG MỐC GÕ, không so với trần tay trái cả ô.
+  it('cú chồng ấy NGÂN, không tắt ngay', () => {
+    for (let take = 0; take < 8; take += 1) {
+      const tai0 = dung(take).right.filter((e) => Math.abs(e.startBeat - oCuoi) < 1e-6)
+      const dai = Math.max(...tai0.map((e) => e.durationBeats))
+      expect(dai, `lượt ${take}`).toBeGreaterThan(BAR / 2)
+    }
+  })
 
-    Luật đo được là 0% số mốc có tay phải nằm dưới tay trái — đo tại từng thời
-    điểm. Bản đầu tôi so với nốt cao nhất của cả ô, nghiêm hơn hẳn luật thật:
-    tay trái leo lên 64 ở cuối ô thì một nốt tay phải ở 61 từ đầu ô bị tính là
-    bắt chéo, dù lúc nó vang thì tay trái còn ở dưới.
-  */
   it('cú gõ chồng nằm trên tay trái tại chính lúc nó vang', () => {
     for (let take = 0; take < 8; take += 1) {
       const { left, right } = dung(take)
@@ -481,7 +486,7 @@ describe('cửa ra cuối đoạn', () => {
       const chay = right.filter((e) => e.startBeat >= k.tu - 1e-6 && e.startBeat < k.den - 1e-6)
       const cuaRa = right.filter((e) => e.startBeat >= oCuoi)
       expect(chay.length, `chạy, lượt ${take}`).toBeGreaterThanOrEqual(5)
-      expect(cuaRa.length, `cửa ra, lượt ${take}`).toBeGreaterThan(8)
+      expect(cuaRa.length, `cửa ra, lượt ${take}`).toBeGreaterThan(4)
     }
   })
 })

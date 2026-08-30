@@ -158,6 +158,18 @@ const GIU_NUA_O = 0.5
  * vừa ô rồi bị bỏ, và tổng số chuỗi tụt.
  */
 const CHUOI_MOI_O = 1
+
+/**
+ * Bao nhiêu phần ô có thêm một câu chạy móc kép ngắn.
+ *
+ * Người dùng bảo "không nghe thấy câu chạy ngón nào nữa". Đo ra thì CÓ — sáu
+ * nốt ở ô áp chót — nhưng đúng một lần trên cả đoạn mười ô, và nó bị nốt thấp
+ * ngay sau đó chôn mất. Một lần thì tai không kịp nhận ra.
+ *
+ * Thêm câu chạy ngắn rải trong đoạn. Bản gốc chỉ chạy một lần trên CẢ BÀI, nên
+ * đây là LỰA CHỌN PHỐI KHÍ theo yêu cầu người dùng, không phải số đo.
+ */
+const CHAY_THEM = 0.35
 const CHUOI_NGAN = 3
 const CHUOI_DAI = 7
 
@@ -182,13 +194,20 @@ const CHUOI_DAI = 7
  * Cả hai ô đều đứng trên hợp âm hút (bậc V và bậc V7). Chỗ ấy là của vòng hợp
  * âm, không phải của bộ này — bộ này chỉ dày lên đúng chỗ vòng đã hút sẵn.
  */
-const CUA_RA_CHONG = [5, 4, 4]
+/**
+ * Cửa ra: MỘT cú dặm rồi ngân, không lặp ba khối giống hệt.
+ *
+ * Bản đầu chồng đúng bốn nốt ấy ba lần ở phách 1, 1&, 2 rồi im tới phách 3&.
+ * Nghe ra là một khối tĩnh lặp lại rồi tắt — đúng cái người dùng gọi là "dặm
+ * hợp âm rồi nghỉ". Cử chỉ báo hiệu phải là MỘT cú, đủ dày, rồi để nó vang.
+ */
+const CUA_RA_CHONG = [5]
 /*
   Chồng ngay TỪ VẠCH NHỊP. Bản gốc chồng ở phách 1&, 2, 3 — nhưng ở đó ô trước
   vẫn đang chạy tiếp vào, còn bản dựng thì câu chạy vừa đáp xuống đúng vạch.
   Để trống phách 1 thì có một khe ngay giữa hai cử chỉ, và đó là chỗ khựng.
 */
-const CUA_RA_PHACH = [0, 0.5, 1]
+const CUA_RA_PHACH = [0]
 
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
@@ -337,7 +356,21 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
           .sort((x, y) => x - y)
         note = thap[0] ?? datNot(pc, tranTrai + KHE_VUA, san, range.high)
       } else {
-        note = datNot(pc, tranTrai + KHE_VUA, san, range.high)
+        /*
+          DẪN GIỌNG: đặt nốt gần NỐT TRƯỚC, không phải luôn ở trần tay trái
+          cộng hai quãng tám.
+
+          Bản đầu luôn nhắm `tranTrai + KHE_VUA`, nên mỗi nốt nhảy tới chỗ tay
+          trái đang ở — mà tay trái thì rải lên xuống suốt. Đo ra bước trung
+          bình 7,1 nửa cung, tức mỗi bước một quãng năm, trên 65 cú gõ. Người
+          dùng nghe ra ngay: "quá lạc quẻ, sai về mặt giai điệu".
+
+          Nay nhắm vào chỗ giữa nốt trước và mốc cũ, nghiêng hẳn về nốt trước
+          (bốn phần một). Giai điệu đi liền được, mà vẫn bị kéo về đúng tầng so
+          với tay trái. Đo lại: bước trung bình 7,1 xuống còn quanh 4,5.
+        */
+        const moc2 = (truoc * 4 + (tranTrai + KHE_VUA)) / 5
+        note = datNot(pc, moc2, san, range.high)
       }
       if (note !== null) them(beat, note, !demChung, keo)
 
@@ -482,14 +515,41 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
         out.push({
           notes: [note],
           startBeat: luc,
-          durationBeats: 0.45,
+          // Ngân dài: đây là chỗ đáp của câu chạy, không phải một cú dặm rồi tắt.
+          durationBeats: barBeats * 0.9,
           hand: 'right',
-          velocity: 84,
+          velocity: 88,
           grace: false,
         })
         duoiCung = note + 1
       }
     })
+  }
+
+  /*
+    CÂU CHẠY NGẮN rải trong đoạn, ngoài câu chạy ở cửa ra.
+
+    Bốn móc kép vào nửa sau ô, cùng hình đi lên với câu chạy chính. Đặt sau
+    phép chuỗi liền bậc nên nó đè lên, và đó là chủ ý: chạy móc kép nghe rõ hơn
+    chuỗi móc đơn.
+  */
+  if (gam && gam.length >= 5) {
+    const soO2 = Math.ceil(tong / barBeats)
+    for (let o = 1; o < soO2 - 2; o += 1) {
+      if (hash(take * 107 + o * 23) >= CHAY_THEM) continue
+      const tuChay = o * barBeats + barBeats / 2
+      const truocDo = out
+        .filter((e) => e.startBeat < tuChay)
+        .sort((a, b) => b.startBeat - a.startBeat)[0]
+      const batDau = truocDo ? Math.min(...truocDo.notes) : range.low + 12
+      const chord2 = hopAm(tuChay)
+      const thu2 = !chordTonesStrict(chord2).includes(((chord2.root + 4) % 12) as PitchClass)
+      const con2 = out.filter(
+        (e) => e.startBeat < tuChay - 1e-6 || e.startBeat >= tuChay + 1 - 1e-6,
+      )
+      out.length = 0
+      out.push(...con2, ...chayNgon(tuChay, batDau as MidiNote, thu2, range.high).slice(0, 4))
+    }
   }
 
   const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
