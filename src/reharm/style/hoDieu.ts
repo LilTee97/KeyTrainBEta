@@ -166,3 +166,21 @@ export function khongTiaTayTrai(styleId: string): boolean {
   const ho = hoCuaDieu(styleId)
   return ho !== null && KHONG_TIA.includes(ho)
 }
+
+/**
+ * Họ nào dùng lối RẢI MỞ RỘNG cho tay phải ở đoạn GIANG TẤU.
+ *
+ * Đo trên mười ô giang tấu bản ký âm Linh Nhi: 57% bước nhảy xa, móc kép giảm
+ * từ 30% xuống 6%, 36% cú gõ chồng từ hai nốt, tầm lên tới 95. Giang tấu của
+ * người soạn này KHÔNG phải chạy ngón nhanh — nó là rải hợp âm mở rộng.
+ *
+ * CHỈ giang tấu. Dạo đầu và kết bài chưa đo nên chưa mở, và cỡ mẫu vẫn là một
+ * bài của một người soạn.
+ */
+const RAI_MO_RONG: readonly string[] = ['bolero']
+
+/** Đoạn giang tấu của điệu này có dùng lối rải mở rộng không. */
+export function raiMoRongOGiangTau(styleId: string): boolean {
+  const ho = hoCuaDieu(styleId)
+  return ho !== null && RAI_MO_RONG.includes(ho)
+}

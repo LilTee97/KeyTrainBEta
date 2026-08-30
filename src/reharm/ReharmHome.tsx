@@ -136,7 +136,7 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
-import { kieuChoSolo } from './style/hoDieu'
+import { kieuChoSolo, raiMoRongOGiangTau } from './style/hoDieu'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -1266,7 +1266,7 @@ export function ReharmHome() {
    * nào, và đó là lúc sổ mẫu vẫn là đường duy nhất.
    */
   const builtLine = useCallback(
-    (list: readonly ParsedChord[], spin: number) => {
+    (list: readonly ParsedChord[], spin: number, giangTau = false) => {
       if (!lineSolo || !phraseScale) return null
       const anchors = accentBeats(styleSolo)
       if (anchors.length === 0) return null
@@ -1278,6 +1278,13 @@ export function ReharmHome() {
         scale: phraseScale.pitchClasses,
         range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
         take: spin + phraseSpin + playSpin.current,
+        /*
+          Rải mở rộng CHỈ ở giang tấu, và chỉ cho họ nào có số đo.
+
+          Dạo đầu và kết bài chưa ai đo nên chưa mở — mở bừa thì thành suy rộng
+          một số đo mười ô ra cả bài.
+        */
+        moRong: giangTau && raiMoRongOGiangTau(styleSolo.id),
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
@@ -1629,7 +1636,7 @@ export function ReharmHome() {
         }),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
-          builtLine(lastLoop ? lastLoopChords : windowChords, take) ??
+          builtLine(lastLoop ? lastLoopChords : windowChords, take, true) ??
           soloToTimeline(
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
               beatsPerChord: chordBeats,

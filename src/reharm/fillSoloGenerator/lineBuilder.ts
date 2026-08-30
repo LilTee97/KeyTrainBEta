@@ -59,7 +59,41 @@ export interface LineOptions {
   range: { low: number; high: number }
   /** Lượt chơi — đổi đường đi mà không đổi luật. */
   take?: number
+  /**
+   * RẢI MỞ RỘNG — lối tay phải ở đoạn giang tấu, thay cho câu chạy bước hẹp.
+   *
+   * Đo trên mười ô giang tấu bản ký âm Linh Nhi, và nó ngược hẳn dự đoán: đoạn
+   * giang tấu KHÔNG phải chạy ngón nhanh.
+   *
+   * |                | phiên khúc | giang tấu |
+   * |----------------|-----------|-----------|
+   * | bước nhảy xa   | 16%       | **57%**   |
+   * | liền bậc       | 34%       | 16%       |
+   * | quãng ba       | 34%       | 17%       |
+   * | móc kép        | 30%       | **6%**    |
+   * | cú gõ chồng nốt| 17%       | **36%**   |
+   * | tầm            | 52-83     | **57-95** |
+   *
+   * Móc kép GIẢM năm lần, thay vào đó là nhảy quãng rộng và chồng nhiều nốt,
+   * trải hơn hai quãng tám. Đây là rải hợp âm mở rộng, không phải câu chạy.
+   */
+  moRong?: boolean
 }
+
+/**
+ * Phân bố cỡ bước của lối rải mở rộng, đo trên bản ký âm.
+ *
+ * Ngưỡng cộng dồn: dưới 0,57 là nhảy xa, dưới 0,74 là quãng ba, dưới 0,90 là
+ * liền bậc, còn lại là quãng bốn / quãng năm. Con số lấy thẳng từ số đo chứ
+ * không nắn cho tròn.
+ */
+const MO_RONG = { xa: 0.57, ba: 0.74, lien: 0.9 }
+
+/** Trần tầm khi rải mở rộng. Bản ký âm lên tới 95; ngoài chế độ này giữ nguyên. */
+const MO_RONG_TRAN = 95
+
+/** Bao nhiêu phần cú gõ được chồng thêm một nốt. Đo ra 36%. */
+const MO_RONG_CHONG = 0.36
 
 /**
  * Vốn ô nhịp điệu, đo trên bảy bản ký âm của Cà Pháo.
@@ -316,7 +350,8 @@ export function buildLine(options: LineOptions): LineNote[] {
   const take = options.take ?? 0
   if (chords.length === 0 || anchors.length === 0 || scale.length === 0) return []
 
-  const ladder = ladderOf(scale, range.low, range.high)
+  const tran = options.moRong ? Math.max(range.high, MO_RONG_TRAN) : range.high
+  const ladder = ladderOf(scale, range.low, tran)
   if (ladder.length < 3) return []
 
   const total = chords.length * beatsPerChord
@@ -381,7 +416,7 @@ export function buildLine(options: LineOptions): LineNote[] {
       câu bốn ô nhịp, đường đi trải gần hết tầm, và bước quãng ba tự xuất hiện.
     */
     const height = arc(order % perPhrase, perPhrase, take + Math.floor(order / perPhrase))
-    const want = range.low + height * (range.high - range.low)
+    const want = range.low + height * (tran - range.low)
 
     /*
       Cọc KHÔNG phải lúc nào cũng là nốt hợp âm.
@@ -413,15 +448,39 @@ export function buildLine(options: LineOptions): LineNote[] {
     let best = pool[0]!
     let bestCost = Infinity
     for (const note of pool) {
+      /*
+        Mở rộng thì cọc cũng được nhảy. Phạt cọc-sang-cọc ở bốn nửa cung là luật
+        của đoạn có lời; giữ nó ở đây thì một phần ba số bước bị ghim hẹp, và
+        phân bố không bao giờ với tới 57%.
+      */
+      const nguong = options.moRong ? 12 : MAX_ANCHOR_LEAP
       const leap = previousAnchor === null ? 0 : Math.abs(note - previousAnchor)
-      const cost = Math.abs(note - want) + 1.6 * Math.max(0, leap - MAX_ANCHOR_LEAP)
+      const cost = Math.abs(note - want) + 1.6 * Math.max(0, leap - nguong)
       if (cost < bestCost) {
         bestCost = cost
         best = note
       }
     }
-    previousAnchor = best
-    anchorNote.set(index, best)
+    /*
+      MỞ RỘNG: dời cọc đi một quãng tám.
+
+      Đây mới là chỗ quyết định, và tôi tìm sai hai lần trước khi thấy. Hình vòm
+      đặt cọc trôi êm nên hai cọc liền nhau luôn gần nhau về cao độ — mà bước ĐI
+      VÀO cọc chiếm một phần ba số bước, nên dù đường nối có nhảy xa cỡ nào thì
+      tổng vẫn bị ghìm quanh 34%.
+
+      Bản gốc làm đúng thứ này: cùng những nốt hợp âm ấy nhưng ném sang quãng
+      tám khác. Nốt vẫn đúng hoà âm, chỉ đổi tầng.
+    */
+    let dat = best
+    if (options.moRong && hash(take * 37 + order * 11) < 0.55) {
+      const len = dat + 12
+      const xuong = dat - 12
+      if (len <= tran) dat = len as MidiNote
+      else if (xuong >= range.low) dat = xuong as MidiNote
+    }
+    previousAnchor = dat
+    anchorNote.set(index, dat)
   })
 
   /*
@@ -451,6 +510,13 @@ export function buildLine(options: LineOptions): LineNote[] {
       rung = nearest(ladder, here)
       alt = 0
       out.push({ note: here, startBeat: beat, durationBeats: 0, anchor: true })
+      // Cọc cũng được chồng nốt: đo ra 36% cú gõ có từ hai nốt, cọc không ngoại lệ.
+      if (options.moRong && hash(take * 3 + index * 41) < MO_RONG_CHONG) {
+        const duoi = rung >= 2 ? ladder[rung - 2] : ladder[rung + 2]
+        if (duoi !== undefined && duoi !== ladder[rung]) {
+          out.push({ note: duoi, startBeat: beat, durationBeats: 0, anchor: false })
+        }
+      }
       return
     }
 
@@ -459,6 +525,49 @@ export function buildLine(options: LineOptions): LineNote[] {
     const movesLeft = target === undefined ? 2 : Math.max(1, target - index)
     const need = (to - rung) / movesLeft
     const dir = need === 0 ? (hash(take + index) < 0.5 ? 1 : -1) : Math.sign(need)
+
+    if (options.moRong) {
+      /*
+        RẢI MỞ RỘNG: chọn CỠ BƯỚC trước, rồi mới tìm nốt.
+
+        Lối thường đi ngược — bước một hai bậc thang rồi cỡ bước ra sao thì ra.
+        Cách ấy không bao giờ ra được 57% nhảy xa, vì hai bậc thang trên gam bảy
+        nốt nhiều nhất là bốn nửa cung.
+
+        Nên ở đây rút cỡ bước từ chính phân bố đo được, rồi tìm nốt gần cỡ ấy
+        nhất trong thang. Nhảy xa lấy 7-19 nửa cung: một quãng năm tới hơn một
+        quãng tám rưỡi, đúng tầm trải của bản gốc.
+      */
+      const thuoc = hash(take * 11 + index * 7)
+      const co =
+        thuoc < MO_RONG.xa
+          ? 7 + Math.floor(hash(take * 23 + index * 3) * 13)
+          : thuoc < MO_RONG.ba
+            ? 3 + Math.floor(hash(take * 5 + index * 19) * 2)
+            : thuoc < MO_RONG.lien
+              ? 1 + Math.floor(hash(take * 31 + index) * 2)
+              : 5 + Math.floor(hash(take * 13 + index * 29) * 2)
+
+      const dich = ladder[rung]! + dir * co
+      let chon = nearest(ladder, dich)
+      // Đụng mép thì quay đầu, đừng dồn cục ở đầu này hay đầu kia của tầm.
+      if (chon === rung) chon = nearest(ladder, ladder[rung]! - dir * co)
+      rung = chon
+      out.push({ note: ladder[rung]!, startBeat: beat, durationBeats: 0, anchor: false })
+
+      /*
+        Chồng thêm một nốt. Đo ra 36% cú gõ có từ hai nốt trở lên, dày nhất năm.
+        Lấy nốt hợp âm dưới nốt vừa chọn — chồng lên trên thì át mất đường trên.
+      */
+      if (hash(take * 3 + index * 41) < MO_RONG_CHONG) {
+        // Xuống hai bậc; sát đáy thì lên hai bậc, đừng bỏ cú chồng vì hết chỗ.
+        const duoi = rung >= 2 ? ladder[rung - 2] : ladder[rung + 2]
+        if (duoi !== undefined && duoi !== ladder[rung]) {
+          out.push({ note: duoi, startBeat: beat, durationBeats: 0, anchor: false })
+        }
+      }
+      return
+    }
 
     /*
       LUÂN PHIÊN bước hẹp và bước rộng, và **đếm lại từ đầu sau mỗi cọc**.
@@ -495,7 +604,15 @@ export function buildLine(options: LineOptions): LineNote[] {
     Không có nắp thì nốt cuối câu ngân trùm qua chỗ nghỉ và chỗ nghỉ mất tác
     dụng: thước vẫn đếm ra khe vì nó đo chỗ gõ, còn tai thì nghe liền một mạch.
   */
-  const sorted = balanceSteps(out, ladder)
+  /*
+    RẢI MỞ RỘNG thì KHÔNG nắn cân bằng bước.
+
+    `balanceSteps` kéo mỗi cửa sổ năm bước về chỗ có cả hai cỡ, vì người thật ở
+    đoạn có lời chơi 68-82% câu pha trộn. Đoạn giang tấu thì ngược hẳn: 57% nhảy
+    xa. Nắn ở đây là kéo kết quả về đúng chỗ vừa cố thoát ra — đo ra nhảy xa chỉ
+    còn 33% thay vì 57%, và quãng ba phình lên 31%.
+  */
+  const sorted = options.moRong ? out : balanceSteps(out, ladder)
   return sorted.map((note, index) => {
     const next = sorted[index + 1]?.startBeat ?? total
     const room = (next - note.startBeat) * 0.92
