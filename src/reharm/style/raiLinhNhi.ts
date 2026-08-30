@@ -112,6 +112,27 @@ const RIENG = 0.2
  */
 const CHONG = 0.85
 
+/**
+ * Bao nhiêu phần ô nhịp có tay phải GIỮ một nốt dài, tay trái đi tiếp.
+ *
+ * Người dùng đề nghị "đảo vai": tay phải giữ hợp âm, tay trái chạy. Đo thì
+ * thấy NỬA ĐÚNG NỬA SAI, và phần đúng lại thường xuyên hơn tôi tưởng:
+ *
+ *   tay phải giữ nốt dài, tay trái đi tiếp   CÓ — 5/10 ô giang tấu, 23/72 cả bài
+ *   tay trái CHẠY                            gần như không — 3 ô, và đó là cặp
+ *                                            móc kép sẵn có của mẫu
+ *
+ * Nên cài phần đo được, bỏ phần tự nghĩ. Đo kỹ chỗ ấy:
+ *
+ *   trường độ đúng 2,0 phách — nửa ô, không hơn
+ *   vào ở phách 1 (5 lần) hoặc phách 3 (4 lần), tức đầu một nửa ô
+ *   tay trái vẫn gõ 3,6 nốt trong lúc giữ
+ *
+ * Bộ sinh trước KHÔNG BAO GIỜ giữ nốt — trường độ luôn bám tới cú gõ kế. Đó là
+ * một lý do nữa khiến nó nghe dày và không có chỗ thở.
+ */
+const GIU_NUA_O = 0.5
+
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
 const KHE_HEP = 9
@@ -293,6 +314,43 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     Bỏ mọi nốt tay phải rơi trong khoảng chạy: chạy ngón là một hơi liền, có
     thêm nốt rải chen vào giữa thì nó không còn là một hơi nữa.
   */
+  /*
+    GIỮ NỬA Ô: tay phải ngân một nốt trọn nửa ô, tay trái đi tiếp bên dưới.
+
+    Làm sau cùng, trên kết quả đã dựng: giữ nốt ĐẦU của nửa ô ấy rồi bỏ những
+    nốt còn lại trong nửa ấy. Cách này không đụng vào phép chọn cao độ, nên mọi
+    luật khoá hai tay ở trên vẫn nguyên — kể cả luật phách 1 luôn có nốt, vì
+    nốt được giữ chính là nốt phách 1.
+  */
+  const tong = chords.length * beatsPerChord
+  const nuaO = barBeats / 2
+  for (let o = 0; o * barBeats < tong - 1e-6; o += 1) {
+    if (hash(take * 61 + o * 13) >= GIU_NUA_O) continue
+    const nua = hash(take * 71 + o * 7) < 0.55 ? 0 : 1
+    const tu = o * barBeats + nua * nuaO
+    const den = tu + nuaO
+    const trong = out
+      .filter((e) => e.startBeat >= tu - 1e-6 && e.startBeat < den - 1e-6)
+      .sort((a, b) => a.startBeat - b.startBeat)
+    /*
+      Chỉ ngân khi nửa ô ấy CÓ nốt rơi đúng đầu nửa. Bản gốc vào ở phách 1 hoặc
+      phách 3, tức đầu một nửa ô — không có lần nào ngân từ giữa nửa. Không đòi
+      chỗ ấy thì nốt ngân trôi vào offset 3 và mất luôn cảm giác "mở nửa ô".
+    */
+    if (trong.length < 2 || Math.abs(trong[0]!.startBeat - tu) > 1e-6) continue
+    /*
+      NGÂN, KHÔNG XOÁ. Đây là chỗ tôi làm sai lần đầu.
+
+      Bản đầu bỏ hết nốt còn lại trong nửa ô ấy, và mật độ tụt từ 8,9 xuống 6,8
+      nốt mỗi ô. Đo lại bản gốc thì thấy vô lý ngay: ô 53 có 10 nốt tay phải VÀ
+      2 nốt giữ cùng lúc, mà cả đoạn vẫn 9,3 nốt mỗi ô.
+
+      Nốt giữ là MỘT NGÓN ngân — các ngón khác vẫn chạy tiếp bên trên. Đó cũng
+      đúng lời người dùng: "tay phải giữ hợp âm", giữ chứ không ngừng.
+    */
+    trong[0]!.durationBeats = nuaO * 0.98
+  }
+
   const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
   if (khung) {
     const con = out.filter((e) => e.startBeat < khung.tu - 1e-6 || e.startBeat >= khung.den - 1e-6)

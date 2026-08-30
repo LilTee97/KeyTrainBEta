@@ -249,3 +249,58 @@ describe('chạy ngón chen vào giang tấu', () => {
     expect(khungChayNgon(BAR * 2, BAR)).toBeNull()
   })
 })
+
+/*
+  GIỮ NỬA Ô — tay phải ngân một nốt, tay trái đi tiếp bên dưới.
+
+  Người dùng đề nghị "đảo vai": tay phải giữ hợp âm, tay trái chạy. Đo thì thấy
+  NỬA ĐÚNG NỬA SAI:
+
+    tay phải giữ nốt dài, tay trái đi tiếp   CÓ — 5/10 ô giang tấu, 23/72 cả bài
+    tay trái CHẠY                            gần như không — 3 ô, và đó là cặp
+                                             móc kép sẵn có của mẫu
+
+  Nên cài phần đo được, bỏ phần tự nghĩ. Đo kỹ: trường độ đúng 2,0 phách — nửa
+  ô, không hơn — vào ở phách 1 hoặc phách 3, và tay trái vẫn gõ 3,6 nốt trong
+  lúc giữ.
+*/
+describe('giữ nửa ô', () => {
+  it('có nốt ngân trọn nửa ô, ở khoảng một nửa số ô', () => {
+    let coGiu = 0
+    let tongO = 0
+    for (let take = 0; take < 12; take += 1) {
+      const { right } = dung(take)
+      const theoO = new Map<number, boolean>()
+      for (const e of right) {
+        const o = Math.floor(e.startBeat / BAR)
+        theoO.set(o, (theoO.get(o) ?? false) || e.durationBeats >= BAR / 2 - 0.1)
+      }
+      coGiu += [...theoO.values()].filter(Boolean).length
+      tongO += theoO.size
+    }
+    const ti = coGiu / tongO
+    expect(ti).toBeGreaterThan(0.3)
+    expect(ti).toBeLessThan(0.7)
+  })
+
+  it('nốt ngân vào đúng đầu một nửa ô', () => {
+    for (let take = 0; take < 12; take += 1) {
+      for (const e of dung(take).right) {
+        if (e.durationBeats < BAR / 2 - 0.1) continue
+        const trongO = e.startBeat % BAR
+        expect([0, BAR / 2]).toContain(trongO)
+      }
+    }
+  })
+
+  /*
+    NGÂN, KHÔNG NGỪNG. Bản đầu tôi bỏ hết nốt còn lại trong nửa ô ấy và mật độ
+    tụt từ 8,9 xuống 6,8. Đo lại bản gốc thì vô lý ngay: ô 53 có 10 nốt tay
+    phải VÀ 2 nốt giữ cùng lúc, mà cả đoạn vẫn 9,3 nốt mỗi ô. Nốt giữ là MỘT
+    NGÓN ngân, các ngón khác vẫn chạy tiếp.
+  */
+  it('giữ nốt KHÔNG làm tay phải thưa đi', () => {
+    const moiO = trungBinh((take) => dung(take).right.length / CHORDS.length)
+    expect(moiO).toBeGreaterThan(7)
+  })
+})
