@@ -1,7 +1,7 @@
 import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { fixHandByRegister, interludeAccompaniment } from './songStructure'
-import { khongTiaTayTrai } from './hoDieu'
+import { khongTiaTayTrai, raiTheoTayTrai } from './hoDieu'
 import { interlockHands } from './soloLeftHand'
 import type { TimelineEvent } from './types'
 
@@ -491,8 +491,13 @@ export function buildArrangedSong(
         phần đệm. Xem `interlockHands`.
       */
       const line = range.solo ? range.solo(take, last) : null
+      /*
+        Họ nào dựng tay phải bám vào tay trái thì KHÔNG chạy qua `interlockHands`
+        nữa: phép phối hợp đã nằm sẵn trong bộ sinh, và luật kia dựng theo Cà
+        Pháo — tay phải cài vào KHE của tay trái, ngược hẳn. Xem `raiLinhNhi.ts`.
+      */
       const woven =
-        backing && line
+        backing && line && !(styleId && raiTheoTayTrai(styleId))
           ? interlockHands(
               interludeAccompaniment(backing),
               line,

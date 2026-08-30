@@ -184,3 +184,23 @@ export function raiMoRongOGiangTau(styleId: string): boolean {
   const ho = hoCuaDieu(styleId)
   return ho !== null && RAI_MO_RONG.includes(ho)
 }
+
+/**
+ * Họ nào dựng tay phải giang tấu BÁM VÀO TAY TRÁI, thay vì sinh độc lập.
+ *
+ * Đo mười ô giang tấu bản ký âm Linh Nhi: 55% mốc gõ có cả hai tay, và trong
+ * những mốc chung ấy 47% tay phải chơi lại chính lớp cao độ tay trái đang giữ.
+ * Hai tay khoá nhau ở nhịp và lớp cao độ; đường nét thì tự do (52/48 cùng
+ * hướng, tức gần như ngẫu nhiên).
+ *
+ * Họ nào bật cờ này thì đường giang tấu KHÔNG chạy qua `interlockHands` nữa —
+ * luật ấy dựng theo Cà Pháo, nơi tay phải cài vào KHE của tay trái. Linh Nhi
+ * làm ngược. Trộn hai phong cách là hỏng cả hai. Xem `raiLinhNhi.ts`.
+ */
+const RAI_THEO_TAY_TRAI: readonly string[] = ['bolero']
+
+/** Giang tấu của điệu này có dựng tay phải bám vào tay trái không. */
+export function raiTheoTayTrai(styleId: string): boolean {
+  const ho = hoCuaDieu(styleId)
+  return ho !== null && RAI_THEO_TAY_TRAI.includes(ho)
+}

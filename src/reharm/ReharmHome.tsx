@@ -136,7 +136,8 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
-import { kieuChoSolo, raiMoRongOGiangTau } from './style/hoDieu'
+import { kieuChoSolo, raiMoRongOGiangTau, raiTheoTayTrai } from './style/hoDieu'
+import { raiLinhNhi } from './style/raiLinhNhi'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -1583,6 +1584,10 @@ export function ReharmHome() {
       const pull = nextFirst
         ? pullChordFor(nextFirst.chord, { avoid: last.chord, strong: true })
         : null
+      /** Tay trái của một cửa sổ hợp âm — dùng lại ở cả phần đệm lẫn bộ rải. */
+      const traiCua = (list: readonly ParsedChord[], beats: readonly number[]) =>
+        soloLeftHand({ chords: list, beatsEach: beats, style: styleSolo })
+
       const pullHit = pull
         ? renderPattern(
             voiceLeadTwoHands([pull], { dropRootFromRightHand: dropRoot }),
@@ -1624,18 +1629,32 @@ export function ReharmHome() {
           nhịp của điệu đang chọn, nên luật ở trên còn nguyên; thứ đổi là AI
           chơi phần nào, không phải chơi điệu gì. Xem `style/soloLeftHand.ts`.
         */
-        events: soloLeftHand({
-          chords: windowChords,
-          beatsEach: picked.map((span) => span.beats),
-          style: styleSolo,
-        }),
-        lastEvents: soloLeftHand({
-          chords: headChords,
-          beatsEach: head.map((span) => span.beats),
-          style: styleSolo,
-        }),
+        events: traiCua(windowChords, picked.map((span) => span.beats)),
+        lastEvents: traiCua(headChords, head.map((span) => span.beats)),
         exit: pullHit,
         solo: (take: number, lastLoop?: boolean) =>
+          /*
+            TAY PHẢI BÁM VÀO TAY TRÁI, với họ nào có số đo.
+
+            Đo mười ô giang tấu bản ký âm Linh Nhi: hai tay gõ CÙNG NHAU 55% số
+            mốc — nhiều hơn phiên khúc — và gần một nửa số mốc chung, tay phải
+            chơi lại chính lớp cao độ tay trái đang giữ.
+
+            Bộ sinh cũ cho tay phải bốc nốt từ thang gam mà không hề biết tay
+            trái đang giữ gì, rồi mới cài vào khe. Người dùng nghe ra ngay: "tay
+            phải quá rời rạc với tay trái". Xem `raiLinhNhi.ts`.
+          */
+          (raiTheoTayTrai(styleSolo.id)
+            ? raiLinhNhi({
+                left: lastLoop
+                  ? traiCua(headChords, head.map((span) => span.beats))
+                  : traiCua(windowChords, picked.map((span) => span.beats)),
+                chords: lastLoop ? lastLoopChords : windowChords,
+                beatsPerChord: chordBeats,
+                range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+                take: take + phraseSpin + playSpin.current,
+              })
+            : null) ??
           builtLine(lastLoop ? lastLoopChords : windowChords, take, true) ??
           soloToTimeline(
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
