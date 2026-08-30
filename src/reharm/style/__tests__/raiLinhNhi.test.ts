@@ -147,3 +147,49 @@ describe('tay phải giang tấu bám vào tay trái', () => {
     expect(cua(3)).toBe(cua(3))
   })
 })
+
+/*
+  PHÁCH 1 LUÔN CÓ NỐT — luật cứng, không phải xác suất.
+
+  Người dùng nhận ra trước khi tôi đo, và ví von rất đúng: ca sĩ luôn biết chọn
+  điểm rơi của mẫu đệm mà vào. Đếm trên bản ký âm thì đúng tuyệt đối — 16/16 ô
+  ở phiên khúc và 10/10 ô ở giang tấu, không sót ô nào.
+
+  Bản trước chỉ gõ chung 64% số mốc, nên cứ ba ô lại có một ô vào trống phách 1.
+  Đó là một phần lý do nó nghe rời rạc.
+*/
+describe('phách 1 và trọng số trong ô', () => {
+  it('ô nào cũng có nốt tay phải đúng phách 1', () => {
+    for (let take = 0; take < 12; take += 1) {
+      const { right } = dung(take)
+      const coNot = new Set(right.map((e) => Math.floor(e.startBeat / BAR)))
+      const coPhachMot = new Set(
+        right.filter((e) => Math.abs(e.startBeat % BAR) < 0.03).map((e) => Math.floor(e.startBeat / BAR)),
+      )
+      expect(coPhachMot.size, `lượt ${take}`).toBe(coNot.size)
+    }
+  })
+
+  /*
+    Nửa đầu ô THƯA, nửa sau DÀY. Đếm trên mười ô giang tấu:
+
+      phách 1 → 10   1& → 5    2 → 10   2& → 5
+      phách 3 → 15   3& → 15   4 → 13   4& → 14
+
+    Tay trái thì đều tăm tắp 8-10 ở mọi vị trí, nên cái nhấp nhô này là của
+    riêng tay phải — nó giữ thưa lúc mở ô rồi dồn lại về cuối ô.
+  */
+  it('nửa sau ô dày hơn nửa đầu', () => {
+    let dau = 0
+    let sau = 0
+    for (let take = 0; take < 12; take += 1) {
+      for (const e of dung(take).right) {
+        if (e.startBeat % BAR < BAR / 2) dau += 1
+        else sau += 1
+      }
+    }
+    const tiSau = sau / (dau + sau)
+    expect(tiSau).toBeGreaterThan(0.58)
+    expect(tiSau).toBeLessThan(0.75)
+  })
+})

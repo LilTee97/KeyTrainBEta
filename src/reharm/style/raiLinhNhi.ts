@@ -45,6 +45,55 @@ import type { TimelineEvent } from './types'
 /** Bao nhiêu phần cú gõ tay trái được tay phải gõ cùng. Đo: 55 trên 55+31. */
 const CUNG_GO = 0.64
 
+/**
+ * PHÁCH 1 LUÔN CÓ NỐT TAY PHẢI. Đây là luật cứng, không phải xác suất.
+ *
+ * Đếm trên bản ký âm: 16/16 ô ở phiên khúc và 10/10 ô ở giang tấu đều có nốt
+ * tay phải rơi ĐÚNG phách 1. Không sót một ô nào.
+ *
+ * Người dùng nhận ra trước khi tôi đo, và ví von rất đúng: ca sĩ luôn biết chọn
+ * điểm rơi của mẫu đệm mà vào. Bỏ phách 1 thì câu solo mất chỗ bám, và đó là
+ * một phần lý do bản trước nghe rời rạc — nó chỉ gõ chung 64% số mốc, nên cứ ba
+ * ô lại có một ô vào trống phách 1.
+ */
+const PHACH_MOT = 0.03
+
+/**
+ * Móc đơn XEN ở nửa đầu ô thì thưa. Đếm trên mười ô giang tấu:
+ *
+ *   phách 1 → 10   1& → 5    phách 2 → 10   2& → 5
+ *   phách 3 → 15   3& → 15   phách 4 → 13   4& → 14
+ *
+ * Đọc kỹ mới thấy: KHÔNG phải "nửa đầu thưa". Các PHÁCH đều 100% cả bốn; chỉ
+ * những móc đơn XEN ở nửa đầu mới rơi xuống 50%. Nửa sau thì cả phách lẫn móc
+ * đơn xen đều đầy, và còn chồng thêm nốt (15 với 14 trên mười ô).
+ *
+ * Bản đầu tôi bóp cả nửa đầu ô, kể cả phách 2 — làm mật độ tụt từ 8,9 xuống
+ * 6,3 nốt mỗi ô và ba test khác đỏ theo. Mô hình sai thì chữa được một chỉ số
+ * mà hỏng ba cái.
+ */
+const THUA_MOC_XEN = 0.5
+
+/**
+ * Bao nhiêu phần nốt tay phải xuống sát tay trái để ĐỆM CHUNG thay vì hát.
+ *
+ * Người dùng hỏi đúng chỗ có thật, nhưng đo ra nó HIẾM: chỉ 10% số nốt tay phải
+ * nằm trong 12 nửa cung của trần tay trái, trung vị cả đoạn là 20. Nên đây là
+ * một màu điểm xuyết, không phải kết cấu thường trực.
+ *
+ * CHƯA ĐẠT, VÀ CHƯA BIẾT VÌ SAO. Bản dựng đo ra 1% chứ không phải 10%. Đã thử
+ * ba cách và không cách nào nhúc nhích con số:
+ *
+ *   1. chọn lớp cao độ nào đặt được xuống thấp, thay vì giữ nốt đã bốc
+ *   2. cho nốt đệm xuống dưới sàn tầm giai điệu
+ *   3. nới sàn riêng cho nhánh này
+ *
+ * Ghi ra đây thay vì vặn tiếp: đây là màu chiếm một phần mười, còn ba luật
+ * chính — phách 1, trọng số nửa ô, khoá hai tay — đều đã đạt. Vặn mò một chỗ
+ * nhỏ mà không hiểu nguyên nhân thì dễ làm hỏng ba chỗ lớn.
+ */
+const DEM_CHUNG = 0.1
+
 /** Trong những mốc chung, bao nhiêu phần tay phải lấy lại lớp cao độ tay trái. */
 const NHAN_BAN = 0.47
 
@@ -54,10 +103,14 @@ const RIENG = 0.2
 /**
  * Bao nhiêu phần cú gõ tay phải có từ hai nốt trở lên. Đo trên bản gốc: 36%.
  *
- * Đặt cao hơn 0,36 có chủ ý: phép chồng chỉ chạy ở mốc CHUNG, mà mốc chung
- * chiếm chừng 57% số cú gõ tay phải, nên 0,36 thẳng thì đo ra chỉ 23%.
+ * Đặt cao hơn 0,36 có chủ ý, vì hai chỗ làm loãng nó: phép chồng chỉ chạy ở
+ * mốc CHUNG (chừng 57% số cú gõ), và ở nửa đầu ô nó còn bị hạ xuống một phần
+ * ba. Đo ra 0,36 thẳng thì chỉ còn 20%.
+ *
+ * Chồng nốt cũng chính là thứ làm nửa sau ô dày lên: bản gốc có 14-15 nốt trên
+ * mười ô ở các vị trí cuối, tức HƠN một nốt mỗi ô.
  */
-const CHONG = 0.55
+const CHONG = 0.85
 
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
@@ -88,6 +141,8 @@ export interface RaiLinhNhiOptions {
   left: readonly TimelineEvent[]
   chords: readonly ParsedChord[]
   beatsPerChord: number
+  /** Độ dài một ô nhịp, để biết đâu là phách 1 và đâu là nửa sau ô. */
+  barBeats?: number
   range: { low: number; high: number }
   /** Lượt chơi — đổi đường đi mà không đổi luật. */
   take?: number
@@ -95,6 +150,7 @@ export interface RaiLinhNhiOptions {
 
 export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
   const { left, chords, beatsPerChord, range } = options
+  const barBeats = options.barBeats ?? beatsPerChord
   const take = options.take ?? 0
   if (left.length === 0 || chords.length === 0) return []
 
@@ -133,7 +189,17 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     const chord = hopAm(beat)
     const tones = chordTonesStrict(chord)
 
-    if (hash(take * 17 + index * 5) < CUNG_GO) {
+    /*
+      Phách 1 thì LUÔN gõ. Nửa sau ô dày hơn nửa đầu — xem `THUA_NUA_DAU`.
+    */
+    const trongO = ((beat % barBeats) + barBeats) % barBeats
+    const laPhachMot = Math.min(trongO, barBeats - trongO) < PHACH_MOT
+    const laPhach = Math.abs(trongO - Math.round(trongO)) < PHACH_MOT
+    const nuaSau = trongO >= barBeats / 2
+    // Phách thì luôn có; chỉ móc đơn XEN ở nửa đầu mới thưa.
+    const nguong = laPhachMot || laPhach || nuaSau ? CUNG_GO : CUNG_GO * THUA_MOC_XEN
+
+    if (laPhachMot || hash(take * 17 + index * 5) < nguong) {
       /*
         MỐC CHUNG. Gần một nửa số lần lấy lại chính lớp cao độ tay trái đang
         giữ — đây là chỗ hai tay dính vào nhau. Còn lại lấy một nốt hợp âm khác,
@@ -151,10 +217,47 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       const khac = tones.filter((pc) => !dangGiu.has(pc))
       const kho = nhanBan || khac.length === 0 ? duoi.map(lop) : khac
       const pc = kho[Math.floor(hash(take * 7 + index * 13) * kho.length) % kho.length]!
-      const note = datNot(pc, tranTrai + KHE_VUA, san, range.high)
-      if (note !== null) them(beat, note, true, keo)
+      /*
+        Thỉnh thoảng tay phải xuống sát tay trái ĐỆM CHUNG thay vì hát — đúng
+        thứ người dùng hỏi. Nhưng chỉ 10%: đo ra vậy, và cài dày hơn là dựng ra
+        một bản khác hẳn bản gốc.
+      */
+      const demChung = !laPhachMot && hash(take * 53 + index * 17) < DEM_CHUNG
 
-      if (note !== null && hash(take * 3 + index * 41) < CHONG) {
+      /*
+        Đệm chung thì phải CHỌN lớp cao độ nào đặt được xuống thấp, chứ không
+        giữ nốt đã bốc.
+
+        Bản đầu giữ nguyên `pc` rồi chỉ hạ mốc mong muốn xuống. Nhưng một lớp
+        cao độ chỉ có quãng tám rơi vào khe 9-12 nửa cung chừng một phần tư số
+        lần, nên 10% nhân với một phần tư ra 1% — cái núm không điều khiển được
+        gì. Chọn trong cả bộ nốt hợp âm thì luôn có một nốt vừa chỗ.
+      */
+      let note: MidiNote | null
+      if (demChung) {
+        /*
+          Nốt đệm chung được xuống DƯỚI sàn tầm giai điệu.
+
+          Sàn ấy (`range.low`) là để câu hát không tụt xuống vùng đệm. Nhưng nốt
+          này CHÍNH LÀ nốt đệm — nó đứng thấp là đúng vai của nó. Giữ sàn thì
+          khe không bao giờ nhỏ hơn 12 được: trần tay trái nhiều chỗ chỉ 45, mà
+          sàn là 57. Đo ra 1% thay vì 10%, và cái núm không điều khiển được gì.
+
+          Vẫn giữ `KHE_HEP`: không bao giờ chạm hay vượt qua tay trái.
+        */
+        const sanDem = tranTrai + KHE_HEP
+        const thap = kho
+          .map((one) => datNot(one, sanDem, sanDem, range.high))
+          .filter((one): one is MidiNote => one !== null)
+          .sort((x, y) => x - y)
+        note = thap[0] ?? datNot(pc, tranTrai + KHE_VUA, san, range.high)
+      } else {
+        note = datNot(pc, tranTrai + KHE_VUA, san, range.high)
+      }
+      if (note !== null) them(beat, note, !demChung, keo)
+
+      // Chồng nốt dồn về nửa sau ô: đó là chỗ bản gốc dày lên, không phải đầu ô.
+      if (note !== null && hash(take * 3 + index * 41) < (nuaSau ? CHONG : CHONG * 0.3)) {
         // Chồng thêm một nốt hợp âm phía dưới, vẫn trên trần tay trái.
         const duoiPc = tones[Math.floor(hash(take * 19 + index * 23) * tones.length) % tones.length]!
         const them2 = datNot(duoiPc, note - 5, san, note - 1)

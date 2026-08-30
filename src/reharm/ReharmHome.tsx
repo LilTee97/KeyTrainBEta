@@ -1651,6 +1651,7 @@ export function ReharmHome() {
                   : traiCua(windowChords, picked.map((span) => span.beats)),
                 chords: lastLoop ? lastLoopChords : windowChords,
                 beatsPerChord: chordBeats,
+                barBeats: phrasePulseBar,
                 range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
                 take: take + phraseSpin + playSpin.current,
               })
