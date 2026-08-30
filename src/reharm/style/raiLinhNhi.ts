@@ -287,5 +287,106 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     }
   })
 
+  /*
+    CHEN CHẠY NGÓN vào ô áp chót, và dọn chỗ cho nó.
+
+    Bỏ mọi nốt tay phải rơi trong khoảng chạy: chạy ngón là một hơi liền, có
+    thêm nốt rải chen vào giữa thì nó không còn là một hơi nữa.
+  */
+  const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
+  if (khung) {
+    const con = out.filter((e) => e.startBeat < khung.tu - 1e-6 || e.startBeat >= khung.den - 1e-6)
+    const chord = hopAm(khung.tu)
+    const traiLucAy = mocs.filter((m) => m <= khung.tu)
+    const tranTrai = traiLucAy.length > 0 ? Math.max(...moc.get(traiLucAy[traiLucAy.length - 1]!)!) : range.low
+    /*
+      Bắt đầu đủ thấp để trèo trọn 14 nửa cung mà không đụng trần, và vẫn trên
+      tay trái. Bản gốc chạy từ 74 lên 88 trong tầm trần 95.
+    */
+    const dau = datNot(lop(chord.root), range.high - 16, Math.max(range.low, tranTrai + KHE_HEP), range.high)
+    if (dau !== null) {
+      const thu = !chordTonesStrict(chord).includes(((chord.root + 4) % 12) as PitchClass)
+      con.push(...chayNgon(khung.tu, dau, thu, range.high))
+      return con.sort((a, b) => a.startBeat - b.startBeat)
+    }
+  }
+
   return out.sort((a, b) => a.startBeat - b.startBeat)
+}
+
+/**
+ * CHẠY NGÓN: khuôn lấy nguyên từ lần chạy DUY NHẤT trong bản ký âm.
+ *
+ * Cả 72 ô chỉ có một ô chạy móc kép — ô 71, tức áp chót bài. Nên đây không
+ * phải thói quen thường xuyên của người soạn; nó là một cử chỉ hiếm. Người
+ * dùng muốn chen vào giang tấu thì cài, nhưng cài đúng HÌNH của lần ấy và đúng
+ * TẦN SUẤT một lần mỗi đoạn, chứ không rải khắp nơi.
+ *
+ * Đo lần chạy ấy:
+ *
+ *   6 nốt móc kép, bắt đầu đúng NỬA SAU ô (offset 1,5), kết ở offset 2,75
+ *   bước [2, 2, 3, 5, 2] — 60% liền bậc, đi LÊN, trèo 14 nửa cung
+ *   TAY TRÁI: 0 nốt trong suốt lúc chạy
+ *
+ * Chỗ cuối là thứ người dùng nhận ra trước: tay trái buông hẳn để nhường.
+ */
+const CHAY_SO_NOT = 6
+const CHAY_MOC = 0.25
+/** Chạy bắt đầu ở nửa sau ô, đúng chỗ bản gốc đặt. */
+const CHAY_VAO = 1.5
+
+/**
+ * Dãy bước của lần chạy gốc, và một biến thể cho hợp âm thứ.
+ *
+ * Đặt từ nốt gốc thì [2,2,3,5,2] ra bậc 1-2-3-5-8-9 — nghe sạch trên hợp âm
+ * trưởng. Trên hợp âm thứ thì bậc 3 trưởng chỏi, nên đổi bước thứ hai còn 1 để
+ * ra 1-2-b3-5-8-9. Đây là CHỖ TÔI SỬA, không phải số đo: bản gốc chỉ chạy một
+ * lần và lần ấy trên một chất hợp âm.
+ */
+const CHAY_BUOC_TRUONG = [2, 2, 3, 5, 2]
+const CHAY_BUOC_THU = [2, 1, 4, 5, 2]
+
+/**
+ * Ô nào trong đoạn được chen chạy ngón, tính bằng phách tuyệt đối.
+ *
+ * Lấy ô ÁP CHÓT, đúng chỗ bản gốc đặt — ô 71 trên 72. Nó rơi ngay trước lúc
+ * đoạn kết thúc, nên nghe ra là một câu dẫn chứ không phải một cú chen ngang.
+ *
+ * Bên dựng tay trái gọi chính hàm này để buông tay ra đúng khoảng ấy, nên hai
+ * bên không thể lệch nhau.
+ */
+export function khungChayNgon(
+  tongPhach: number,
+  barBeats: number,
+): { tu: number; den: number } | null {
+  const soO = Math.floor(tongPhach / barBeats)
+  if (soO < 3) return null
+  const dauO = (soO - 2) * barBeats
+  return { tu: dauO + CHAY_VAO, den: dauO + CHAY_VAO + CHAY_SO_NOT * CHAY_MOC }
+}
+
+/** Sáu nốt móc kép đi lên, hình lấy từ lần chạy gốc. */
+export function chayNgon(
+  tu: number,
+  batDau: MidiNote,
+  thu: boolean,
+  tran: number,
+): TimelineEvent[] {
+  const buoc = thu ? CHAY_BUOC_THU : CHAY_BUOC_TRUONG
+  const out: TimelineEvent[] = []
+  let note = batDau
+  for (let at = 0; at < CHAY_SO_NOT; at += 1) {
+    if (note > tran) break
+    out.push({
+      notes: [note],
+      startBeat: tu + at * CHAY_MOC,
+      durationBeats: CHAY_MOC * 0.9,
+      hand: 'right',
+      // Nhẹ dần lên đỉnh thì nghe ra một hơi, không phải sáu cú gõ rời.
+      velocity: 62 + at * 3,
+      grace: false,
+    })
+    note = (note + (buoc[at] ?? 2)) as MidiNote
+  }
+  return out
 }

@@ -137,7 +137,7 @@ import {
   resolveStyleForSection,
 } from './style/sectionStyles'
 import { kieuChoSolo, raiMoRongOGiangTau, raiTheoTayTrai } from './style/hoDieu'
-import { raiLinhNhi } from './style/raiLinhNhi'
+import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -1585,8 +1585,27 @@ export function ReharmHome() {
         ? pullChordFor(nextFirst.chord, { avoid: last.chord, strong: true })
         : null
       /** Tay trái của một cửa sổ hợp âm — dùng lại ở cả phần đệm lẫn bộ rải. */
-      const traiCua = (list: readonly ParsedChord[], beats: readonly number[]) =>
-        soloLeftHand({ chords: list, beatsEach: beats, style: styleSolo })
+      const traiCua = (list: readonly ParsedChord[], beats: readonly number[]) => {
+        const trai = soloLeftHand({ chords: list, beatsEach: beats, style: styleSolo })
+        if (!raiTheoTayTrai(styleSolo.id)) return trai
+        /*
+          BUÔNG TAY TRÁI trong lúc tay phải chạy ngón.
+
+          Đo lần chạy duy nhất của bản ký âm (ô 71): tay trái im hẳn, 0 nốt suốt
+          sáu móc kép. Người dùng nhận ra trước khi tôi đo — "tay trái ko phải
+          đệm" — và số đo đúng như vậy.
+
+          Hai bên gọi chung `khungChayNgon` nên không thể lệch khoảng với nhau.
+        */
+        const khung = khungChayNgon(
+          beats.reduce((sum, one) => sum + one, 0),
+          phrasePulseBar,
+        )
+        if (!khung) return trai
+        return trai.filter(
+          (event) => event.startBeat < khung.tu - 1e-6 || event.startBeat >= khung.den - 1e-6,
+        )
+      }
 
       const pullHit = pull
         ? renderPattern(

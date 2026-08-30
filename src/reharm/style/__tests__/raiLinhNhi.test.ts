@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
-import { raiLinhNhi } from '../raiLinhNhi'
+import { khungChayNgon, raiLinhNhi } from '../raiLinhNhi'
 import { soloLeftHand } from '../soloLeftHand'
 import { getStyle } from '../styleLibrary'
 import type { TimelineEvent } from '../types'
@@ -191,5 +191,61 @@ describe('phách 1 và trọng số trong ô', () => {
     const tiSau = sau / (dau + sau)
     expect(tiSau).toBeGreaterThan(0.58)
     expect(tiSau).toBeLessThan(0.75)
+  })
+})
+
+/*
+  CHẠY NGÓN — khuôn lấy nguyên từ lần chạy DUY NHẤT trong bản ký âm.
+
+  Cả 72 ô chỉ có một ô chạy móc kép: ô 71, tức áp chót bài. Nên đây không phải
+  thói quen thường xuyên của người soạn, nó là một cử chỉ hiếm. Người dùng muốn
+  chen vào giang tấu thì cài đúng HÌNH của lần ấy và đúng TẦN SUẤT một lần mỗi
+  đoạn, chứ không rải khắp nơi.
+
+  Đo lần chạy ấy: 6 nốt móc kép, vào đúng nửa sau ô (offset 1,5), đi LÊN, bước
+  [2,2,3,5,2] tức 60% liền bậc, trèo 14 nửa cung — và TAY TRÁI im hẳn, 0 nốt.
+*/
+describe('chạy ngón chen vào giang tấu', () => {
+  const khung = () => khungChayNgon(CHORDS.length * BAR, BAR)!
+
+  it('rơi vào ô áp chót, nửa sau ô', () => {
+    const k = khung()
+    const oApChot = (CHORDS.length - 2) * BAR
+    expect(k.tu).toBe(oApChot + 1.5)
+    expect(k.den - k.tu).toBeCloseTo(1.5, 5)
+  })
+
+  it('sáu nốt móc kép, đi lên, phần lớn liền bậc', () => {
+    const k = khung()
+    for (let take = 0; take < 8; take += 1) {
+      const chay = dung(take).right.filter(
+        (e) => e.startBeat >= k.tu - 1e-6 && e.startBeat < k.den - 1e-6,
+      )
+      expect(chay.length, `lượt ${take}`).toBeGreaterThanOrEqual(5)
+      for (const e of chay) expect(e.durationBeats).toBeLessThan(0.3)
+
+      const cao = chay.map((e) => Math.min(...e.notes))
+      for (let at = 1; at < cao.length; at += 1) {
+        expect(cao[at], 'phải đi LÊN').toBeGreaterThan(cao[at - 1]!)
+      }
+      const buoc = cao.slice(1).map((x, at) => x - cao[at]!)
+      const lienBac = buoc.filter((x) => x <= 2).length / buoc.length
+      expect(lienBac).toBeGreaterThanOrEqual(0.5)
+    }
+  })
+
+  it('không nốt rải nào chen vào giữa câu chạy', () => {
+    const k = khung()
+    for (let take = 0; take < 8; take += 1) {
+      const trong = dung(take).right.filter(
+        (e) => e.startBeat > k.tu + 1e-6 && e.startBeat < k.den - 1e-6,
+      )
+      // Mọi nốt trong khoảng ấy phải là móc kép của chính câu chạy.
+      for (const e of trong) expect(e.durationBeats).toBeLessThan(0.3)
+    }
+  })
+
+  it('đoạn quá ngắn thì không chen', () => {
+    expect(khungChayNgon(BAR * 2, BAR)).toBeNull()
   })
 })
