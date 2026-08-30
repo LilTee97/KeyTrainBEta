@@ -4,7 +4,8 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
-import { khongTiaTayTrai } from './hoDieu'
+import { khongTiaTayTrai, raiTheoTayTrai } from './hoDieu'
+import { raiLinhNhi } from './raiLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose } from './phraseCue'
@@ -28,6 +29,13 @@ export interface PhraseSectionOptions {
   opening: ParsedChord | null
   /** Câu ngẫu hứng cho một vòng hợp âm; cùng bộ sinh nốt với đoạn giang tấu. */
   solo: (chords: readonly ParsedChord[]) => readonly TimelineEvent[]
+  /**
+   * Gam để dựng câu, nếu điệu này dùng lối bám tay trái.
+   *
+   * Bỏ trống thì `solo` chạy như cũ — mọi điệu không thuộc họ có khai lối ấy
+   * đều đi đường cũ, không đổi gì.
+   */
+  scale?: readonly PitchClass[]
   /** Rải ngón hợp âm báo thay vì dặm một lượt — dành cho họ ballad. */
   rollCue?: boolean
   /**
@@ -103,7 +111,26 @@ export function buildPhraseSection(
   */
   const backing = soloLeftHand({ chords, beatsEach, style })
 
-  const voiced = solo(chords)
+  /*
+    DẠO ĐẦU VÀ KẾT BÀI cũng dựng như giang tấu, theo yêu cầu người dùng.
+
+    Trước đây chỉ giang tấu dùng lối bám tay trái; dạo đầu và kết bài vẫn sinh
+    câu độc lập rồi mới cài vào. Hai đoạn ấy nghe khác hẳn giang tấu dù cùng
+    một bài, cùng một điệu.
+
+    Đường cũ vẫn còn nguyên cho mọi điệu không khai lối này — `raiTheoTayTrai`
+    trả `false` thì `solo` chạy y như trước.
+  */
+  const voiced = raiTheoTayTrai(style.id)
+    ? raiLinhNhi({
+        left: backing,
+        chords,
+        beatsPerChord,
+        barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+        ...(options.scale ? { scale: options.scale } : {}),
+        range: { low: 57, high: 95 },
+      })
+    : solo(chords)
   const roundBeats = chords.length * beatsPerChord
 
   /*

@@ -182,8 +182,13 @@ const CHUOI_DAI = 7
  * Cả hai ô đều đứng trên hợp âm hút (bậc V và bậc V7). Chỗ ấy là của vòng hợp
  * âm, không phải của bộ này — bộ này chỉ dày lên đúng chỗ vòng đã hút sẵn.
  */
-const CUA_RA_CHONG = [4, 4, 5]
-const CUA_RA_PHACH = [0.5, 1, 2]
+const CUA_RA_CHONG = [5, 4, 4]
+/*
+  Chồng ngay TỪ VẠCH NHỊP. Bản gốc chồng ở phách 1&, 2, 3 — nhưng ở đó ô trước
+  vẫn đang chạy tiếp vào, còn bản dựng thì câu chạy vừa đáp xuống đúng vạch.
+  Để trống phách 1 thì có một khe ngay giữa hai cử chỉ, và đó là chỗ khựng.
+*/
+const CUA_RA_PHACH = [0, 0.5, 1]
 
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
@@ -526,8 +531,18 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
  */
 const CHAY_SO_NOT = 6
 const CHAY_MOC = 0.25
-/** Chạy bắt đầu ở nửa sau ô, đúng chỗ bản gốc đặt. */
-const CHAY_VAO = 1.5
+/**
+ * Câu chạy HẠ CÁNH ĐÚNG VẠCH NHỊP của ô cuối, không dừng trước đó.
+ *
+ * Bản đầu đặt chạy từ offset 1,5 tới 3,0 rồi để trống một phách, sau đó cửa ra
+ * mới vào ở phách 1&. Người dùng nghe ra ngay: "dặm hợp âm rồi nghỉ rồi đánh
+ * thêm hợp âm báo vào, nghe nó khựng lại rất dở". Đúng — giữa hai cử chỉ có
+ * một phách trống, và một phách trống ở chỗ ấy nghe như hụt chân.
+ *
+ * Nay chạy chiếm 1,5 phách CUỐI ô áp chót, nốt cuối rơi ngay trước vạch, và
+ * hợp âm báo đứng ĐÚNG vạch. Thành một cử chỉ liền: chạy lên rồi đáp.
+ */
+const CHAY_LUI = 1.5
 
 /**
  * Dãy bước của lần chạy gốc, và một biến thể cho hợp âm thứ.
@@ -555,8 +570,9 @@ export function khungChayNgon(
 ): { tu: number; den: number } | null {
   const soO = Math.floor(tongPhach / barBeats)
   if (soO < 3) return null
-  const dauO = (soO - 2) * barBeats
-  return { tu: dauO + CHAY_VAO, den: dauO + CHAY_VAO + CHAY_SO_NOT * CHAY_MOC }
+  // Lùi từ vạch nhịp ô cuối, để nốt cuối câu chạy đáp ngay vào hợp âm báo.
+  const vach = (soO - 1) * barBeats
+  return { tu: vach - CHAY_LUI, den: vach }
 }
 
 /** Sáu nốt móc kép đi lên, hình lấy từ lần chạy gốc. */

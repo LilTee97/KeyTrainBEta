@@ -216,10 +216,21 @@ describe('phách 1 và trọng số trong ô', () => {
 describe('chạy ngón chen vào giang tấu', () => {
   const khung = () => khungChayNgon(CHORDS.length * BAR, BAR)!
 
-  it('rơi vào ô áp chót, nửa sau ô', () => {
+  /*
+    HẠ CÁNH ĐÚNG VẠCH NHỊP của ô cuối.
+
+    Bản đầu đặt chạy ở offset 1,5-3,0 của ô áp chót rồi để trống một phách, sau
+    đó cửa ra mới vào. Người dùng nghe ra ngay: "dặm hợp âm rồi nghỉ rồi đánh
+    thêm hợp âm báo vào, nghe nó khựng lại rất dở". Một phách trống ở đúng chỗ
+    ấy nghe như hụt chân.
+
+    Nay chạy chiếm 1,5 phách CUỐI ô áp chót và đáp thẳng vào hợp âm báo đứng ở
+    vạch nhịp — một cử chỉ liền, không có khe.
+  */
+  it('chiếm 1,5 phách cuối ô áp chót, đáp đúng vạch nhịp', () => {
     const k = khung()
-    const oApChot = (CHORDS.length - 2) * BAR
-    expect(k.tu).toBe(oApChot + 1.5)
+    const vachOCuoi = (CHORDS.length - 1) * BAR
+    expect(k.den).toBe(vachOCuoi)
     expect(k.den - k.tu).toBeCloseTo(1.5, 5)
   })
 
@@ -427,8 +438,13 @@ describe('cửa ra cuối đoạn', () => {
       }
       const day = [...chong.entries()].filter(([, n]) => n >= 4)
       expect(day.length, `lượt ${take}`).toBeGreaterThanOrEqual(3)
-      // Đúng ba chỗ bản gốc chồng: phách 1&, phách 2, phách 3.
-      for (const [at] of day) expect([0.5, 1, 2]).toContain(at)
+      /*
+        Chồng NGAY TỪ VẠCH NHỊP. Bản gốc chồng ở phách 1&, 2, 3 — nhưng ở đó ô
+        trước vẫn đang chạy tiếp vào, còn bản dựng thì câu chạy vừa đáp xuống
+        đúng vạch. Để trống phách 1 là để lại một khe ngay giữa hai cử chỉ, và
+        đó chính là chỗ khựng người dùng nghe ra.
+      */
+      for (const [at] of day) expect([0, 0.5, 1]).toContain(at)
     }
   })
 

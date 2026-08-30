@@ -1602,9 +1602,31 @@ export function ReharmHome() {
           phrasePulseBar,
         )
         if (!khung) return trai
-        return trai.filter(
-          (event) => event.startBeat < khung.tu - 1e-6 || event.startBeat >= khung.den - 1e-6,
-        )
+
+        /*
+          NGÂN XUYÊN QUA, không xoá.
+
+          Bản đầu bỏ hẳn mọi nốt tay trái trong lúc chạy. Người dùng nghe ra một
+          chỗ đứt: "tay trái ngừng gây cảm giác đứt quãng". Đúng — bè trầm thủng
+          hẳn một phách rưỡi.
+
+          Bản gốc ô 71 không có CÚ GÕ tay trái nào trong lúc chạy, nhưng nốt gõ
+          trước đó vẫn đang vang. Nên giữ đúng nghĩa ấy: không gõ thêm, mà kéo
+          dài nốt cuối cùng trước câu chạy cho tới hết chỗ chạy.
+        */
+        const truoc = trai
+          .filter((event) => event.startBeat < khung.tu - 1e-6)
+          .sort((a, b) => a.startBeat - b.startBeat)
+        const cuoi = truoc[truoc.length - 1]
+        return trai
+          .filter(
+            (event) => event.startBeat < khung.tu - 1e-6 || event.startBeat >= khung.den - 1e-6,
+          )
+          .map((event) =>
+            event === cuoi
+              ? { ...event, durationBeats: Math.max(event.durationBeats, khung.den - event.startBeat) }
+              : event,
+          )
       }
 
       const pullHit = pull
@@ -2576,6 +2598,8 @@ export function ReharmHome() {
               kind,
               key: reharm.key,
               style: styleSolo,
+              // Gam cho lối bám tay trái; thiếu nó thì câu chạy scale không dựng được.
+              ...(phraseScale ? { scale: phraseScale.pitchClasses } : {}),
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
