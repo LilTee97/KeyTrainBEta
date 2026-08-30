@@ -552,6 +552,99 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     }
   }
 
+  /*
+    NỐT NHANH THÌ PHẢI ĐI BƯỚC NGẮN. Đây là chỗ hỏng nặng nhất, và nó giả trang
+    thành một lỗi hoà âm.
+
+    Người dùng nghe "giai điệu quá sai, nhiều nốt bị phô". Đo hoà âm thì sạch:
+    2% ngoài gam, 3% nghịch nửa cung với tay trái, 19% ngoài hợp âm ở phách chẵn
+    (bản gốc 42% — tức còn thuận tai hơn bản gốc). Không có nốt nào sai.
+
+    Thứ sai là BƯỚC ĐI. In ra thì thấy những cụm móc kép kiểu:
+
+        86 · 86 · 81 · 78 · 54      tụt 24 nửa cung giữa chuỗi
+        71 · 59 · 62                tụt 12
+        62 · 64 · 66 · 69 · 59      lên bốn nốt rồi rơi 10
+
+    Mọi nốt đều trong gam, nhưng nhảy hai quãng tám giữa một chuỗi móc kép thì
+    tai nghe như hỏng. Và đó cũng là lý do người dùng "không thấy câu chạy nào":
+    những cụm ấy nhanh về nhịp nhưng không thành hình, nên không ai nghe ra là
+    câu chạy. Phép đếm của tôi đo NHỊP mà không đo HÌNH, nên báo 6 câu chạy
+    trong khi thật ra có một.
+
+    Luật: hai nốt cách nhau từ một móc kép trở xuống thì bước không được quá
+    một quãng ba. Vượt thì kéo về bậc thang gần nhất còn trong khoảng ấy.
+  */
+  const KHE_NHANH = 0.26
+  /*
+    Năm nửa cung, không phải bốn: dãy bước của câu chạy gốc là [2,2,3,5,2], nên
+    chính bản ký âm có một bước quãng bốn trong lúc chạy. Chặn ở bốn là chặt
+    hơn người soạn.
+  */
+  const BUOC_NHANH = 5
+  {
+    /*
+      KHÔNG phụ thuộc gam. Luật "nốt nhanh đi bước ngắn" đúng với mọi bài, còn
+      gam thì có thể không có — và lần đầu tôi bọc cả khối trong nhánh `if (gam)`
+      nên nó CHƯA TỪNG CHẠY ở đường không truyền gam. Test đỏ y nguyên sau hai
+      lượt sửa thuật toán, và mãi mới thấy là do cái bọc ấy.
+
+      Không có gam thì lấy nốt hợp âm làm thang — thưa hơn nhưng vẫn nắn được.
+    */
+    const kho2 = gam && gam.length >= 5 ? gam : chordTonesStrict(hopAm(0))
+    const thang2: MidiNote[] = []
+    for (let note = range.low; note <= range.high; note += 1) {
+      if (kho2.includes(lop(note))) thang2.push(note as MidiNote)
+    }
+    /*
+      So ĐƯỜNG TRÊN với ĐƯỜNG TRÊN, gom theo mốc gõ.
+
+      Bản đầu duyệt mảng đã sắp theo phách, nên nó so nốt CHỒNG — nốt thấp cùng
+      một chỗ gõ — với nốt của mốc kế tiếp, và bỏ lọt những bước 24 nửa cung.
+      Đúng cái bẫy đã sập hai lần trong phiên này: phép đo chạy theo thứ tự mảng
+      thay vì theo mốc gõ.
+    */
+    const theoMoc = new Map<number, TimelineEvent[]>()
+    for (const one of out) {
+      const key = Number(one.startBeat.toFixed(3))
+      theoMoc.set(key, [...(theoMoc.get(key) ?? []), one])
+    }
+    const mocSap = [...theoMoc.keys()].sort((a, b) => a - b)
+    for (let at = 1; at < mocSap.length; at += 1) {
+      if (mocSap[at]! - mocSap[at - 1]! > KHE_NHANH) continue
+      const truocDo = theoMoc.get(mocSap[at - 1]!)!
+      const nay = theoMoc.get(mocSap[at]!)!
+      const goc2 = Math.max(...truocDo.flatMap((one) => one.notes))
+      // Chỉ nắn ĐƯỜNG TRÊN; nốt chồng bên dưới để yên, nó là bè đệm.
+      const dinh = nay.reduce((x, y) => (Math.max(...x.notes) >= Math.max(...y.notes) ? x : y))
+      if (Math.abs(dinh.notes[0]! - goc2) <= BUOC_NHANH) continue
+
+      /*
+        Nắn bước NHƯNG VẪN PHẢI TRÊN TAY TRÁI.
+
+        Bản đầu chỉ tìm nốt gần nốt trước, không ngó tay trái — nó kéo một nốt
+        xuống còn 7 nửa cung trên trần tay trái, dưới ngưỡng 9, và làm đỏ đúng
+        cái test giữ luật không bắt chéo. Chữa một luật mà phá một luật khác.
+
+        Không có ứng viên nào vừa cả hai thì để nguyên: chỗ đặt cũ đã tôn trọng
+        tay trái rồi, thà một bước rộng còn hơn một nốt đè lên bè trầm.
+      */
+      const traiTruocDo = mocs.filter((one) => one <= mocSap[at]!)
+      const tranLucAy =
+        traiTruocDo.length > 0
+          ? Math.max(...moc.get(traiTruocDo[traiTruocDo.length - 1]!)!)
+          : range.low
+      const sanLucAy = Math.max(range.low, tranLucAy + KHE_HEP)
+
+      const gan = thang2
+        .filter(
+          (one) => Math.abs(one - goc2) <= BUOC_NHANH && one !== goc2 && one >= sanLucAy,
+        )
+        .sort((x, y) => Math.abs(x - dinh.notes[0]!) - Math.abs(y - dinh.notes[0]!))[0]
+      if (gan !== undefined) dinh.notes = [gan]
+    }
+  }
+
   const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
   if (khung) {
     const con = out.filter((e) => e.startBeat < khung.tu - 1e-6 || e.startBeat >= khung.den - 1e-6)

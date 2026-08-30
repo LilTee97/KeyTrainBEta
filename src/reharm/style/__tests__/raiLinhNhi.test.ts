@@ -490,3 +490,95 @@ describe('cửa ra cuối đoạn', () => {
     }
   })
 })
+
+/*
+  NỐT NHANH THÌ PHẢI ĐI BƯỚC NGẮN.
+
+  Người dùng nghe "giai điệu quá sai, nhiều nốt bị phô". Đo hoà âm thì SẠCH:
+  2% ngoài gam, 3% nghịch nửa cung với tay trái đang vang, 19% ngoài hợp âm ở
+  phách chẵn — bản gốc 42%, tức bản dựng còn thuận tai hơn bản gốc.
+
+  Không có nốt nào sai. Thứ sai là BƯỚC ĐI. In ra thì thấy:
+
+      86 · 86 · 81 · 78 · 54          tụt 24 nửa cung giữa chuỗi móc kép
+      71 · 59 · 62                    tụt 12
+      62 · 64 · 66 · 69 · 59 · 57     lên bốn nốt rồi rơi 10
+
+  Mọi nốt đều trong gam, nhưng nhảy hai quãng tám giữa một chuỗi móc kép thì
+  tai nghe như hỏng.
+
+  Và đây cũng là lý do người dùng "không thấy câu chạy nào": những cụm ấy nhanh
+  về NHỊP nhưng không thành HÌNH, nên không ai nghe ra là câu chạy. Phép đếm cũ
+  của tôi đếm khoảng cách thời gian mà không nhìn cao độ, nên báo 6 câu chạy
+  mỗi đoạn trong khi thật ra chỉ có đúng một — câu ở cửa ra.
+*/
+describe('nốt nhanh đi bước ngắn', () => {
+  /*
+    Bỏ Ô CỬA RA khỏi phép đo: ở đó câu chạy đáp thẳng vào một hợp âm chồng năm
+    nốt, nên bước từ nốt đỉnh xuống nốt đáy hợp âm là rất rộng — và đó là chủ
+    ý, không phải lỗi. Ngưỡng năm nửa cung lấy đúng bước rộng nhất trong dãy
+    [2,2,3,5,2] của câu chạy gốc.
+  */
+  const oCuaRa = Math.floor((CHORDS.length * BAR - 1e-6) / BAR) * BAR
+
+  /** Đường trên cùng, gom theo MỐC GÕ — không phải theo thứ tự mảng. */
+  const duongTren = (take: number) => {
+    const at = new Map<number, number[]>()
+    for (const e of dung(take).right) {
+      const k = Number(e.startBeat.toFixed(3))
+      at.set(k, [...(at.get(k) ?? []), ...e.notes])
+    }
+    return [...at.entries()].sort((a, b) => a[0] - b[0]).map(([b, v]) => [b, Math.max(...v)] as const)
+  }
+
+  /*
+    THỨ TỰ ƯU TIÊN, và test này phải nói đúng nó.
+
+    Luật bước ngắn xếp SAU luật không bắt chéo. Chỗ nào không tìm được nốt vừa
+    gần nốt trước vừa còn trên trần tay trái thì để nguyên — thà một bước rộng
+    còn hơn một nốt đè lên bè trầm.
+
+    Nên đây không phải luật tuyệt đối mà là luật gần tuyệt đối. Đo ra hơn 97%
+    số bước nhanh tuân thủ; phần còn lại là chỗ hai luật đụng nhau.
+  */
+  it('gần như mọi bước nhanh đều không quá quãng bốn', () => {
+    let tuan = 0
+    let tong = 0
+    for (let take = 0; take < 12; take += 1) {
+      const tren = duongTren(take)
+      for (let at = 1; at < tren.length; at += 1) {
+        if (tren[at]![0] >= oCuaRa) continue
+        if (tren[at]![0] - tren[at - 1]![0] > 0.26) continue
+        tong += 1
+        if (Math.abs(tren[at]![1] - tren[at - 1]![1]) <= 5) tuan += 1
+      }
+    }
+    expect(tong).toBeGreaterThan(50)
+    expect(tuan / tong).toBeGreaterThan(0.95)
+  })
+
+  /*
+    Cụm móc kép giờ phải THÀNH HÌNH: đo bề rộng cả cụm, không chỉ từng bước.
+    Cụm năm nốt mà trải hơn hai quãng tám thì dù từng bước có ngắn cũng không
+    phải một câu chạy.
+  */
+  it('cụm móc kép trải trong tầm một câu chạy thật', () => {
+    for (let take = 0; take < 12; take += 1) {
+      const tren = duongTren(take)
+      let cum: number[] = []
+      const xet = () => {
+        if (cum.length >= 3) expect(Math.max(...cum) - Math.min(...cum)).toBeLessThanOrEqual(16)
+        cum = []
+      }
+      for (let at = 1; at < tren.length; at += 1) {
+        if (tren[at]![0] >= oCuaRa) break
+        if (tren[at]![0] - tren[at - 1]![0] > 0.26) xet()
+        else {
+          if (cum.length === 0) cum.push(tren[at - 1]![1])
+          cum.push(tren[at]![1])
+        }
+      }
+      xet()
+    }
+  })
+})
