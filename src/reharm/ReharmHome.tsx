@@ -1671,6 +1671,7 @@ export function ReharmHome() {
                 chords: lastLoop ? lastLoopChords : windowChords,
                 beatsPerChord: chordBeats,
                 barBeats: phrasePulseBar,
+                scale: phraseScale?.pitchClasses,
                 range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
                 take: take + phraseSpin + playSpin.current,
               })

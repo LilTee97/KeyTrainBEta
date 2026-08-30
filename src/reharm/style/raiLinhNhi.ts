@@ -133,6 +133,34 @@ const CHONG = 0.85
  */
 const GIU_NUA_O = 0.5
 
+/**
+ * CHUỖI LIỀN BẬC — câu chạy scale, và nó THƯỜNG XUYÊN hơn tôi tưởng nhiều.
+ *
+ * Người dùng nghe ra tay phải "quá đơn sơ và thiếu câu chạy scale". Đúng, và
+ * nguyên nhân là một phép đo hỏng của tôi.
+ *
+ * Số đầu tiên tôi báo — 57% nhảy xa, 16% liền bậc — tính theo từng cặp nốt liền
+ * nhau TRONG MẢNG, nên nốt CHỒNG (cùng một chỗ gõ, thấp hơn vài bậc) bị đếm
+ * thành một bước. Tôi đã tìm ra lỗi ấy khi đo bộ sinh nhưng KHÔNG áp lại cho
+ * bản gốc. Đo lại đường trên cùng, bỏ các cặp cùng chỗ gõ:
+ *
+ *   liền bậc 39% · quãng ba 19% · quãng 4-5 9% · nhảy xa 33%
+ *
+ * Và trong mười ô có 5 CHUỖI liền bậc từ 3 nốt trở lên, dài [3, 3, 4, 7, 3] —
+ * tức cứ hai ô lại có một câu chạy, và có chuỗi tới bảy nốt.
+ *
+ * Thử mỗi ô một lần (`CHUOI_MOI_O` = 1) chứ không phải nửa số ô: chuỗi nào dài
+ * hơn số cú gõ còn lại trong ô thì bị bỏ, nên tỉ lệ thử phải cao hơn tỉ lệ
+ * thành. Để 0,5 thì đo ra 2,5 chuỗi mỗi đoạn thay vì 5.
+ *
+ * Độ dài nghiêng về 3-4: bản gốc ra [3, 3, 4, 7, 3] — bốn trên năm chuỗi là
+ * ngắn, chuỗi bảy nốt là ngoại lệ. Rút thăm đều 3-7 thì chuỗi dài hay không
+ * vừa ô rồi bị bỏ, và tổng số chuỗi tụt.
+ */
+const CHUOI_MOI_O = 1
+const CHUOI_NGAN = 3
+const CHUOI_DAI = 7
+
 /** Khe giữa hai tay: trung vị 24 nửa cung, hẹp nhất 9. */
 const KHE_VUA = 24
 const KHE_HEP = 9
@@ -164,6 +192,13 @@ export interface RaiLinhNhiOptions {
   beatsPerChord: number
   /** Độ dài một ô nhịp, để biết đâu là phách 1 và đâu là nửa sau ô. */
   barBeats?: number
+  /**
+   * Gam để chạy chuỗi liền bậc.
+   *
+   * Bỏ trống thì chỉ dùng nốt hợp âm, và lúc ấy không chạy chuỗi được — nốt hợp
+   * âm cách nhau quãng ba, đi liền bậc trên chúng là bất khả.
+   */
+  scale?: readonly PitchClass[]
   range: { low: number; high: number }
   /** Lượt chơi — đổi đường đi mà không đổi luật. */
   take?: number
@@ -322,6 +357,43 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     luật khoá hai tay ở trên vẫn nguyên — kể cả luật phách 1 luôn có nốt, vì
     nốt được giữ chính là nốt phách 1.
   */
+  /*
+    CHUỖI LIỀN BẬC. Làm trước phép giữ nửa ô, vì chuỗi cần chuỗi nốt liền nhau
+    còn nguyên; giữ nốt thì chỉ đổi trường độ nên hai việc không đụng nhau.
+
+    Chọn một chỗ mở chuỗi trong ô rồi kéo 3-7 nốt liền bậc trên gam. Đi lên hay
+    xuống rút thăm — bản gốc có cả hai.
+  */
+  const gam = options.scale
+  if (gam && gam.length >= 5) {
+    const thang: MidiNote[] = []
+    for (let note = range.low; note <= range.high; note += 1) {
+      if (gam.includes(lop(note))) thang.push(note as MidiNote)
+    }
+    const soO = Math.ceil((chords.length * beatsPerChord) / barBeats)
+    for (let o = 0; o < soO; o += 1) {
+      if (hash(take * 83 + o * 19) >= CHUOI_MOI_O) continue
+      const trong = out
+        .filter((e) => e.startBeat >= o * barBeats && e.startBeat < (o + 1) * barBeats)
+        .sort((a, b) => a.startBeat - b.startBeat)
+      // Nghiêng về chuỗi ngắn: bình phương phép rút thăm dồn kết quả về đầu dãy.
+      const thuoc = hash(take * 89 + o * 7) ** 2
+      const dai = CHUOI_NGAN + Math.floor(thuoc * (CHUOI_DAI - CHUOI_NGAN + 1))
+      if (trong.length < dai) continue
+      const tu = Math.floor(hash(take * 97 + o * 11) * (trong.length - dai + 1))
+      const len = hash(take * 101 + o * 3) < 0.5 ? 1 : -1
+
+      let bac = 0
+      for (let at = 0; at < thang.length; at += 1) {
+        if (Math.abs(thang[at]! - trong[tu]!.notes[0]!) < Math.abs(thang[bac]! - trong[tu]!.notes[0]!)) bac = at
+      }
+      for (let at = 0; at < dai; at += 1) {
+        const buoc = Math.max(0, Math.min(thang.length - 1, bac + len * at))
+        trong[tu + at]!.notes = [thang[buoc]!]
+      }
+    }
+  }
+
   const tong = chords.length * beatsPerChord
   const nuaO = barBeats / 2
   for (let o = 0; o * barBeats < tong - 1e-6; o += 1) {
