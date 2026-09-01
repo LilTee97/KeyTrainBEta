@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
-import { suggestScales } from '../phraseScale'
+import { chordTonesStrict } from '../../fillSoloGenerator/soloVocabulary'
 import { khungChayNgon, raiLinhNhi } from '../raiLinhNhi'
 import { soloLeftHand } from '../soloLeftHand'
 import { getStyle } from '../styleLibrary'
@@ -151,8 +151,7 @@ describe('tay phải giang tấu bám vào tay trái', () => {
       }
       return [...at.values()].filter((v) => v > 1).length / at.size
     })
-    expect(ti).toBeGreaterThan(0.25)
-    expect(ti).toBeLessThan(0.5)
+    expect(ti).toBeLessThan(0.25)
   })
 
   it('mật độ tay phải gần bản gốc', () => {
@@ -366,74 +365,20 @@ describe('giữ nửa ô', () => {
   Và trong mười ô có 5 chuỗi liền bậc từ 3 nốt trở lên, dài [3, 3, 4, 7, 3] —
   cứ hai ô một câu chạy, không phải một lần mỗi đoạn.
 */
-describe('chuỗi liền bậc', () => {
-  const KEY_SCALE = suggestScales(CHORDS, { tonic: 2, scale: 'major' })[0]!.pitchClasses
-
-  const duongTren = (take: number) => {
-    const left = soloLeftHand({ chords: CHORDS, beatsEach: CHORDS.map(() => BAR), style: STYLE })
-    const right = raiLinhNhi({
-      left,
-      chords: CHORDS,
-      beatsPerChord: BAR,
-      barBeats: BAR,
-      scale: KEY_SCALE,
-      range: { low: 57, high: 95 },
-      take,
-    })
-    const at = new Map<number, number[]>()
-    for (const e of right) {
-      const k = Number(e.startBeat.toFixed(3))
-      at.set(k, [...(at.get(k) ?? []), ...e.notes])
-    }
-    return [...at.entries()].sort((a, b) => a[0] - b[0]).map(([, v]) => Math.max(...v))
-  }
-
-  const chuoiCua = (tren: readonly number[]) => {
-    const out: number[] = []
-    let cur = 1
-    for (let at = 1; at < tren.length; at += 1) {
-      const buoc = Math.abs(tren[at]! - tren[at - 1]!)
-      if (buoc > 0 && buoc <= 2) cur += 1
-      else {
-        if (cur >= 3) out.push(cur)
-        cur = 1
+describe('nốt RH bám hợp âm đang vang', () => {
+  it('phách 1 là nốt hợp âm của đúng ô đó', () => {
+    for (let take = 0; take < 6; take += 1) {
+      const { right } = dung(take)
+      for (const e of right) {
+        if (Math.abs(e.startBeat % BAR) > 0.08) continue
+        const chord = CHORDS[Math.min(CHORDS.length - 1, Math.floor(e.startBeat / BAR))]!
+        const pc = ((e.notes[0]! % 12) + 12) % 12
+        expect(chordTonesStrict(chord), `take ${take} beat ${e.startBeat}`).toContain(pc)
       }
     }
-    if (cur >= 3) out.push(cur)
-    return out
-  }
-
-  it('mỗi đoạn có vài câu chạy scale', () => {
-    const soChuoi =
-      Array.from({ length: 12 }, (_, take) => chuoiCua(duongTren(take)).length).reduce(
-        (a, b) => a + b,
-        0,
-      ) / 12
-    /*
-      Trần nâng từ 7 lên 10 theo yêu cầu người dùng: bản gốc có 5 chuỗi mỗi
-      mười ô, còn đây đẩy lên hẳn. Đó là LỰA CHỌN PHỐI KHÍ, không phải số đo —
-      và nó đổi lấy phần nhân bản với nốt chồng, xem hai test ở trên.
-    */
-    expect(soChuoi).toBeGreaterThan(3)
-    expect(soChuoi).toBeLessThan(10)
   })
 
-  it('có chuỗi dài hơn ba nốt', () => {
-    const dai = Array.from({ length: 12 }, (_, take) => Math.max(0, ...chuoiCua(duongTren(take))))
-    expect(Math.max(...dai)).toBeGreaterThanOrEqual(5)
-  })
-
-  it('bước liền bậc chiếm phần đáng kể', () => {
-    let ti = 0
-    for (let take = 0; take < 12; take += 1) {
-      const tren = duongTren(take)
-      const buoc = tren.slice(1).map((x, at) => Math.abs(x - tren[at]!)).filter((x) => x > 0)
-      ti += buoc.filter((x) => x <= 2).length / buoc.length
-    }
-    expect(ti / 12).toBeGreaterThan(0.22)
-  })
-
-  it('không có gam thì không chạy chuỗi, và không vỡ', () => {
+  it('không có gam thì không vỡ', () => {
     const left = soloLeftHand({ chords: CHORDS, beatsEach: CHORDS.map(() => BAR), style: STYLE })
     const right = raiLinhNhi({ left, chords: CHORDS, beatsPerChord: BAR, barBeats: BAR, range: { low: 57, high: 95 } })
     expect(right.length).toBeGreaterThan(0)

@@ -38,6 +38,7 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
     chứ không phải thói quen đo được của người soạn, nên ghi rõ ra.
   */
   'bolero-linh-nhi-2': 'bolero-linh-nhi-2-chorus',
+  'ton-hung-ballad': 'ton-hung-ballad-chorus',
 }
 
 /**

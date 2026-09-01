@@ -374,6 +374,38 @@ export function stableToneOf(chord: ParsedChord): PitchClass {
   return ((chord.root + preferred) % 12) as PitchClass
 }
 
+export type StrongBeatStyle = 'ca-phao' | 'linh-nhi' | 'ton-hung'
+
+/** Nốt đích phách mạnh — ao riêng từng thầy (đo 2 bài). */
+export function strongBeatPcs(
+  chord: ParsedChord,
+  style: StrongBeatStyle = 'ca-phao',
+): PitchClass[] {
+  const fromRoot = (pc: PitchClass) => (pc - chord.root + 12) % 12
+  const rankOf = (pc: PitchClass): number => {
+    const d = fromRoot(pc)
+    if (style === 'linh-nhi') {
+      if (d === 3 || d === 4) return 0
+      if (d === 0) return 1
+      if (d === 7) return 2
+      return 9
+    }
+    if (style === 'ton-hung') {
+      if (d === 0) return 0
+      if (d === 3 || d === 4) return 1
+      if (d === 7) return 2
+      if (d === 10 || d === 11) return 3
+      return 9
+    }
+    if (d === 2 || d === 1 || d === 5 || d === 9 || d === 8 || d === 6) return 0
+    if (d === 10 || d === 11) return 1
+    if (d === 3 || d === 4) return 2
+    return 3
+  }
+  const pool = style === 'linh-nhi' ? chordTonesStrict(chord) : chordMaterial(chord)
+  return pool.filter((pc) => rankOf(pc) < 9).sort((a, b) => rankOf(a) - rankOf(b))
+}
+
 /** Giữ một vị trí nằm trong bậc thang. */
 const clampStep = (ladder: readonly MidiNote[], step: number) =>
   Math.max(0, Math.min(ladder.length - 1, step))

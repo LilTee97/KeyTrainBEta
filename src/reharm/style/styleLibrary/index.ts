@@ -1,6 +1,7 @@
 import type { StylePattern } from '../types'
 import { ONEMOTION_STYLES, styleFamilies } from './onemotion'
 import { HAI_STYLES } from './haiStyles'
+import { TON_HUNG_STYLES } from './tonHungStyles'
 import testerStylesJson from './testerStyles.json'
 
 const DELETED_KEY = 'keytrain-deleted-styles'
@@ -413,6 +414,7 @@ const TESTER_STYLES = testerStylesJson as StylePattern[]
 export const VERIFIED_STYLES: readonly StylePattern[] = [
   ...ONEMOTION_STYLES,
   ...HAI_STYLES,
+  ...TON_HUNG_STYLES,
   ...BOLERO_STYLES,
   ...TESTER_STYLES,
 ]

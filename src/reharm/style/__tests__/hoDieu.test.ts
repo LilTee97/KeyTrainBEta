@@ -75,6 +75,9 @@ describe('họ điệu gom các kiểu lại', () => {
     }
     expect(kieuTrongHo('bolero').map((s) => s.id)).toContain('bolero-linh-nhi-2')
     expect(kieuTrongHo('bolero').map((s) => s.id)).not.toContain('bolero-linh-nhi-2-chorus')
+    expect(kieuTrongHo('ballad').map((s) => s.id)).toContain('ton-hung-ballad')
+    expect(kieuTrongHo('ballad').map((s) => s.id)).not.toContain('ton-hung-ballad-giang')
+    expect(kieuTrongHo('ballad').map((s) => s.id)).not.toContain('ton-hung-tinh-em-giang')
   })
 })
 

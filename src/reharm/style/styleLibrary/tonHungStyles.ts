@@ -1,0 +1,93 @@
+import type { StylePattern } from '../types'
+import { cellFromArps } from './arpToCell'
+
+/**
+ * Ballad rải Tôn Hùng — phiên/điệp Chiếc Lá Mùa Đông. Không trộn Tình Em.
+ * Sheet: quarter=120. Fill Licky vẫn theo phách, không đụng.
+ */
+export const TON_HUNG_STYLES: readonly StylePattern[] = [
+  {
+    id: 'ton-hung-ballad',
+    name: 'Ballad rải (Tôn Hùng)',
+    family: 'ton-hung-ballad',
+    familyName: 'Ballad rải (Tôn Hùng)',
+    variant: 1,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 120,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['PianoBrain: acc-ballad-ton-hung'],
+    cell: cellFromArps(
+      'x . . .',
+      '1r 1rf 1r+ . . . . .',
+      1,
+      0.5,
+      4,
+    ),
+    note: 'Phiên Chiếc Lá @120: LH gốc–5–8 phách 1 · 1& · 2 rồi nghỉ. RH phách 1. Điệp tự dày. Không trộn Tình Em.',
+  },
+  {
+    id: 'ton-hung-ballad-chorus',
+    name: 'Ballad rải (Tôn Hùng) — điệp',
+    family: 'ton-hung-ballad',
+    familyName: 'Ballad rải (Tôn Hùng)',
+    variant: 3,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 120,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['PianoBrain: acc-ballad-ton-hung'],
+    cell: cellFromArps(
+      'x . . .',
+      '1r 1rf 1r+ 1rf . 1r 1rf .',
+      1,
+      0.5,
+      4,
+    ),
+    note: 'Điệp Chiếc Lá: LH rải xuyên ô (0 · 0.5 · 1 · 1.5 · 2.5 · 3).',
+  },
+  {
+    id: 'ton-hung-ballad-giang',
+    name: 'Ballad rải (Tôn Hùng) — giang tấu',
+    family: 'ton-hung-ballad',
+    familyName: 'Ballad rải (Tôn Hùng)',
+    variant: 2,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 120,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['PianoBrain: acc-ballad-ton-hung'],
+    cell: cellFromArps(
+      'x . x . x . x .',
+      '1r 5 1r+ 5 1r 5 1r+ 5',
+      0.5,
+      0.5,
+      4,
+    ),
+    note: 'Giang tấu Chiếc Lá: LH dày 8th. Không dùng cho hát.',
+  },
+  {
+    id: 'ton-hung-tinh-em-giang',
+    name: 'Ballad rải (Tôn Hùng) — giang Tình Em',
+    family: 'ton-hung-ballad',
+    familyName: 'Ballad rải (Tôn Hùng)',
+    variant: 4,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 120,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['PianoBrain: acc-ballad-ton-hung'],
+    cell: cellFromArps(
+      'x . . .',
+      '1r 5 1r+ 5 1r . . . 1r 5 1r+ 5 1r . . .',
+      1,
+      0.25,
+      4,
+    ),
+    note: 'Giang Tình Em: LH hai cụm móc 16. Không trộn vào phiên Chiếc Lá.',
+  },
+]

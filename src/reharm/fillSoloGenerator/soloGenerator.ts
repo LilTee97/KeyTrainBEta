@@ -29,6 +29,8 @@ import {
   licksFor,
   nearestStep,
   resolvesUpFourth,
+  strongBeatPcs,
+  type StrongBeatStyle,
 } from './soloVocabulary'
 
 /**
@@ -253,31 +255,31 @@ export interface SoloOptions {
    * Bỏ trống là móc đơn đều — đúng bản cũ, và đúng cho ballad. Xem `soloFeel.ts`.
    */
   feel?: SoloFeel
+  /**
+   * Giai điệu: nốt đích và mẫu câu.
+   *
+    * `color` — Cà Pháo: mở bằng cú quét ngũ cung.
+    * `stable` — Tôn Hùng / Linh Nhi: không quét.
+   */
+  melody?: 'color' | 'stable'
+  /** Ao nốt phách mạnh. Bỏ trống = Cà Pháo. */
+  teacher?: StrongBeatStyle | null
+  /** Tôn Hùng: dạo thưa, giang dày. */
+  teacherKhung?: 'intro' | 'interlude'
+  /** Tôn Hùng giang: Chiếc Lá thưa, Tình Em dày. */
+  tonHungGiang?: 'chiec-la' | 'tinh-em' | 'hoa-tron'
 }
 
-/**
- * Xếp hạng nốt của hợp âm theo mức đáng làm nốt đích.
- *
- * Nốt màu xếp trên nốt gốc và quãng năm: nốt gốc thì phần đệm đã vang rồi, còn
- * quãng năm gần như không nói lên điều gì. Bậc ba và bậc bảy xếp giữa vì chúng
- * quyết định tính chất hợp âm.
- */
-function targetPriority(interval: number): number {
-  const folded = interval % 12
-  if (folded === 0) return 3
-  if (folded === 7) return 4
-  if (folded === 3 || folded === 4) return 1
-  if (folded === 10 || folded === 11) return 1
-  // Nốt màu: bậc chín, mười một, mười ba
-  return 0
-}
-
-/** Chọn các lớp cao độ đáng làm nốt đích cho một hợp âm. */
-function targetPitchClasses(chord: ParsedChord, count: number): PitchClass[] {
-  return [...chord.quality.intervals]
-    .sort((a, b) => targetPriority(a) - targetPriority(b))
-    .slice(0, Math.max(1, count))
-    .map((interval) => (chord.root + interval) % 12)
+function targetPitchClasses(
+  chord: ParsedChord,
+  count: number,
+  style: StrongBeatStyle = 'ton-hung',
+): PitchClass[] {
+  const strong = strongBeatPcs(chord, style)
+  const rest = [...chord.quality.intervals]
+    .map((interval) => ((chord.root + interval) % 12) as PitchClass)
+    .filter((pc) => !strong.includes(pc))
+  return [...strong, ...rest].slice(0, Math.max(1, count))
 }
 
 /**
@@ -1058,7 +1060,12 @@ export function generateSolo(
     pulse,
     pulseBar,
     feel = 'straight',
+    melody = 'color',
+    teacher = null,
+    teacherKhung,
+    tonHungGiang = 'hoa-tron',
   } = options
+  const beatStyle: StrongBeatStyle = teacher ?? 'ca-phao'
 
   const soloLow = range?.low ?? SOLO_LOW
   const soloHigh = range?.high ?? SOLO_HIGH
@@ -1118,13 +1125,21 @@ export function generateSolo(
   */
   const bossaPack = interlude && feel === 'bossa'
   const notesPerBeat =
-    (density === 'sparse'
-      ? 0.8
-      : density === 'dense'
-        ? interlude
-          ? 1.5
-          : 2.2
-        : 1.4) + (bossaPack ? 0.6 : 0)
+    beatStyle === 'ton-hung'
+      ? teacherKhung === 'interlude'
+        ? tonHungGiang === 'tinh-em'
+          ? 2.4
+          : tonHungGiang === 'chiec-la'
+            ? 1.1
+            : 1.5
+        : 0.55
+      : (density === 'sparse'
+          ? 0.8
+          : density === 'dense'
+            ? interlude
+              ? 1.5
+              : 2.2
+            : 1.4) + (bossaPack ? 0.6 : 0)
 
   /*
     Câu solo chạy trên **vòng hợp âm chính**, bỏ qua hợp âm lướt.
@@ -1441,6 +1456,8 @@ export function generateSolo(
       take: round,
       resolving: resolvesUpFourth(chord, spans[index + 1]?.chord ?? null),
       interlude,
+      melody,
+      teacher: beatStyle,
     })
 
     const context = {
@@ -2204,6 +2221,8 @@ interface LickChoice {
   take: number
   /** Hợp âm sau nằm quãng bốn đi lên — chỗ V về I. */
   resolving: boolean
+  melody?: 'color' | 'stable'
+  teacher?: StrongBeatStyle | null
 }
 
 /**
@@ -2270,6 +2289,16 @@ function chooseLick(choice: LickChoice): Lick {
   const mix = (salt: number) => Math.imul(take + 1 + salt + phrase * 17, 2654435761) >>> 0
   const rotation = mix(3)
   const laps = Math.floor(rotation / Math.max(1, openers.length))
+
+  if (choice.teacher === 'linh-nhi' || choice.teacher === 'ton-hung' || choice.melody === 'stable') {
+    if (isPhraseEnd) {
+      return fit(endings.length > 0 ? endings[laps % endings.length] : fallbackLick())
+    }
+    if (choice.teacher === 'ton-hung') {
+      return fit(openers.find((lick) => lick.id === 'arpeggio') ?? fallbackLick())
+    }
+    return fit(openers.find((lick) => lick.id === 'chord-tone') ?? fallbackLick())
+  }
 
   /*
     Kết câu ở nốt ổn định — mục 4: *"tránh dừng ở nốt lơ lửng khiến câu nhạc

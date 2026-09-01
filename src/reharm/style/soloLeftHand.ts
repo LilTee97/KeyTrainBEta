@@ -75,6 +75,8 @@ export interface SoloLeftHandOptions {
   style: StylePattern
   /** Trần tay trái. Bỏ trống là hai quãng tám kể từ sàn. */
   top?: number
+  /** Chỉ giữ cú gõ phách 1 — dạo/kết Chiếc Lá. */
+  chiPhach1?: boolean
 }
 
 export interface Strike {
@@ -254,7 +256,7 @@ function upAndBack(steps: number, count: number): number[] {
 }
 
 export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
-  const { chords, beatsEach, style } = options
+  const { chords, beatsEach, style, chiPhach1 } = options
   /*
     CHỈ phần tay trái của mẫu đệm, không gộp cả phần tay phải.
 
@@ -324,7 +326,11 @@ export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
     cursor += beats
   })
 
-  return events
+  if (!chiPhach1) return events
+  return events.filter((event) => {
+    const o = ((event.startBeat % bar) + bar) % bar
+    return o < 0.12
+  })
 }
 
 /** Từ ngần này nốt mỗi phách trở lên là tay phải đang chạy dày (móc kép). */

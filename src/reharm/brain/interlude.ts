@@ -1,7 +1,6 @@
 import { brain } from './index'
 import { degreeOf } from '../reharmEngine/degreeAnalysis'
 import { pullStrength } from '../style/interludeLoop'
-import { isPlainInterludeQuality } from '../style/interludeChords'
 import type { ParsedChord } from '../types'
 import type { KnowledgeItem } from './index'
 import type { ScaleType } from '../../shared/musicTheory/scales'
@@ -127,25 +126,11 @@ export interface InterludeRequest {
   size?: number
 }
 
-/**
- * Kho có cho phép chọn vòng giang tấu bằng hợp âm màu không.
- *
- * Item `rule-interlude-plain-harmony` nói không: giang tấu lấy vòng gốc rút về
- * màu cơ bản. Não tôn luật ấy — gặp vòng còn nguyên add9, 13 hay hợp âm giảm
- * thì im, để bên gọi rút gọn trước rồi hỏi lại, chứ không tự chọn bừa.
- */
-const PLAIN_RULE = 'rule-interlude-plain-harmony'
-
 export function brainInterludeWindow(
   request: InterludeRequest,
 ): InterludeChoice | null {
   const { chords, key, nextChord, size = 4 } = request
   if (!key || chords.length < size) return null
-
-  const rule = brain().byId.get(PLAIN_RULE)
-  if (rule && chords.some((chord) => !isPlainInterludeQuality(chord.quality.id))) {
-    return null
-  }
 
   /*
     Giọng thứ quy về giọng trưởng song song trước khi tra bậc — cùng lý do như

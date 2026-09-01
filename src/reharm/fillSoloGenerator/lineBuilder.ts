@@ -1,4 +1,9 @@
-import { chordTonesStrict, ladderOf } from './soloVocabulary'
+import {
+  chordTonesStrict,
+  ladderOf,
+  strongBeatPcs,
+  type StrongBeatStyle,
+} from './soloVocabulary'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { TimelineEvent } from '../style/types'
@@ -78,6 +83,7 @@ export interface LineOptions {
    * trải hơn hai quãng tám. Đây là rải hợp âm mở rộng, không phải câu chạy.
    */
   moRong?: boolean
+  teacher?: StrongBeatStyle | null
 }
 
 /**
@@ -406,6 +412,11 @@ export function buildLine(options: LineOptions): LineNote[] {
     const chord = chords[Math.min(chords.length - 1, Math.floor(beat / beatsPerChord))]!
     const tones = new Set(chordTonesStrict(chord))
     const inChord = ladder.filter((note) => tones.has((((note % 12) + 12) % 12) as PitchClass))
+    const beatStyle = options.teacher
+    const strong = new Set(strongBeatPcs(chord, beatStyle ?? 'ca-phao'))
+    const preferred = inChord.filter((note) =>
+      strong.has((((note % 12) + 12) % 12) as PitchClass),
+    )
 
     /*
       Hình vòm dựng theo TỪNG CÂU, không trải cả đoạn.
@@ -431,8 +442,24 @@ export function buildLine(options: LineOptions): LineNote[] {
       ngay sau nó giải quyết được.
     */
     const outside = ladder.filter((note) => !inChord.includes(note))
-    const wantsColour = hash(take * 17 + order * 5) < 0.45 && outside.length > 0
-    const pool = wantsColour ? outside : inChord.length > 0 ? inChord : ladder
+    const colourChance =
+      beatStyle === 'linh-nhi' ? 0.12 : beatStyle === 'ton-hung' ? 0.18 : 0.45
+    const wantsColour = hash(take * 17 + order * 5) < colourChance && outside.length > 0
+    let pool = wantsColour
+      ? outside
+      : preferred.length > 0
+        ? preferred
+        : inChord.length > 0
+          ? inChord
+          : ladder
+    if (beatStyle === 'linh-nhi' && previousAnchor !== null && hash(take * 11 + order) < 0.35) {
+      const same = pool.filter((note) => note % 12 === previousAnchor! % 12)
+      if (same.length > 0) pool = same
+    }
+    if (beatStyle === 'ca-phao' && previousAnchor !== null && hash(take * 13 + order) < 0.22) {
+      const held = pool.filter((note) => note === previousAnchor)
+      if (held.length > 0) pool = held
+    }
 
     /*
       Cọc theo vòm, NHƯNG không nhảy cóc khỏi cọc trước.
@@ -453,7 +480,7 @@ export function buildLine(options: LineOptions): LineNote[] {
         của đoạn có lời; giữ nó ở đây thì một phần ba số bước bị ghim hẹp, và
         phân bố không bao giờ với tới 57%.
       */
-      const nguong = options.moRong ? 12 : MAX_ANCHOR_LEAP
+      const nguong = options.moRong || beatStyle === 'ton-hung' ? 12 : MAX_ANCHOR_LEAP
       const leap = previousAnchor === null ? 0 : Math.abs(note - previousAnchor)
       const cost = Math.abs(note - want) + 1.6 * Math.max(0, leap - nguong)
       if (cost < bestCost) {

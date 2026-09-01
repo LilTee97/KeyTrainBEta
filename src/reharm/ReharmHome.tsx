@@ -133,8 +133,9 @@ import { teacherBadge } from './brain/badge'
 import { scaleForChord, scaleGaps, scaleLabelForChord } from './brain/chordScale'
 import { soloFeelFor } from './fillSoloGenerator/soloFeel'
 import { BALLAD_SOLO_RANGE, isBalladStyle } from './style/balladFamily'
-import { plainForInterlude } from './style/interludeChords'
+
 import { cueChord, phraseChords } from './style/phraseChords'
+import { interludeChordsForTeacher } from './style/teacherSoloChords'
 import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import {
@@ -144,13 +145,20 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
+import { kieuChoSolo, thienVeCuaHo } from './style/hoDieu'
 import {
-  kieuChoSolo,
-  raiMoRongOGiangTau,
-  raiTheoTayTrai,
-  soloTuDoCaPhao,
-  thienVeCuaHo,
-} from './style/hoDieu'
+  melodyKind,
+  noteSourceForTeacher,
+  SOLO_THAY_NUT,
+  soloTeacherOf,
+  teacherEndsWithRun,
+  LINH_NHI_RAI,
+  TON_HUNG_RAI,
+  TON_HUNG_GIANG,
+  TON_HUNG_GIANG_TINH,
+  type SoloTeacher,
+  type TonHungGiang,
+} from './fillSoloGenerator/soloTeacher'
 import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
@@ -591,6 +599,10 @@ export function ReharmHome() {
   /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
   const [beatsPerChord, setBeatsPerChord] = useState(4)
   const [styleId, setStyleId] = useState('pop-1')
+  /** Thầy cho dạo / giang tấu / kết. `null` = theo điệu đệm. */
+  const [soloThay, setSoloThay] = useState<SoloTeacher>(null)
+  const [chiecLa, setChiecLa] = useState(false)
+  const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const [susDominant, setSusDominant] = useState(true)
@@ -706,15 +718,7 @@ export function ReharmHome() {
    * gam nằm ở `style/phraseScale.ts`, chấm điểm theo chính vòng hợp âm của bài.
    */
   const [phraseScaleId, setPhraseScaleId] = useState<string | null>(null)
-  /**
-   * Rút hợp âm đoạn không lời về chất cơ bản trước khi dựng câu.
-   *
-   * Bật sẵn: giang tấu vốn đã rút gọn từ trước, và đoạn dạo giờ mượn hợp âm của
-   * bài nên thừa hưởng đúng vấn đề ấy — chồng `add9`, `9sus4`, `13` lên nền solo
-   * thì nốt ngoài giọng nhiều tới mức câu chạy nghe lạc. Tắt được, vì có bài
-   * người ta muốn giữ nguyên bảng màu.
-   */
-  const [plainPhrase, setPlainPhrase] = useState(true)
+
   /** Giang tấu mượn mấy hợp âm của bài. Xem `INTERLUDE_LENGTHS`. */
   const [interludeChords, setInterludeChords] = useState<number>(
     DEFAULT_INTERLUDE_CHORDS,
@@ -866,10 +870,21 @@ export function ReharmHome() {
     còn câu solo một kiểu khác. Người dùng chưa chọn thì `kieuChoSolo` lấy kiểu
     ưu tiên của họ; với Bolero đó là bản rải của Linh Nhi.
 
-    Luật cũ còn nguyên: `kieuChoSolo` chỉ trả về kiểu TRONG CÙNG HỌ, nên app
-    không bao giờ tự bước sang họ khác sau lưng người dùng. Xem `hoDieu.ts`.
-  */
-  const styleSolo = getStyle(kieuChoSolo(style.id)) ?? style
+    Theo đệm / Linh Nhi: `kieuChoSolo` — bolero phiên giữ điệu đang chọn,
+    dạo/giang/kết hai tay rải Linh Nhi.
+    Tôn Hùng: dạo/giang/kết hai tay rải ballad Chiếc Lá.
+   */
+  const styleSolo =
+    getStyle(
+      soloThay === 'linh-nhi'
+        ? LINH_NHI_RAI
+        : soloThay === 'ton-hung'
+          ? TON_HUNG_RAI
+          : soloThay == null
+            ? kieuChoSolo(style.id)
+            : style.id,
+    ) ?? style
+  const thaySolo: SoloTeacher = soloThay ?? soloTeacherOf(styleSolo.id)
 
   /**
    * Số phách mỗi hợp âm chiếm.
@@ -1335,8 +1350,8 @@ export function ReharmHome() {
    */
   const builtLine = useCallback(
     (list: readonly ParsedChord[], spin: number, giangTau = false) => {
-      if (!lineSolo || !phraseScale) return null
-      const anchors = accentBeats(styleSolo)
+      if (thaySolo || !lineSolo || !phraseScale) return null
+      const anchors = accentBeats(style)
       if (anchors.length === 0) return null
       const line = buildLine({
         chords: list,
@@ -1352,11 +1367,13 @@ export function ReharmHome() {
           Dạo đầu và kết bài chưa ai đo nên chưa mở — mở bừa thì thành suy rộng
           một số đo mười ô ra cả bài.
         */
-        moRong: giangTau && raiMoRongOGiangTau(styleSolo.id),
+        moRong: giangTau && thaySolo === 'linh-nhi',
+        teacher: thaySolo,
+        // Rải mở rộng: số đo giang tấu Linh Nhi — 57% nhảy, không chạy móc kép.
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
-    [lineSolo, phraseScale, styleSolo, chordBeats, phrasePulseBar, ballad, phraseSpin],
+    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin],
   )
 
 
@@ -1392,9 +1409,8 @@ export function ReharmHome() {
   /**
    * Hợp âm của riêng PHIÊN KHÚC và riêng ĐIỆP KHÚC.
    *
-   * Người dùng đặt luật: dạo đầu mượn hợp âm phiên khúc, kết bài mượn của điệp
-   * khúc. Trước đây cả hai mượn từ CẢ BÀI nên ra gần giống nhau, và không đoạn
-   * nào báo trước được đoạn nó dẫn vào.
+   * Dạo đầu chọn 4 hợp âm từ phiên hút vào đầu phiên — không chép hết phiên.
+   * Kết bài mượn điệp: một ô dẫn rồi đậu chủ.
    *
    * Đọc thẳng `sectionChordRanges`, KHÔNG qua `songSources`: hàm ấy gộp mọi
    * đoạn không phải giang tấu thành `verse`, nên nếu lấy từ đó thì danh sách
@@ -1419,6 +1435,20 @@ export function ReharmHome() {
     },
     [baseSheet, withPassing, chordBeats, mainSongChords],
   )
+
+  const hopAmDaoGoc = useCallback(() => {
+    if (!baseSheet) return [] as ParsedChord[]
+    const spans = mainChordSpans(withPassing, chordBeats)
+    const rieng: ParsedChord[] = []
+    for (const range of sectionChordRanges(baseSheet)) {
+      if (range.kind !== 'intro') continue
+      for (let at = range.from; at <= range.to; at += 1) {
+        const span = spans[at]
+        if (span?.chord && !span.chord.passing) rieng.push(span.chord)
+      }
+    }
+    return rieng
+  }, [baseSheet, withPassing, chordBeats])
 
   /**
    * VÒNG HOÀ THANH của cả bài và của từng đoạn.
@@ -1456,19 +1486,20 @@ export function ReharmHome() {
       ...phraseChords('intro', reharm.key, {
         songChords: hopAmChoDoan('intro'),
         vongPhienKhuc,
-        plain: plainPhrase,
+        thay: thaySolo,
+        songIntro: hopAmDaoGoc(),
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
     ]
-  }, [reharm.key, hopAmChoDoan, vongPhienKhuc, plainPhrase, phraseOpening])
+  }, [reharm.key, hopAmChoDoan, vongPhienKhuc, phraseOpening, thaySolo, hopAmDaoGoc])
 
   const outroSymbols = useMemo(
     () =>
       phraseChords('outro', reharm.key, {
         songChords: hopAmChoDoan('outro'),
-        plain: plainPhrase,
+        thay: thaySolo,
       }).map((chord) => chord.symbol),
-    [reharm.key, hopAmChoDoan, plainPhrase],
+    [reharm.key, hopAmChoDoan, thaySolo],
   )
 
   const sheet = useMemo(() => {
@@ -1648,17 +1679,9 @@ export function ReharmHome() {
       const end = verse.startBeat + verse.lengthBeats
 
       /*
-        Giang tấu lấy **vòng hợp âm gốc**, không lấy bản đã tô màu.
-
-        Vòng đang vang là `withPassing` — đã qua tái hòa âm của anh Khá nên đầy
-        add9, 9, dim7. Màu ấy đúng chỗ khi có người hát: giọng hát là đường
-        giai điệu, hợp âm dày lên thì nghe đầy. Nhưng giang tấu không có ai hát;
-        cây đàn tự chạy câu, và nốt màu chồng lên nền solo làm câu chạy nghe
-        lạc.
-
-        Nên chỗ này lần ngược về `sequence.chords` theo số thứ tự hợp âm chính,
-        rồi rút nốt về tính chất cơ bản. Xem `style/interludeChords.ts` và item
-        `rule-interlude-plain-harmony` trong kho.
+        Giang tấu lấy vòng gốc của bài (`sequence.chords`), không lấy bản
+        `withPassing` đã tô màu Khá. Giữ nguyên chất (7, 9, dim…) — giai điệu
+        bám đúng hợp âm đang vang.
       */
       const chorus: { span: (typeof spans)[number]; main: number }[] = []
       let main = -1
@@ -1681,10 +1704,8 @@ export function ReharmHome() {
         bài người ta cố ý muốn giang tấu giữ nguyên bảng màu — nên nó thành một
         ô tick, chung với đoạn dạo, để ba đoạn không lời cùng theo một luật.
       */
-      const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord => {
-        const raw = sequence.chords[mainIndex] ?? fallback
-        return plainPhrase ? plainForInterlude(raw) : raw
-      }
+      const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord =>
+        sequence.chords[mainIndex] ?? fallback
       if (chorus.length === 0) return null
 
       /*
@@ -1698,18 +1719,45 @@ export function ReharmHome() {
         ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
         : undefined
       const loopChords = chorus.map((entry) => plainAt(entry.main, entry.span.chord))
-      const fromBrain = brainInterludeWindow({
-        chords: loopChords,
-        key: reharm.key,
-        nextChord: nextFirst?.chord,
-        size: interludeChords,
-      })
+      const theoThay =
+        reharm.key
+          ? interludeChordsForTeacher(
+              thaySolo,
+              reharm.key,
+              loopChords,
+              vongPhienKhuc,
+              nextFirst?.chord ?? null,
+              hopAmDaoGoc(),
+              tonHungGiang,
+            )
+          : []
+      const fromBrain = theoThay.length
+        ? null
+        : brainInterludeWindow({
+            chords: loopChords,
+            key: reharm.key,
+            nextChord: nextFirst?.chord,
+            size: interludeChords,
+          })
       const window = fromBrain ?? chooseChorusLoop(loopChords, interludeChords)
+      const origin = chorus[0]!.span
       const picked = (
-        window
-          ? chorus.slice(window.from, window.to + 1)
-          : chorus.slice(0, interludeChords)
-      ).map((entry) => ({ ...entry.span, chord: plainAt(entry.main, entry.span.chord) }))
+        theoThay.length > 0
+          ? theoThay.map((chord, i) => ({
+              ...origin,
+              start: origin.start + i * chordBeats,
+              beats: chordBeats,
+              chord,
+            }))
+          : (
+              window
+                ? chorus.slice(window.from, window.to + 1)
+                : chorus.slice(0, interludeChords)
+            ).map((entry) => ({
+              ...entry.span,
+              chord: plainAt(entry.main, entry.span.chord),
+            }))
+      )
       const first = picked[0]
       const last = picked[picked.length - 1]
       if (!first || !last) return null
@@ -1727,15 +1775,24 @@ export function ReharmHome() {
         : null
       /** Tay trái của một cửa sổ hợp âm — dùng lại ở cả phần đệm lẫn bộ rải. */
       const traiCua = (list: readonly ParsedChord[], beats: readonly number[]) => {
-        const trai = soloLeftHand({ chords: list, beatsEach: beats, style: styleSolo })
+        const trai = soloLeftHand({
+          chords: list,
+          beatsEach: beats,
+          style:
+            thaySolo === 'ton-hung'
+              ? (getStyle(
+                  tonHungGiang === 'tinh-em' ? TON_HUNG_GIANG_TINH : TON_HUNG_GIANG,
+                ) ?? styleSolo)
+              : styleSolo,
+        })
         /*
           Cà Pháo KHÔNG buông tay trái trong lúc tay phải chạy — đo ô 51 bản ký
           âm *Hồng Kông 1*: câu chạy chiếm từ offset 1,625 tới 3, mà tay trái
           vẫn gõ ở 2 và 3 xuyên qua nó. Ngược hẳn ô 71 của Linh Nhi, nơi tay
           trái im hẳn suốt câu chạy. Hai phong cách, hai luật.
         */
-        if (soloTuDoCaPhao(styleSolo.id)) return trai
-        if (!raiTheoTayTrai(styleSolo.id)) return trai
+        if (thaySolo === 'ca-phao') return trai
+        if (thaySolo !== 'linh-nhi') return trai
         /*
           BUÔNG TAY TRÁI trong lúc tay phải chạy ngón.
 
@@ -1858,22 +1915,22 @@ export function ReharmHome() {
             thế nào — và nó không phải lối bám tay trái của Linh Nhi. Các điệu
             bossa khác vẫn giữ lối bám ấy như người dùng đã yêu cầu.
           */
-          (soloTuDoCaPhao(styleSolo.id)
+          (thaySolo === 'ca-phao'
             ? caPhaoSolo({
                 chords: lastLoop ? lastLoopChords : windowChords,
                 beatsPerChord: chordBeats,
                 barBeats: phrasePulseBar,
                 range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
                 take: take + phraseSpin + playSpin.current,
-                ...(thienVeCuaHo(styleSolo.id)
-                  ? { thienVe: thienVeCuaHo(styleSolo.id)! }
+                ...(thienVeCuaHo(style.id)
+                  ? { thienVe: thienVeCuaHo(style.id)! }
                   : {}),
                 left: lastLoop
                   ? traiCua(headChords, head.map((span) => span.beats))
                   : traiCua(windowChords, picked.map((span) => span.beats)),
               })
             : null) ??
-          (raiTheoTayTrai(styleSolo.id)
+          (thaySolo === 'linh-nhi'
             ? raiLinhNhi({
                 left: lastLoop
                   ? traiCua(headChords, head.map((span) => span.beats))
@@ -1881,7 +1938,6 @@ export function ReharmHome() {
                 chords: lastLoop ? lastLoopChords : windowChords,
                 beatsPerChord: chordBeats,
                 barBeats: phrasePulseBar,
-                scale: phraseScale?.pitchClasses,
                 range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
                 take: take + phraseSpin + playSpin.current,
               })
@@ -1900,21 +1956,26 @@ export function ReharmHome() {
               density: interludeDensity(interludeBars),
               graceDensity,
               key: reharm.key,
-              noteSource: phraseNoteSource,
-              ...(phraseScale ? { singleScale: phraseScale.pitchClasses } : {}),
+              noteSource: thaySolo
+                ? noteSourceForTeacher(thaySolo)
+                : phraseNoteSource,
+              ...(!thaySolo && phraseScale
+                ? { singleScale: phraseScale.pitchClasses }
+                : {}),
               ...(phrasePulse.length > 0
                 ? { pulse: phrasePulse, pulseBar: phrasePulseBar }
                 : {}),
               chordsPerPhrase,
               take: take + phraseSpin + playSpin.current,
-              endWithRun: lastLoop === true,
-              // Đoạn giang tấu: nốt theo bậc ưu tiên riêng, không lấy màu Khá.
+              endWithRun:
+                lastLoop === true && teacherEndsWithRun(thaySolo),
               interlude: true,
-              // Chỉ có tác dụng khi người dùng chọn nguồn nốt "gam jazz của kho".
-              storeScale: storeScaleInKey,
-              // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
-              feel: soloFeelFor(styleId),
-              // Điệu ballad thì hạ trần câu solo cho khớp tay người đệm.
+              ...(!thaySolo ? { storeScale: storeScaleInKey } : {}),
+              feel: soloFeelFor(style.id),
+              melody: melodyKind(thaySolo),
+              teacher: thaySolo,
+              teacherKhung: 'interlude',
+              tonHungGiang,
               ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
             }),
           ),
@@ -1927,12 +1988,13 @@ export function ReharmHome() {
       songSources,
       dropRoot,
       style,
-      styleSolo,
+      thaySolo,
       soloDirection,
       graceDensity,
       reharm.key,
-      plainPhrase,
+
       interludeChords,
+      tonHungGiang,
       lineSolo,
       builtLine,
       phraseNoteSource,
@@ -1942,6 +2004,8 @@ export function ReharmHome() {
       soloNoteSource,
       chordsPerPhrase,
       phraseSpin,
+      vongPhienKhuc,
+      hopAmDaoGoc,
     ],
   )
 
@@ -2340,7 +2404,7 @@ export function ReharmHome() {
    * lên phía phải đàn, đúng chỗ tai người nghe chờ một cú đẩy trước khi vào.
    */
   const phraseSolo = useCallback(
-    (chords: readonly ParsedChord[], spin: number, endWithRun = true) =>
+    (chords: readonly ParsedChord[], spin: number, endWithRun = teacherEndsWithRun(thaySolo)) =>
       builtLine(chords, spin) ??
       soloToTimeline(
         generateSolo(chords, {
@@ -2349,8 +2413,10 @@ export function ReharmHome() {
           density: 'medium',
           graceDensity,
           key: reharm.key,
-          noteSource: phraseNoteSource,
-          ...(phraseScale ? { singleScale: phraseScale.pitchClasses } : {}),
+          noteSource: thaySolo ? noteSourceForTeacher(thaySolo) : phraseNoteSource,
+          ...(!thaySolo && phraseScale
+            ? { singleScale: phraseScale.pitchClasses }
+            : {}),
           ...(phrasePulse.length > 0
             ? { pulse: phrasePulse, pulseBar: phrasePulseBar }
             : {}),
@@ -2358,8 +2424,11 @@ export function ReharmHome() {
           take: spin + phraseSpin + playSpin.current,
           endWithRun,
           interlude: true,
-          storeScale: storeScaleInKey,
-          feel: soloFeelFor(styleId),
+          ...(!thaySolo ? { storeScale: storeScaleInKey } : {}),
+          feel: soloFeelFor(style.id),
+          melody: melodyKind(thaySolo),
+          teacher: thaySolo,
+          teacherKhung: 'intro',
           ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
         }),
       ),
@@ -2374,8 +2443,8 @@ export function ReharmHome() {
       phrasePulseBar,
       chordsPerPhrase,
       phraseSpin,
-      ballad,
-      styleId,
+      style,
+      thaySolo,
       builtLine,
     ],
   )
@@ -2457,7 +2526,7 @@ export function ReharmHome() {
       noteSource,
       jazzScales: storeScales,
       phraseScaleId,
-      plainPhrase,
+
       interludeChords,
       chordsPerPhrase,
     }),
@@ -2577,7 +2646,7 @@ export function ReharmHome() {
       khác: bài cũ mở ra vẫn nghe như bài cũ.
     */
     setPhraseScaleId(saved.phraseScaleId ?? null)
-    setPlainPhrase(saved.plainPhrase !== false)
+
     setInterludeChords(saved.interludeChords ?? DEFAULT_INTERLUDE_CHORDS)
     setLineSolo(saved.lineSolo === true)
     setChordsPerPhrase(saved.chordsPerPhrase)
@@ -2733,10 +2802,19 @@ export function ReharmHome() {
   )
 
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
-  const steps = useMemo(
-    () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
-    [arrangement, songSources],
-  )
+  const steps = useMemo(() => {
+    let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
+    if (!chiecLa) return base
+    base = base.filter((step) => {
+      if (step.type !== 'section' || !songSources) return true
+      return !/dạo|intro/i.test(songSources[step.source]?.name ?? '')
+    })
+    base = base.map((step) =>
+      step.type === 'intro' ? { ...step, restAfter: 0 } : step,
+    )
+    if (base.some((step) => step.type === 'intro')) return base
+    return [{ type: 'intro' as const, restAfter: 0 }, ...base]
+  }, [arrangement, songSources, chiecLa])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -2786,14 +2864,18 @@ export function ReharmHome() {
               kind,
               key: reharm.key,
               style: styleSolo,
-              // Gam cho lối bám tay trái; thiếu nó thì câu chạy scale không dựng được.
-              ...(phraseScale ? { scale: phraseScale.pitchClasses } : {}),
+              thay: thaySolo,
+              vongPhienKhuc,
+              songIntro: hopAmDaoGoc(),
+              ...(!thaySolo && phraseScale
+                ? { scale: phraseScale.pitchClasses }
+                : {}),
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
               // Dạo đầu mượn hợp âm phiên khúc, kết bài mượn của điệp khúc.
               songChords: hopAmChoDoan(kind),
-              plainChords: plainPhrase,
+
               /*
                 CÙNG CƠ CHẾ LẤY NỐT VÀ CÙNG PHÉP ĐỔI LƯỢT VỚI GIANG TẤU.
 
@@ -2808,6 +2890,7 @@ export function ReharmHome() {
               */
               take: (kind === 'outro' ? 1 : 0) + phraseSpin + playSpin.current,
               range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+              ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
             })
@@ -2822,7 +2905,7 @@ export function ReharmHome() {
         })
       }
 
-      return buildSongTimeline({
+      const body = buildSongTimeline({
         accompaniment: yieldToFill(
           giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
           fills(pass),
@@ -2830,14 +2913,49 @@ export function ReharmHome() {
         fills,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
-        /*
-          Luồng gõ vòng hợp âm trơn không có cấu trúc thật nào, nên cứ lặp
-          vòng đều. Các mẫu dựng sẵn khác đã bỏ: có lời bài hát thì thứ tự
-          chơi do người dùng sắp ở khung Thứ tự chơi.
-        */
         form: SONG_FORMS[0],
         takeOffset: pass * takesPerPass,
       })
+      if (!chiecLa) return body
+      const intro = buildPhraseSection({
+        kind: 'intro',
+        key: reharm.key,
+        style: styleSolo,
+        thay: thaySolo,
+        vongPhienKhuc,
+        songIntro: hopAmDaoGoc(),
+        beatsPerChord: chordBeats,
+        dropRoot,
+        opening: recolored.find((chord) => !chord.passing) ?? null,
+        songChords: hopAmChoDoan('intro'),
+        take: phraseSpin + playSpin.current,
+        motif: 'chiec-la',
+        solo: (chords) => phraseSolo(chords, 0, true),
+      })
+      if (!intro) return body
+      const shift = intro.lengthBeats
+      return {
+        ...body,
+        events: [
+          ...intro.events,
+          ...body.events.map((event) => ({
+            ...event,
+            startBeat: event.startBeat + shift,
+          })),
+        ],
+        totalBeats: body.totalBeats + shift,
+        sections: [
+          { kind: 'interlude' as const, startBeat: 0, lengthBeats: shift },
+          ...body.sections.map((section) => ({
+            ...section,
+            startBeat: section.startBeat + shift,
+          })),
+        ],
+        segments: body.segments.map((segment) => ({
+          ...segment,
+          startBeat: segment.startBeat + shift,
+        })),
+      }
     },
     [
       accompaniment,
@@ -2859,6 +2977,7 @@ export function ReharmHome() {
       varyOnRepeat,
       style.beatsPerMeasure,
       steps,
+      chiecLa,
     ],
   )
 
@@ -3575,6 +3694,73 @@ export function ReharmHome() {
           />
         </div>
 
+        <div className="mb-3">
+          <p className="mb-1.5 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
+            Hợp âm + giai điệu dạo / giang tấu / kết
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SOLO_THAY_NUT.map((nut) => {
+              const on = soloThay === nut.id
+              return (
+                <button
+                  key={nut.label}
+                  type="button"
+                  onClick={() => {
+                    setChiecLa(false)
+                    setSoloThay(nut.id)
+                  }}
+                  title={
+                    nut.id
+                      ? `Dạo / giang / kết theo sheet ${nut.label} — không dùng gam tự chọn`
+                      : 'Theo điệu đệm đang chọn'
+                  }
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    on
+                      ? 'border-teal-key bg-teal-key/20 text-teal-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {nut.label}
+                </button>
+              )
+            })}
+          </div>
+          {thaySolo === 'ton-hung' && (
+            <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input
+                type="checkbox"
+                checked={chiecLa}
+                onChange={() => setChiecLa((on) => !on)}
+              />
+              Câu Chiếc Lá (dạo)
+            </label>
+          )}
+          {thaySolo === 'ton-hung' && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(
+                [
+                  ['chiec-la', 'Giang Chiếc Lá'],
+                  ['tinh-em', 'Giang Tình Em'],
+                  ['hoa-tron', 'Giang hòa trộn'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setTonHungGiang(id)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                    tonHungGiang === id
+                      ? 'border-teal-key bg-teal-key/20 text-teal-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -3947,6 +4133,13 @@ export function ReharmHome() {
         </div>
 
         <div className="flex flex-col gap-3">
+          {thaySolo ? (
+            <p className="text-[10px] leading-snug text-dim">
+              Nốt dạo / giang / kết theo sheet thầy, không dùng gam hay nguồn nốt
+              tự chọn.
+            </p>
+          ) : (
+          <>
           <div>
             <h4 className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
               Lấy nốt từ đâu
@@ -4105,19 +4298,11 @@ export function ReharmHome() {
                 </span>
               </span>
             </label>
-
-            <label className="mt-2 flex items-center gap-2 text-xs text-dim">
-              <input
-                type="checkbox"
-                checked={plainPhrase}
-                onChange={(event) => setPlainPhrase(event.target.checked)}
-              />
-              <span title="Rút add9, 9sus4, 13, hợp âm giảm về chất cơ bản trước khi dựng câu. Màu hợp âm là thứ của đoạn có lời; đoạn ngẫu hứng cần nền trơn để câu chạy không nghe lạc.">
-                Rút gọn hợp âm đoạn không lời
-              </span>
-            </label>
           </div>
+          </>
+          )}
 
+          {!thaySolo && (
           <div>
             <h4
               className="mb-2 font-mono text-[10px] tracking-[0.08em] text-dim uppercase"
@@ -4147,6 +4332,7 @@ export function ReharmHome() {
               ))}
             </div>
           </div>
+          )}
 
           {/*
             Bỏ ô chọn mật độ nốt giang tấu. Ô 1 / ô 3 / ô 4 tự quyết mật độ.
@@ -4187,35 +4373,38 @@ export function ReharmHome() {
               Không khoá theo họ ballad như hai công tắc dưới: gam jazz dùng được
               ở mọi điệu, và thật ra ballad là chỗ ít cần nó nhất.
             */}
-            <label
-              className="mt-2 flex items-center gap-2 text-xs text-dim"
-              title="Đoạn không lời chạy đúng thang âm của chất hợp âm, lấy từ kho PianoBrain. Hợp âm bảy jazz: Lydian cho maj7, Bebop Dominant cho hợp âm át, Altered cho át biến âm, Melodic Minor cho m(maj7), Whole Tone cho 7#5, Diminished cho dim7 — 13 bài giảng jazz, đã đối chiếu video. Hợp âm ba nốt trưởng và thứ: ngũ cung thầy Hải dạy ở Tập 1 bài 9, dựng trên chính nốt gốc hợp âm nên không lạc giọng. Còn sus4, m6 thì kho chưa có gam — giữ nguyên nốt hợp âm. Câu lót chen giữa lời không đổi."
-            >
-              <input
-                type="checkbox"
-                checked={storeScales}
-                onChange={(event) => setStoreScales(event.target.checked)}
-                className="accent-teal-key"
-              />
-              Gam của kho
-            </label>
-
-            {storeScales && (
-              <p className="mt-1 text-[10px] leading-snug text-dim/80">
-                Chỉ đổi đoạn không lời. Hợp âm bảy jazz lấy gam của nguồn Jazz
-                Scales; hợp âm ba nốt lấy ngũ cung thầy Hải dạy ở Tập 1 bài 9.
-                {missingScales.length > 0 && (
-                  <>
-                    {' '}
-                    <span className="text-amber-key/80">
-                      Kho chưa có gam cho {missingScales.length} hợp âm trong bài (
-                      {missingScales.slice(0, 6).join(', ')}
-                      {missingScales.length > 6 ? '…' : ''}) — mấy hợp âm đó giữ
-                      nguyên nốt hợp âm.
-                    </span>
-                  </>
+            {!thaySolo && (
+              <>
+                <label
+                  className="mt-2 flex items-center gap-2 text-xs text-dim"
+                  title="Đoạn không lời chạy đúng thang âm của chất hợp âm, lấy từ kho PianoBrain. Hợp âm bảy jazz: Lydian cho maj7, Bebop Dominant cho hợp âm át, Altered cho át biến âm, Melodic Minor cho m(maj7), Whole Tone cho 7#5, Diminished cho dim7 — 13 bài giảng jazz, đã đối chiếu video. Hợp âm ba nốt trưởng và thứ: ngũ cung thầy Hải dạy ở Tập 1 bài 9, dựng trên chính nốt gốc hợp âm nên không lạc giọng. Còn sus4, m6 thì kho chưa có gam — giữ nguyên nốt hợp âm. Câu lót chen giữa lời không đổi."
+                >
+                  <input
+                    type="checkbox"
+                    checked={storeScales}
+                    onChange={(event) => setStoreScales(event.target.checked)}
+                    className="accent-teal-key"
+                  />
+                  Gam của kho
+                </label>
+                {storeScales && (
+                  <p className="mt-1 text-[10px] leading-snug text-dim/80">
+                    Chỉ đổi đoạn không lời. Hợp âm bảy jazz lấy gam của nguồn Jazz
+                    Scales; hợp âm ba nốt lấy ngũ cung thầy Hải dạy ở Tập 1 bài 9.
+                    {missingScales.length > 0 && (
+                      <>
+                        {' '}
+                        <span className="text-amber-key/80">
+                          Kho chưa có gam cho {missingScales.length} hợp âm trong bài (
+                          {missingScales.slice(0, 6).join(', ')}
+                          {missingScales.length > 6 ? '…' : ''}) — mấy hợp âm đó giữ
+                          nguyên nốt hợp âm.
+                        </span>
+                      </>
+                    )}
+                  </p>
                 )}
-              </p>
+              </>
             )}
 
             {/*

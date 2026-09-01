@@ -110,7 +110,7 @@ const RIENG = 0.2
  * Chồng nốt cũng chính là thứ làm nửa sau ô dày lên: bản gốc có 14-15 nốt trên
  * mười ô ở các vị trí cuối, tức HƠN một nốt mỗi ô.
  */
-const CHONG = 0.85
+const CHONG = 0.36
 
 /**
  * Bao nhiêu phần ô nhịp có tay phải GIỮ một nốt dài, tay trái đi tiếp.
@@ -247,12 +247,18 @@ export interface RaiLinhNhiOptions {
   range: { low: number; high: number }
   /** Lượt chơi — đổi đường đi mà không đổi luật. */
   take?: number
+  /**
+   * Câu chạy móc kép cửa ra. Sheet: intro 0 lần; giang/kết thỉnh thoảng 1 lần.
+   * Bỏ = không chèn chạy ngón (đoạn dạo).
+   */
+  chayNgonCuoi?: boolean
 }
 
 export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
   const { left, chords, beatsPerChord, range } = options
   const barBeats = options.barBeats ?? beatsPerChord
   const take = options.take ?? 0
+  const chayCuoi = options.chayNgonCuoi !== false
   if (left.length === 0 || chords.length === 0) return []
 
   /* Gom tay trái theo mốc gõ: một mốc có thể nhiều nốt. */
@@ -313,11 +319,30 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
         nên nó vô tình trùng thêm, và tỉ lệ trùng lớp đo ra 66% thay vì 47%. Cái
         núm 0,47 không điều khiển được gì cả khi nhánh còn lại cũng trùng.
       */
-      const dangGiu = new Set(duoi.map(lop))
+      const triad = tones.filter((pc) => {
+        const d = (pc - chord.root + 12) % 12
+        return d === 0 || d === 3 || d === 4 || d === 7
+      })
+      const ao = triad.length > 0 ? triad : tones
+      const copy = duoi.map(lop).filter((pc) => ao.includes(pc))
       const nhanBan = hash(take * 29 + index * 11) < NHAN_BAN
-      const khac = tones.filter((pc) => !dangGiu.has(pc))
-      const kho = nhanBan || khac.length === 0 ? duoi.map(lop) : khac
-      const pc = kho[Math.floor(hash(take * 7 + index * 13) * kho.length) % kho.length]!
+      let pc: PitchClass
+      if (nhanBan && copy.length > 0) {
+        pc = copy[Math.floor(hash(take * 7 + index * 13) * copy.length) % copy.length]!
+      } else {
+        let best = ao[0]!
+        let bestD = 99
+        for (const p of ao) {
+          const n = datNot(p, truoc, san, range.high)
+          if (n === null) continue
+          const gap = Math.abs(n - truoc)
+          if (gap < bestD) {
+            bestD = gap
+            best = p
+          }
+        }
+        pc = best
+      }
       /*
         Thỉnh thoảng tay phải xuống sát tay trái ĐỆM CHUNG thay vì hát — đúng
         thứ người dùng hỏi. Nhưng chỉ 10%: đo ra vậy, và cài dày hơn là dựng ra
@@ -347,7 +372,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
           Vẫn giữ `KHE_HEP`: không bao giờ chạm hay vượt qua tay trái.
         */
         const sanDem = tranTrai + KHE_HEP
-        const thap = kho
+        const thap = ao
           .map((one) => datNot(one, sanDem, sanDem, range.high))
           .filter((one): one is MidiNote => one !== null)
           .sort((x, y) => x - y)
@@ -372,9 +397,12 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       if (note !== null) them(beat, note, !demChung, keo)
 
       // Chồng nốt dồn về nửa sau ô: đó là chỗ bản gốc dày lên, không phải đầu ô.
-      if (note !== null && hash(take * 3 + index * 41) < (nuaSau ? CHONG : CHONG * 0.3)) {
-        // Chồng thêm một nốt hợp âm phía dưới, vẫn trên trần tay trái.
-        const duoiPc = tones[Math.floor(hash(take * 19 + index * 23) * tones.length) % tones.length]!
+      if (
+        note !== null &&
+        !laPhachMot &&
+        hash(take * 3 + index * 41) < (nuaSau ? CHONG : CHONG * 0.3)
+      ) {
+        const duoiPc = ao[Math.floor(hash(take * 19 + index * 23) * ao.length) % ao.length]!
         const them2 = datNot(duoiPc, note - 5, san, note - 1)
         if (them2 !== null) {
           out.push({
@@ -423,25 +451,16 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     Chọn một chỗ mở chuỗi trong ô rồi kéo 3-7 nốt liền bậc trên gam. Đi lên hay
     xuống rút thăm — bản gốc có cả hai.
   */
-  const gam = options.scale
-  /*
-    KHÔNG gate bằng `gam`. Người dùng báo "chưa thấy thay đổi gì" về câu chạy,
-    và đây là lý do: cả phép chuỗi liền bậc lẫn khối câu chạy đều nằm trong
-    nhánh `if (gam)`, mà `phraseScale` chỉ có khi người dùng chọn MỘT gam. Lối
-    nhiều gam thì `gam` rỗng và không câu chạy nào được sinh.
-
-    Đúng cái bẫy vừa sập ở luật bước ngắn, lặp lại ở hai chỗ nữa. Không có gam
-    thì lấy nốt hợp âm làm thang — thưa hơn nhưng vẫn chạy được.
-  */
   {
-    const khoGam = gam && gam.length >= 5 ? gam : chordTonesStrict(hopAm(0))
-    const thang: MidiNote[] = []
-    for (let note = range.low; note <= range.high; note += 1) {
-      if (khoGam.includes(lop(note))) thang.push(note as MidiNote)
-    }
     const soO = Math.ceil((chords.length * beatsPerChord) / barBeats)
     for (let o = 0; o < soO; o += 1) {
       if (hash(take * 83 + o * 19) >= CHUOI_MOI_O) continue
+      const khoGam = chordTonesStrict(hopAm(o * barBeats))
+      const thang: MidiNote[] = []
+      for (let note = range.low; note <= range.high; note += 1) {
+        if (khoGam.includes(lop(note))) thang.push(note as MidiNote)
+      }
+      if (thang.length < 3) continue
       const trong = out
         .filter((e) => e.startBeat >= o * barBeats && e.startBeat < (o + 1) * barBeats)
         .sort((a, b) => a.startBeat - b.startBeat)
@@ -542,7 +561,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     phép chuỗi liền bậc nên nó đè lên, và đó là chủ ý: chạy móc kép nghe rõ hơn
     chuỗi móc đơn.
   */
-  {
+  if (chayCuoi) {
     const soO2 = Math.ceil(tong / barBeats)
     for (let o = 1; o < soO2 - 2; o += 1) {
       if (hash(take * 107 + o * 23) >= CHAY_THEM) continue
@@ -638,13 +657,8 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
       nên nó CHƯA TỪNG CHẠY ở đường không truyền gam. Test đỏ y nguyên sau hai
       lượt sửa thuật toán, và mãi mới thấy là do cái bọc ấy.
 
-      Không có gam thì lấy nốt hợp âm làm thang — thưa hơn nhưng vẫn nắn được.
+      Nắn về nốt hợp âm của ô đang vang, không dùng gam cả bài.
     */
-    const kho2 = gam && gam.length >= 5 ? gam : chordTonesStrict(hopAm(0))
-    const thang2: MidiNote[] = []
-    for (let note = range.low; note <= range.high; note += 1) {
-      if (kho2.includes(lop(note))) thang2.push(note as MidiNote)
-    }
     /*
       So ĐƯỜNG TRÊN với ĐƯỜNG TRÊN, gom theo mốc gõ.
 
@@ -684,6 +698,11 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
           ? Math.max(...moc.get(traiTruocDo[traiTruocDo.length - 1]!)!)
           : range.low
       const sanLucAy = Math.max(range.low, tranLucAy + KHE_HEP)
+      const kho2 = chordTonesStrict(hopAm(mocSap[at]!))
+      const thang2: MidiNote[] = []
+      for (let note = range.low; note <= range.high; note += 1) {
+        if (kho2.includes(lop(note))) thang2.push(note as MidiNote)
+      }
 
       const gan = thang2
         .filter(
@@ -694,7 +713,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     }
   }
 
-  const khung = khungChayNgon(chords.length * beatsPerChord, barBeats)
+  const khung = chayCuoi ? khungChayNgon(chords.length * beatsPerChord, barBeats) : null
   if (khung) {
     const con = out.filter((e) => e.startBeat < khung.tu - 1e-6 || e.startBeat >= khung.den - 1e-6)
     const chord = hopAm(khung.tu)

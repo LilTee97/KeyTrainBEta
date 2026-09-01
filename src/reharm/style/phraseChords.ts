@@ -6,6 +6,8 @@ import { pullChordFor } from './turnaround'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import type { SoloTeacher } from '../fillSoloGenerator/soloTeacher'
+import { introChordsForTeacher } from './teacherSoloChords'
 
 /**
  * Vòng hợp âm của đoạn dạo đầu và đoạn kết.
@@ -52,17 +54,15 @@ export interface PhraseChordOptions {
    */
   plain?: boolean
   /**
-   * MỘT LƯỢT vòng hoà thanh của phiên khúc, đã bỏ hợp âm nửa ô.
+   * Hợp âm mở phiên khúc — đích để vòng dạo **hút vào**, không phải vòng để chép.
    *
-   * Có thì đoạn dạo chơi ĐÚNG vòng ấy. Người dùng đặt luật: dạo đầu dựng TRÊN
-   * vòng hợp âm của phiên khúc, đừng nhặt bừa vài hợp âm trong đoạn.
-   *
-   * Bản trước quét cả phiên khúc rồi chấm điểm chọn một khoảng bốn hợp âm hút
-   * mạnh nhất về hợp âm mở bài. Không phải ngẫu nhiên, nhưng cũng không phải
-   * vòng của bài: khoảng thắng cuộc có thể vắt qua hai lượt vòng, nên dạo đầu
-   * ra một vòng không đoạn nào trong bài từng chơi.
+   * Intro không lấy hết phiên khúc. Sheet: dạo 6–18 ô, phiên có khi 16–32 ô.
    */
   vongPhienKhuc?: readonly ParsedChord[]
+  /** Thầy cho dạo/kết — chỉ đổi vòng hợp âm, không đổi điệu đệm. */
+  thay?: SoloTeacher
+  /** Đoạn dạo gốc trên lời bài, nếu có. */
+  songIntro?: readonly ParsedChord[]
 }
 
 /** Bỏ hợp âm lướt: chúng mượn phách của hợp âm trước, không phải ô của vòng. */
@@ -91,25 +91,77 @@ function tonicChordOf(
 /**
  * Vòng hợp âm của đoạn dạo, **mượn từ bài**.
  *
- * Dạo đầu lấy một khoảng bốn hợp âm liên tiếp trong vòng, chọn khoảng nào có
- * hợp âm cuối hút mạnh nhất về hợp âm mở bài — đúng bộ chọn mà đoạn giang tấu
- * đang dùng (`chooseInterludeWindow`), nên hai đoạn nghe ra cùng một bài.
+ * Dạo đầu: bốn hợp âm liên tiếp trong bài, hợp âm cuối hút vào đầu phiên.
+ * Không chép hết phiên khúc. Cùng bộ chọn với giang tấu (`chooseInterludeWindow`).
  *
  * Kết bài giữ hình ba ô như cũ — một ô dẫn rồi hai ô đậu lại — nhưng cả ba ô
  * đều là hợp âm có thật trong bài: ô dẫn là hợp âm trong vòng hút mạnh nhất về
  * hợp âm chủ, hai ô sau là chính hợp âm chủ của bài, giữ nguyên màu.
  */
+function pcsOf(chord: ParsedChord): Set<number> {
+  return new Set(chord.quality.intervals.map((interval) => (chord.root + interval) % 12))
+}
+
+function chungNot(a: ParsedChord, b: ParsedChord): number {
+  const left = pcsOf(a)
+  let n = 0
+  for (const pc of pcsOf(b)) if (left.has(pc)) n += 1
+  return n
+}
+
+function diDuoc(
+  a: ParsedChord,
+  b: ParsedChord,
+  key: { tonic: PitchClass; scale: ScaleType },
+): boolean {
+  if (key.scale === 'minor' && a.root === key.tonic) {
+    const bac = (b.root - key.tonic + 12) % 12
+    if (bac === 8 || bac === 3) return false
+  }
+  return chungNot(a, b) >= 2 || pullStrength(a, b) >= 3 || pullStrength(b, a) >= 3
+}
+
+function chacIntro(
+  list: ParsedChord[],
+  key: { tonic: PitchClass; scale: ScaleType },
+): ParsedChord[] {
+  if (list.length < 2) return list
+  const out = [list[0]!]
+  for (let i = 1; i < list.length; i += 1) {
+    const prev = out[i - 1]!
+    let next = list[i]!
+    if (!diDuoc(prev, next, key)) {
+      const tron = plainForInterlude(next)
+      next = diDuoc(prev, tron, key)
+        ? tron
+        : (pullChordFor(prev, { strong: true }) ?? tron)
+    }
+    out.push(next)
+  }
+  return out
+}
+
 function borrowedChords(
   kind: 'intro' | 'outro',
   key: { tonic: PitchClass; scale: ScaleType },
   songChords: readonly ParsedChord[],
+  verse: readonly ParsedChord[] = [],
+  thay?: SoloTeacher,
+  songIntro: readonly ParsedChord[] = [],
 ): ParsedChord[] {
   const main = mainChords(songChords)
   if (main.length === 0) return []
 
   if (kind === 'intro') {
-    const window = chooseInterludeWindow(main, main[0]!, 4)
-    return window ? main.slice(window.from, window.to + 1) : []
+    const xuong = verse.length > 0 ? verse : main
+    const theoThay = introChordsForTeacher(thay ?? null, key, main, xuong, songIntro)
+    if (theoThay.length > 0) return chacIntro(theoThay, key)
+    const target = xuong[0] ?? main[0]!
+    const window = chooseInterludeWindow(main, target, 4)
+    const raw = window
+      ? main.slice(window.from, window.to + 1)
+      : main.slice(0, Math.min(4, main.length))
+    return chacIntro(raw, key)
   }
 
   const tonic = tonicChordOf(main, key) ?? main[main.length - 1]!
@@ -154,17 +206,15 @@ export function phraseChords(
 ): ParsedChord[] {
   if (!key) return []
 
-  /*
-    Vòng phiên khúc đi trước mọi phép chọn khác: đã biết vòng thật của bài thì
-    không có lý do gì đi chấm điểm để đoán lại nó.
-  */
-  if (kind === 'intro' && options.vongPhienKhuc && options.vongPhienKhuc.length > 0) {
-    const vong = mainChords(options.vongPhienKhuc)
-    if (vong.length > 0) return options.plain ? vong.map(plainForInterlude) : [...vong]
-  }
-
   const borrowed = options.songChords
-    ? borrowedChords(kind, key, options.songChords)
+    ? borrowedChords(
+        kind,
+        key,
+        options.songChords,
+        kind === 'intro' ? mainChords(options.vongPhienKhuc ?? []) : [],
+        options.thay,
+        options.songIntro ?? [],
+      )
     : []
   if (borrowed.length > 0) {
     return options.plain ? borrowed.map(plainForInterlude) : [...borrowed]

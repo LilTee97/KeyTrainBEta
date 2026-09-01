@@ -185,4 +185,24 @@ describe('giai điệu neo vào cú gõ mạnh, không vào mọi cú', () => {
       )
     }
   })
+
+  it('Tôn Hùng dạo: chỉ phách 1', () => {
+    const style = getStyle('ton-hung-ballad')!
+    const chords = parseChordInput('C F G C').chords
+    const events = soloLeftHand({
+      chords,
+      beatsEach: chords.map(() => 4),
+      style,
+      chiPhach1: true,
+    })
+    expect([
+      ...new Set(events.map((event) => Number((event.startBeat % 4).toFixed(3)))),
+    ]).toEqual([0])
+  })
+
+  it('Tôn Hùng giang dày hơn dạo', () => {
+    expect(patternOnsets(getStyle('ton-hung-ballad-giang')!, 'left').length).toBeGreaterThan(
+      patternOnsets(getStyle('ton-hung-ballad')!, 'left').length,
+    )
+  })
 })

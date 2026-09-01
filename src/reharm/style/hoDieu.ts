@@ -65,7 +65,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   ballad: {
     ten: 'Ballad',
-    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca'],
+    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad'],
   },
   bossa: {
     ten: 'Bossa Nova',
@@ -112,7 +112,10 @@ export function kieuTrongHo(hoId: string): StylePattern[] {
   const mo = HO_DIEU[hoId]
   if (!mo) return []
   return ALL_STYLES.filter(
-    (style) => mo.families.includes(style.family) && !style.id.endsWith('-chorus'),
+    (style) =>
+      mo.families.includes(style.family) &&
+      !style.id.endsWith('-chorus') &&
+      !style.id.endsWith('-giang'),
   )
 }
 
@@ -301,6 +304,12 @@ export function thienVeCuaHo(styleId: string): 'chay' | 'chum' | undefined {
 /** Điệu này có chơi câu solo tự do kiểu Cà Pháo không. */
 export function soloTuDoCaPhao(styleId: string): boolean {
   const family = getStyle(styleId)?.family
+  /*
+    Tôn Hùng nằm họ ballad nhưng KHÔNG chơi lối Cà Pháo. Đo 2 bài ballad của
+    ông: gần như 0 câu chạy móc kép, RH solo ≈ mật độ hát. Gán lối tự do Cà
+    Pháo cho điệu này là trộn thầy.
+  */
+  if (family === 'ton-hung-ballad') return false
   if (family !== undefined && SOLO_TU_DO.includes(family)) return true
   const ho = hoCuaDieu(styleId)
   return ho !== null && SOLO_TU_DO_HO.includes(ho)

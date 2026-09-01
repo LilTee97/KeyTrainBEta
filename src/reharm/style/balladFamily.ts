@@ -26,6 +26,7 @@ export const BALLAD_FAMILY_IDS: readonly string[] = [
   /* Biến tấu KeyTrain dựng từ Pop Ballad (Hải) — vẫn là ballad. */
   'hai-pop-ballad-free',
   'hai-pop-ballad-free-chorus',
+  'ton-hung-ballad',
 ]
 
 const BALLAD = new Set(BALLAD_FAMILY_IDS)

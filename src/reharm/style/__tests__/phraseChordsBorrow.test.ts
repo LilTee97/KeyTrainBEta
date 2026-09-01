@@ -71,54 +71,55 @@ describe('hợp âm đoạn dạo mượn từ bài', () => {
 })
 
 /*
-  DẠO ĐẦU CHƠI ĐÚNG VÒNG PHIÊN KHÚC.
-
-  Bản trước quét cả phiên khúc rồi chấm điểm chọn khoảng bốn hợp âm hút mạnh
-  nhất về hợp âm mở bài. Không ngẫu nhiên, nhưng cũng không phải vòng của bài:
-  khoảng thắng cuộc vắt qua hai lượt vòng được, nên dạo đầu ra một vòng không
-  đoạn nào trong bài từng chơi. Người dùng bác: dạo đầu phải dựng TRÊN vòng hợp
-  âm của phiên khúc.
+  Dạo đầu CHỌN bốn hợp âm hút vào đầu phiên — không chép hết phiên khúc.
+  Sheet: dạo 6–18 ô, phiên 16–32 ô.
 */
-describe('dạo đầu dựng trên vòng phiên khúc', () => {
-  const VONG = parseChordInput('Am(add9) Fadd2 Cadd2 Em7').chords
+describe('dạo đầu chọn hợp âm, không copy phiên khúc', () => {
+  const DAI = parseChordInput(
+    'Am(add9) Fadd2 Cadd2 Em7 Am(add9) Dm9 Cadd2 G7 Am(add9) Fadd2 Cadd2 Em7',
+  ).chords
 
-  it('chơi đúng vòng ấy, đúng thứ tự, không cắt không đảo', () => {
+  it('Linh Nhi không I–V: i–♭VII–♭VI–III, không Fadd2', () => {
     const intro = phraseChords('intro', KEY, {
-      songChords: chords(),
-      vongPhienKhuc: VONG,
+      songChords: DAI,
+      vongPhienKhuc: DAI.slice(0, 8),
+      thay: 'linh-nhi',
     })
-    expect(symbols(intro)).toEqual(['Am(add9)', 'Fadd2', 'Cadd2', 'Em7'])
+    expect(intro.map((c) => c.root).slice(0, 4)).toEqual([9, 7, 5, 0])
+    expect(intro.some((c) => c.symbol === 'Fadd2')).toBe(false)
   })
 
-  it('vòng phiên khúc thắng phép chấm điểm cũ', () => {
-    const cu = phraseChords('intro', KEY, { songChords: chords() })
-    const moi = phraseChords('intro', KEY, {
-      songChords: chords(),
-      vongPhienKhuc: VONG,
-    })
-    expect(symbols(moi)).not.toEqual(symbols(cu))
-  })
-
-  it('vẫn rút về màu cơ bản khi được yêu cầu', () => {
+  it('không cho Am(add9) nhảy sang Fadd2', () => {
     const intro = phraseChords('intro', KEY, {
-      vongPhienKhuc: VONG,
-      plain: true,
+      songChords: DAI,
+      vongPhienKhuc: DAI.slice(0, 4),
     })
-    // `plainForInterlude` rút add9 / 9sus4 / 13, nhưng GIỮ bảy: Em7 vẫn là Em7.
-    expect(symbols(intro)).toEqual(['Am', 'F', 'C', 'Em7'])
+    for (let i = 1; i < intro.length; i += 1) {
+      expect(`${intro[i - 1]!.symbol}→${intro[i]!.symbol}`).not.toBe('Am(add9)→Fadd2')
+    }
   })
 
-  /* Chưa chia đoạn thì không có vòng phiên khúc — phải lui về lối cũ, không rỗng. */
-  it('không có vòng phiên khúc thì giữ nguyên lối cũ', () => {
+  it('intro đúng 4 hợp âm, không lấy hết phiên', () => {
+    const intro = phraseChords('intro', KEY, {
+      songChords: DAI,
+      vongPhienKhuc: DAI.slice(0, 8),
+    })
+    expect(intro).toHaveLength(4)
+    expect(symbols(intro)).not.toEqual(symbols(DAI.slice(0, 8)))
+  })
+
+  it('không có vòng phiên thì vẫn chọn 4 từ bài', () => {
     const intro = phraseChords('intro', KEY, { songChords: chords(), vongPhienKhuc: [] })
-    expect(intro.length).toBeGreaterThan(0)
+    expect(intro).toHaveLength(4)
   })
 
-  it('kết bài KHÔNG lấy vòng phiên khúc', () => {
+  it('kết bài vẫn là dẫn rồi đậu chủ, không copy phiên', () => {
+    const VONG = parseChordInput('Am(add9) Fadd2 Cadd2 Em7').chords
     const outro = phraseChords('outro', KEY, {
       songChords: chords(),
       vongPhienKhuc: VONG,
     })
+    expect(outro).toHaveLength(3)
     expect(symbols(outro)).not.toEqual(symbols(VONG))
   })
 })

@@ -31,6 +31,11 @@ describe('tách phong cách từng thầy', () => {
     trái của Linh Nhi. Đây đúng là chỗ hai phong cách chồng lên nhau, nên khoá
     riêng nó.
   */
+  it('Ballad Tôn Hùng không dính lối tự do Cà Pháo hay rải Linh Nhi', () => {
+    expect(soloTuDoCaPhao('ton-hung-ballad')).toBe(false)
+    expect(raiTheoTayTrai('ton-hung-ballad')).toBe(false)
+  })
+
   it('điệu Cà Pháo KHÔNG dính lối bám tay trái của Linh Nhi', () => {
     expect(soloTuDoCaPhao('bossa-ca-phao-som')).toBe(true)
     expect(raiTheoTayTrai('bossa-ca-phao-som')).toBe(false)

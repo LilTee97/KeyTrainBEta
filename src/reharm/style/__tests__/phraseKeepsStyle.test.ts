@@ -117,3 +117,28 @@ describe('bossa bật lối bám tay trái mà không mất chất điệu', () 
     }
   })
 })
+
+describe('Tôn Hùng hai tay', () => {
+  it('dạo: LH chỉ phách 1', () => {
+    const style = getStyle('ton-hung-ballad')!
+    const chords = parseChordInput(SONG).chords
+    const built = buildPhraseSection({
+      kind: 'intro',
+      key: KEY,
+      style,
+      thay: 'ton-hung',
+      beatsPerChord: 4,
+      dropRoot: true,
+      opening: chords[0]!,
+      solo: () => [],
+      songChords: chords,
+    })!
+    expect([
+      ...new Set(
+        built.events
+          .filter((event) => event.hand === 'left')
+          .map((event) => Number((event.startBeat % 4).toFixed(3))),
+      ),
+    ]).toEqual([0])
+  })
+})

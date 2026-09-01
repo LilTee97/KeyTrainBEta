@@ -11,6 +11,7 @@ import {
   nearestStep,
   resolvesUpFourth,
   stableToneOf,
+  strongBeatPcs,
 } from '../soloVocabulary'
 
 const chordOf = (text: string) => parseChordInput(text).chords[0]
@@ -64,6 +65,14 @@ describe('chất liệu nốt lấy từ hợp âm đang vang', () => {
   it('nốt kết câu là nốt ổn định của hợp âm', () => {
     expect(stableToneOf(chordOf('Cmaj7'))).toBe(4)
     expect(stableToneOf(chordOf('Am7'))).toBe(0)
+  })
+
+  it('phách mạnh: ao nốt từng thầy', () => {
+    expect(strongBeatPcs(chordOf('Cmaj7'), 'linh-nhi')).toEqual([4, 0, 7])
+    expect(strongBeatPcs(chordOf('Am7'), 'linh-nhi')).toEqual([0, 9, 4])
+    expect(strongBeatPcs(chordOf('Cmaj7'), 'ton-hung')).toEqual([0, 4, 7, 11])
+    expect(strongBeatPcs(chordOf('G7'), 'ton-hung')).toEqual([7, 11, 2, 5])
+    expect(strongBeatPcs(chordOf('Cmaj7'), 'ca-phao')[0]).toBe(2)
   })
 })
 

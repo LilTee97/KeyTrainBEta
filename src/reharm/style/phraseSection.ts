@@ -4,17 +4,14 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain } from './patternRenderer'
-import {
-  khongTiaTayTrai,
-  raiTheoTayTrai,
-  soloTuDoCaPhao,
-  thienVeCuaHo,
-} from './hoDieu'
+import { khongTiaTayTrai, thienVeCuaHo } from './hoDieu'
+import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo } from './caPhaoSolo'
 import { raiLinhNhi } from './raiLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose, tamBao } from './phraseCue'
+import { chiecLaMotif } from './chiecLaMotif'
 
 /**
  * Ráp một đoạn dạo đầu hoặc một đoạn kết.
@@ -67,6 +64,12 @@ export interface PhraseSectionOptions {
   songChords?: readonly ParsedChord[]
   /** Rút hợp âm đoạn dạo về chất cơ bản, như đoạn giang tấu vẫn làm. */
   plainChords?: boolean
+  /** Thầy cho vòng dạo/kết — không đổi điệu đệm. */
+  thay?: import('../fillSoloGenerator/soloTeacher').SoloTeacher
+  vongPhienKhuc?: readonly ParsedChord[]
+  songIntro?: readonly ParsedChord[]
+  /** Ostinato Bb–A–D Chiếc Lá — chỉ dạo. */
+  motif?: 'chiec-la'
 }
 
 export interface PhraseSection {
@@ -88,11 +91,17 @@ export function buildPhraseSection(
     take,
     songChords,
     plainChords,
+    thay,
+    vongPhienKhuc,
+    songIntro,
   } = options
 
   const chords = phraseChords(kind, key, {
     ...(songChords ? { songChords } : {}),
     ...(plainChords ? { plain: true } : {}),
+    ...(thay ? { thay } : {}),
+    ...(vongPhienKhuc ? { vongPhienKhuc } : {}),
+    ...(songIntro ? { songIntro } : {}),
   })
   if (chords.length === 0) return null
 
@@ -129,7 +138,13 @@ export function buildPhraseSection(
     phần trong đó thực sự kêu lên thì tuỳ tay phải đang bận tới đâu — xem
     `interlockHands`. Luật "đoạn không lời chơi đúng điệu" còn nguyên.
   */
-  const backing = soloLeftHand({ chords, beatsEach, style })
+  const thaySolo = thay ?? soloTeacherOf(style.id)
+  const backing = soloLeftHand({
+    chords,
+    beatsEach,
+    style,
+    chiPhach1: thaySolo === 'ton-hung',
+  })
 
   /*
     DẠO ĐẦU VÀ KẾT BÀI cũng dựng như giang tấu, theo yêu cầu người dùng.
@@ -141,7 +156,15 @@ export function buildPhraseSection(
     Đường cũ vẫn còn nguyên cho mọi điệu không khai lối này — `raiTheoTayTrai`
     trả `false` thì `solo` chạy y như trước.
   */
-  const voiced = soloTuDoCaPhao(style.id)
+  const voiced =
+    kind === 'intro' && options.motif === 'chiec-la' && key
+    ? chiecLaMotif({
+        chords,
+        beatsPerChord,
+        tonic: key.tonic,
+        scale: key.scale,
+      })
+    : thaySolo === 'ca-phao'
     ? caPhaoSolo({
         chords,
         beatsPerChord,
@@ -151,7 +174,7 @@ export function buildPhraseSection(
         ...(thienVeCuaHo(style.id) ? { thienVe: thienVeCuaHo(style.id)! } : {}),
         left: backing,
       })
-    : raiTheoTayTrai(style.id)
+    : thaySolo === 'linh-nhi'
     ? raiLinhNhi({
         left: backing,
         chords,
@@ -159,6 +182,7 @@ export function buildPhraseSection(
         barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
         ...(options.scale ? { scale: options.scale } : {}),
         range: options.range ?? { low: 57, high: 95 },
+        chayNgonCuoi: kind !== 'intro',
         ...(take !== undefined ? { take } : {}),
       })
     : solo(chords)
@@ -240,7 +264,7 @@ export function buildPhraseSection(
     (tỉa), còn luật 2 (chèn nốt lấp khe) chạy bất kể cờ. Nên phải bỏ hẳn phép
     cài, đúng như `arrangement.ts` làm, chứ không phải chỉnh cờ.
   */
-  const woven = raiTheoTayTrai(style.id) || soloTuDoCaPhao(style.id)
+  const woven = thaySolo === 'linh-nhi' || thaySolo === 'ca-phao' || thaySolo === 'ton-hung'
     ? { left: backing, melody: voiced }
     : interlockHands(
         backing,

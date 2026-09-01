@@ -97,17 +97,13 @@ describe('bài đã tái hòa âm đầy màu, giang tấu vẫn lấy vòng g�
     }
   })
 
-  it('não từ chối chọn khi vòng còn màu, nhận khi đã rút gọn', () => {
+  it('não vẫn chọn được khi vòng còn màu', () => {
     const key = C_MAJOR
     const dài = parseChordInput('C Am Dm G C F Em Dm G').chords
-
     const cònMàu = dài.map((chord, at) =>
       at === 5 ? parseChordInput('Fadd9').chords[0] : chord,
     )
-    expect(brainInterludeWindow({ chords: cònMàu, key })).toBeNull()
-
-    const đãRút = cònMàu.map(plainForInterlude)
-    expect(brainInterludeWindow({ chords: đãRút, key })).not.toBeNull()
+    expect(brainInterludeWindow({ chords: cònMàu, key })).not.toBeNull()
   })
 })
 

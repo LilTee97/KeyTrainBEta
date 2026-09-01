@@ -34,6 +34,32 @@ describe('tính toàn vẹn của thư viện điệu', () => {
     }
   })
 
+  it('Ballad rải Tôn Hùng: 120 BPM, LH phiên 1 · 1& · 2', () => {
+    const style = getStyle('ton-hung-ballad')
+    expect(style?.name).toBe('Ballad rải (Tôn Hùng)')
+    expect(style?.bpm).toBe(120)
+    expect(isPlayable(style!)).toBe(true)
+    expect(style!.cell!.left.map((hit) => hit.beat)).toEqual([0, 0.5, 1])
+  })
+
+  it('Ballad rải Tôn Hùng điệp: LH dày hơn phiên', () => {
+    expect(getStyle('ton-hung-ballad-chorus')!.cell!.left.map((hit) => hit.beat)).toEqual([
+      0, 0.5, 1, 1.5, 2.5, 3,
+    ])
+  })
+
+  it('Ballad Tôn Hùng giang: LH 8th, không bày trên bảng chọn', () => {
+    const style = getStyle('ton-hung-ballad-giang')
+    expect(style!.bpm).toBe(120)
+    expect(style!.cell!.left.map((hit) => hit.beat)).toEqual([0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5])
+  })
+
+  it('Giang Tình Em: LH móc 16 hai cụm', () => {
+    const beats = getStyle('ton-hung-tinh-em-giang')!.cell!.left.map((hit) => hit.beat)
+    expect(beats).toContain(0.25)
+    expect(beats.length).toBeGreaterThan(8)
+  })
+
   it('điệu chưa xác nhận không có mẫu tiết tấu', () => {
     // Thà báo là chưa có còn hơn bịa mẫu rồi dạy sai
     for (const style of UNVERIFIED_STYLES) {

@@ -2,6 +2,7 @@ import type { EndingMode } from './endingChord'
 import type { SectionKind, SongTimeline, TimeSegment } from './songStructure'
 import { fixHandByRegister, interludeAccompaniment } from './songStructure'
 import { khongTiaTayTrai, raiTheoTayTrai, soloTuDoCaPhao } from './hoDieu'
+import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { interlockHands } from './soloLeftHand'
 import type { TimelineEvent } from './types'
 
@@ -499,7 +500,12 @@ export function buildArrangedSong(
       const woven =
         backing &&
         line &&
-        !(styleId && (raiTheoTayTrai(styleId) || soloTuDoCaPhao(styleId)))
+        !(
+          styleId &&
+          (raiTheoTayTrai(styleId) ||
+            soloTuDoCaPhao(styleId) ||
+            soloTeacherOf(styleId) === 'ton-hung')
+        )
           ? interlockHands(
               interludeAccompaniment(backing),
               line,
