@@ -12,6 +12,7 @@ import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose, tamBao } from './phraseCue'
 import { chiecLaMotif } from './chiecLaMotif'
+import { arcDungXa, hutDungXa } from './daoDungXa'
 
 /**
  * Ráp một đoạn dạo đầu hoặc một đoạn kết.
@@ -68,7 +69,7 @@ export interface PhraseSectionOptions {
   thay?: import('../fillSoloGenerator/soloTeacher').SoloTeacher
   vongPhienKhuc?: readonly ParsedChord[]
   songIntro?: readonly ParsedChord[]
-  /** Ostinato Bb–A–D Chiếc Lá — chỉ dạo. */
+/** Ostinato Bb–A–D Chiếc Lá — chỉ dạo. */
   motif?: 'chiec-la'
 }
 
@@ -187,6 +188,39 @@ export function buildPhraseSection(
       })
     : solo(chords)
   const roundBeats = chords.length * beatsPerChord
+  const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
+
+  /*
+    Vòng cung mật độ Đừng Xa — nắn lại thứ vừa dựng, không sinh nốt mới.
+
+    Đặt SAU `voiced` để cả hai tay đã có đủ nốt rồi mới bàn tới mật độ; đặt
+    trước `interlockHands` để phép cài — nếu điệu này còn dùng — nhìn thấy đúng
+    mật độ đã nắn chứ không phải mật độ cũ.
+  */
+  /*
+    `thay` chứ KHÔNG phải `thaySolo`.
+
+    `thaySolo` lui về `soloTeacherOf(style.id)`, mà hàm ấy trả 'linh-nhi' cho
+    MỌI điệu bật cờ rải-theo-tay-trái — bossa nova nằm trong đó. Lượt sửa đầu
+    dùng `thaySolo` nên câu dạo bolero Đừng Xa bị đắp lên `bossa-nova-1`, và ba
+    lưới `phraseAssembled` bắt được: đoạn dạo dài 20 phách thay vì 16.
+
+    Vòng cung mật độ và ô hút là của MỘT bản ký âm bolero cụ thể, nên chỉ chạy
+    khi người dùng chọn thẳng thầy Linh Nhi.
+  */
+  const arc =
+    kind === 'intro' && thay === 'linh-nhi' && key
+      ? arcDungXa({
+          left: backing,
+          melody: voiced,
+          barBeats,
+          bars: Math.max(1, Math.round(roundBeats / barBeats)),
+          chords,
+          beatsPerChord,
+        })
+      : null
+  const traiCuoi = arc?.left ?? backing
+  const phaiCuoi = arc?.melody ?? voiced
 
   /*
     HỢP ÂM BÁO NẰM TRONG VÒNG, KHÔNG ĐÈO THÊM MỘT PHÁCH.
@@ -203,7 +237,7 @@ export function buildPhraseSection(
     Đoạn kết giữ nguyên một phách cộng thêm: ở đó cái đuôi ấy chính là chỗ bài
     đậu xuống, không phải thứ chen vào giữa hai đoạn.
   */
-  const cueOf = kind === 'intro' ? cueChord(opening) : null
+  const cueOf = kind === 'intro' && thay !== 'linh-nhi' ? cueChord(opening) : null
   const lengthBeats = roundBeats + (kind === 'outro' ? 1 : 0)
 
   const cueVoicing = tamBao(
@@ -265,11 +299,11 @@ export function buildPhraseSection(
     cài, đúng như `arrangement.ts` làm, chứ không phải chỉnh cờ.
   */
   const woven = thaySolo === 'linh-nhi' || thaySolo === 'ca-phao' || thaySolo === 'ton-hung'
-    ? { left: backing, melody: voiced }
+    ? { left: traiCuoi, melody: phaiCuoi }
     : interlockHands(
-        backing,
-        voiced,
-        style.beatsPerMeasure * (style.gridUnit ?? 1),
+        traiCuoi,
+        phaiCuoi,
+        barBeats,
         khongTiaTayTrai(style.id),
       )
   /*
@@ -332,6 +366,34 @@ export function buildPhraseSection(
     âm, hai cao độ khác nhau chồng nhau là legato — cả hai đều đúng.
   */
   const events = holdUntilStruckAgain(ghep)
+
+  /*
+    Ô HÚT nối vào SAU vòng, không nằm trong vòng.
+
+    Bản ký âm có chín ô mà vòng hợp âm chỉ tám: ô 9 là một ô THÊM, đứng trên
+    bậc V, và nó không quạt mẫu đệm nào cả. Nhét nó vào trong vòng thì mất một
+    ô của chính vòng ấy; nối vào sau thì đoạn dạo dài thêm đúng một ô, đúng như
+    bản gốc.
+
+    Chỗ này từng có một cú nhấc bốn phách đóng cứng cho mọi câu dạo Linh Nhi —
+    hình 1-3-5 đi lên trước ô 1. Đã XOÁ: bản ký âm Đừng Xa vào thẳng hợp âm chủ
+    ở ô 1, không có cú nhấc nào. (Cú nhấc D–F#–A là của Biển Tình; muốn dựng lại
+    thì phải gắn theo BÀI, không gắn theo thầy — xem phiếu KHUNG-HOI-THAY §3.a.)
+  */
+  if (kind === 'intro' && thay === 'linh-nhi' && key) {
+    return {
+      events: [
+        ...events,
+        ...hutDungXa({
+          at: roundBeats,
+          hut: ((key.tonic + 7) % 12) as PitchClass,
+          barBeats,
+        }),
+      ],
+      lengthBeats: roundBeats + barBeats,
+    }
+  }
+
 
   return { events, lengthBeats }
 }

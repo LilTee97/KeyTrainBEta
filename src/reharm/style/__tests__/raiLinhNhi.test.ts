@@ -70,7 +70,14 @@ describe('tay phải giang tấu bám vào tay trái', () => {
       const moc = mocGo(left, right)
       return moc.filter((v) => v.l.length && v.r.length).length / moc.length
     })
-    expect(ti).toBeGreaterThan(0.45)
+    /*
+      Ngưỡng 0,45 cũ đến từ MỘT bài — giang tấu Biển Tình, 55%. Đo cả năm bài bolero
+      thì thước này ra thấp hơn hẳn: dạo 38% · giang 40% · kết 31%. Sau khi hạ
+      `CUNG_GO` về 0,54 theo số đo năm bài, bản sinh ra 42% — vẫn TRÊN mức năm bài.
+      Nên hạ ngưỡng về 0,35: nó vẫn giữ luật "quá một phần ba số mốc có cả hai tay",
+      mà không còn khoá cứng con số của một bài lệch.
+    */
+    expect(ti).toBeGreaterThan(0.35)
     expect(ti).toBeLessThan(0.65)
   })
 
@@ -378,6 +385,43 @@ describe('nốt RH bám hợp âm đang vang', () => {
     }
   })
 
+  it('hợp âm màu: RH chỉ 1-3-5, không 9', () => {
+    const mau = parseChordInput('Cadd9 Am9').chords
+    const left = soloLeftHand({ chords: mau, beatsEach: mau.map(() => BAR), style: STYLE })
+    const right = raiLinhNhi({
+      left,
+      chords: mau,
+      beatsPerChord: BAR,
+      barBeats: BAR,
+      range: { low: 57, high: 95 },
+      chayNgonCuoi: false,
+    })
+    const cam = (root: number) => new Set([root, (root + 3) % 12, (root + 4) % 12, (root + 7) % 12])
+    for (const e of right) {
+      const chord = mau[Math.min(mau.length - 1, Math.floor(e.startBeat / BAR))]!
+      expect(cam(chord.root)).toContain(((e.notes[0]! % 12) + 12) % 12)
+    }
+  })
+
+  it('terThu: RH ♭3 trên trưởng, 3 trưởng trên V7', () => {
+    const ds = parseChordInput('C A7').chords
+    const left = soloLeftHand({ chords: ds, beatsEach: ds.map(() => BAR), style: STYLE })
+    const right = raiLinhNhi({
+      left,
+      chords: ds,
+      beatsPerChord: BAR,
+      barBeats: BAR,
+      range: { low: 57, high: 95 },
+      chayNgonCuoi: false,
+      terThu: true,
+    })
+    for (const e of right) {
+      const chord = ds[Math.min(ds.length - 1, Math.floor(e.startBeat / BAR))]!
+      const d = (((e.notes[0]! % 12) + 12) % 12 - chord.root + 12) % 12
+      expect(chord.quality.intervals.includes(10) ? [0, 4, 7] : [0, 3, 7]).toContain(d)
+    }
+  })
+
   it('không có gam thì không vỡ', () => {
     const left = soloLeftHand({ chords: CHORDS, beatsEach: CHORDS.map(() => BAR), style: STYLE })
     const right = raiLinhNhi({ left, chords: CHORDS, beatsPerChord: BAR, barBeats: BAR, range: { low: 57, high: 95 } })
@@ -558,5 +602,96 @@ describe('câu chạy chèn giữa đoạn', () => {
     const dai = cum.filter((one) => one.length >= 4)
     expect(dai.length).toBeGreaterThanOrEqual(4)
     for (const one of dai) expect(one.length).toBe(6)
+  })
+})
+
+/*
+  CHUỖI LIỀN BẬC PHẢI ĐI TRÊN GAM, KHÔNG PHẢI TRÊN NỐT HỢP ÂM.
+
+  `options.scale` từng được KHAI BÁO mà không dòng nào đọc, nên khối chuỗi dựng
+  thang bằng `tam()` — ba nốt hợp âm, hai bậc cạnh nhau cách một quãng BA. Cả
+  đoạn dạo sinh ra chỉ 5% bước đi ≤ 2 nửa cung, trong khi bản ký âm Đừng Xa ô
+  1-9 đo được 45% (bước 25, nhảy 30).
+
+  Lỗi ấy sống lâu vì không lưới nào nhìn vào ĐỘ RỘNG bước đi — các lưới khác chỉ
+  kiểm mốc gõ, khe hai tay, tỉ lệ trùng lớp. Đây là lưới bù chỗ đó.
+*/
+describe('chuỗi liền bậc đi trên gam', () => {
+  const AM = [9, 11, 0, 2, 4, 5, 7] as const
+
+  const buocNhay = (scale?: readonly number[]) => {
+    let buoc = 0
+    let nhay = 0
+    for (let take = 0; take < 12; take += 1) {
+      const left = soloLeftHand({
+        chords: CHORDS,
+        beatsEach: CHORDS.map(() => BAR),
+        style: STYLE,
+      })
+      const right = raiLinhNhi({
+        left,
+        chords: CHORDS,
+        beatsPerChord: BAR,
+        range: { low: 57, high: 95 },
+        take,
+        ...(scale ? { scale: scale as never } : {}),
+      })
+        .slice()
+        .sort((a, b) => a.startBeat - b.startBeat)
+        .map((e) => Math.max(...e.notes))
+      for (let at = 1; at < right.length; at += 1) {
+        const xa = Math.abs(right[at]! - right[at - 1]!)
+        if (xa > 0 && xa <= 2) buoc += 1
+        else if (xa >= 3) nhay += 1
+      }
+    }
+    return buoc / (buoc + nhay)
+  }
+
+  it('có gam thì bước đi liền bậc quanh mức bản ký âm', () => {
+    const ty = buocNhay(AM)
+    expect(ty).toBeGreaterThan(0.3)
+    expect(ty).toBeLessThan(0.6)
+  })
+
+  /*
+    Lưới CỐT LÕI: truyền gam vào PHẢI đổi được đầu ra. Suốt một thời gian
+    `options.scale` không dòng nào đọc, nên truyền hay không cũng ra y hệt —
+    đúng thứ lưới này bắt.
+
+    So tương đối chứ không đóng đinh một ngưỡng tuyệt đối: mẫu thô này còn có
+    câu chạy sáu nốt với bước 2-2-3-5-2 đóng góp sẵn một phần bước ngắn, nên
+    con số nền không phải 5% như đo riêng trên đoạn dạo.
+  */
+  it('truyền gam phải nâng tỉ lệ liền bậc lên rõ rệt', () => {
+    /*
+      Khoảng cách thu lại sau khi hạ `CHUOI_MOI_O` về 0,45: 0,367 → 0,446, tức 7,9 điểm
+      thay vì hơn 10 như trước. Lưới này sinh ra để bắt `scale` chết, và 7,9 điểm thì
+      thừa sức chứng minh nó còn sống — chết thì khoảng cách bằng 0.
+    */
+    expect(buocNhay(AM)).toBeGreaterThan(buocNhay() + 0.05)
+  })
+
+  it('có gam vẫn không bao giờ chui xuống dưới tay trái', () => {
+    for (let take = 0; take < 12; take += 1) {
+      const left = soloLeftHand({
+        chords: CHORDS,
+        beatsEach: CHORDS.map(() => BAR),
+        style: STYLE,
+      })
+      const right = raiLinhNhi({
+        left,
+        chords: CHORDS,
+        beatsPerChord: BAR,
+        range: { low: 57, high: 95 },
+        take,
+        scale: AM as never,
+      })
+      for (const v of mocGo(left, right)) {
+        if (v.l.length && v.r.length) {
+          expect(Math.min(...v.r), `lượt ${take}`).toBeGreaterThan(Math.max(...v.l))
+        }
+      }
+    }
   })
 })

@@ -587,6 +587,8 @@ export function ReharmHome() {
   const [fillRests, setFillRests] = useState<Record<number, number>>({})
   const [lickyFills, setLickyFills] = useState(true)
   const [lickyRuns, setLickyRuns] = useState(false)
+  const [linhNhiFills, setLinhNhiFills] = useState(false)
+  const [linhNhiRuns, setLinhNhiRuns] = useState(false)
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
   const [phraseSpin, setPhraseSpin] = useState(0)
   const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
@@ -1481,7 +1483,7 @@ export function ReharmHome() {
   }, [vongHoaThanh])
 
   const introSymbols = useMemo(() => {
-    const cue = cueChord(phraseOpening)
+    const cue = thaySolo === 'linh-nhi' ? null : cueChord(phraseOpening)
     return [
       ...phraseChords('intro', reharm.key, {
         songChords: hopAmChoDoan('intro'),
@@ -1490,8 +1492,23 @@ export function ReharmHome() {
         songIntro: hopAmDaoGoc(),
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
+      /*
+        Ô hút bậc V nối SAU vòng, nên `phraseChords` không biết tới nó — xem
+        `daoDungXa.ts`. Không thêm ở đây thì lưới hiện tám ô còn tai nghe chín,
+        và người dùng đọc lưới ra kết luận là nút tick chẳng làm gì.
+      */
+      ...(thaySolo === 'linh-nhi' && reharm.key
+        ? [`${pitchClassName(normalizePitchClass(reharm.key.tonic + 7))} (hút)`]
+        : []),
     ]
-  }, [reharm.key, hopAmChoDoan, vongPhienKhuc, phraseOpening, thaySolo, hopAmDaoGoc])
+  }, [
+    reharm.key,
+    hopAmChoDoan,
+    vongPhienKhuc,
+    phraseOpening,
+    thaySolo,
+    hopAmDaoGoc,
+  ])
 
   const outroSymbols = useMemo(
     () =>
@@ -1706,15 +1723,6 @@ export function ReharmHome() {
       */
       const plainAt = (mainIndex: number, fallback: ParsedChord): ParsedChord =>
         sequence.chords[mainIndex] ?? fallback
-      if (chorus.length === 0) return null
-
-      /*
-        Hỏi não trước, heuristic cũ đỡ sau.
-
-        Não chỉ trả lời khi bốn hợp âm ấy nằm trong một vòng hòa âm thầy Hải đã
-        chỉ đích danh là dùng được cho đoạn dạo. Không có căn cứ thì nó im, và
-        `chooseChorusLoop` chọn như trước — không mất gì.
-      */
       const nextFirst = _next
         ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
         : undefined
@@ -1731,16 +1739,27 @@ export function ReharmHome() {
               tonHungGiang,
             )
           : []
-      const fromBrain = theoThay.length
-        ? null
-        : brainInterludeWindow({
-            chords: loopChords,
-            key: reharm.key,
-            nextChord: nextFirst?.chord,
-            size: interludeChords,
-          })
-      const window = fromBrain ?? chooseChorusLoop(loopChords, interludeChords)
-      const origin = chorus[0]!.span
+      if (thaySolo === 'linh-nhi') {
+        if (theoThay.length === 0) return null
+      } else if (chorus.length === 0) {
+        return null
+      }
+      const fromBrain =
+        theoThay.length > 0 || thaySolo === 'linh-nhi'
+          ? null
+          : brainInterludeWindow({
+              chords: loopChords,
+              key: reharm.key,
+              nextChord: nextFirst?.chord,
+              size: interludeChords,
+            })
+      const window =
+        thaySolo === 'linh-nhi' ? null : (fromBrain ?? chooseChorusLoop(loopChords, interludeChords))
+      const origin = chorus[0]?.span ?? {
+        start: 0,
+        beats: chordBeats,
+        chord: theoThay[0]!,
+      }
       const picked = (
         theoThay.length > 0
           ? theoThay.map((chord, i) => ({
@@ -1940,6 +1959,19 @@ export function ReharmHome() {
                 barBeats: phrasePulseBar,
                 range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
                 take: take + phraseSpin + playSpin.current,
+                chayNgonCuoi: false,
+                terThu: true,
+                /*
+                  Gam cho chuỗi liền bậc — cùng lý do với đoạn dạo.
+
+                  Người dùng từng báo tay phải giang tấu "quá đơn sơ và thiếu
+                  câu chạy scale". Lần sửa ấy chưa bao giờ có hiệu lực: chỗ này
+                  không truyền gam, mà `raiLinhNhi` cũng khai `scale` rồi bỏ
+                  không đọc, nên khối chuỗi lui về nốt hợp âm — cách nhau quãng
+                  ba. Bản ký âm giang tấu Đừng Xa đo được 41% bước đi ≤ 2 nửa
+                  cung; dựng theo nốt hợp âm thì không thể tới gần con số ấy.
+                */
+                ...(phraseScale ? { scale: phraseScale.pitchClasses } : {}),
               })
             : null) ??
           builtLine(lastLoop ? lastLoopChords : windowChords, take, true) ??
@@ -2314,6 +2346,8 @@ export function ReharmHome() {
           ),
           lickyFills,
           lickyRuns,
+          linhNhiFills,
+          linhNhiRuns,
           lickyMode,
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
@@ -2341,6 +2375,8 @@ export function ReharmHome() {
       fillRests,
       lickyFills,
       lickyRuns,
+      linhNhiFills,
+      linhNhiRuns,
       lickyMode,
       phraseSpin,
       breaths,
@@ -2498,6 +2534,8 @@ export function ReharmHome() {
       slashEdits,
       lickyFills,
       lickyRuns,
+      linhNhiFills,
+      linhNhiRuns,
       lickyMode,
       acceptedPassing,
       styleId,
@@ -2546,6 +2584,8 @@ export function ReharmHome() {
       slashEdits,
       lickyFills,
       lickyRuns,
+      linhNhiFills,
+      linhNhiRuns,
       lickyMode,
       acceptedPassing,
       styleId,
@@ -2600,6 +2640,8 @@ export function ReharmHome() {
     setSlashEdits(saved.slashEdits ?? {})
     setLickyFills(saved.lickyFills ?? true)
     setLickyRuns(saved.lickyRuns ?? false)
+    setLinhNhiFills(saved.linhNhiFills ?? false)
+    setLinhNhiRuns(saved.linhNhiRuns ?? false)
     setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)
 
@@ -2804,17 +2846,32 @@ export function ReharmHome() {
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(() => {
     let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
-    if (!chiecLa) return base
+    const themSolo = thaySolo === 'linh-nhi' || chiecLa
+    if (!themSolo) return base
     base = base.filter((step) => {
       if (step.type !== 'section' || !songSources) return true
       return !/dạo|intro/i.test(songSources[step.source]?.name ?? '')
     })
-    base = base.map((step) =>
-      step.type === 'intro' ? { ...step, restAfter: 0 } : step,
-    )
-    if (base.some((step) => step.type === 'intro')) return base
-    return [{ type: 'intro' as const, restAfter: 0 }, ...base]
-  }, [arrangement, songSources, chiecLa])
+    if (!base.some((step) => step.type === 'intro')) {
+      base = [{ type: 'intro' as const, restAfter: 0 }, ...base]
+    }
+    if (thaySolo === 'linh-nhi' && songSources && songSources.length > 0) {
+      if (!base.some((step) => step.type === 'interlude')) {
+        const chorus = songSources.findIndex((source) => /điệp/i.test(source.name))
+        const over = chorus >= 0 ? chorus : Math.max(0, songSources.length - 1)
+        const giang = { type: 'interlude' as const, over, loops: 2, restAfter: 0 }
+        const ket = base.findIndex((step) => step.type === 'outro')
+        base =
+          ket >= 0
+            ? [...base.slice(0, ket), giang, ...base.slice(ket)]
+            : [...base, giang]
+      }
+      if (!base.some((step) => step.type === 'outro')) {
+        base = [...base, { type: 'outro' as const }]
+      }
+    }
+    return base
+  }, [arrangement, songSources, chiecLa, thaySolo])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -2867,9 +2924,15 @@ export function ReharmHome() {
               thay: thaySolo,
               vongPhienKhuc,
               songIntro: hopAmDaoGoc(),
-              ...(!thaySolo && phraseScale
-                ? { scale: phraseScale.pitchClasses }
-                : {}),
+              /*
+                Gam đưa vào CẢ KHI đã chọn thầy.
+
+                Cổng `!thaySolo` cũ khoá gam khỏi lối bám tay trái, nên chuỗi
+                liền bậc của `raiLinhNhi` không có thang nào để đi và lui về nốt
+                hợp âm — cách nhau quãng ba. Đó là chỗ 16% liền bậc so với 45%
+                trên bản ký âm.
+              */
+              ...(phraseScale ? { scale: phraseScale.pitchClasses } : {}),
               beatsPerChord: chordBeats,
               dropRoot,
               opening: recolored.find((chord) => !chord.passing) ?? null,
@@ -2888,11 +2951,30 @@ export function ReharmHome() {
                 bám tay trái và sinh câu độc lập — xoay cùng nhịp chứ không mỗi
                 đường một kiểu.
               */
-              take: (kind === 'outro' ? 1 : 0) + phraseSpin + playSpin.current,
+              /*
+                ĐOẠN DẠO ĐÓNG BĂNG; đoạn kết và giang tấu vẫn đổi theo lượt.
+
+                Câu dạo là thứ được SOẠN, không phải thứ ngẫu hứng. Cả sổ
+                `sheet-solos` là bản ký âm những câu dạo cố định — Linh Nhi đàn
+                bài Đừng Xa mười lần thì mười lần câu dạo giống nhau. Chỗ ngẫu
+                hứng sống là giang tấu, và nó đang chạy hai lượt trong cùng một
+                lần phát nên đổi ở đó nghe ra ngay.
+
+                Ba lý do thực dụng: ca sĩ tập với một câu dạo rồi tới lúc hát
+                lại nghe câu khác thì phải mò lại chỗ vào; người tập đàn không
+                dựa được vào một nền đệm đổi mỗi lượt; và câu dạo chỉ nghe MỘT
+                lần mỗi lượt nên đổi giữa hai lượt cách nhau vài phút không đọc
+                ra là phong phú mà đọc ra là không nhất quán.
+
+                ĐÂY LÀ ĐẢO MỘT QUYẾT ĐỊNH CŨ. Trước đây người dùng yêu cầu cho
+                dạo/kết đổi theo lượt như giang tấu, lúc chúng còn đóng cứng
+                `take = 0`. Nay họ nghe lại và đồng ý đóng băng riêng câu dạo.
+              */
+              take: kind === 'intro' ? 0 : 1 + phraseSpin + playSpin.current,
               range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
               ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
               solo: (chords) =>
-                phraseSolo(chords, kind === 'outro' ? 1 : 0, kind !== 'outro'),
+                phraseSolo(chords, kind === 'outro' ? 1 : 0, false),
             })
             if (!built) return brainPhrase({ kind, key: reharm.key })
             return built
@@ -4360,6 +4442,24 @@ export function ReharmHome() {
                   {option.label}
                 </button>
               ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs text-dim">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={linhNhiFills}
+                  onChange={(event) => setLinhNhiFills(event.target.checked)}
+                />
+                Fill Linh Nhi
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={linhNhiRuns}
+                  onChange={(event) => setLinhNhiRuns(event.target.checked)}
+                />
+                Run Linh Nhi
+              </label>
             </div>
 
             {/*

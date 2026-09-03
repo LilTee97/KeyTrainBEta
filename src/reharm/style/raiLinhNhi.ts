@@ -17,7 +17,7 @@ import type { TimelineEvent } from './types'
  *
  * |                          | phiên khúc | giang tấu |
  * |--------------------------|-----------|-----------|
- * | mốc gõ có CẢ HAI tay     | 45%       | **55%**   |
+ * | mốc gõ có CẢ HAI tay     | 45%       | **55%**   |  ← một bài; năm bài: 40%
  * | chỉ tay trái             | 43%       | 31%       |
  * | chỉ tay phải             | 11%       | 13%       |
  * | nốt TRÙNG LỚP CAO ĐỘ     | 31%       | **47%**   |
@@ -43,7 +43,16 @@ import type { TimelineEvent } from './types'
  */
 
 /** Bao nhiêu phần cú gõ tay trái được tay phải gõ cùng. Đo: 55 trên 55+31. */
-const CUNG_GO = 0.64
+/*
+  HẠ TỪ 0,64 XUỐNG 0,54 — người dùng chốt theo số đo năm bài (phiếu T2.1).
+
+  0,64 bằng đúng Biển Tình (0,63–0,64), mà Biển Tình là bài CAO NHẤT trong năm. Bốn bài
+  kia: Đường Xưa 0,40–0,45 · Mùa Xuân 0,48–0,52 · Đừng Xa 0,51–0,61 · Rừng Lá 0,58–0,59.
+  Gộp cả năm: 0,54.
+
+  MUỐN QUAY LẠI thì đặt 0.64 — nếu người dùng nghe thấy tay phải rời tay trái quá.
+*/
+const CUNG_GO = 0.54
 
 /**
  * PHÁCH 1 LUÔN CÓ NỐT TAY PHẢI. Đây là luật cứng, không phải xác suất.
@@ -94,8 +103,36 @@ const THUA_MOC_XEN = 0.5
  */
 const DEM_CHUNG = 0.1
 
-/** Trong những mốc chung, bao nhiêu phần tay phải lấy lại lớp cao độ tay trái. */
-const NHAN_BAN = 0.47
+/**
+ * Trong những mốc chung, bao nhiêu phần tay phải lấy lại lớp cao độ tay trái.
+ *
+ * Đây là núm quyết định hai tay nghe ra là MỘT hay là HAI. Cao thì tay phải
+ * thành tiếng vọng của tay trái, hai bè hoà thành một khối dày; thấp thì hai bè
+ * rời hẳn và mất luôn chữ ký Linh Nhi — tay phải TỰA vào tay trái, chứ không
+ * nhân đôi nó.
+ *
+ * Số cũ 0,47 lấy từ **đúng một đoạn**: giang tấu Biển Tình, 49 mốc chung. Đo
+ * lại cả sáu đoạn bolero trong kho thì nó là ngoại lệ cao nhất, không phải mức
+ * chung:
+ *
+ * |            | dạo | giang | kết | cả bài |
+ * |------------|-----|-------|-----|--------|
+ * | Biển Tình  | 40% | 47%   | 26% | 45/111 = **0,41** |
+ * | Đừng Xa    | 26% | 22%   | 54% | 30/96  = **0,31** |
+ *
+ * Gộp cả hai: 75/207 = 0,362. Trung bình hai bài: 0,359. Hai cách tính ra như
+ * nhau nên con số không phụ thuộc bài nào dài hơn.
+ *
+ * ĐỪNG dựng luật theo đoạn từ bảng trên. Đoạn kết chỉ có 19 và 24 mốc chung —
+ * ở cỡ ấy đổi một nốt là đổi bốn năm điểm phần trăm, và hai bài còn ngược chiều
+ * nhau. Cột "cả bài" mới là thứ đọc được.
+ *
+ * Hai bài cũng chưa đủ để biết đây là hằng số phong cách hay là thứ thay đổi
+ * theo bài. Có bài Linh Nhi bolero thứ ba, thứ tư mà vẫn quanh 0,31–0,41 thì
+ * chốt trung vị; nếu tản ra 0,2–0,6 thì nó phải thành LỰA CHỌN cho người dùng,
+ * không phải một con số.
+ */
+const NHAN_BAN = 0.36
 
 /** Bao nhiêu mốc là tay phải gõ MỘT MÌNH, chen giữa hai cú gõ tay trái. */
 const RIENG = 0.2
@@ -156,8 +193,26 @@ const GIU_NUA_O = 0.5
  * Độ dài nghiêng về 3-4: bản gốc ra [3, 3, 4, 7, 3] — bốn trên năm chuỗi là
  * ngắn, chuỗi bảy nốt là ngoại lệ. Rút thăm đều 3-7 thì chuỗi dài hay không
  * vừa ô rồi bị bỏ, và tổng số chuỗi tụt.
+ *
+ * HẠ TỪ 1 XUỐNG 0,45 — người dùng chốt theo số đo năm bài (phiếu T2.2).
+ *
+ * Núm này không đo trực tiếp được; thứ đo được là **tỉ lệ bước đi liền bậc** của tay
+ * phải. Bản ký âm năm bài: dạo **31%**, giang **36%**. Để `CHUOI_MOI_O = 1` thì sinh ra
+ * 49% và 52% — cao hơn bản gốc chừng 15–18 điểm, tức nghe ra nhiều câu chạy hơn thầy
+ * thật. Dò bốn mức:
+ *
+ * | CHUOI_MOI_O | dạo | giang |
+ * |-------------|-----|-------|
+ * | 1           | 49% | 52%   |
+ * | 0,6         | 39% | 38%   |
+ * | **0,45**    | **32%** | **34%** |
+ * | 0,3         | 24% | 25%   |
+ *
+ * 0,45 sát nhất. 0,5 ra 35/35 — đúng giang hơn nhưng lệch dạo bốn điểm, tổng sai lớn hơn.
+ *
+ * MUỐN QUAY LẠI thì đặt 1 — nếu người dùng nghe thấy câu đàn ít chạy quá.
  */
-const CHUOI_MOI_O = 1
+const CHUOI_MOI_O = 0.45
 
 /**
  * Bao nhiêu phần ô có thêm một câu chạy móc kép ngắn.
@@ -223,6 +278,18 @@ const lop = (note: number) => (((note % 12) + 12) % 12) as PitchClass
  * `san` là trần tay trái cộng khe hẹp nhất — đây là chỗ giữ luật "không bao giờ
  * bắt chéo", và số đo cho 0% nên nó là luật cứng chứ không phải xu hướng.
  */
+/** 1-3-5 (sus: 1-4-5). `terThu`: ♭3 trừ V7 — Đừng Xa RH F trên D, Eb trên C. */
+function tam(chord: ParsedChord, terThu = false): PitchClass[] {
+  const r = chord.root
+  const iv = chord.quality.intervals
+  const bac = [0, 7]
+  if (terThu) bac.push(iv.includes(10) && iv.includes(4) ? 4 : 3)
+  else if (iv.includes(3)) bac.push(3)
+  else if (iv.includes(4)) bac.push(4)
+  else if (iv.includes(5)) bac.push(5)
+  return bac.map((d) => ((r + d) % 12) as PitchClass)
+}
+
 function datNot(pc: PitchClass, muon: number, san: number, tran: number): MidiNote | null {
   let note = Math.round((muon - pc) / 12) * 12 + pc
   while (note < san) note += 12
@@ -252,6 +319,8 @@ export interface RaiLinhNhiOptions {
    * Bỏ = không chèn chạy ngón (đoạn dạo).
    */
   chayNgonCuoi?: boolean
+  /** Giang giọng thứ: RH lấy ♭3, trừ V7. */
+  terThu?: boolean
 }
 
 export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
@@ -259,6 +328,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
   const barBeats = options.barBeats ?? beatsPerChord
   const take = options.take ?? 0
   const chayCuoi = options.chayNgonCuoi !== false
+  const terThu = options.terThu === true
   if (left.length === 0 || chords.length === 0) return []
 
   /* Gom tay trái theo mốc gõ: một mốc có thể nhiều nốt. */
@@ -294,7 +364,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     const tranTrai = Math.max(...duoi)
     const san = Math.max(range.low, tranTrai + KHE_HEP)
     const chord = hopAm(beat)
-    const tones = chordTonesStrict(chord)
+    const tones = tam(chord, terThu)
 
     /*
       Phách 1 thì LUÔN gõ. Nửa sau ô dày hơn nửa đầu — xem `THUA_NUA_DAU`.
@@ -319,11 +389,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
         nên nó vô tình trùng thêm, và tỉ lệ trùng lớp đo ra 66% thay vì 47%. Cái
         núm 0,47 không điều khiển được gì cả khi nhánh còn lại cũng trùng.
       */
-      const triad = tones.filter((pc) => {
-        const d = (pc - chord.root + 12) % 12
-        return d === 0 || d === 3 || d === 4 || d === 7
-      })
-      const ao = triad.length > 0 ? triad : tones
+      const ao = tones
       const copy = duoi.map(lop).filter((pc) => ao.includes(pc))
       const nhanBan = hash(take * 29 + index * 11) < NHAN_BAN
       let pc: PitchClass
@@ -450,12 +516,29 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
 
     Chọn một chỗ mở chuỗi trong ô rồi kéo 3-7 nốt liền bậc trên gam. Đi lên hay
     xuống rút thăm — bản gốc có cả hai.
+
+    THANG PHẢI DỰNG TỪ GAM, KHÔNG PHẢI TỪ NỐT HỢP ÂM.
+
+    Khối này từng dựng thang bằng `tam()` — ba nốt hợp âm — nên hai bậc cạnh
+    nhau cách một quãng BA. "Liền bậc" hoá ra là "liền nốt hợp âm", và cả đoạn
+    dạo sinh ra chỉ 16% bước đi ≤ 2 nửa cung trong khi bản ký âm Đừng Xa có 45%.
+    Tai đọc ra ngay: một chuỗi rải, không phải một câu nhạc.
+
+    Cùng lúc ấy `options.scale` được KHAI BÁO mà không dòng nào đọc — nên mọi
+    lần truyền gam vào từ bên ngoài đều rơi vào hư không. Hai lỗi che nhau: chỗ
+    gọi tưởng đã đưa gam vào, chỗ nhận thì vẫn chạy nốt hợp âm.
+
+    Không có gam thì lui về nốt hợp âm như cũ, để mọi đường gọi cũ giữ nguyên
+    hành vi.
   */
   {
     const soO = Math.ceil((chords.length * beatsPerChord) / barBeats)
     for (let o = 0; o < soO; o += 1) {
       if (hash(take * 83 + o * 19) >= CHUOI_MOI_O) continue
-      const khoGam = chordTonesStrict(hopAm(o * barBeats))
+      const khoGam =
+        options.scale && options.scale.length >= 5
+          ? options.scale
+          : tam(hopAm(o * barBeats), terThu)
       const thang: MidiNote[] = []
       for (let note = range.low; note <= range.high; note += 1) {
         if (khoGam.includes(lop(note))) thang.push(note as MidiNote)
@@ -611,12 +694,19 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
         trèo 14. Đầu ra cũng vậy: nốt đứng đúng chỗ câu chạy vừa dứt dính luôn
         vào cụm. Cho một khe thở mỗi đầu thì cụm về đúng hình của nó.
       */
-      const con2 = out.filter(
-        (e) => e.startBeat < tuChay - CHAY_MOC - 1e-6 ||
-          e.startBeat >= tuChay + CHAY_DAI + CHAY_MOC - 1e-6,
-      )
-      out.length = 0
-      out.push(...con2, ...chayNgon(tuChay, batDau as MidiNote, thu2, range.high))
+      /*
+        Dựng câu TRƯỚC rồi mới dọn chỗ. Không đủ quãng thì `chayNgon` trả rỗng,
+        và lúc ấy phải để nguyên đường rải — dọn trước thì thành một lỗ trống.
+      */
+      const cau = chayNgon(tuChay, batDau as MidiNote, thu2, range.high, sanChay)
+      if (cau.length > 0) {
+        const con2 = out.filter(
+          (e) => e.startBeat < tuChay - CHAY_MOC - 1e-6 ||
+            e.startBeat >= tuChay + CHAY_DAI + CHAY_MOC - 1e-6,
+        )
+        out.length = 0
+        out.push(...con2, ...cau)
+      }
     }
   }
 
@@ -698,7 +788,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
           ? Math.max(...moc.get(traiTruocDo[traiTruocDo.length - 1]!)!)
           : range.low
       const sanLucAy = Math.max(range.low, tranLucAy + KHE_HEP)
-      const kho2 = chordTonesStrict(hopAm(mocSap[at]!))
+      const kho2 = tam(hopAm(mocSap[at]!), terThu)
       const thang2: MidiNote[] = []
       for (let note = range.low; note <= range.high; note += 1) {
         if (kho2.includes(lop(note))) thang2.push(note as MidiNote)
@@ -726,7 +816,15 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
     const dau = datNot(lop(chord.root), range.high - 16, Math.max(range.low, tranTrai + KHE_HEP), range.high)
     if (dau !== null) {
       const thu = !chordTonesStrict(chord).includes(((chord.root + 4) % 12) as PitchClass)
-      con.push(...chayNgon(khung.tu, dau, thu, range.high))
+      con.push(
+        ...chayNgon(
+          khung.tu,
+          dau,
+          thu,
+          range.high,
+          Math.max(range.low, tranTrai + KHE_HEP),
+        ),
+      )
       return con.sort((a, b) => a.startBeat - b.startBeat)
     }
   }
@@ -796,18 +894,61 @@ export function khungChayNgon(
   return { tu: vach - CHAY_LUI, den: vach }
 }
 
-/** Sáu nốt móc kép đi lên, hình lấy từ lần chạy gốc. */
+/**
+ * Sáu nốt móc kép đi lên, hình lấy từ lần chạy gốc.
+ *
+ * ĐỤNG TRẦN THÌ HẠ QUÃNG TÁM, KHÔNG CẮT CỤT.
+ *
+ * Bản trước gặp trần là `break` giữa chừng, và câu chạy ra năm nốt. Cả cái
+ * `describe` "câu chạy chèn giữa đoạn" sinh ra từ đúng lỗi này ở dạng nặng hơn
+ * — người dùng báo "vẫn chưa thấy phần chạy nốt nào TRỪ cuối giang tấu" vì câu
+ * chèn bị cắt còn bốn. Năm nốt cũng là câu cụt, chỉ đỡ hơn.
+ *
+ * Chỗ gọi ở cửa ra đã tự né bằng cách khởi hành từ `range.high - 16`, nhưng chỗ
+ * gọi giữa đoạn lấy nốt khởi hành từ chính đường rải nên không kiểm soát được
+ * độ cao. Đặt luật vào trong hàm thì cả hai chỗ gọi cùng an toàn, và chỗ nào
+ * sau này gọi thêm cũng vậy.
+ *
+ * Người đàn thật cũng làm đúng thế: câu chạy không vừa trên cao thì chơi thấp
+ * xuống một quãng tám, chứ không bỏ dở nửa câu.
+ *
+ * NHƯNG HẠ TỚI ĐÂU THÌ DỪNG: `san` là trần tay trái cộng khe hẹp nhất. Luật
+ * "không bao giờ bắt chéo" đo ra 0% trên bản gốc nên nó là luật CỨNG, đứng trên
+ * luật câu chạy đủ sáu nốt. Thứ tự ưu tiên khi cả hai không cùng giữ được:
+ *
+ *   1. không bao giờ chui xuống dưới tay trái
+ *   2. chạy đủ sáu nốt
+ *   3. KHÔNG CHẠY — chứ không phải chạy cụt
+ *
+ * Lượt sửa đầu bỏ sót điều 1: hạ quãng tám tới đáy đàn, khe hai tay tụt còn 7
+ * nửa cung trong khi hẹp nhất cho phép là 9. Lượt sau chặn đúng sàn thì lộ ra
+ * rằng ở vài ô, tay trái leo cao tới mức giữa sàn và trần không đủ 14 nửa cung
+ * cho câu chạy trèo.
+ *
+ * Chỗ ấy trả về RỖNG. Người đàn không nhét một câu vào quãng tay không với
+ * tới — họ bỏ câu ấy, ô sau chạy. Và câu cụt chính là thứ người dùng đã bác một
+ * lần: "không đọc ra là một câu". Thà không có còn hơn có nửa vời.
+ *
+ * Câu chạy vốn là trang trí — `CHAY_THEM` chỉ rắc nó vào phần lớn ô chứ không
+ * phải mọi ô — nên bỏ một lần không mất gì của kết cấu.
+ */
 export function chayNgon(
   tu: number,
   batDau: MidiNote,
   thu: boolean,
   tran: number,
+  san: number,
 ): TimelineEvent[] {
   const buoc = thu ? CHAY_BUOC_THU : CHAY_BUOC_TRUONG
   const out: TimelineEvent[] = []
+  /* Tổng đường trèo của cả câu — 14 nửa cung ở cả hai dãy bước. */
+  const treo = buoc
+    .slice(0, CHAY_SO_NOT - 1)
+    .reduce((tong, buocMot) => tong + buocMot, 0)
   let note = batDau
+  while (note + treo > tran && note - 12 >= san) note -= 12
+  if (note + treo > tran) return []
   for (let at = 0; at < CHAY_SO_NOT; at += 1) {
-    if (note > tran) break
     out.push({
       notes: [note],
       startBeat: tu + at * CHAY_MOC,
