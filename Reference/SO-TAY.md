@@ -445,3 +445,448 @@ Phát + BPM nằm **đầu khung lời**. Tab Luyện đệm: tên hợp âm l�
 ```
 localStorage.removeItem('keytrain-deleted-styles'); location.reload()
 ```
+
+---
+
+## Linh Nhi — clone từ tám bản ký âm
+
+Đo từ `PianoBrain/video/Linh_Nhi/`, biên đoạn người dùng chốt trong `corpus.json`.
+Phiếu và số liệu đầy đủ: `PianoBrain/ingest/phieu-linh-nhi-bolero.md` và
+`phieu-linh-nhi-bolero-tra-loi-1.md`.
+
+### Vòng solo rút từ vốn hợp âm của bài, không dựng theo bậc cố định
+
+Đo 20 đoạn không lời của 7 bài: **16/20 không dùng bậc nào ngoài đoạn hát của chính bài
+ấy**. Bốn ngoại lệ chỉ gồm hai hợp âm — iv thứ (3 lần) và I trưởng Picardy (1 lần).
+
+`style/vonHopAmLinhNhi.ts` dựng bốn luật: lấy vốn của bài · mở trên hợp âm chủ, xoay vòng
+chứ không sắp lại · ô cuối dạo và giang là bậc V (cửa vào hát) · đoạn kết hãm hoà âm còn
+**0,45 hợp âm mỗi ô** (đo: 5/7 bài dưới 0,6; Lá Thư 0,00 — giữ nguyên suốt).
+
+Đoạn kết chậm lại bằng cách **giữ mỗi hợp âm hai ô**, không phải bằng cách ngắn đi.
+
+Nó chạy TRƯỚC dãy bậc cố định của `teacherSoloChords.ts` và trả rỗng khi bài dưới ba hợp
+âm, để đường cũ tiếp quản. Dãy cố định ấy là chỗ từng sinh ra `Bbm` — bậc VI thứ không
+thuộc bài nào trong năm bài đo được.
+
+### Luật "rút hợp âm về chất trơn" đã bị số đo bác — đừng bật lại
+
+Đếm chất hợp âm 7 bản ký âm: đoạn không lời **78%** hợp âm trơn, đoạn hát **77%**. Tỉ lệ y
+hệt — thầy KHÔNG rút màu ở đoạn solo. Cờ `plain` / `plainChords` đã xoá khỏi
+`phraseChords.ts` và `phraseSection.ts`; item kho `rule-interlude-plain-harmony` đánh dấu
+`rejected`, thay bằng `rule-linh-nhi-solo-giu-mau`.
+
+Thứ duy nhất thầy tránh ở đoạn solo là **`maj7`** — 20 lần ở đoạn hát, **0 lần** trong 30
+hợp âm màu của đoạn solo. `vonHopAmLinhNhi.ts` bỏ đúng chất ấy.
+
+### Bốn hằng số hạ theo số đo năm bài
+
+| hằng số | cũ | mới | triệu chứng để lùi |
+| --- | --- | --- | --- |
+| `CUNG_GO` | 0.64 | **0.54** | tay phải rời tay trái quá |
+| `CHUOI_MOI_O` | 1 | **0.45** | ít câu chạy quá |
+| `NHAN_BAN` | 0.47 | **0.36** | hai tay dính thành một khối |
+| `CHONG_O_THUA` | 0.62 | **giữ 0.62** | đã thử hạ 0.30 rồi trả lại |
+
+`CHUOI_MOI_O` chỉnh gián tiếp qua tỉ lệ liền bậc: `1` ra 49%/52%, `0.45` ra 32%/34%, đích
+là 31% (dạo) / 36% (giang).
+
+**T2.3 từng bị đề nghị hạ, và đề nghị ấy SAI**: so `0,62` (đo riêng ô tay trái thưa) với
+`20–34%` (trung bình cả đoạn, gồm cả ô dày mà bộ này chồng 0%) — hai tỉ lệ khác mẫu số.
+
+### Điệp khúc dày theo CHIỀU DỌC, không theo chiều ngang — họ `Bolero Nhi`
+
+Tỉ lệ mốc gõ có ≥2 nốt tay trái, phiên → điệp: Đường Xưa 18% → **76%**, Rừng Lá 24% →
+**67%**, ba bài kia gần như đứng yên. Nhưng **số mốc gõ không đổi** (8,3 → 8,3): tay trái
+đổi từ nốt đơn sang bấm hợp âm trên đúng những mốc cũ.
+
+Đây là lần thứ ba hình này xuất hiện — ô thưa câu dạo (tay phải chồng nốt), ô dồn áp chót,
+và điệp khúc. **Muốn dày thì chồng nốt, không thêm cú gõ.**
+
+`bolero-linh-nhi-3` (hiển thị *Bolero Nhi*): điệp giữ bass đơn ở phách 1, 3, 4 và chồng bộ
+ba ở các mốc yếu. n = 2 nên nó đứng cạnh ba họ Linh Nhi cũ, không thành mặc định.
+
+### Fill: chọn nút thầy là đổi cả nhãn lẫn nguồn
+
+Chọn Linh Nhi trong hàng nút thầy thì menu chuột phải đổi thành **Linh Fill / Linh Run**,
+nguồn lấy từ `licky/linhNhiPhrases.ts`. Hai ô tick cũ đã bỏ — chọn thầy rồi mà vẫn phát câu
+Licky thì không còn là lối thầy.
+
+Đọc `soloThay` (nút người dùng bấm) chứ **không** `thaySolo`: `thaySolo` lui về
+`soloTeacherOf(style.id)`, mà hàm ấy trả `'linh-nhi'` cho mọi điệu bật cờ rải-theo-tay-trái
+— bossa nova nằm trong đó.
+
+Thêm **bốn câu ba nốt** vào sổ. Đo 54 cụm móc kép trong đoạn có lời: **34 cụm 3 nốt (63%)**,
+11 cụm 4 nốt. Sổ ban đầu có 4, 4, 4, 6, 8, 8 nốt — không câu nào ba nốt. `placeLocked` neo
+câu vào CUỐI hợp âm nên độ dài câu quyết định chỗ bắt đầu; câu 6–8 nốt đẩy điểm vào tận
+phách 2, trong khi thầy hay vào ở **phách 4,25** (15/54).
+
+### BẪY ĐO: gom nốt chồng vào câu chạy làm sai mọi tỉ lệ quãng
+
+Bộ gom cụm ban đầu cho hai nốt **cùng phách** vào một cụm, nên hợp âm chồng bị tính thành
+câu chạy toàn nốt nhảy. Kết quả: 146 cụm, 8% liền bậc — và tôi kết luận nhầm rằng sổ fill
+quá du dương.
+
+Sửa lại (mỗi mốc chỉ lấy nốt trên cùng, nốt sau phải muộn hơn nốt trước): **54 cụm, 18%
+liền bậc** — khớp sổ (19%). Vị trí hay nhất cũng đổi từ phách 4,5 sang **4,25**.
+
+Cùng loại bẫy đã sập ba lần trong một phiên: hai lần so hai tỉ lệ khác mẫu số, một lần gom
+nhầm. **Trước khi so hai con số, kiểm chúng có cùng mẫu số và cùng định nghĩa không.**
+
+### Đoạn hát chia đôi ô thì đoạn dạo cũng chia — nhưng thưa hơn một nửa
+
+Câu hỏi gốc: bài có **phần hát** chia đôi hợp âm thì Linh Nhi có đổi cách chọn hoà thanh
+cho đoạn dạo không. Đo bảy bản ký âm, đếm ô có từ hai hợp âm KHÁC nhau:
+
+| bài | đoạn hát | đoạn dạo | tỉ số |
+|---|---|---|---|
+| Biển Tình | 19% | 11% | 0,58 |
+| Đừng Xa | 25% | 11% | 0,44 |
+| Lá Thư | 40% | 33% | **0,83** |
+| Một Cõi | 1% | 0% | — |
+| Đường Xưa | 13% | 0% | — |
+| Mùa Xuân | 20% | 12% | 0,60 |
+| Rừng Lá | 39% | 11% | **0,28** |
+| **gộp** | **22%** | **10%** | |
+
+**Có ảnh hưởng, và 7/7 bài cùng chiều**: đoạn dạo luôn chia thưa hơn hoặc bằng đoạn hát,
+không bài nào ngược lại. Hai bài mà đoạn hát chia **dưới 15%** có đoạn dạo **không chia ô
+nào** — đó là `NGUONG_CHIA`. Năm bài còn lại tỉ số 0,28–0,83, trung vị 0,58; lấy
+`HE_SO_CHIA = 0,55` là lấy khoảng giữa. **n=5, tản rộng** — Lá Thư kéo lên, Rừng Lá kéo
+xuống, hai đầu cách nhau ba lần.
+
+Giá trị cũ 0,45 (lấy tỉ lệ gộp 10/22); triệu chứng để lùi là bài chia nhiều và bài chia
+vừa ra cùng một số ô chia.
+
+Kiểm lại trên đoạn tám ô: Đường Xưa 13% → 0 ô, Biển Tình 19% → 1 ô (thực 11%), Mùa Xuân
+20% → 1 (thực 12%), Đừng Xa 25% → 1 (thực 11%), Rừng Lá 39% → 2 (thực 11%, **hơi quá**),
+Lá Thư 40% → 2 (thực 33%, **hơi thiếu**). Khớp 4/6.
+
+**Chất hợp âm nửa sau:** át hoặc át phụ **3/6** (Đừng Xa `E→A`, Lá Thư `Bb→E`, Biển Tình
+`F#m→E`), hạ át 2/6, chủ 1/6. n=6 — chỉ đủ nói át là chất hay gặp nhất, nên ưu tiên một
+hợp âm chất át trong VỐN CỦA BÀI, không có thì đi tiếp trong vốn. Cũ luôn đi tiếp trong
+vốn; triệu chứng là vốn xếp cạnh nhau kiểu `Am` rồi `Eb` thì ô chia nhảy quãng ba cung.
+
+**Vị trí chia — chỗ yếu nhất.** Sáu ô chia nằm ở 0,89 · 0,83 · 0,78 · 0,50 · 0,33 · 0,33
+của đoạn; 3/6 ở một phần ba cuối. n=6, chưa thành luật. Tạm đặt từ ô **áp chót** lùi lên,
+chừa ô cuối vì đó là cửa bậc V cho ca sĩ vào hát.
+
+**Ba chỗ code sót, đã làm hết:**
+
+1. `vonHopAmLinhNhi.ts` đặt cứng 1,00 hợp âm mỗi ô. Nay chèn hợp âm nửa ô sau theo tỉ lệ
+   trên, và `nhipVong()` trả số phách từng hợp âm để `phraseSection` cắt đúng nửa ô.
+2. `giaiDieuDaoLinhNhi.ts` chỉ đọc hợp âm đầu ô. Nay **trải hợp âm ra trục phách** rồi mới
+   chia về ô, nhận thêm `beatsEach`. Nốt cảm tra hợp âm đang vang tại đúng phách của nốt.
+3. `ODao` thêm `bac2` và `chia`; ô chia đôi của bài chỉ ghép với ô chia đôi của bản ký âm.
+
+Dây nối: `VongHoaThanh.tiLeChia` (mới) → `ReharmHome.tiLeChiaHat` → `buildPhraseSection`
+→ `phraseChords` → `vonHopAmLinhNhi`. `khungHopAm` vốn đã bỏ hợp âm không rơi trên vạch
+nhịp, nên tỉ lệ bị bỏ **chính là** tỉ lệ ô chia đôi.
+
+**BẪY 1: độ dài đoạn đếm theo SỐ HỢP ÂM.** `phraseSection` tính
+`roundBeats = chords.length * beatsPerChord`. Ô chia đôi dài nửa ô, nên đếm theo số hợp
+âm thì mỗi ô chia làm đoạn dạo dôi thêm một ô trọn — đo được **36 phách thành 40**. Nay
+lấy tổng `beatsEach`.
+
+Chỗ này **không bài kiểm hàm lẻ nào bắt được** vì nó nằm giữa dây nối: `vonHopAmLinhNhi`
+trả đúng, `nhipVong` trả đúng, mà `phraseSection` vẫn đếm sai. Phải có bài kiểm đi từ
+`doVongHoaThanh` tới `buildPhraseSection` mới thấy — đó là `chiaOXuyenSuot.test.ts`.
+
+**BẪY 2: đánh dấu nửa ô bằng WeakSet trên đối tượng hợp âm.** Vòng tám ô rút từ vốn sáu
+hợp âm thì cùng một `A7` xuất hiện ở nhiều ô — đánh dấu thẳng lên nó là **mọi** ô chứa
+`A7` bị coi là nửa ô và đoạn dạo co còn một nửa độ dài. Hai nửa của ô chia phải là đối
+tượng riêng (`{ ...chord }`). Bài kiểm canh bằng cách đòi tổng số phách luôn bằng 32.
+
+**Điệu vẫn để chung.** Người dùng chốt: *"tạm thời vẫn giữ chung slow rock và bolero cho
+đến khi nào đủ lượng sheet bolero thứ trong kho."* Trường `dieu` đã có sẵn trong bảng
+cho lúc tách.
+
+### Biển Tình là RÊ TRƯỞNG, không phải Si thứ — và bolero đang lẫn slow rock
+
+Hai chuyện tìm ra khi người dùng hỏi *"có gom lẫn tư duy slow rock giọng thứ sang bolero
+giọng thứ không"*.
+
+**Một — đọc sai giọng Biển Tình.** Tôi đọc theo hợp âm MỞ ĐẦU đoạn dạo (`Bm`) và kết
+luận Si thứ. Đếm cả bài thì `D=19` nhiều nhất, `Bm=13`, `F#m=13`, `A=12`, bài đóng trên
+`D`, và vòng `D-Bm-F#m-Em-A-D` là **I-vi-iii-ii-V-I**. Rê **TRƯỞNG**; đoạn dạo chỉ mở
+trên bậc vi.
+
+Cái sai này từng nằm trong `tuyenDaoLinhNhi.ts` với `thu: true, chuGoc: 11`, tức đem
+chất liệu giọng trưởng đi ghép vào bài giọng thứ, lại lệch chủ âm 3 nửa cung. Đã sửa:
+cao độ `+9`, bậc hợp âm `+9 (mod 12)`, `thu: false`, `chuGoc: 2`.
+
+Sửa xong thì khớp lại với chú thích cũ trong `vonHopAmLinhNhi.ts` — "**3 trưởng, 4
+thứ**" — vốn đã đúng từ trước; chính tôi mới là chỗ lệch.
+
+**Luật rút ra:** giọng của một bài phải đọc bằng **đếm cả bài và xem bài đóng ở đâu**,
+không đọc bằng hợp âm đầu đoạn dạo.
+
+**Hai — kho tuyến trộn hai điệu.** Bảy sheet gồm **5 bolero, 2 slow rock** (Lá Thư Trần
+Thế, Một Cõi Đi Về). `locO()` chỉ lọc thứ/trưởng và số phách, **không lọc điệu**:
+
+| kho | tuyến trong kho | slow rock chiếm |
+|---|---|---|
+| thứ, 4 phách | Đừng Xa · Rừng Lá · **Lá Thư** | **26%** ô được ghép (n=480) |
+| trưởng, 4 phách | Biển Tình · Đường Xưa · Mùa Xuân | 0% |
+| thứ, 3 phách | **Một Cõi** | 100% |
+
+Bên hoà thanh cũng vậy: `vonHopAmLinhNhi.ts` đo gộp **20 đoạn không lời của cả 7 sheet**,
+trong đó 6 đoạn là slow rock = **30% mẫu**. Không có chỗ nào tách điệu.
+
+Ngược lại, các hằng số trong `raiLinhNhi.ts` và `daoDungXa.ts` **thuần bolero** — phiếu
+T2 đo trên năm bài Biển Tình · Đường Xưa · Mùa Xuân · Đừng Xa · Rừng Lá, cả năm đều
+bolero.
+
+Chưa sửa chỗ trộn này vì chưa rõ người dùng muốn tách hay muốn giữ. Muốn tách thì thêm
+trường `dieu` vào `TuyenDao` và lọc trong `locO()`; giá phải trả là kho thứ 4 phách tụt
+từ 24 ô xuống **18 ô** (chỉ còn Đừng Xa và Rừng Lá).
+
+**Lỗi phụ sửa kèm:** kho thứ co lại còn 3 tuyến thì phép quay vòng hạng ứng viên bị
+trùng lượt. Nay **lệch pha theo ô** — ô thứ `o` quay thêm `o` nhịp.
+
+### Đoạn dạo GHÉP MẢNH theo bậc hợp âm — tư duy tạo tuyến
+
+`tuyenDaoLinhNhi.ts` (bảng, chia theo ô) và `giaiDieuDaoLinhNhi.ts` (phép ghép). Bốn
+mục dưới ghi bốn bản trước; giữ làm mốc, đừng làm lại.
+
+Bản 4 ghép NGUYÊN một tuyến vào bài, tức dán cả câu Biển Tình lên một bài có vòng hoà
+thanh khác hẳn. Người dùng đòi bậc tiếp: *"đã đọc được tuyến giai điệu vậy bạn có thể
+tư duy như Linh Nhi để tạo ra tuyến giai điệu từ những vòng hoà thanh khác nhau không...
+được quyền hoà trộn các tuyến giọng trưởng với nhau và giọng thứ cũng vậy."*
+
+**Bảng nay chia theo Ô, mỗi ô ghi kèm bậc hợp âm nó đứng trên.** Không có bậc thì không
+trộn được — sẽ ghép ô đứng trên bậc IV vào chỗ đang là bậc V.
+
+| bài | bậc hợp âm từng ô |
+|---|---|
+| Biển Tình | — Im Vm IVm ♭III Im IVm Vm ♭III |
+| Đừng Xa | Im ♭VII ♭VI ♭III IVm Im II Im V |
+| Lá Thư | Im ♭VII ♭III IVm ♭VI V7 |
+| Một Cõi | — Im Im IVm IVm IVm IVm V7 V7 V7 |
+| Đường Xưa | — IV IIm I VIm IIm V VIm |
+| Mùa Xuân | I VIm IIIm V I IIIm I V |
+| Rừng Lá | V Im ♭VII ♭III Im Vm Vm Im Im |
+
+**Tư duy tạo tuyến, viết thành ba phép chọn.** Mỗi ô của bài đang mở được ghép bằng một
+ô nhịp CÓ THẬT, chọn theo:
+
+1. **Cùng bậc hợp âm**; không có thì hạ xuống cùng **chức năng** (chủ · hạ át · át)
+2. **Nối được giọng** — nốt đầu ô mới gần nốt cuối ô trước; đây là chỗ giữ cho tám ô
+   thành MỘT câu chứ không phải tám mảnh dán cạnh nhau
+3. **Ở lại cùng một bài càng lâu càng tốt** — nhảy bài giữa câu là đứt hơi
+
+Cộng hai luật vị trí: ô đầu lấy ô đầu, ô cuối lấy ô cuối (ô cửa thưa cho ca sĩ vào
+hát), và **ô nào về chỗ ô ấy** — thiếu luật cuối thì ô 1 và ô 6 Đừng Xa cùng đứng trên
+bậc Im, cả hai chỗ đều bị ghép bằng ô 1.
+
+Nhờ phạt "đổi nguồn" mà **ghép vào đúng vòng hoà thanh của một bản ký âm thì ra lại
+nguyên câu của chính bài ấy** — bài kiểm khoá sáu ô Đừng Xa bằng `toEqual`.
+
+**BẪY: "chính xác hơn" không phải là giữ hết mọi nốt.** Có lúc đã thử giữ toàn bộ nốt
+khuông tay phải cho đầy đủ. Sai — ô 1 Đừng Xa gõ `A4+D5+E5+F5` rồi `D4+E5+F5`, đó là
+**nắm hợp âm tay phải**, không phải giai điệu. Giữ hết thì một ô phình lên **20 nốt**
+trong khi bản ký âm chỉ có 8 mốc gõ, và phần dưới nắm trùng việc với phần đệm đã dựng
+sẵn. Giai điệu là **nốt trên cùng mỗi mốc gõ**: 40–70 nốt một câu, 5–9 nốt một ô. Cái
+bảng này giữ thêm được so với bản trước là **độ ngân thật**, thay vì suy từ khoảng cách
+tới nốt sau.
+
+**Trưởng ra trưởng, thứ ra thứ** — `locO()` lọc `t.thu === thu` trước mọi thứ khác.
+Giọng lấy từ `key` mà bước tái hoà thanh đã xác định, và `ScaleType` chỉ có hai giá trị
+`major | minor` nên không có ngả thứ ba. Bài chưa có giọng thì suy từ chất hợp âm đầu,
+vì `key?.scale === 'minor'` khi `key` rỗng sẽ ra `false` và đẩy bài thứ sang tuyến
+trưởng.
+
+**Ba lỗi đã sửa:**
+
+- Rung điểm theo `m.tuyen.length` — `dung-xa` và `rung-la` **cùng dài 7 ký tự** nên hai
+  tuyến nhận đúng một giá trị rung. Nay băm chuỗi tử tế.
+- Rung thôi vẫn không đủ: ô đứng đầu bảng dẫn quá xa thì rung bao nhiêu cũng không lật
+  được thứ hạng, lượt 1 ra y hệt lượt 0. Nay **lượt thứ N lấy ứng viên hạng N**.
+- **KẸP THAY VÌ QUAY VÒNG — người dùng nghe ra, bài kiểm thì không.** Luật trên viết
+  bằng `Math.min(take, xep.length - 1)`. `playSpin` tăng mãi, nên chơi vài lượt là
+  `take` vượt số ứng viên, mọi ô kẹt ở ô hạng chót và **đứng yên vĩnh viễn**: *"sao mỗi
+  lần phát intro giờ không đổi khác nữa"*. Nay `xep[hang % xep.length]`. Bài kiểm cũ
+  chỉ chạy 6 lượt nên không thấy; bài kiểm mới chạy tới **lượt 40**, đòi không lượt nào
+  giống lượt liền trước và tổng số câu khác nhau phải trên 30. Đo được: 40 lượt ra 40
+  câu ở giọng thứ, 38 ở giọng trưởng.
+
+**Luật rút ra:** mọi phép chỉ số ăn theo `playSpin` đều phải **quay vòng**, không được
+kẹp — `playSpin` không có trần.
+
+**Vốn ô giọng TRƯỞNG mỏng**: chỉ 2 bản ký âm, 15 ô, có bậc chỉ một ô ứng cử nên mọi
+lượt dùng chung. Thêm bản ký âm trưởng là hết — đây là chỗ đáng nạp sheet nhất.
+
+**CHƯA ĐO:** *Để nhớ một thời ta đã yêu* không nằm trong repo nên chưa đối chiếu được
+trên chính nó.
+
+### Đoạn dạo GHÉP VÀO TUYẾN CÓ SẴN, không sinh nốt theo luật nữa
+
+`src/reharm/style/tuyenDaoLinhNhi.ts` (bảng) và `giaiDieuDaoLinhNhi.ts` (phép ghép).
+Hai mục ngay dưới ghi hai lần sửa trước — **cả hai đều chữa nhầm hướng**, giữ lại làm
+mốc chứ đừng làm lại.
+
+**Ba bản trước đều cố rút ra luật rồi sinh nốt theo luật:**
+
+| bản | cách làm | hỏng ở đâu |
+|---|---|---|
+| 1 | sáu mẫu gõ tay, bậc theo hợp âm | 3,8–5,0 nốt/ô, bài trưởng chỉ 4 bậc |
+| 2 | chép mười ô nhịp thật, vẫn theo hợp âm | đủ mật độ, nhưng mười ô rời nhau |
+| 3 | một đường nốt neo lấy từ Đừng Xa | đúng từng nốt trên vòng Đừng Xa, sang vòng khác thì lỗi |
+
+Người dùng nghe bản 3 và chốt hướng khác: *"đọc tuyến giai điệu của các intro trên
+vòng bài giọng thứ và trưởng rồi train theo tuyến của các bài đó, sau này bất kỳ bài ở
+tone nào cứ ghép vào tuyến của một trong các bài thôi."*
+
+**Bảy tuyến, sinh thẳng từ bản ký âm, không gõ tay một dòng nào:**
+
+| tuyến | giọng | phách/ô | ô | nốt |
+|---|---|---|---|---|
+| Biển Tình | Si thứ | 4 | 9 | 51 |
+| Đừng Xa Em Đêm Nay | Rê thứ | 4 | 9 | 54 |
+| Lá Thư Trần Thế | Rê thứ | 4 | 6 | 46 |
+| Một Cõi Đi Về | Sol thứ | **3** | 10 | 65 |
+| Đường Xưa Lối Cũ | Đô trưởng | 4 | 8 | 40 |
+| Mùa Xuân Đầu Tiên | Sol trưởng | 4 | 8 | 47 |
+| Rừng Lá Thấp | La thứ | 4 | 9 | 70 |
+
+Mỗi nốt lưu `[ô, phách trong ô, nửa cung so với chủ âm ở MIDI 60+chủ âm]`. Chuyển giọng
+thành phép cộng, đường đi giữ nguyên tuyệt đối.
+
+**Giọng phải đọc từ vòng hợp âm, không đọc mỗi bộ khoá.** Đường Xưa bộ khoá 0, vòng dạo
+`F Dm C Am Dm G Am` — hợp âm **G trưởng** chỉ đứng được nếu đọc là bậc V của **Đô
+trưởng** (IV ii I vi ii V vi), đoạn dạo đóng trên bậc vi. Đọc là Fa trưởng thì G thành
+bậc II trưởng, vô nghĩa.
+
+**Phép ghép làm bốn việc, KHÔNG có việc nắn nốt theo hợp âm** — nắn thì lại thành sinh
+nốt theo luật, đúng thứ vừa bị bác:
+
+1. Lọc tuyến theo thứ/trưởng **và theo số phách một ô**
+2. Dịch giọng
+3. Kéo giãn hoặc cắt cho khớp số ô, **giữ nguyên ô đầu và ô cuối** (ô cuối là ô "cửa"
+   thưa hẳn ra để ca sĩ vào hát)
+4. Dời quãng tám cả câu một lượt
+
+Ngoại lệ duy nhất được nắn: **nâng nốt cảm trên hợp âm bậc V** — đo Đừng Xa ô 7 (A7,
+đánh C#) và Một Cõi ô 8 (D7, đánh C#), **n=2**, nên chỉ nâng khi hợp âm đang vang chứa
+thật nốt ấy.
+
+**Ba lỗi bài kiểm bắt được, đều đã sửa:**
+
+- **Tụt quãng tám.** Mốc dời phải là chủ âm **bản gốc**, không phải trần tay phải. Cũ:
+  đẩy lên cao nhất mà chưa chạm trần; triệu chứng là tuyến Biển Tình ghép sang bài Rê
+  thứ ra `F4 A4 C5` trong khi bản gốc `D5 F#5 A5`. Vì thế bảng phải có trường `chuGoc`.
+- **Mất trắng câu.** Tuyến Một Cõi trải `62..98` — hơn ba quãng tám, rộng hơn cả tầm
+  tay phải `57..95` — nên không mức quãng tám nào lọt hết và hàm trả rỗng. Nay **gập**
+  nốt biên vào bằng quãng tám: méo một nốt còn hơn mất cả câu. Muốn hết méo thì nới
+  `range`.
+- **Sáu lượt không ra sáu câu.** Chỉ có 4 tuyến thứ nên `take % 4` làm lượt 4 lặp lượt
+  0, `phraseAssembled.test.ts` đỏ. Nay hết một vòng tuyến thì **xoay ô giữa** — câu
+  khác đi mà mọi nốt vẫn là nốt thật, chỉ khác thứ tự ô.
+
+**Chốt chặn:** ghép tuyến NGƯỢC về đúng giọng bài nguồn thì phải ra lại **đúng từng
+nốt** bản ký âm. Bài kiểm khoá chín ô Biển Tình và bốn ô Đừng Xa bằng `toEqual`, cộng
+một lượt quét **12 giọng × 8 lượt × hai kiểu** xem có nốt nào vượt tầm tay phải không.
+
+**CHƯA ĐO:** bài *Để nhớ một thời ta đã yêu* không nằm trong repo (người dùng nhập tay
+trong app) nên chưa đối chiếu được trên chính nó.
+
+### Câu dạo neo vào GIỌNG BÀI, không neo vào từng hợp âm
+
+`src/reharm/style/giaiDieuDaoLinhNhi.ts` viết lại lõi. Mục ngay dưới ghi lần sửa
+trước — mở rộng bảng bậc — **lần ấy chữa sai tầng**, giữ đây làm mốc chứ đừng làm lại.
+
+**Chỗ hiểu ngược.** Cả bản gõ tay lẫn bản chép mẫu đều lưu *bậc so với từng hợp âm*,
+rồi `dat()` đặt lại nốt ở quãng tám gần nốt trước nhất. Cách ấy giữ được tiết tấu mà
+vứt mất **đường đi của câu** — nghe ra tám ô rời nhau. Người dùng nói thẳng: tiết tấu
+gần giống Đừng Xa rồi nhưng giai điệu thì quá tệ.
+
+**Bằng chứng chị ấy neo vào giọng bài.** Ô 5 hợp âm **Gm**, chị đánh `Bb Bb Bb Bb A
+Bb A` — bậc **♭6 và 5 của Rê thứ**, không phải bậc của Gm. Ô 3 hợp âm **Bb**, chị đánh
+`D D D D E F` — bậc **1, 2, ♭3 của Rê thứ**.
+
+**Đường nốt neo tám ô Đừng Xa**, đo so với chủ âm D5:
+
+| ô | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| lệch chủ âm | +3 | +2 | 0 | −2 | −4 | +3 | +2 | 0 |
+| bậc | ♭3 | 2 | 1 | ♭7 | ♭6 | ♭3 | 2 | 1 |
+
+Đi xuống ♭3 → 2 → 1 → ♭7 → ♭6, nhảy về ♭3 đi xuống lần nữa. Đổi ra **bước trong gam**
+thành `2 1 0 −1 −2 2 1 0`, dùng chung được cho cả giọng trưởng.
+
+**Bước đi trong câu** — 47 nốt trên đường giai điệu, đã tách 6 nốt đáp trầm:
+
+| bước từ nốt trước | bản ký âm | bộ sinh mới |
+|---|---|---|
+| lặp lại đúng nốt cũ | **24%** | 21% |
+| liền bậc (1–2 nửa cung) | **54%** | 62% |
+| nhảy ≥ 5 | 17% | 15% |
+
+**Năm dáng ô**, chép nguyên mốc thời gian: `GIU` (ô 1·3), `GIU_B` (ô 5), `DI` (ô 4),
+`DI_B` (ô 6), `CUA` (ô 8, chỉ ba mốc để ca sĩ vào hát). Thứ tự `GIU DI GIU DI GIU_B
+DI_B DI GIU` — giữ và đi xen kẽ.
+
+**Đo lại trên chính vòng Đừng Xa thì bộ sinh ra ĐÚNG TỪNG NỐT ở ô 1, 3, 4, 5.** Bài
+kiểm khoá cứng bốn ô ấy bằng `toEqual`.
+
+Hai lỗi phụ sửa kèm:
+
+- **Quãng tám.** Cũ `goc = 60 + chu + (chu < 4 ? 12 : 0)`; triệu chứng là bài **Mi thứ**
+  ra câu ở G4–B3, thấp hơn bản gốc cả quãng tám và nghe ù. Nay đặt chủ âm ở quãng tám
+  gần **D5 (74)** nhất.
+- **Bài chưa dò ra giọng.** `phraseSection.ts` truyền `minor: key?.scale === 'minor'`,
+  bài không có giọng thì ra `false` và bài THỨ bị dựng trên gam TRƯỞNG. Nay chỉ tin
+  `minor` khi có `tonic` đi kèm, không thì suy từ chất hợp âm đầu.
+
+`phraseSection.ts` nay truyền thêm `tonic: key?.tonic` — trước đó bộ sinh **không hề
+biết giọng bài**, đó là gốc của cả chuyện.
+
+**CHƯA ĐO:** bài *Để nhớ một thời ta đã yêu* không nằm trong repo (người dùng nhập tay
+trong app) nên chưa đối chiếu được trên chính nó. Đã đo trên ba vòng thứ dựng sẵn —
+Rê thứ, La thứ, Mi thứ.
+
+### Bộ sinh giai điệu đoạn dạo — thay bảng gõ tay bằng ô nhịp thật
+
+`src/reharm/style/giaiDieuDaoLinhNhi.ts`. Bảng mẫu đầu tiên gõ tay: sáu mẫu, mỗi
+mẫu 4–6 nốt, đúng sáu bậc `{1, 9, ♭3, 3, 11, 5}`. Đo lại đoạn dạo **bảy bản ký âm**
+(3 trưởng, 4 thứ) thì lệch ba tầng — và giọng trưởng hỏng nặng hơn giọng thứ:
+
+| | bảng gõ tay | sau khi sửa | bản ký âm |
+|---|---|---|---|
+| nốt/ô, giọng thứ | 5,0 | **8,8** | 8,5 |
+| nốt/ô, giọng trưởng | **3,8** | **8,5** | 8,5 |
+| nốt mỗi mốc gõ | 1,00 | 1,15–1,20 | **1,35** |
+| bậc ♭7 | 0% | 5% thứ · 13% trưởng | 10% · 7% |
+| ♭3 trong bài TRƯỞNG | **0%** | 6% | **14%** |
+| bậc 11 trong bài trưởng | 0% | 7% | 11% |
+| `1`+`5` gộp, giọng trưởng | **68%** | 52% | 43% |
+| số bậc dùng, giọng trưởng | **4** | 7 | 7 |
+
+Ba việc đã làm, **không đụng thuật toán**:
+
+1. **Chép mười ô nhịp thật** thay cả hai bảng — Đừng Xa ô 4·6·7, Rừng Lá ô 1·7
+   (giọng thứ); Biển Tình ô 2·4·7·8, Đường Xưa ô 3 (giọng trưởng). Giữ nguyên mốc
+   thời gian, nguyên bậc, nguyên chỗ chồng nốt. Mỗi mẫu ghi rõ ô nguồn.
+2. **Thêm tầng chồng nốt** `k: 2` — hàm `chong()` lấy nốt hợp âm cao nhất còn cách
+   nốt chính ít nhất 3 nửa cung. Bản ký âm có 1,35 nốt mỗi mốc; bảng cũ đúng 1,00
+   nên hụt mật độ ở cả hai tầng chứ không riêng số mốc.
+3. **Bỏ phép đổi ♭3 → 3 trưởng** trong `bac()`. Dòng
+   `if (!thu && x === 3 && chord.quality.intervals.includes(4)) x = 4` xoá đúng nốt
+   xanh — bậc phổ biến **thứ ba** của bài giọng trưởng (14%). Đây là chỗ khiến giọng
+   trưởng chỉ còn bốn bậc. Mẫu nào cần quãng ba trưởng nay ghi thẳng bậc `4`.
+
+**Triệu chứng để lùi:** nghe thấy đoạn dạo giọng trưởng chối tai ở nốt ♭3 trên hợp
+âm trưởng thì bật lại dòng đổi bậc ở `bac()` — nhưng bật xong bài kiểm
+`giaiDieuDaoLinhNhi.test.ts` sẽ đỏ, đó là chủ ý.
+
+**CHỖ CÒN LỆCH — chưa sửa, vì nó nằm ở thuật toán chứ không ở bảng.** Tỉ lệ đi liền
+bậc nay **vượt** bản ký âm: 51% giọng thứ và 58% giọng trưởng, so với **37%** đo
+được. Trước khi sửa là 43% và 15% — tức giọng trưởng đã hết nhảy cóc nhưng cả hai
+giọng giờ đi quá mượt. Nguyên nhân ở `dat()`: nó luôn đặt bậc vào quãng tám **gần
+nốt trước nhất**, nên mọi bước đều co về nhỏ nhất có thể, trong khi ô nhịp gốc rải
+rộng hơn. Sửa chỗ này là sửa `dat()`, một dòng, nhưng nó đụng cả `khongNgang()` nên
+để nghe thử trước.
+
+Bài kiểm: `src/reharm/style/__tests__/giaiDieuDaoLinhNhi.test.ts` — 6 mục, canh mật
+độ hai giọng, tầng chồng nốt, bậc ♭7, nốt xanh ♭3 và bậc 11 ở bài trưởng, và trần
+tay phải.

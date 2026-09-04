@@ -122,12 +122,77 @@ function boMaj7(chord: ParsedChord): ParsedChord {
   return { root: chord.root, quality: tron, source: symbol, symbol }
 }
 
+/**
+ * Ô CHIA ĐÔI: đoạn dạo chia thưa hơn đoạn hát, đúng một nửa.
+ *
+ * Đo bảy bản ký âm, đếm ô có từ hai hợp âm khác nhau:
+ *
+ * | bài | đoạn hát | đoạn dạo |
+ * |---|---|---|
+ * | Biển Tình | 19% | 11% |
+ * | Đừng Xa | 25% | 11% |
+ * | Lá Thư | 40% | 33% |
+ * | Một Cõi | 1% | 0% |
+ * | Đường Xưa | 13% | 0% |
+ * | Mùa Xuân | 20% | 12% |
+ * | Rừng Lá | 39% | 11% |
+ * | **gộp** | **22%** | **10%** |
+ *
+ * **7/7 bài đều có đoạn dạo chia thưa hơn hoặc bằng đoạn hát** — không bài nào ngược
+ * lại. Nên bài hát chia nhiều thì đoạn dạo cũng chia, nhưng chỉ khoảng một nửa mức ấy.
+ *
+ * Hai bài mà đoạn hát chia **dưới 15%** (Một Cõi 1%, Đường Xưa 13%) có đoạn dạo **không
+ * chia ô nào** — đó là `NGUONG_CHIA`.
+ *
+ * Tỉ số dạo/hát của năm bài còn lại: 0,58 · 0,44 · **0,83** · 0,60 · **0,28**. Trung vị
+ * 0,58, và hai đầu cách nhau ba lần — Lá Thư kéo lên, Rừng Lá kéo xuống. **n=5, tản
+ * rộng**; lấy 0,55 là lấy khoảng giữa chứ không phải một con số chắc.
+ *
+ * Cũ: 0,45 (lấy tỉ lệ gộp 10/22). Triệu chứng để lùi là bài chia nhiều với bài chia
+ * vừa ra cùng một số ô chia — 0,45 không tách được hai mức ấy trong một đoạn tám ô.
+ */
+const HE_SO_CHIA = 0.55
+
+/** Đoạn hát chia dưới mức này thì đoạn dạo không chia ô nào. Đo: Một Cõi 1%, Đường Xưa 13%. */
+const NGUONG_CHIA = 0.15
+
+/**
+ * Ô chia đôi đặt ở đâu — CHƯA ĐO ĐỦ, đây là chỗ yếu nhất của bộ này.
+ *
+ * Sáu ô chia đo được nằm ở vị trí 0,89 · 0,78 · 0,83 · 0,50 · 0,33 · 0,33 của đoạn.
+ * 3/6 rơi vào một phần ba cuối. **n=6**, chưa thành luật; tạm đặt từ ô ÁP CHÓT lùi
+ * dần lên, và chừa ô cuối vì ô cuối là cửa bậc V cho ca sĩ vào hát.
+ *
+ * Phách chia: 3/6 đúng giữa ô, 2/6 ở phách 3, 1/6 ở phách 1 — lấy giữa ô.
+ */
+const CHIA_TU_CUOI = true
+
+/** Đánh dấu hai nửa của một ô chia đôi, để `phraseSection` biết chia phách. */
+const nuaO = new WeakSet<ParsedChord>()
+
+/**
+ * Số phách của từng hợp âm trong vòng.
+ *
+ * ponytail: nhận diện bằng WeakSet trên chính đối tượng hợp âm, nên đường đi từ đây
+ * tới `phraseSection` phải giữ NGUYÊN tham chiếu, không được tạo hợp âm mới. Hiện
+ * `phraseChords` chỉ sao chép MẢNG (`[...borrowed]`) chứ không tạo phần tử mới nên còn
+ * đúng; ai chèn thêm bước `map` dựng hợp âm mới thì nhịp chia đôi sẽ lặng lẽ biến mất.
+ *
+ * Vì thế hai nửa của ô chia phải là ĐỐI TƯỢNG RIÊNG. Một vòng tám ô rút từ vốn sáu hợp
+ * âm thì cùng một `A7` xuất hiện ở nhiều ô — đánh dấu thẳng lên nó là mọi ô chứa `A7`
+ * cùng bị coi là nửa ô, và đoạn dạo co lại còn một nửa độ dài.
+ */
+export const nhipVong = (chords: readonly ParsedChord[], moiO: number): number[] =>
+  chords.map((chord) => (nuaO.has(chord) ? moiO / 2 : moiO))
+
 export function vonHopAmLinhNhi(options: {
   kind: 'intro' | 'interlude' | 'outro'
   key: Key | null
   /** Hợp âm CHÍNH của bài, đã bỏ hợp âm lướt. */
   songChords: readonly ParsedChord[]
   soO?: number
+  /** Tỉ lệ ô chia đôi của ĐOẠN HÁT — xem `HE_SO_CHIA`. */
+  tiLeChiaHat?: number
 }): ParsedChord[] {
   const { kind, key, songChords } = options
   const soO = options.soO ?? SO_O
@@ -173,12 +238,67 @@ export function vonHopAmLinhNhi(options: {
     mới. Đây là chỗ nhịp hoà âm chậm lại ở đoạn kết: bốn hợp âm trải tám ô thì mỗi
     hợp âm vang hai ô, ra đúng 0,5 hợp âm mỗi ô.
   */
-  if (soHopAm >= soO) return chon.map(boMaj7)
-  const out: ParsedChord[] = []
-  for (let o = 0; o < soO; o += 1) {
-    out.push(chon[Math.min(soHopAm - 1, Math.floor((o * soHopAm) / soO))]!)
+  const deu =
+    soHopAm >= soO
+      ? chon
+      : Array.from(
+          { length: soO },
+          (_, o) => chon[Math.min(soHopAm - 1, Math.floor((o * soHopAm) / soO))]!,
+        )
+  return chiaO(deu.map(boMaj7), kho, options.tiLeChiaHat ?? 0, soO)
+}
+
+/**
+ * Chèn hợp âm nửa ô sau vào một số ô, theo tỉ lệ đo được ở `HE_SO_CHIA`.
+ *
+ * Hợp âm chèn lấy trong VỐN HỢP ÂM CỦA BÀI, không dựng mới — giữ đúng luật gốc của
+ * file này.
+ *
+ * Chất của hợp âm thứ hai, đo sáu ô chia: **át hoặc át phụ 3/6**, hạ át 2/6, chủ 1/6 —
+ * Đừng Xa `E→A` (A7 là bậc V), Lá Thư `Bb→E` (át phụ), Biển Tình `F#m→E` (át phụ).
+ * **n=6**, chỉ đủ để nói át là chất HAY GẶP NHẤT, không đủ thành luật. Nên: ưu tiên
+ * một hợp âm chất át trong vốn của bài, không có thì đi tiếp trong vốn.
+ *
+ * Cũ: luôn đi tiếp trong vốn. Triệu chứng là vốn xếp cạnh nhau kiểu `Am` rồi `Eb` thì
+ * ô chia nhảy quãng ba cung, nghe chối.
+ */
+function chiaO(
+  vong: readonly ParsedChord[],
+  kho: readonly ParsedChord[],
+  tiLeChiaHat: number,
+  soO: number,
+): ParsedChord[] {
+  if (tiLeChiaHat < NGUONG_CHIA) return [...vong]
+  const soChia = Math.round(soO * tiLeChiaHat * HE_SO_CHIA)
+  if (soChia <= 0 || vong.length < 2 || kho.length < 2) return [...vong]
+
+  /* Ô áp chót lùi dần lên; chừa ô cuối vì đó là cửa bậc V cho ca sĩ vào hát. */
+  const cho = new Set<number>()
+  for (let k = 0; k < soChia; k += 1) {
+    const o = vong.length - 2 - (CHIA_TU_CUOI ? k : -k)
+    if (o >= 0) cho.add(o)
   }
-  return out.map(boMaj7)
+
+  const out: ParsedChord[] = []
+  vong.forEach((chord, o) => {
+    out.push(chord)
+    if (!cho.has(o)) return
+    const trung = (a: ParsedChord, b: ParsedChord) =>
+      lop(a) === lop(b) && a.quality.symbol === b.quality.symbol
+    /* Ưu tiên một hợp âm chất át trong vốn; không có thì đi tiếp trong vốn. */
+    const at = kho.find((c) => c.quality.intervals.includes(10) && !trung(c, chord))
+    const i = kho.findIndex((c) => trung(c, chord))
+    const ke = at ?? kho[(Math.max(0, i) + 1) % kho.length]!
+    if (trung(ke, chord)) return
+    /* Nhân bản để dấu chỉ dính đúng hai nửa này, không dính mọi ô cùng hợp âm. */
+    const dau = { ...chord }
+    const cuoi = { ...ke }
+    nuaO.add(dau)
+    nuaO.add(cuoi)
+    out[out.length - 1] = dau
+    out.push(cuoi)
+  })
+  return out
 }
 
 /**

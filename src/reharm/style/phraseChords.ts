@@ -58,6 +58,8 @@ export interface PhraseChordOptions {
    * Intro không lấy hết phiên khúc. Sheet: dạo 6–18 ô, phiên có khi 16–32 ô.
    */
   vongPhienKhuc?: readonly ParsedChord[]
+  /** Tỉ lệ ô chia đôi của ĐOẠN HÁT — xem `HE_SO_CHIA` trong `vonHopAmLinhNhi.ts`. */
+  tiLeChiaHat?: number
   /** Thầy cho dạo/kết — chỉ đổi vòng hợp âm, không đổi điệu đệm. */
   thay?: SoloTeacher
   /** Đoạn dạo gốc trên lời bài, nếu có. */
@@ -147,6 +149,8 @@ function borrowedChords(
   verse: readonly ParsedChord[] = [],
   thay?: SoloTeacher,
   songIntro: readonly ParsedChord[] = [],
+  /** Tỉ lệ ô chia đôi của đoạn hát — chỉ Linh Nhi dùng tới. */
+  tiLeChiaHat = 0,
 ): ParsedChord[] {
   const main = mainChords(songChords)
   if (main.length === 0) return []
@@ -161,7 +165,12 @@ function borrowedChords(
       tiếp quản.
     */
     if (thay === 'linh-nhi') {
-      const rut = vonHopAmLinhNhi({ kind: 'intro', key, songChords: xuong })
+      const rut = vonHopAmLinhNhi({
+        kind: 'intro',
+        key,
+        songChords: xuong,
+        tiLeChiaHat,
+      })
       if (rut.length > 0) return rut
     }
     const theoThay = introChordsForTeacher(thay ?? null, key, main, xuong, songIntro)
@@ -236,6 +245,7 @@ export function phraseChords(
         kind === 'intro' ? mainChords(options.vongPhienKhuc ?? []) : [],
         options.thay,
         options.songIntro ?? [],
+        options.tiLeChiaHat ?? 0,
       )
     : []
   if (borrowed.length > 0) {

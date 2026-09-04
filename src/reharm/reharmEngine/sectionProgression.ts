@@ -69,6 +69,16 @@ export interface VongHoaThanh {
   lap: number
   /** Vòng gọn để bày ra, ví dụ `1-6-4-5`. Rỗng khi có bậc nằm ngoài giọng. */
   ten: string
+  /**
+   * Tỉ lệ hợp âm bị `khungHopAm` bỏ đi vì không rơi trên vạch nhịp — tức **tỉ lệ ô
+   * chia đôi** của khoảng này.
+   *
+   * `chords` ở trên đã bỏ hợp âm nửa ô, nên nếu không giữ lại con số này thì phía sau
+   * không còn cách nào biết bài có chia đôi hay không. Đoạn dạo Linh Nhi cần nó: đo
+   * bảy bản ký âm thì đoạn dạo chia **10%** còn đoạn hát chia **22%**, và **7/7 bài**
+   * đều có đoạn dạo chia thưa hơn đoạn hát.
+   */
+  tiLeChia: number
 }
 
 /**
@@ -104,20 +114,23 @@ export function doVongHoaThanh(
 ): VongHoaThanh {
   const khung = khungHopAm(spans, barBeats)
   const chords = khung.map((span) => span.chord)
+  /* Bao nhiêu phần hợp âm không rơi trên vạch nhịp — xem `tiLeChia`. */
+  const tiLeChia = spans.length > 0 ? 1 - khung.length / spans.length : 0
   if (chords.length === 0) {
-    return { key: null, phanVan: false, chords: [], bac: [], roman: [], lap: 0, ten: '' }
+    return { key: null, phanVan: false, chords: [], bac: [], roman: [], lap: 0, ten: '', tiLeChia }
   }
 
   const ungVien = detectKey(chords, { beats: khung.map((span) => span.beats) })
   const key = ungVien[0] ?? null
   if (!key) {
-    return { key: null, phanVan: false, chords, bac: [], roman: [], lap: 0, ten: '' }
+    return { key: null, phanVan: false, chords, bac: [], roman: [], lap: 0, ten: '', tiLeChia }
   }
 
   const doc = analyzeInKey(chords, key.tonic, key.scale)
   const bac = doc.map((one) => one.degree)
 
   return {
+    tiLeChia,
     key,
     phanVan: isAmbiguous(ungVien),
     chords,

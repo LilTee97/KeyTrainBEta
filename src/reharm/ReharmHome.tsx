@@ -588,8 +588,17 @@ export function ReharmHome() {
   const [fillRests, setFillRests] = useState<Record<number, number>>({})
   const [lickyFills, setLickyFills] = useState(true)
   const [lickyRuns, setLickyRuns] = useState(false)
-  const [linhNhiFills, setLinhNhiFills] = useState(false)
-  const [linhNhiRuns, setLinhNhiRuns] = useState(false)
+  /*
+    CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY, KHÔNG CÒN Ô TICK RIÊNG.
+
+    Trước đây là hai ô tick. Người dùng chốt: chọn nút Linh Nhi trong hàng thầy thì
+    menu chuột phải đổi luôn sang câu của chị ấy. Giữ thêm hai ô tick là giữ một
+    lựa chọn thừa — chọn thầy rồi mà vẫn phát câu Licky thì không còn là lối thầy.
+
+    Đọc `soloThay` chứ KHÔNG đọc `thaySolo`: `thaySolo` lui về
+    `soloTeacherOf(style.id)`, mà hàm ấy trả 'linh-nhi' cho MỌI điệu bật cờ
+    rải-theo-tay-trái, bossa nova nằm trong đó. Đã sập một lần ở `phraseSection.ts`.
+  */
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
   const [phraseSpin, setPhraseSpin] = useState(0)
   const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
@@ -604,6 +613,8 @@ export function ReharmHome() {
   const [styleId, setStyleId] = useState('pop-1')
   /** Thầy cho dạo / giang tấu / kết. `null` = theo điệu đệm. */
   const [soloThay, setSoloThay] = useState<SoloTeacher>(null)
+  /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
+  const cauLinhNhi = soloThay === 'linh-nhi'
   const [chiecLa, setChiecLa] = useState(false)
   const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
@@ -1483,12 +1494,30 @@ export function ReharmHome() {
     return phien ? motLuot(phien.vong) : []
   }, [vongHoaThanh])
 
+  /*
+    TỈ LỆ Ô CHIA ĐÔI CỦA ĐOẠN HÁT — đoạn dạo Linh Nhi chia theo nó.
+
+    Đo bảy bản ký âm: đoạn hát chia 22%, đoạn dạo chia 10%, và 7/7 bài đều có đoạn dạo
+    chia thưa hơn hoặc bằng đoạn hát. `vonHopAmLinhNhi` nhân với `HE_SO_CHIA = 0,45`.
+
+    `vong.chords` đã bỏ hợp âm nửa ô rồi, nên phải lấy `vong.tiLeChia` — con số ấy giữ
+    lại đúng phần đã bị bỏ.
+  */
+  const tiLeChiaHat = useMemo(() => {
+    const hat = vongHoaThanh.doan.filter(
+      (one) => one.kind === 'verse' || one.kind === 'chorus',
+    )
+    if (hat.length === 0) return 0
+    return hat.reduce((a, one) => a + one.vong.tiLeChia, 0) / hat.length
+  }, [vongHoaThanh])
+
   const introSymbols = useMemo(() => {
     const cue = thaySolo === 'linh-nhi' ? null : cueChord(phraseOpening)
     return [
       ...phraseChords('intro', reharm.key, {
         songChords: hopAmChoDoan('intro'),
         vongPhienKhuc,
+        tiLeChiaHat,
         thay: thaySolo,
         songIntro: hopAmDaoGoc(),
       }).map((chord) => chord.symbol),
@@ -1506,6 +1535,7 @@ export function ReharmHome() {
     reharm.key,
     hopAmChoDoan,
     vongPhienKhuc,
+    tiLeChiaHat,
     phraseOpening,
     thaySolo,
     hopAmDaoGoc,
@@ -2361,8 +2391,8 @@ export function ReharmHome() {
           ),
           lickyFills,
           lickyRuns,
-          linhNhiFills,
-          linhNhiRuns,
+          linhNhiFills: cauLinhNhi,
+          linhNhiRuns: cauLinhNhi,
           lickyMode,
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
@@ -2390,8 +2420,7 @@ export function ReharmHome() {
       fillRests,
       lickyFills,
       lickyRuns,
-      linhNhiFills,
-      linhNhiRuns,
+      cauLinhNhi,
       lickyMode,
       phraseSpin,
       breaths,
@@ -2549,8 +2578,6 @@ export function ReharmHome() {
       slashEdits,
       lickyFills,
       lickyRuns,
-      linhNhiFills,
-      linhNhiRuns,
       lickyMode,
       acceptedPassing,
       styleId,
@@ -2599,8 +2626,7 @@ export function ReharmHome() {
       slashEdits,
       lickyFills,
       lickyRuns,
-      linhNhiFills,
-      linhNhiRuns,
+      cauLinhNhi,
       lickyMode,
       acceptedPassing,
       styleId,
@@ -2655,8 +2681,6 @@ export function ReharmHome() {
     setSlashEdits(saved.slashEdits ?? {})
     setLickyFills(saved.lickyFills ?? true)
     setLickyRuns(saved.lickyRuns ?? false)
-    setLinhNhiFills(saved.linhNhiFills ?? false)
-    setLinhNhiRuns(saved.linhNhiRuns ?? false)
     setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)
 
@@ -2938,6 +2962,7 @@ export function ReharmHome() {
               style: styleSolo,
               thay: thaySolo,
               vongPhienKhuc,
+              tiLeChiaHat,
               songIntro: hopAmDaoGoc(),
               /*
                 Gam đưa vào CẢ KHI đã chọn thầy.
@@ -3020,6 +3045,7 @@ export function ReharmHome() {
         style: styleSolo,
         thay: thaySolo,
         vongPhienKhuc,
+        tiLeChiaHat,
         songIntro: hopAmDaoGoc(),
         beatsPerChord: chordBeats,
         dropRoot,
@@ -4068,6 +4094,7 @@ export function ReharmHome() {
               section.lines.some((line) => line.lyric.trim().length > 0),
             ) && (
           <SongSheetView
+            cauLinhNhi={cauLinhNhi}
             sheet={sheet}
             activeIndex={activeChordIndex}
             pairedChords={pairedChords}
@@ -4458,24 +4485,6 @@ export function ReharmHome() {
                 </button>
               ))}
             </div>
-            <div className="mt-2 flex flex-wrap gap-3 text-xs text-dim">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={linhNhiFills}
-                  onChange={(event) => setLinhNhiFills(event.target.checked)}
-                />
-                Fill Linh Nhi
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={linhNhiRuns}
-                  onChange={(event) => setLinhNhiRuns(event.target.checked)}
-                />
-                Run Linh Nhi
-              </label>
-            </div>
 
             {/*
               Gam jazz đứng RIÊNG, dưới hàng nút chứ không nằm trong hàng nút.
@@ -4684,8 +4693,7 @@ export function ReharmHome() {
           Thêm màu hợp âm
         </h3>
         <p className="mb-3 text-xs leading-relaxed text-dim">
-          Chữ ký số một của phong cách: không dùng hợp âm ba trơn, luôn thêm
-          màu bằng sus, add9, 9, 11.
+          Khá: add9 / 9sus4 / 7b9. Linh Nhi (sheet): Δ, m7, V7 — không add9.
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -4695,12 +4703,21 @@ export function ReharmHome() {
                 ['off', 'Giữ nguyên'],
                 ['light', 'Nhẹ'],
                 ['full', 'Đậm'],
+                ['linhNhi', 'Linh Nhi'],
               ] as const
             ).map(([value, label]) => (
               <button
                 key={value}
                 type="button"
-                onClick={() => setIntensity(value)}
+                onClick={() => {
+                  setIntensity(value)
+                  if (value === 'linhNhi') {
+                    setSusDominant(false)
+                    setAllowJazzColors(false)
+                    setVaryOnRepeat(false)
+                    setUseSlashChords(false)
+                  }
+                }}
                 className={`rounded-lg border px-3 py-1.5 text-xs ${
                   intensity === value
                     ? 'border-amber-key bg-amber-key/15 text-amber-key'

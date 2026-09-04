@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
-import { vonHopAmLinhNhi } from '../vonHopAmLinhNhi'
+import { vonHopAmLinhNhi, nhipVong } from '../vonHopAmLinhNhi'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 
 /*
@@ -77,5 +77,82 @@ describe('vốn hợp âm rút từ bài', () => {
     const ra = vonHopAmLinhNhi({ kind: 'intro', key: AM, songChords: BAI })
     /* Bài mở bằng Am nên không phải xoay; hai hợp âm đầu phải là Am rồi Dm. */
     expect([lop(ra[0]!.root), lop(ra[1]!.root)]).toEqual([9, 2])
+  })
+
+  describe('ô chia đôi theo đoạn hát', () => {
+    /*
+      Đo bảy bản ký âm, đếm ô có từ hai hợp âm khác nhau:
+
+      | bài | đoạn hát | đoạn dạo |
+      |---|---|---|
+      | Biển Tình | 19% | 11% |
+      | Đừng Xa | 25% | 11% |
+      | Lá Thư | 40% | 33% |
+      | Một Cõi | 1% | 0% |
+      | Đường Xưa | 13% | 0% |
+      | Mùa Xuân | 20% | 12% |
+      | Rừng Lá | 39% | 11% |
+
+      **7/7 bài đều có đoạn dạo chia thưa hơn hoặc bằng đoạn hát.** Hai bài mà đoạn hát
+      chia dưới 15% có đoạn dạo không chia ô nào.
+    */
+    const kho = parseChordInput('Dm | Gm | C | F | Bb | A7 | Am | Eb').chords
+    const chay = (tiLeChiaHat: number) => {
+      const vong = vonHopAmLinhNhi({
+        kind: 'intro',
+        key: { tonic: 2 as PitchClass, scale: 'minor' },
+        songChords: kho,
+        soO: 8,
+        tiLeChiaHat,
+      })
+      const nhip = nhipVong(vong, 4)
+      return { vong, nhip, soChia: nhip.filter((x) => x === 2).length / 2 }
+    }
+
+    it('đoạn hát chia dưới ngưỡng thì đoạn dạo không chia ô nào', () => {
+      /* Một Cõi 1% và Đường Xưa 13% — cả hai có đoạn dạo 0 ô chia. */
+      expect(chay(0.01).soChia).toBe(0)
+      expect(chay(0.13).soChia).toBe(0)
+    })
+
+    it('đoạn hát chia nhiều thì đoạn dạo chia nhiều hơn', () => {
+      expect(chay(0.2).soChia).toBeGreaterThan(0)
+      expect(chay(0.4).soChia).toBeGreaterThan(chay(0.2).soChia)
+    })
+
+    it('đoạn dạo LUÔN chia thưa hơn đoạn hát — 7/7 bài trong bản ký âm', () => {
+      for (const hat of [0.2, 0.25, 0.39, 0.4, 0.6]) {
+        expect(chay(hat).soChia / 8, `đoạn hát ${hat}`).toBeLessThan(hat)
+      }
+    })
+
+    it('chia ô KHÔNG làm đoạn dạo dài ra', () => {
+      /*
+        Ô chia đôi dài nửa ô. Quên chỗ này thì mỗi ô chia cộng thêm một ô trọn và cả
+        đoạn dạo dôi ra đúng bằng số ô đã chia.
+      */
+      for (const hat of [0, 0.2, 0.4, 0.6]) {
+        const { nhip } = chay(hat)
+        expect(nhip.reduce((a, b) => a + b, 0), `đoạn hát ${hat}`).toBe(32)
+      }
+    })
+
+    it('dấu nửa ô dính ĐÚNG hai nửa ấy, không dính mọi ô cùng hợp âm', () => {
+      /*
+        Vòng tám ô rút từ vốn sáu hợp âm thì cùng một `A7` xuất hiện ở nhiều ô. Đánh dấu
+        thẳng lên đối tượng hợp âm là mọi ô chứa `A7` cùng bị coi là nửa ô, và đoạn dạo
+        co lại còn một nửa độ dài. Vì thế hai nửa của ô chia phải là đối tượng riêng.
+      */
+      const { vong, nhip } = chay(0.4)
+      const nua = vong.filter((_, i) => nhip[i] === 2).map((c) => c.symbol)
+      const tron = vong.filter((_, i) => nhip[i] !== 2).map((c) => c.symbol)
+      /* Có ký hiệu vừa xuất hiện ở nửa ô vừa ở ô trọn — đó chính là ca dễ sai. */
+      expect(nua.some((k) => tron.includes(k))).toBe(true)
+    })
+
+    it('ô cuối không bị chia — đó là cửa bậc V cho ca sĩ vào hát', () => {
+      const { nhip } = chay(0.6)
+      expect(nhip[nhip.length - 1]).toBe(4)
+    })
   })
 })

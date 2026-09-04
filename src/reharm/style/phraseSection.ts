@@ -8,6 +8,8 @@ import { khongTiaTayTrai, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo } from './caPhaoSolo'
 import { raiLinhNhi } from './raiLinhNhi'
+import { giaiDieuDaoLinhNhi } from './giaiDieuDaoLinhNhi'
+import { nhipVong } from './vonHopAmLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
 import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose, tamBao } from './phraseCue'
@@ -66,6 +68,8 @@ export interface PhraseSectionOptions {
   /** Thầy cho vòng dạo/kết — không đổi điệu đệm. */
   thay?: import('../fillSoloGenerator/soloTeacher').SoloTeacher
   vongPhienKhuc?: readonly ParsedChord[]
+  /** Tỉ lệ ô chia đôi của ĐOẠN HÁT — đoạn dạo Linh Nhi chia theo nó, hệ số 0,45. */
+  tiLeChiaHat?: number
   songIntro?: readonly ParsedChord[]
 /** Ostinato Bb–A–D Chiếc Lá — chỉ dạo. */
   motif?: 'chiec-la'
@@ -91,6 +95,7 @@ export function buildPhraseSection(
     songChords,
     thay,
     vongPhienKhuc,
+    tiLeChiaHat,
     songIntro,
   } = options
 
@@ -98,11 +103,19 @@ export function buildPhraseSection(
     ...(songChords ? { songChords } : {}),
     ...(thay ? { thay } : {}),
     ...(vongPhienKhuc ? { vongPhienKhuc } : {}),
+    ...(tiLeChiaHat === undefined ? {} : { tiLeChiaHat }),
     ...(songIntro ? { songIntro } : {}),
   })
   if (chords.length === 0) return null
 
-  const beatsEach = chords.map(() => beatsPerChord)
+  /*
+    Ô CHIA ĐÔI dài nửa ô, không dài bằng các ô khác.
+
+    `vonHopAmLinhNhi` chèn hợp âm nửa ô sau và đánh dấu cả hai nửa; `nhipVong` đọc dấu
+    ấy ra. Không có bước này thì ô chia đôi kéo dài bằng một ô trọn và cả đoạn dạo dôi
+    ra đúng bằng số ô đã chia.
+  */
+  const beatsEach = nhipVong(chords, beatsPerChord)
 
   /*
     Đoạn kết: tay phải **chỉ ngẫu hứng**, không quạt đệm nữa.
@@ -171,6 +184,21 @@ export function buildPhraseSection(
         ...(thienVeCuaHo(style.id) ? { thienVe: thienVeCuaHo(style.id)! } : {}),
         left: backing,
       })
+    : kind === 'intro' &&
+        (thay === 'linh-nhi' || (style.family ?? '').includes('linh-nhi'))
+    ? giaiDieuDaoLinhNhi({
+        left: backing,
+        chords,
+        beatsPerChord,
+        barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+        range: options.range ?? { low: 57, high: 95 },
+        take: take ?? 0,
+        minor: key?.scale === 'minor',
+        /* Bài có ô chia đôi thì hợp âm không dài bằng nhau — bộ ghép phải biết. */
+        beatsEach,
+        /* Cả câu neo vào chủ âm của bài, không neo vào từng hợp âm. */
+        tonic: key?.tonic,
+      })
     : thaySolo === 'linh-nhi'
     ? raiLinhNhi({
         left: backing,
@@ -179,11 +207,18 @@ export function buildPhraseSection(
         barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
         ...(options.scale ? { scale: options.scale } : {}),
         range: options.range ?? { low: 57, high: 95 },
-        chayNgonCuoi: kind !== 'intro',
+        chayNgonCuoi: true,
         ...(take !== undefined ? { take } : {}),
       })
     : solo(chords)
-  const roundBeats = chords.length * beatsPerChord
+  /*
+    Độ dài lấy TỔNG `beatsEach`, không lấy `chords.length * beatsPerChord`.
+
+    Ô chia đôi dài nửa ô, nên đếm theo số hợp âm thì mỗi ô chia làm đoạn dạo dôi thêm
+    một ô trọn — đo được 36 phách thành 40. Bài kiểm từng hàm lẻ không bắt được chỗ này
+    vì nó nằm giữa dây nối; `chiaOXuyenSuot.test.ts` canh nó.
+  */
+  const roundBeats = beatsEach.reduce((a, b) => a + b, 0)
   const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
 
   /*
