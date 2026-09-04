@@ -282,6 +282,152 @@ const BOLERO_STYLES: StylePattern[] = [
     leftHandTop: 67,
     soloMaxStrikes: 9,
   },
+  /*
+    HỌ BOLERO LINH NHI 3 — ĐIỆP KHÚC DÀY THEO CHIỀU DỌC.
+
+    Đo năm bản ký âm bolero Linh Nhi, tính tỉ lệ mốc gõ có TỪ HAI NỐT TAY TRÁI
+    TRỞ LÊN, tách phiên khúc và điệp khúc:
+
+    | bài                | phiên | điệp    | mốc gõ phiên → điệp |
+    |--------------------|-------|---------|---------------------|
+    | Đường xưa lối cũ   | 18%   | **76%** | 8,3 → 8,3           |
+    | Rừng lá thấp       | 24%   | **67%** | 7,4 → 8,7           |
+    | Mùa xuân đầu tiên  | 22%   | 32%     | 7,4 → 6,8           |
+    | Đừng Xa            | 14%   | 16%     | 5,7 → 5,2           |
+    | Biển Tình          |  2%   |  5%     | 8,0 → 8,3           |
+
+    HAI bài đổi, ba bài không. Và chỗ đáng học nằm ở cột cuối: **số mốc gõ gần
+    như không đổi**. Điệp khúc không dày thêm theo THỜI GIAN mà dày theo CHIỀU
+    DỌC — tay trái đổi từ nốt đơn sang bấm hợp âm trên đúng những mốc cũ.
+
+    Đây là lần thứ ba hình ấy xuất hiện trong phong cách này: ô thưa của câu dạo
+    (tay phải chồng nốt, số mốc giữ nguyên), ô dồn áp chót câu dạo, và giờ là
+    điệp khúc. **Muốn dày thì chồng nốt, không thêm cú gõ.**
+
+    Đo Đường xưa ô 41-58, vị trí nào giữ bass và vị trí nào chồng:
+
+      giữ bass đơn : 0 · 2 · 3          (phách mạnh)
+      chồng hợp âm : 0,5 · 0,75 · 1 · 1,5 · 2,5 · 3,5
+
+    Thế chồng hay gặp nhất là `(0, 4, 7)` — bộ ba sát nhau, đặt trên bass một
+    quãng tám; sau đó là `(0, 7, 12, 15)` trải rộng.
+
+    PHIÊN KHÚC DÙNG LẠI LƯỚI CHÍN CÚ GÕ của `bolero-linh-nhi-2`, vì đo ra đúng
+    như vậy — Đường xưa, Biển Tình và Mùa xuân cùng một lưới. Khác biệt của họ
+    này nằm TRỌN ở điệp khúc.
+
+    CỠ MẪU n = 2. Theo ngưỡng trong `KHUNG-HOI-THAY.md`, n = 2 chưa tách được
+    "phong cách của thầy" khỏi "bài này thầy chơi vậy". Nên đây là một họ điệu
+    ĐỨNG CẠNH, người dùng tự chọn — không phải mặc định của Linh Nhi.
+
+    Rừng lá thấp cũng dày ở điệp nhưng dồn vào ĐUÔI ô (2,5 · 2,75 · 3 · 3,5)
+    thay vì giữa ô, và lưới phiên khúc của nó có 2,75 thay cho 0,75. Chưa dựng:
+    cao độ tay trái bài ấy không thành một mẫu cố định, dựng ra là bịa.
+  */
+  {
+    id: 'bolero-linh-nhi-3',
+    name: 'Bolero Nhi — phiên khúc',
+    family: 'bolero-linh-nhi-3',
+    familyName: 'Bolero Nhi',
+    variant: 1,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 69,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['Duong Xua Loi Cu-Linh Nhi.mxl o 9-40 — ban ky am piano do Linh Nhi soan'],
+    cell: {
+      lengthBeats: 4,
+      left: [
+        { beat: 0, durationBeats: 0.5, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 0.5, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 0.75, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 1, durationBeats: 0.5, velocityScale: 0.85, tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }] },
+        { beat: 1.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 2, durationBeats: 0.5, velocityScale: 0.75, tones: [{ toneIndex: 2, fromRoot: true }] },
+        { beat: 2.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
+        { beat: 3, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 0, fromRoot: true }] },
+        { beat: 3.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true }] },
+      ],
+      right: [],
+    },
+    note: 'Phien khuc: dung lai luoi chin cu go cua bolero-linh-nhi-2 — do ra Duong Xua, Bien Tinh va Mua Xuan cung mot luoi. Khac biet cua ho nay nam tron o diep khuc.',
+    leftHandTop: 67,
+    soloMaxStrikes: 9,
+  },
+  {
+    id: 'bolero-linh-nhi-3-chorus',
+    name: 'Bolero Nhi — điệp khúc',
+    family: 'bolero-linh-nhi-3',
+    familyName: 'Bolero Nhi',
+    variant: 2,
+    timeSignature: '4/4',
+    beatsPerMeasure: 4,
+    bpm: 69,
+    feel: 'straight-block-chord',
+    verified: true,
+    sourceVideos: ['Duong Xua Loi Cu-Linh Nhi.mxl o 41-58 — 76% moc go co tu hai not tay trai tro len'],
+    cell: {
+      lengthBeats: 4,
+      left: [
+        { beat: 0, durationBeats: 0.5, velocityScale: 1, tones: [{ toneIndex: 0, fromRoot: true }] },
+        {
+          beat: 0.5, durationBeats: 0.25, velocityScale: 0.6,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+        {
+          beat: 0.75, durationBeats: 0.25, velocityScale: 0.6,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+        {
+          beat: 1, durationBeats: 0.5, velocityScale: 0.7,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+        {
+          beat: 1.5, durationBeats: 0.5, velocityScale: 0.65,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+        { beat: 2, durationBeats: 0.5, velocityScale: 0.85, tones: [{ toneIndex: 0, fromRoot: true }] },
+        {
+          beat: 2.5, durationBeats: 0.5, velocityScale: 0.65,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+        { beat: 3, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 0, fromRoot: true }] },
+        {
+          beat: 3.5, durationBeats: 0.5, velocityScale: 0.6,
+          tones: [
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+            { toneIndex: 1, fromRoot: true, semitones: 12 },
+            { toneIndex: 2, fromRoot: true, semitones: 12 },
+          ],
+        },
+      ],
+      right: [],
+    },
+    note: 'Diep khuc: bass don o phach 1, 3 va 4; sau bo ba (0,4,7) tren bass mot quang tam o cac moc yeu. Cung luoi chin cu go voi phien khuc — day theo chieu doc, khong them cu go.',
+    leftHandTop: 67,
+    soloMaxStrikes: 9,
+  },
   {
     id: 'bolero-linh-nhi-2-chorus',
     name: 'Bolero rai — vom cao (len bac 15)',

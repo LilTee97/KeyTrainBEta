@@ -51,23 +51,19 @@ describe('hợp âm đoạn dạo mượn từ bài', () => {
   })
 
   /*
-    Rút gọn là **tuỳ chọn**, không mặc định: người dùng có thể muốn đoạn dạo giữ
-    nguyên bảng màu của bài.
-  */
-  it('bật rút gọn thì hợp âm về chất cơ bản', () => {
-    const plain = phraseChords('intro', KEY, { songChords: chords(), plain: true })
-    for (const chord of plain) {
-      expect(['maj', 'min', '7', 'maj7', 'm7', 'm7b5', 'sus2', 'sus4', '7sus4'], chord.symbol)
-        .toContain(chord.quality.id)
-    }
-  })
+    ĐÃ XOÁ HAI LƯỚI "rút hợp âm về chất cơ bản" — LUẬT ẤY KHÔNG CÒN.
 
-  it('rút gọn vẫn giữ đúng nốt gốc — chỉ bỏ màu', () => {
-    const song = chords()
-    const rich = phraseChords('intro', KEY, { songChords: song })
-    const plain = phraseChords('intro', KEY, { songChords: song, plain: true })
-    expect(plain.map((c) => c.root)).toEqual(rich.map((c) => c.root))
-  })
+    Cờ `plain` / `plainChords` được đặt lúc chưa có bản ký âm của thầy nào. Đo bảy
+    bản ký âm Linh Nhi thì đoạn solo giữ **78%** hợp âm trơn còn đoạn hát **77%** —
+    tỉ lệ y hệt, tức chị ấy KHÔNG rút hợp âm đoạn không lời về chất trơn.
+
+    Người dùng chốt: luật họ tự đặt trước khi có tài liệu thì nhường cho số đo, và
+    bỏ hẳn chứ không dung hoà. Cờ đã xoá khỏi `phraseChords.ts` và `phraseSection.ts`;
+    số đo ghi ở đầu `interludeChords.ts`.
+
+    Thứ duy nhất chị ấy tránh ở đoạn solo là `maj7` (20 lần ở đoạn hát, 0 lần trong
+    30 hợp âm màu của đoạn solo) — lưới cho nó nằm ở `vonHopAmLinhNhi.test.ts`.
+  */
 })
 
 /*
@@ -79,14 +75,40 @@ describe('dạo đầu chọn hợp âm, không copy phiên khúc', () => {
     'Am(add9) Fadd2 Cadd2 Em7 Am(add9) Dm9 Cadd2 G7 Am(add9) Fadd2 Cadd2 Em7',
   ).chords
 
-  it('Linh Nhi không I–V: i–♭VII–♭VI–III, không Fadd2', () => {
+  /*
+    ĐÃ ĐỔI THIẾT KẾ, KHÔNG PHẢI NỚI TEST.
+
+    Bản cũ đóng đinh dãy bậc CỐ ĐỊNH `i–♭VII–♭VI–III` = roots [9, 7, 5, 0], giống
+    hệt nhau cho mọi bài. Đo bảy bản ký âm Linh Nhi thì ngược lại: **16 trên 20
+    đoạn không lời KHÔNG dùng bậc nào ngoài đoạn hát của chính bài ấy**. Người dùng
+    chốt đổi sang lối rút từ vốn hợp âm của bài — xem `style/vonHopAmLinhNhi.ts`.
+
+    Vế "không Fadd2" của bản cũ cũng không đứng được: đếm chất hợp âm trên sheet
+    thì đoạn solo giữ **78%** hợp âm trơn còn đoạn hát **77%** — tỉ lệ y hệt, tức
+    chị ấy KHÔNG rút hợp âm solo về chất trơn. Thứ duy nhất chị ấy bỏ là `maj7`
+    (20 lần ở đoạn hát, 0 lần trong 30 hợp âm màu của đoạn solo), và bộ mới đã bỏ.
+
+    Còn giữ lại từ bản cũ: **mở trên hợp âm chủ** — đo bảy đoạn dạo, bốn mở trên
+    i/I và một trên vi.
+  */
+  it('Linh Nhi dạo rút từ vốn hợp âm của bài, mở trên tonic', () => {
     const intro = phraseChords('intro', KEY, {
       songChords: DAI,
       vongPhienKhuc: DAI.slice(0, 8),
       thay: 'linh-nhi',
     })
-    expect(intro.map((c) => c.root).slice(0, 4)).toEqual([9, 7, 5, 0])
-    expect(intro.some((c) => c.symbol === 'Fadd2')).toBe(false)
+    expect(intro[0]!.root).toBe(9)
+
+    /* Không sinh bậc nào ngoài bài — trừ bậc V ở ô cuối làm cửa vào hát. */
+    const cuaBai = new Set(DAI.map((c) => ((c.root % 12) + 12) % 12))
+    const ngoai = intro
+      .slice(0, -1)
+      .map((c) => ((c.root % 12) + 12) % 12)
+      .filter((pc) => !cuaBai.has(pc))
+    expect(ngoai).toEqual([])
+
+    /* Giữ trật tự của bài: Am → Fadd2 → Cadd2 → Em7. */
+    expect(intro.map((c) => c.root).slice(0, 4)).toEqual([9, 5, 0, 4])
   })
 
   it('không cho Am(add9) nhảy sang Fadd2', () => {

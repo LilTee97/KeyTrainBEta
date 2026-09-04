@@ -7,7 +7,8 @@ import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { SoloTeacher } from '../fillSoloGenerator/soloTeacher'
-import { introChordsForTeacher } from './teacherSoloChords'
+import { introChordsForTeacher, outroChordsForTeacher } from './teacherSoloChords'
+import { vonHopAmLinhNhi } from './vonHopAmLinhNhi'
 
 /**
  * Vòng hợp âm của đoạn dạo đầu và đoạn kết.
@@ -51,8 +52,6 @@ export interface PhraseChordOptions {
    * Đoạn dạo là chỗ ngẫu hứng: tai bám vào đường giai điệu chứ không bám vào
    * màu hợp âm, nên chồng `add9`, `9sus4`, `13` lên nền solo thì câu chạy nghe
    * lạc. Xem `interludeChords.ts`.
-   */
-  plain?: boolean
   /**
    * Hợp âm mở phiên khúc — đích để vòng dạo **hút vào**, không phải vòng để chép.
    *
@@ -154,14 +153,37 @@ function borrowedChords(
 
   if (kind === 'intro') {
     const xuong = verse.length > 0 ? verse : main
+    /*
+      RÚT TỪ VỐN HỢP ÂM CỦA CHÍNH BÀI — xem `vonHopAmLinhNhi.ts`.
+
+      Đo bảy bản ký âm: 16 trên 20 đoạn không lời KHÔNG dùng bậc nào ngoài đoạn hát.
+      Chạy trước dãy bậc cố định; bài dưới ba hợp âm thì nó trả rỗng và đường cũ
+      tiếp quản.
+    */
+    if (thay === 'linh-nhi') {
+      const rut = vonHopAmLinhNhi({ kind: 'intro', key, songChords: xuong })
+      if (rut.length > 0) return rut
+    }
     const theoThay = introChordsForTeacher(thay ?? null, key, main, xuong, songIntro)
-    if (theoThay.length > 0) return chacIntro(theoThay, key)
+    if (theoThay.length > 0) return theoThay
     const target = xuong[0] ?? main[0]!
     const window = chooseInterludeWindow(main, target, 4)
     const raw = window
       ? main.slice(window.from, window.to + 1)
       : main.slice(0, Math.min(4, main.length))
     return chacIntro(raw, key)
+  }
+
+  if (thay === 'linh-nhi') {
+    /* Đoạn kết hãm hoà âm còn ~0,45 hợp âm mỗi ô — xem `vonHopAmLinhNhi.ts`. */
+    const rut = vonHopAmLinhNhi({
+      kind: 'outro',
+      key,
+      songChords: verse.length > 0 ? verse : main,
+    })
+    if (rut.length > 0) return rut
+    const ket = outroChordsForTeacher(thay, key)
+    if (ket.length >= 3) return ket
   }
 
   const tonic = tonicChordOf(main, key) ?? main[main.length - 1]!
@@ -217,7 +239,7 @@ export function phraseChords(
       )
     : []
   if (borrowed.length > 0) {
-    return options.plain ? borrowed.map(plainForInterlude) : [...borrowed]
+    return [...borrowed]
   }
 
   const tonic: PitchClass =
@@ -236,7 +258,7 @@ export function phraseChords(
     })
   }
 
-  return options.plain ? out.map(plainForInterlude) : out
+  return out
 }
 
 /**

@@ -22,6 +22,12 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'hai-slow-rock': 'hai-slow-rock-chorus',
   'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
   /*
+    Điệp khúc DÀY THEO CHIỀU DỌC — hai bài trên năm bài bolero Linh Nhi làm vậy.
+    Xem chú thích họ `bolero-linh-nhi-3` trong `styleLibrary/index.ts`. Đây là
+    đổi theo ĐOẠN, đúng loại việc bảng này sinh ra để làm.
+  */
+  'bolero-linh-nhi-3': 'bolero-linh-nhi-3-chorus',
+  /*
     Bolero rải: vòm thấp cho phiên khúc, vòm cao cho điệp khúc.
 
     ĐÂY LÀ LỰA CHỌN KHI DỰNG, KHÔNG PHẢI SỐ ĐO. Đếm trên bản ký âm gốc thì vòm

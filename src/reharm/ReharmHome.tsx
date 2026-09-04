@@ -160,6 +160,7 @@ import {
   type TonHungGiang,
 } from './fillSoloGenerator/soloTeacher'
 import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
+import { vonHopAmLinhNhi } from './style/vonHopAmLinhNhi'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -1727,8 +1728,22 @@ export function ReharmHome() {
         ? spans.find((span) => Math.abs(span.start - _next.startBeat) < 0.001)
         : undefined
       const loopChords = chorus.map((entry) => plainAt(entry.main, entry.span.chord))
+      /*
+        GIANG TẤU RÚT TỪ VỐN HỢP ÂM CỦA CHÍNH BÀI — xem `style/vonHopAmLinhNhi.ts`.
+        Chạy trước vòng bậc cố định; bài ít hợp âm thì lui về đường cũ.
+      */
+      const rutTuBai =
+        thaySolo === 'linh-nhi' && reharm.key
+          ? vonHopAmLinhNhi({
+              kind: 'interlude',
+              key: reharm.key,
+              songChords: vongPhienKhuc,
+            })
+          : []
       const theoThay =
-        reharm.key
+        rutTuBai.length > 0
+          ? rutTuBai
+          : reharm.key
           ? interludeChordsForTeacher(
               thaySolo,
               reharm.key,

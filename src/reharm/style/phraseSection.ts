@@ -63,8 +63,6 @@ export interface PhraseSectionOptions {
    * luồng gõ vòng hợp âm trơn: ở đó không có bài nào để mượn.
    */
   songChords?: readonly ParsedChord[]
-  /** Rút hợp âm đoạn dạo về chất cơ bản, như đoạn giang tấu vẫn làm. */
-  plainChords?: boolean
   /** Thầy cho vòng dạo/kết — không đổi điệu đệm. */
   thay?: import('../fillSoloGenerator/soloTeacher').SoloTeacher
   vongPhienKhuc?: readonly ParsedChord[]
@@ -91,7 +89,6 @@ export function buildPhraseSection(
     solo,
     take,
     songChords,
-    plainChords,
     thay,
     vongPhienKhuc,
     songIntro,
@@ -99,7 +96,6 @@ export function buildPhraseSection(
 
   const chords = phraseChords(kind, key, {
     ...(songChords ? { songChords } : {}),
-    ...(plainChords ? { plain: true } : {}),
     ...(thay ? { thay } : {}),
     ...(vongPhienKhuc ? { vongPhienKhuc } : {}),
     ...(songIntro ? { songIntro } : {}),

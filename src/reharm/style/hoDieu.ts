@@ -48,7 +48,13 @@ export interface HoDieu {
 export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   bolero: {
     ten: 'Bolero',
-    families: ['bolero', 'bolero-tu-n', 'bolero-linh-nhi', 'bolero-linh-nhi-2'],
+    families: [
+      'bolero',
+      'bolero-tu-n',
+      'bolero-linh-nhi',
+      'bolero-linh-nhi-2',
+      'bolero-linh-nhi-3',
+    ],
     /*
       Bolero rải của Linh Nhi được ưu tiên cho câu solo, theo yêu cầu người dùng.
 

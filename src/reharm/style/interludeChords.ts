@@ -9,8 +9,27 @@ import type { ParsedChord } from '../types'
  * không bám vào màu hợp âm. Chồng add9, 6/9, 13 hay hợp âm giảm lên nền solo thì
  * nốt ngoài giọng nhiều tới mức câu chạy nghe lạc, và người đệm mất chỗ tựa.
  *
- * Luật gốc nằm ở kho PianoBrain, item `rule-interlude-plain-harmony`. Bảng dưới
- * đây là chỗ thi hành nó.
+ * ## SỐ ĐO ĐÃ LẬT LUẬT NÀY — ĐỪNG BẬT LẠI
+ *
+ * Luật gốc nằm ở kho PianoBrain, item `rule-interlude-plain-harmony`, và nó được đặt
+ * **lúc chưa có bản ký âm của thầy nào**. Nay đo được bảy bản ký âm Linh Nhi, đếm chất
+ * hợp âm và tách theo đoạn:
+ *
+ * |            | hợp âm trơn | có màu |
+ * |------------|-------------|--------|
+ * | đoạn solo  | 105 (**78%**) | 30   |
+ * | đoạn hát   | 417 (**77%**) | 125  |
+ *
+ * **Tỉ lệ y hệt nhau.** Chị ấy KHÔNG rút hợp âm đoạn không lời về chất trơn. Thứ duy
+ * nhất chị ấy tránh là `maj7` — 20 lần ở đoạn hát, **0 lần** trong 30 hợp âm màu của
+ * đoạn solo; chỗ thi hành nằm ở `vonHopAmLinhNhi.ts`, không ở đây.
+ *
+ * Người dùng chốt: luật họ tự đặt trước khi có tài liệu thì **nhường cho số đo**. Cờ
+ * `plain` / `plainChords` đã bị xoá khỏi `phraseChords.ts` và `phraseSection.ts`.
+ *
+ * Hàm dưới đây còn sống vì một việc KHÁC: `chacIntro` dùng nó khi hai hợp âm liền nhau
+ * không nối giọng được — đó là phép sửa nối giọng, không phải luật màu, và đường ấy
+ * Linh Nhi không đi qua.
  *
  * Ba nhóm rút gọn:
  *
