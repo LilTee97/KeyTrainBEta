@@ -1532,55 +1532,6 @@ export function generateSolo(
         })),
       }
     }
-    /*
-      CUỐI CÂU PHẢI ĐÁP VÀO NỐT ỔN ĐỊNH — `pianoimprovnotes.md`: tránh dừng ở
-      nốt lơ lửng khiến câu nghe dở dang.
-
-      Mẫu `chord-tone` tự nhận là "không bao giờ lệch hoà âm", nhưng nó đi trên
-      thang dựng từ `material` — tức cả gam, không riêng nốt hợp âm — nên nốt
-      cuối rơi đâu thì rơi. Đo trên vòng `C Am F G Em Dm G7 C`: câu kết trên
-      `G` đáp vào `A` (bậc 9) và câu kết trên `Dm` đáp vào `E` (bậc 9).
-
-      Lỗi này nấp lâu vì `interlude` mặc định bật, mà nhánh giang tấu có đường
-      kết riêng. Tắt mặc định đi thì nó lộ ra.
-
-      Chỉ dịch **nốt cuối cùng**, và dịch tới nốt ổn định GẦN NHẤT trong thang
-      đã ép — nên đường đi của câu giữ nguyên, chỉ chỗ đáp là đổi.
-    */
-    if (isPhraseEnd && built.notes.length > 0 && safe.length > 0) {
-      const onDinh = new Set(
-        [0, 3, 4, 7]
-          .filter((buoc) =>
-            chord.quality.intervals.some((i) => i % 12 === buoc),
-          )
-          .map((buoc) => (chord.root + buoc) % 12),
-      )
-      /*
-        Nốt "cuối câu" là nốt VANG SAU CÙNG, không phải phần tử cuối mảng. Mẫu
-        câu không bắt buộc phát ra theo thứ tự thời gian, nên hai thứ ấy lệch
-        nhau — bản đầu tôi lấy nhầm phần tử cuối mảng, và ô kết trên `G` thoát
-        lưới vì phần tử cuối mảng tình cờ đã là nốt ổn định.
-      */
-      let cuoi = 0
-      for (let i = 1; i < built.notes.length; i += 1) {
-        if (built.notes[i]!.startBeat > built.notes[cuoi]!.startBeat) cuoi = i
-      }
-      const not = built.notes[cuoi]!
-      if (onDinh.size > 0 && !onDinh.has(not.note % 12)) {
-        const gan = safe
-          .filter((cao) => onDinh.has(cao % 12))
-          .sort((a, b) => Math.abs(a - not.note) - Math.abs(b - not.note))[0]
-        if (gan !== undefined) {
-          built = {
-            ...built,
-            notes: built.notes.map((item, i) =>
-              i === cuoi ? { ...item, note: gan as MidiNote } : item,
-            ),
-          }
-        }
-      }
-    }
-
     if (positionInPhrase === 2 && !isPhraseEnd && built.notes.length > 0) {
       const slot = playBeats / built.notes.length
       built = {
@@ -2115,9 +2066,115 @@ export function generateSolo(
     return duration === note.durationBeats ? note : { ...note, durationBeats: duration }
   })
 
+  /*
+    CUỐI CÂU PHẢI ĐÁP VÀO NỐT ỔN ĐỊNH — `pianoimprovnotes.md`: tránh dừng ở nốt
+    lơ lửng khiến câu nghe dở dang.
+
+    Mẫu `chord-tone` tự nhận "không bao giờ lệch hoà âm", nhưng nó đi trên thang
+    dựng từ `material` — cả gam, không riêng nốt hợp âm — nên nốt cuối rơi đâu
+    thì rơi. Đo trên vòng `C Am F G Em Dm G7 C`: câu kết trên `G` đáp vào `A`
+    (bậc 9), câu kết trên `Dm` đáp vào `E` (bậc 9). Lỗi nấp lâu vì `interlude`
+    mặc định bật, mà nhánh giang tấu có đường kết riêng.
+
+    SIẾT Ở ĐÂY, SAU KHI CAO ĐỘ ĐÃ CHỐT. Vá lúc mẫu câu vừa dựng thì vô ích: phía
+    sau còn `capStack`, `applyFeel`, `snapToPulse` và bộ kéo bước quãng tám, và
+    chúng ghi đè lại — đo được ô kết dựng ra `12:67 12.5:69 13.25:71 13.75:74`
+    mà ra tới đây thành `12:71 12.5:74 13.25:79 13.75:69`.
+
+    BA RÀNG BUỘC, thiếu cái nào cũng hỏng chỗ khác (bản đầu thiếu cả ba, 3 lỗi
+    thành 6):
+
+      1. Chỉ chọn cao độ nằm trong **thang của chính hợp âm ấy**, dựng lại bằng
+         `materialFor`. Chọn bừa nốt ổn định gần nhất thì ở chế độ một gam xuyên
+         suốt nó rơi ra ngoài gam.
+      2. Bỏ qua nốt **đang có nốt láy bám vào** — nốt láy tính theo bậc so với
+         nốt chính, dời nốt chính thì nó lệch bậc.
+      3. "Nốt cuối" là nốt **vang sau cùng**, không phải phần tử cuối mảng: mẫu
+         câu không bắt buộc phát ra theo thứ tự thời gian.
+
+    VÀ CHỈ SIẾT KHI CHẤT LIỆU LÀ NỐT HỢP ÂM. Siết tuốt thì tỉ lệ nốt hợp âm trên
+    mạch vọt lên **81%**, trong khi khoảng đo được ở **người thật** — 7 bản ký âm
+    Cà Pháo, nguồn `ca-phao-piano-covers` — là **41–69%**. Tức người thật KHÔNG
+    phải lúc nào cũng kết vào nốt hợp âm, và luật "luôn kết ở nốt ổn định" rút từ
+    `pianoimprovnotes.md` bị chính số đo bác ở lối chơi theo gam.
+
+    Người dùng chọn nguồn theo gam thì kết ở bậc 9 là màu hợp lệ, ép về nốt hợp
+    âm là làm trái lựa chọn của họ. Luật số đo thắng luật tài liệu.
+  */
+  const ketOnDinh = clipped.slice()
+  const siet = noteSource === 'chordTone'
+  for (let i = 0; i < spans.length; i += 1) {
+    const { chord, start } = spans[i]!
+    const nextStart = spans[i + 1]?.start ?? totalBeats
+    const cuoiCau =
+      i === spans.length - 1 || phraseAt(nextStart) !== phraseAt(start)
+    if (!siet || !cuoiCau) continue
+
+    /*
+      Nốt ổn định là gốc, bậc ba, bậc năm. NHƯNG hợp âm TREO không có bậc ba —
+      bậc bốn (hay bậc hai) đứng thay chỗ nó, và kết ở đó mới đúng chất treo.
+      Dùng cứng `[0, 3, 4, 7]` thì mọi câu kết trên `sus4` bị coi là lơ lửng rồi
+      bị kéo về gốc, và vòng toàn sus4 chơi ra khác hẳn.
+    */
+    const coBacBa = chord.quality.intervals.some(
+      (x) => x % 12 === 3 || x % 12 === 4,
+    )
+    const onDinh = new Set(
+      (coBacBa ? [0, 3, 4, 7] : [0, 2, 5, 7])
+        .filter((buoc) => chord.quality.intervals.some((x) => x % 12 === buoc))
+        .map((buoc) => (chord.root + buoc) % 12),
+    )
+    if (onDinh.size === 0) continue
+
+    const lift = phraseAt(start) % 2 === 0 ? 0 : PHRASE_LIFT
+    const ungCu = ladderOf(
+      materialFor(
+        chord,
+        noteSource,
+        key,
+        [spans[i + 1]?.chord, spans[i - 1]?.chord].filter(
+          (entry): entry is ParsedChord => entry !== undefined,
+        ),
+        tones,
+        interlude,
+        storeScale,
+        singleScale,
+      ),
+      (soloLow + lift) as MidiNote,
+      Math.min(soloCeiling, soloHigh + lift) as MidiNote,
+    ).filter((cao) => onDinh.has(cao % 12))
+    if (ungCu.length === 0) continue
+
+    let chon = -1
+    for (let k = 0; k < ketOnDinh.length; k += 1) {
+      const not = ketOnDinh[k]!
+      if (not.isGrace) continue
+      if (not.startBeat < start || not.startBeat >= nextStart) continue
+      if (chon < 0 || not.startBeat > ketOnDinh[chon]!.startBeat) chon = k
+    }
+    if (chon < 0) continue
+
+    const hienTai = ketOnDinh[chon]!
+    if (onDinh.has(hienTai.note % 12)) continue
+
+    const coLay = ketOnDinh.some(
+      (not) =>
+        not.isGrace &&
+        not.startBeat < hienTai.startBeat &&
+        hienTai.startBeat - not.startBeat < 0.3,
+    )
+    if (coLay) continue
+
+    let gan = ungCu[0]!
+    for (const cao of ungCu) {
+      if (Math.abs(cao - hienTai.note) < Math.abs(gan - hienTai.note)) gan = cao
+    }
+    ketOnDinh[chon] = { ...hienTai, note: gan as MidiNote }
+  }
+
   // Ngón gán sau cùng, khi cao độ đã chốt — gán trước thì mọi bước sửa nốt
   // phía trên đều làm số ngón nói dối.
-  return assignFingers(clipped).notes
+  return assignFingers(ketOnDinh).notes
 }
 
 /**

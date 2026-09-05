@@ -1341,3 +1341,66 @@ lọt, vì dây tầng phía sau (`capStack`, `applyFeel`, `snapToPulse`, bộ k
 | `soloGenerator` · câu kết ở nốt ổn định | như trên: cần siết sau dây tầng cao độ mà vẫn tôn trọng `material` |
 | `phraseAcrossBar` · phần lớn nốt trong một hơi dài | tỉ lệ 0,47 so với ngưỡng 0,50 — sát ngưỡng, chưa truy |
 | `handSplitAudit` · ô 3 giang tấu có ngón chromatic | không còn bước nửa cung nào ở ô 3 |
+
+### Câu kết vào nốt ổn định: ba ràng buộc, thiếu cái nào cũng hỏng chỗ khác
+
+Vá được, nhưng phải qua bốn lần sai. Ghi lại cả bốn.
+
+**Vá ở đâu.** Phải siết ở **cuối `generateSolo`**, sau khi cao độ đã chốt. Vá lúc mẫu câu
+vừa dựng là vô ích: phía sau còn `capStack`, `applyFeel`, `snapToPulse` và bộ kéo bước
+quãng tám ghi đè lại — đo được ô kết dựng ra `12:67 12.5:69 13.25:71 13.75:74`, ra tới
+đầu kia thành `12:71 12.5:74 13.25:79 13.75:69`.
+
+**Ràng buộc 1 — chỉ chọn cao độ trong THANG của chính hợp âm ấy** (dựng lại bằng
+`materialFor`). Chọn bừa nốt ổn định gần nhất thì ở chế độ một-gam-xuyên-suốt nó rơi ra
+ngoài gam: `singleScale.test.ts` vỡ hai chỗ.
+
+**Ràng buộc 2 — bỏ qua nốt đang có nốt láy bám vào.** Nốt láy tính theo bậc so với nốt
+chính; dời nốt chính thì nó lệch bậc, `graceNotesInSolo` vỡ.
+
+**Ràng buộc 3 — "nốt cuối" là nốt VANG SAU CÙNG**, không phải phần tử cuối mảng. Mẫu câu
+không bắt buộc phát ra theo thứ tự thời gian, và ô kết trên `G` thoát lưới đúng vì phần tử
+cuối mảng tình cờ đã ổn định.
+
+**Và chỉ siết khi chất liệu là nốt hợp âm.** Siết tuốt thì tỉ lệ nốt hợp âm trên mạch vọt
+lên **81%**, trong khi khoảng đo ở **người thật** — 7 bản ký âm Cà Pháo — là **41–69%**.
+Tức người thật KHÔNG phải lúc nào cũng kết vào nốt hợp âm. Luật "luôn kết ở nốt ổn định"
+rút từ `pianoimprovnotes.md` bị chính số đo bác ở lối chơi theo gam; số đo thắng.
+
+**Hợp âm TREO không có bậc ba**, nên tập ổn định cứng `[0, 3, 4, 7]` loại mất bậc bốn —
+thứ đứng thay chỗ bậc ba và là chất của chính hợp âm treo. Vòng toàn `sus4` chơi ra khác
+hẳn, `missingScale.test.ts` vỡ. Với hợp âm treo thì tập ổn định là `[0, 2, 5, 7]`.
+
+### `handSplitAudit` ô 3: test mang tên "ô 3" mà chưa từng chạm tới ô 3
+
+`ReharmHome` chạy giang tấu ở câu **bốn ô** (mặc định `chordsPerPhrase = 4`), còn
+`generateSolo` mặc định **2**. Test để trống nên ô 3 đã sang câu mới, `positionInPhrase`
+bị đặt lại 0, và nhánh *"ô 3 giang tấu chạy chromatic"* **không bao giờ chạy**. Đã ghi
+`chordsPerPhrase: 4` cho khớp ứng dụng.
+
+Sửa xong thì nhánh chạy thật: chọn đúng `enclosure`, dựng ra 9 nốt. **Nhưng vẫn không có
+bước nửa cung nào** — `enclosure` đi trên thang gam nên hai nốt bao vây là bước gam chứ
+không phải nửa cung. Muốn có ngón chromatic thật thì phải sửa chính mẫu `enclosure` dùng
+nốt lướt nửa cung, mà nó đổi tiếng ở **mọi chỗ khác** đang dùng mẫu này — quyết định về
+âm nhạc, chưa làm.
+
+Một giả thuyết đã bị bác dọc đường: tôi ngờ ngưỡng `notes.length >= 5` loại mất `enclosure`
+vì nó là hình ngắn. Đo ra nó dựng **9 nốt**, ngưỡng không hề cản. Đã lùi bản vá ấy.
+
+### `phraseAcrossBar` rơi từ 58% xuống 47% ở `b2dd25e`
+
+Khoanh bằng cách lùi `src/` về từng commit rồi chạy lại:
+
+| commit | ngày | nốt nằm trong hơi ≥ 5 |
+|---|---|---|
+| `ee3d943` | 23/8 | **58%** (303/522) — đạt |
+| `b2dd25e` | 24/8 | **47%** (262/553) — hỏng |
+
+`b2dd25e` sửa `soloGenerator.ts` **+147 dòng** (việc giang tấu 4 ô). Nó thêm ngón quay đầu
+ở vị trí mở câu, mà chính chú thích trong `phraseAcrossBar.test.ts` đã nói: hình hai nốt là
+mẫu bao vây và mẫu kẹp nửa cung, **cố ý** quay đầu, và ép chúng biến mất là giết đúng cái
+ngón đàn phải giữ.
+
+Nên hai đích **chống nhau**: hơi dài liền mạch, và ngón quay đầu đa dạng. Cân lại là quyết
+định về âm nhạc, cần tai người. Đo thêm: bỏ cổng `mix(13) % 3 === 0` ở ô 3 **không đổi gì**
+(vẫn 47%, 262/553) — nhánh ấy không phải chỗ sinh ra chênh lệch.

@@ -65,6 +65,13 @@ function interludeLayers() {
       // nó dựa vào mặc định `interlude = true` — mặc định ấy trái với chú thích
       // của chính `generateSolo` nên đã đổi thành `false`.
       interlude: true,
+      /*
+        Ứng dụng chạy giang tấu ở câu BỐN ô (`ReharmHome` mặc định 4), còn hàm
+        thì mặc định 2. Để trống thì ô 3 đã sang câu mới, `positionInPhrase` bị
+        đặt lại 0, và nhánh "ô 3 giang tấu chạy chromatic" không bao giờ chạy —
+        test mang tên "ô 3" mà chưa từng chạm tới ô 3 thật.
+      */
+      chordsPerPhrase: 4,
     }),
   )
 
@@ -170,6 +177,7 @@ describe('giang tấu — tách tay', () => {
                 range: BALLAD_SOLO_RANGE,
                 endWithRun: true,
                 interlude: true,
+                chordsPerPhrase: 4,
               }),
             ),
         })!
