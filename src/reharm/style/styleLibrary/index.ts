@@ -335,7 +335,9 @@ const BOLERO_STYLES: StylePattern[] = [
     bpm: 69,
     feel: 'straight-block-chord',
     verified: true,
-    sourceVideos: ['Duong Xua Loi Cu-Linh Nhi.mxl o 9-40 — ban ky am piano do Linh Nhi soan'],
+    sourceVideos: [
+      'Bay ban ky am Linh Nhi, doan phien khuc: 2125 moc go tay trai, 1,22 not/moc',
+    ],
     cell: {
       lengthBeats: 4,
       left: [
@@ -344,10 +346,26 @@ const BOLERO_STYLES: StylePattern[] = [
         { beat: 0.75, durationBeats: 0.25, velocityScale: 0.6, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
         { beat: 1, durationBeats: 0.5, velocityScale: 0.85, tones: [{ toneIndex: 1, fromRoot: true, semitones: 12 }] },
         { beat: 1.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
-        { beat: 2, durationBeats: 0.5, velocityScale: 0.75, tones: [{ toneIndex: 2, fromRoot: true }] },
+        {
+          beat: 2,
+          durationBeats: 0.5,
+          velocityScale: 0.75,
+          tones: [
+            { toneIndex: 2, fromRoot: true },
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+          ],
+        },
         { beat: 2.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 0, fromRoot: true, semitones: 12 }] },
         { beat: 3, durationBeats: 0.5, velocityScale: 0.8, tones: [{ toneIndex: 0, fromRoot: true }] },
-        { beat: 3.5, durationBeats: 0.5, velocityScale: 0.7, tones: [{ toneIndex: 2, fromRoot: true }] },
+        {
+          beat: 3.5,
+          durationBeats: 0.5,
+          velocityScale: 0.7,
+          tones: [
+            { toneIndex: 2, fromRoot: true },
+            { toneIndex: 0, fromRoot: true, semitones: 12 },
+          ],
+        },
       ],
       right: [],
     },
@@ -366,7 +384,9 @@ const BOLERO_STYLES: StylePattern[] = [
     bpm: 69,
     feel: 'straight-block-chord',
     verified: true,
-    sourceVideos: ['Duong Xua Loi Cu-Linh Nhi.mxl o 41-58 — 76% moc go co tu hai not tay trai tro len'],
+    sourceVideos: [
+      'Bay ban ky am Linh Nhi, doan diep khuc: 1026 moc go tay trai, 1,60 not/moc',
+    ],
     cell: {
       lengthBeats: 4,
       left: [
@@ -375,7 +395,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 0.5, durationBeats: 0.25, velocityScale: 0.6,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },
@@ -383,7 +402,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 0.75, durationBeats: 0.25, velocityScale: 0.6,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },
@@ -391,7 +409,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 1, durationBeats: 0.5, velocityScale: 0.7,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },
@@ -399,7 +416,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 1.5, durationBeats: 0.5, velocityScale: 0.65,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },
@@ -408,7 +424,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 2.5, durationBeats: 0.5, velocityScale: 0.65,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },
@@ -417,7 +432,6 @@ const BOLERO_STYLES: StylePattern[] = [
           beat: 3.5, durationBeats: 0.5, velocityScale: 0.6,
           tones: [
             { toneIndex: 0, fromRoot: true, semitones: 12 },
-            { toneIndex: 1, fromRoot: true, semitones: 12 },
             { toneIndex: 2, fromRoot: true, semitones: 12 },
           ],
         },

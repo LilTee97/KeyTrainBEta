@@ -56,6 +56,15 @@ import { TUYEN_DAO, gocTuyen, type ODao } from './tuyenDaoLinhNhi'
 const NOT_CAM = true
 
 /**
+ * Tầm tuyệt đối của đoạn dạo — cao độ trung bình tay phải, tính bằng MIDI.
+ *
+ * Đo bảy đoạn dạo: 70,4 · 72,1 · 72,8 · 74,2 · 75,0 · 75,4 · 75,5 — trung bình **73,6**
+ * (đúng D5), **lệch chuẩn 1,9 nửa cung** qua năm giọng khác nhau. Đây là một trong những
+ * con số ổn định nhất đo được về chị ấy.
+ */
+const TAM_TAY_PHAI = 73.6
+
+/**
  * Chức năng hoà thanh của từng bậc — dùng khi không có ô nào cùng bậc.
  *
  * Thà lấy ô cùng chức năng còn hơn lấy bừa: ô đứng trên một bậc hạ át nghe vẫn xuôi ở
@@ -261,17 +270,35 @@ export function giaiDieuDaoLinhNhi(options: {
 
   /*
     DỜI QUÃNG TÁM CẢ CÂU MỘT LƯỢT — dời từng nốt là phá đường đi, đúng lỗi của bản 1.
-    Mốc là tầm của bản gốc: lấy chủ âm gốc hay gặp nhất trong các mảnh đã chọn.
+
+    Mốc là **TẦM TUYỆT ĐỐI** chị ấy đánh, không phải tầm của bản ký âm nguồn. Đo cao độ
+    trung bình tay phải của cả bảy đoạn dạo:
+
+    | bài | chủ âm | trung bình |
+    |---|---|---|
+    | Biển Tình | D | E5 (75,5) |
+    | Đừng Xa | D | Bb4 (70,4) |
+    | Lá Thư | D | Eb5 (75,4) |
+    | Một Cõi | G | C5 (72,1) |
+    | Đường Xưa | C | D5 (74,2) |
+    | Mùa Xuân | G | Eb5 (75,0) |
+    | Rừng Lá | A | C#5 (72,8) |
+
+    **Trung bình 73,6 — đúng D5 — lệch chuẩn chỉ 1,9 nửa cung**, qua năm giọng khác nhau.
+    Tầm ấy gần như không nhúc nhích theo giọng bài; đoạn dạo của chị luôn nằm ở đó.
+
+    CŨ: `12 × round((chuGoc − chu) / 12)`, tức bám tầm bản nguồn. Triệu chứng là bài La
+    thứ mà ô ghép phần lớn lấy từ Đừng Xa (Rê) thì ra `doi = −12`, câu tụt xuống trung
+    bình **F#4–G4** — thấp hơn bản ký âm bảy nửa cung, trần thấp hơn cả một quãng sáu.
+    Người dùng nghe ra ngay: câu chìm vào đúng vùng tay trái đang chạy.
   */
-  const dem = new Map<number, number>()
-  for (const { m } of chon) dem.set(m.chuGoc, (dem.get(m.chuGoc) ?? 0) + 1)
-  const gocHay = [...dem.entries()].sort((a, b) => b[1] - a[1])[0]![0]
   const moi = chon.flatMap(({ m }, o) => m.o.n.map(([at, d, du]) => ({ o, at, du, note: goc + d })))
   if (moi.length === 0) return []
 
   const ngoai = (k: number) =>
     moi.reduce((a, n) => a + (n.note + k > range.high || n.note + k < range.low ? 1 : 0), 0)
-  let doi = 12 * Math.round((gocHay - chu) / 12)
+  const tam = moi.reduce((a, n) => a + n.note, 0) / moi.length
+  let doi = 12 * Math.round((TAM_TAY_PHAI - tam) / 12)
   for (const k of [doi - 12, doi + 12]) if (ngoai(k) < ngoai(doi)) doi = k
 
   /*

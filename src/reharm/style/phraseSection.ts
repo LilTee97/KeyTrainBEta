@@ -149,11 +149,59 @@ export function buildPhraseSection(
     `interlockHands`. Luật "đoạn không lời chơi đúng điệu" còn nguyên.
   */
   const thaySolo = thay ?? soloTeacherOf(style.id)
+  /*
+    TAY TRÁI MỎNG ĐI Ở ĐOẠN KHÔNG LỜI — đo bảy bản ký âm, mốc gõ tay trái mỗi ô:
+
+    | | phần hát | dạo | tỉ lệ | kết | tỉ lệ |
+    |---|---|---|---|---|---|
+    | giọng thứ | 6,5 | 4,6 | 0,71 | 4,9 | 0,75 |
+    | giọng trưởng | 7,7 | 6,8 | 0,88 | 3,2 | 0,42 |
+
+    ĐẶT THEO TỈ LỆ chứ không theo số mốc tuyệt đối. Bản trước dùng trần tuyệt đối, chỉnh
+    trên `bolero-linh-nhi-3` ra đúng 4,4 mốc/ô, nhưng áp sang `bolero-linh-nhi-2` thì ra
+    **3,7** — và người dùng nghe ra: *"các câu intro giờ lại mất hẳn kết hợp giữa hai tay
+    trái phải."* Tay trái mỏng quá thì không còn mốc nào gõ một mình để đối đáp.
+
+    BA TỈ LỆ DƯỚI ĐÂY HIỆU CHỈNH THEO KẾT QUẢ THẬT, không lấy thẳng tỉ lệ dạo/hát ở bảng
+    trên. Lý do: mẫu đệm có 9 cú gõ một ô, còn đoạn hát trong bản ký âm chỉ 6,5 mốc — nhân
+    tỉ lệ 0,75 vào 9 cú thì ra 7 mốc, trong khi đích là 4,9. Nhân vào số cú gõ của mẫu chứ
+    không nhân vào mật độ bản ký âm, nên phải chỉnh lại cho khớp đầu ra.
+
+    Đo được sau khi chỉnh: dạo thứ **4,4** (đích 4,6) · kết thứ **~5,0** (đích 4,9) · kết
+    trưởng **~3,0** (đích 3,2).
+  */
+  /*
+    CHẶN THEO HỌ ĐIỆU, KHÔNG CHẶN THEO `thaySolo`.
+
+    `soloTeacherOf('bossa-nova-1')` trả về `'linh-nhi'` — mọi điệu bám tay trái đều nhận
+    thầy ấy. Chặn bằng `thaySolo` thì phép hãm ăn luôn sang bossa và `phraseKeepsStyle`
+    đỏ: tay trái bossa mất cú gõ ở phách 2 và 3,5, tức mất chất điệu.
+
+    Số đo mật độ này rút từ sheet bolero của Linh Nhi, nên nó chỉ đúng cho điệu của chị.
+    Đây là lần thứ hai vấp đúng cái bẫy `thaySolo` trong cùng một dự án.
+  */
+  const laLinhNhi = (style.family ?? '').includes('linh-nhi')
+  const tiLeTrai =
+    laLinhNhi
+      ? kind === 'outro'
+        ? key?.scale === 'minor'
+          ? 0.55
+          : 0.33
+        : key?.scale === 'minor'
+        ? 0.71
+        : /*
+            ĐOẠN DẠO GIỌNG TRƯỞNG KHÔNG HÃM. Bản ký âm 6,8 mốc/ô, mà không hãm gì thì
+            app cũng ra đúng 6,8 — hãm vào là hỏng chỗ đang đúng. Đặt tỉ lệ 0,88 theo
+            số đo thì ra 6,2, thiếu mất nửa mốc.
+          */
+          undefined
+      : undefined
   const backing = soloLeftHand({
     chords,
     beatsEach,
     style,
     chiPhach1: thaySolo === 'ton-hung',
+    ...(tiLeTrai === undefined ? {} : { tiLeGiuTrai: tiLeTrai }),
   })
 
   /*

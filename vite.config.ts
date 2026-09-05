@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { pianobrainKnowledge, pianobrainRoot } from './src/reharm/brain/pianobrainPlugin'
+import { nguonJson } from './src/reharm/nguon/nguonPlugin'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -28,6 +29,11 @@ export default defineConfig({
     alias: { '@pianobrain': path.join(BRAIN, 'src') },
   },
   plugins: [
+    /*
+      Sổ `Nguon.json` — ghi câu dạo mỗi lần phát và bình luận về chúng.
+      Chỉ chạy khi `npm run dev`; bản dựng tĩnh không có máy chủ để ghi.
+    */
+    nguonJson(HERE),
     pianobrainKnowledge(HERE),
     react(),
     tailwindcss(),

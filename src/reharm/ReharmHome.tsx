@@ -161,6 +161,9 @@ import {
 } from './fillSoloGenerator/soloTeacher'
 import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
 import { vonHopAmLinhNhi } from './style/vonHopAmLinhNhi'
+import { giaiDieuDaoLinhNhi } from './style/giaiDieuDaoLinhNhi'
+import { luuCauDao, type CauDaoLuu } from './nguon/nguon'
+import { OBinhLuan } from './nguon/OBinhLuan'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
   DOMINANT_COLOR_OPTIONS,
@@ -784,6 +787,8 @@ export function ReharmHome() {
   /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
   const [songId, setSongId] = useState<string | null>(null)
   const [songTitle, setSongTitle] = useState<string | null>(null)
+  /* Câu dạo vừa lưu vào `Nguon.json` — ô bình luận gắn ý kiến vào đúng số này. */
+  const [cauDaoLuu, setCauDaoLuu] = useState<CauDaoLuu | null>(null)
   /** Tăng lên mỗi lần lưu, để danh sách bài đọc lại kho. */
   const [saveCount, setSaveCount] = useState(0)
 
@@ -1552,11 +1557,30 @@ export function ReharmHome() {
 
   const sheet = useMemo(() => {
     if (!baseSheet) return null
-    const playOrder = arrangement ?? []
-    const intro = playOrder.some((step) => step.type === 'intro') ? introSymbols : []
-    const outro = playOrder.some((step) => step.type === 'outro') ? outroSymbols : []
+    /*
+      BẢNG NHẠC PHẢI BÀY ĐÚNG THỨ TỰ SẼ PHÁT, không bày `arrangement` thô.
+
+      `arrangement` chỉ có giá trị khi người dùng TỰ sắp bố cục; mặc định nó là `null`.
+      Bản cũ viết `arrangement ?? []` rồi hỏi mảng rỗng ấy có đoạn dạo không — luôn
+      không — nên bản nhạc đã tái hoà âm **không hiện hàng hợp âm dạo và kết**, dù bấm
+      phát thì hai đoạn ấy vẫn kêu.
+
+      `steps` mới là thứ tự thật, và nó ÉP thêm dạo/giang/kết khi chọn Linh Nhi hoặc
+      Chiếc Lá. Nhưng `steps` khai sau `sheet` (nó cần `songSources`), nên ở đây chép
+      lại đúng hai luật ép ấy — không chép cả `steps` được.
+
+      Ai sửa luật ép trong `steps` thì phải sửa cả chỗ này, nếu không bản nhạc lại lệch
+      với tiếng nghe được.
+    */
+    const daSap = arrangement ?? []
+    const epDao = thaySolo === 'linh-nhi' || chiecLa
+    const epKet = thaySolo === 'linh-nhi'
+    const intro =
+      epDao || daSap.some((step) => step.type === 'intro') ? introSymbols : []
+    const outro =
+      epKet || daSap.some((step) => step.type === 'outro') ? outroSymbols : []
     return attachPhraseToSheet(baseSheet, intro, outro)
-  }, [baseSheet, arrangement, introSymbols, outroSymbols])
+  }, [baseSheet, arrangement, introSymbols, outroSymbols, thaySolo, chiecLa])
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
 
@@ -1993,6 +2017,45 @@ export function ReharmHome() {
                   ? traiCua(headChords, head.map((span) => span.beats))
                   : traiCua(windowChords, picked.map((span) => span.beats)),
               })
+            : null) ??
+          /*
+            GIANG TẤU LẤY LẠI CÂU DẠO.
+
+            Đo sáu bài có giang tấu, so theo TỪNG Ô (điền ô trống bằng hợp âm đang
+            vang, không so danh sách ký hiệu):
+
+              vòng hợp âm  giang trùng dạo **77%**
+              tuyến nốt neo giang trùng dạo **78%**
+
+            Biển Tình trùng 100% ở cả hai: vòng dạo `VI III II I VI II II I`, vòng
+            giang là `I` + đúng dãy ấy + `V`.
+
+            Hai vòng hợp âm vốn đã trùng nhau, nên chỉ cần cho giang tấu đi qua CÙNG
+            bộ ghép tuyến và CÙNG `take` với đoạn dạo — `phraseSpin + playSpin.current`,
+            không cộng chỉ số vòng lặp. Từng thử thêm phép lệch một ô cho khớp chỗ
+            Biển Tình thêm ô mở, nhưng lệch ô làm hợp âm và vị trí ô không còn khớp
+            nhau, bộ lọc bậc phá mất phép căn và tỉ lệ trùng tụt xuống 50%.
+
+            Trước đây giang tấu dùng `raiLinhNhi` — tay phải bám mốc tay trái, sinh
+            nốt riêng — nên hai đoạn ra hai câu khác nhau, ngược bản ký âm.
+            `raiLinhNhi` vẫn giữ làm đường lui khi bộ ghép trả rỗng.
+          */
+          (thaySolo === 'linh-nhi' && reharm.key
+            ? (() => {
+                const tuyen = giaiDieuDaoLinhNhi({
+                  left: lastLoop
+                    ? traiCua(headChords, head.map((span) => span.beats))
+                    : traiCua(windowChords, picked.map((span) => span.beats)),
+                  chords: lastLoop ? lastLoopChords : windowChords,
+                  beatsPerChord: chordBeats,
+                  barBeats: phrasePulseBar,
+                  range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+                  take: phraseSpin + playSpin.current,
+                  tonic: reharm.key.tonic,
+                  minor: reharm.key.scale === 'minor',
+                })
+                return tuyen.length > 0 ? tuyen : null
+              })()
             : null) ??
           (thaySolo === 'linh-nhi'
             ? raiLinhNhi({
@@ -2994,23 +3057,29 @@ export function ReharmHome() {
               /*
                 ĐOẠN DẠO ĐÓNG BĂNG; đoạn kết và giang tấu vẫn đổi theo lượt.
 
-                Câu dạo là thứ được SOẠN, không phải thứ ngẫu hứng. Cả sổ
-                `sheet-solos` là bản ký âm những câu dạo cố định — Linh Nhi đàn
-                bài Đừng Xa mười lần thì mười lần câu dạo giống nhau. Chỗ ngẫu
-                hứng sống là giang tấu, và nó đang chạy hai lượt trong cùng một
-                lần phát nên đổi ở đó nghe ra ngay.
+                CÂU DẠO SOẠN MỚI MỖI LẦN BẤM PHÁT.
 
-                Ba lý do thực dụng: ca sĩ tập với một câu dạo rồi tới lúc hát
-                lại nghe câu khác thì phải mò lại chỗ vào; người tập đàn không
-                dựa được vào một nền đệm đổi mỗi lượt; và câu dạo chỉ nghe MỘT
-                lần mỗi lượt nên đổi giữa hai lượt cách nhau vài phút không đọc
-                ra là phong phú mà đọc ra là không nhất quán.
+                Đây là lần đảo thứ HAI của cùng một chỗ, nên ghi lại cả ba nước để
+                đừng ai lật lại lần nữa mà không biết:
 
-                ĐÂY LÀ ĐẢO MỘT QUYẾT ĐỊNH CŨ. Trước đây người dùng yêu cầu cho
-                dạo/kết đổi theo lượt như giang tấu, lúc chúng còn đóng cứng
-                `take = 0`. Nay họ nghe lại và đồng ý đóng băng riêng câu dạo.
+                  1. Ban đầu dạo và kết đóng cứng `take = 0`.
+                  2. Người dùng yêu cầu cho chúng đổi theo lượt như giang tấu.
+                  3. Rồi nghe lại và đồng ý đóng băng RIÊNG câu dạo, với lý do câu
+                     dạo là thứ được soạn chứ không phải ngẫu hứng — ca sĩ tập với
+                     một câu rồi tới lúc hát lại nghe câu khác thì phải mò lại chỗ
+                     vào.
+                  4. Nay người dùng chốt lại: *"intro là soạn vậy, mỗi lần bấm phát
+                     hãy soạn một intro khác dù đang phát cái cũ."*
+
+                Nước 4 không bác lý lẽ của nước 3 — câu dạo VẪN là thứ được soạn,
+                chỉ là soạn MỚI mỗi lần bấm phát chứ không soạn một lần rồi giữ mãi.
+                Trong một lần phát nó vẫn đứng yên; `playSpin` chỉ nhích khi bấm.
+
+                Đi cùng chuyện này là sổ `Nguon.json`: nay mỗi lần bấm phát đẻ ra
+                một câu mới nên sổ có nhiều dòng để đối chiếu và bình luận, chứ
+                không còn dồn hết vào một dòng.
               */
-              take: kind === 'intro' ? 0 : 1 + phraseSpin + playSpin.current,
+              take: phraseSpin + playSpin.current,
               range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
               ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
               solo: (chords) =>
@@ -3408,6 +3477,51 @@ export function ReharmHome() {
       playSpin.current += 1
       setPhraseSpin((spin) => spin + 1)
       const base = playSpin.current * 31 + 7
+
+      /*
+        LƯU CÂU DẠO NGAY LÚC BẤM PHÁT — xem `nguon/nguon.ts`.
+
+        Người dùng đặt: lưu ngay, không hỏi, và bấm dừng giữa chừng cũng phải lưu
+        trọn câu. Nên chỗ gọi nằm ở đây chứ không ở chỗ phát xong: câu đã dựng đủ
+        trước khi tiếng đầu tiên kêu lên.
+
+        `sections[0]` bắt đầu ở phách 0 chính là đoạn dạo — `buildPass` dán nó vào
+        đầu rồi đẩy mọi đoạn còn lại lùi đúng bấy nhiêu phách. Bài không có đoạn dạo
+        thì chỉ có một đoạn, và không lưu gì.
+      */
+      /*
+        SỔ GHI KHÔNG ĐƯỢC LÀM GÃY VIỆC PHÁT NHẠC.
+
+        Chỗ này gọi `buildPass` THÊM một lần, ngay trong tay xử lý cú bấm. Vòng phát
+        chính gọi nó bên trong `startTimelineLoop`, nơi lỗi được nuốt; gọi thêm ở đây
+        thì lỗi văng thẳng ra tay xử lý sự kiện và làm sập cả trang — người dùng thấy
+        app tự nạp lại khi bấm phát với một điệu nhất định.
+
+        `nguon.ts` đã nuốt lỗi mạng, nhưng chưa nuốt lỗi DỰNG. Nay bọc cả khối.
+      */
+      try {
+        const luot = buildPass(base, song.soloTakes)
+        const dauBai = luot.sections?.[0]
+        if (dauBai && dauBai.startBeat === 0 && (luot.sections?.length ?? 0) > 1) {
+          void luuCauDao({
+            events: luot.events.filter((e) => e.startBeat < dauBai.lengthBeats - 1e-6),
+            lengthBeats: dauBai.lengthBeats,
+            barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+            bai: songTitle ?? '',
+            giong: reharm.key
+              ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
+              : '',
+            dieu: styleSolo.id,
+            /* Vòng hợp âm đúng như lưới đang bày ra cho người dùng nhìn. */
+            hopAm: introSymbols,
+          }).then((luu) => {
+            if (luu) setCauDaoLuu(luu)
+          })
+        }
+      } catch (loi) {
+        console.warn('Nguon.json: không lưu được câu dạo, bỏ qua', loi)
+      }
+
       startTimelineLoop(
         (pass) =>
           eventsForHand(
@@ -3422,7 +3536,21 @@ export function ReharmHome() {
       startSourceAtBeat(sourceBeat, bpm, !playsOnce)
       advanceRound()
     },
-    [buildPass, song.soloTakes, hand, bpm, loopLengthBeats, playsOnce, advanceRound],
+    [
+      buildPass,
+      song.soloTakes,
+      hand,
+      bpm,
+      loopLengthBeats,
+      playsOnce,
+      advanceRound,
+      style.beatsPerMeasure,
+      style.gridUnit,
+      songTitle,
+      reharm.key,
+      styleSolo.id,
+      introSymbols,
+    ],
   )
 
   const playFromSourceBeat = useCallback(
@@ -4133,7 +4261,10 @@ export function ReharmHome() {
             slashHintAt={slashHintAt}
             onToggleSlash={toggleSlash}
             toolbar={
-              <div className="mb-3 flex flex-wrap items-center gap-3 border-b border-line pb-3">
+              <div className="mb-3 border-b border-line pb-3">
+                {/* Ô bình luận nằm TRÊN nút phát, theo yêu cầu người dùng. */}
+                <OBinhLuan cau={cauDaoLuu} />
+                <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() =>
@@ -4152,6 +4283,7 @@ export function ReharmHome() {
                       ? '▶ Phát trọn bài'
                       : '▶ Phát cả bài'}
                 </button>
+                </div>
               </div>
             }
             onDuplicateChord={duplicateChord}

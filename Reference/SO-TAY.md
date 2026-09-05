@@ -644,6 +644,287 @@ từ 24 ô xuống **18 ô** (chỉ còn Đừng Xa và Rừng Lá).
 **Lỗi phụ sửa kèm:** kho thứ co lại còn 3 tuyến thì phép quay vòng hạng ứng viên bị
 trùng lượt. Nay **lệch pha theo ô** — ô thứ `o` quay thêm `o` nhịp.
 
+### Sổ `Nguon.json` — ghi câu dạo mỗi lần phát, kèm ô bình luận
+
+Trước đó **không có gì được lưu**: câu solo sinh lại từ đầu mỗi lần phát rồi mất.
+`SongSnapshot` chỉ lưu cài đặt, và ngay cả `playSpin`/`phraseSpin` cũng không nằm trong
+đó — nghe thấy hay cũng không giữ được, nghe thấy dở cũng không chỉ đích danh được câu
+nào.
+
+**Trang web không tự ghi file lên đĩa được**, nên phải có máy chủ ghi hộ. Vite đã chạy
+sẵn một máy chủ khi phát triển, nên `nguonPlugin.ts` gắn thêm ba đường vào đó:
+
+| đường | việc |
+|---|---|
+| `GET /__nguon` | đọc cả sổ |
+| `POST /__nguon/cau` | lưu một câu dạo vừa phát |
+| `POST /__nguon/binh-luan` | gắn ý kiến vào một câu theo số thứ tự |
+
+**Chỉ chạy khi `npm run dev`.** Bản dựng tĩnh không có máy chủ; ở đó lệnh gọi hỏng và
+client nuốt lỗi trong im lặng — sổ này là công cụ soi lúc luyện, không phải tính năng
+cho người dùng cuối.
+
+**File theo kiểu bảng**, hai bảng nối nhau bằng `stt`:
+
+- `cau` — cột `stt · tao · bai · giong · dieu · soO · soNot · lanPhat · not`
+- `binhLuan` — cột `stt · cauStt · luc · yKien`
+
+Mỗi dòng là một **mảng đúng thứ tự cột**, đổ ra bảng tính được. Thêm cột thì thêm vào
+cuối, đừng chèn giữa.
+
+**Lưu lúc BẤM PHÁT, không đợi phát xong.** Chỗ gọi nằm trong `playFromBeat`, ngay sau
+khi dựng xong lượt: câu đã trọn vẹn trước khi tiếng đầu tiên kêu lên, nên bấm dừng giữa
+chừng vẫn lưu đủ. Lấy đoạn dạo bằng `sections[0]` — `buildPass` dán nó vào đầu rồi đẩy
+mọi đoạn còn lại lùi đúng bấy nhiêu phách.
+
+**CÂU TRÙNG THÌ KHÔNG ĐẺ DÒNG MỚI.** Mỗi lần bấm phát nay soạn một câu mới, nên phần
+lớn lần phát đẻ một dòng mới. Phép gộp là lưới chắn cho ca hiếm — bài ít hợp âm, đoạn
+dạo ngắn, vốn ô trong bảng tuyến quá mỏng — lúc ấy câu trùng khít câu cũ chỉ **ghi thêm
+một mốc vào cột `lanPhat`**.
+
+Ô bình luận (`OBinhLuan.tsx`) đặt **trên** nút phát cả bài, chỉ hiện sau khi đã phát ít
+nhất một lần, và dọn ô mỗi khi đổi sang câu khác.
+
+**CỘT `hopAm`.** Sổ lưu luôn vòng hợp âm của chính câu dạo, theo ký hiệu, đúng thứ tự ô.
+Thiếu nó thì muốn trả lời một câu hỏi đơn giản như *"intro đã tạo vòng hợp âm trên giọng
+thứ chưa"* phải chạy lại code để dựng lại vòng — mà vòng dựng lại **chưa chắc trùng vòng
+đã phát**, vì nó phụ thuộc lượt. Lấy thẳng từ `introSymbols`, tức đúng lưới đang bày ra
+cho người dùng nhìn, kể cả ô `(báo)` và `(hút)`.
+
+Phép gộp câu trùng vẫn so bằng **NỐT**, không so bằng hợp âm: hai câu khác nhau vẫn có
+thể đứng trên cùng một vòng, mà thứ người dùng nghe và chấm là câu.
+
+**HAI Ô TICK.** *"1 là 'Đã ổn' thì intro này sẽ được giữ lại. 2 là 'Chưa ổn' thì sẽ cho
+tôi bình luận ý kiến."* Nên **Đã ổn** chấm xong là xong, không bắt viết gì; **Chưa ổn**
+mới mở ô viết. Chấm gửi ngay lúc tick — nó là một cú bấm dứt khoát, không phải thứ gõ dở.
+
+Chấm lưu ở cột `danhGia` của bảng `cau`, không ở bảng `binhLuan`: nó là nhận xét về CÂU,
+mà một câu chỉ có một chấm còn ý kiến thì có thể nhiều. Chấm lại thì **ghi đè** — nghe
+lại rồi đổi ý là chuyện thường, giữ hai chấm ngược nhau thì không ai đọc ra câu ấy thế
+nào. Đường thứ ba: `POST /__nguon/cham`.
+
+**GÕ DỞ MÀ BẤM PHÁT THÌ MẤT — có chủ ý.** Mỗi lần bấm phát sinh một câu mới nên `stt`
+đổi và ô dọn; chưa bấm "Lưu ý kiến" là mất. Đã dựng phép tự cứu, gửi ý kiến gõ dở cho
+câu CŨ trước khi dọn, rồi người dùng bảo bỏ: *"thôi không cần sửa lỗi mất trắng đó, mỗi
+lần bình luận xong bắt buộc tôi phải bấm lưu ý kiến nếu không là mất luôn."* Đừng dựng
+lại nếu không được yêu cầu — cứu tự động thì mọi chữ gõ nháp đều chui vào sổ.
+
+Có ghi lại đây một cái bẫy React gặp lúc dựng phép cứu ấy, phòng khi sau này cần: **hàm
+dọn của `useEffect` chụp giá trị lúc ĐĂNG KÝ**, tức lúc ô vừa dọn và còn rỗng — cứu ra
+chuỗi rỗng. Mà đọc ref ngay trong hàm dọn cũng hỏng, vì React render trước hiệu ứng nên
+ref đã mang số câu MỚI ghép với chữ CŨ. Muốn đúng thì phải giữ một ref chạy chậm một
+nhịp, chỉ nhận chữ khi số câu còn khớp.
+
+`Nguon.json` nằm ở gốc repo và **chưa cho vào `.gitignore`** — nó là dữ liệu người dùng
+tự sinh, để người dùng quyết có commit hay không.
+
+### Câu dạo soạn MỚI mỗi lần bấm phát — đảo lần thứ hai
+
+`ReharmHome.tsx`, dòng `take` của `buildPhraseSection`. Chỗ này đã đảo hai lần nên ghi
+đủ bốn nước để đừng ai lật lại mà không biết:
+
+1. Ban đầu dạo và kết đóng cứng `take = 0`.
+2. Người dùng yêu cầu cho chúng đổi theo lượt như giang tấu.
+3. Người dùng nghe lại và đồng ý đóng băng RIÊNG câu dạo — lý do: câu dạo là thứ được
+   soạn chứ không phải ngẫu hứng; ca sĩ tập với một câu rồi tới lúc hát lại nghe câu
+   khác thì phải mò lại chỗ vào.
+4. Nay chốt lại: *"intro là soạn vậy, mỗi lần bấm phát hãy soạn một intro khác dù đang
+   phát cái cũ."*
+
+Nước 4 **không bác lý lẽ của nước 3**: câu dạo vẫn là thứ được soạn, chỉ là soạn MỚI mỗi
+lần bấm phát chứ không soạn một lần rồi giữ mãi. Trong một lần phát nó vẫn đứng yên vì
+`playSpin` chỉ nhích khi bấm.
+
+Cũ: `take: kind === 'intro' ? 0 : 1 + phraseSpin + playSpin.current`
+Nay: `take: phraseSpin + playSpin.current`
+
+Đo được: **20 lần bấm liên tiếp ra 20 câu khác nhau**, cả giọng thứ lẫn giọng trưởng,
+không lần nào giống hệt lần trước.
+
+**Triệu chứng để lùi:** nếu người dùng báo tập theo không kịp vì mỗi lần phát một câu
+dạo khác, thì đó là nước 3 quay lại — hỏi lại họ trước khi sửa, đừng tự đóng băng.
+
+### Bản nhạc không hiện hàng hợp âm dạo và kết
+
+Người dùng báo: chọn intro Linh Nhi mà bản nhạc đã tái hoà âm không thấy vòng hợp âm của
+đoạn dạo.
+
+`ReharmHome.tsx`, memo `sheet`, dòng cũ:
+
+```ts
+const playOrder = arrangement ?? []
+const intro = playOrder.some((step) => step.type === 'intro') ? introSymbols : []
+```
+
+`arrangement` chỉ có giá trị khi người dùng **tự sắp bố cục**; mặc định nó `null`. Nên
+`playOrder` là mảng rỗng, `.some(...)` luôn sai, và hàng hợp âm dạo/kết **không bao giờ
+được gắn vào bản nhạc** — dù bấm phát thì hai đoạn ấy vẫn kêu.
+
+Thứ tự phát thật nằm ở memo `steps`, và nó **ÉP** thêm dạo/giang/kết khi chọn Linh Nhi
+hoặc Chiếc Lá. Nhưng `steps` khai SAU `sheet` vì nó cần `songSources`, nên không dùng lại
+được — phải chép đúng hai luật ép ấy vào memo `sheet`.
+
+**Bẫy để lại:** hai chỗ nay giữ cùng một luật ở hai nơi. Ai sửa luật ép trong `steps` mà
+quên chỗ này thì bản nhạc lại lệch với tiếng nghe được — đúng kiểu lỗi vừa rồi, im lặng
+và khó thấy.
+
+### Sổ ghi làm sập app — bọc lại
+
+Người dùng báo: chọn intro Linh Nhi cùng một điệu bolero nhất định rồi bấm phát thì
+**KeyTrain tự nạp lại trang**.
+
+Quét cả **106 điệu** qua `buildPhraseSection` (dạo và kết, hai giọng) và qua
+`giaiDieuDaoLinhNhi` với `barBeats` của từng điệu: **không hàm thuần nào ném lỗi**. Nên
+chỗ hỏng nằm ở tầng React.
+
+Thủ phạm là chính chỗ nối sổ vào `playFromBeat`: nó gọi `buildPass` **thêm một lần**, ngay
+trong tay xử lý cú bấm. Vòng phát chính gọi `buildPass` bên trong `startTimelineLoop`, nơi
+lỗi được nuốt; gọi thêm ở tay xử lý sự kiện thì lỗi văng thẳng ra và sập cả trang.
+
+`nguon.ts` vốn đã nuốt lỗi **mạng**, nhưng chưa nuốt lỗi **dựng**. Nay bọc cả khối trong
+`try/catch`.
+
+**Luật rút ra:** sổ `Nguon.json` là công cụ soi, **không được phép làm gãy việc phát
+nhạc**. Mọi đường nối nó vào app phải nuốt lỗi — kể cả lỗi dựng, không chỉ lỗi mạng.
+
+*Chưa tìm ra vì sao `buildPass` ném lỗi với điệu ấy* — cần tên điệu và thông báo lỗi
+trong console của trình duyệt. Bọc lại chỉ chặn triệu chứng.
+
+### Sửa theo ý kiến người dùng: tầm cao độ và phép cài hai tay
+
+Người dùng nghe rồi báo: *"sao các câu intro giờ lại mất hẳn kết hợp giữa hai tay trái
+phải rồi... Và bài đang đánh là ở giọng thứ, intro đã tạo vòng hợp âm trên giọng thứ
+chưa."*
+
+**Vòng hợp âm thì đúng sẵn**: bài La thứ ra `Im IVm ♭VII ♭III ♭VI V Im IVm V`, rút từ vốn
+của bài, đóng trên bậc V. Không phải chỗ hỏng.
+
+Hai chỗ kia thì hỏng thật.
+
+#### Một — TẦM CAO ĐỘ neo nhầm mốc
+
+Đo cao độ trung bình tay phải cả bảy đoạn dạo: 70,4 · 72,1 · 72,8 · 74,2 · 75,0 · 75,4 ·
+75,5 — **trung bình 73,6 (D5), lệch chuẩn chỉ 1,9 nửa cung** qua năm giọng khác nhau.
+Tầm đoạn dạo của chị gần như **không nhúc nhích theo giọng bài**. Đây là một trong những
+con số ổn định nhất đo được.
+
+Cũ neo theo tầm **bản ký âm nguồn**: `12 × round((chuGoc − chu) / 12)`. Bài La thứ mà ô
+ghép phần lớn lấy từ Đừng Xa (Rê) thì ra `doi = −12`, câu tụt xuống trung bình **F#4–G4**
+— thấp hơn bảy nửa cung, trần thấp hơn cả một quãng sáu. Câu chìm vào đúng vùng tay trái
+đang chạy.
+
+Nay neo theo `TAM_TAY_PHAI = 73.6`. Sai số còn lại bị chặn ở **±6 nửa cung** vì phép dời
+chỉ đi theo quãng tám nguyên — dời lẻ là phá đường đi. Đo được: La thứ 77,6 và Đô trưởng
+70,0, tức lệch ~4, thay cho lệch −7 có hệ thống.
+
+#### Hai — hãm tay trái theo TỈ LỆ, không theo số mốc tuyệt đối
+
+Đếm mốc gõ có **cả hai tay cùng lúc**, tính trên mốc tay trái:
+
+| | app trước | app sau | bản ký âm (4 bài thứ) |
+|---|---|---|---|
+| cả hai tay | 76–79% | **57%** | **59%** |
+| tay trái MỘT MÌNH | 21–24% | **43%** | **41%** |
+
+Số đo nói **ngược** cảm nhận mà người dùng vẫn đúng: hai tay không rời nhau, chúng **dính
+nhau quá chặt**. Thứ mất là **tiếng nói riêng của tay trái** — chỗ nó gõ một mình, xen
+giữa các nốt tay phải.
+
+Nguyên nhân là trần `mocToiDa` tuyệt đối thêm ở món 3: chỉnh trên `bolero-linh-nhi-3` (9
+cú gõ một ô) ra đúng 4,4 mốc/ô, nhưng áp sang `bolero-linh-nhi-2` thì cùng trần ấy ra
+**3,7**. Nay đổi thành `tiLeGiuTrai`, nhân vào số cú gõ của chính mẫu đệm.
+
+Ba tỉ lệ **hiệu chỉnh theo đầu ra**, không lấy thẳng tỉ lệ dạo/hát: mẫu đệm có 9 cú gõ
+còn đoạn hát bản ký âm chỉ 6,5 mốc, nhân 0,75 vào 9 thì ra 7 mốc trong khi đích là 4,9.
+Chốt: dạo thứ **0,71**, kết thứ **0,55**, kết trưởng **0,33**. **Đoạn dạo giọng trưởng
+không hãm** — nó vốn đã ra đúng 6,8.
+
+#### BẪY `thaySolo` — vấp lần thứ hai trong cùng dự án
+
+Chặn phép hãm bằng `thaySolo === 'linh-nhi'` làm `phraseKeepsStyle` đỏ ba mục: tay trái
+**bossa-nova-1** mất cú gõ ở phách 2 và 3,5. Vì `soloTeacherOf('bossa-nova-1')` trả về
+`'linh-nhi'` — mọi điệu bám tay trái đều nhận thầy ấy.
+
+Nay chặn bằng `(style.family ?? '').includes('linh-nhi')`. Số đo mật độ rút từ sheet
+bolero của chị, nên nó **chỉ đúng cho điệu của chị**.
+
+#### Skill `y-kien-intro` nay chạy TAY
+
+Người dùng bỏ phép quét tự động: *"tôi không cần tự động quét để bật skill nữa, hãy đưa
+tôi lệnh bật thủ công."* Monitor đã tắt, **đừng dựng lại**. Gõ `/y-kien-intro`; mỗi lần
+bật quét mọi cặp câu-dạo/ý-kiến mới trong **30 phút** gần nhất chưa được đưa sang.
+
+### Skill `y-kien-intro` — đưa ý kiến sang sổ Linh Nhi
+
+`.opencode/skills/y-kien-intro/SKILL.md`. Chạy sau mỗi lần người dùng bình luận về câu
+dạo: đọc `Nguon.json`, chép dòng MỚI sang mục **"Ý kiến khi nghe"** trong
+`PianoBrain/knowledge/teachers/linh-nhi-piano.md`.
+
+**Vì sao phải chuyển:** `Nguon.json` là sổ thô của app, ghi đủ mọi lần phát và mọi nốt,
+lớn nhanh. Sổ Linh Nhi là nơi kiến thức đọng lại — ý kiến nằm ở sổ thô thì phiên sau
+không thấy, nằm ở sổ Linh Nhi thì thấy cùng chỗ với các số đo mà nó nói về.
+
+**Ranh giới hai repo:** luật "PianoBrain không đọc/sửa/nhập/commit gì trong KeyTrain" nói
+về **mã và bản dựng** của PianoBrain, và còn nguyên. Skill này là việc của trợ lý — chép
+chữ từ một file bên KeyTrain sang một file `.md` bên PianoBrain, không sinh `import` nào,
+không đụng kho `.json` có schema.
+
+**Skill không phải script**, và đó là chủ ý: sau khi chép bảng còn phải **rút ra điều
+đáng nhớ** — gộp những ý rời nhau cùng chê một chỗ, và **nói thẳng chỗ ý kiến chỏi với
+số đo** thay vì lặng lẽ chép cả hai vào. Việc ấy máy làm không được.
+
+Skill cấm tự sửa bộ sinh theo ý kiến: một ý kiến là **n=1**, có thể chỏi với số đo trên
+bảy bản ký âm — phải hỏi người dùng trước.
+
+### Ba món đo được trên sheet mà code thiếu — đã dựng
+
+**1 · Giang tấu lấy lại câu dạo.** Đo sáu bài, so theo TỪNG Ô (điền ô trống bằng hợp âm
+đang vang): vòng hợp âm giang trùng dạo **77%**, tuyến nốt neo trùng **78%**. Biển Tình
+trùng 100% ở cả hai — vòng dạo `VI III II I VI II II I`, vòng giang là `I` + đúng dãy ấy
++ `V`.
+
+Giang tấu trước đó dùng `raiLinhNhi` (bám mốc tay trái, sinh nốt riêng) nên hai đoạn ra
+hai câu khác nhau. Nay đi qua cùng `giaiDieuDaoLinhNhi` và **cùng `take`** với đoạn dạo
+(`phraseSpin + playSpin.current`, không cộng chỉ số vòng lặp).
+
+*Đã thử rồi bỏ:* tuỳ chọn `lechO` dịch một ô cho khớp chỗ Biển Tình thêm ô mở. Lệch ô
+làm hợp âm và vị trí ô không còn khớp, bộ lọc bậc phá mất phép căn, tỉ lệ trùng **tụt
+xuống 50%**. Hai vòng hợp âm vốn đã trùng nên không cần lệch.
+
+**2 · Điệp khúc dày bằng NẮM DÀY HƠN.** Đo 2125 mốc tay trái ở phiên khúc và 1026 ở điệp
+khúc, cả bảy sheet: phiên **1,22** nốt/mốc, điệp **1,60**, còn **số mốc gõ gần như đứng
+yên** (6,6→6,4 giọng thứ, 7,7→7,8 giọng trưởng).
+
+| | cũ | mới | sheet |
+|---|---|---|---|
+| `bolero-linh-nhi-3` | 1,00 | **1,22** | 1,22 |
+| `bolero-linh-nhi-3-chorus` | 2,33 | **1,67** | 1,60 |
+
+Nắm dày rơi vào **phách LẺ**: off-beat 1,74–1,96 nốt/mốc trong khi phách 0 và 2 chỉ
+1,30–1,32. Phách mạnh là bass trụ, để một nốt. Mốc yếu chồng **đôi**, không phải bộ ba.
+
+**3 · Tay trái mỏng đi ở đoạn không lời.** Thêm `mocToiDa` cho `soloLeftHand`.
+
+| | app trước | app sau | sheet |
+|---|---|---|---|
+| thứ · dạo | 6,8 | **4,4** | 4,6 |
+| thứ · kết | 9,0 | **5,0** | 4,9 |
+| trưởng · dạo | 6,8 | **6,8** | 6,8 |
+| trưởng · kết | 9,0 | **3,0** | 3,2 |
+
+Đoạn kết sai nặng nhất: **9,0 so với 3,2**, gấp gần ba. Đoạn dạo giọng trưởng **cố ý
+không hãm** — nó vốn đã đúng, hãm vào là hỏng chỗ đang đúng. Trần đặt cao hơn đích vì
+`interlockHands` còn bớt tiếp: trần 5 ra 3,9, trần 6 mới ra 4,4.
+
+**Hai test cũ khoá số n=1 đã phải thay** trong `diepDayLinhNhi.test.ts`: *"phiên khúc
+không chồng nốt"* (đòi dưới 20% số mốc) và *"mốc yếu chồng bộ ba"* (đòi ≥3 nốt). Cả hai
+đo trên MỘT đoạn của MỘT bài — Đường Xưa ô 41–58. Số n=7 nói phiên khúc **có** chồng
+(1,22) và mốc yếu chồng khoảng **hai**. Đây là thay số đo cũ bằng số đo rộng hơn, không
+phải nới test cho qua.
+
+**CÒN LỆCH:** tay phải đoạn dạo giọng thứ vẫn mỏng (app 5,6 so với sheet 6,9) nên chưa
+thật sự "đảo vai"; tay phải đoạn kết thì ngược lại, quá dày (6,1–7,0 so với 5,0–5,7).
+
 ### Đoạn dạo GHÉP MẢNH theo bậc hợp âm — tư duy tạo tuyến
 
 `tuyenDaoLinhNhi.ts` (bảng, chia theo ô) và `giaiDieuDaoLinhNhi.ts` (phép ghép). Bốn

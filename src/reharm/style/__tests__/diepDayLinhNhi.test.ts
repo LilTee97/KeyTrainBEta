@@ -34,19 +34,40 @@ describe('điệp khúc dày theo chiều dọc', () => {
     expect(trai(DIEP).map((e) => e.startBeat)).toEqual(trai(PHIEN).map((e) => e.startBeat))
   })
 
-  it('điệp chồng nốt, phiên thì không', () => {
-    const day = (id: string) =>
-      trai(id).filter((e) => e.notes.length >= 2).length / trai(id).length
-    expect(day(PHIEN)).toBeLessThan(0.2)
-    expect(day(DIEP)).toBeGreaterThan(0.6)
+  it('điệp chồng nốt NHIỀU HƠN phiên, nhưng phiên cũng có chồng', () => {
+    /*
+      SỐ ĐO CŨ n=1 ĐÃ BỊ THAY. Bài kiểm này từng đòi phiên khúc chồng dưới 20% số mốc,
+      tức gần như không chồng — số ấy đo trên MỘT đoạn của MỘT bài (Đường Xưa ô 41-58).
+      Đo lại cả bảy sheet, 2125 mốc gõ tay trái ở phiên khúc và 1026 ở điệp khúc:
+
+        phiên khúc **1,22** nốt mỗi mốc · điệp khúc **1,60**
+
+      Phiên khúc CÓ chồng, chỉ là chồng thưa hơn. Ép nó về 0 là sai bản ký âm.
+    */
+    const tren = (id: string) =>
+      trai(id).reduce((a, e) => a + e.notes.length, 0) / trai(id).length
+    expect(tren(PHIEN)).toBeGreaterThan(1.1)
+    expect(tren(PHIEN)).toBeLessThan(1.35)
+    expect(tren(DIEP)).toBeGreaterThan(1.45)
+    expect(tren(DIEP)).toBeLessThan(1.75)
+    expect(tren(DIEP)).toBeGreaterThan(tren(PHIEN))
   })
 
-  /* Đo Đường xưa ô 41-58: bass đơn ở phách 1, 3, 4; chồng ở các mốc yếu. */
-  it('phách mạnh giữ bass đơn, mốc yếu chồng bộ ba', () => {
+  it('phách mạnh giữ bass đơn, mốc yếu chồng ĐÔI', () => {
+    /*
+      Hướng thì đúng từ đầu, chỉ sai độ dày. Đo bảy sheet, nốt mỗi mốc ở điệp khúc theo
+      vị trí phách:
+
+        phách 0 → 1,32 · phách 2 → 1,30 · phách 3 → 1,45
+        off-beat 0,5 → 1,74 · 0,75 → 1,80 · 1,5 → 1,74 · 2,5 → 1,74 · 2,75 → 1,96 · 3,5 → 1,78
+
+      Phách mạnh là chỗ bass trụ, chị ấy để MỘT nốt; mốc yếu chồng khoảng HAI, không
+      phải ba. Số cũ đòi ≥3 và đo trên một đoạn của một bài.
+    */
     const tai = new Map(trai(DIEP).map((e) => [e.startBeat, e.notes.length]))
     for (const beat of [0, 2, 3]) expect(tai.get(beat), `phách ${beat}`).toBe(1)
     for (const beat of [0.5, 0.75, 1, 1.5, 2.5, 3.5]) {
-      expect(tai.get(beat), `mốc ${beat}`).toBeGreaterThanOrEqual(3)
+      expect(tai.get(beat), `mốc ${beat}`).toBe(2)
     }
   })
 

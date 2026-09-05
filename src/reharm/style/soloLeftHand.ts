@@ -77,6 +77,35 @@ export interface SoloLeftHandOptions {
   top?: number
   /** Chỉ giữ cú gõ phách 1 — dạo/kết Chiếc Lá. */
   chiPhach1?: boolean
+  /**
+   * Trần số mốc gõ tay trái trong một ô. Bỏ trống là không hãm.
+   *
+   * Đo bảy bản ký âm Linh Nhi, mốc gõ tay trái mỗi ô:
+   *
+   * | | phần hát | dạo | giang | kết |
+   * |---|---|---|---|---|
+   * | giọng thứ | 6,5 | **4,6** | 4,2 | **4,9** |
+   * | giọng trưởng | 7,7 | **6,8** | 6,9 | **3,2** |
+   *
+   * Vào đoạn không lời tay trái MỎNG ĐI 25-29%, và đoạn kết giọng trưởng mỏng nhất —
+   * chưa bằng một nửa đoạn dạo. App trước đó đánh **9,0 mốc/ô ở cả hai đoạn kết**, tức
+   * gấp đôi tới gấp ba bản ký âm.
+   *
+   * Bỏ cú gõ NHẸ trước, giữ cú nặng — cú nặng là chỗ bass trụ.
+   *
+   * ĐẶT THEO TỈ LỆ, KHÔNG THEO SỐ MỐC TUYỆT ĐỐI. Bản trước dùng trần tuyệt đối, chỉnh
+   * trên `bolero-linh-nhi-3` (9 cú gõ một ô) ra đúng 4,4 mốc/ô — nhưng áp sang
+   * `bolero-linh-nhi-2` thì cùng trần ấy ra **3,7**, thấp hơn đích. Mẫu đệm khác nhau có
+   * số cú gõ khác nhau, nên trần tuyệt đối ăn khác nhau ở từng điệu.
+   *
+   * Tỉ lệ lấy từ số đo: mốc tay trái đoạn không lời chia cho mốc tay trái đoạn hát.
+   *
+   * | | đoạn hát | đoạn dạo | tỉ lệ | đoạn kết | tỉ lệ |
+   * |---|---|---|---|---|---|
+   * | giọng thứ | 6,5 | 4,6 | **0,71** | 4,9 | **0,75** |
+   * | giọng trưởng | 7,7 | 6,8 | **0,88** | 3,2 | **0,42** |
+   */
+  tiLeGiuTrai?: number
 }
 
 export interface Strike {
@@ -272,7 +301,20 @@ export function soloLeftHand(options: SoloLeftHandOptions): TimelineEvent[] {
     Nốt chèn cho nhịp kép vẫn còn: slow rock ở đoạn không lời phải nghe đủ sáu
     phách bên tay trái, đó là yêu cầu riêng và nó không đổi.
   */
-  const strikes = patternStrikes(style, 'left')
+  const day = patternStrikes(style, 'left')
+  /*
+    HÃM SỐ MỐC GÕ — xem `mocToiDa`. Giữ nguyên thứ tự phách sau khi đã chọn, để mẫu đệm
+    không bị xáo; chỉ bớt đi chứ không dời chỗ.
+  */
+  const tiLe = options.tiLeGiuTrai
+  const tran = tiLe === undefined ? undefined : Math.max(2, Math.round(day.length * tiLe))
+  const strikes =
+    tran !== undefined && day.length > tran
+      ? [...day]
+          .sort((a, b) => b.velocityScale - a.velocityScale || a.beat - b.beat)
+          .slice(0, tran)
+          .sort((a, b) => a.beat - b.beat)
+      : day
   if (strikes.length === 0 || chords.length === 0) return []
 
   const grid = style.gridUnit ?? 1
