@@ -25,3 +25,8 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# So tho cua o binh luan cau dao — lon them moi lan bam phat.
+# Y kien dang giu lau dai da duoc skill y-kien-intro chuyen sang
+# PianoBrain/knowledge/teachers/linh-nhi-piano.md, va file ay o trong git.
+Nguon.json
