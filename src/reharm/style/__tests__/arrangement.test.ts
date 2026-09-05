@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { ArrangementStep, SourceSection } from '../arrangement'
 import {
   buildArrangedSong,
+  DEFAULT_REST_AFTER,
   defaultArrangement,
   stepLabel,
 } from '../arrangement'
@@ -128,7 +129,12 @@ describe('giang tấu chèn vào chỗ trống', () => {
 
     expect(interlude.kind).toBe('interlude')
     expect(interlude.lengthBeats).toBe(8)
-    expect(song.totalBeats).toBe(32)
+    /*
+      Bốn bước tám phách, cộng chỗ nghỉ sau giang tấu. Viết theo hằng số chứ
+      không đóng cứng con số: chỗ nghỉ là thứ chỉnh được, đóng cứng thì mỗi lần
+      chỉnh lại phải sửa test mà không biết vì sao.
+    */
+    expect(song.totalBeats).toBe(8 * 4 + DEFAULT_REST_AFTER)
   })
 
   it('bỏ phần đệm tay phải, giữ tay trái', () => {
@@ -310,20 +316,39 @@ describe('tra ngược về vòng hợp âm gốc', () => {
       interludeRange: () => ({ startBeat: 12, lengthBeats: 4 }),
     })
 
-    // Hai lượt giang tấu chiếm 8 phách, phiên khúc vào ở phách 8
-    expect(sourceBeatAt(song.segments, 8)).toBe(0)
+    /*
+      Hai lượt giang tấu chiếm 8 phách, rồi nghỉ `DEFAULT_REST_AFTER` phách,
+      phiên khúc mới vào. Chỗ nghỉ là im lặng nên không tra về mốc gốc nào.
+    */
+    expect(sourceBeatAt(song.segments, 8)).toBeNull()
+    expect(sourceBeatAt(song.segments, 8 + DEFAULT_REST_AFTER)).toBe(0)
   })
 
-  it('bản đồ phủ kín cả bài, không có khe hở', () => {
+  it('bản đồ chỉ hở đúng chỗ nghỉ, không hở chỗ nào khác', () => {
     const song = arranged([
       { type: 'section', source: 0 },
       { type: 'interlude', over: 1, loops: 1 },
       { type: 'section', source: 1 },
     ])
 
+    /*
+      Chỗ nghỉ sau giang tấu là im lặng, không neo vào mốc nào trên vòng hợp âm
+      gốc được, nên nó HỞ có chủ ý. Kiểm chặt hơn "phủ kín": đếm đúng số phách
+      hở và bắt chúng phải nằm liền nhau ngay sau giang tấu — hở ở chỗ khác,
+      hoặc hở nhiều hơn, là lỗi thật.
+    */
+    const ho: number[] = []
     for (let beat = 0; beat < song.totalBeats; beat += 1) {
-      expect(sourceBeatAt(song.segments, beat)).not.toBeNull()
+      if (sourceBeatAt(song.segments, beat) === null) ho.push(beat)
     }
+
+    const giang = song.sections[1]
+    const sauGiang = giang.startBeat + giang.lengthBeats
+
+    expect(ho).toHaveLength(DEFAULT_REST_AFTER)
+    expect(ho).toEqual(
+      Array.from({ length: DEFAULT_REST_AFTER }, (_, i) => sauGiang + i),
+    )
   })
 
   it('ngoài phạm vi bài thì không tra được gì', () => {
@@ -347,9 +372,12 @@ describe('tra ngược về vòng hợp âm gốc', () => {
       interludeRange: () => ({ startBeat: 8, lengthBeats: 8 }),
     })
 
+    // Điệp khúc đứng sau giang tấu VÀ sau chỗ nghỉ, nên dời thêm bấy nhiêu.
+    const dauDiepKhuc = 16 + DEFAULT_REST_AFTER
+
     expect(arrangedBeatAt(song.segments, 0, song.sections)).toBe(0)
-    expect(arrangedBeatAt(song.segments, 8, song.sections)).toBe(16)
-    expect(arrangedBeatAt(song.segments, 10, song.sections)).toBe(18)
+    expect(arrangedBeatAt(song.segments, 8, song.sections)).toBe(dauDiepKhuc)
+    expect(arrangedBeatAt(song.segments, 10, song.sections)).toBe(dauDiepKhuc + 2)
   })
 })
 

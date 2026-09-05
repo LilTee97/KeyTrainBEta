@@ -21,15 +21,22 @@ import type { TimelineEvent } from './types'
  */
 
 /**
- * Nghỉ mặc định sau đoạn giang tấu: **không nghỉ thêm**.
- *
- * Chỗ nghỉ đã nằm sẵn trong cụm quay đầu — nửa sau ô nhịp thứ hai để trống cho
- * người hát lấy hơi. Cộng thêm một khoảng nữa ở đây thì thành nghỉ hai lần.
+ * Hết giang tấu: nghỉ hai phách rồi mới vào đoạn sau.
  *
  * Đặt thành trọn một ô nhịp thì **bỏ hẳn cụm quay đầu**: cách nhau cả ô im
- * lặng thì câu dẫn chẳng dẫn vào đâu.
+ * lặng thì câu dẫn chẳng dẫn vào đâu (xem `severed` bên dưới).
+ *
+ * LỊCH SỬ, để khỏi lật đi lật lại. Giá trị này đã đi 1 → 0 → 2:
+ *   - `cf75ff7` đặt 1.
+ *   - `6468c05` hạ về 0 vì cụm quay đầu lúc ấy trải hai ô và đã chừa sẵn chỗ
+ *     nghỉ ở nửa sau ô thứ hai; cộng thêm nữa thành nghỉ hai lần.
+ *   - `b2dd25e` nâng lên 2 cùng lúc thêm `DEFAULT_INTRO_REST`, để ca sĩ lấy
+ *     hơi. Đây là bản đang dùng.
+ *
+ * Chỗ nghỉ này KHÔNG có mốc trên vòng hợp âm gốc — im lặng thì không neo vào
+ * đâu được — nên `segments` để hở đúng bấy nhiêu phách. Đó là chủ ý, không
+ * phải khe hở lọt lưới; `arrangement.test.ts` kiểm đúng điều đó.
  */
-/** Hết giang tấu: nghỉ hai phách rồi mới vào đoạn sau. */
 export const DEFAULT_REST_AFTER = 2
 
 /** Hết dạo đầu: nghỉ một ô cho ca sĩ lấy hơi, rồi mới vào bài. */

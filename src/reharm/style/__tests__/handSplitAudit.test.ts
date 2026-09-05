@@ -61,6 +61,10 @@ function interludeLayers() {
       key: KEY,
       take: 0,
       range: BALLAD_SOLO_RANGE,
+      // Cả file này kiểm ĐOẠN GIANG TẤU, nên phải ghi cờ tường minh. Trước đây
+      // nó dựa vào mặc định `interlude = true` — mặc định ấy trái với chú thích
+      // của chính `generateSolo` nên đã đổi thành `false`.
+      interlude: true,
     }),
   )
 
@@ -165,6 +169,7 @@ describe('giang tấu — tách tay', () => {
                 take,
                 range: BALLAD_SOLO_RANGE,
                 endWithRun: true,
+                interlude: true,
               }),
             ),
         })!

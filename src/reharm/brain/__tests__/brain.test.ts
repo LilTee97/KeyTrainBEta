@@ -16,7 +16,17 @@ describe('cầu nối PianoBrain', () => {
   })
 
   it('tóm tắt kho đếm đủ số thầy', () => {
-    expect(brainSummary()).toMatch(/item · \d+ nguồn · [3-9] thầy/)
+    /*
+      Đọc SỐ rồi so ngưỡng, đừng khớp chữ số bằng lớp ký tự. Bản trước viết
+      `[3-9] thầy` — vô tình chặn trần ở một chữ số, nên kho lớn lên tới 10 thầy
+      là vỡ dù chẳng có gì sai. Ngưỡng dưới mới là điều cần giữ: nhãn thầy không
+      bị gộp mất.
+    */
+    const tom = brainSummary()
+    expect(tom).toMatch(/item · \d+ nguồn · \d+ thầy/)
+
+    const soThay = Number(tom.match(/(\d+) thầy/)?.[1])
+    expect(soThay).toBeGreaterThanOrEqual(3)
   })
 
   it('hỏi fill sus2 sang 3 thì ra Kingsley, không ra thầy Hải', () => {

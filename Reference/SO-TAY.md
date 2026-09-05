@@ -1293,3 +1293,51 @@ nào để lùi.
 
 Giữ lại `src/reharm/licky/linhNhiPhrases.ts`: nó **đang được `soloGenerator.ts` import**,
 và nội dung là tám câu chép thẳng từ bản ký âm — đúng tinh thần soạn, không phải sinh.
+
+### `interlude` mặc định BẬT — câu ở mật độ thưa không bao giờ nghỉ
+
+Chú thích ngay trên `generateSolo` viết: *"chỉ nên bật ở đoạn không có lời — bật suốt bài
+thì nó đè lên phần hát."* Vậy mà mặc định là `interlude = true`. Bên gọi nào quên ghi cờ
+là được đúng chế độ nguy hiểm hơn.
+
+Hậu quả đo được: điều kiện nghỉ trong `chooseLick` mở đầu bằng `!choice.interlude`, nên ở
+mật độ **thưa** câu **không bao giờ nghỉ** — mất hẳn hình câu mở–nghỉ–giữa–kết mà
+`pianoimprovnotes.md` mục 4 đặt ra. Dump ra bốn ô đều có nốt, ô nào cũng dày.
+
+Đổi mặc định thành `false`. `ReharmHome.tsx` luôn ghi cờ này tường minh nên **ứng dụng
+không đổi gì**; chỉ các bên gọi quên ghi mới được hành vi an toàn. `handSplitAudit.test.ts`
+vốn dựa vào mặc định để test giang tấu — đã ghi `interlude: true` tường minh vào đó.
+
+Một mình việc này gỡ được 3 test.
+
+### Cuối câu phải đáp vào nốt ổn định — và vá Ở ĐÂU mới đúng
+
+Mẫu `chord-tone` tự nhận "không bao giờ lệch hoà âm", nhưng nó đi trên thang dựng từ
+`material`, tức **cả gam** chứ không riêng nốt hợp âm, nên nốt cuối rơi đâu thì rơi. Đo
+trên vòng `C Am F G Em Dm G7 C`: câu kết trên `G` đáp vào `A` (bậc 9), câu kết trên `Dm`
+đáp vào `E` (bậc 9). Lỗi nấp lâu vì `interlude` mặc định bật, mà nhánh giang tấu có đường
+kết riêng.
+
+**Bẫy 1 — lấy nhầm "nốt cuối".** `built.notes[length - 1]` là phần tử cuối **mảng**, không
+phải nốt vang sau cùng. Mẫu câu không bắt buộc phát ra theo thứ tự thời gian. Phải quét
+tìm `startBeat` lớn nhất.
+
+**Bẫy 2 — vá ở cuối đường ống thì HỎNG NẶNG HƠN.** Tôi thử siết ngay trước `assignFingers`,
+sau khi cao độ đã chốt. Kết quả: 3 lỗi thành **6**. Nốt ổn định gần nhất có thể **nằm ngoài
+gam** ở chế độ một-gam-xuyên-suốt (`singleScale.test.ts` vỡ hai chỗ), và dời nốt làm lệch
+quan hệ nốt láy (`graceNotesInSolo`) lẫn tỉ lệ nốt hợp âm so với người thật
+(`styleProfile`). Muốn vá ở đó thì phải dựng lại `material` của hợp âm ấy để chỉ chọn cao
+độ hợp lệ — việc lớn hơn, chưa làm.
+
+Bản đang dùng vá **lúc dựng mẫu câu**, sửa được câu kết trên `Dm`. Câu kết trên `G` vẫn
+lọt, vì dây tầng phía sau (`capStack`, `applyFeel`, `snapToPulse`, bộ kéo bước quãng tám)
+đổi lại cao độ: dựng ra `12:67 12.5:69 13.25:71 13.75:74`, ra tới đầu kia thành
+`12:71 12.5:74 13.25:79 13.75:69`.
+
+### Ba test còn hỏng — biết vì sao, chưa sửa
+
+| test | vì sao |
+|---|---|
+| `soloGenerator` · câu kết ở nốt ổn định | như trên: cần siết sau dây tầng cao độ mà vẫn tôn trọng `material` |
+| `phraseAcrossBar` · phần lớn nốt trong một hơi dài | tỉ lệ 0,47 so với ngưỡng 0,50 — sát ngưỡng, chưa truy |
+| `handSplitAudit` · ô 3 giang tấu có ngón chromatic | không còn bước nửa cung nào ở ô 3 |

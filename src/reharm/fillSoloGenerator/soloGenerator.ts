@@ -1054,7 +1054,20 @@ export function generateSolo(
     chordsPerPhrase = 2,
     take = 0,
     endWithRun = false,
-    interlude = true,
+    /*
+      MẶC ĐỊNH TẮT. Chú thích ngay trên hàm này đã nói: "chỉ nên bật ở đoạn
+      không có lời — bật suốt bài thì nó đè lên phần hát." Vậy mà mặc định
+      từng là `true`, tức bên gọi nào quên ghi cờ là được chế độ nguy hiểm hơn.
+
+      Hậu quả đo được: điều kiện nghỉ ở `chooseLick` mở đầu bằng
+      `!choice.interlude`, nên với mặc định `true` thì câu ở mật độ thưa KHÔNG
+      BAO GIỜ nghỉ — mất hẳn hình câu mở–nghỉ–giữa–kết mà
+      `pianoimprovnotes.md` mục 4 đặt ra.
+
+      `ReharmHome.tsx` luôn ghi cờ này tường minh, nên đổi mặc định không đổi
+      gì ở ứng dụng; chỉ các bên gọi quên ghi mới được hành vi an toàn.
+    */
+    interlude = false,
     range,
     storeScale,
     /*
@@ -1519,6 +1532,55 @@ export function generateSolo(
         })),
       }
     }
+    /*
+      CUỐI CÂU PHẢI ĐÁP VÀO NỐT ỔN ĐỊNH — `pianoimprovnotes.md`: tránh dừng ở
+      nốt lơ lửng khiến câu nghe dở dang.
+
+      Mẫu `chord-tone` tự nhận là "không bao giờ lệch hoà âm", nhưng nó đi trên
+      thang dựng từ `material` — tức cả gam, không riêng nốt hợp âm — nên nốt
+      cuối rơi đâu thì rơi. Đo trên vòng `C Am F G Em Dm G7 C`: câu kết trên
+      `G` đáp vào `A` (bậc 9) và câu kết trên `Dm` đáp vào `E` (bậc 9).
+
+      Lỗi này nấp lâu vì `interlude` mặc định bật, mà nhánh giang tấu có đường
+      kết riêng. Tắt mặc định đi thì nó lộ ra.
+
+      Chỉ dịch **nốt cuối cùng**, và dịch tới nốt ổn định GẦN NHẤT trong thang
+      đã ép — nên đường đi của câu giữ nguyên, chỉ chỗ đáp là đổi.
+    */
+    if (isPhraseEnd && built.notes.length > 0 && safe.length > 0) {
+      const onDinh = new Set(
+        [0, 3, 4, 7]
+          .filter((buoc) =>
+            chord.quality.intervals.some((i) => i % 12 === buoc),
+          )
+          .map((buoc) => (chord.root + buoc) % 12),
+      )
+      /*
+        Nốt "cuối câu" là nốt VANG SAU CÙNG, không phải phần tử cuối mảng. Mẫu
+        câu không bắt buộc phát ra theo thứ tự thời gian, nên hai thứ ấy lệch
+        nhau — bản đầu tôi lấy nhầm phần tử cuối mảng, và ô kết trên `G` thoát
+        lưới vì phần tử cuối mảng tình cờ đã là nốt ổn định.
+      */
+      let cuoi = 0
+      for (let i = 1; i < built.notes.length; i += 1) {
+        if (built.notes[i]!.startBeat > built.notes[cuoi]!.startBeat) cuoi = i
+      }
+      const not = built.notes[cuoi]!
+      if (onDinh.size > 0 && !onDinh.has(not.note % 12)) {
+        const gan = safe
+          .filter((cao) => onDinh.has(cao % 12))
+          .sort((a, b) => Math.abs(a - not.note) - Math.abs(b - not.note))[0]
+        if (gan !== undefined) {
+          built = {
+            ...built,
+            notes: built.notes.map((item, i) =>
+              i === cuoi ? { ...item, note: gan as MidiNote } : item,
+            ),
+          }
+        }
+      }
+    }
+
     if (positionInPhrase === 2 && !isPhraseEnd && built.notes.length > 0) {
       const slot = playBeats / built.notes.length
       built = {
