@@ -4,7 +4,7 @@ import { accentBeats } from '../style/soloLeftHand'
 /**
  * Cách chia thời gian của câu chạy, theo điệu đang chọn.
  *
- * Trước đây bộ sinh câu **không nhìn thấy điệu** một lần nào: `soloGenerator.ts`
+ * Trước đây bộ soạn câu **không nhìn thấy điệu** một lần nào: `soloGenerator.ts`
  * không import module điệu nào cả, nên câu giang tấu của bossa nova, slow rock,
  * swing và ballad giống hệt nhau từng nốt — chỉ phần đệm đổi. Nghe ra ngay là
  * một câu chạy vô danh tính đặt lên một nền có danh tính.
@@ -281,7 +281,7 @@ export function snapToPulse<T extends TimedNote>(
  *
  * ## Vì sao không phải công tắc bật / tắt
  *
- * Bản đầu của luật này định làm: đoạn ngắn thì **không sinh câu solo**, giữ mẫu
+ * Bản đầu của luật này định làm: đoạn ngắn thì **không soạn câu solo**, giữ mẫu
  * đệm chạy tiếp. Sai, vì hai bên không so được trực tiếp.
  *
  * Ở bản ký âm của Cà Pháo, tay phải LUÔN chơi giai điệu — đoạn hát cũng là tay

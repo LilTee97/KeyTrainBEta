@@ -10,7 +10,7 @@ import { ladderOf } from '../soloVocabulary'
 import { CA_PHAO_RANGE, profileLine, within, type LineProfile } from '../styleProfile'
 
 /*
-  Bộ sinh câu dựng bằng NHỊP TRƯỚC, chạy song song sổ mẫu Licky.
+  Bộ soạn câu dựng bằng NHỊP TRƯỚC, chạy song song sổ mẫu Licky.
 
   Chưa thay mặc định. Điều kiện đặt ra từ đầu là hai bộ cùng bị một cái thước
   chấm, rồi mới nói bộ nào hơn — không đổi vì cảm giác.
@@ -81,7 +81,7 @@ const shapeMiss = (profile: LineProfile) =>
   miss(profile.arpeggio, CA_PHAO_RANGE.arpeggio) +
   miss(profile.mixed, CA_PHAO_RANGE.mixed)
 
-describe('bộ sinh nhịp-trước', () => {
+describe('bộ soạn nhịp-trước', () => {
   /*
     BA CHỈ SỐ NHỊP, cái mà bản trước hỏng và cái thước lúc ấy chưa nhìn ra.
 

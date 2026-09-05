@@ -83,7 +83,27 @@ const MINOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
   7: { light: '7', full: '9' },
 }
 
-export type ColorIntensity = 'off' | 'light' | 'full'
+export type ColorIntensity = 'off' | 'light' | 'full' | 'linhNhi'
+
+/** Sheet Linh Nhi: I/IV Δ, ii/iii/vi m7, V7. Không add9 / 9sus4 / 7b9. */
+const LINH_NHI_MAJOR: Record<number, string> = {
+  1: 'maj7',
+  2: 'm7',
+  3: 'm7',
+  4: 'maj7',
+  5: '7',
+  6: 'm7',
+  7: 'm7b5',
+}
+const LINH_NHI_MINOR: Record<number, string> = {
+  1: 'm7',
+  2: 'm7b5',
+  3: 'maj7',
+  4: 'm7',
+  5: '7',
+  6: 'maj7',
+  7: '7',
+}
 
 /**
  * Màu dùng cho các bậc **trưởng đứng yên** — bậc I và IV của giọng trưởng,
@@ -551,6 +571,12 @@ export function colorChord(
 ): ParsedChord {
   const { intensity = 'full', susDominant = false } = options
   if (intensity === 'off') return chord
+  if (intensity === 'linhNhi') {
+    const id = chord.quality.id
+    if (id === 'maj') return withQuality(chord, 'maj7')
+    if (id === 'min') return withQuality(chord, 'm7')
+    return chord
+  }
 
   // Hợp âm bảy át chuyển sang treo bậc bốn trước, rồi mới thêm màu tiếp.
   if (susDominant && (chord.quality.id === '7' || chord.quality.id === '9')) {
@@ -660,6 +686,13 @@ export function colorAnalyzedChord(
     preferInKey = true,
   } = options
   if (intensity === 'off') return analyzed.chord
+  if (intensity === 'linhNhi') {
+    const { chord, degree } = analyzed
+    if (degree === null && analyzed.actsAsDominant) return withQuality(chord, '7')
+    if (degree === null) return colorChord(chord, options)
+    const target = (scale === 'minor' ? LINH_NHI_MINOR : LINH_NHI_MAJOR)[degree]
+    return target ? withQuality(chord, target) : colorChord(chord, options)
+  }
 
   const { chord, degree } = analyzed
   const qualityId = chord.quality.id

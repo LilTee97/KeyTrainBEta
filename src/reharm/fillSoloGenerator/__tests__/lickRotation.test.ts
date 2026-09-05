@@ -45,7 +45,7 @@ describe('khai báo của từng mẫu câu', () => {
 
 describe('danh sách xoay suy ra từ vốn từ vựng', () => {
   it('mọi vai trò đều có ít nhất một mẫu đang dùng', () => {
-    // Thiếu một vai trò là bộ sinh sẽ lùi về mẫu nền tảng ở chỗ đó
+    // Thiếu một vai trò là bộ soạn sẽ lùi về mẫu nền tảng ở chỗ đó
     for (const role of ROLES) {
       expect(licksFor(role).length, role).toBeGreaterThan(0)
     }

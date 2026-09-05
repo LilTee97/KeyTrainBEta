@@ -229,7 +229,7 @@ describe('đoạn dạo giữ đúng số ô', () => {
 
   Lối bám tay trái ở hai đoạn này trước đây không nhận `take`, nên nó lấy mặc
   định 0: giang tấu thì mỗi lượt một câu, còn dạo đầu và kết bài phát lại đúng
-  một câu mãi. Đường sinh câu độc lập đã tự xoay theo lượt từ trước, nên chỉ
+  một câu mãi. Đường soạn câu độc lập đã tự xoay theo lượt từ trước, nên chỉ
   nhánh bám tay trái bị kẹt — và đó đúng là nhánh của họ bolero.
 */
 describe('đoạn dạo và đoạn kết đổi theo lượt', () => {

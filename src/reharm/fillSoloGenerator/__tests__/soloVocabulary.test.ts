@@ -156,7 +156,7 @@ describe('mọi mẫu câu đều bám hợp âm đang vang', () => {
 })
 
 describe('mẫu câu nghỉ lấy hơi', () => {
-  it('không sinh nốt nào', () => {
+  it('không soạn nốt nào', () => {
     expect(getLick('breath')!.build(contextFor('C')).notes).toEqual([])
   })
 })

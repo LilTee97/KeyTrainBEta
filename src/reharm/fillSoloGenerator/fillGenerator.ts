@@ -5,7 +5,7 @@ import type { PassingSuggestion } from '../reharmEngine/passingChordRules'
 import type { ParsedChord } from '../types'
 
 /**
- * Sinh câu nối lấp khoảng trống giữa hai hợp âm bằng chuỗi dim7.
+ * Soạn câu nối lấp khoảng trống giữa hai hợp âm bằng chuỗi dim7.
  *
  * Tài liệu mục 5: bass đi bộ, mỗi bậc một dim7. Ví dụ nguyên văn V→I:
  *

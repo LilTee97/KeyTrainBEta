@@ -64,7 +64,7 @@ export function noteSourceForTeacher(teacher: SoloTeacher): SoloNoteSource {
 
 /** Tôn Hùng: 0–3 câu chạy ngắn / bài — không kết đoạn bằng cú chạy ngón. */
 export function teacherEndsWithRun(teacher: SoloTeacher): boolean {
-  return teacher !== 'ton-hung'
+  return teacher !== 'ton-hung' && teacher !== 'linh-nhi'
 }
 
 /**

@@ -56,7 +56,7 @@ describe('MÓN 1 — giang tấu lấy lại câu dạo', () => {
     (Mùa Xuân 100% · Biển Tình 89% · Đừng Xa 89% · Lá Thư 67% · Đường Xưa 62% · Một Cõi
     60%). Ba bài trên 89% là CÙNG MỘT CÂU, chỉ thêm một ô mở ở đầu.
 
-    Trước đó giang tấu dùng `raiLinhNhi` — tay phải bám mốc tay trái và sinh nốt riêng —
+    Trước đó giang tấu dùng `raiLinhNhi` — tay phải bám mốc tay trái và soạn nốt riêng —
     nên hai đoạn ra hai câu khác nhau, ngược bản ký âm.
   */
   const neo = (ev: ReturnType<typeof giaiDieuDaoLinhNhi>) => {
@@ -303,5 +303,59 @@ describe('MÓN 4 — hai tay CÀI vào nhau, và câu nằm đúng tầm', () =>
       const tam = doiTay('intro', txt, tonic, minor, 'bolero-linh-nhi-2').tam
       expect(Math.abs(tam - 73.6), `chủ âm ${tonic}: tầm ${tam.toFixed(1)}`).toBeLessThanOrEqual(6)
     }
+  })
+})
+
+describe('MÓN 5 — mật độ tay PHẢI ở đoạn kết', () => {
+  /*
+    Đo bảy bản ký âm, mốc gõ tay phải mỗi ô ở đoạn kết: **5,7 giọng thứ · 5,0 giọng
+    trưởng**. App ra **6,8 và 6,1** — dày hơn khoảng một phần năm.
+
+    Cần gạt `density` KHÔNG dùng được: đo `'medium'` và `'dense'` ra số y hệt nhau, đúng
+    như chú thích sẵn có trong `ReharmHome`. Nên phải hãm thẳng sau khi đã dựng, bằng
+    `thuaTayPhai`: mỗi lượt lấy ô đang dày nhất rồi bỏ nốt chen nhất trong ô ấy.
+
+    Không đụng ô cuối — câu chạy kết là chủ ý (`endWithRun`) — và không bỏ nốt đầu ô.
+    Vì thế con số không xuống hẳn tới đích; đòi trong sai số 0,5 là đòi đúng mức làm được.
+  */
+  const phaiMoiO = (txt: string, tonic: number, minor: boolean) => {
+    const key = { tonic: tonic as PitchClass, scale: minor ? ('minor' as const) : ('major' as const) }
+    const chords = parseChordInput(txt).chords
+    const d = buildPhraseSection({
+      kind: 'outro',
+      key,
+      style: getStyle('bolero-linh-nhi-2')!,
+      thay: 'linh-nhi',
+      beatsPerChord: 4,
+      dropRoot: true,
+      take: 0,
+      songChords: chords,
+      opening: chords[0]!,
+      solo: (c) =>
+        soloToTimeline(
+          generateSolo(c, {
+            beatsPerChord: 4,
+            density: 'medium',
+            key,
+            take: 0,
+            noteSource: 'storeScale',
+            interlude: true,
+            endWithRun: true,
+          }),
+        ),
+    })!
+    return (
+      d.events.filter((e) => e.hand === 'right').length /
+      Math.max(1, Math.round(d.lengthBeats / 4))
+    )
+  }
+
+  it('đoạn kết không còn dày hơn bản ký âm một phần năm', () => {
+    expect(Math.abs(phaiMoiO(THU, 9, true) - 5.7)).toBeLessThan(0.5)
+    expect(Math.abs(phaiMoiO(TRUONG, 0, false) - 5.0)).toBeLessThan(0.5)
+  })
+
+  it('kết giọng trưởng thưa hơn kết giọng thứ, đúng chiều bản ký âm', () => {
+    expect(phaiMoiO(TRUONG, 0, false)).toBeLessThan(phaiMoiO(THU, 9, true))
   })
 })

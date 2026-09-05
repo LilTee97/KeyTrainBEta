@@ -4,7 +4,7 @@ import type { ParsedChord } from '../types'
 /**
  * Đo một dòng nốt và trả về **hình dạng thống kê** của nó.
  *
- * Đây là cái thước, không phải bộ sinh câu. Nó tồn tại để câu hỏi "bộ sinh mới
+ * Đây là cái thước, không phải bộ soạn câu. Nó tồn tại để câu hỏi "bộ soạn mới
  * có hay hơn không" trả lời được bằng số thay vì bằng ý kiến — và để so được
  * với một người chơi thật thay vì với cảm giác của người viết mã.
  *
@@ -38,7 +38,7 @@ export interface LineProfile {
   /**
    * Bao nhiêu **cỡ nhịp khác nhau** xuất hiện trong câu.
    *
-   * Chỉ số này thêm sau, vì thiếu nó mà cả một bản dựng hỏng lọt lưới: bộ sinh
+   * Chỉ số này thêm sau, vì thiếu nó mà cả một bản dựng hỏng lọt lưới: bộ soạn
    * cọc-và-nối đạt 16 trên 24 chỉ số cũ rồi bị tai bác thẳng là "loạn". Đo lại
    * mới thấy nó chỉ có BA cỡ nhịp, còn người thật dùng bảy tới hai mươi hai.
    * Thước không đo nhịp thì nhịp tự do hỏng.
@@ -51,7 +51,7 @@ export interface LineProfile {
   /**
    * Tỉ lệ chỗ dùng lại một hình đã xuất hiện, tính trên **cao độ VÀ nhịp**.
    *
-   * Bản trước chỉ đếm trùng hình mà không nhìn nhịp, nên nó **nói dối**: bộ sinh
+   * Bản trước chỉ đếm trùng hình mà không nhìn nhịp, nên nó **nói dối**: bộ soạn
    * cọc-và-nối đo ra 60% — nằm trong khoảng người thật — nhưng con số ấy bị
    * thổi phồng chính vì nhịp đơn điệu. Ba cỡ nhịp thì trùng hình là đương nhiên,
    * và đó là sự ĐỀU ĐẶN chứ không phải motif.
@@ -230,7 +230,7 @@ export const CA_PHAO_RANGE = {
     Đo lại trên bảy bản ký âm bằng CHÍNH chỉ số đã sửa (khoá theo cả nhịp lẫn
     cao độ), không lấy con số cũ: khoá đổi thì khoảng đo cũng đổi. Hai đầu là
     Yêu xa 14% và Yêu là tha thứ 66% — chênh nhau bốn lần rưỡi, nên đây là
-    khoảng rất rộng và một bộ sinh lọt vào giữa chưa nói lên nhiều.
+    khoảng rất rộng và một bộ soạn lọt vào giữa chưa nói lên nhiều.
   */
   motifReuse: [0.14, 0.66],
   scale: [0.06, 0.22],
@@ -245,7 +245,7 @@ export const CA_PHAO_RANGE = {
 export const within = (value: number, range: readonly [number, number]) =>
   value >= range[0] - 1e-9 && value <= range[1] + 1e-9
 
-/** Một dòng báo cáo gọn, để in ra khi so hai bộ sinh câu. */
+/** Một dòng báo cáo gọn, để in ra khi so hai bộ soạn câu. */
 export function describeProfile(profile: LineProfile): string {
   const pct = (x: number) => `${Math.round(x * 100)}%`
   return (

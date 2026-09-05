@@ -8,7 +8,7 @@ import { khongTiaTayTrai, raiMoRongOGiangTau, raiTheoTayTrai, soloTuDoCaPhao } f
   Người dùng đặt luật đứng: mỗi lần học phong cách của ai thì phải tách hết
   khỏi các thầy khác, và chỉ hoà hai phong cách khi họ yêu cầu đích danh.
 
-  Luật này không chỉ nói về "bộ sinh nào chạy". Nó nói cả về những chỗ mượn nhỏ
+  Luật này không chỉ nói về "bộ soạn nào chạy". Nó nói cả về những chỗ mượn nhỏ
   trông như cho nhất quán: mượn hằng số đã chỉnh trên bản ký âm của thầy khác,
   gọi hàm của thầy khác vì "cũng là việc ấy", hay để một luật hậu kỳ chung nắn
   lại đường nét vốn dựng theo nguyên tắc của thầy này.

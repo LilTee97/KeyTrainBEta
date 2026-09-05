@@ -13,7 +13,7 @@ Repo `D:\Coding Piano app` khi lập kế hoạch còn trống hoàn toàn (ch�
 > B, và trang cài đặt cùng chức năng preset ở bước 30.
 
 - **Hệ A — Luyện tai nghe hợp âm** (lấy cảm hứng từ mikebwilliams.com/chords/): nhận diện hợp âm đơn, luyện progression, metronome, spaced repetition + thống kê. Điểm khác biệt: phần **ôn tập ghi nhớ được game hóa**.
-- **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → sinh câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B **không game hoá** — không điểm, không sao, không huy hiệu.
+- **Hệ B — Tái hòa âm & backing track theo phong cách Khá Bự**: nhập hợp âm / vòng hợp âm / lời bài hát có hợp âm → tái hòa âm theo phong cách → sinh backing track theo điệu → soạn câu fill/solo → luyện tương tác với chế độ **chờ đánh đúng nốt mới qua nốt tiếp** và **tách luyện tay trái / tay phải**. Hệ B **không game hoá** — không điểm, không sao, không huy hiệu.
 
 Phạm vi nội dung nhạc: **chỉ Jazz + Pop**, không có nội dung cổ điển.
 
@@ -88,9 +88,9 @@ Chia 3 tầng: `src/shared/` (xây một lần, cả 2 hệ dùng chung) — `sr
 - `voicingGenerator/handSplitVoicing.ts` — tách LH (bass) / RH (đệm hợp âm) theo từng điệu, gọi lại `voiceLeadingOptimizer.ts` để mỗi tay đều mượt.
 - `fillSoloGenerator/graceNoteOrnamenter.ts` — kỹ thuật 4: chèn nốt láy cách 1 bậc trên/dưới/kết hợp, 3 mức mật độ.
 - `fillSoloGenerator/fillGenerator.ts` — dùng đúng công thức chuỗi dim7 ở chỗ V→I; chỗ khác dùng connector đi liền bậc, rồi tô điểm bằng module trên.
-- `fillSoloGenerator/soloGenerator.ts` — sinh câu solo/intro bằng cách nối các nốt đích lấy từ nốt mở rộng của hợp âm (9/11/13, sus), tô điểm bằng nốt láy.
+- `fillSoloGenerator/soloGenerator.ts` — soạn câu solo/intro bằng cách nối các nốt đích lấy từ nốt mở rộng của hợp âm (9/11/13, sus), tô điểm bằng nốt láy.
 - `playback/backingTrackRenderer.ts` — timeline phát thụ động hoàn chỉnh.
-- `playback/noteGatedPlaybackEngine.ts` — **chờ đánh đúng nốt**: đi theo timeline nhưng chặn không cho qua cho tới khi `midiStore` báo đúng nhóm nốt mong đợi. So khớp với **đúng tập nốt của voicing đã sinh ra** (không phải khớp theo tên hợp âm mơ hồ) vì hệ B luôn biết chính xác nó đã sinh nốt nào.
+- `playback/noteGatedPlaybackEngine.ts` — **chờ đánh đúng nốt**: đi theo timeline nhưng chặn không cho qua cho tới khi `midiStore` báo đúng nhóm nốt mong đợi. So khớp với **đúng tập nốt của voicing đã sinh ra** (không phải khớp theo tên hợp âm mơ hồ) vì hệ B luôn biết chính xác nó đã soạn nốt nào.
 - `playback/practiceModeController.ts` — chế độ chỉ tay trái / chỉ tay phải / hai tay, bằng cách lọc track nào đang bị gate.
 
 ### Luồng dữ liệu xuyên hệ
@@ -223,7 +223,7 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 22. **Nhập bài hát** — `songTextParser.ts` (cả 2 định dạng) + tab "Bài hát" hiện hợp âm bấm được trên lời.
 23. ~~**Popup thế bấm**~~ — **đã bỏ**. Bàn phím đàn dưới bản nhạc đã chỉ đúng thế bấm hai tay của hợp âm vừa chạm, và chế độ chờ đánh đúng nốt cũng hiện nốt đang chờ. Một popup nữa chỉ là cách thứ ba nói cùng một điều.
 24. **Câu fill V-I** — phát hiện chỗ V-I, chèn chuỗi dim7 đúng công thức tài liệu, có toggle.
-25. **Nốt láy + sinh solo** — tô điểm giai điệu + sinh câu solo/intro, **gắn nhãn "thử nghiệm / mô phỏng phong cách"** trên UI.
+25. **Nốt láy + sinh solo** — tô điểm giai điệu + soạn câu solo/intro, **gắn nhãn "thử nghiệm / mô phỏng phong cách"** trên UI.
 26. **Backing track hoàn chỉnh** — gộp điệu + tái hòa âm + fill/solo vào một nút "Phát backing track".
 27. **Chờ đánh đúng nốt (hai tay)** — `noteGatedPlaybackEngine.ts` gate timeline bước 26 theo `midiStore`. **Làm prototype quyết định transport tại đây** (rủi ro #2) trước khi xây tiếp lên trên.
 28. **Chế độ tay trái / tay phải riêng** — `practiceModeController.ts` lọc track theo tay.
@@ -249,7 +249,7 @@ Lõi dùng chung (bước 0-9) xây một lần, cả 2 hệ dùng. Hệ A đi t
 1. **Safari không hỗ trợ Web MIDI** (cả desktop lẫn iOS) → bàn phím ảo (bước 3) là thành phần chịu lực, không phải phụ. Feature-detect `navigator.requestMIDIAccess`, hiện banner "nên dùng Chrome/Edge để cắm đàn MIDI" và tự động rơi về bàn phím ảo.
 2. **Timing của chế độ chờ đánh đúng nốt** — độ trễ đọc MIDI không phải vấn đề (dưới vài ms); vấn đề nằm ở chỗ gate ghép với `Tone.Transport` thế nào. Dừng/khởi động lại transport mỗi lần gate sẽ giật. Hướng đề xuất: giữ **một transport chạy liên tục làm đồng hồ thuần**, gate ở tầng "sự kiện nào được phép kêu", không pause/restart theo từng nốt — **làm prototype ở bước 27**, không giả định là xong.
 3. **Hợp âm mơ hồ** — cùng một tập nốt có thể đọc thành nhiều tên hợp âm, càng tệ với extension/shell/slash chord. Hệ A: `chordDetection.ts` trả **danh sách xếp hạng**, chấm điểm theo **tập con pitch-class** với độ chặt tùy chỉnh, không đòi khớp tuyệt đối. Hệ B: né hẳn vấn đề bằng cách gate theo **đúng tập nốt của voicing đã sinh**, không khớp theo tên hợp âm.
-4. **Chất lượng câu fill/solo tự sinh** — tài liệu mô tả kỹ thuật nốt láy ở mức **nguyên lý định tính**, không phải ngữ pháp sinh nhạc đầy đủ. Bộ sinh (bước 25) là **mô phỏng gần đúng**, phải gắn nhãn "thử nghiệm" trên UI để không bị hiểu nhầm là chép đúng phong cách Khá Bự.
+4. **Chất lượng câu fill/solo tự sinh** — tài liệu mô tả kỹ thuật nốt láy ở mức **nguyên lý định tính**, không phải ngữ pháp sinh nhạc đầy đủ. Bộ soạn (bước 25) là **mô phỏng gần đúng**, phải gắn nhãn "thử nghiệm" trên UI để không bị hiểu nhầm là chép đúng phong cách Khá Bự.
 5. **Parse lời có hợp âm** — text dán vào thực tế có khoảng trắng/tab lộn xộn, ký tự full-width, dòng nhạc cụ không có lời. Giới hạn đúng 2 định dạng đã đặc tả (không đoán mò tự do) + thêm bước **xem trước kết quả parse và chỉnh tay** vị trí hợp âm trước khi chấp nhận.
 6. **Hệ B lớn hơn hẳn hệ A** — parser + rule engine + thư viện điệu + sinh voicing 2 tay + sinh fill/solo + backing track + note-gating gần bằng một sản phẩm độc lập. Thứ tự xây đã cố tình đẩy hệ A lên trước để kiểm chứng lõi chung với chi phí thấp, và **đặt mốc kiểm sau bước 21** để cân nhắc có nên dời phần nhập bài hát / sinh solo / tách tay sang đợt sau v1 hay không — quyết định có ý thức tại mốc đó, không mặc định là làm hết trong v1.
 7. **Chỉ chạy client-side (quyết định để mở)** — v1 không cần backend vì chưa có yêu cầu tài khoản/chia sẻ. Nếu sau này cần đồng bộ tiến trình SRS/gamification giữa nhiều thiết bị, hoặc chia sẻ bài đã tái hòa âm cho người khác, sẽ cần một service đồng bộ nhẹ — **ghi nhận là không cần cho v1**.

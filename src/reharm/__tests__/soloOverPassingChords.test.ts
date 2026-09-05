@@ -99,7 +99,7 @@ describe('giang tấu trên vòng có hợp âm lướt', () => {
           "Bám hợp âm chính" tính cả ba tầng của bậc ưu tiên nốt giang tấu: nốt
           hợp âm, ngũ cung dựng trên nốt gốc hợp âm ấy, và thang âm của giọng.
           Hai tầng đầu dựng trên chính hợp âm chính; tầng ba là nốt trong giọng,
-          bộ sinh câu vẫn dùng để bước nối giữa hai nốt trụ.
+          bộ soạn câu vẫn dùng để bước nối giữa hai nốt trụ.
 
           Chốt chặn thật với hợp âm lướt nằm ở bài kiểm ngay bên dưới: nốt đặc
           trưng của hợp âm lướt (bậc ba của bậc năm phụ chẳng hạn) nằm **ngoài

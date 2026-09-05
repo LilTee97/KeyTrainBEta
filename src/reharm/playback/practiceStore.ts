@@ -82,7 +82,7 @@ export interface PracticeSong {
  * Mở một bài đã lưu không phải là nạp thẳng dòng thời gian: ảnh chụp chỉ ghi
  * **lựa chọn** của người dùng — lời bài hát, cách chia đoạn, màu hợp âm, mật độ
  * câu fill — còn dòng thời gian thì phải dựng lại từ đó qua cả chuỗi luật tái
- * hoà âm, sinh voicing và sinh câu fill. Chuỗi ấy nằm trong tab Tái hoà âm.
+ * hoà âm, sinh voicing và soạn câu fill. Chuỗi ấy nằm trong tab Tái hoà âm.
  *
  * Nên tab Luyện đệm **nhờ** thay vì tự dựng. Chép chuỗi dựng sang đây thì có
  * hai bản, và hai bản sẽ lệch nhau ngay lần sửa luật kế tiếp — bài tập ra một

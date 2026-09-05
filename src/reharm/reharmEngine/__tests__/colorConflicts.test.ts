@@ -85,6 +85,15 @@ describe('chủ âm phải nghe như chỗ nghỉ', () => {
     ).toBe(false)
   })
 
+  it('Linh Nhi: Am7 chủ âm không cảnh báo', () => {
+    const result = reharmonize(parseChordInput('Am Dm E Am').chords, {
+      intensity: 'linhNhi',
+      key: { tonic: 9, scale: 'minor' },
+    })
+    expect(result.conflicts.some((c) => c.kind === 'tonic-not-resting')).toBe(false)
+    expect(result.colored.map((c) => c.symbol)).toEqual(['Am7', 'Dm7', 'E7', 'Am7'])
+  })
+
   it('hợp âm bảy át ở bậc năm thì không bị cảnh báo', () => {
     // Chỉ chủ âm mới cần cảm giác nghỉ
     const conflicts = conflictsFor('C F G7 C')

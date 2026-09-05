@@ -170,7 +170,7 @@ describe('hợp âm chia đôi', () => {
     })
   }
 
-  it('ô chia đôi không sinh nốt chạy bass nào', () => {
+  it('ô chia đôi không soạn nốt chạy bass nào', () => {
     const half = [bar / 2, bar / 2, bar, bar]
     const notes = run(half, 1)
     // Hai hợp âm đầu chiếm nửa ô: không nốt nào rơi trong khoảng của chúng.

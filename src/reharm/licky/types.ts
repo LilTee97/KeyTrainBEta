@@ -17,6 +17,8 @@ export interface LickPhrase {
   kind: LickyKind
   span: number
   notes: LickNote[]
+  /** Bậc nốt đầu so gốc hợp âm sheet (0=1, 3=♭3, 4=3…). Bỏ = gốc. */
+  fromRoot?: number
 }
 
 export interface PlacedNote {
@@ -36,6 +38,8 @@ export interface PlaceOptions {
   mode?: LickyMode
   kind: LickyKind
   key?: SongKey | null
+  book?: readonly LickPhrase[]
+  lockShape?: boolean
   /**
    * Trần số nốt của câu. Bỏ trống thì theo `noteCount` như cũ.
    *

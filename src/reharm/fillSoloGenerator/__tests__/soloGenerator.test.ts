@@ -537,7 +537,7 @@ describe('soloToTimeline', () => {
   })
 
   it('nốt tô điểm đánh nhẹ hơn nốt chính', () => {
-    // Vòng đủ dài để chắc chắn có mẫu câu sinh nốt tô điểm (nốt dẫn, hình láy)
+    // Vòng đủ dài để chắc chắn có mẫu câu soạn nốt tô điểm (nốt dẫn, hình láy)
     const solo = generateSolo(chords('C Am F G Em Dm G7 C'), {
       beatsPerChord: 4,
       density: 'dense',

@@ -494,7 +494,7 @@ export function buildArrangedSong(
       const line = range.solo ? range.solo(take, last) : null
       /*
         Họ nào dựng tay phải bám vào tay trái thì KHÔNG chạy qua `interlockHands`
-        nữa: phép phối hợp đã nằm sẵn trong bộ sinh, và luật kia dựng theo Cà
+        nữa: phép phối hợp đã nằm sẵn trong bộ soạn, và luật kia dựng theo Cà
         Pháo — tay phải cài vào KHE của tay trái, ngược hẳn. Xem `raiLinhNhi.ts`.
       */
       const woven =

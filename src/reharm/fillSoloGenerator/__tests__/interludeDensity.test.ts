@@ -75,7 +75,7 @@ describe('độ dài giang tấu quyết định mật độ câu solo', () => {
 
     Đây là cùng một gốc với chuyện rải hợp âm quá nhiều: câu được dập từ một
     hình có sẵn, rồi mới đi hỏi hoàn cảnh. Muốn điều khiển được mật độ thì câu
-    phải được DỰNG theo số nốt cần, tức bộ sinh cọc-và-nối ở bước 3.
+    phải được DỰNG theo số nốt cần, tức bộ soạn cọc-và-nối ở bước 3.
   */
   it('mật độ có tác dụng, nhưng chưa đủ để nghe ra', () => {
     const short = noteCount(4)
@@ -88,7 +88,7 @@ describe('độ dài giang tấu quyết định mật độ câu solo', () => {
   /*
     Giang tấu của app hiện dài 4 ô, hoặc 8 ô khi vòng lặp hai lượt — luôn nằm ở
     phía cầu nối. Test này ghi lại chuyện đó: muốn có một câu solo thật thì phải
-    kéo dài chính đoạn giang tấu, không phải chỉnh bộ sinh câu.
+    kéo dài chính đoạn giang tấu, không phải chỉnh bộ soạn câu.
   */
   it('giang tấu mặc định của app thuộc phía cầu nối', () => {
     expect(interludeDensity(4)).toBe('sparse')

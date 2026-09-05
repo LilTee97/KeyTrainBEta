@@ -36,7 +36,7 @@ import { TUYEN_DAO, gocTuyen, type ODao } from './tuyenDaoLinhNhi'
  * Thêm hai luật vị trí đo được từ bản ký âm: ô đầu ưu tiên lấy ô ĐẦU của một câu, ô
  * cuối ưu tiên lấy ô CUỐI — ô cuối là ô "cửa" thưa hẳn ra để ca sĩ vào hát.
  *
- * KHÔNG có bước nào nắn cao độ cho vừa hợp âm. Nắn là quay lại kiểu sinh nốt theo luật
+ * KHÔNG có bước nào nắn cao độ cho vừa hợp âm. Nắn là quay lại kiểu soạn nốt theo luật
  * đã bị bác ba lần. Ngoại lệ duy nhất là nốt cảm bậc V, có số đo riêng bên dưới.
  *
  * ## Trưởng ra trưởng, thứ ra thứ
@@ -63,6 +63,23 @@ const NOT_CAM = true
  * con số ổn định nhất đo được về chị ấy.
  */
 const TAM_TAY_PHAI = 73.6
+
+/*
+  ĐÃ THỬ RỒI BỎ: phép chuộng ô đủ dày cho tay phải.
+
+  Bản ký âm cho tay phải **6,9 nốt/ô ở giọng thứ** và **5,5 ở giọng trưởng**; app ra 5,6
+  và 5,4. Vốn ô trong bảng thừa sức đạt — trung bình 7,1 (thứ) và 5,7 (trưởng).
+
+  Đã thêm một số hạng phạt theo khoảng cách mật độ, quét trọng số 0,5 · 0,6 · 1,2 · 1,5 ·
+  2 · 3. Giọng thứ **đứng yên ở 5,6 với mọi trọng số** trừ mức 3, mà mức 3 lại đẩy giọng
+  trưởng từ 5,4 lên 6,4 — hỏng chỗ đang đúng.
+
+  Lý do: vòng hợp âm đoạn dạo do `vonHopAmLinhNhi` rút ra, và bộ lọc CÙNG BẬC thường chỉ
+  còn một ô ứng cử mỗi chỗ. Không còn gì để chọn thì cho điểm kiểu nào cũng vô nghĩa.
+
+  Muốn nâng mật độ tay phải giọng thứ thì phải nới bộ lọc bậc — tức đổi hoà thanh lấy mật
+  độ. Chưa làm, vì hoà thanh là thứ đã đo chắc còn mật độ mới lệch một phần năm.
+*/
 
 /**
  * Chức năng hoà thanh của từng bậc — dùng khi không có ô nào cùng bậc.

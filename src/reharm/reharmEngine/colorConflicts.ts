@@ -87,6 +87,8 @@ function isAlteredDominant(chord: ParsedChord): boolean {
 export interface ConflictOptions {
   tonic: PitchClass
   scale: ScaleType
+  /** Linh Nhi: Am7 ở i là màu nghỉ, không phải át. Luật Khá thì cảnh báo. */
+  allowTonicMinorSeventh?: boolean
 }
 
 /**
@@ -100,7 +102,7 @@ export function analyzeColorConflicts(
   analyzed: readonly AnalyzedChord[],
   options: ConflictOptions,
 ): ColorConflict[] {
-  const { tonic, scale } = options
+  const { tonic, scale, allowTonicMinorSeventh = false } = options
   const conflicts: ColorConflict[] = []
 
   colored.forEach((chord, index) => {
@@ -117,9 +119,9 @@ export function analyzeColorConflicts(
       })
     }
 
-    // Chủ âm phải nghe như chỗ nghỉ. Có bậc bảy thứ là thành hợp âm át,
-    // mất hết cảm giác đã về nhà.
+    // Chủ âm Khá: b7 = át. Linh Nhi: i m7 là màu đậu (sheet Am7).
     if (
+      !allowTonicMinorSeventh &&
       degree === 1 &&
       chord.quality.intervals.includes(MINOR_SEVENTH)
     ) {

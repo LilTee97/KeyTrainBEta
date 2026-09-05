@@ -29,5 +29,6 @@ describe('tách thầy khi sinh solo', () => {
     expect(soloTeacherOf('bossa-ca-phao-som')).toBe('ca-phao')
     expect(soloTeacherOf('bolero-linh-nhi-2')).toBe('linh-nhi')
     expect(noteSourceForTeacher('linh-nhi')).toBe('chordTone')
+    expect(teacherEndsWithRun('linh-nhi')).toBe(false)
   })
 })

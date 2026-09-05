@@ -227,7 +227,7 @@ import type { LickyMode } from './licky/types'
  *
  * Lưu ý điều đã học lần trước: nếu đoạn dài vẫn nghe lê thê thì rất có thể
  * không phải tại độ dài, mà tại câu solo bị dập từ hình lick có sẵn nên không
- * có hình dáng đi đâu về đâu. Chỗ ấy là việc của bộ sinh câu, không sửa ở đây.
+ * có hình dáng đi đâu về đâu. Chỗ ấy là việc của bộ soạn câu, không sửa ở đây.
  */
 const INTERLUDE_LENGTHS = [4, 8, 12, 16] as const
 const DEFAULT_INTERLUDE_CHORDS = 4
@@ -722,7 +722,7 @@ export function ReharmHome() {
    * đó giữ nốt hợp âm.
    */
   const [storeScales, setStoreScales] = useState(true)
-  /** Nguồn nốt thật sự đưa cho bộ sinh câu: công tắc gam jazz đè lên lựa chọn kia. */
+  /** Nguồn nốt thật sự đưa cho bộ soạn câu: công tắc gam jazz đè lên lựa chọn kia. */
   const soloNoteSource: SoloNoteSource = storeScales ? 'storeScale' : noteSource
   /**
    * Gam cho **đoạn không lời**: dạo đầu, kết bài, giang tấu.
@@ -1324,7 +1324,7 @@ export function ReharmHome() {
     return scaleChoices[0] ?? null
   }, [style, reharm.key, scaleChoices])
 
-  /** Gam thật sự đưa cho bộ sinh câu. `null` là lối nhiều gam. */
+  /** Gam thật sự đưa cho bộ soạn câu. `null` là lối nhiều gam. */
   const phraseScale = useMemo(() => {
     // `'multi'` là lối nhiều gam do người dùng chọn tay, khác với `null` là để tự.
     if (phraseScaleId === MULTI_SCALE) return null
@@ -1992,7 +1992,7 @@ export function ReharmHome() {
             mốc — nhiều hơn phiên khúc — và gần một nửa số mốc chung, tay phải
             chơi lại chính lớp cao độ tay trái đang giữ.
 
-            Bộ sinh cũ cho tay phải bốc nốt từ thang gam mà không hề biết tay
+            Bộ soạn cũ cho tay phải bốc nốt từ thang gam mà không hề biết tay
             trái đang giữ gì, rồi mới cài vào khe. Người dùng nghe ra ngay: "tay
             phải quá rời rạc với tay trái". Xem `raiLinhNhi.ts`.
           */
@@ -2535,7 +2535,7 @@ export function ReharmHome() {
   ])
 
   /**
-   * Sinh câu cho **một vòng hợp âm bất kỳ** — dùng đúng cách của đoạn giang tấu.
+   * Soạn câu cho **một vòng hợp âm bất kỳ** — dùng đúng cách của đoạn giang tấu.
    *
    * Đoạn dạo đầu và đoạn kết trước đây lấy nốt từ `brainPhrase`: một câu ngắn
    * do luật Kingsley soạn, hay nhưng chỉ có mấy hình cố định, và không đi qua
@@ -3004,7 +3004,7 @@ export function ReharmHome() {
           /*
             Đoạn dạo đầu và đoạn kết chơi **cùng điệu với thân bài**.
 
-            Câu tay phải dựng bằng cùng bộ sinh nốt với đoạn giang tấu. Nếu chỉ
+            Câu tay phải dựng bằng cùng bộ soạn nốt với đoạn giang tấu. Nếu chỉ
             phát bấy nhiêu thì đoạn dạo là một dòng nốt bay lơ lửng, không có
             bass đỡ bên dưới, nghe như ai đó tập gam. Nên chỗ này quạt điệu đang
             chọn trên đúng vòng hợp âm ấy, rồi mới chồng câu lên trên.
@@ -3051,7 +3051,7 @@ export function ReharmHome() {
                 tấu đi từ 62, hai đoạn này đóng cứng 57.
 
                 Số lượt lấy ĐÚNG biểu thức mà `phraseSolo` dùng, để hai đường —
-                bám tay trái và sinh câu độc lập — xoay cùng nhịp chứ không mỗi
+                bám tay trái và soạn câu độc lập — xoay cùng nhịp chứ không mỗi
                 đường một kiểu.
               */
               /*
@@ -3415,7 +3415,7 @@ export function ReharmHome() {
 
     Bên kia chỉ có ảnh chụp, mà ảnh chụp chỉ ghi **lựa chọn** của người dùng —
     dòng thời gian phải dựng lại từ đó qua cả chuỗi luật tái hoà âm, sinh
-    voicing và sinh câu fill, và chuỗi ấy nằm ở đây. Nên bên kia nhờ, bên này
+    voicing và soạn câu fill, và chuỗi ấy nằm ở đây. Nên bên kia nhờ, bên này
     dựng rồi đăng lại; chép chuỗi dựng sang đó thì có hai bản và hai bản sẽ
     lệch nhau ngay lần sửa luật kế tiếp.
 

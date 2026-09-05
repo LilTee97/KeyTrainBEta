@@ -9,7 +9,7 @@ import type { TimelineEvent } from '../types'
 /*
   TAY PHẢI GIANG TẤU BÁM VÀO TAY TRÁI.
 
-  Bộ sinh trước cho tay phải bốc nốt từ thang gam mà KHÔNG hề biết tay trái đang
+  Bộ soạn trước cho tay phải bốc nốt từ thang gam mà KHÔNG hề biết tay trái đang
   giữ nốt gì ở thời điểm ấy, rồi mới để `interlockHands` xen vào tỉa bớt. Hai
   luồng xa lạ ghép lại, và người dùng nghe ra ngay: "tay phải quá rời rạc với
   tay trái".
@@ -434,7 +434,7 @@ describe('nốt RH bám hợp âm đang vang', () => {
 
   Bộ này từng chồng năm nốt vào vạch ô cuối làm chỗ đáp cho câu chạy, hình lấy
   từ ô 53 và ô 71 bản ký âm. Số đo ấy đúng cho GIANG TẤU, nhưng đoạn dạo đầu và
-  đoạn kết chạy qua cùng bộ sinh nên lĩnh luôn cái khối ấy — rồi cuối đoạn còn
+  đoạn kết chạy qua cùng bộ soạn nên lĩnh luôn cái khối ấy — rồi cuối đoạn còn
   một tiếng báo nữa. Đo trên đoạn dạo `bolero-linh-nhi-2`: sáu nốt cùng rơi
   phách 12, tiếng báo ở phách 15. Hai lần thông báo cho một lần chuyển đoạn.
 

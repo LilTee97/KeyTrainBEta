@@ -289,7 +289,7 @@ describe('ô nối không chạy ngón', () => {
     expect(line.length).toBeGreaterThan(0)
   })
 
-  it('chọn không quãng tám nào thì không sinh câu chạy', () => {
+  it('chọn không quãng tám nào thì không soạn câu chạy', () => {
     expect(fill(mark(2, 0))).toHaveLength(0)
   })
 

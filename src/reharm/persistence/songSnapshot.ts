@@ -51,6 +51,8 @@ export interface SongSnapshot {
   slashEdits?: Record<number, boolean>
   lickyFills?: boolean
   lickyRuns?: boolean
+  linhNhiFills?: boolean
+  linhNhiRuns?: boolean
   lickyMode?: string
   /** Các gợi ý hợp âm lướt đã chấp nhận, theo khoá vị trí và kỹ thuật. */
   acceptedPassing: string[]

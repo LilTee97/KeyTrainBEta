@@ -89,7 +89,7 @@ Tài liệu mô tả kỹ thuật nốt láy ở mức **nguyên lý**: trước
 
 - Nốt đích lấy từ chính nốt của hợp âm, **ưu tiên nốt màu** (bậc 9, 11, 13) hơn nốt gốc và quãng năm — vì phần đệm đã vang nốt gốc rồi, còn quãng năm gần như không nói lên điều gì.
 - Các nốt đích nối nhau theo **đường ngắn nhất** để câu nhạc đi từng bước thay vì nhảy loạn.
-- Nốt láy lấy **bậc liền kề trong gam**, không phải nửa cung cố định — tài liệu ghi "một bậc", mà trong gam thì bậc lúc là một cung lúc là nửa cung. Lấy cố định nửa cung sẽ sinh nốt ngoài giọng ở nửa số trường hợp.
+- Nốt láy lấy **bậc liền kề trong gam**, không phải nửa cung cố định — tài liệu ghi "một bậc", mà trong gam thì bậc lúc là một cung lúc là nửa cung. Lấy cố định nửa cung sẽ soạn nốt ngoài giọng ở nửa số trường hợp.
 
 Kiểu xen kẽ đổi chiều sau **mỗi nốt được láy**, không phải mỗi nốt — nếu đổi theo mọi nốt thì ở mật độ thưa sẽ luôn ra cùng một chiều.
 
@@ -155,7 +155,7 @@ Trình duyệt chặn phát tiếng tự động, nên `startAudio()` bắt bu�
 
 ## Đoạn giang tấu dựng từ bản ký âm thật, không từ suy đoán
 
-Bộ hình mẫu cho đoạn giang tấu được **đọc ngược từ bản ký âm piano bài *Hồng Kông 1*** (`Reference/hongkong1.mxl`, bản advanced, bản chơi của anh Cà Pháo). Đây là lần đầu một tính năng sinh nhạc của KeyTrain có nguồn cụ thể thay vì chỉ dựa trên mô tả định tính, nên phần này đáng tin hơn hẳn các phần sinh câu trước đó.
+Bộ hình mẫu cho đoạn giang tấu được **đọc ngược từ bản ký âm piano bài *Hồng Kông 1*** (`Reference/hongkong1.mxl`, bản advanced, bản chơi của anh Cà Pháo). Đây là lần đầu một tính năng sinh nhạc của KeyTrain có nguồn cụ thể thay vì chỉ dựa trên mô tả định tính, nên phần này đáng tin hơn hẳn các phần soạn câu trước đó.
 
 ### Cấu trúc bài rút ra được
 
@@ -229,7 +229,7 @@ Kết quả trên vòng `Fmaj7 Em7 Dm7 G7 Cmaj7 Am7 Dm7 G7`: lượt một 46 n�
 
 ### `Tone.Part` với `loop = true` phát lại y nguyên — không dùng cho giang tấu
 
-Biến tấu theo lượt dựng xong rồi mà người dùng vẫn nghe lặp y nguyên. Nguyên nhân nằm ở tầng phát tiếng chứ không ở bộ sinh: `startTimelineLoop` dùng `Tone.Part` với `loop = true`, mà `Part` lặp thì **phát lại đúng bộ sự kiện cũ**. Bộ sinh có tài mấy cũng vô nghĩa nếu chỉ được gọi một lần.
+Biến tấu theo lượt dựng xong rồi mà người dùng vẫn nghe lặp y nguyên. Nguyên nhân nằm ở tầng phát tiếng chứ không ở bộ soạn: `startTimelineLoop` dùng `Tone.Part` với `loop = true`, mà `Part` lặp thì **phát lại đúng bộ sự kiện cũ**. Bộ soạn có tài mấy cũng vô nghĩa nếu chỉ được gọi một lần.
 
 Sửa bằng cách bỏ vòng lặp sẵn của `Part`, thay bằng `Tone.Loop` **dựng lại lịch phát ở đầu mỗi lượt** và truyền số lượt cho bên gọi. `startTimelineLoop` vì vậy nhận `hits` **hoặc** một hàm `(pass) => hits`.
 
@@ -243,7 +243,7 @@ Tài liệu 12 giọng (nay đã gỡ) nói vòng ii-V-I là *"nền tảng quan
 
 Thêm mẫu `guide-tone`, chỉ dùng khi hợp âm sau cách một **quãng bốn đi lên**. Ở đây hai tài liệu nói khác nhau và phải chọn: `pianoimprovnotes.md` mục 4 khuyên kết câu ở nốt ổn định, còn đúng chỗ V về I thì cái tai chờ **sự giải quyết**. Chọn theo vòng V về I, vì nốt ổn định ở đó nghe như câu nhạc đứt ngang. Hợp âm ba không có bậc bảy thì không có nốt dẫn hướng, tự lùi về nốt ổn định.
 
-Phần còn lại của tài liệu — vòng quãng bốn và cách chia buổi tập qua 12 giọng — **chưa dùng**; nó thuộc về một bài luyện dịch giọng, không thuộc bộ sinh giang tấu. Tài liệu cũng ghi rõ các lick cụ thể trong nguồn tham khảo **có bản quyền**, nên KeyTrain tự sinh câu chứ không chép.
+Phần còn lại của tài liệu — vòng quãng bốn và cách chia buổi tập qua 12 giọng — **chưa dùng**; nó thuộc về một bài luyện dịch giọng, không thuộc bộ soạn giang tấu. Tài liệu cũng ghi rõ các lick cụ thể trong nguồn tham khảo **có bản quyền**, nên KeyTrain tự soạn câu chứ không chép.
 
 ### Lần lùi lại vì thêm ba thứ cùng lúc mà không cho nghe
 
@@ -304,7 +304,7 @@ Kéo theo một chỉnh bất biến trong test: bất biến thật không ph�
 
 Thêm mẫu câu xong, in ra đọc thì không thấy mẫu mới đâu. Nguyên nhân: `chooseLick` chia ba vị trí mở câu / giữa câu / kết câu, nhưng mặc định là **hai hợp âm một câu** — hợp âm đầu là mở câu, hợp âm sau đã là kết câu, **không tồn tại vị trí giữa câu**. Các mẫu hay nhất lại nằm hết ở danh sách giữa câu.
 
-Bài học lặp lại lần thứ hai trong phiên này: viết xong một bộ sinh thì phải **in kết quả ra đọc**, đừng tin test cấu trúc. Lần trước nó lộ ra câu nhạc kẹt ở đáy tầm; lần này nó lộ ra nửa vốn từ vựng không bao giờ chạy.
+Bài học lặp lại lần thứ hai trong phiên này: viết xong một bộ soạn thì phải **in kết quả ra đọc**, đừng tin test cấu trúc. Lần trước nó lộ ra câu nhạc kẹt ở đáy tầm; lần này nó lộ ra nửa vốn từ vựng không bao giờ chạy.
 
 ### Hai lỗi chỉ lộ ra khi in cả đoạn solo ra đọc
 
@@ -744,6 +744,81 @@ không lần nào giống hệt lần trước.
 **Triệu chứng để lùi:** nếu người dùng báo tập theo không kịp vì mỗi lần phát một câu
 dạo khác, thì đó là nước 3 quay lại — hỏi lại họ trước khi sửa, đừng tự đóng băng.
 
+### NGUYÊN TẮC — bộ soạn phải thành bộ SOẠN
+
+Người dùng chốt, áp cho cả KeyTrain lẫn PianoBrain và mọi thầy sau này:
+
+> *"Các câu solo giờ là phải soạn ra để chơi chứ không sinh ngẫu nhiên nữa, bộ soạn hãy
+> sửa thành bộ soạn."*
+
+Soạn theo **tư duy của thầy rút từ bản ký âm**: cách chọn vòng hợp âm · cách hoà hợp hai
+tay · cách chọn tuyến giai điệu · các tiết tấu. Không có số đo thì không đặt luật.
+
+**"Ngẫu hứng" cũng là soạn.** Người dùng đính chính chữ chính họ từng dùng: *"các câu
+giang tấu lúc trước tôi nói ngẫu hứng là do tôi chưa đưa khái niệm ngẫu hứng là phải làm
+thế nào — ngẫu hứng trong giang tấu thực ra là cũng phải soạn."* Đừng đọc chữ ấy trong
+các chú thích cũ là "được phép bốc thăm".
+
+**Ba bước:** học tư duy của thầy → mô phỏng → sáng tạo trên nền tảng ấy. Không nhảy cóc.
+Đích cho đoạn dạo: soạn sáng tạo những câu khác nhau trên những bài khác nhau. **Giang
+tấu làm sau.**
+
+#### Tất định KHÔNG có nghĩa là đã soạn
+
+Đây là chỗ dễ tự ru ngủ. Quét cả `src/reharm`: **không có `Math.random` ở đâu cả** — mọi
+thứ tất định theo `take`. Nhưng tất định chỉ nghĩa là **lặp lại được**, không nghĩa là
+**đã soạn**.
+
+| chỗ | dùng hàm băm để làm gì | soạn hay xúc xắc |
+|---|---|---|
+| `giaiDieuDaoLinhNhi` — `rung()` | phá thế hoà giữa ứng viên ngang điểm | **soạn** — nốt vẫn là ô có thật |
+| `daoDungXa` — `CHONG_O_THUA` | quyết có chồng nốt ở ô thưa không | xúc xắc |
+| `raiLinhNhi` — `CUNG_GO` `NHAN_BAN` `CHONG` `DEM_CHUNG` | quyết gõ hay không, nhân bản hay không, lấy cao độ nào | xúc xắc |
+
+`raiLinhNhi` là chỗ còn nhiều xúc xắc nhất, và nó đang chạy ở đường lui của giang tấu.
+Đó là việc phải làm khi tới lượt giang tấu.
+
+**Phép thử một dòng khi sửa bất cứ bộ nào:** *nốt này đến từ đâu?* Trả lời được bằng **"ô
+số mấy của bản ký âm nào"** thì là soạn. Trả lời **"một số ngẫu nhiên nhỏ hơn ngưỡng"**
+thì chưa.
+
+**Chưa đổi tên `bộ soạn` → `bộ soạn` trong mã.** Đổi tên hàm và biến là một diff lớn quét
+khắp repo; ghi nguyên tắc trước, đổi tên khi người dùng bảo.
+
+### Mật độ tay phải: hãm được đoạn kết, KHÔNG nâng được đoạn dạo giọng thứ
+
+**Đoạn kết — sửa được.** Bản ký âm 5,7 mốc/ô giọng thứ và 5,0 giọng trưởng; app ra 6,8 và
+6,1. Nay **6,0 và 5,4**.
+
+Cần gạt `density` là **cần gạt chết**: đo `'medium'` và `'dense'` ra số y hệt nhau, đúng
+như chú thích sẵn có trong `ReharmHome`. Nên thêm `thuaTayPhai` trong `phraseSection`:
+mỗi lượt lấy ô đang dày nhất rồi bỏ **nốt chen nhất** trong ô ấy. Không đụng ô cuối (câu
+chạy kết là chủ ý) và không bỏ nốt đầu ô, nên sai số còn 0,3–0,4 — đó là mức làm được.
+
+**Đoạn dạo giọng thứ — KHÔNG sửa được, đã thử và bỏ.** Bản ký âm 6,9 nốt/ô, app 5,6.
+Vốn ô thừa sức đạt (trung bình 7,1). Đã thêm số hạng phạt mật độ vào phép chọn ô, quét
+trọng số 0,5 · 0,6 · 1,2 · 1,5 · 2 · 3:
+
+| trọng số | thứ | trưởng |
+|---|---|---|
+| nền | 5,6 | 5,4 |
+| 0,6 · 1,2 hai chiều | **5,6** | 5,4 |
+| 3 một chiều | 6,2 | **6,4** ← hỏng chỗ đang đúng |
+
+Giọng thứ **đứng yên với mọi trọng số dùng được**, vì bộ lọc cùng bậc thường chỉ còn một
+ô ứng cử mỗi chỗ — không còn gì để chọn thì cho điểm kiểu nào cũng vô nghĩa.
+
+Đã **bỏ hẳn** số hạng ấy: không giữ code không đổi được gì. Chỉ để lại chú thích trong
+`giaiDieuDaoLinhNhi.ts` ghi đã thử những gì, để phiên sau không dựng lại.
+
+Muốn nâng thì phải nới bộ lọc bậc — đổi hoà thanh lấy mật độ. Chưa làm.
+
+**Một lỗi đo của chính tôi, ghi lại:** lúc đầu tôi so 62 nốt (bộ ghép trả) với 50 nốt
+(đoạn ráp xong) rồi kết luận "mất 12 nốt", và đi tìm chỗ cắt. Sai: hai con số ấy **khác
+mẫu số** — bộ ghép trong app chạy trên **vòng hợp âm dạo đã rút ra**, còn phép đo rời của
+tôi chạy trên vòng hợp âm của bài. Trước khi so hai con số, kiểm xem chúng có cùng đầu
+vào không.
+
 ### Bản nhạc không hiện hàng hợp âm dạo và kết
 
 Người dùng báo: chọn intro Linh Nhi mà bản nhạc đã tái hoà âm không thấy vòng hợp âm của
@@ -873,7 +948,7 @@ không đụng kho `.json` có schema.
 đáng nhớ** — gộp những ý rời nhau cùng chê một chỗ, và **nói thẳng chỗ ý kiến chỏi với
 số đo** thay vì lặng lẽ chép cả hai vào. Việc ấy máy làm không được.
 
-Skill cấm tự sửa bộ sinh theo ý kiến: một ý kiến là **n=1**, có thể chỏi với số đo trên
+Skill cấm tự sửa bộ soạn theo ý kiến: một ý kiến là **n=1**, có thể chỏi với số đo trên
 bảy bản ký âm — phải hỏi người dùng trước.
 
 ### Ba món đo được trên sheet mà code thiếu — đã dựng
@@ -883,7 +958,7 @@ bảy bản ký âm — phải hỏi người dùng trước.
 trùng 100% ở cả hai — vòng dạo `VI III II I VI II II I`, vòng giang là `I` + đúng dãy ấy
 + `V`.
 
-Giang tấu trước đó dùng `raiLinhNhi` (bám mốc tay trái, sinh nốt riêng) nên hai đoạn ra
+Giang tấu trước đó dùng `raiLinhNhi` (bám mốc tay trái, soạn nốt riêng) nên hai đoạn ra
 hai câu khác nhau. Nay đi qua cùng `giaiDieuDaoLinhNhi` và **cùng `take`** với đoạn dạo
 (`phraseSpin + playSpin.current`, không cộng chỉ số vòng lặp).
 
@@ -1000,13 +1075,13 @@ lượt dùng chung. Thêm bản ký âm trưởng là hết — đây là chỗ
 **CHƯA ĐO:** *Để nhớ một thời ta đã yêu* không nằm trong repo nên chưa đối chiếu được
 trên chính nó.
 
-### Đoạn dạo GHÉP VÀO TUYẾN CÓ SẴN, không sinh nốt theo luật nữa
+### Đoạn dạo GHÉP VÀO TUYẾN CÓ SẴN, không soạn nốt theo luật nữa
 
 `src/reharm/style/tuyenDaoLinhNhi.ts` (bảng) và `giaiDieuDaoLinhNhi.ts` (phép ghép).
 Hai mục ngay dưới ghi hai lần sửa trước — **cả hai đều chữa nhầm hướng**, giữ lại làm
 mốc chứ đừng làm lại.
 
-**Ba bản trước đều cố rút ra luật rồi sinh nốt theo luật:**
+**Ba bản trước đều cố rút ra luật rồi soạn nốt theo luật:**
 
 | bản | cách làm | hỏng ở đâu |
 |---|---|---|
@@ -1097,7 +1172,7 @@ thành `2 1 0 −1 −2 2 1 0`, dùng chung được cho cả giọng trưởng.
 
 **Bước đi trong câu** — 47 nốt trên đường giai điệu, đã tách 6 nốt đáp trầm:
 
-| bước từ nốt trước | bản ký âm | bộ sinh mới |
+| bước từ nốt trước | bản ký âm | bộ soạn mới |
 |---|---|---|
 | lặp lại đúng nốt cũ | **24%** | 21% |
 | liền bậc (1–2 nửa cung) | **54%** | 62% |
@@ -1107,7 +1182,7 @@ thành `2 1 0 −1 −2 2 1 0`, dùng chung được cho cả giọng trưởng.
 `DI_B` (ô 6), `CUA` (ô 8, chỉ ba mốc để ca sĩ vào hát). Thứ tự `GIU DI GIU DI GIU_B
 DI_B DI GIU` — giữ và đi xen kẽ.
 
-**Đo lại trên chính vòng Đừng Xa thì bộ sinh ra ĐÚNG TỪNG NỐT ở ô 1, 3, 4, 5.** Bài
+**Đo lại trên chính vòng Đừng Xa thì bộ soạn ra ĐÚNG TỪNG NỐT ở ô 1, 3, 4, 5.** Bài
 kiểm khoá cứng bốn ô ấy bằng `toEqual`.
 
 Hai lỗi phụ sửa kèm:
@@ -1119,14 +1194,14 @@ Hai lỗi phụ sửa kèm:
   bài không có giọng thì ra `false` và bài THỨ bị dựng trên gam TRƯỞNG. Nay chỉ tin
   `minor` khi có `tonic` đi kèm, không thì suy từ chất hợp âm đầu.
 
-`phraseSection.ts` nay truyền thêm `tonic: key?.tonic` — trước đó bộ sinh **không hề
+`phraseSection.ts` nay truyền thêm `tonic: key?.tonic` — trước đó bộ soạn **không hề
 biết giọng bài**, đó là gốc của cả chuyện.
 
 **CHƯA ĐO:** bài *Để nhớ một thời ta đã yêu* không nằm trong repo (người dùng nhập tay
 trong app) nên chưa đối chiếu được trên chính nó. Đã đo trên ba vòng thứ dựng sẵn —
 Rê thứ, La thứ, Mi thứ.
 
-### Bộ sinh giai điệu đoạn dạo — thay bảng gõ tay bằng ô nhịp thật
+### Bộ soạn giai điệu đoạn dạo — thay bảng gõ tay bằng ô nhịp thật
 
 `src/reharm/style/giaiDieuDaoLinhNhi.ts`. Bảng mẫu đầu tiên gõ tay: sáu mẫu, mỗi
 mẫu 4–6 nốt, đúng sáu bậc `{1, 9, ♭3, 3, 11, 5}`. Đo lại đoạn dạo **bảy bản ký âm**
@@ -1171,3 +1246,50 @@ rộng hơn. Sửa chỗ này là sửa `dat()`, một dòng, nhưng nó đụng
 Bài kiểm: `src/reharm/style/__tests__/giaiDieuDaoLinhNhi.test.ts` — 6 mục, canh mật
 độ hai giọng, tầng chồng nốt, bậc ♭7, nốt xanh ♭3 và bậc 11 ở bài trưởng, và trần
 tay phải.
+
+### 10 test hỏng là NỢ CÓ SẴN, không phải hồi quy — phải lấy mốc ở HEAD rồi mới kết luận
+
+Cây làm việc có 10 test hỏng / 2423 đạt. Tôi nhìn thấy **5 trên 6 file test ấy không hề
+bị sửa**, chỉ mã mà chúng kiểm bị sửa, rồi kết luận "hồi quy thật từ phần chưa commit".
+
+**Sai.** Lùi toàn bộ `src/` về HEAD rồi chạy lại: **cũng đúng 10 hỏng / 2423 đạt, 6 file**
+— trùng khít. Nợ đã nằm sẵn trong `5c6ca12`.
+
+Test không sửa mà hỏng thì **không** suy ra được là cây làm việc gây ra. Muốn biết thì
+phải chạy ở HEAD. Cách làm không cần `git stash` (cấm khi máy chủ Vite đang chạy): sao lưu
+các file sửa ra ngoài, `git checkout HEAD -- src`, chạy, rồi chép ngược lại.
+
+Mười lỗi ấy nằm ở `arrangement` (4), `audit` (2), `chordTiming`, `phraseAcrossBar`,
+`handSplitAudit`, `brain`. Phần lớn thuộc vùng **giang tấu** — vùng người dùng đã dặn để
+làm sau. Riêng `brain.test.ts` chờ `[3-9] thầy` mà kho nay có **14 thầy**: đó là test cũ
+cần cập nhật, không phải mã sai.
+
+### `tsc ... | tail` NUỐT MẤT mã thoát — đừng đọc `$?` sau ống dẫn
+
+Tôi chạy `npx tsc --noEmit -p tsconfig.app.json 2>&1 | tail -5` rồi đọc `$?` thấy `0` và
+báo "TSC sạch". `$?` ấy là mã thoát của **`tail`**, không phải của `tsc`. Chạy lại có
+chuyển hướng ra file thì `tsc` trả về **2** với ba lỗi `TS6133`.
+
+Từ nay: `npx tsc --noEmit -p tsconfig.app.json > /tmp/tsc.txt 2>&1; echo $?` rồi mới đọc
+file. Đừng nối ống khi còn cần mã thoát.
+
+Ba lỗi ấy là tham số không dùng trong `teacherSoloChords.ts`. Vá bằng cách đổi tên thành
+`_verse` / `_songIntro` chứ **không bỏ tham số** — bỏ thì lệch vị trí của mọi lời gọi.
+
+### `src/music_engine/` là bản sao dữ liệu PianoBrain — đã đưa ra khỏi dự án
+
+Thư mục này chưa từng được import ở đâu, và `src/music_engine/data/` chứa
+`approved_rules.json`, `difficulty_profiles.json`, `teacher_style_profile.json` **trùng
+md5 y hệt** với `D:\PianoBrain\data\`.
+
+Đó là một nhánh rẽ của dữ liệu PianoBrain nằm bên trong KeyTrain — đúng thứ kiến trúc dự
+án cấm, vì KeyTrain đọc PianoBrain qua alias `@pianobrain` và cầu nối ấy đã có sẵn ở
+`src/reharm/brain/`. Giữ lại là giữ hai nguồn sự thật rồi lệch nhau.
+
+Đã chuyển ra ngoài cùng `basic_pitch_transcription.mid` (chính file từng làm **sập máy chủ
+Vite** vì EBUSY, xem chú thích trong `vite.config.ts`), `test_piano_engine.html`,
+`scratch-songs.json`. **Chuyển đi, không xoá** — file chưa theo dõi thì git không giữ bản
+nào để lùi.
+
+Giữ lại `src/reharm/licky/linhNhiPhrases.ts`: nó **đang được `soloGenerator.ts` import**,
+và nội dung là tám câu chép thẳng từ bản ký âm — đúng tinh thần soạn, không phải sinh.

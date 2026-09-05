@@ -8,7 +8,7 @@ import type { TimelineEvent } from './types'
  *
  * ## Vì sao phải đảo kiến trúc
  *
- * Bộ sinh trước cho tay phải bốc nốt từ thang gam mà **không hề biết tay trái
+ * Bộ soạn trước cho tay phải bốc nốt từ thang gam mà **không hề biết tay trái
  * đang giữ nốt gì ở thời điểm ấy**, rồi mới để `interlockHands` xen vào tỉa
  * bớt. Hai luồng xa lạ ghép lại. Người dùng nghe ra ngay: "tay phải quá rời
  * rạc với tay trái".
@@ -165,7 +165,7 @@ const CHONG = 0.36
  *   vào ở phách 1 (5 lần) hoặc phách 3 (4 lần), tức đầu một nửa ô
  *   tay trái vẫn gõ 3,6 nốt trong lúc giữ
  *
- * Bộ sinh trước KHÔNG BAO GIỜ giữ nốt — trường độ luôn bám tới cú gõ kế. Đó là
+ * Bộ soạn trước KHÔNG BAO GIỜ giữ nốt — trường độ luôn bám tới cú gõ kế. Đó là
  * một lý do nữa khiến nó nghe dày và không có chỗ thở.
  */
 const GIU_NUA_O = 0.5
@@ -178,7 +178,7 @@ const GIU_NUA_O = 0.5
  *
  * Số đầu tiên tôi báo — 57% nhảy xa, 16% liền bậc — tính theo từng cặp nốt liền
  * nhau TRONG MẢNG, nên nốt CHỒNG (cùng một chỗ gõ, thấp hơn vài bậc) bị đếm
- * thành một bước. Tôi đã tìm ra lỗi ấy khi đo bộ sinh nhưng KHÔNG áp lại cho
+ * thành một bước. Tôi đã tìm ra lỗi ấy khi đo bộ soạn nhưng KHÔNG áp lại cho
  * bản gốc. Đo lại đường trên cùng, bỏ các cặp cùng chỗ gõ:
  *
  *   liền bậc 39% · quãng ba 19% · quãng 4-5 9% · nhảy xa 33%
@@ -621,7 +621,7 @@ export function raiLinhNhi(options: RaiLinhNhiOptions): TimelineEvent[] {
 
     Bộ này từng chồng năm nốt vào vạch ô cuối làm chỗ đáp cho câu chạy, hình
     lấy từ ô 53 và ô 71 bản ký âm. Nhưng đoạn dạo đầu và đoạn kết cũng chạy qua
-    chính bộ sinh này, nên chúng lĩnh luôn cái khối ấy — rồi cuối đoạn lại còn
+    chính bộ soạn này, nên chúng lĩnh luôn cái khối ấy — rồi cuối đoạn lại còn
     một tiếng báo nữa. Đo trên đoạn dạo `bolero-linh-nhi-2`: sáu nốt cùng rơi
     phách 12, rồi tiếng báo ở phách 15. Hai lần thông báo cho một lần chuyển
     đoạn. Người dùng nghe ra: "intro vẫn bị dặm hợp âm trước báo, hãy sửa để

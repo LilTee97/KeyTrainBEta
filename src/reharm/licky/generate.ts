@@ -36,13 +36,14 @@ function scramble(take: number): number {
   return Math.imul(take + 1, 2654435761) >>> 0
 }
 
-function pick(kind: PlaceOptions['kind'], take: number): LickPhrase {
-  const book = lickyPhrases()
-  const pool =
-    kind === 'run'
-      ? book.filter((phrase) => phrase.notes.length >= 6)
-      : book
-  return pool[scramble(take) % pool.length] ?? phrases[0]!
+function pick(kind: PlaceOptions['kind'], take: number, book?: readonly LickPhrase[]): LickPhrase {
+  const src = book ?? lickyPhrases()
+  const pool = book
+    ? src.filter((phrase) => phrase.kind === kind)
+    : kind === 'run'
+      ? src.filter((phrase) => phrase.notes.length >= 6)
+      : src
+  return pool[scramble(take) % Math.max(1, pool.length)] ?? src[0] ?? phrases[0]!
 }
 
 function gridOf(kind: PlaceOptions['kind']): number {
@@ -207,6 +208,37 @@ function bassWalk(
   return out
 }
 
+function placeLocked(
+  phrase: LickPhrase,
+  chord: ParsedChord,
+  startBeat: number,
+  beats: number,
+  low: number,
+  high: number,
+): PlacedNote[] {
+  const src = phrase.notes
+  if (src.length === 0 || beats <= 0) return []
+  const last = src[src.length - 1]!
+  const phLen = last.at + last.dur
+  const t0 = startBeat + Math.max(0, beats - phLen)
+  const pc = ((chord.root + (phrase.fromRoot ?? 0)) % 12 + 12) % 12
+  let start = ANCHOR - (ANCHOR % 12) + pc
+  while (start < low) start += 12
+  while (start > high) start -= 12
+  const zero = src[0]!.interval
+  return src.map((one) => {
+    let midi = start + (one.interval - zero)
+    while (midi < low) midi += 12
+    while (midi > high) midi -= 12
+    return {
+      note: midi as MidiNote,
+      startBeat: t0 + one.at,
+      durationBeats: one.dur,
+      isGrace: false as const,
+    }
+  })
+}
+
 export function placeLick(options: PlaceOptions): PlacedNote[] {
   const {
     chord,
@@ -220,16 +252,21 @@ export function placeLick(options: PlaceOptions): PlacedNote[] {
     maxNotes,
     register,
     bassWalk: walk,
+    book,
+    lockShape,
   } = options
   if (beats <= 0) return []
+  const low = register?.low ?? LOW
+  const high = register?.high ?? HIGH
+  if (lockShape && book) {
+    return placeLocked(pick(kind, take, book), chord, startBeat, beats, low, high)
+  }
 
   const count = maxNotes
     ? Math.max(1, Math.min(maxNotes, noteCount(kind, beats)))
     : noteCount(kind, beats)
-  const low = register?.low ?? LOW
-  const high = register?.high ?? HIGH
   let intervals = shape(
-    pick(kind, mode === 'create' ? take + 19 : take),
+    pick(kind, mode === 'create' ? take + 19 : take, book),
     count,
     take,
   )

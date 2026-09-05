@@ -48,7 +48,7 @@ function dung(moRong: boolean, take = 0): LineNote[] {
  * Bỏ những cặp cùng một chỗ gõ — đó là nốt CHỒNG, không phải một bước. Phép đo
  * đầu tiên của tôi quét từng cặp liền nhau trong mảng và đếm nốt chồng thành
  * "bước quãng ba", nên nó báo 41% nhảy xa trong khi thật ra là 57%. Suýt nữa
- * tôi vặn bộ sinh để chữa một lỗi nằm ở cái thước.
+ * tôi vặn bộ soạn để chữa một lỗi nằm ở cái thước.
  */
 function buoc(line: readonly LineNote[]): number[] {
   const out: number[] = []

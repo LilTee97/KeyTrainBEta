@@ -51,7 +51,7 @@ import type { TimelineEvent } from './types'
  *    gốc nó. Nhỏ, nhưng đó là thứ làm cú dặm thứ hai nghe ra là một cử chỉ chứ
  *    không phải một khối hợp âm rơi xuống.
  *
- * Bộ này KHÔNG sinh nốt. Nó nắn lại thứ `soloLeftHand` và `raiLinhNhi` đã dựng,
+ * Bộ này KHÔNG soạn nốt. Nó nắn lại thứ `soloLeftHand` và `raiLinhNhi` đã dựng,
  * nên mọi luật của hai bộ ấy còn nguyên — thứ đổi là mật độ theo ô và cái đuôi.
  */
 

@@ -20,6 +20,19 @@ function colored(input: string, intensity: 'light' | 'full' = 'full'): string {
   return colorChord(chord(input), { intensity }).symbol
 }
 
+describe('colorChord — Linh Nhi', () => {
+  it('triad thành Δ / m7, át giữ 7', () => {
+    expect(colorChord(chord('C'), { intensity: 'linhNhi' }).symbol).toBe('Cmaj7')
+    expect(colorChord(chord('Am'), { intensity: 'linhNhi' }).symbol).toBe('Am7')
+    expect(colorChord(chord('G7'), { intensity: 'linhNhi' }).symbol).toBe('G7')
+  })
+
+  it('không đẩy lên 9 / 11', () => {
+    expect(colorChord(chord('Cmaj7'), { intensity: 'linhNhi' }).symbol).toBe('Cmaj7')
+    expect(colorChord(chord('Am7'), { intensity: 'linhNhi' }).symbol).toBe('Am7')
+  })
+})
+
 describe('colorChord — mức tắt', () => {
   it('giữ nguyên hợp âm', () => {
     expect(colorChord(chord('C'), { intensity: 'off' }).symbol).toBe('C')

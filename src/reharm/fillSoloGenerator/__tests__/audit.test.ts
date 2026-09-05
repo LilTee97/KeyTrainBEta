@@ -46,7 +46,7 @@ describe('câu solo luôn chuyển động', () => {
   })
 
   it('dùng ít nhất năm cao độ khác nhau trong cả đoạn', () => {
-    // Câu nhạc quanh quẩn hai ba nốt là dấu hiệu bộ sinh đang dính biên
+    // Câu nhạc quanh quẩn hai ba nốt là dấu hiệu bộ soạn đang dính biên
     for (const noteSource of sources) {
       const solo = generateSolo(chords(PROGRESSION), { ...options, noteSource })
       const distinct = new Set(solo.map((note) => note.note))

@@ -14,9 +14,9 @@ import {
 /*
   CÁI THƯỚC.
 
-  Chấm một bộ sinh câu bằng cách so hình dạng thống kê của nó với **một người
+  Chấm một bộ soạn câu bằng cách so hình dạng thống kê của nó với **một người
   chơi thật** — corpus 7 bản ký âm của Cà Pháo, nguồn `ca-phao-piano-covers` bên
-  PianoBrain. Trước khi có nó, câu hỏi "bộ sinh mới có hay hơn không" chỉ trả
+  PianoBrain. Trước khi có nó, câu hỏi "bộ soạn mới có hay hơn không" chỉ trả
   lời được bằng ý kiến.
 
   Test này KHÔNG khẳng định giống Cà Pháo là hay. Nó khẳng định hai chuyện đo
@@ -116,7 +116,7 @@ describe('cái thước tự nó có đo đúng không', () => {
   })
 })
 
-describe('chấm bộ sinh câu hiện tại so với người thật', () => {
+describe('chấm bộ soạn câu hiện tại so với người thật', () => {
   /*
     Đây là lý do mặc định của bốn họ điệu đã đổi sang nguồn theo gam. Nguồn
     `chordTone` chỉ lấy nốt hợp âm, mà nốt hợp âm cách nhau quãng ba — nên câu
@@ -163,7 +163,7 @@ describe('chấm bộ sinh câu hiện tại so với người thật', () => {
   thật 6-22%). Nghĩa là câu chạy của app hiếm khi đi liền bậc một mạch — nó cứ
   lượn lờ giữa hai lối.
 
-  Đây là chỗ bộ sinh mới phải thắng, và test này là nơi chứng minh.
+  Đây là chỗ bộ soạn mới phải thắng, và test này là nơi chứng minh.
 */
 describe('khoảng còn hở, chưa đóng được', () => {
   it('ghi lại: hình câu của nguồn theo gam còn lệch khoảng người thật', () => {
@@ -177,7 +177,7 @@ describe('khoảng còn hở, chưa đóng được', () => {
 /*
   BA CHỈ SỐ NHỊP, thêm sau khi một bản dựng hỏng lọt lưới.
 
-  Bộ sinh cọc-và-nối đạt 16 trên 24 chỉ số cũ rồi bị tai người dùng bác thẳng
+  Bộ soạn cọc-và-nối đạt 16 trên 24 chỉ số cũ rồi bị tai người dùng bác thẳng
   là "loạn". Sáu chỉ số cũ đều đo CHẤT LIỆU — cỡ bước, tỉ lệ nốt hợp âm, độ dài
   hơi — không cái nào đo NHỊP. Đo lại mới thấy:
 

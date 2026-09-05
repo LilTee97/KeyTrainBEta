@@ -13,6 +13,7 @@ import { densityOption, ornamentLine, stepInScale } from './graceNoteOrnamenter'
 import { arpeggioRun, octaveRun } from './leadIn'
 import type { LickyMode } from '../licky/types'
 import { placeLick } from '../licky/generate'
+import { linhNhiBook } from '../licky/linhNhiPhrases'
 import type { Lick } from './soloVocabulary'
 import {
   chordBlues,
@@ -589,6 +590,9 @@ export function generateFillLine(
     lickyFills?: boolean
     /** Câu chạy ngón lấy từ sổ Licky thay vì hợp âm rải. */
     lickyRuns?: boolean
+    /** Sổ fill/run Linh Nhi (phiếu bolero). Không thay Licky. */
+    linhNhiFills?: boolean
+    linhNhiRuns?: boolean
     lickyMode?: LickyMode
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
@@ -626,6 +630,8 @@ export function generateFillLine(
     take = 0,
     lickyMode = 'clone',
     lickyFills = true,
+    linhNhiFills = false,
+    linhNhiRuns = false,
     extraFills,
     extraRuns,
     fillRests,
@@ -773,6 +779,7 @@ export function generateFillLine(
           take: mainIndex + take,
           mode: lickyMode,
           kind: 'run',
+          ...(linhNhiRuns ? { book: linhNhiBook('run'), lockShape: true } : {}),
         }),
       )
       continue
@@ -790,9 +797,11 @@ export function generateFillLine(
           kind: 'fill',
           key,
           ...(fillMaxNotes !== undefined ? { maxNotes: fillMaxNotes } : {}),
-          ...(drawsBass(fillBassChance, mainIndex + take)
-            ? { register: BASS_RUN_RANGE, bassWalk: true }
-            : {}),
+          ...(linhNhiFills
+            ? { book: linhNhiBook('fill'), lockShape: true }
+            : drawsBass(fillBassChance, mainIndex + take)
+              ? { register: BASS_RUN_RANGE, bassWalk: true }
+              : {}),
         }),
       )
       continue
@@ -864,7 +873,7 @@ export function generateFillLine(
       Công tắc này trước nay **chết**: `ReharmHome` truyền vào nhưng không dòng
       nào đọc. Đây là chỗ nối nó vào, và nay nó bật sẵn.
     */
-    if (lickyFills) {
+    if (lickyFills || linhNhiFills) {
       result.push(
       ...placeLick({
         chord: chords[index],
@@ -876,6 +885,7 @@ export function generateFillLine(
         kind: 'fill',
         key,
           ...(fillMaxNotes !== undefined ? { maxNotes: fillMaxNotes } : {}),
+          ...(linhNhiFills ? { book: linhNhiBook('fill'), lockShape: true } : {}),
         }),
       )
       continue

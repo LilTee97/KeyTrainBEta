@@ -281,6 +281,18 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     ])
   })
 
+  it('Linh Nhi: I/IV Δ, vi m7, V7 — không add9 / 9sus4', () => {
+    expect(
+      final('C Am F G', { intensity: 'linhNhi', key: { tonic: 0, scale: 'major' } }),
+    ).toEqual(['Cmaj7', 'Am7', 'Fmaj7', 'G7'])
+  })
+
+  it('Linh Nhi giọng thứ: i m7, V7, không 7b9', () => {
+    expect(
+      final('Am Dm E Am', { intensity: 'linhNhi', key: { tonic: 9, scale: 'minor' } }),
+    ).toEqual(['Am7', 'Dm7', 'E7', 'Am7'])
+  })
+
   it('đổi bậc năm sang hợp âm treo khi được bật', () => {
     const result = reharmonize(chords('C Am F G'), { susDominant: true })
     expect(result.colored[3].symbol).toBe('G9sus4')

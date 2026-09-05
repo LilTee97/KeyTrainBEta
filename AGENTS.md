@@ -26,6 +26,7 @@ KeyTrain — app luyện tập piano offline, lấy cảm hứng từ mikebwilli
 - `.opencode/skills/licky` — Licky: clone/sáng tạo câu fill và chạy ngón từ sổ lick
 - `.opencode/skills/khabu-ballad` — mật độ đệm ballad theo đoạn
 - `.opencode/skills/song-import` — nhập bài (file/link) → vòng hợp âm + BPM, đệm bằng điệu app, luyện ở tab Luyện đệm
+- `.opencode/skills/train-teacher-solo` — train bộ sinh solo từ câu dạo/giang/kết đã lưu ở PianoBrain `data/sheet-solos/`
 
 ## File tham khảo
 

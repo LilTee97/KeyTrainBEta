@@ -7,7 +7,7 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
 /*
   ĐOẠN DẠO LINH NHI — GHÉP MẢNH TỪ NHỮNG Ô NHỊP CÓ THẬT.
 
-  Bốn bản trước đều hỏng theo cùng một kiểu: rút ra luật rồi sinh nốt theo luật, hoặc
+  Bốn bản trước đều hỏng theo cùng một kiểu: rút ra luật rồi soạn nốt theo luật, hoặc
   dán nguyên một câu lên bài mà không đếm xỉa vòng hoà thanh. Bản này chọn cho mỗi ô
   của bài một ô nhịp CÓ THẬT trong bảy câu dạo, theo bậc hợp âm và theo phép nối giọng.
 
@@ -116,7 +116,7 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
   })
 
   it('MỌI NỐT ĐỀU THẬT — không nốt nào do luật sinh ra', () => {
-    /* Đây là điều kiện cốt lõi. Sinh nốt theo luật đã bị người dùng bác bốn lần. */
+    /* Đây là điều kiện cốt lõi. Soạn nốt theo luật đã bị người dùng bác bốn lần. */
     for (const [txt, tonic, minor] of [
       [DUNG_XA, 2, true],
       ['Am | Dm | G | C | F | Bdim | E7 | Am', 9, true],

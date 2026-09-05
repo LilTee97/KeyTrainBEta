@@ -90,6 +90,14 @@ interface SongSheetViewProps {
    */
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  /**
+   * Đang chọn thầy Linh Nhi thì menu đổi tên và đổi nguồn câu.
+   *
+   * Nguồn nằm ở `licky/linhNhiPhrases.ts` — tám câu rút thẳng từ bản ký âm. Đo
+   * lại 54 cụm móc kép trong đoạn có lời của bảy bản ký âm: 18% liền bậc, còn
+   * sổ ấy 19% — khớp. Sổ Licky là sổ chung, không mang hình câu của thầy nào.
+   */
+  cauLinhNhi?: boolean
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
   fillRestAt?: (chordIndex: number) => number
@@ -182,6 +190,7 @@ export function SongSheetView({
   onToggleFill,
   runAt,
   onToggleRun,
+  cauLinhNhi,
   fillRestAt,
   onSetFillRest,
   colorHintAt,
@@ -453,6 +462,7 @@ export function SongSheetView({
               : undefined
           }
           run={runAt?.(menu.chordIndex) ?? null}
+          cauLinhNhi={cauLinhNhi}
           onToggleRun={
             onToggleRun
               ? () => {
@@ -526,6 +536,7 @@ export function ChordContextMenu({
   onToggleFill,
   run,
   onToggleRun,
+  cauLinhNhi,
   fillRest,
   onSetFillRest,
   colorHint,
@@ -556,6 +567,8 @@ export function ChordContextMenu({
   /** Chỗ này đang có fill không; rỗng nghĩa là không chêm được. */
   fill: boolean | null
   onToggleFill?: () => void
+  /** Đang chọn thầy Linh Nhi — đổi nhãn menu và nguồn câu. */
+  cauLinhNhi?: boolean
   run?: boolean | null
   onToggleRun?: () => void
   fillRest?: number
@@ -845,10 +858,18 @@ export function ChordContextMenu({
               className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
             >
               <span className={fill ? 'text-cream' : 'text-amber-key'}>
-                {fill ? 'Bỏ Licky Fills' : 'Licky Fills'}
+                {cauLinhNhi
+                  ? fill
+                    ? 'Bỏ Linh Fill'
+                    : 'Linh Fill'
+                  : fill
+                    ? 'Bỏ Licky Fills'
+                    : 'Licky Fills'}
               </span>
               <span className="text-[10px] text-dim">
-                Câu lick chêm cuối ô hợp âm này
+                {cauLinhNhi
+                  ? 'Câu fill rút từ bản ký âm Linh Nhi'
+                  : 'Câu lick chêm cuối ô hợp âm này'}
               </span>
             </button>
           )}
@@ -859,10 +880,18 @@ export function ChordContextMenu({
               className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
             >
               <span className={run ? 'text-cream' : 'text-amber-key'}>
-                {run ? 'Bỏ Licky Runs' : 'Licky Runs'}
+                {cauLinhNhi
+                  ? run
+                    ? 'Bỏ Linh Run'
+                    : 'Linh Run'
+                  : run
+                    ? 'Bỏ Licky Runs'
+                    : 'Licky Runs'}
               </span>
               <span className="text-[10px] text-dim">
-                Câu chạy ngón từ sổ Licky
+                {cauLinhNhi
+                  ? 'Câu chạy ngón rút từ bản ký âm Linh Nhi'
+                  : 'Câu chạy ngón từ sổ Licky'}
               </span>
             </button>
           )}

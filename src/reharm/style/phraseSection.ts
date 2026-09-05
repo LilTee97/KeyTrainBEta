@@ -33,7 +33,7 @@ export interface PhraseSectionOptions {
   dropRoot: boolean
   /** Hợp âm mở bài — hợp âm báo cuối dạo đầu hút về chính nó. */
   opening: ParsedChord | null
-  /** Câu ngẫu hứng cho một vòng hợp âm; cùng bộ sinh nốt với đoạn giang tấu. */
+  /** Câu ngẫu hứng cho một vòng hợp âm; cùng bộ soạn nốt với đoạn giang tấu. */
   solo: (chords: readonly ParsedChord[]) => readonly TimelineEvent[]
   /**
    * Gam để dựng câu, nếu điệu này dùng lối bám tay trái.
@@ -78,6 +78,55 @@ export interface PhraseSectionOptions {
 export interface PhraseSection {
   events: TimelineEvent[]
   lengthBeats: number
+}
+
+/**
+ * Thưa bớt tay phải ở ĐOẠN KẾT cho về đúng mật độ bản ký âm.
+ *
+ * Đo bảy bản ký âm, mốc gõ tay phải mỗi ô ở đoạn kết: **5,7 giọng thứ · 5,0 giọng
+ * trưởng**. App ra **6,8 và 6,1** — dày hơn khoảng một phần năm.
+ *
+ * Cần gạt `density` KHÔNG dùng được: đo `'medium'` và `'dense'` ra số y hệt nhau, đúng
+ * như chú thích sẵn có trong `ReharmHome` ("density hiện chưa có tác dụng"). Nên phải
+ * hãm thẳng sau khi đã dựng.
+ *
+ * Bỏ nốt nào: mỗi lượt lấy ô ĐANG DÀY NHẤT, rồi trong ô ấy bỏ nốt **chen nhất** — nốt
+ * có khoảng cách tới hai nốt kề nhỏ nhất. Không bao giờ bỏ nốt đầu ô (chỗ câu vào) và
+ * không đụng ô cuối (câu chạy kết là chủ ý, xem `endWithRun`).
+ */
+function thuaTayPhai(
+  melody: readonly TimelineEvent[],
+  dich: number,
+  barBeats: number,
+  soO: number,
+): TimelineEvent[] {
+  if (soO <= 1 || melody.length <= dich * soO) return [...melody]
+  const o = (e: TimelineEvent) => Math.floor(e.startBeat / barBeats)
+  const cuoi = soO - 1
+  const con = [...melody]
+  while (con.length > dich * soO) {
+    const theoO = new Map<number, TimelineEvent[]>()
+    for (const e of con) {
+      if (o(e) === cuoi) continue
+      theoO.set(o(e), [...(theoO.get(o(e)) ?? []), e])
+    }
+    const day = [...theoO.entries()].sort((a, b) => b[1].length - a[1].length)[0]
+    if (!day || day[1].length <= 2) break
+    const xep = day[1].slice().sort((a, b) => a.startBeat - b.startBeat)
+    let bo = xep[1]!
+    let hep = Infinity
+    for (let i = 1; i < xep.length - 1; i += 1) {
+      const khe = xep[i + 1]!.startBeat - xep[i - 1]!.startBeat
+      if (khe < hep) {
+        hep = khe
+        bo = xep[i]!
+      }
+    }
+    const at = con.indexOf(bo)
+    if (at < 0) break
+    con.splice(at, 1)
+  }
+  return con
 }
 
 export function buildPhraseSection(
@@ -148,6 +197,15 @@ export function buildPhraseSection(
     phần trong đó thực sự kêu lên thì tuỳ tay phải đang bận tới đâu — xem
     `interlockHands`. Luật "đoạn không lời chơi đúng điệu" còn nguyên.
   */
+  /**
+   * Câu dạo này có do BỘ GHÉP TUYẾN dựng không.
+   *
+   * Dùng ở hai chỗ nên tách ra một cờ: chọn bộ soạn, và quyết có áp vòng cung mật độ
+   * `arcDungXa` lên tay phải hay không. Hai chỗ ấy phải luôn cùng một câu trả lời.
+   */
+  const tuyenGhep =
+    kind === 'intro' && (thay === 'linh-nhi' || (style.family ?? '').includes('linh-nhi'))
+
   const thaySolo = thay ?? soloTeacherOf(style.id)
   /*
     TAY TRÁI MỎNG ĐI Ở ĐOẠN KHÔNG LỜI — đo bảy bản ký âm, mốc gõ tay trái mỗi ô:
@@ -232,8 +290,7 @@ export function buildPhraseSection(
         ...(thienVeCuaHo(style.id) ? { thienVe: thienVeCuaHo(style.id)! } : {}),
         left: backing,
       })
-    : kind === 'intro' &&
-        (thay === 'linh-nhi' || (style.family ?? '').includes('linh-nhi'))
+    : tuyenGhep
     ? giaiDieuDaoLinhNhi({
         left: backing,
         chords,
@@ -270,7 +327,7 @@ export function buildPhraseSection(
   const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
 
   /*
-    Vòng cung mật độ Đừng Xa — nắn lại thứ vừa dựng, không sinh nốt mới.
+    Vòng cung mật độ Đừng Xa — nắn lại thứ vừa dựng, không soạn nốt mới.
 
     Đặt SAU `voiced` để cả hai tay đã có đủ nốt rồi mới bàn tới mật độ; đặt
     trước `interlockHands` để phép cài — nếu điệu này còn dùng — nhìn thấy đúng
@@ -299,7 +356,22 @@ export function buildPhraseSection(
         })
       : null
   const traiCuoi = arc?.left ?? backing
-  const phaiCuoi = arc?.melody ?? voiced
+  /*
+    CHỈ LẤY TAY TRÁI CỦA VÒNG CUNG, KHÔNG LẤY TAY PHẢI — khi câu dạo do bộ ghép tuyến
+    dựng.
+
+    `arcDungXa` sinh ra hồi tay phải còn do bộ soạn nốt cũ tạo: nó rút tay phải còn 4 nốt
+    ở ô dồn và chồng thêm nốt ở ô thưa, tức **áp một vòng cung mật độ lên câu**. Nay tay
+    phải chính là ô nhịp chép từ bản ký âm, và nó đã mang sẵn vòng cung của chính nó —
+    áp thêm lần nữa là chồng hai vòng cung.
+
+    Đo được: bộ ghép trả 62 nốt cho 9 ô (**6,9 nốt/ô**, đúng bản ký âm), nhưng ráp xong
+    chỉ còn 50 (**5,6**) — **mất 12 nốt**, và chỉ mất ở giọng thứ.
+
+    Tay TRÁI thì vẫn lấy: vòng cung thưa/dày của tay trái không có trong bảng tuyến, nó
+    là số đo riêng và vẫn đúng.
+  */
+  const phaiCuoi = tuyenGhep ? voiced : (arc?.melody ?? voiced)
 
   /*
     HỢP ÂM BÁO NẰM TRONG VÒNG, KHÔNG ĐÈO THÊM MỘT PHÁCH.
@@ -429,7 +501,17 @@ export function buildPhraseSection(
               ? { ...e, notes: [Math.max(...e.notes) as (typeof e.notes)[number]] }
               : e,
           )
-  const whole = [...avoidMelodyClash(woven.left, melody), ...melody]
+  /* Đoạn kết Linh Nhi: hãm tay phải về mật độ bản ký âm — xem `thuaTayPhai`. */
+  const melodyCuoi =
+    kind === 'outro' && thaySolo === 'linh-nhi'
+      ? thuaTayPhai(
+          melody,
+          key?.scale === 'minor' ? 5.7 : 5.0,
+          barBeats,
+          Math.max(1, Math.round(roundBeats / barBeats)),
+        )
+      : melody
+  const whole = [...avoidMelodyClash(woven.left, melodyCuoi), ...melodyCuoi]
   const ghep =
     kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
 

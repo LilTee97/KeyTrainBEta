@@ -58,17 +58,17 @@ describe('vòng solo theo thầy', () => {
     ])
   })
 
-  it('Linh Nhi không dạo gốc: vi–iii–ii–I, không I–V như Cà Pháo', () => {
+  it('Linh Nhi dạo: bậc Đừng Xa trên tonic bài (C→Am), ô 1 = Am không phải Dm', () => {
     const verse = parseChordInput('C Am F G Em Dm').chords
     expect(symbols(introChordsForTeacher('linh-nhi', KEY, pool(), verse))).toEqual([
       'Am',
-      'Em',
-      'Dm',
+      'G',
+      'F',
       'C',
+      'Dm',
       'Am',
-      'Em',
-      'Dm',
-      'C',
+      'E7',
+      'Am',
     ])
   })
 
@@ -79,11 +79,24 @@ describe('vòng solo theo thầy', () => {
     )
   })
 
-  it('Linh Nhi giang tấu = dạo sheet, ô cuối át vào đoạn sau', () => {
+  it('Linh Nhi giang: bậc Đừng Xa trên tonic bài, không dán Dm', () => {
     const am = parseChordInput('Am').chords[0]!
     const giang = interludeChordsForTeacher('linh-nhi', KEY, pool(), pool(), am)
-    expect(giang.map((c) => c.root).slice(0, 4)).toEqual([9, 4, 2, 0])
+    expect(symbols(giang).slice(0, 7)).toEqual(['Fmaj7', 'Am', 'G', 'Fm', 'C', 'Dm', 'Am'])
+    expect(giang[0]!.root).not.toBe(2)
     expect(giang.at(-1)!.root).toBe(4)
-    expect(giang.at(-1)!.quality.intervals).toContain(10)
+  })
+
+  const AM = { tonic: 9, scale: 'minor' } as const
+
+  it('Linh Nhi dạo bài Am: i=Am (Đừng Xa i=Dm đã dịch)', () => {
+    expect(symbols(introChordsForTeacher('linh-nhi', AM, pool(), pool()))[0]).toBe('Am')
+  })
+
+  it('Linh Nhi giang bài Am: cùng bậc, i=Am', () => {
+    const am = parseChordInput('Am').chords[0]!
+    const giang = interludeChordsForTeacher('linh-nhi', AM, pool(), pool(), am)
+    expect(symbols(giang).slice(0, 7)).toEqual(['Fmaj7', 'Am', 'G', 'Fm', 'C', 'Dm', 'Am'])
+    expect(giang.some((c) => c.root === 9)).toBe(true)
   })
 })

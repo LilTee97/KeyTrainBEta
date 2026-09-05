@@ -197,7 +197,7 @@ export function reharmonize(
       })
     : colorSequence(original, colorOptions)
   const held =
-    colorOptions.intensity === 'off'
+    colorOptions.intensity === 'off' || colorOptions.intensity === 'linhNhi'
       ? painted
       : varyHeldColors(painted, {
           beatsOf: (index) => chordBeats?.[index] ?? beatsPerChord,
@@ -205,7 +205,10 @@ export function reharmonize(
           skipHeldAt: options.skipHeldAt,
         })
   const colored =
-    varyOnRepeat && sectionRanges && sectionRanges.length > 0
+    varyOnRepeat &&
+    colorOptions.intensity !== 'linhNhi' &&
+    sectionRanges &&
+    sectionRanges.length > 0
       ? varyRepeatEndings(held, sectionRanges)
       : held
 
@@ -264,6 +267,7 @@ export function reharmonize(
       ? analyzeColorConflicts(colored, analyzed, {
           tonic: activeKey.tonic,
           scale: activeKey.scale,
+          allowTonicMinorSeventh: colorOptions.intensity === 'linhNhi',
         })
       : [],
     final,

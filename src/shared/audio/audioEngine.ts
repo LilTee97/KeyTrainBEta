@@ -526,7 +526,7 @@ function clearLoopFollowUp(): void {
  * lại đúng bộ sự kiện cũ. Cách giải quyết: **nối sẵn nhiều lượt khác nhau
  * thành một vòng dài** rồi cho nó lặp.
  *
- * Ba lượt, vì bộ sinh xoay danh sách mẫu câu theo chu kỳ ba — lượt thứ tư
+ * Ba lượt, vì bộ soạn xoay danh sách mẫu câu theo chu kỳ ba — lượt thứ tư
  * quay lại đúng lượt đầu, nối thêm chỉ tổ làm vòng dài ra mà không thêm gì mới.
  *
  * Cách này thay cho bản dùng `Tone.Loop` dựng lại lịch ở đầu mỗi lượt. Bản đó

@@ -11,8 +11,7 @@ import type { SoloTeacher, TonHungGiang } from '../fillSoloGenerator/soloTeacher
  * hỏi não thầy Hải.
  *
  * Cà Pháo: I–V–I–V (Người hãy quên). Giang: I–°–I–V khi dựng được dim.
- * Linh Nhi: giang tấu = vòng dạo của bài; không có dạo thì I–V của bài.
- *   Ô cuối giang = át của đoạn hát kế. Không đắp Andalusian lên mọi bài.
+ * Linh Nhi: bậc Đừng Xa (Dm) dựng lại trên tonic bài (Để nhớ = Am). Không dán Dm.
  * Tôn Hùng: I–IV–V–I. Giang: theo bài / hòa trộn, vào giọng thứ.
  */
 
@@ -69,6 +68,17 @@ function giongThu(key: Key): Key {
   return key.scale === 'minor'
     ? key
     : { tonic: ((key.tonic + 9) % 12) as PitchClass, scale: 'minor' }
+}
+
+/** Biển Tình = D trưởng; mọi giọng quy về trưởng song song. */
+function giongTruong(key: Key): Key {
+  return key.scale === 'major'
+    ? key
+    : { tonic: ((key.tonic + 3) % 12) as PitchClass, scale: 'major' }
+}
+
+function bacTruong(key: Key, degree: number): ParsedChord | null {
+  return bacTron(giongTruong(key), degree)
 }
 
 function thu(key: Key, degree: number, qualityOverride?: string): ParsedChord | null {
@@ -128,34 +138,25 @@ export function introChordsForTeacher(
   thay: SoloTeacher,
   key: Key,
   pool: readonly ParsedChord[],
-  verse: readonly ParsedChord[],
+  // Giữ tham số cho đúng vị trí của mọi lời gọi. Vòng dạo giờ lấy thẳng từ
+  // songIntro (ô nhịp thật của bản ký âm) chứ không rút từ phần hát nữa, nên
+  // verse hết việc — nhưng bỏ nó đi thì lệch mọi đối số phía sau.
+  _verse: readonly ParsedChord[],
   songIntro: readonly ParsedChord[] = [],
 ): ParsedChord[] {
   if (thay === 'linh-nhi') {
     const dao = songIntro.filter((chord) => !chord.passing).slice(0, 8)
     if (dao.length >= 4) return [...dao]
-    const vong =
-      key.scale === 'minor'
-        ? fill([
-            bacTron(key, 1),
-            bacTron(key, 7),
-            bacTron(key, 6),
-            bacTron(key, 3),
-            bacTron(key, 4),
-            bacTron(key, 1),
-            V7(key, pool),
-            bacTron(key, 1),
-          ])
-        : fill([
-            bacTron(key, 6),
-            bacTron(key, 3),
-            bacTron(key, 2),
-            bacTron(key, 1),
-            bacTron(key, 6),
-            bacTron(key, 3),
-            bacTron(key, 2),
-            bacTron(key, 1),
-          ])
+    const vong = fill([
+      thu(key, 1),
+      thu(key, 7),
+      thu(key, 6),
+      thu(key, 3),
+      thu(key, 4),
+      thu(key, 1),
+      thu(key, 5, '7'),
+      thu(key, 1),
+    ])
     if (vong.length >= 3) return vong
   }
 
@@ -178,21 +179,30 @@ export function interludeChordsForTeacher(
   thay: SoloTeacher,
   key: Key,
   pool: readonly ParsedChord[],
-  verse: readonly ParsedChord[],
+  _verse: readonly ParsedChord[],
   next: ParsedChord | null = null,
-  songIntro: readonly ParsedChord[] = [],
+  _songIntro: readonly ParsedChord[] = [],
   giang: TonHungGiang = 'hoa-tron',
 ): ParsedChord[] {
   if (thay === 'linh-nhi') {
-    const dao = introChordsForTeacher(thay, key, pool, verse, songIntro)
-    if (dao.length === 0) return []
-    const out = [...dao]
+    const vong = fill([
+      thu(key, 6, 'maj7'),
+      thu(key, 1),
+      thu(key, 7),
+      thu(key, 6, 'min'),
+      thu(key, 3),
+      thu(key, 4),
+      thu(key, 1),
+      thu(key, 5, '7'),
+    ])
+    if (vong.length === 0) return []
     const vao = next
-      ? chordAtDegree(next.root, 'major', 5, { qualityOverride: '7' })
-      : null
-    const at = vao ? parsed(vao) : V7(key, pool)
-    if (at) out[out.length - 1] = at
-    return out
+      ? chordAtDegree(next.root, next.quality.intervals.includes(3) ? 'minor' : 'major', 5, {
+          qualityOverride: '7',
+        })
+      : thu(key, 5, '7')
+    if (vao) vong[vong.length - 1] = 'source' in vao ? vao : parsed(vao)
+    return vong
   }
 
   if (thay === 'ton-hung') {
@@ -221,4 +231,18 @@ export function interludeChordsForTeacher(
   }
 
   return []
+}
+
+/** Trưởng: Biển Tình vi–iii–ii–I. Thứ: Đừng Xa i–iv–i–V7. */
+export function outroChordsForTeacher(thay: SoloTeacher, key: Key): ParsedChord[] {
+  if (thay !== 'linh-nhi') return []
+  if (key.scale === 'minor') {
+    return fill([thu(key, 1), thu(key, 4), thu(key, 1), thu(key, 5, '7')])
+  }
+  return fill([
+    bacTruong(key, 6),
+    bacTruong(key, 3),
+    bacTruong(key, 2),
+    bacTruong(key, 1),
+  ])
 }
