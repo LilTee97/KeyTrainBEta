@@ -211,3 +211,56 @@ describe('nhân đôi hợp âm', () => {
     expect(anchors[0]!.source).toBe(anchors[1]!.source)
   })
 })
+
+describe('dòng lời ChordPro MỞ ĐẦU bằng hợp âm', () => {
+  /*
+    Người dùng tự gõ thêm hợp âm rồi báo lỗi: cả dòng lời hiện lên thành TÊN ĐOẠN viết hoa.
+
+    Nguyên nhân ở `sectionHeaderOf`: biểu thức `^\[(.+)\]$` tham lam, nên một dòng mở đầu
+    bằng `[Am]` và kết thúc bằng `[C]` bị nuốt trọn từ dấu `[` đầu tới dấu `]` cuối. Nhóm
+    bắt được không đọc ra hợp âm, nên phép canh "không phải hợp âm thì là tên đoạn" cho lọt.
+  */
+  const BAI = [
+    '2. Xưa thật là [C]xưa nhớ mấy cho [Dm]vừa nhớ mẹ kể đêm [Em]mưa [Em]',
+    '[Am]Có ông vua [Fmaj7]trẻ xuất binh qua [G]rừng dẹp quân xâm [C]lấn [C]',
+    'Khi vua kéo quân [Dm]về tình cờ gặp một giai [Em]nhân',
+  ].join('\n')
+
+  it('không đọc thành tên đoạn', () => {
+    const ra = parseSongText(BAI)
+    const ten = ra.sections.map((s) => s.name).join(' | ')
+    expect(ten).not.toMatch(/ông vua/i)
+    expect(ten).not.toMatch(/Fmaj7/i)
+  })
+
+  it('giữ đủ lời của cả ba dòng', () => {
+    const ra = parseSongText(BAI)
+    const loi = ra.sections
+      .flatMap((s) => s.lines)
+      .map((l) => l.lyric)
+      .join(' ')
+    expect(loi).toContain('Có ông vua')
+    expect(loi).toContain('trẻ xuất binh qua')
+    expect(loi).toContain('Khi vua kéo quân')
+  })
+
+  it('đọc đúng các hợp âm của dòng ấy', () => {
+    const ra = parseSongText(BAI)
+    const hop = ra.sections
+      .flatMap((s) => s.lines)
+      .flatMap((l) => l.chords.map((c) => c.source))
+    expect(hop).toContain('Am')
+    expect(hop).toContain('Fmaj7')
+    expect(hop).toContain('G')
+  })
+
+  it('TÊN ĐOẠN THẬT vẫn nhận — một cặp ngoặc, không có ngoặc bên trong', () => {
+    const ra = parseSongText('[Điệp khúc]\nMột hai [C]ba bốn')
+    expect(ra.sections.some((s) => /điệp khúc/i.test(s.name))).toBe(true)
+  })
+
+  it('dòng chỉ có MỘT hợp âm trong ngoặc vẫn là hợp âm, không phải tên đoạn', () => {
+    const ra = parseSongText('[Am]\nlời gì đó')
+    expect(ra.sections.some((s) => /^am$/i.test(s.name))).toBe(false)
+  })
+})

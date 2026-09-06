@@ -49,6 +49,15 @@ export interface SheetAnchor {
 export interface SheetLine {
   lyric: string
   anchors: SheetAnchor[]
+  /**
+   * Dòng hợp âm của một đoạn KHÔNG LỜI — dạo đầu · giang tấu · kết bài.
+   *
+   * Các neo trên dòng này có `chordIndex === null` vì chúng không thuộc vòng hợp âm của
+   * thân bài, nên phép tô sáng và phép bấm-để-phát của bản lời không với tới. Nhãn này
+   * nói cho `SongSheetView` biết phải tra sáng/bấm ở ĐƯỜNG KHÁC: `soloSpans` của dòng
+   * thời gian, xem `songStructure.soloChordAt`.
+   */
+  solo?: 'intro' | 'interlude' | 'outro'
 }
 
 export interface SheetSection {
@@ -128,6 +137,21 @@ export function buildSongSheet(
         },
       ]
     })
+    /*
+      GỘP HAI NEO TRÙNG TÊN — CHỈ KHI CHÚNG ĐỨNG CÙNG MỘT CHỖ TRÊN DÒNG.
+
+      Bản cũ gộp mọi cặp liền nhau cùng ký hiệu, bất kể đứng đâu. Nó nuốt luôn những hợp âm
+      người dùng **cố ý gõ lặp** để báo gõ lại:
+
+          [Am]Có ông vua [Fmaj7]trẻ … [C]lấn [C]
+
+      Ô `[C]` thứ hai biến mất khỏi bản nhạc trong khi vẫn nằm trong vòng hợp âm — nên bản
+      lời và lưới hợp âm nói hai chuyện khác nhau, và số thứ tự hợp âm nhảy cóc (…#7 rồi
+      #9), làm hỏng cả phép tô sáng lẫn phép bấm-để-phát của những neo sau nó.
+
+      Cùng `charOffset` thì mới thật là trùng — hai nhãn chồng lên nhau ở một chỗ thì chỉ
+      đọc được một. Khác chỗ là hai lần gõ khác nhau, phải hiện đủ.
+    */
     const anchors: SheetAnchor[] = []
     for (const anchor of raw) {
       const prev = anchors[anchors.length - 1]
@@ -135,7 +159,8 @@ export function buildSongSheet(
         prev &&
         !anchor.passing &&
         !prev.passing &&
-        prev.symbol === anchor.symbol
+        prev.symbol === anchor.symbol &&
+        prev.charOffset === anchor.charOffset
       ) {
         continue
       }
@@ -364,44 +389,108 @@ export interface SectionChordRange {
  * kèm hợp âm, không có gì để chơi.
  */
 /** Gắn dạo đầu / kết bài lên bản lời — không đánh số vào vòng chính. */
+/** Một dòng chỉ có hợp âm, thuộc đoạn không lời. */
+function dongSolo(
+  symbols: readonly string[],
+  solo: 'intro' | 'interlude' | 'outro',
+): SheetLine {
+  return {
+    lyric: '',
+    solo,
+    anchors: symbols.map((symbol, at) => ({
+      symbol,
+      charOffset: at * 10,
+      chordIndex: null,
+      broken: false,
+    })),
+  }
+}
+
+/**
+ * Gắn vòng hợp âm giang tấu vào dưới nhãn của mọi đoạn giang tấu.
+ *
+ * Tách khỏi `attachPhraseToSheet` vì thứ tự phụ thuộc: vòng giang tấu chỉ tính được SAU
+ * khi đã có bản nhạc (nó nhặt một khoảng trong chính vòng của bài), nên không thể gắn
+ * cùng lúc với đoạn dạo và đoạn kết.
+ */
+export function attachInterludeToSheet(
+  sheet: SongSheet,
+  interlude: readonly string[],
+  /**
+   * Tên đoạn mà giang tấu MƯỢN vòng — chèn đoạn giang tấu ngay sau nó.
+   *
+   * Chỉ dùng khi bản nhạc **chưa có** đoạn nào là giang tấu. Chọn thầy Linh Nhi thì app
+   * tự chèn một bước giang tấu vào lúc phát dù người dùng không đánh dấu đoạn nào là
+   * giang tấu — lúc ấy vòng hợp âm vẫn kêu mà trên bản nhạc không có chỗ nào để gắn,
+   * nên người dùng nhìn xuống không thấy gì.
+   */
+  sauDoan?: string | null,
+): SongSheet {
+  if (interlude.length === 0) return sheet
+  /* Đã gắn rồi thì thôi — tránh chồng hai dòng khi bản nhạc dựng lại. */
+  if (sheet.sections.some((one) => one.lines.some((line) => line.solo === 'interlude'))) {
+    return sheet
+  }
+
+  if (sheet.sections.some((one) => one.kind === 'interlude')) {
+    return {
+      ...sheet,
+      sections: sheet.sections.map((section) =>
+        section.kind === 'interlude'
+          ? { ...section, lines: [...section.lines, dongSolo(interlude, 'interlude')] }
+          : section,
+      ),
+    }
+  }
+
+  const moi: SheetSection = {
+    name: 'Giang tấu',
+    kind: 'interlude',
+    lines: [dongSolo(interlude, 'interlude')],
+  }
+  /*
+    Đặt NGAY SAU đoạn nó mượn vòng — đó cũng đúng chỗ nó vang lên. Không tìm ra đoạn ấy
+    thì đặt cuối, còn hơn giấu đi.
+  */
+  const at = sauDoan
+    ? sheet.sections.findIndex((one) => one.name === sauDoan)
+    : -1
+  const sections =
+    at >= 0
+      ? [...sheet.sections.slice(0, at + 1), moi, ...sheet.sections.slice(at + 1)]
+      : [...sheet.sections, moi]
+  return { ...sheet, sections }
+}
+
 export function attachPhraseToSheet(
   sheet: SongSheet,
   intro: readonly string[],
   outro: readonly string[],
+  /**
+   * Hợp âm giang tấu, gắn thành một dòng dưới nhãn của MỌI đoạn giang tấu.
+   *
+   * Không dựng đoạn mới như dạo đầu và kết bài: chỗ giang tấu là do người dùng tự đánh
+   * dấu trên lời, nên nhãn đã có sẵn — thứ còn thiếu chỉ là vòng hợp âm dưới nó.
+   */
+  interlude: readonly string[] = [],
 ): SongSheet {
-  const sections = [...sheet.sections]
+  const sections = sheet.sections.map((section) =>
+    interlude.length > 0 && section.kind === 'interlude'
+      ? { ...section, lines: [...section.lines, dongSolo(interlude, 'interlude')] }
+      : section,
+  )
   if (intro.length > 0) {
     sections.unshift({
       name: 'Dạo đầu',
       kind: 'intro',
-      lines: [
-        {
-          lyric: '',
-          anchors: intro.map((symbol, at) => ({
-            symbol,
-            charOffset: at * 10,
-            chordIndex: null,
-            broken: false,
-          })),
-        },
-      ],
+      lines: [dongSolo(intro, 'intro')],
     })
   }
   if (outro.length > 0) {
     sections.push({
       name: 'Kết bài',
       kind: 'outro',
-      lines: [
-        {
-          lyric: '',
-          anchors: outro.map((symbol, at) => ({
-            symbol,
-            charOffset: at * 10,
-            chordIndex: null,
-            broken: false,
-          })),
-        },
-      ],
+      lines: [dongSolo(outro, 'outro')],
     })
   }
   return { ...sheet, sections }

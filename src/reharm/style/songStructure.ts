@@ -164,12 +164,59 @@ export interface TimeSegment {
   sourceBeat: number
 }
 
+/**
+ * Một đoạn KHÔNG LỜI trên dòng thời gian đã sắp, kèm vòng hợp âm của chính nó.
+ *
+ * Vì sao cần riêng: `segments` chỉ tra ngược về vòng hợp âm GỐC của bài, mà đoạn dạo và
+ * đoạn kết **không mượn vòng của đoạn nào** — chúng không đẩy `segments` nào cả. Nên
+ * trước đây không có cách nào biết đang chơi tới hợp âm nào của đoạn dạo, và bảng hợp âm
+ * đoạn dạo chỉ là một dòng chữ chết.
+ *
+ * Giang tấu thì có `segments`, nhưng nó tra về chỗ MƯỢN nằm giữa thân bài — sáng lên ở
+ * đó chứ không sáng dưới chữ "giang tấu". Nên giang tấu cũng cần mặt ở đây.
+ */
+export interface SoloSpan {
+  kind: 'intro' | 'interlude' | 'outro'
+  startBeat: number
+  lengthBeats: number
+  /** Ký hiệu hợp âm, đúng thứ tự chơi. */
+  chords: readonly string[]
+  /** Mỗi hợp âm dài mấy phách — cùng độ dài với `chords`. */
+  beatsEach: readonly number[]
+}
+
+/**
+ * Hợp âm thứ mấy của một đoạn không lời đang vang tại mốc phách này.
+ *
+ * Trả `null` khi mốc ấy không nằm trong đoạn nào — kể cả khoảng im sau đoạn dạo.
+ */
+export function soloChordAt(
+  spans: readonly SoloSpan[],
+  beat: number,
+): { span: SoloSpan; index: number } | null {
+  for (const span of spans) {
+    if (beat < span.startBeat) continue
+    if (beat >= span.startBeat + span.lengthBeats) continue
+    let at = span.startBeat
+    for (let i = 0; i < span.chords.length; i += 1) {
+      const dai = span.beatsEach[i] ?? 0
+      if (beat < at + dai) return { span, index: i }
+      at += dai
+    }
+    /* Hợp âm chia không hết đoạn — giữ sáng hợp âm cuối còn hơn tắt giữa chừng. */
+    if (span.chords.length > 0) return { span, index: span.chords.length - 1 }
+  }
+  return null
+}
+
 export interface SongTimeline {
   events: TimelineEvent[]
   totalBeats: number
   sections: PlacedSection[]
   /** Bản đồ tra ngược về vòng hợp âm gốc, xếp theo thứ tự thời gian. */
   segments: TimeSegment[]
+  /** Đoạn dạo · giang tấu · kết: nằm ở phách nào, chơi hợp âm gì. */
+  soloSpans: SoloSpan[]
   /** Số lượt giang tấu bài này dùng hết, để lần phát sau nối tiếp. */
   soloTakes: number
 }
@@ -414,6 +461,7 @@ export function buildSongTimeline(options: BuildSongOptions): SongTimeline {
     totalBeats: cursor,
     sections,
     segments,
+    soloSpans: [],
     soloTakes: take - takeOffset,
   }
 }

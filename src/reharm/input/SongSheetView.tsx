@@ -41,6 +41,15 @@ interface SongSheetViewProps {
   sheet: SongSheet
   /** Hợp âm đang vang, đếm từ 0. Rỗng nghĩa là đang không phát. */
   activeIndex: number | null
+  /**
+   * Hợp âm nào của đoạn KHÔNG LỜI đang vang — dạo đầu · giang tấu · kết bài.
+   *
+   * Ba đoạn ấy hiện trên bản lời thành những dòng chỉ có hợp âm, và hợp âm của chúng
+   * không thuộc vòng của thân bài nên `activeIndex` không soi tới. Xem `SheetLine.solo`.
+   */
+  soloActive?: { kind: 'intro' | 'interlude' | 'outro'; index: number } | null
+  /** Bấm vào hợp âm thứ mấy của đoạn không lời thì phát từ đó. */
+  onSeekSolo?: (kind: 'intro' | 'interlude' | 'outro', index: number) => void
   /** Bấm vào một hợp âm thì phát lại từ đúng chỗ đó. */
   onSeek?: (chordIndex: number) => void
   /** Người dùng vừa bôi đen một khoảng dòng và chọn nó là đoạn gì. */
@@ -175,6 +184,8 @@ interface ChordMenu {
 export function SongSheetView({
   sheet,
   activeIndex,
+  soloActive,
+  onSeekSolo,
   onSeek,
   onMark,
   onClearMarks,
@@ -368,6 +379,22 @@ export function SongSheetView({
                       line={line}
                       lyricClass={tone.lyric}
                       activeIndex={activeIndex}
+                      {...(line.solo
+                        ? {
+                            solo: {
+                              activeIndex:
+                                soloActive?.kind === line.solo
+                                  ? soloActive.index
+                                  : null,
+                              ...(onSeekSolo
+                                ? {
+                                    onSeek: (index: number) =>
+                                      onSeekSolo(line.solo!, index),
+                                  }
+                                : {}),
+                            },
+                          }
+                        : {})}
                       fillAt={fillAt}
                       runAt={runAt}
                       pairedChords={pairedChords}
@@ -1161,6 +1188,7 @@ function AnchorRow({
   pairedChords,
   onSeek,
   bindMenu,
+  solo,
 }: {
   line: SheetLine
   lyricClass: string
@@ -1170,8 +1198,18 @@ function AnchorRow({
   pairedChords?: ReadonlySet<number>
   onSeek?: (chordIndex: number) => void
   bindMenu?: (chordIndex: number) => LongPressHandlers
+  /**
+   * Đường tô sáng / bấm-để-phát cho dòng hợp âm của đoạn KHÔNG LỜI.
+   *
+   * Neo trên dòng ấy có `chordIndex === null` vì chúng không thuộc vòng hợp âm của thân
+   * bài, nên `activeIndex` và `onSeek` thường không với tới. Ở đây tra theo **thứ tự
+   * neo trong dòng** thay vì theo số hợp âm của cả bài.
+   */
+  solo?: { activeIndex: number | null; onSeek?: (index: number) => void }
 }) {
   const placed = layoutAnchors(line.anchors)
+  /* Số thứ tự của từng neo trong dòng — khoá tra của đường solo. */
+  const thuTu = new Map(line.anchors.map((anchor, at) => [anchor, at]))
   const clusters: { column: number; items: SheetAnchor[] }[] = []
   for (const { anchor, column } of placed) {
     const last = clusters.at(-1)
@@ -1192,8 +1230,16 @@ function AnchorRow({
               <ChordLabel
                 key={`${cluster.column}-${index}`}
                 lead={index > 0}
-                anchor={anchor}
-                active={anchor.chordIndex === activeIndex}
+                anchor={
+                  line.solo
+                    ? { ...anchor, chordIndex: thuTu.get(anchor) ?? null }
+                    : anchor
+                }
+                active={
+                  line.solo
+                    ? (solo?.activeIndex ?? null) === thuTu.get(anchor)
+                    : anchor.chordIndex === activeIndex
+                }
                 hasFill={
                   anchor.chordIndex !== null &&
                   (fillAt?.(anchor.chordIndex) ?? false) === true
@@ -1207,8 +1253,9 @@ function AnchorRow({
                   pairedChords !== undefined &&
                   isPaired(pairedChords, anchor.chordIndex)
                 }
-                onSeek={onSeek}
-                bindMenu={bindMenu}
+                onSeek={line.solo ? solo?.onSeek : onSeek}
+                /* Menu hợp âm tra theo số hợp âm của bài — dòng solo không có. */
+                bindMenu={line.solo ? undefined : bindMenu}
               />
             ))}
           </span>

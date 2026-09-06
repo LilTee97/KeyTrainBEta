@@ -17,7 +17,16 @@ import type { PassingOption, TransitionOption } from '../input/SongSheetView'
  */
 
 export interface PracticeTransport {
+  /**
+   * Phát từ một mốc trên **vòng hợp âm gốc** — bấm vào hợp âm nào thì phát từ đó.
+   *
+   * KHÔNG dùng được để phát cả bài: `playFrom(0)` tra qua `segments`, mà đoạn dạo
+   * không đẩy `segments` nào cả nên mốc 0 rơi vào chỗ bài hát vào — tức **bỏ qua đoạn
+   * dạo**. Muốn phát từ đầu thì gọi `playAll`.
+   */
   playFrom: (beat: number) => void
+  /** Phát cả bài từ phách 0 của dòng thời gian đã sắp, có cả dạo · giang · kết. */
+  playAll: () => void
   pause: () => void
   stop: () => void
   onTone: (delta: number) => void

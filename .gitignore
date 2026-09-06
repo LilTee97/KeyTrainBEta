@@ -30,3 +30,6 @@ pnpm-debug.log*
 # Y kien dang giu lau dai da duoc skill y-kien-intro chuyen sang
 # PianoBrain/knowledge/teachers/linh-nhi-piano.md, va file ay o trong git.
 Nguon.json
+
+# Bộ đo Python trong tools/ sinh ra
+__pycache__/

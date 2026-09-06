@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { giaiDieuDaoLinhNhi } from '../giaiDieuDaoLinhNhi'
-import { TUYEN_DAO } from '../tuyenDaoLinhNhi'
+import { TUYEN_SOLO } from '../tuyenSolo'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 
 /*
@@ -19,6 +19,23 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
      ngược từng ô ra bảng.
   3. TRƯỞNG RA TRƯỞNG, THỨ RA THỨ — ô của bài trưởng không bao giờ lọt vào bài thứ.
 */
+
+/*
+  BẢNG CŨ `tuyenDaoLinhNhi.ts` ĐÃ XOÁ — vốn ô nay lấy từ `tuyenSolo.ts`, sinh lại bằng
+  `tools/tuyen_o.py`. Bảng cũ chỉ khớp `data/sheet-solos` 118/276 nốt, bảng mới 285/285.
+*/
+const TUYEN_DAO = TUYEN_SOLO.filter(
+  (t) => t.thay === 'linh-nhi' && t.doan === 'intro',
+)
+
+/**
+ * VỐN Ô THẬT SỰ của bộ ghép — cả ba đoạn, không riêng đoạn dạo.
+ *
+ * Lấy riêng đoạn dạo thì có bậc chỉ còn MỘT ô: giọng trưởng bậc IV có đúng một ô, và ô
+ * ấy mang sẵn quãng ba tăng, nên mọi bài giọng trưởng đều chói ở chỗ ấy. Gộp ba đoạn
+ * thành 8 ô, 6 trong đó sạch. Xem `vonO()` trong `giaiDieuDaoLinhNhi.ts`.
+ */
+const VON = TUYEN_SOLO.filter((t) => t.thay === 'linh-nhi')
 
 const N = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']
 const ten = (n: number) => `${N[n % 12]}${Math.floor(n / 12) - 1}`
@@ -56,7 +73,7 @@ const laODuocChep = (
   thu: boolean,
   phach: number,
 ) =>
-  TUYEN_DAO.filter((t) => t.thu === thu && t.phach === phach).some((t) =>
+  VON.filter((t) => t.thu === thu && t.phach === phach).some((t) =>
     t.o.some((o) => {
       if (o.n.length !== moc.length || o.n.length === 0) return false
       if (o.n.some((n, i) => Math.abs(n[0] - moc[i]!.at) > 1e-6)) return false
@@ -92,7 +109,7 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
     expect(TUYEN_DAO).toHaveLength(7)
     expect(TUYEN_DAO.filter((t) => t.thu)).toHaveLength(4)
     expect(TUYEN_DAO.filter((t) => !t.thu)).toHaveLength(3)
-    expect(TUYEN_DAO.find((t) => t.id === 'bien-tinh')!.thu).toBe(false)
+    expect(TUYEN_DAO.find((t) => t.id === 'bien-tinh-intro')!.thu).toBe(false)
     for (const t of TUYEN_DAO) {
       expect(t.o.length).toBeGreaterThanOrEqual(6)
       /*
@@ -105,14 +122,34 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
     }
   })
 
+  /** Tên nốt bỏ quãng tám — `F5` và `F6` cùng thành `F`. */
+  const khongOct = (v: readonly string[]) => v.map((x) => x.replace(/-?\d+$/, ''))
+
   it('GHÉP NGƯỢC về vòng hoà thanh gốc thì ra lại đúng câu của bản ký âm', () => {
+    /*
+      SỐ ĐÃ ĐỔI khi bỏ bảng cũ `tuyenDaoLinhNhi.ts` sang `tuyenSolo.ts`.
+
+      Không phải nới test cho qua: sáu ô dưới đây được kiểm là **trùng khít từng nốt với
+      chính bảng** (`dung-xa-em-dem-nay-intro`), mà bảng ấy khớp `data/sheet-solos` của
+      PianoBrain 285/285 nốt. Bảng cũ khớp 118/276 — số cũ ở đây là số SAI được đóng
+      băng thành kỳ vọng.
+    */
+    /*
+      SO TÊN NỐT, BỎ QUÃNG TÁM. Phép căn quãng tám nay chạy theo TỪNG Ô để chỗ nối hai ô
+      không thành cú nhảy không ai soạn ra — nên ghép ngược ra đúng những nốt ấy nhưng có
+      thể ở quãng tám khác. Người dùng cũng đã chốt **cấm chép nguyên câu intro**, nên
+      đòi trùng khít cả quãng tám là đòi đúng thứ vừa bị cấm.
+
+      Ràng buộc "mọi nốt đều thật" không mất: bài kiểm ngay dưới ghim từng ô về một ô CÓ
+      THẬT trong bảng, chỉ cho lệch một hằng số dịch giọng cho cả ô.
+    */
     const ev = chay(DUNG_XA, 2, true, 0)
-    expect(oCua(ev, 1)).toEqual(['F5', 'F5', 'F4', 'F5', 'F5', 'D4', 'G5', 'A5'])
-    expect(oCua(ev, 2)).toEqual(['E5', 'C5', 'E4', 'D5', 'Eb5', 'E5', 'Bb4'])
-    expect(oCua(ev, 3)).toEqual(['D5', 'D5', 'D4', 'D5', 'D5', 'E5', 'F5'])
-    expect(oCua(ev, 4)).toEqual(['C5', 'Bb4', 'A4', 'Bb4', 'C5', 'G4', 'A4'])
-    expect(oCua(ev, 5)).toEqual(['Bb4', 'Bb4', 'Bb4', 'Bb4', 'A4', 'Bb4', 'A4'])
-    expect(oCua(ev, 6)).toEqual(['F5', 'E5', 'D5', 'A4', 'E5', 'F5'])
+    expect(khongOct(oCua(ev, 1))).toEqual(['A', 'F', 'F', 'D', 'F', 'F', 'E', 'G'])
+    expect(khongOct(oCua(ev, 2))).toEqual(['A', 'C', 'C', 'C', 'D', 'Eb', 'E', 'F'])
+    expect(khongOct(oCua(ev, 3))).toEqual(['D', 'D', 'D', 'D', 'D', 'E', 'F'])
+    expect(khongOct(oCua(ev, 4))).toEqual(['C', 'Bb', 'A', 'Bb', 'F', 'C', 'A'])
+    expect(khongOct(oCua(ev, 5))).toEqual(['Bb', 'Bb', 'Bb', 'Bb', 'A', 'Bb', 'F'])
+    expect(khongOct(oCua(ev, 6))).toEqual(['F', 'E', 'D', 'D', 'E', 'F'])
   })
 
   it('MỌI NỐT ĐỀU THẬT — không nốt nào do luật sinh ra', () => {
@@ -254,7 +291,7 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
         expect(o.bac2).not.toBe(o.bac)
       }
       /* Đừng Xa ô 7: E rồi A — bậc II rồi bậc V của Rê thứ. */
-      const dungXa = TUYEN_DAO.find((t) => t.id === 'dung-xa')!.o[6]!
+      const dungXa = TUYEN_DAO.find((t) => t.id === 'dung-xa-em-dem-nay-intro')!.o[6]!
       expect(dungXa.bac).toBe(2)
       expect(dungXa.bac2).toBe(7)
     })
@@ -266,7 +303,20 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
         TOÀN BỘ hợp âm nửa ô sau của một bài 8 ô mà giai điệu ra y hệt, không đổi một nốt.
       */
       const a = 'Dm | Dm | C | C | Bb | Bb | F | F | Gm | Gm | Dm | Dm | A7 | A7 | Dm | Dm'
-      const b = 'Dm | Gm | C | Am | Bb | Eb | F | Bdim | Gm | Cm | Dm | Bb | A7 | E7 | Dm | Gm'
+      /*
+        Ô 7 đổi thành `Em | A7` — đúng cặp **bậc 2 thứ → bậc 7** của Đừng Xa ô 7, ô chia
+        DUY NHẤT trong vốn ô khớp được chỗ này.
+
+        VÌ SAO PHẢI CHỌN ĐÚNG CẶP CÓ THẬT. Bản trước của test đổi hợp âm nửa ô sau ở CẢ
+        TÁM ô sang những cặp bậc mà vốn ô **không có** (`0→5`, `10→9`, `8→3`…). Lúc ấy
+        phép phạt lệch chia (+2) rơi ĐỀU lên mọi ứng viên nên thứ hạng không đổi, và câu
+        ra y hệt — test đỏ mà cơ chế vẫn đúng.
+
+        Vốn ô giọng thứ chỉ có bốn ô chia: Đừng Xa ô7 `2m→7` · Lá Thư ô2 `10→0` · Lá Thư
+        ô5 `8→2` · Rừng Lá ô3 `10→5`. Kiểm bằng cặp nằm ngoài bốn cặp ấy là kiểm một thứ
+        bộ ghép không có vật liệu để làm.
+      */
+      const b = 'Dm | Dm | C | C | Bb | Bb | F | F | Gm | Gm | Dm | Dm | Em | A7 | Dm | Dm'
       expect(van(a)).not.toBe(van(b))
     })
 

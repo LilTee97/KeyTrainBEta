@@ -220,6 +220,10 @@ export interface BuildArrangedSongOptions {
   phrase?: (kind: 'intro' | 'outro') => {
     events: readonly TimelineEvent[]
     lengthBeats: number
+    /** Ký hiệu hợp âm của chính đoạn ấy — để bảng hợp âm sáng theo chỗ đang chơi. */
+    chords?: readonly string[]
+    /** Mỗi hợp âm dài mấy phách. */
+    beatsEach?: readonly number[]
   } | null
   /**
    * Câu quay đầu ở cuối lượt giang tấu **cuối cùng**, hút về đoạn ngay sau.
@@ -256,6 +260,15 @@ export interface BuildArrangedSongOptions {
     lastEvents?: readonly TimelineEvent[]
     /** Phách chót vòng cuối: hợp âm hút, cả hai tay. */
     exit?: readonly TimelineEvent[]
+    /**
+     * Ký hiệu hợp âm của vòng ngắn, đúng thứ tự chơi.
+     *
+     * Tên `kyHieu` chứ không phải `chords` vì `chords` ở đây đã có nghĩa khác — nó là
+     * danh sách `{start, beats, chord}` mà bên gọi dùng để dựng phần đệm.
+     */
+    kyHieu?: readonly string[]
+    /** Mỗi hợp âm dài mấy phách, cùng độ dài với `kyHieu`. */
+    kyHieuBeats?: readonly number[]
   } | null
   /**
    * Hợp âm cuối của **đoạn kết bài**, đã đổi màu.
@@ -347,6 +360,7 @@ export function buildArrangedSong(
   const events: TimelineEvent[] = []
   const sections: SongTimeline['sections'] = []
   const segments: TimeSegment[] = []
+  const soloSpans: SongTimeline['soloSpans'] = []
   let cursor = 0
   let take = 0
 
@@ -426,6 +440,15 @@ export function buildArrangedSong(
 
       const lengthBeats = step.lengthBeats ?? made.lengthBeats
       sections.push({ kind: 'interlude', startBeat: cursor, lengthBeats })
+      if (made.chords && made.chords.length > 0) {
+        soloSpans.push({
+          kind: step.type,
+          startBeat: cursor,
+          lengthBeats,
+          chords: made.chords,
+          beatsEach: made.beatsEach ?? [],
+        })
+      }
       for (const event of made.events) {
         events.push({ ...event, startBeat: event.startBeat + cursor })
       }
@@ -486,6 +509,17 @@ export function buildArrangedSong(
         lengthBeats: loopBeats,
         sourceBeat: range.startBeat,
       })
+
+      /* Mỗi LƯỢT một dải riêng: chơi vòng hai lần thì sáng lại từ đầu ở lượt hai. */
+      if (range.kyHieu && range.kyHieu.length > 0) {
+        soloSpans.push({
+          kind: 'interlude',
+          startBeat: at,
+          lengthBeats: loopBeats,
+          chords: range.kyHieu,
+          beatsEach: range.kyHieuBeats ?? [],
+        })
+      }
 
       const backing =
         last && range.lastEvents ? range.lastEvents : range.events
@@ -559,6 +593,7 @@ export function buildArrangedSong(
     totalBeats: cursor,
     sections,
     segments,
+    soloSpans,
     soloTakes: take,
   }
 }

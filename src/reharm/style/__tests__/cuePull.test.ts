@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { cueStrike } from '../phraseCue'
-import { khungChayNgon } from '../raiLinhNhi'
+import { khungChayNgon } from '../khungChayNgon'
 import { cueChord } from '../phraseChords'
 import { pullChordFor } from '../turnaround'
 import { parseChordInput } from '../../input/chordInputParser'

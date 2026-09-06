@@ -307,3 +307,56 @@ describe('xếp cột cho ký hiệu hợp âm', () => {
     }
   })
 })
+
+
+describe('HỢP ÂM NGƯỜI DÙNG TỰ THÊM phải hiện đủ và có số thứ tự liền mạch', () => {
+  /*
+    Người dùng gõ thêm hợp âm vào lời rồi báo: chúng không hiện trên bản nhạc đã tái hoà âm.
+
+    Hai lỗi chồng nhau, đã sửa cả hai:
+
+    1. `sectionHeaderOf` tham lam — dòng mở đầu bằng `[Am]` và kết thúc bằng `[C]` bị đọc
+       thành TÊN ĐOẠN. Xem `songTextParser.test.ts`.
+    2. Phép gộp neo trùng tên ở `buildSongSheet` gộp mọi cặp liền nhau cùng ký hiệu, bất kể
+       đứng đâu trên dòng — nên `[C]lấn [C]` chỉ hiện MỘT. Hợp âm bị nuốt vẫn nằm trong vòng
+       hợp âm, nên bản lời và lưới nói hai chuyện khác nhau, và số thứ tự nhảy cóc (#7 rồi
+       #9) làm hỏng cả phép tô sáng lẫn phép bấm-để-phát của mọi neo sau nó.
+  */
+  const BAI = [
+    '2. Xưa thật là [C]xưa nhớ mấy cho [Dm]vừa nhớ mẹ kể đêm [Em]mưa [Em]',
+    '[Am]Có ông vua [Fmaj7]trẻ xuất binh qua [G]rừng dẹp quân xâm [C]lấn [C]',
+    'Khi vua kéo quân [Dm]về tình cờ gặp một giai [Em]nhân',
+  ].join('\n')
+
+  const dung = () => {
+    const song = parseSongText(BAI)
+    return { song, sheet: buildSongSheet(song, song.chords) }
+  }
+
+  it('đủ 11 hợp âm, không nuốt cái nào', () => {
+    const { song, sheet } = dung()
+    expect(song.chords).toHaveLength(11)
+    const neo = sheet.sections.flatMap((s) => s.lines).flatMap((l) => l.anchors)
+    expect(neo.map((a) => a.symbol)).toEqual([
+      'C', 'Dm', 'Em', 'Em', 'Am', 'Fmaj7', 'G', 'C', 'C', 'Dm', 'Em',
+    ])
+  })
+
+  it('SỐ THỨ TỰ LIỀN MẠCH 0-10 — không nhảy cóc', () => {
+    /* Nhảy cóc là thứ làm hỏng phép tô sáng và phép bấm-để-phát của các neo sau nó. */
+    const { sheet } = dung()
+    const so = sheet.sections
+      .flatMap((s) => s.lines)
+      .flatMap((l) => l.anchors)
+      .map((a) => a.chordIndex)
+    expect(so).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    expect(sheet.chordCount).toBe(11)
+  })
+
+  it('hai nhãn CHỒNG ĐÚNG MỘT CHỖ thì vẫn gộp — chỉ đọc được một', () => {
+    const song = parseSongText('[C][C]lời gì đó')
+    const sheet = buildSongSheet(song, song.chords)
+    const neo = sheet.sections.flatMap((s) => s.lines).flatMap((l) => l.anchors)
+    expect(neo).toHaveLength(1)
+  })
+})

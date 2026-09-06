@@ -57,6 +57,38 @@ export function PracticeHome() {
 
       {song && song.timeline.length > 0 ? (
         <>
+          {/*
+            NÚT PHÁT CẢ BÀI.
+
+            Tab này trước chỉ có lối tập chờ-đánh-đúng-nốt (`NoteGatedPractice`), không
+            có cách nào nghe trọn bài — `showToolbar={false}` tắt luôn thanh phát của
+            lưới hợp âm. Muốn nghe thì phải sang tab Tái hoà âm, tức đi vòng đúng thứ
+            mà tab này lập ra để khỏi phải làm.
+
+            Gọi `playAll` chứ KHÔNG gọi `playFrom(0)`: `playFrom` tra qua `segments`,
+            mà đoạn dạo không đẩy `segments` nào cả nên mốc 0 rơi vào chỗ bài hát vào —
+            bỏ mất đoạn dạo.
+          */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={!transport}
+              onClick={() =>
+                looping ? transport?.pause() : transport?.playAll()
+              }
+              className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
+                looping
+                  ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
+                  : 'bg-amber-key text-ink hover:brightness-110'
+              }`}
+            >
+              {looping ? '■ Dừng' : '▶ Phát cả bài'}
+            </button>
+            <span className="text-xs text-dim">
+              Chơi trọn bài đúng thứ tự đã sắp — có cả dạo đầu, giang tấu và kết.
+            </span>
+          </div>
+
           {song.perBeat.length > 0 && (
             <ChordOverview
               perBeat={song.perBeat}

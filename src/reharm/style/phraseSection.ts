@@ -7,7 +7,6 @@ import { holdUntilStruckAgain } from './patternRenderer'
 import { khongTiaTayTrai, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo } from './caPhaoSolo'
-import { raiLinhNhi } from './raiLinhNhi'
 import { giaiDieuDaoLinhNhi } from './giaiDieuDaoLinhNhi'
 import { nhipVong } from './vonHopAmLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
@@ -78,6 +77,16 @@ export interface PhraseSectionOptions {
 export interface PhraseSection {
   events: TimelineEvent[]
   lengthBeats: number
+  /**
+   * Ký hiệu hợp âm của chính đoạn này, đúng thứ tự chơi.
+   *
+   * Có mặt ở đây để bảng hợp âm đoạn dạo / đoạn kết **sáng theo chỗ đang chơi và bấm
+   * vào được**. Đoạn dạo không mượn vòng của đoạn nào nên nó không đẩy `segments` nào
+   * cả — thiếu chỗ này thì không có cách nào biết đang chơi tới hợp âm thứ mấy.
+   */
+  chords: readonly string[]
+  /** Mỗi hợp âm dài mấy phách, cùng độ dài với `chords`. */
+  beatsEach: readonly number[]
 }
 
 /**
@@ -203,10 +212,20 @@ export function buildPhraseSection(
    * Dùng ở hai chỗ nên tách ra một cờ: chọn bộ soạn, và quyết có áp vòng cung mật độ
    * `arcDungXa` lên tay phải hay không. Hai chỗ ấy phải luôn cùng một câu trả lời.
    */
-  const tuyenGhep =
-    kind === 'intro' && (thay === 'linh-nhi' || (style.family ?? '').includes('linh-nhi'))
-
   const thaySolo = thay ?? soloTeacherOf(style.id)
+  /*
+    BẢNG TUYẾN MỚI PHỦ CẢ BA THẦY VÀ CẢ ĐOẠN KẾT.
+
+    Bảng cũ chỉ có câu dạo Linh Nhi nên bộ ghép cũng chỉ chạy ở đó; mọi chỗ khác rơi về
+    bộ SINH (`caPhaoSolo`, `chiecLaMotif`, `raiLinhNhi`). `tuyenSolo.ts` có 38 tuyến cho
+    cả ba thầy ở cả dạo · giang · kết, nên khi ô tick bật thì bộ ghép nhận hết.
+
+    MỘT CHỖ KHÔNG PHỦ: Tôn Hùng không có bản ký âm giọng trưởng nào (0 ô), nên bài giọng
+    trưởng chọn Tôn Hùng thì bộ ghép không có gì để ghép. Nút của anh bị khoá ở bài giọng
+    trưởng — mượn ô của thầy khác là lấy luật thầy A áp cho thầy B.
+  */
+  const tuyenGhep =
+    thaySolo !== null && (kind === 'intro' || kind === 'outro')
   /*
     TAY TRÁI MỎNG ĐI Ở ĐOẠN KHÔNG LỜI — đo bảy bản ký âm, mốc gõ tay trái mỗi ô:
 
@@ -273,12 +292,31 @@ export function buildPhraseSection(
     trả `false` thì `solo` chạy y như trước.
   */
   const voiced =
+    /*
+      MÔ-TÍP CHIẾC LÁ đứng trước cả bộ ghép: nó là một Ô TICK người dùng bật có ý, không
+      phải đường mặc định. Bật lên mà vẫn ra câu ghép thì ô tick ấy thành vô nghĩa.
+    */
     kind === 'intro' && options.motif === 'chiec-la' && key
     ? chiecLaMotif({
         chords,
         beatsPerChord,
         tonic: key.tonic,
         scale: key.scale,
+      })
+    : /* Bộ ghép ô thật đứng trước mọi bộ SINH. */
+      tuyenGhep && thaySolo
+    ? giaiDieuDaoLinhNhi({
+        thay: thaySolo,
+        doan: kind === 'outro' ? 'outro' : 'intro',
+        left: backing,
+        chords,
+        beatsPerChord,
+        barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+        range: options.range ?? { low: 57, high: 95 },
+        take: take ?? 0,
+        minor: key?.scale === 'minor',
+        beatsEach,
+        ...(key ? { tonic: key.tonic } : {}),
       })
     : thaySolo === 'ca-phao'
     ? caPhaoSolo({
@@ -304,17 +342,13 @@ export function buildPhraseSection(
         /* Cả câu neo vào chủ âm của bài, không neo vào từng hợp âm. */
         tonic: key?.tonic,
       })
-    : thaySolo === 'linh-nhi'
-    ? raiLinhNhi({
-        left: backing,
-        chords,
-        beatsPerChord,
-        barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
-        ...(options.scale ? { scale: options.scale } : {}),
-        range: options.range ?? { low: 57, high: 95 },
-        chayNgonCuoi: true,
-        ...(take !== undefined ? { take } : {}),
-      })
+    /*
+      NHÁNH `raiLinhNhi` ĐÃ BỎ — nó là mã chết.
+
+      Nó đứng sau `tuyenGhep && thaySolo`, mà `tuyenGhep = thaySolo !== null && (intro |
+      outro)` và hàm này chỉ được gọi với intro/outro. Nên nhánh `thaySolo === 'linh-nhi'`
+      chỉ tới được khi `thaySolo` là `null` — mâu thuẫn, không bao giờ chạy.
+    */
     : solo(chords)
   /*
     Độ dài lấy TỔNG `beatsEach`, không lấy `chords.length * beatsPerChord`.
@@ -541,8 +575,12 @@ export function buildPhraseSection(
     ở ô 1, không có cú nhấc nào. (Cú nhấc D–F#–A là của Biển Tình; muốn dựng lại
     thì phải gắn theo BÀI, không gắn theo thầy — xem phiếu KHUNG-HOI-THAY §3.a.)
   */
+  const kyHieu = chords.map((chord) => chord.symbol)
+
   if (kind === 'intro' && thay === 'linh-nhi' && key) {
     return {
+      chords: kyHieu,
+      beatsEach,
       events: [
         ...events,
         ...hutDungXa({
@@ -556,5 +594,5 @@ export function buildPhraseSection(
   }
 
 
-  return { events, lengthBeats }
+  return { events, lengthBeats, chords: kyHieu, beatsEach }
 }

@@ -110,7 +110,22 @@ function asChord(token: string): ParsedChord | null {
 function sectionHeaderOf(line: string): string | null {
   const trimmed = line.trim()
 
-  const bracket = /^\[(.+)\]$/.exec(trimmed)
+  /*
+    MỘT CẶP NGOẶC DUY NHẤT, không có ngoặc nào bên trong.
+
+    Bản cũ dùng `^\[(.+)\]$` — tham lam, nên một dòng lời ChordPro **mở đầu bằng hợp âm
+    và kết thúc bằng hợp âm** bị nuốt trọn từ dấu `[` đầu tới dấu `]` cuối:
+
+        [Am]Có ông vua [Fmaj7]trẻ xuất binh qua [G]rừng dẹp quân xâm [C]lấn [C]
+
+    Nhóm bắt được là `Am]Có ông vua [Fmaj7]…lấn [C` — đọc không ra hợp âm, nên phép canh
+    "không phải hợp âm thì là tên đoạn" cho nó lọt, và cả dòng lời hiện lên thành TÊN ĐOẠN
+    viết hoa. Người dùng gặp đúng ca này khi tự gõ thêm hợp âm.
+
+    `[^\[\]]` chặn tận gốc: tên đoạn phải nằm trong đúng một cặp ngoặc và không chứa cặp
+    nào khác. `[Điệp khúc]` vẫn nhận; dòng lời nhiều hợp âm thì không.
+  */
+  const bracket = /^\[([^[\]]+)\]$/.exec(trimmed)
   if (bracket) return asChord(bracket[1]) ? null : bracket[1].trim()
 
   const colon = /^([\p{L}\p{N} ]{2,30}):$/u.exec(trimmed)

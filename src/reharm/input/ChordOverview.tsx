@@ -138,12 +138,59 @@ export function PlaybackToolbar({
   )
 }
 
+/**
+ * Một dải hợp âm của đoạn KHÔNG LỜI — dạo đầu · giang tấu · kết bài.
+ *
+ * Trước đây ba dải này chỉ là một dòng chữ chết: `nhãn: hợp âm hợp âm hợp âm`. Người
+ * dùng yêu cầu chúng **sáng lên theo chỗ đang chơi và bấm vào đâu thì phát chỗ đó**,
+ * đúng như bản lời.
+ *
+ * `activeIndex` và `onSeek` để trống thì dải vẫn hiện như cũ, chỉ không bấm được — đó
+ * là đường lui cho những chỗ gọi chưa nối mốc phách vào.
+ */
+export interface DaiSolo {
+  label: string
+  chords: readonly string[]
+  /** Hợp âm thứ mấy đang vang. `null` = đoạn này chưa tới lượt. */
+  activeIndex?: number | null
+  /** Bấm vào hợp âm thứ mấy thì phát từ đó. */
+  onSeek?: (index: number) => void
+}
+
+function DaiHopAm({ dai }: { dai: DaiSolo }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
+      <span className="text-dim">{dai.label}:</span>
+      {dai.chords.map((symbol, index) => {
+        const on = dai.activeIndex === index
+        const bam = dai.onSeek
+        return (
+          <button
+            /* Vòng hợp âm hay có hai ô cùng tên nên phải kèm vị trí vào khoá. */
+            key={`${symbol}-${index}`}
+            type="button"
+            disabled={!bam}
+            onClick={bam ? () => bam(index) : undefined}
+            className={`rounded px-1.5 py-0.5 ${
+              on
+                ? 'bg-amber-key/25 text-amber-key ring-1 ring-amber-key/60'
+                : 'text-amber-key/80'
+            } ${bam ? 'hover:bg-white/10' : 'cursor-default'}`}
+          >
+            {symbol}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 interface ChordOverviewProps {
   perBeat: readonly string[]
   /** Hợp âm đoạn dạo đầu, hiện thành dải riêng phía trên lưới. */
-  leadIn?: { label: string; chords: readonly string[] }
+  leadIn?: DaiSolo
   /** Hợp âm đoạn kết, hiện thành dải riêng phía dưới lưới. */
-  leadOut?: { label: string; chords: readonly string[] }
+  leadOut?: DaiSolo
   /**
    * Hợp âm đoạn giang tấu.
    *
@@ -152,7 +199,7 @@ interface ChordOverviewProps {
    * người đệm cần biết là **khoảng nào** được mượn — nhìn lưới thân bài thì
    * không thấy được.
    */
-  interlude?: { label: string; chords: readonly string[] }
+  interlude?: DaiSolo
   meter: 3 | 4
   bpm: number
   onBpm?: (bpm: number) => void
@@ -337,21 +384,11 @@ export function ChordOverview({
 
       {(leadIn || leadOut || interlude) && (
         <div className="mb-2 flex flex-col gap-1 text-xs">
-          {leadIn && leadIn.chords.length > 0 && (
-            <p className="font-mono text-amber-key">
-              {leadIn.label}: {leadIn.chords.join('  ')}
-            </p>
-          )}
+          {leadIn && leadIn.chords.length > 0 && <DaiHopAm dai={leadIn} />}
           {interlude && interlude.chords.length > 0 && (
-            <p className="font-mono text-amber-key">
-              {interlude.label}: {interlude.chords.join('  ')}
-            </p>
+            <DaiHopAm dai={interlude} />
           )}
-          {leadOut && leadOut.chords.length > 0 && (
-            <p className="font-mono text-amber-key">
-              {leadOut.label}: {leadOut.chords.join('  ')}
-            </p>
-          )}
+          {leadOut && leadOut.chords.length > 0 && <DaiHopAm dai={leadOut} />}
         </div>
       )}
 

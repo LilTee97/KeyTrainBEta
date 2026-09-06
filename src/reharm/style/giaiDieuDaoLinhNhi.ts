@@ -1,7 +1,8 @@
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { TimelineEvent } from './types'
-import { TUYEN_DAO, gocTuyen, type ODao } from './tuyenDaoLinhNhi'
+import type { SoloTeacher } from '../fillSoloGenerator/soloTeacher'
+import { TUYEN_SOLO, gocTuyen, type OSolo } from './tuyenSolo'
 
 /**
  * Giai điệu tay phải đoạn dạo — **ghép mảnh từ những ô nhịp có thật**.
@@ -55,14 +56,40 @@ import { TUYEN_DAO, gocTuyen, type ODao } from './tuyenDaoLinhNhi'
  */
 const NOT_CAM = true
 
+/** Bậc của gam trưởng so với chủ âm — dùng để bắt nốt lạc khi ghép bài giọng trưởng. */
+const GAM_TRUONG = new Set([0, 2, 4, 5, 7, 9, 11])
+
 /**
- * Tầm tuyệt đối của đoạn dạo — cao độ trung bình tay phải, tính bằng MIDI.
+ * Tầm tuyệt đối của đoạn dạo — cao độ trung bình tay phải, tính bằng MIDI, THEO TỪNG THẦY.
  *
- * Đo bảy đoạn dạo: 70,4 · 72,1 · 72,8 · 74,2 · 75,0 · 75,4 · 75,5 — trung bình **73,6**
- * (đúng D5), **lệch chuẩn 1,9 nửa cung** qua năm giọng khác nhau. Đây là một trong những
- * con số ổn định nhất đo được về chị ấy.
+ * Đo riêng **đoạn dạo** của từng thầy, tách trưởng/thứ:
+ *
+ * | thầy | trưởng | thứ |
+ * |---|---|---|
+ * | Linh Nhi | **75,3** — Biển Tình 75,2 · Đường Xưa 74,5 · Mùa Xuân 76,0 (n=141) | **73,2** — Đừng Xa 70,8 · Lá Thư 76,1 · Một Cõi 72,7 · Rừng Lá 73,6 (n=239) |
+ * | Cà Pháo | **70,8** — Hồng Kông 70,7 · Có Em Chờ 71,5 · Ngày Mai 70,4 (n=263) | **68,0** — một bài (n=62) |
+ * | Tôn Hùng | *(không có bài giọng trưởng)* | **75,8** — Chiếc Lá 74,4 · Tình Em 76,9 (n=97) |
+ *
+ * **Cà Pháo thấp hơn Linh Nhi 4,5 nửa cung ở giọng trưởng và 5,2 ở giọng thứ.** Dùng neo
+ * của Linh Nhi cho anh ấy thì câu cao hơn thầy thật gần nửa quãng tám.
+ *
+ * **Số cũ:** một hằng số **73,6** dùng chung cho mọi thầy mọi giọng, lấy trung bình bảy
+ * đoạn dạo Linh Nhi. Rồi tách thành `TAM_TRUONG = 75.3` / `TAM_THU = 73.2` — vẫn là số của
+ * riêng Linh Nhi, áp cho cả ba thầy.
+ *
+ * **Đừng lấy con số 67 trong `ca-phao.md`.** Đó là tâm gộp cả ba đoạn solo (dạo · giang ·
+ * kết) trên 828 nốt; riêng đoạn dạo là 70,8. Hai mẫu số khác nhau.
+ *
+ * **Cỡ mẫu mỏng:** Cà Pháo giọng thứ chỉ có **một bài**. Nghe thấy sai thì kiểm số này
+ * trước. Triệu chứng để lùi: đặt cao hơn thì câu chạm trần tầm tay phải và phép gập quãng
+ * tám bẻ nốt biên xuống, nghe ra chỗ gãy giữa câu.
  */
-const TAM_TAY_PHAI = 73.6
+const TAM: Record<Exclude<SoloTeacher, null>, { truong: number; thu: number }> = {
+  'linh-nhi': { truong: 75.3, thu: 73.2 },
+  'ca-phao': { truong: 70.8, thu: 68.0 },
+  /* Tôn Hùng không có bản ký âm giọng trưởng — cột ấy lấy số của giọng thứ. */
+  'ton-hung': { truong: 75.8, thu: 75.8 },
+}
 
 /*
   ĐÃ THỬ RỒI BỎ: phép chuộng ô đủ dày cho tay phải.
@@ -98,22 +125,115 @@ function chuc(bac: number, thu: boolean): 'chu' | 'ha' | 'at' {
   return 'at'
 }
 
-type Manh = { tuyen: string; chuGoc: PitchClass; i: number; cuoi: boolean; o: ODao }
+type Manh = {
+  tuyen: string
+  chuGoc: PitchClass
+  i: number
+  cuoi: boolean
+  o: OSolo
+  /** Ô này lấy từ đoạn khác (giang tấu · kết) chứ không phải đoạn đang soạn. */
+  muon: boolean
+}
+
+type NguonTuyen = {
+  id: string
+  thu: boolean
+  phach: number
+  chuGoc: PitchClass
+  o: readonly OSolo[]
+  muon: boolean
+}
+
+/**
+ * VỐN Ô của một lượt soạn — lấy từ `tuyenSolo.ts`, sinh lại bằng `tools/tuyen_o.py`.
+ *
+ * BẢNG CŨ `tuyenDaoLinhNhi.ts` ĐÃ XOÁ. Nó chỉ khớp `data/sheet-solos` của PianoBrain
+ * **118/276 nốt** trong khi bảng này khớp **285/285**, và người dùng nghe ra chỗ sai
+ * bằng tai trước khi đo: ô `duong-xua` số 7 trong bảng cũ ghi `F#` và `C#` ở hai chỗ mà
+ * bản ký âm ghi `F` và `C` — cả hai đều là nốt của chính hợp âm `G9sus4` đang vang. Xem
+ * mục "Ý kiến khi nghe", câu #29 và #40 trong `knowledge/teachers/linh-nhi-piano.md`.
+ */
+export function vonO(
+  thay: Exclude<SoloTeacher, null>,
+  doan: 'intro' | 'interlude' | 'outro',
+): readonly NguonTuyen[] {
+  /*
+    VỐN Ô GỘP CẢ BA ĐOẠN, ô của đoạn khác chịu một điểm phạt.
+
+    Lấy riêng đoạn đang soạn thì vốn mỏng tới mức có bậc chỉ còn MỘT ô. Đo trên vốn của
+    Linh Nhi, giọng trưởng, bậc IV: **1 ô, và ô ấy mang sẵn quãng ba tăng** — nên mọi
+    bài giọng trưởng đều nghe cùng một nốt chói ở chỗ ấy, đổi bao nhiêu lượt cũng vậy.
+    Đúng như người dùng báo: *"chỗ Fadd2 nghe nhiều nốt lệch nhất dù chuyển qua bao
+    nhiêu câu"*.
+
+    | bậc (giọng trưởng) | chỉ đoạn dạo | gộp ba đoạn |
+    |---|---|---|
+    | I | 6 ô sạch / 6 | 23/23 |
+    | ii | 4/4 | 8/8 |
+    | **IV** | **0/1** | **6/8** |
+    | V | 3/3 | 9/10 |
+    | vi | 5/5 | 13/13 |
+
+    "Sạch" = không có nốt nào cách gốc hợp âm một quãng ba tăng.
+  */
+  return TUYEN_SOLO.filter((t) => t.thay === thay).map((t) => ({
+    ...t,
+    muon: t.doan !== doan,
+  }))
+}
+
+/** Bậc của gam THỨ, gộp cả ba gam — xem luật 6 trong `LUAT-SOAN-NOT.md`. */
+const GAM_THU = new Set([0, 2, 3, 5, 7, 8, 9, 10, 11])
+
+/**
+ * Ô này có nốt nào nằm ngoài gam của bài không.
+ *
+ * Cao độ trong bảng ghi theo nửa cung so với chủ âm BẢN GỐC, mà phép ghép dịch cả ô theo
+ * chủ âm bài mới — nên bậc so với gam giữ nguyên, kiểm ngay trên số trong bảng được.
+ */
+const coNotLa = (o: OSolo, thu: boolean) => {
+  const gam = thu ? GAM_THU : GAM_TRUONG
+  return o.n.some(([, cao]) => !gam.has((((cao % 12) + 12) % 12)))
+}
 
 /** Mọi ô dùng được cho bài này: cùng thứ/trưởng, cùng số phách, và có hợp âm. */
-function locO(thu: boolean, phach: number): Manh[] {
-  const hop = TUYEN_DAO.filter((t) => t.thu === thu && t.phach === phach)
+function locO(thu: boolean, phach: number, von: readonly NguonTuyen[]): Manh[] {
+  const hop = von.filter((t) => t.thu === thu && t.phach === phach)
   /*
     Không có bản ký âm nào cùng nhịp thì hạ điều kiện nhịp xuống — thà lệch phách còn
     hơn trả rỗng và mất câu. Chỉ xảy ra với bài 3 phách giọng trưởng: bảng chưa có.
   */
-  const dung = hop.length > 0 ? hop : TUYEN_DAO.filter((t) => t.thu === thu)
+  const dung = hop.length > 0 ? hop : von.filter((t) => t.thu === thu)
   const ra: Manh[] = []
   for (const t of dung) {
     t.o.forEach((o, i) => {
       /* Ô lấy đà chưa có hợp âm thì không ghép theo bậc được — bỏ. */
       if (o.bac === null || o.n.length === 0) return
-      ra.push({ tuyen: t.id, chuGoc: t.chuGoc, i, cuoi: i === t.o.length - 1, o })
+      /*
+        Ô MƯỢN TỪ ĐOẠN KHÁC PHẢI SẠCH GAM.
+
+        Đo vốn ô Linh Nhi: đoạn dạo có **1,4%** nốt ngoài gam (trưởng) và **0,4%** (thứ),
+        còn giang tấu và đoạn kết có **2,2–3,5%** — vì ở đó chị mượn hợp âm (Đường Xưa kết
+        `Am → Fm`). Nốt ấy đúng trên hợp âm mượn của chính bài nó, nhưng ghép sang một ô
+        diatonic của bài khác thì thành nốt lạc.
+
+        Mở vốn sang hai đoạn kia là để chữa chỗ bậc IV chỉ có một ô (xem `vonO`); không
+        phải để nhập thêm chromatic. Nên ô mượn phải sạch, còn ô của CHÍNH đoạn đang soạn
+        thì giữ nguyên cả nốt ngoài gam của nó — đó là vật liệu thật của đoạn ấy.
+
+        Đo lại sau khi thêm luật này: nốt lạc trên 10 vòng trưởng **3,6% → 1,6%**, bản ký
+        âm 1,4%. Chỉ một phép phạt bằng trọng số thì bão hoà ở 2,4% và bắt đầu đánh đổi
+        với tỉ lệ nốt hợp âm.
+      */
+      if (t.muon && coNotLa(o, thu)) return
+      ra.push({
+        tuyen: t.id,
+        chuGoc: t.chuGoc,
+        i,
+        cuoi: i === t.o.length - 1,
+        o,
+        muon: t.muon,
+      })
     })
   }
   return ra
@@ -155,11 +275,30 @@ export function giaiDieuDaoLinhNhi(options: {
    * mà giai điệu ra y hệt, không đổi một nốt.
    */
   beatsEach?: readonly number[]
+  /** Thầy lấy vốn ô. Bỏ trống thì lấy Linh Nhi. */
+  thay?: Exclude<SoloTeacher, null>
+  /** Đoạn lấy vốn ô. Bỏ trống thì lấy đoạn dạo. */
+  doan?: 'intro' | 'interlude' | 'outro'
 }): TimelineEvent[] {
   const { left, chords, beatsPerChord, barBeats, range } = options
   const take = options.take ?? 0
   if (chords.length === 0) return []
-  void left
+
+  /*
+    MỐC GÕ TAY TRÁI, quy về vị trí trong ô — dùng để chọn ô cho tay phải.
+
+    Trước đây hàm này nhận `left` rồi `void left`, tức **bỏ qua hoàn toàn**. Bên kia,
+    `soloLeftHand` tỉa tay trái theo cường độ của chính mẫu đệm, cũng không nhìn tay
+    phải. Hai bè không bên nào biết bên nào — nên tỉ lệ tay trái gõ MỘT MÌNH là chuyện
+    hên xui: bảng tuyến cũ tình cờ ra >30%, bảng mới ra **10%**, trong khi bản ký âm là
+    **41%** (đo bảy đoạn dạo giọng thứ).
+
+    Hai bảng có nhịp điệu gần y hệt nhau — 43% mốc rơi đúng phách nguyên ở cả hai — nên
+    chênh lệch ấy KHÔNG do bảng. Nó do không ai ngắm ai.
+  */
+  const mocTrai = new Set(
+    left.map((e) => Math.round(((e.startBeat % barBeats) + barBeats) % barBeats * 1000)),
+  )
 
   /*
     Bài chưa dò ra giọng thì suy cả chủ âm lẫn thứ/trưởng từ hợp âm đầu.
@@ -173,7 +312,11 @@ export function giaiDieuDaoLinhNhi(options: {
       ? dau.quality.intervals.includes(3) && !dau.quality.intervals.includes(4)
       : options.minor !== false
 
-  const kho = locO(thu, barBeats)
+  const kho = locO(
+    thu,
+    barBeats,
+    vonO(options.thay ?? 'linh-nhi', options.doan ?? 'intro'),
+  )
   if (kho.length === 0) return []
   const goc = gocTuyen(chu)
 
@@ -205,9 +348,18 @@ export function giaiDieuDaoLinhNhi(options: {
     const trongO = hopAmO(o)
     const chord = trongO[0]!.chord
     const bac = ((chord.root % 12) - chu + 12) % 12
-    /* Ô của BÀI có chia đôi không, và nửa sau đứng trên bậc nào. */
+    /*
+      Ô của BÀI có chia đôi không, và nửa sau đứng trên bậc nào.
+
+      HAI NỬA CÙNG MỘT HỢP ÂM THÌ KHÔNG PHẢI Ô CHIA. `Dm | Dm` viết thành hai ô nửa
+      nhịp vẫn chỉ là một hợp âm vang suốt ô, và bảng tuyến cũng chỉ đặt `bac2` khi hai
+      ký hiệu KHÁC nhau — xem `tools/tuyen_o.py`. Đếm nó là ô chia thì mọi ô của mọi bài
+      nhập kiểu nửa nhịp đều thành "chia", và phép phạt lệch chia mất hết tác dụng phân
+      biệt.
+    */
     const sau = trongO.length > 1 ? trongO[1]! : null
-    const bac2 = sau ? (((sau.chord.root % 12) - chu + 12) % 12) : null
+    const bacSau = sau ? (((sau.chord.root % 12) - chu + 12) % 12) : null
+    const bac2 = bacSau !== null && bacSau !== bac ? bacSau : null
     const cuoi = o === soO - 1
 
     /* Cùng bậc trước; không có thì cùng chức năng; vẫn không có thì lấy cả kho. */
@@ -266,6 +418,89 @@ export function giaiDieuDaoLinhNhi(options: {
         const mChia = m.o.bac2 !== null
         if (mChia !== (bac2 !== null)) d += 2
         else if (mChia && bac2 !== null && m.o.bac2 !== bac2) d += 1
+        /*
+          HAI TAY ĐỐI ĐÁP, KHÔNG NÓI CÙNG LÚC.
+
+          Đo bảy đoạn dạo giọng thứ: **41% mốc gõ tay trái không có tay phải đi kèm**.
+          Đây là chỗ duy nhất trong cả bộ ghép mà tay phải nhìn tay trái, nên phép chọn
+          ô phải gánh luôn việc ấy: ô nào đè lên nhiều mốc tay trái thì tốn điểm.
+
+          KHÔNG nắn nốt, không dời phách — chỉ **chọn ô khác** trong vốn ô có thật. Nắn
+          là quay lại kiểu soạn nốt theo luật đã bị bác bốn lần.
+
+          Trọng số **0,6** mỗi mốc đè: đủ để phân biệt giữa các ô ngang điểm, nhưng nhẹ
+          hơn hẳn phép phạt đổi bài (5) và phép phạt lệch chỗ đầu/cuối (4 và 6) — hơi câu
+          liền mạch vẫn đứng trên.
+
+          **Giá trị cũ: 0** (không có phép phạt này). Đo lại sau khi thêm: tay trái gõ
+          một mình **45% giọng thứ · 52% giọng trưởng**, so với bản ký âm **41%** và so
+          với **10%** lúc chưa có. Triệu chứng để lùi: đặt nặng hơn thì bộ ghép bắt đầu
+          bỏ ô đúng bậc để né mốc tay trái, và phép ghép ngược không còn ra đúng câu gốc
+          — `giaiDieuDaoLinhNhi.test.ts` sẽ đỏ ở bài "GHÉP NGƯỢC".
+        */
+        const de = m.o.n.reduce(
+          (a, [at]) => a + (mocTrai.has(Math.round(at * 1000)) ? 1 : 0),
+          0,
+        )
+        d += de * 0.6
+        /*
+          QUÃNG BA TĂNG VỚI GỐC HỢP ÂM — chỗ chói tai nhất, người dùng chỉ đích danh.
+
+          *"chỗ Fadd2 nghe nhiều nốt lệch quá"* — và đo trên 44 câu đã lưu thì đúng:
+          trên `Fadd2` có **31%** số nốt là bậc `♭5` so với gốc, `Gadd2` **29%**, trong
+          khi bản ký âm Linh Nhi để bậc ấy ở **2%** trên hợp âm trưởng (n=305). Đếm
+          tuyệt đối: app 59 nốt quãng ba tăng, bản ký âm **7 nốt trên cả bảy bài**.
+
+          RÒ RỈ Ở PHÉP LUI VỀ CÙNG CHỨC NĂNG. Ghép theo bậc thì bậc so với hợp âm được
+          giữ nguyên; nhưng không có ô cùng bậc thì bộ ghép lui xuống cùng chức năng
+          (`chuc()`), và bậc 5 với bậc 2 cùng là "hạ át". Ô của bậc ii mang nốt bậc 7
+          của gam — trên ii nó là `♭13`, nghe xuôi — đặt sang bậc IV thì chính nốt ấy
+          thành **quãng ba tăng với gốc**. Không nốt nào bịa ra, vẫn ra nốt chói.
+
+          Nên phải chấm ô bằng **hợp âm thật nó sắp đứng lên**, không chỉ bằng bậc.
+
+          Trọng số: 1,5 mỗi nốt, cộng 2 nữa nếu nó MỞ ĐẦU ô. Người dùng báo hai lần về
+          đúng nốt đầu ô (*"nốt cuối câu chạy, đồng thời là nốt đầu của Fadd2"*), và đo
+          được **47%** số nốt quãng ba tăng của app rơi vào chỗ mở ô.
+
+          KHÔNG cấm tuyệt đối: bản ký âm vẫn có 7 nốt như thế, 3 trong số đó đi vào và
+          ra đều bằng bước liền bậc. Phạt để chọn ô khác, không phải để nắn nốt.
+        */
+        /*
+          NỐT LẠC — ngoài gam của bài VÀ ngoài hợp âm đang vang.
+
+          Ô của giang tấu và đoạn kết mang **2–3,5% nốt ngoài gam** (chị ấy mượn hợp âm ở
+          đó — Đường Xưa kết `Am → Fm`), so với **1,4%** ở đoạn dạo. Mở vốn sang hai đoạn
+          ấy để chữa chỗ Fadd2 thì nhập luôn đám chromatic này: đo trên 10 vòng trưởng ra
+          **3,6% nốt lạc**, gấp 2,5 lần bản ký âm.
+
+          Nốt ngoài gam mà THUỘC hợp âm đang vang thì không phạt — vòng có `Bb` hay `A7`
+          thì nốt ấy đúng chứ không lạc.
+        */
+        const tapHop = new Set(
+          chord.quality.intervals.map((iv) => ((((chord.root + iv - chu) % 12) + 12) % 12)),
+        )
+        const chan = m.o.n.reduce((a, [at, cao], k) => {
+          void at
+          const soHop = (((cao - bac) % 12) + 12) % 12
+          const soGam = (((cao % 12) + 12) % 12)
+          let p = 0
+          /* Quãng ba tăng với gốc — chỗ chói nhất, người dùng chỉ đích danh ở `Fadd2`. */
+          if (soHop === 6) p += 1.5 + (k === 0 ? 2 : 0)
+          if (!GAM_TRUONG.has(soGam) && !tapHop.has(soGam) && !thu) p += 1.5
+          return a + p
+        }, 0)
+        d += chan
+        /*
+          Ô MƯỢN TỪ ĐOẠN KHÁC chịu một điểm phạt vừa phải.
+
+          Ô của đoạn dạo vẫn được chuộng — hai đầu câu có tính chất riêng, xem hai phép
+          phạt vị trí ở trên. Nhưng khi đoạn đang soạn không có ô nào sạch cho một bậc,
+          thà mượn ô thật của giang tấu còn hơn dùng ô duy nhất mang quãng ba tăng.
+
+          Trọng số 2: nhẹ hơn phép phạt đổi bài (5), nặng hơn phép phạt lệch chỗ (1,5).
+        */
+        if (m.muon) d += 2
         d += take === 0 ? 0 : rung(take * 977 + o * 31 + m.i * 7 + bam(m.tuyen)) * 9
         return { m, d }
       })
@@ -309,14 +544,58 @@ export function giaiDieuDaoLinhNhi(options: {
     bình **F#4–G4** — thấp hơn bản ký âm bảy nửa cung, trần thấp hơn cả một quãng sáu.
     Người dùng nghe ra ngay: câu chìm vào đúng vùng tay trái đang chạy.
   */
-  const moi = chon.flatMap(({ m }, o) => m.o.n.map(([at, d, du]) => ({ o, at, du, note: goc + d })))
+  /*
+    CĂN QUÃNG TÁM CHO TỪNG Ô, không chỉ cho cả câu.
+
+    Bảng ghi cao độ so với chủ âm BẢN GỐC, mà mỗi ô có thể lấy từ một bài khác nhau —
+    hai ô liền nhau vì thế hay rơi vào hai quãng tám khác nhau, và chỗ nối thành một cú
+    nhảy không ai soạn ra cả. Đo trên 10 vòng trưởng: **nhảy 8+ chiếm 28%** trong khi
+    bản ký âm chỉ **25%**, còn bước liền bậc **26%** so với **32%**.
+
+    Phép căn chỉ dời NGUYÊN ô đi bội số 12, nên **không đổi tên nốt nào** — cùng thứ
+    phép mà bước căn tầm ngay dưới vẫn làm cho cả câu, chỉ khác là làm theo từng ô.
+
+    KHÔNG ép về sát nhau: chỉ nhận mức dời khi nó rút ngắn được bước nối, còn cú nhảy
+    quãng tám vốn có trong bản ký âm (25%) thì giữ — ép hết là giết đúng nét ấy.
+  */
+  const dichO: number[] = []
+  let cuoiTruoc: number | null = null
+  chon.forEach(({ m }, o) => {
+    const dau = goc + m.o.n[0]![1]
+    let k = 0
+    if (cuoiTruoc !== null) {
+      for (const thu of [-12, 12]) {
+        if (Math.abs(dau + thu - cuoiTruoc) < Math.abs(dau + k - cuoiTruoc)) k = thu
+      }
+    }
+    dichO[o] = k
+    cuoiTruoc = goc + m.o.n[m.o.n.length - 1]![1] + k
+  })
+
+  const moi = chon.flatMap(({ m }, o) =>
+    m.o.n.map(([at, d, du]) => ({ o, at, du, note: goc + d + dichO[o]! })),
+  )
   if (moi.length === 0) return []
 
   const ngoai = (k: number) =>
     moi.reduce((a, n) => a + (n.note + k > range.high || n.note + k < range.low ? 1 : 0), 0)
   const tam = moi.reduce((a, n) => a + n.note, 0) / moi.length
-  let doi = 12 * Math.round((TAM_TAY_PHAI - tam) / 12)
-  for (const k of [doi - 12, doi + 12]) if (ngoai(k) < ngoai(doi)) doi = k
+  const neo = TAM[options.thay ?? 'linh-nhi']
+  const doi = 12 * Math.round(((thu ? neo.thu : neo.truong) - tam) / 12)
+  void ngoai
+  /*
+    ĐÃ BỎ: phép nhích thêm ±12 khi mức ấy có ÍT nốt lọt ra ngoài tầm hơn.
+
+    Nó lật ngược thứ tự ưu tiên. Vốn ô lấy từ bản ký âm có vài **nốt đáp trầm** rất thấp
+    nằm ngay trên khuông tay phải — Đừng Xa xuống tới MIDI 52. Chỉ vài nốt ấy lọt dưới
+    đáy 57 là phép đếm chọn mức `+12`, và **cả câu bị đẩy lên một quãng tám**: đo được
+    tâm **80,7** thay vì 73,6, tức lệch 8,3 nửa cung — trong khi cả bốn tuyến nguồn đều
+    nằm ở 70,8–76,0.
+
+    Không cần phép nhích ấy nữa vì `gap()` ngay dưới đã GẬP từng nốt biên vào tầm. Gập
+    một hai nốt trầm là méo nhỏ; đẩy cả câu lên một quãng tám là đổi hẳn chỗ ngồi của
+    câu — đúng thứ người dùng nghe ra và chê ở các câu #3 và #7.
+  */
 
   /*
     ponytail: nốt nào vẫn lọt ra ngoài thì GẬP vào bằng quãng tám. Ô của Một Cõi trải

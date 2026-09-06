@@ -60,6 +60,7 @@ import {
   buildSongSheet,
   resectionSheet,
   sectionChordRanges,
+  attachInterludeToSheet,
   attachPhraseToSheet,
 } from './input/songSheet'
 import type { ParsedSong } from './input/songTextParser'
@@ -159,7 +160,7 @@ import {
   type SoloTeacher,
   type TonHungGiang,
 } from './fillSoloGenerator/soloTeacher'
-import { khungChayNgon, raiLinhNhi } from './style/raiLinhNhi'
+import { khungChayNgon } from './style/khungChayNgon'
 import { vonHopAmLinhNhi } from './style/vonHopAmLinhNhi'
 import { giaiDieuDaoLinhNhi } from './style/giaiDieuDaoLinhNhi'
 import { luuCauDao, type CauDaoLuu } from './nguon/nguon'
@@ -190,6 +191,7 @@ import {
   SONG_FORMS,
   buildSongTimeline,
   arrangedBeatAt,
+  soloChordAt,
   sourceBeatAt,
 } from './style/songStructure'
 import type { SectionKind } from './style/songStructure'
@@ -1966,6 +1968,12 @@ export function ReharmHome() {
         lengthBeats: last.start + last.beats - first.start,
         chords: picked,
         /*
+          Ký hiệu + độ dài từng hợp âm, để dải giang tấu trên bản lời SÁNG theo chỗ
+          đang chơi và bấm vào được. `chords` ngay trên là thứ khác — nó dựng phần đệm.
+        */
+        kyHieu: picked.map((span) => span.chord.symbol),
+        kyHieuBeats: picked.map((span) => span.beats),
+        /*
           Giang tấu chơi **đúng điệu đang chọn**, cả hai tay, không thay gì.
 
           Bản trước thay tay trái bằng một câu rải ballad (hình gốc-5-8-5 của
@@ -2043,6 +2051,7 @@ export function ReharmHome() {
           (thaySolo === 'linh-nhi' && reharm.key
             ? (() => {
                 const tuyen = giaiDieuDaoLinhNhi({
+                  ...(thaySolo ? { thay: thaySolo, doan: 'interlude' as const } : {}),
                   left: lastLoop
                     ? traiCua(headChords, head.map((span) => span.beats))
                     : traiCua(windowChords, picked.map((span) => span.beats)),
@@ -2057,31 +2066,17 @@ export function ReharmHome() {
                 return tuyen.length > 0 ? tuyen : null
               })()
             : null) ??
-          (thaySolo === 'linh-nhi'
-            ? raiLinhNhi({
-                left: lastLoop
-                  ? traiCua(headChords, head.map((span) => span.beats))
-                  : traiCua(windowChords, picked.map((span) => span.beats)),
-                chords: lastLoop ? lastLoopChords : windowChords,
-                beatsPerChord: chordBeats,
-                barBeats: phrasePulseBar,
-                range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
-                take: take + phraseSpin + playSpin.current,
-                chayNgonCuoi: false,
-                terThu: true,
-                /*
-                  Gam cho chuỗi liền bậc — cùng lý do với đoạn dạo.
+          /*
+            ĐƯỜNG LUI `raiLinhNhi` ĐÃ BỎ.
 
-                  Người dùng từng báo tay phải giang tấu "quá đơn sơ và thiếu
-                  câu chạy scale". Lần sửa ấy chưa bao giờ có hiệu lực: chỗ này
-                  không truyền gam, mà `raiLinhNhi` cũng khai `scale` rồi bỏ
-                  không đọc, nên khối chuỗi lui về nốt hợp âm — cách nhau quãng
-                  ba. Bản ký âm giang tấu Đừng Xa đo được 41% bước đi ≤ 2 nửa
-                  cung; dựng theo nốt hợp âm thì không thể tới gần con số ấy.
-                */
-                ...(phraseScale ? { scale: phraseScale.pitchClasses } : {}),
-              })
-            : null) ??
+            Nó chỉ chạy khi bộ ghép ô trả rỗng. Đo: **0 trên 128 lượt** (8 vòng hợp âm ×
+            2 số phách × 8 lượt, cả trưởng lẫn thứ) — bộ ghép chưa bao giờ trả rỗng cho
+            Linh Nhi. Giữ một đường lui không bao giờ đi tới chỉ để bốn hằng số bên trong
+            nó tiếp tục quyết định bằng hàm băm.
+
+            Số đo của bộ ấy đã chép sang `PianoBrain/knowledge/teachers/linh-nhi-piano.md`
+            mục 10b trước khi xoá.
+          */
           builtLine(lastLoop ? lastLoopChords : windowChords, take, true) ??
           soloToTimeline(
             generateSolo(lastLoop ? lastLoopChords : windowChords, {
@@ -3214,6 +3209,20 @@ export function ReharmHome() {
     return mainIndex >= 0 ? mainIndex : null
   }, [looping, sheet, positionBeats, song, withPassing, chordBeats])
 
+  /**
+   * Hợp âm nào của đoạn KHÔNG LỜI đang vang.
+   *
+   * `activeChordIndex` ngay trên chỉ soi được vòng hợp âm của thân bài, vì nó đi qua
+   * `segments` — mà đoạn dạo và đoạn kết không đẩy `segments` nào cả. Đây là đường
+   * riêng cho ba dải dạo · giang · kết.
+   */
+  const activeSolo = useMemo(() => {
+    if (!looping) return null
+    const total = song.totalBeats
+    if (total <= 0) return null
+    return soloChordAt(song.soloSpans, positionBeats % total)
+  }, [looping, positionBeats, song.soloSpans, song.totalBeats])
+
   const soloScaleLabel = useMemo(() => {
     const idx = activeChordIndex ?? selectedIndex
     if (idx === null) return null
@@ -3246,6 +3255,24 @@ export function ReharmHome() {
       interludeWindow(over, null)?.chords.map((span) => span.chord.symbol) ?? []
     )
   }, [songSources, steps, interludeWindow])
+
+  /**
+   * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
+   *
+   * Không gắn thẳng vào `sheet` vì `sheet` là đầu vào để tính ra `songSources`, rồi mới
+   * ra được vòng giang tấu. Gắn ở đó là vòng phụ thuộc quẩn.
+   */
+  const sheetHien = useMemo(() => {
+    if (!sheet) return null
+    /*
+      Giang tấu mượn vòng của đoạn nào — lấy từ chính bước giang tấu trong thứ tự chơi.
+      Bản nhạc chưa có đoạn giang tấu thì đoạn mới được chèn ngay sau đoạn ấy.
+    */
+    const buoc = steps.find((step) => step.type === 'interlude')
+    const sauDoan =
+      buoc && songSources ? (songSources[buoc.over]?.name ?? null) : null
+    return attachInterludeToSheet(sheet, interludeSymbols, sauDoan)
+  }, [sheet, interludeSymbols, steps, songSources])
 
   /*
     Đăng bài đang mở lên kho dùng chung, để tab Luyện đệm lấy về.
@@ -3562,6 +3589,37 @@ export function ReharmHome() {
     [song.segments, song.sections, playFromBeat],
   )
 
+  /**
+   * Dựng một dải hợp âm bấm được cho đoạn không lời.
+   *
+   * Hợp âm lấy từ CHÍNH dải trên dòng thời gian khi có, không lấy danh sách hiện sẵn:
+   * `introSymbols` còn kèm hợp âm báo và ô hút bậc V nên số thứ tự của nó **không khớp**
+   * với thứ tự hợp âm thật sự chơi. Chưa dựng dòng thời gian thì mới lui về danh sách cũ,
+   * và lúc ấy dải chỉ để đọc, không bấm được.
+   */
+  const daiSolo = useCallback(
+    (
+      kind: 'intro' | 'interlude' | 'outro',
+      label: string,
+      fallback: readonly string[],
+    ) => {
+      const dang = activeSolo?.span.kind === kind ? activeSolo.span : null
+      const span = dang ?? song.soloSpans.find((one) => one.kind === kind) ?? null
+      if (!span) return { label, chords: fallback, activeIndex: null }
+      return {
+        label,
+        chords: span.chords,
+        activeIndex: dang ? activeSolo!.index : null,
+        onSeek: (index: number) => {
+          let at = span.startBeat
+          for (let i = 0; i < index; i += 1) at += span.beatsEach[i] ?? 0
+          void playFromBeat(at)
+        },
+      }
+    },
+    [activeSolo, song.soloSpans, playFromBeat],
+  )
+
   const pausePlay = useCallback(() => {
     stopTimelineLoop()
     pauseSource()
@@ -3575,6 +3633,7 @@ export function ReharmHome() {
   useEffect(() => {
     setPracticeTransport({
       playFrom: playFromSourceBeat,
+      playAll: () => void playFromBeat(0),
       pause: pausePlay,
       stop: stopPlay,
       onTone: (delta) => setTranspose((value) => value + delta),
@@ -3585,6 +3644,7 @@ export function ReharmHome() {
   }, [
     setPracticeTransport,
     playFromSourceBeat,
+    playFromBeat,
     pausePlay,
     stopPlay,
     transpose,
@@ -3729,20 +3789,17 @@ export function ReharmHome() {
           */
           leadIn={
             steps.some((step) => step.type === 'intro')
-              ? { label: 'Dạo đầu', chords: introSymbols }
+              ? daiSolo('intro', 'Dạo đầu', introSymbols)
               : undefined
           }
           interlude={
             interludeSymbols.length > 0
-              ? { label: 'Giang tấu', chords: interludeSymbols }
+              ? daiSolo('interlude', 'Giang tấu', interludeSymbols)
               : undefined
           }
           leadOut={
             steps.some((step) => step.type === 'outro')
-              ? {
-                  label: 'Kết bài',
-                  chords: outroSymbols,
-                }
+              ? daiSolo('outro', 'Kết bài', outroSymbols)
               : undefined
           }
           meter={style.beatsPerMeasure === 3 ? 3 : 4}
@@ -3952,23 +4009,38 @@ export function ReharmHome() {
           <div className="flex flex-wrap gap-2">
             {SOLO_THAY_NUT.map((nut) => {
               const on = soloThay === nut.id
+              /*
+                TÔN HÙNG KHÔNG CÓ BẢN KÝ ÂM GIỌNG TRƯỞNG NÀO — đo vốn ô đoạn dạo: 17 ô,
+                cả 17 đều giọng thứ. Bài giọng trưởng chọn anh thì bộ ghép không có gì
+                để ghép. Khoá nút thay vì mượn ô của thầy khác: mượn là lấy luật thầy A
+                áp cho thầy B, đúng thứ người dùng đã cấm.
+              */
+              const khoa =
+                nut.id === 'ton-hung' &&
+                reharm.key !== null &&
+                reharm.key.scale !== 'minor'
               return (
                 <button
                   key={nut.label}
                   type="button"
+                  disabled={khoa}
                   onClick={() => {
                     setChiecLa(false)
                     setSoloThay(nut.id)
                   }}
                   title={
-                    nut.id
-                      ? `Dạo / giang / kết theo sheet ${nut.label} — không dùng gam tự chọn`
-                      : 'Theo điệu đệm đang chọn'
+                    khoa
+                      ? 'Tôn Hùng chưa có bản ký âm giọng trưởng nào — không có ô để ghép'
+                      : nut.id
+                        ? `Dạo / giang / kết theo sheet ${nut.label} — không dùng gam tự chọn`
+                        : 'Theo điệu đệm đang chọn'
                   }
                   className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    on
-                      ? 'border-teal-key bg-teal-key/20 text-teal-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    khoa
+                      ? 'cursor-not-allowed border-line bg-white/4 text-dim/40'
+                      : on
+                        ? 'border-teal-key bg-teal-key/20 text-teal-key'
+                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
                   }`}
                 >
                   {nut.label}
@@ -4015,20 +4087,18 @@ export function ReharmHome() {
         <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              looping ? pausePlay() : void playFromBeat(0)
-            }
-            disabled={timeline.length === 0}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
-              looping
-                ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
-                : 'bg-amber-key text-ink hover:brightness-110'
-            }`}
-          >
-            {looping ? '■ Dừng' : '▶ Phát lặp bản đệm'}
-          </button>
+          {/*
+            NÚT PHÁT Ở ĐÂY ĐÃ BỎ.
+
+            Nó gọi đúng một việc với nút "Phát cả bài" trên thanh của bản nhạc
+            (`toolbar` truyền vào `SongSheetView`) — cùng `playFromBeat(0)`, cùng
+            `pausePlay`. Hai nút giống hệt nhau đứng cách nhau một màn hình.
+
+            Chỗ này trước đây tên là "Phát lặp bản đệm" nên trông như một việc khác;
+            đổi tên cho đúng thì mới lộ ra là trùng. Giữ nút ở thanh bản nhạc vì nó
+            nằm cạnh chỗ người dùng đang nhìn khi tập, và nó còn phân biệt được
+            "Phát trọn bài" với "Phát cả bài" theo `playsOnce`.
+          */}
 
           {/*
             Nhịp độ nằm ngay trong khung chọn điệu, vì hai thứ này luôn đi cùng
@@ -4217,14 +4287,22 @@ export function ReharmHome() {
             </p>
           )}
 
-          {sheet &&
-            sheet.sections.some((section) =>
+          {sheetHien &&
+            sheetHien.sections.some((section) =>
               section.lines.some((line) => line.lyric.trim().length > 0),
             ) && (
           <SongSheetView
             cauLinhNhi={cauLinhNhi}
-            sheet={sheet}
+            sheet={sheetHien}
             activeIndex={activeChordIndex}
+            soloActive={
+              activeSolo
+                ? { kind: activeSolo.span.kind, index: activeSolo.index }
+                : null
+            }
+            onSeekSolo={(kind, index) =>
+              daiSolo(kind, '', []).onSeek?.(index)
+            }
             pairedChords={pairedChords}
             passingOptionsFor={(chordIndex) =>
               passingOptionsForChord(chordIndex, chordIndex)
