@@ -185,10 +185,24 @@ trọng số 3 · 8 · 20 ra gần như y hệt. Lý do: tỉ lệ nốt hợp �
 3,05 nốt. Rải bừa trong gam trên vốn dày ấy đã trúng 64,9%, so với 43% trên vốn của chị.
 Nên thước là **bội số** = tỉ lệ trúng ÷ tỉ lệ trúng nếu rải bừa trong gam.
 
-**Chỗ chặn không nằm ở phía app.** Bản ký âm chỉ có **ba** bài giọng trưởng (bội số 1,60 ·
-1,36 · 1,71), sai số chuẩn 0,103, và không giảm được. **Chênh lệch nhỏ nhất phát hiện được
-là 0,20 bội số.** Bài kiểm vì thế chỉ đòi app nằm trong khoảng của chị, không đòi trúng
-trung bình. Siết chặt hơn là siết vào nhiễu — nếu bạn thấy nó "lỏng" thì đó là cố ý.
+**Chỗ chặn không nằm ở phía app.** Bản ký âm chỉ có **ba** bài giọng trưởng — Đường Xưa
+**1,364** · Biển Tình **1,604** · Mùa Xuân **1,714**, trung bình 1,561, sai số chuẩn 0,103,
+và không giảm được. **Chênh lệch nhỏ nhất phát hiện được là 0,20 bội số.** Bài kiểm vì thế
+chỉ đòi app nằm trong khoảng của chị, không đòi trúng trung bình. Siết chặt hơn là siết vào
+nhiễu — nếu bạn thấy nó "lỏng" thì đó là cố ý.
+
+**Tra ngược ba con số ấy:** `python tools/sheet/boi_so.py --kiem` bên PianoBrain in lại đúng
+chúng từ bản ký âm; bảng đầy đủ cả ba thầy ở `linh-nhi-piano.md` mục 16b, `ca-phao.md` mục
+5b, `ton-hung.md` mục 5b, và luật chung ở `LUAT-SOAN-NOT.md` Luật 13. Trước 6/9/2026 chúng
+chỉ nằm trong chính bài kiểm, gõ tay — người dùng hỏi thẳng "có nên viết lại cho chắc
+không", và đó là lý do bộ đo ấy ra đời.
+
+**Hai điều bảng bội số nói ra, đáng biết trước khi sửa bộ soạn:**
+
+- Đoạn **kết** là chỗ hai giọng của Linh Nhi tách xa nhất: trưởng **1,807** so với thứ
+  **1,131** — chênh 0,68, gấp hơn ba lần ngưỡng phát hiện. Xác nhận độc lập hằng `DICH_HOP`.
+- Đoạn **dạo** thì hai giọng gần như y hệt: 1,561 và 1,549. Đừng đặt luật "dạo giọng trưởng
+  bám chặt hơn" — số đo không đỡ.
 
 ### 5.4 Ba việc còn treo, tôi xếp theo mức đáng làm trước
 
@@ -239,6 +253,7 @@ Tương tự, `sietHopAm.test.ts` có một khẳng định **cố ý** nói *đ
 | `sang_toi.py` | đo **cả hai tay**, so giọng trưởng với giọng thứ ở mọi đoạn solo |
 | `day_not.py` | dò "dãy nốt" — ngưỡng riêng từng thầy trong `NGUONG` |
 | `chay_not.py` | **cố ý tách riêng** khỏi `day_not.py`; ngưỡng 0,26 của Cà Pháo không được đổi |
+| `boi_so.py` | **bội số** bám hợp âm từng bài × từng đoạn; `--kiem` tái lập số mốc của bài kiểm bên KeyTrain |
 | `luu_solo.py` | lưu câu dạo/giang/kết ra `data/sheet-solos/` (38 file) cho skill của bạn |
 | `khung.py` | nạp `corpus.json` |
 
@@ -303,6 +318,7 @@ Chép từ `C:\Users\Tin PC\.claude\CLAUDE.md` — áp cho mọi agent trên má
 - Thấy người dùng sai thì **nói trước khi làm**. Họ nhắc lại sau khi bạn đã nêu lo ngại thì
   **làm theo**, đừng bàn lại. Không có cơ sở thì đừng phản đối cho có.
 - Phát hiện thứ mình từng nói là sai thì **sửa ngay và nói rõ**, kể cả khi không được hỏi.
+- Giao thứ người dùng cầm lên dùng được ngay, đừng giao đường dẫn tới nó.
 
 ---
 
@@ -323,6 +339,9 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
 6. **Chừa việc của bạn ra khỏi git** vì tưởng `.opencode/` là vùng cấm — mất một bản skill
    tốt hơn bản đang dùng. Đã sửa ở mục 0.
 7. **Viết sai tên thầy** ("Tôn Hưng") vì lấy tên từ slug không dấu thay vì trường `name`.
+8. **Viết con số không tra ngược được.** Ba mốc bội số nằm trong bài kiểm suốt một thời
+   gian mà không bản ký âm nào đỡ chúng. Số hoá ra đúng, nhưng đó là may chứ không phải
+   quy trình — nay đã có `boi_so.py --kiem`.
 
 ---
 

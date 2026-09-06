@@ -14,14 +14,14 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
 
   Nhưng tỉ lệ nốt hợp âm THÔ không so được giữa hai vốn hợp âm khác nhau. Đo trên bài *Hoa
   Trinh Nữ* mà app soạn: hợp âm trung bình **4,33 nốt** (`Cadd2 · Dm11 · G9sus4`), còn ba
-  đoạn dạo giọng trưởng của Linh Nhi dùng **3,05 nốt** — gần như toàn hợp âm ba trơn. Rải
-  bừa trong gam trên vốn dày ấy đã trúng **64,9%** rồi, so với **43%** trên vốn của chị.
+  đoạn dạo giọng trưởng của Linh Nhi dùng **3,03 nốt** — gần như toàn hợp âm ba trơn. Rải
+  bừa trong gam trên vốn dày ấy đã trúng **64,9%** rồi, so với **43,3%** trên vốn của chị (số của chị đo bằng `boi_so.py`; số 4,33 và 64,9% phía app đo trên chính bài Hoa Trinh Nữ, chưa có bộ đo riêng).
 
   Nên thước là **BỘI SỐ so với ngẫu nhiên**:
 
       bội số = (tỉ lệ nốt trúng hợp âm) / (tỉ lệ trúng nếu rải bừa trong gam)
 
-  Mức của Linh Nhi, ba đoạn dạo giọng trưởng: **1,60 · 1,36 · 1,71** — trung bình 1,557.
+  Mức của Linh Nhi, ba đoạn dạo giọng trưởng: **1,364 · 1,604 · 1,714** — trung bình 1,561. Tra ngược: `python tools/sheet/boi_so.py --kiem` bên PianoBrain.
 
   ## Vì sao 16 vòng × 4 lượt
 
@@ -37,12 +37,12 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
 
   ## CHỖ CHẶN KHÔNG NẰM Ở PHÍA APP — đọc kỹ trước khi siết ngưỡng
 
-  Bản ký âm chỉ có **BA** bài giọng trưởng: 1,60 · 1,36 · 1,71, độ lệch 0,179, **sai số
+  Bản ký âm chỉ có **BA** bài giọng trưởng: 1,364 · 1,604 · 1,714, độ lệch 0,179, **sai số
   chuẩn 0,103**. Con số ấy không giảm được.
 
   > **Chênh lệch nhỏ nhất phát hiện được là 0,20 bội số**, kể cả khi phía app đo hoàn hảo.
 
-  Nên bài kiểm này **không** đòi app trúng trung bình 1,557. Nó đòi app nằm **trong khoảng
+  Nên bài kiểm này **không** đòi app trúng trung bình 1,561. Nó đòi app nằm **trong khoảng
   của chị**, và bắt khi app rơi ra ngoài quá xa. Siết chặt hơn là siết vào nhiễu.
 
   ## Tầm âm phải đúng tầm app thật
@@ -152,8 +152,17 @@ function chamHet() {
   return { theoVong, boi, nho, tongNot, soCau: theoVong.length * LUOT }
 }
 
-/** Ba đoạn dạo giọng trưởng của Linh Nhi — mốc để so. */
-const CHI = { boi: [1.6, 1.36, 1.71], nho: [0.7, 0.54, 0.45] }
+/**
+ * Ba đoạn dạo giọng trưởng của Linh Nhi — mốc để so.
+ *
+ * **Nguồn tra ngược:** `python tools/sheet/boi_so.py --kiem` bên PianoBrain in ra đúng ba
+ * con số này từ bản ký âm; bảng đầy đủ ở `knowledge/teachers/linh-nhi-piano.md` mục 16b.
+ * Trước 6/9/2026 chúng chỉ nằm ở đây, gõ tay, không kiểm lại được — nếu sửa số ở đây thì
+ * phải sửa cả hai chỗ kia, và ngược lại.
+ *
+ * Từng bài: Đường Xưa 1,364 · Biển Tình 1,604 · Mùa Xuân 1,714 (trung bình 1,561).
+ */
+const CHI = { boi: [1.364, 1.604, 1.714], nho: [0.537, 0.7, 0.447] }
 const CHI_THAP = Math.min(...CHI.boi)
 const CHI_CAO = Math.max(...CHI.boi)
 
@@ -173,7 +182,7 @@ describe('bội số tươi sáng — 16 vòng × 4 lượt', () => {
       [
         '',
         `  ${r.soCau} câu · ${r.tongNot} nốt`,
-        `  BỘI SỐ   ${r.boi.toFixed(3)}   (Linh Nhi 1,36–1,71 · trung bình 1,557)`,
+        `  BỘI SỐ   ${r.boi.toFixed(3)}   (Linh Nhi 1,364–1,714 · trung bình 1,561)`,
         `  BƯỚC NHỎ ${(100 * r.nho).toFixed(1)}%   (Linh Nhi 45–70%)`,
         `  thấp nhất: ${xep.slice(0, 3).map(ten).join(' · ')}`,
         `  cao nhất : ${xep.slice(-3).map(ten).join(' · ')}`,
@@ -183,9 +192,9 @@ describe('bội số tươi sáng — 16 vòng × 4 lượt', () => {
     expect(r.tongNot).toBeGreaterThan(2000)
   })
 
-  it('BỘI SỐ nằm trong khoảng của chị — 1,36 tới 1,71', () => {
+  it('BỘI SỐ nằm trong khoảng của chị — 1,364 tới 1,714', () => {
     /*
-      KHÔNG đòi trúng trung bình 1,557. Với ba bài mẫu, sai số chuẩn phía bản ký âm là
+      KHÔNG đòi trúng trung bình 1,561. Với ba bài mẫu, sai số chuẩn phía bản ký âm là
       0,103 và chênh lệch nhỏ nhất phát hiện được là 0,20 — siết chặt hơn là siết vào nhiễu.
       Nới hai đầu 0,20 đúng bằng ngưỡng ấy.
     */

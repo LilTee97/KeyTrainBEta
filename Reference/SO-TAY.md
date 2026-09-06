@@ -2008,3 +2008,32 @@ phiên vì tưởng `.opencode/` là vùng cấm. Bản ấy hoá ra là **bản
 nó có mục "Tone chủ" (đo sheet theo bậc và quãng so với tonic sheet rồi dựng lại trên tonic
 bài đang mở) mà bản ở `PianoBrain/.claude/skills/` và bản ở `~/.claude/skills/` đều thiếu.
 Chừa nó ra là chừa mất tri thức tốt hơn thứ đang dùng.
+
+
+### Con số mốc của một bài kiểm phải TRA NGƯỢC được về bản ký âm
+
+`boiSoTuoiSang.test.ts` chấm câu dạo của app bằng ba con số mốc — bội số bám hợp âm của ba
+đoạn dạo giọng trưởng Linh Nhi. Ba con số ấy nằm trong hằng `CHI`, **do agent gõ tay**, và
+không bản ký âm nào đỡ chúng: không md thầy nào ghi, không script nào ở PianoBrain sinh ra.
+Người dùng hỏi thẳng có nên làm lại cho chắc không.
+
+Đã dựng `PianoBrain/tools/sheet/boi_so.py`, có `--kiem`. Kết quả: **số gõ tay đúng** —
+1,364 · 1,604 · 1,714, trung bình 1,561 (test ghi 1,60/1,36/1,71 → 1,557; chênh 0,004 do
+làm tròn). Độ dày hợp âm 3,03 nốt (test ghi 3,05), rải bừa trúng 43,3% (test ghi 43%).
+
+Nhưng **đúng là may, không phải quy trình**. Nay `CHI` ghi 3 chữ số và trỏ thẳng về
+`boi_so.py --kiem` cùng `linh-nhi-piano.md` mục 16b; sửa một chỗ thì phải sửa cả ba.
+
+Bảng đầy đủ mở ra hai thứ chưa từng đo:
+
+- **Đoạn kết Linh Nhi: trưởng 1,807 · thứ 1,131** — chênh 0,68, gấp hơn ba lần ngưỡng phát
+  hiện 0,20. Đây là **xác nhận độc lập** cho `DICH_HOP` (trưởng kết .75, thứ kết .50): hai
+  phép đo khác nhau, cùng một chiều.
+- **Đoạn dạo thì hai giọng y hệt: 1,561 và 1,549.** Đừng đặt luật "dạo giọng trưởng bám chặt
+  hơn" — số đo không đỡ. `DICH_HOP` đặt .68/.69 ở đoạn dạo, nhất quán.
+
+Và một cái bẫy mẫu số bị lật: `ca-phao.md` mục 3 ghi Cà Pháo bám hợp âm **chặt hơn** Linh
+Nhi (70,8% so với 63,6%). Đúng theo **tỉ lệ thô**, nhưng theo **bội số thì ngược lại** —
+1,299 so với 1,561. Lý do: hợp âm của Cà Pháo dày 3,51 nốt so với 3,03 của chị, mà hợp âm
+càng dày thì rải bừa càng dễ trúng. Cả hai con số đều đúng, chúng trả lời hai câu hỏi khác
+nhau — đã ghi rõ ở cả hai md.
