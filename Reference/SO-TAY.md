@@ -1995,3 +1995,16 @@ cao nhất *Đường Xưa* 1,65. Bài kiểm in số ra mỗi lần chạy.
 `daoTruongLinhNhi.test.ts` **vẫn còn dùng `{57, 95}`** — rộng hơn app thật 21 nửa cung,
 nên nó báo tâm 75,8 đạt neo trong khi app thật ra 70,7. Test xanh mà app vẫn lệch. Chưa
 sửa: sửa xong nó sẽ đỏ, vì trần 79 của `SOLO_RANGE` chặn không cho đạt neo 75,3.
+
+### Bàn giao sang OpenCode nằm ở `Reference/BAN-GIAO-OPENCODE.md`
+
+Hai agent cùng sửa hai repo này. Người dùng chốt: **không chừa phần nào cho bên nào** —
+OpenCode đọc và sửa được mọi thứ Claude làm, và ngược lại. Ranh giới duy nhất còn giữ là
+**ranh giới kiến trúc**, không phải ranh giới agent: mã PianoBrain không `import` thứ gì
+trong KeyTrain; chiều ngược lại đi qua alias `@pianobrain`.
+
+Cái bẫy đã sập: tôi để `.opencode/skills/train-teacher-solo/SKILL.md` ngoài git suốt nhiều
+phiên vì tưởng `.opencode/` là vùng cấm. Bản ấy hoá ra là **bản đầy đủ nhất trong ba bản** —
+nó có mục "Tone chủ" (đo sheet theo bậc và quãng so với tonic sheet rồi dựng lại trên tonic
+bài đang mở) mà bản ở `PianoBrain/.claude/skills/` và bản ở `~/.claude/skills/` đều thiếu.
+Chừa nó ra là chừa mất tri thức tốt hơn thứ đang dùng.
