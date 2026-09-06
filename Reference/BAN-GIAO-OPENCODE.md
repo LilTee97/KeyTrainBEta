@@ -217,10 +217,40 @@ không", và đó là lý do bộ đo ấy ra đời.
    **Đừng hạ ngưỡng neo cho nó xanh.**
 3. Hai test đỏ sẵn có ở mục 6.
 
-Bốn trục lệch của bài *Hoa Trinh Nữ* so với đoạn dạo giọng trưởng thật của Linh Nhi (vòng
-hợp âm · nốt giai điệu tay phải · nốt rải tay trái · tiết tấu đệm) đã đo xong và ghi trong
-`linh-nhi-piano.md` §9b. `SOLO_RANGE` là trục tôi khuyên chữa trước vì nó vô hiệu hoá cả neo
-cao độ lẫn vật liệu ô.
+### 5.5 CHƯA LÀM: so bài *Hoa Trinh Nữ* với đoạn dạo giọng trưởng của Linh Nhi
+
+Người dùng giao năm trục: **vòng hợp âm · nốt giai điệu tay phải · nốt rải hợp âm tay trái ·
+tiết tấu đệm · độ tươi sáng khi chọn nốt**.
+
+**Chỉ trục thứ năm có bàn đo** — `boiSoTuoiSang.test.ts`, và nó chạy trên **16 vòng hợp âm
+chung**, không phải trên bài này. **Bốn trục đầu chưa có gì lưu lại.** Tôi có đo chúng trong
+một phiên trước và báo miệng trong khung chat, rồi ngữ cảnh bị nén và số ấy mất. Không kiểm
+lại được, nên coi như **chưa đo**.
+
+> **Bản bàn giao này trước đó viết rằng bốn trục ấy "đã đo xong và ghi trong
+> `linh-nhi-piano.md` §9b". Câu đó SAI** — OpenCode bắt được ngày 6/9/2026. §9b chỉ là **mốc
+> ba bài giọng trưởng của chị** (141 nốt tay phải), không nhắc bài này; chữ "Hoa Trinh Nữ"
+> không xuất hiện ở bất kỳ đâu trong `PianoBrain/knowledge/`.
+
+Vật liệu đang có, nếu bạn nhận việc này:
+
+- **Hai câu app đã phát**, `KeyTrain/Nguon.json` mục `cau` số **117** và **118** — cùng vòng
+  9 ô `Cadd2 · Dm11 · Em7 · Fadd2 · G9sus4 · C · Am9 · G9sus4 · G (hút)`, giọng Đô trưởng,
+  điệu `bolero-linh-nhi-2`, 112 và 109 nốt. Người dùng đã tick **Chưa ổn** cho câu 118. Đây
+  là bản phát, **không phải** bộ câu dựng để so — hai câu là quá mỏng, người dùng đã tự nêu
+  điều đó ("mới chỉ có 2 câu intro liệu có hơi ít").
+- **Ba đoạn dạo giọng trưởng của chị** để làm vế kia: `linh-nhi-piano.md` §9b.
+- **Bộ đo bội số** `PianoBrain/tools/sheet/boi_so.py` cho trục thứ năm.
+
+Trục **vòng hợp âm** là chỗ nhìn thấy chênh ngay mà chưa cần đo: vòng app dùng hợp âm màu
+(`Cadd2 · Dm11 · G9sus4`, trung bình 4,33 nốt) còn ba đoạn dạo của chị gần như toàn hợp âm
+ba trơn (3,03 nốt). Bốn trục còn lại cần đo thật.
+
+---
+
+### 5.6 Trục nên chữa trước
+
+`SOLO_RANGE` là trục tôi khuyên chữa trước vì nó vô hiệu hoá cả neo cao độ lẫn vật liệu ô.
 
 ---
 
@@ -342,6 +372,11 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
 8. **Viết con số không tra ngược được.** Ba mốc bội số nằm trong bài kiểm suốt một thời
    gian mà không bản ký âm nào đỡ chúng. Số hoá ra đúng, nhưng đó là may chứ không phải
    quy trình — nay đã có `boi_so.py --kiem`.
+9. **Viết rằng đã ghi vào một file mà file không hề có nội dung đó.** Chính bản bàn giao này
+   nói bốn trục *Hoa Trinh Nữ* nằm ở §9b; grep ra thì không có chữ nào. Nguyên nhân: tôi đo
+   trong khung chat rồi không lưu, ngữ cảnh bị nén, và khi viết bàn giao thì nhớ nhầm rằng
+   đã lưu. **Đo xong mà không ghi vào file thì coi như chưa đo** — mục 5.5 nay chép đúng
+   trạng thái. OpenCode bắt được lỗi này, không phải tôi.
 
 ---
 
@@ -349,7 +384,7 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
 
 Nếu người dùng chưa giao việc cụ thể, thứ tự tôi đề nghị:
 
-1. Đọc `linh-nhi-piano.md` §9b (bốn trục lệch của *Hoa Trinh Nữ*) và `SO-TAY.md` mục cuối.
+1. Đọc `linh-nhi-piano.md` §9b (mốc ba bài giọng trưởng) và `SO-TAY.md` mục cuối.
 2. Hỏi người dùng nốt cao nhất trong sheet giọng trưởng của Linh Nhi chạm tới đâu, rồi mở
    trần `SOLO_RANGE` cho đúng — việc 5.4.1.
 3. Sửa `daoTruongLinhNhi.test.ts` sang `SOLO_RANGE`; nó sẽ đỏ, và cái đỏ ấy là thật.

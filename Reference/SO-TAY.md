@@ -2037,3 +2037,26 @@ Nhi (70,8% so với 63,6%). Đúng theo **tỉ lệ thô**, nhưng theo **bội 
 1,299 so với 1,561. Lý do: hợp âm của Cà Pháo dày 3,51 nốt so với 3,03 của chị, mà hợp âm
 càng dày thì rải bừa càng dễ trúng. Cả hai con số đều đúng, chúng trả lời hai câu hỏi khác
 nhau — đã ghi rõ ở cả hai md.
+
+### Đo xong mà không ghi vào file thì coi như CHƯA ĐO
+
+Người dùng giao so bài *Hoa Trinh Nữ* với đoạn dạo giọng trưởng của Linh Nhi trên năm trục:
+vòng hợp âm · nốt giai điệu tay phải · nốt rải hợp âm tay trái · tiết tấu đệm · độ tươi sáng.
+
+Tôi đo bốn trục đầu, **báo trong khung chat, không ghi vào file nào**. Ngữ cảnh bị nén, số
+mất. Khi viết bản bàn giao cho OpenCode thì tôi nhớ nhầm là đã ghi, nên viết rằng bốn trục
+ấy nằm ở `linh-nhi-piano.md` §9b. **OpenCode grep ra và bác** — §9b chỉ là mốc ba bài giọng
+trưởng (141 nốt tay phải), và chữ "Hoa Trinh Nữ" không xuất hiện ở bất kỳ đâu trong
+`PianoBrain/knowledge/`.
+
+Trạng thái thật, đã chép vào bàn giao mục 5.5:
+
+- **Trục 5 (tươi sáng)** có bàn đo — `boiSoTuoiSang.test.ts` — nhưng nó chạy trên **16 vòng
+  hợp âm chung**, không phải trên bài này.
+- **Bốn trục đầu: chưa có gì lưu lại.**
+- Vật liệu còn: hai câu app đã phát ở `Nguon.json` #117 và #118, cùng vòng 9 ô `Cadd2 · Dm11
+  · Em7 · Fadd2 · G9sus4 · C · Am9 · G9sus4 · G (hút)`, 112 và 109 nốt, câu 118 người dùng
+  tick **Chưa ổn**. Hai câu là quá mỏng — chính người dùng đã nêu.
+
+Bài học đứng lâu dài: **kết quả sống trong khung chat là kết quả đã mất.** Đo xong thì ghi
+vào md hoặc vào một bộ đo chạy lại được, ngay trong lượt ấy, trước khi nói "đã đo".
