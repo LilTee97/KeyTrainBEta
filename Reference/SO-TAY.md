@@ -1900,3 +1900,35 @@ Sửa: chỉ gộp khi hai neo **cùng `charOffset`** — hai nhãn chồng đú
 Bỏ điều kiện cũ **không làm đỏ bài kiểm nào** — nó không bảo vệ thứ gì có test. Nay có ba
 bài kiểm trong `songSheet.test.ts` canh: đủ 11 hợp âm, số thứ tự liền mạch 0–10, và hai nhãn
 chồng đúng một chỗ thì vẫn gộp.
+
+### "Giọng trưởng tươi sáng hơn" — đo được, nhưng KHÔNG nằm ở việc chọn nốt
+
+Người dùng nêu: ở bài giọng trưởng các thầy *"chọn nốt có xu hướng tươi sáng"*. Đo cả hai
+tay, mọi đoạn solo, bằng `PianoBrain/tools/sheet/sang_toi.py`.
+
+**Chỗ phải loại bỏ trước.** So bậc giữa hai giọng thì chênh lệch lớn nhất là `3` **+15** và
+`13` **+13**, `♭3` **−16**. Nhìn thì thuyết phục, nhưng **gam trưởng vốn có sẵn `3` và `13`
+còn gam thứ vốn có sẵn `♭3`** — bốn con số ấy chỉ nói lại định nghĩa của hai cái gam.
+
+**Phép so đúng là giữ nguyên chất hợp âm rồi mới so.** Làm thế thì bậc các thầy chọn ở bài
+trưởng **gần như trùng khít** bài thứ. Nên "chọn nốt tươi sáng" không phải thứ bản ký âm cho
+thấy.
+
+**Ba chỗ thật sự đổi, và mỗi thầy một kiểu:**
+
+| | Linh Nhi | Cà Pháo |
+|---|---|---|
+| hợp âm át ở bài trưởng | **2%** (bài thứ 11%) | **7%** (bài thứ 24%) |
+| tầm âm bài trưởng so bài thứ | +1,4 — **gần như không đổi** | **+3,7 tâm, +9 trần** |
+| nốt hợp âm ở bài trưởng | **70,2%** (bài thứ 59,9%) | — |
+
+Riêng Linh Nhi, chỗ mạnh nhất là **mức bám hợp âm**: bài trưởng 70,2% so với 59,9%, bước
+liền bậc cộng quãng ba **55% so với 38%**, và tỉ lệ nốt hợp âm ở **đoạn kết 75% so với 50%**
+— tức hai giọng đi **ngược chiều** về phía cuối câu.
+
+> **Cách đọc, người dùng đã xác nhận:** thứ tai nghe thành "tươi sáng" là **sự chắc chắn** —
+> nốt nằm trên hợp âm, bước đi nhỏ, càng về kết càng chắc.
+
+**Việc cho KeyTrain, chưa làm:** bộ soạn hiện dùng **cùng một bộ luật cho cả hai giọng**.
+Muốn theo số đo này thì bài giọng trưởng phải siết về nốt hợp âm và siết thêm ở đoạn kết —
+nhưng đó là đổi lối chơi, nên phải dựng sau một ô tick nghe thử, đúng luật người dùng đã đặt.
