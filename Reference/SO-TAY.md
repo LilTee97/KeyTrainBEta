@@ -2078,3 +2078,55 @@ và sửa là đổi lối chơi, phải qua ô tick nghe thử.
 Hai nhu cầu đừng lẫn: **đủ câu để ĐO** thì gọi bộ soạn nhiều `take` trong một bài kiểm, không
 cần app; **đủ câu để NGƯỜI DÙNG CHẤM BẰNG TAI** thì chỉ có một đường là họ bấm phát thêm N
 lần, agent không thay được.
+
+### Tám câu dạo *Hoa Trinh Nữ* so với ba đoạn dạo trưởng của Linh Nhi
+
+Đo 6/9/2026. App: 8 `take` cùng vòng 9 ô, `SOLO_RANGE` 62–79, điệu `bolero-linh-nhi-2`,
+406 nốt tuyến. Chị: 3 bài (Biển Tình · Đường Xưa · Mùa Xuân), 141 nốt tuyến. Bàn đo
+`hoaTrinhNuVsLinhNhi.test.ts` in số mỗi lần chạy. Kết luận **chỉ nói về vòng này**.
+
+| trục | app 8 câu | chị 3 dạo trưởng | đọc |
+|---|---|---|---|
+| 1 vòng bậc | `I ii iii IV V I vi V V` | vi–iii–ii–I · IV–ii–I–vi · I–vi–iii–V | app đi bậc 1→2→3→4, chị không |
+| 1 độ dày | **4,33** nốt · ba trơn 22% | **3,09** nốt · ba trơn 91% | bảng màu (`Cadd2 · Dm11 · G9sus4`), không phải bộ soạn |
+| 2 tâm RH | **72,1** · min–max 62–79 | **75,2** · min 57 max **91** | app đụng cả hai tường `SOLO_RANGE`; chị *Mùa Xuân* chạm 91 |
+| 2 bước | 27·28·17·16·12 | 32·24·13·25·6 | lien·ba·45·nhảy·lặp |
+| 3 LH hình | xen **72/72** ô | xen 19 / lên 3 / một 3 (n=25 ô) | app không có ô đi lên |
+| 3 LH quãng / tầm | 6,6 nc · 36–64 | 5,6·6,7·5,4 · 33–69 | trần app 64 = `SOLO_LEFT_TOP` |
+| 4 RH nốt/ô | **5,6** | **5,6** (tuyến; mọi nốt RH = 6,8) | cùng mẫu số tuyến thì khớp |
+| 4 LH mốc/ô | **9,0** | **6,8** | dạo trưởng không hãm → nguyên mẫu 9 cú |
+| 4 LH một mình | **49%** | **49%** | khớp; 41% là số giọng **thứ**, đừng dùng |
+| 5 bội số | **1,273** | **1,561** (1,36–1,71) | chênh 0,29 vs trung bình; vẫn trong khoảng 1,16–1,91 |
+| 5 bước nhỏ | **56%** | **56%** | khớp |
+
+**Cái bẫy mẫu số, đã sập một lần rồi tránh:** so RH nốt/ô bằng *mọi nốt tay phải* của chị
+(6,8) với *tuyến giai điệu* của app (5,6) thì ra app thưa. Cùng tuyến: 141/25 ô = 5,6.
+
+**Không kết luận "kém tươi sáng".** 1,273 thấp hơn trung bình chị 0,29 (vượt ngưỡng 0,20)
+nhưng **không ra ngoài khoảng** ba bài của chị nới 0,20. Đúng lỗi đã rút ở mục bàn giao
+số 5.
+
+**Không mở `SOLO_RANGE`.** Số đo nốt cao nhất sheet trưởng: **91** (*Mùa Xuân*, n=1 bài;
+hai bài kia 83 và 84). Trần cũ 79. Chưa đổi — chờ người dùng chốt trần mới.
+
+Chưa sửa bộ soạn. Ô tick siết vẫn mặc định tắt.
+
+### Bàn giao phải có mục "chưa đo", không chỉ mục "đã biết"
+
+Người dùng vặn: *"Sao tôi kêu bạn đưa hết thông tin và tri thức của dự án qua cho OpenCode
+mà vẫn nói nó có chỗ còn thiếu?"* — sau khi OpenCode phải hỏi người dùng chọn trần tầm âm.
+
+Con số nó thiếu (**22,7% nốt của Linh Nhi nằm trên 79**) **chưa từng tồn tại** trong kho
+trước ngày 6/9/2026, nên đó không phải thứ bị bỏ sót khi bàn giao. Nhưng bản bàn giao
+**thiếu mục "chưa đo"**, trong khi mọi file md của từng thầy đều có mục ấy. Agent nhận bàn
+giao vì thế không phân biệt được *"đã đo và chốt"* với *"chưa ai đo"* — nên nó hỏi người
+dùng một câu dựng trên **max = 91**, mà 91 là đúng một nốt.
+
+Đã thêm mục 11b vào `BAN-GIAO-OPENCODE.md`: bảy lỗ còn trống, kèm **cách đo đúng** cho
+những cái bẫy hay gặp, và dặn xoá dòng khỏi bảng khi đo xong.
+
+**Cái bẫy đáng nhớ nhất trong đó: chọn một NGƯỠNG thì đo PHÂN VỊ, đừng đo MAX.** Ba đoạn dạo
+giọng trưởng của chị có max 91, nhưng 90 và 91 mỗi cao độ đúng một nốt, cùng một bài. Phân
+vị mới dùng được: p50 76 · p75 **79** · p90 83 · p95 86 · p99 88. Trần app đúng bằng p75 của
+chị, tức nó cắt 22,7% vốn nốt và cắt đúng phần trên — đó là lời giải cho tâm app 72,1 so với
+75,3 của chị. Bộ đo: `PianoBrain/tools/sheet/tran_am.py`.

@@ -66,6 +66,7 @@ Hai cái hỏng là hỏng **từ trước**, không phải do việc đang làm
 | soạn nốt cho câu solo nói chung | `D:\PianoBrain\knowledge\LUAT-SOAN-NOT.md` (1215 dòng) |
 | đụng vào mã KeyTrain | `D:\KeyTrain\Reference\SO-TAY.md` (1997 dòng) |
 | cần chất hợp âm ra pitch class | gọi `don_hop_am.tap_not()`, **đừng chép lại bảng** |
+| **định kết luận một điều gì** | **mục 11b của chính file này — danh sách **chưa đo**, để biết đâu là số đo đâu là lỗ trống** |
 
 **Luật người dùng đặt: file md của một thầy CHÍNH LÀ thầy ấy.** Nói "trong vai Linh Nhi"
 thì việc đầu tiên là mở `linh-nhi-piano.md`, không phải chạy lại script đo. File md là ảnh
@@ -515,6 +516,57 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
    trong khung chat rồi không lưu, ngữ cảnh bị nén, và khi viết bàn giao thì nhớ nhầm rằng
    đã lưu. **Đo xong mà không ghi vào file thì coi như chưa đo** — mục 5.5 nay chép đúng
    trạng thái. OpenCode bắt được lỗi này, không phải tôi.
+
+---
+
+## 11b. CHƯA ĐO — lỗ còn lại, và cách đo đúng khi bạn chạm vào
+
+Mục này quan trọng ngang mục 2. Mọi file md của từng thầy đều có mục *"Chưa đo"*; bản bàn
+giao trước **thiếu nó**, và hậu quả đã xảy ra thật: OpenCode phải hỏi người dùng chọn trần
+tầm âm dựa trên **max = 91**, trong khi 91 là đúng **một nốt** và con số quyết định lại là
+*22,7% nốt nằm trên 79* — không ai đo con số ấy trước ngày 6/9/2026.
+
+**Đừng đọc mục này như một danh sách việc phải làm.** Nó là ranh giới: thứ nằm trong đây thì
+**bạn phải tự đo trước khi kết luận**, đừng đoán và cũng đừng hỏi người dùng thay cho việc đo.
+
+### Chỗ chưa có số
+
+| lỗ | vì sao còn trống |
+|---|---|
+| **Bốn trục so *Hoa Trinh Nữ*** | xem phiếu 5.5 — chưa ai đo và lưu |
+| **Thầy Hải** (`hai-joseph`) | 741 mục tri thức nhưng **không có sheet nào**; chưa có file md, người dùng chưa gọi làm |
+| **Tôn Hùng ở giọng trưởng** | cả hai bản ký âm đều giọng thứ. Cột trưởng trong `TAM` đang **mượn số của giọng thứ** — đừng đọc nó như số đo |
+| **Ba đoạn kết bội số dưới 1** | *Một Cõi* 0,656 · *Rừng Lá* 0,875 · *Lá Thư* báo hợp âm dày **7,00 nốt** (nghi ký hiệu đọc sai). Chưa soi |
+| **Hai test đỏ** | `phraseAcrossBar` 47,4% và `handSplitAudit` ô 3 — cần tai người dùng, xem mục 6 |
+| **Vốn giọng trưởng của Linh Nhi** | chỉ **ba** bài. Sàn sai số 0,103 nằm ở đây, chỉ thêm sheet mới hạ được |
+| **Cà Pháo giọng thứ** | đoạn dạo và giang chỉ **một** bài mỗi ô — đừng đặt luật từ đó |
+
+### Cách đo đúng cho những lỗ hay gặp
+
+**Chọn một NGƯỠNG thì đo PHÂN VỊ, đừng đo MAX.** Đây là cái bẫy đã sập ngày 6/9/2026. Ba
+đoạn dạo giọng trưởng của Linh Nhi có max 91, nhưng đếm ra thì 90 và 91 mỗi cao độ đúng
+**một** nốt, cả hai ở cùng một bài. Con số dùng được là phân vị: p50 76 · p75 **79** · p90 83
+· p95 86 · p99 88, và **22,7% nốt nằm trên 79**. Đo max thì tưởng phải nâng trần lên 91; đo
+phân vị thì thấy 84 phủ 94,3% mà không phải chạy theo ngoại lệ. Bộ đo:
+`PianoBrain/tools/sheet/tran_am.py`; bảng đã ghi trong `linh-nhi-piano.md` ngay sau §9b.
+
+**So hai tỉ lệ thì kiểm mẫu số trước.** Tỉ lệ nốt trúng hợp âm thô không so được giữa hai
+vốn hợp âm khác nhau — dùng **bội số**, xem `LUAT-SOAN-NOT.md` Luật 13 và `boi_so.py`.
+
+**So vòng hợp âm thì trải ký hiệu ra từng ô** và điền ô trống bằng hợp âm đang vang. Đếm
+theo ký hiệu xuất hiện sẽ lệch vì hai bên ghi ký hiệu với mật độ khác nhau.
+
+**Đo trên bản ký âm thì đi qua `mxl.notes()` + `clone_do.sua_o()`**, đừng tự viết bộ duyệt
+XML — bộ tự viết đặt sai vạch nhịp, xem lỗi số 2 ở mục 11.
+
+**Nói một con số thì nói kèm cỡ mẫu**, và nếu chưa có thì nói thẳng là **chưa đo**. Đây là
+luật người dùng đặt cho mọi agent trên máy này, xem mục 10.
+
+### Khi bạn đo được một lỗ
+
+Ghi ngay, trong chính lượt ấy, trước khi báo: số về một thầy vào md thầy đó · luật chung vào
+`LUAT-SOAN-NOT.md` · số về app vào `SO-TAY.md`. Rồi **xoá dòng tương ứng khỏi bảng trên**.
+Bảng này chỉ có ích khi nó đúng.
 
 ---
 
