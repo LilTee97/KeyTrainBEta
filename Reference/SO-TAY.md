@@ -2060,3 +2060,21 @@ Trạng thái thật, đã chép vào bàn giao mục 5.5:
 
 Bài học đứng lâu dài: **kết quả sống trong khung chat là kết quả đã mất.** Đo xong thì ghi
 vào md hoặc vào một bộ đo chạy lại được, ngay trong lượt ấy, trước khi nói "đã đo".
+
+### Bộ soạn ra 32 câu khác nhau trên 32 lượt — không cần "làm nó đa dạng hơn"
+
+Câu hỏi người dùng đặt: có phải sửa quy trình tạo intro để đủ câu so sánh không. Đo trên
+vòng bài *Hoa Trinh Nữ* (`Cadd2 · Dm11 · Em7 · Fadd2 · G9sus4 · C · Am9 · G9sus4 · G`),
+`take` chạy 0–31: **32 câu khác nhau, không câu nào trùng câu nào**, dài 40–54 nốt.
+
+Cộng thêm hai thứ đã có sẵn trong app: `playSpin` nhích mỗi lần bấm phát
+(`ReharmHome.tsx:3088`) nên mỗi lượt là một câu mới, và `luuCauDao` ghi từng câu vào
+`Nguon.json` (`ReharmHome.tsx:3545`).
+
+Nên `Nguon.json` chỉ có **hai** câu của bài ấy là vì bài mới được bấm phát hai lần, **không
+phải vì quy trình chặn**. Đừng sửa `giaiDieuDaoLinhNhi()` để tăng đa dạng — nó đã đa dạng,
+và sửa là đổi lối chơi, phải qua ô tick nghe thử.
+
+Hai nhu cầu đừng lẫn: **đủ câu để ĐO** thì gọi bộ soạn nhiều `take` trong một bài kiểm, không
+cần app; **đủ câu để NGƯỜI DÙNG CHẤM BẰNG TAI** thì chỉ có một đường là họ bấm phát thêm N
+lần, agent không thay được.

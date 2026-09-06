@@ -271,6 +271,33 @@ Hai câu người dùng đã **nghe thật** nằm ở `KeyTrain/Nguon.json`, b�
 Tiên. Lấy bằng `PianoBrain/tools/sheet/bac_not.py` (`do_bai`) hoặc `boi_so.py`; mốc đã chốt
 ở `linh-nhi-piano.md` §9b.
 
+#### KHÔNG phải sửa bộ soạn để có đủ câu — đã đo, đừng đi đường vòng
+
+Người dùng hỏi thẳng có cần sửa quy trình tạo intro để đủ câu so sánh không. **Không.** Ba
+phép kiểm chạy ngày 6/9/2026:
+
+| kiểm | kết quả |
+|---|---|
+| bộ soạn có ra câu khác nhau theo `take` không | **32 lượt → 32 câu khác nhau, không trùng cái nào** (40–54 nốt mỗi câu) |
+| app có soạn câu mới mỗi lần bấm phát không | **có** — `playSpin` nhích mỗi lần bấm, `ReharmHome.tsx:3088` |
+| app có lưu từng câu vào `Nguon.json` không | **có** — `luuCauDao` gọi mỗi lượt phát, `ReharmHome.tsx:3545` |
+
+Nên `Nguon.json` chỉ có hai câu *Hoa Trinh Nữ* đơn giản vì bài ấy **mới được bấm phát hai
+lần**, không phải vì quy trình chặn. Đừng sửa `giaiDieuDaoLinhNhi()` để "làm nó đa dạng hơn"
+— nó đã đa dạng, và sửa nó là đổi lối chơi, phải qua ô tick nghe thử (xem 5.2).
+
+Hai nhu cầu khác nhau, đừng lẫn:
+
+- **Đủ câu để ĐO** (bốn trục đầu + trục tươi sáng): gọi `giaiDieuDaoLinhNhi()` với `take`
+  chạy từ 0 đi lên, trong một bài kiểm. **Không cần app, không cần người dùng bấm gì.** Làm
+  được ngay hôm nay.
+- **Đủ câu để NGƯỜI DÙNG CHẤM BẰNG TAI**: chỉ có một đường — người dùng bấm phát thêm N lần
+  bài *Hoa Trinh Nữ*, mỗi lần đẻ một dòng mới trong `Nguon.json`, rồi tick và ghi ý kiến.
+  Việc này **phải nhờ người dùng**, bạn không thay được. Nói rõ cần bao nhiêu lượt và vì sao.
+
+Lấy ý kiến tai xong thì chuyển sang sổ Linh Nhi bằng skill `y-kien-intro` (mục 9) — nó chép
+cả bộ ba: lời nhận xét + vòng hợp âm + nốt giai điệu.
+
 #### Cỡ mẫu — quyết trước khi đo, đừng đo rồi mới tính
 
 **Hai câu là quá mỏng.** Chính người dùng nêu điều đó: *"tôi thấy với bài Hoa trinh nữ mới
