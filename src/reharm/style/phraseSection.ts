@@ -72,6 +72,8 @@ export interface PhraseSectionOptions {
   songIntro?: readonly ParsedChord[]
 /** Ostinato Bb–A–D Chiếc Lá — chỉ dạo. */
   motif?: 'chiec-la'
+  /** Ô tick nghe thử: siết mức bám hợp âm về đúng bản ký âm. */
+  siet?: boolean
 }
 
 export interface PhraseSection {
@@ -308,6 +310,7 @@ export function buildPhraseSection(
     ? giaiDieuDaoLinhNhi({
         thay: thaySolo,
         doan: kind === 'outro' ? 'outro' : 'intro',
+        ...(options.siet ? { siet: true } : {}),
         left: backing,
         chords,
         beatsPerChord,

@@ -1932,3 +1932,66 @@ liền bậc cộng quãng ba **55% so với 38%**, và tỉ lệ nốt hợp â
 **Việc cho KeyTrain, chưa làm:** bộ soạn hiện dùng **cùng một bộ luật cho cả hai giọng**.
 Muốn theo số đo này thì bài giọng trưởng phải siết về nốt hợp âm và siết thêm ở đoạn kết —
 nhưng đó là đổi lối chơi, nên phải dựng sau một ô tick nghe thử, đúng luật người dùng đã đặt.
+
+### Ô tick "siết bám hợp âm" — được hai, mất một, và một chỗ bão hoà
+
+Bản ký âm Linh Nhi đổi mức bám hợp âm theo đoạn, và **hai giọng đi ngược chiều**:
+
+    trưởng  dạo 68% · giang 68% · kết 75%   ← siết dần về cuối
+    thứ     dạo 69% · giang 59% · kết 50%   ← càng về cuối càng rời
+
+Bộ ghép thì **phẳng**: 60–68% ở mọi đoạn mọi giọng. Ô tick kéo phép chọn ô về đúng mức
+(`DICH_HOP`), kéo **cả hai chiều** — nên đoạn kết giọng thứ được *nới ra* chứ không phải chỗ
+nào cũng siết.
+
+| | tắt | **bật** | bản ký âm |
+|---|---|---|---|
+| trưởng · dạo | 68,2% | 66,1% | 68% |
+| trưởng · kết | 67,1% | **69,7%** | 75% |
+| thứ · dạo | 60,0% | 59,7% | 69% |
+| thứ · kết | 61,5% | **56,1%** | 50% |
+
+Tổng sai lệch **28,6 → 22,6 điểm**. Hai đoạn kết đi đúng chiều và tách hẳn nhau ra; đổi lại
+đoạn dạo giọng trưởng lùi 2 điểm khỏi mức vốn đã đúng.
+
+**CHỖ BÃO HOÀ, đừng vặn lại.** Đoạn dạo giọng thứ đứng yên ở ~60% so với đích 69%. Dò trọng
+số **3 · 8 · 20 ra gần như y hệt**. Lý do: tỉ lệ nốt hợp âm của một ô **nằm sẵn trong chính
+ô ấy**; phép chấm chỉ chọn trong số ô đủ điều kiện, mà lọc theo bậc hợp âm xong thì các ứng
+viên còn lại có tỉ lệ gần bằng nhau. Muốn đóng 9 điểm ấy thì phải **nới bộ lọc bậc** hoặc
+**nắn nốt** — nắn nốt đã bị bác bốn lần.
+
+Một đòn phụ có tác dụng: khi bật siết thì **phạt ô mượn từ đoạn khác nặng hơn** (2 → 7), để
+đoạn kết dùng đúng ô của đoạn kết. Đó là thứ đẩy trưởng·kết từ 67,1 lên 69,7.
+
+`sietHopAm.test.ts` canh cả ba: mặc định tắt không đổi một nốt nào · hai đoạn kết đi ngược
+chiều và tách xa nhau hơn · và **đoạn dạo giọng thứ vẫn cách đích trên 5 điểm** — bài kiểm
+cuối cố ý khẳng định chỗ CHƯA đạt, để phiên sau đừng tưởng đã xong.
+
+### Chấm "tươi sáng" phải bằng BỘI SỐ, tỉ lệ thô so nhầm mẫu số
+
+Bàn đo `boiSoTuoiSang.test.ts` — 16 vòng hợp âm trưởng × 4 lượt = 64 câu, 3074 nốt.
+
+**Cái bẫy đã sập:** tỉ lệ nốt trúng hợp âm THÔ không so được giữa hai vốn hợp âm khác
+nhau. Bài *Hoa Trinh Nữ* mà app soạn dùng hợp âm trung bình **4,33 nốt** (`Cadd2 · Dm11 ·
+G9sus4`); ba đoạn dạo giọng trưởng của Linh Nhi dùng **3,05 nốt**. Rải bừa trong gam trên
+vốn dày ấy đã trúng **64,9%**, so với **43%** trên vốn của chị — chênh lệch là của bảng
+hợp âm, không phải của cách chọn nốt. Nên thước là
+
+    bội số = (tỉ lệ trúng hợp âm) / (tỉ lệ trúng nếu rải bừa trong gam)
+
+**Vì sao 16 vòng chứ không phát lại một bài nhiều lần:** độ lệch chuẩn giữa các LƯỢT của
+cùng một vòng là 0,067; giữa các VÒNG là **0,115** — gần gấp đôi. Phát lại cùng một vòng
+không thêm mấy thông tin. 16 × 4 đưa sai số phía app xuống 0,030.
+
+**Chỗ chặn không nằm ở phía app.** Bản ký âm chỉ có BA bài giọng trưởng: bội số 1,60 ·
+1,36 · 1,71, sai số chuẩn **0,103**, và con số ấy không giảm được. Chênh lệch nhỏ nhất
+phát hiện được là **0,20 bội số**. Nên bài kiểm không đòi trúng trung bình 1,557, chỉ đòi
+nằm trong khoảng 1,36–1,71 nới hai đầu 0,20. Siết chặt hơn là siết vào nhiễu.
+
+Số hiện tại: **bội số 1,522 · bước nhỏ 55,3%** (chị 45–70%). Thấp nhất *Mùa Xuân* 1,33,
+cao nhất *Đường Xưa* 1,65. Bài kiểm in số ra mỗi lần chạy.
+
+**Thước phải bằng đúng thứ đang đo.** Bàn đo này dùng `SOLO_RANGE` (62–79) như app thật.
+`daoTruongLinhNhi.test.ts` **vẫn còn dùng `{57, 95}`** — rộng hơn app thật 21 nửa cung,
+nên nó báo tâm 75,8 đạt neo trong khi app thật ra 70,7. Test xanh mà app vẫn lệch. Chưa
+sửa: sửa xong nó sẽ đỏ, vì trần 79 của `SOLO_RANGE` chặn không cho đạt neo 75,3.

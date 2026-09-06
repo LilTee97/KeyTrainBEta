@@ -618,6 +618,16 @@ export function ReharmHome() {
   const [styleId, setStyleId] = useState('pop-1')
   /** Thầy cho dạo / giang tấu / kết. `null` = theo điệu đệm. */
   const [soloThay, setSoloThay] = useState<SoloTeacher>(null)
+  /*
+    Ô TICK NGHE THỬ: siết mức bám hợp âm về đúng bản ký âm.
+
+    Bộ ghép hiện chọn ô PHẲNG — tỉ lệ nốt hợp âm ra 60–68% ở mọi đoạn mọi giọng, trong khi
+    bản ký âm đổi hẳn theo đoạn và hai giọng còn đi NGƯỢC CHIỀU về phía cuối câu (trưởng
+    68·68·75, thứ 69·59·50). Xem `DICH_HOP` trong `giaiDieuDaoLinhNhi.ts`.
+
+    Mặc định TẮT — đây là đổi lối chơi, luật người dùng đặt là phải nghe thử trước.
+  */
+  const [siet, setSiet] = useState(false)
   /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
   const cauLinhNhi = soloThay === 'linh-nhi'
   const [chiecLa, setChiecLa] = useState(false)
@@ -2052,6 +2062,7 @@ export function ReharmHome() {
             ? (() => {
                 const tuyen = giaiDieuDaoLinhNhi({
                   ...(thaySolo ? { thay: thaySolo, doan: 'interlude' as const } : {}),
+                  ...(siet ? { siet: true } : {}),
                   left: lastLoop
                     ? traiCua(headChords, head.map((span) => span.beats))
                     : traiCua(windowChords, picked.map((span) => span.beats)),
@@ -3077,6 +3088,7 @@ export function ReharmHome() {
               take: phraseSpin + playSpin.current,
               range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
               ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
+              ...(siet ? { siet: true } : {}),
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, false),
             })
@@ -4048,6 +4060,14 @@ export function ReharmHome() {
               )
             })}
           </div>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={siet}
+              onChange={() => setSiet((on) => !on)}
+            />
+            Siết bám hợp âm theo bản ký âm (nghe thử)
+          </label>
           {thaySolo === 'ton-hung' && (
             <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
               <input

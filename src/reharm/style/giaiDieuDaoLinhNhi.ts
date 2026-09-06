@@ -56,6 +56,31 @@ import { TUYEN_SOLO, gocTuyen, type OSolo } from './tuyenSolo'
  */
 const NOT_CAM = true
 
+/**
+ * MỨC BÁM HỢP ÂM của bản ký âm — tỉ lệ nốt giai điệu nằm trên hợp âm đang vang.
+ *
+ * Đo bảy bản ký âm Linh Nhi, tách theo giọng và theo đoạn. Hai giọng **đi ngược chiều** về
+ * phía cuối câu, đó là chỗ đáng nhớ nhất trong bảng:
+ *
+ * | | dạo | giang | kết |
+ * |---|---|---|---|
+ * | **trưởng** | 68% | 68% | **75%** — siết dần lại |
+ * | **thứ** | 69% | 59% | **50%** — càng về cuối càng rời |
+ *
+ * Gộp cả bài: trưởng **70,2%**, thứ **59,9%** (n=406 và 601).
+ *
+ * Người dùng nêu rằng câu giọng trưởng nghe **tươi sáng** hơn, và số đo nói cái tai nghe
+ * ra ấy chính là **sự chắc chắn** — nốt nằm trên hợp âm, bước đi nhỏ, càng về kết càng
+ * chắc. Cách đọc này người dùng đã xác nhận. Xem `linh-nhi-piano.md` mục 6b.
+ *
+ * ĐO TRÊN SHEET LINH NHI. Cà Pháo và Tôn Hùng chưa đo mức này theo đoạn; hai thầy ấy dùng
+ * tạm bảng này cho tới khi có số riêng.
+ */
+const DICH_HOP = {
+  truong: { intro: 0.68, interlude: 0.68, outro: 0.75 },
+  thu: { intro: 0.69, interlude: 0.59, outro: 0.5 },
+} as const
+
 /** Bậc của gam trưởng so với chủ âm — dùng để bắt nốt lạc khi ghép bài giọng trưởng. */
 const GAM_TRUONG = new Set([0, 2, 4, 5, 7, 9, 11])
 
@@ -275,6 +300,12 @@ export function giaiDieuDaoLinhNhi(options: {
    * mà giai điệu ra y hệt, không đổi một nốt.
    */
   beatsEach?: readonly number[]
+  /**
+   * SIẾT VỀ NỐT HỢP ÂM theo đúng mức bản ký âm — ô tick nghe thử.
+   *
+   * Mặc định `false`: bản đang phát không đổi tiếng cho tới khi người dùng bật và nghe.
+   */
+  siet?: boolean
   /** Thầy lấy vốn ô. Bỏ trống thì lấy Linh Nhi. */
   thay?: Exclude<SoloTeacher, null>
   /** Đoạn lấy vốn ô. Bỏ trống thì lấy đoạn dạo. */
@@ -480,6 +511,27 @@ export function giaiDieuDaoLinhNhi(options: {
         const tapHop = new Set(
           chord.quality.intervals.map((iv) => ((((chord.root + iv - chu) % 12) + 12) % 12)),
         )
+        /*
+          SIẾT VỀ ĐÚNG MỨC BÁM HỢP ÂM CỦA BẢN KÝ ÂM — chỉ khi ô tick bật.
+
+          Bộ ghép hiện chọn ô **phẳng**: tỉ lệ nốt hợp âm ra 60–68% ở mọi đoạn, mọi giọng.
+          Bản ký âm thì không phẳng chút nào, và hai giọng còn **đi ngược chiều** về phía
+          cuối câu — xem `DICH_HOP` ngay dưới.
+
+          Phép chấm không đẩy một chiều mà kéo về ĐÚNG mức: ô nào có tỉ lệ nốt hợp âm lệch
+          xa mức đích thì tốn điểm, dù lệch cao hay lệch thấp. Nhờ vậy đoạn kết giọng thứ
+          được **nới ra** đúng như chị chơi, chứ không phải chỗ nào cũng siết.
+        */
+        let keo = 0
+        if (options.siet === true) {
+          const dich = DICH_HOP[thu ? 'thu' : 'truong'][options.doan ?? 'intro']
+          const trong = m.o.n.reduce(
+            (a, [, cao]) => a + (tapHop.has((((cao % 12) + 12) % 12)) ? 1 : 0),
+            0,
+          )
+          keo = Math.abs(trong / m.o.n.length - dich) * 3
+        }
+
         const chan = m.o.n.reduce((a, [at, cao], k) => {
           void at
           const soHop = (((cao - bac) % 12) + 12) % 12
@@ -490,7 +542,7 @@ export function giaiDieuDaoLinhNhi(options: {
           if (!GAM_TRUONG.has(soGam) && !tapHop.has(soGam) && !thu) p += 1.5
           return a + p
         }, 0)
-        d += chan
+        d += chan + keo
         /*
           Ô MƯỢN TỪ ĐOẠN KHÁC chịu một điểm phạt vừa phải.
 
@@ -500,7 +552,7 @@ export function giaiDieuDaoLinhNhi(options: {
 
           Trọng số 2: nhẹ hơn phép phạt đổi bài (5), nặng hơn phép phạt lệch chỗ (1,5).
         */
-        if (m.muon) d += 2
+        if (m.muon) d += options.siet === true ? 7 : 2
         d += take === 0 ? 0 : rung(take * 977 + o * 31 + m.i * 7 + bam(m.tuyen)) * 9
         return { m, d }
       })
