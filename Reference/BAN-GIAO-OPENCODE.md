@@ -217,34 +217,143 @@ không", và đó là lý do bộ đo ấy ra đời.
    **Đừng hạ ngưỡng neo cho nó xanh.**
 3. Hai test đỏ sẵn có ở mục 6.
 
-### 5.5 CHƯA LÀM: so bài *Hoa Trinh Nữ* với đoạn dạo giọng trưởng của Linh Nhi
+### 5.5 VIỆC GIAO CHO BẠN: so bài *Hoa Trinh Nữ* với đoạn dạo giọng trưởng của Linh Nhi
 
-Người dùng giao năm trục: **vòng hợp âm · nốt giai điệu tay phải · nốt rải hợp âm tay trái ·
-tiết tấu đệm · độ tươi sáng khi chọn nốt**.
+Người dùng đã giao việc này cho Claude Code, việc chưa xong, và người dùng chuyển sang cho
+bạn. Đây là phiếu đầy đủ — đọc hết rồi làm, không cần hỏi lại trừ chỗ mục **Hỏi người dùng**
+ở cuối.
 
-**Chỉ trục thứ năm có bàn đo** — `boiSoTuoiSang.test.ts`, và nó chạy trên **16 vòng hợp âm
-chung**, không phải trên bài này. **Bốn trục đầu chưa có gì lưu lại.** Tôi có đo chúng trong
-một phiên trước và báo miệng trong khung chat, rồi ngữ cảnh bị nén và số ấy mất. Không kiểm
-lại được, nên coi như **chưa đo**.
+#### Trạng thái thật, đừng tin bản bàn giao cũ
 
-> **Bản bàn giao này trước đó viết rằng bốn trục ấy "đã đo xong và ghi trong
-> `linh-nhi-piano.md` §9b". Câu đó SAI** — OpenCode bắt được ngày 6/9/2026. §9b chỉ là **mốc
-> ba bài giọng trưởng của chị** (141 nốt tay phải), không nhắc bài này; chữ "Hoa Trinh Nữ"
-> không xuất hiện ở bất kỳ đâu trong `PianoBrain/knowledge/`.
+Bản bàn giao trước viết rằng bốn trục đầu "đã đo xong và ghi trong `linh-nhi-piano.md` §9b".
+**Câu đó SAI**, chính bạn đã bắt được ngày 6/9/2026. §9b chỉ là **mốc ba bài giọng trưởng
+của chị** (141 nốt tay phải); chữ "Hoa Trinh Nữ" không xuất hiện ở bất kỳ đâu trong
+`PianoBrain/knowledge/`. Claude Code có đo bốn trục ấy trong một phiên trước nhưng chỉ báo
+miệng trong khung chat, không ghi file, rồi ngữ cảnh bị nén và số mất. **Coi như chưa đo.**
 
-Vật liệu đang có, nếu bạn nhận việc này:
+| trục | trạng thái |
+|---|---|
+| 1. vòng hợp âm | chưa có gì lưu |
+| 2. nốt giai điệu tay phải | chưa có gì lưu |
+| 3. nốt rải hợp âm tay trái | chưa có gì lưu |
+| 4. tiết tấu đệm | chưa có gì lưu |
+| 5. độ tươi sáng khi chọn nốt | có bàn đo, nhưng chạy trên **16 vòng chung**, không phải bài này |
 
-- **Hai câu app đã phát**, `KeyTrain/Nguon.json` mục `cau` số **117** và **118** — cùng vòng
-  9 ô `Cadd2 · Dm11 · Em7 · Fadd2 · G9sus4 · C · Am9 · G9sus4 · G (hút)`, giọng Đô trưởng,
-  điệu `bolero-linh-nhi-2`, 112 và 109 nốt. Người dùng đã tick **Chưa ổn** cho câu 118. Đây
-  là bản phát, **không phải** bộ câu dựng để so — hai câu là quá mỏng, người dùng đã tự nêu
-  điều đó ("mới chỉ có 2 câu intro liệu có hơi ít").
-- **Ba đoạn dạo giọng trưởng của chị** để làm vế kia: `linh-nhi-piano.md` §9b.
-- **Bộ đo bội số** `PianoBrain/tools/sheet/boi_so.py` cho trục thứ năm.
+#### Hai vế của phép so
 
-Trục **vòng hợp âm** là chỗ nhìn thấy chênh ngay mà chưa cần đo: vòng app dùng hợp âm màu
-(`Cadd2 · Dm11 · G9sus4`, trung bình 4,33 nốt) còn ba đoạn dạo của chị gần như toàn hợp âm
-ba trơn (3,03 nốt). Bốn trục còn lại cần đo thật.
+**Vế A — bài *Hoa Trinh Nữ* do app soạn.** Vòng 9 ô, giọng **Đô trưởng**, điệu
+`bolero-linh-nhi-2`:
+
+    Cadd2 | Dm11 | Em7 | Fadd2 | G9sus4 | C | Am9 | G9sus4 | G (hút)
+
+Sinh câu bằng `giaiDieuDaoLinhNhi()` trong `src/reharm/style/giaiDieuDaoLinhNhi.ts`, tham số
+`tonic: 0`, `minor: false`, `thay: 'linh-nhi'`, `doan: 'intro'`, `beatsPerChord: 4`,
+`barBeats: 4`, `range: SOLO_RANGE`. Xem `boiSoTuoiSang.test.ts` để lấy nguyên mẫu lời gọi —
+nó đã làm đúng, chép theo.
+
+> **Bài này CÓ thật trong KeyTrain** — người dùng đã lưu ngày 6/9/2026, thấy được trong thư
+> viện bài của app. Nhưng nó nằm trong **IndexedDB của trình duyệt** (`src/shared/persistence/db.ts`),
+> **không phải file trên đĩa**, nên `grep` trong repo không ra và bạn **không đọc được** nó từ
+> phía mình. Hai đường đi:
+>
+> 1. **Làm được ngay:** vòng hợp âm đoạn dạo đã có đủ ở `Nguon.json` (ngay dưới đây), đủ để
+>    sinh lại câu bằng `giaiDieuDaoLinhNhi()`. Bốn trục đều đo được từ đây.
+> 2. **Nếu cần cả bài** (chia đoạn, thứ tự chơi, hợp âm lướt đã chèn): nhờ người dùng bấm nút
+>    mũi tên **↓** cạnh dòng *Hoa Trinh Nữ* trong thư viện — nó xuất ảnh chụp bài ra một file
+>    **JSON** (`src/reharm/persistence/songFile.ts`) giữ nguyên mọi thứ — rồi đặt file ấy vào repo
+>    và báo đường dẫn.
+
+Hai câu người dùng đã **nghe thật** nằm ở `KeyTrain/Nguon.json`, bảng `cau`, số **117** và
+**118** — 112 và 109 nốt; người dùng tick **Chưa ổn** cho câu 118. Cột `not` của chúng là
+`[phách, cao độ MIDI, số phách ngân, tay]`, `P` tay phải và `T` tay trái.
+
+**Vế B — ba đoạn dạo giọng trưởng của chị**: Biển Tình · Đường Xưa Lối Cũ · Mùa Xuân Đầu
+Tiên. Lấy bằng `PianoBrain/tools/sheet/bac_not.py` (`do_bai`) hoặc `boi_so.py`; mốc đã chốt
+ở `linh-nhi-piano.md` §9b.
+
+#### Cỡ mẫu — quyết trước khi đo, đừng đo rồi mới tính
+
+**Hai câu là quá mỏng.** Chính người dùng nêu điều đó: *"tôi thấy với bài Hoa trinh nữ mới
+chỉ có 2 câu intro liệu có hơi ít để so sánh cho chuẩn không."*
+
+Số phương sai đã đo của bộ soạn (nguồn: chú thích đầu `boiSoTuoiSang.test.ts`):
+
+| | độ lệch chuẩn |
+|---|---|
+| giữa các **lượt** của cùng một vòng | 0,067 |
+| giữa các **vòng** hợp âm | 0,115 |
+
+Nên **phát lại chính vòng Hoa Trinh Nữ với nhiều `take` khác nhau** — khoảng **8 lượt** đưa
+sai số phía app xuống ~0,024, đủ nhỏ so với ngưỡng phát hiện.
+
+**Ngưỡng phát hiện là 0,20 bội số, và nó không hạ được.** Ba bài giọng trưởng của chị cho
+sai số chuẩn **0,103**; sàn nằm ở phía bản ký âm, đo thêm bên app không giúp gì. Chênh lệch
+nhỏ hơn 0,20 thì **không được kết luận**.
+
+Và nhớ: đo một vòng thì kết luận **chỉ nói về vòng ấy**, không suy ra bộ soạn nói chung.
+Muốn nói về bộ soạn thì đã có bàn 16 vòng.
+
+#### Đo từng trục thế nào
+
+**Trục 1 — vòng hợp âm.** So ba thứ: **bậc so với chủ âm**, **độ dày hợp âm** (số nốt trung
+bình, lấy từ `don_hop_am.tap_not()`), và **tỉ lệ hợp âm ba trơn**.
+
+> **Cạm bẫy đã sập, đừng sập lại:** khi so vòng hợp âm giữa hai đoạn, phải **trải ký hiệu ra
+> từng ô** và **điền ô trống bằng hợp âm đang vang**. Đếm theo ký hiệu xuất hiện sẽ ra kết
+> luận sai vì hai bên có mật độ ghi ký hiệu khác nhau.
+
+Chỗ này nhìn thấy chênh ngay mà chưa cần đo: vòng app dùng hợp âm màu (trung bình **4,33
+nốt**) còn ba đoạn dạo của chị gần như toàn hợp âm ba trơn (**3,03 nốt**). Việc của bạn là
+đo cho ra con số, và nói rõ chênh ấy đến từ **bảng màu hợp âm người dùng chọn** hay từ bộ
+soạn.
+
+**Trục 2 — nốt giai điệu tay phải.** Ba con số: **tâm cao độ**, **phân bố bậc so với gốc hợp
+âm** (dùng `bac_not.py`, đã có `TEN_BAC`), **phân bố bước** (liền bậc · quãng ba · quãng 4–5
+· nhảy 8+ · lặp). Mốc của chị ở §9b: tâm **75,3**, bước `32 · 25 · 25 · 13 · 6`.
+
+> **Cạm bẫy:** `SOLO_RANGE` của app là **62–79**, trần 79 nằm dưới neo 75,3 chỉ 3,7 nửa cung
+> nên câu bị ép xuống — app thật ra tâm **70,7**. Đừng kết luận "bộ soạn chọn nốt thấp";
+> phải nói rõ bao nhiêu phần của chênh lệch là do **trần tầm âm**. Xem việc 5.4(1).
+
+**Trục 3 — nốt rải hợp âm tay trái.** Phía sheet dùng `PianoBrain/tools/sheet/hai_tay.py` và
+`sang_toi.py` (bộ này lấy **mọi nốt của cả hai tay**, không rút tuyến giai điệu — đúng thứ
+cần cho tay trái). Phía app lấy từ `src/reharm/style/soloLeftHand.ts`. So: **hình rải** (đi
+lên / đi xuống / xen kẽ), **quãng giữa các nốt rải**, **tầm âm tay trái**.
+
+**Trục 4 — tiết tấu đệm.** Ba con số, và con số thứ ba là con số đáng giá nhất:
+
+- số **nốt tay phải mỗi ô** và số **mốc gõ tay trái mỗi ô**
+- **vị trí phách** các mốc gõ rơi vào
+- **tỉ lệ mốc tay trái gõ MỘT MÌNH** — bản ký âm giọng thứ **41%**. Tụt sâu dưới mức ấy nghĩa
+  là hai tay đang dính vào nhau thay vì đối đáp. Đã có ghi chú: bộ soạn từng ra **76–79%** so
+  với 59% của bản ký âm ở một phép đo tương tự (`linh-nhi-piano.md` quanh dòng 1470).
+
+**Trục 5 — độ tươi sáng.** Đã có công cụ cả hai phía, chỉ cần chạy trên vòng này:
+`PianoBrain/tools/sheet/boi_so.py` cho vế B, và công thức trong `boiSoTuoiSang.test.ts` cho
+vế A. **Dùng bội số, đừng dùng tỉ lệ thô** — xem `LUAT-SOAN-NOT.md` Luật 13; vốn hợp âm hai
+bên khác nhau nên tỉ lệ thô so nhầm mẫu số.
+
+#### Ghi kết quả vào đâu
+
+- **Số so sánh app với bản ký âm** → `KeyTrain/Reference/SO-TAY.md`, một mục `###` mới. Đây
+  là số nói về app, không phải về chị.
+- **Số mới đo được về chính chị** (nếu có) → `PianoBrain/knowledge/teachers/linh-nhi-piano.md`.
+- **Luật rút ra áp cho mọi thầy** → `PianoBrain/knowledge/LUAT-SOAN-NOT.md`.
+- Nếu dựng bàn đo chạy lại được thì đặt cạnh `boiSoTuoiSang.test.ts` và cho nó **in số ra mỗi
+  lần chạy** — bàn đo mà không thấy số thì không dùng để sửa được.
+
+**Ghi trước, báo sau.** Đo xong mà chưa ghi vào file thì đừng nói "đã đo" — đó đúng là lỗi
+làm phiếu này phải tồn tại.
+
+#### Hỏi người dùng trước khi kết luận
+
+Hai chỗ số đo không quyết được, phải có tai người:
+
+1. Câu **118** người dùng tick *Chưa ổn* — hỏi **chỗ nào** chưa ổn, ô số mấy. Có một manh
+   mối cũ: người dùng từng nói *"chỗ `Fadd2` trong vòng hợp âm là chỗ hay có nhiều nốt nghe
+   lệch tai nhất dù chuyển qua bao nhiêu câu"*, và vòng này **có `Fadd2` ở ô 4**.
+2. Trước khi mở trần `SOLO_RANGE`: hỏi **nốt cao nhất trong sheet giọng trưởng của chị chạm
+   tới đâu**. Đừng tự chọn trần mới.
 
 ---
 
@@ -373,7 +482,9 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
    gian mà không bản ký âm nào đỡ chúng. Số hoá ra đúng, nhưng đó là may chứ không phải
    quy trình — nay đã có `boi_so.py --kiem`.
 9. **Viết rằng đã ghi vào một file mà file không hề có nội dung đó.** Chính bản bàn giao này
-   nói bốn trục *Hoa Trinh Nữ* nằm ở §9b; grep ra thì không có chữ nào. Nguyên nhân: tôi đo
+   nói bốn trục *Hoa Trinh Nữ* nằm ở §9b; grep ra thì không có chữ nào. (Bài hát thì **có
+   thật** trong KeyTrain, người dùng đã lưu — nó nằm trong IndexedDB của trình duyệt. Thứ không
+   tồn tại là **phần phân tích đã ghi vào kho tri thức**, không phải bài hát.) Nguyên nhân: tôi đo
    trong khung chat rồi không lưu, ngữ cảnh bị nén, và khi viết bàn giao thì nhớ nhầm rằng
    đã lưu. **Đo xong mà không ghi vào file thì coi như chưa đo** — mục 5.5 nay chép đúng
    trạng thái. OpenCode bắt được lỗi này, không phải tôi.
@@ -384,9 +495,14 @@ Liệt kê thật, không phải để tự kiểm điểm mà vì mỗi cái đ
 
 Nếu người dùng chưa giao việc cụ thể, thứ tự tôi đề nghị:
 
+**Việc người dùng đang giao cho bạn là mục 5.5** — so bài *Hoa Trinh Nữ* với đoạn dạo giọng
+trưởng của Linh Nhi trên năm trục. Phiếu ở đó đầy đủ, làm theo.
+
+Nếu còn thời gian, hoặc nếu người dùng chưa giao gì thêm:
+
 1. Đọc `linh-nhi-piano.md` §9b (mốc ba bài giọng trưởng) và `SO-TAY.md` mục cuối.
 2. Hỏi người dùng nốt cao nhất trong sheet giọng trưởng của Linh Nhi chạm tới đâu, rồi mở
-   trần `SOLO_RANGE` cho đúng — việc 5.4.1.
+   trần `SOLO_RANGE` cho đúng — việc 5.4.1. Trục 2 của mục 5.5 cũng vướng đúng chỗ này.
 3. Sửa `daoTruongLinhNhi.test.ts` sang `SOLO_RANGE`; nó sẽ đỏ, và cái đỏ ấy là thật.
 4. Chạy `boiSoTuoiSang.test.ts` sau mỗi lần sửa để thấy bội số nhúc nhích chỗ nào.
 
