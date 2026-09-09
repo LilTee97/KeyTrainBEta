@@ -482,7 +482,9 @@ export function NoteGatedPractice({
         */}
         <PlaybackToolbar
           canPlay={!!transport}
-          onPlay={() => transport?.playFrom(0)}
+          onPlay={() =>
+            looping ? transport?.pause() : transport?.playAll()
+          }
           onPause={() => transport?.pause()}
           onStop={() => transport?.stop()}
           onTone={transport?.onTone}

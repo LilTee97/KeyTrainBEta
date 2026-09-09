@@ -65,8 +65,10 @@ const COT_CAU = [
    * trên giọng thứ chưa"* phải chạy lại code để dựng lại vòng — mà vòng dựng lại chưa
    * chắc trùng vòng đã phát, vì nó phụ thuộc lượt. Lưu thẳng là đọc thẳng.
    */
-  'hopAm',
-] as const
+    'hopAm',
+    /** `'intro'` · `'interlude'`. Cột mới — dòng cũ không có thì coi là intro. */
+    'doan',
+  ] as const
 
 /** Cột của bảng `binhLuan`. */
 const COT_BINH_LUAN = ['stt', 'cauStt', 'luc', 'yKien'] as const
@@ -105,7 +107,17 @@ export function themCau(
   so: So,
   than: Record<string, unknown>,
   luc: string,
-): { stt: number; moi: boolean; lanPhat: number } {
+): {
+  stt: number
+  moi: boolean
+  lanPhat: number
+  giong: string
+  doan: string
+  dieu: string
+} {
+  const giong = String(than.giong ?? '')
+  const doan = than.doan === 'interlude' ? 'interlude' : 'intro'
+  const dieu = String(than.dieu ?? '')
   /*
     So bằng NỐT, không so bằng hợp âm: hai câu khác nhau vẫn có thể đứng trên cùng một
     vòng hợp âm, mà thứ người dùng nghe và chấm là câu chứ không phải vòng.
@@ -114,14 +126,21 @@ export function themCau(
   const cu = so.cau.dong.find((d) => JSON.stringify(d[8]) === van)
   if (cu) {
     ;(cu[7] as string[]).push(luc)
-    return { stt: cu[0] as number, moi: false, lanPhat: (cu[7] as string[]).length }
+    return {
+      stt: cu[0] as number,
+      moi: false,
+      lanPhat: (cu[7] as string[]).length,
+      giong,
+      doan,
+      dieu,
+    }
   }
   const stt = so.cau.dong.length + 1
   so.cau.dong.push([
     stt,
     luc,
     than.bai ?? '',
-    than.giong ?? '',
+    giong,
     than.dieu ?? '',
     than.soO ?? 0,
     Array.isArray(than.not) ? than.not.length : 0,
@@ -129,8 +148,9 @@ export function themCau(
     than.not ?? [],
     '',
     than.hopAm ?? [],
+    doan,
   ])
-  return { stt, moi: true, lanPhat: 1 }
+  return { stt, moi: true, lanPhat: 1, giong, doan, dieu }
 }
 
 /**

@@ -43,6 +43,7 @@ describe('Nguon.json — bảng câu dạo', () => {
       'not',
       'danhGia',
       'hopAm',
+      'doan',
     ])
     expect(so.binhLuan.cot).toEqual(['stt', 'cauStt', 'luc', 'yKien'])
     expect(so.cau.dong).toHaveLength(0)
@@ -51,12 +52,27 @@ describe('Nguon.json — bảng câu dạo', () => {
   it('câu đầu tiên được đánh số 1, có ngày giờ tạo', () => {
     const so = soRong()
     const ra = themCau(so, cau(A), '2026-09-04T10:00:00.000Z')
-    expect(ra).toEqual({ stt: 1, moi: true, lanPhat: 1 })
+    expect(ra).toMatchObject({ stt: 1, moi: true, lanPhat: 1, giong: 'D thứ', doan: 'intro' })
     const dong = so.cau.dong[0]!
     expect(dong[0]).toBe(1)
     expect(dong[1]).toBe('2026-09-04T10:00:00.000Z')
     expect(dong[7]).toEqual(['2026-09-04T10:00:00.000Z'])
     expect(dong[6]).toBe(2)
+    expect(dong[3]).toBe('D thứ')
+    expect(dong[11]).toBe('intro')
+  })
+
+  it('cột doan phân biệt intro và giang tấu; giong đi cùng câu', () => {
+    const so = soRong()
+    const dao = themCau(so, cau(A), 't1')
+    const giang = themCau(so, { ...cau(B), doan: 'interlude', giong: 'A thứ' }, 't2')
+    expect(dao.giong).toBe('D thứ')
+    expect(dao.doan).toBe('intro')
+    expect(dao.dieu).toBe('bolero-linh-nhi-3')
+    expect(giang.giong).toBe('A thứ')
+    expect(giang.doan).toBe('interlude')
+    expect(giang.dieu).toBe('bolero-linh-nhi-3')
+    expect(so.cau.dong[1]![11]).toBe('interlude')
   })
 
   it('câu KHÁC thì đánh số tiếp', () => {
@@ -80,7 +96,7 @@ describe('Nguon.json — bảng câu dạo', () => {
     const hai = themCau(so, cau(A), 't2')
     const ba = themCau(so, cau(A), 't3')
     expect(so.cau.dong).toHaveLength(1)
-    expect(hai).toEqual({ stt: 1, moi: false, lanPhat: 2 })
+    expect(hai).toMatchObject({ stt: 1, moi: false, lanPhat: 2 })
     expect(ba.lanPhat).toBe(3)
     expect(so.cau.dong[0]![7]).toEqual(['t1', 't2', 't3'])
   })
@@ -193,5 +209,18 @@ describe('Nguon.json — vòng hợp âm của câu', () => {
     const ra = themCau(so, cau(B), 't2')
     expect(ra.moi).toBe(true)
     expect(so.cau.dong).toHaveLength(2)
+  })
+})
+
+describe('suKienTuNot', () => {
+  it('đổi [phách, midi, ngân, tay] thành sự kiện', async () => {
+    const { suKienTuNot } = await import('../nguon')
+    const ev = suKienTuNot([
+      [0, 72, 0.5, 'P'],
+      [2, 48, 1, 'T'],
+    ])
+    expect(ev).toHaveLength(2)
+    expect(ev[0]).toMatchObject({ startBeat: 0, notes: [72], hand: 'right' })
+    expect(ev[1]).toMatchObject({ startBeat: 2, notes: [48], hand: 'left' })
   })
 })

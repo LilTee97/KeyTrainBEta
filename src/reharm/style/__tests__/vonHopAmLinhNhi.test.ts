@@ -73,6 +73,116 @@ describe('vốn hợp âm rút từ bài', () => {
     expect(vonHopAmLinhNhi({ kind: 'intro', key: null, songChords: BAI })).toEqual([])
   })
 
+  it('MẶC ĐỊNH vòng dạo bài C đi I-ii-iii — xoay vốn bài', () => {
+    const C = { tonic: 0 as PitchClass, scale: 'major' as const }
+    const bai = parseChordInput('Cadd2 | Dm11 | Em7 | Fadd2 | G9sus4 | C | Am9 | G9sus4').chords
+    const ra = vonHopAmLinhNhi({ kind: 'intro', key: C, songChords: bai })
+    const bac = (c: { root: number }) => ((c.root % 12) + 12) % 12
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 2, 4])
+  })
+
+  it('TICK daoTruong: mẫu Mùa Xuân I-vi-iii, không I-ii-iii-IV (n=3 bài trưởng)', () => {
+    const C = { tonic: 0 as PitchClass, scale: 'major' as const }
+    const bai = parseChordInput('Cadd2 | Dm11 | Em7 | Fadd2 | G9sus4 | C | Am9 | G9sus4').chords
+    const ra = vonHopAmLinhNhi({ kind: 'intro', key: C, songChords: bai, daoTruong: true })
+    const bac = (c: { root: number }) => ((c.root % 12) + 12) % 12
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 9, 4])
+    expect(bac(ra[ra.length - 1]!)).toBe(7)
+    expect(ra.map((c) => c.symbol)).toEqual(['C', 'Am', 'Em', 'G', 'C', 'Em', 'C', 'G'])
+  })
+
+  it('TICK daoThu: mẫu Đừng Xa i-♭VII-♭VI, cửa V (n=8 sheet thứ, take 0)', () => {
+    const ra = vonHopAmLinhNhi({ kind: 'intro', key: AM, songChords: BAI, daoThu: true })
+    const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 10, 8])
+    expect(bac(ra[ra.length - 1]!)).toBe(7)
+  })
+
+  it('daoThu take xoay mẫu — take 1 = Rừng Lá i–♭VII–♭III', () => {
+    const ra = vonHopAmLinhNhi({
+      kind: 'intro',
+      key: AM,
+      songChords: BAI,
+      daoThu: true,
+      take: 1,
+    })
+    const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 10, 3])
+    expect(bac(ra[ra.length - 1]!)).toBe(7)
+  })
+
+  it('daoThu intro thứ: trưởng trơn ≤ ~44% (Linh Nhi dạo 30%, Đừng Xa 44%)', () => {
+    const laTruong = (c: { quality: { intervals: readonly number[] } }) =>
+      c.quality.intervals.includes(4) &&
+      !c.quality.intervals.includes(3) &&
+      !c.quality.intervals.includes(10)
+    for (let take = 0; take < 6; take += 1) {
+      const ra = vonHopAmLinhNhi({
+        kind: 'intro',
+        key: AM,
+        songChords: BAI,
+        daoThu: true,
+        take,
+      })
+      const vong = ra.slice(0, -1)
+      const pct = vong.filter(laTruong).length / Math.max(1, vong.length)
+      expect(pct, `take ${take}`).toBeLessThanOrEqual(0.45)
+    }
+  })
+
+  it('intro thứ daoThu: không hai ô cùng gốc sát nhau (n=6 mẫu)', () => {
+    for (let take = 0; take < 6; take += 1) {
+      const ra = vonHopAmLinhNhi({
+        kind: 'intro',
+        key: AM,
+        songChords: BAI,
+        daoThu: true,
+        take,
+      })
+      const g = ra.map((c) => lop(c.root))
+      for (let i = 1; i < g.length; i += 1) {
+        expect(g[i], `take ${take} ô ${i}`).not.toBe(g[i - 1])
+      }
+    }
+  })
+
+  it('TICK giangThu: mẫu giang Đừng Xa ♭VII-♭VI-♭III, cửa V (n=3 bài, 2 thầy)', () => {
+    const ra = vonHopAmLinhNhi({
+      kind: 'interlude',
+      key: AM,
+      songChords: BAI,
+      giangThu: true,
+      soO: 12,
+    })
+    const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 7, 10])
+    expect(bac(ra[ra.length - 1]!)).toBe(7)
+  })
+
+  it('vòng solo Am không có Bm (ii); luôn mở chủ âm', () => {
+    for (let take = 0; take < 6; take += 1) {
+      const ra = vonHopAmLinhNhi({
+        kind: 'intro',
+        key: AM,
+        songChords: BAI,
+        daoThu: true,
+        take,
+      })
+      expect(lop(ra[0]!.root), `take ${take}`).toBe(9)
+      expect(ra.every((c) => lop(c.root) !== 11), `Bm take ${take}`).toBe(true)
+    }
+  })
+
+  it('daoTruong xoay theo take, vẫn mở I', () => {
+    const C = { tonic: 0 as PitchClass, scale: 'major' as const }
+    const bai = parseChordInput('Cadd2 | Dm11 | Em7 | Fadd2 | G9sus4 | C | Am9 | G9sus4').chords
+    const a = vonHopAmLinhNhi({ kind: 'intro', key: C, songChords: bai, daoTruong: true, take: 0 })
+    const b = vonHopAmLinhNhi({ kind: 'intro', key: C, songChords: bai, daoTruong: true, take: 1 })
+    expect(((a[0]!.root % 12) + 12) % 12).toBe(0)
+    expect(((b[0]!.root % 12) + 12) % 12).toBe(0)
+    expect(a.map((c) => c.symbol).join()).not.toBe(b.map((c) => c.symbol).join())
+  })
+
   it('giữ đúng trật tự hợp âm của bài, chỉ xoay vòng', () => {
     const ra = vonHopAmLinhNhi({ kind: 'intro', key: AM, songChords: BAI })
     /* Bài mở bằng Am nên không phải xoay; hai hợp âm đầu phải là Am rồi Dm. */

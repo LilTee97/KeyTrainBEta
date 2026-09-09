@@ -293,6 +293,18 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     ).toEqual(['Am7', 'Dm7', 'E7', 'Am7'])
   })
 
+  it('Cà Pháo: I add9, ii m9, V 9 (n=4 hát)', () => {
+    expect(
+      final('C Am F G', { intensity: 'caPhao', key: { tonic: 0, scale: 'major' } }),
+    ).toEqual(['Cadd2', 'Am7', 'Fmaj7', 'G9'])
+  })
+
+  it('Tôn Hùng thứ: i trơn, v m7 (n=2, 0 sheet trưởng)', () => {
+    expect(
+      final('Am Dm E Am', { intensity: 'tonHung', key: { tonic: 9, scale: 'minor' } }),
+    ).toEqual(['Am', 'Dm7', 'Em7', 'Am'])
+  })
+
   it('đổi bậc năm sang hợp âm treo khi được bật', () => {
     const result = reharmonize(chords('C Am F G'), { susDominant: true })
     expect(result.colored[3].symbol).toBe('G9sus4')

@@ -156,8 +156,8 @@ type Manh = {
   i: number
   cuoi: boolean
   o: OSolo
-  /** Ô này lấy từ đoạn khác (giang tấu · kết) chứ không phải đoạn đang soạn. */
   muon: boolean
+  thay: Exclude<SoloTeacher, null>
 }
 
 type NguonTuyen = {
@@ -167,6 +167,8 @@ type NguonTuyen = {
   chuGoc: PitchClass
   o: readonly OSolo[]
   muon: boolean
+  thay: Exclude<SoloTeacher, null>
+  doan: 'intro' | 'interlude' | 'outro'
 }
 
 /**
@@ -181,6 +183,7 @@ type NguonTuyen = {
 export function vonO(
   thay: Exclude<SoloTeacher, null>,
   doan: 'intro' | 'interlude' | 'outro',
+  gopThay = false,
 ): readonly NguonTuyen[] {
   /*
     VỐN Ô GỘP CẢ BA ĐOẠN, ô của đoạn khác chịu một điểm phạt.
@@ -201,8 +204,15 @@ export function vonO(
 
     "Sạch" = không có nốt nào cách gốc hợp âm một quãng ba tăng.
   */
-  return TUYEN_SOLO.filter((t) => t.thay === thay).map((t) => ({
+  let von = gopThay ? [...TUYEN_SOLO] : TUYEN_SOLO.filter((t) => t.thay === thay)
+  /*
+    Giang Tuấn: khung intro (A/B, hút), nốt lấy từ GIANG 3 thầy.
+    Phạt muon=2 không đủ — ô intro Chiếc Lá lọt. Cấm copy intro.
+  */
+  if (gopThay && doan === 'interlude') von = von.filter((t) => t.doan === 'interlude')
+  return von.map((t) => ({
     ...t,
+    ...(gopThay && doan === 'intro' && t.thu && t.o4 ? { phach: 4, o: t.o4 } : {}),
     muon: t.doan !== doan,
   }))
 }
@@ -258,6 +268,7 @@ function locO(thu: boolean, phach: number, von: readonly NguonTuyen[]): Manh[] {
         cuoi: i === t.o.length - 1,
         o,
         muon: t.muon,
+        thay: t.thay,
       })
     })
   }
@@ -310,6 +321,8 @@ export function giaiDieuDaoLinhNhi(options: {
   thay?: Exclude<SoloTeacher, null>
   /** Đoạn lấy vốn ô. Bỏ trống thì lấy đoạn dạo. */
   doan?: 'intro' | 'interlude' | 'outro'
+  /** Intro Tuấn: vốn ô mọi thầy, cùng thứ/trưởng. Tuấn 0 sheet. */
+  gopThay?: boolean
 }): TimelineEvent[] {
   const { left, chords, beatsPerChord, barBeats, range } = options
   const take = options.take ?? 0
@@ -342,11 +355,12 @@ export function giaiDieuDaoLinhNhi(options: {
     options.tonic === undefined
       ? dau.quality.intervals.includes(3) && !dau.quality.intervals.includes(4)
       : options.minor !== false
+  const minorIntro = thu && options.gopThay === true && (options.doan ?? 'intro') === 'intro'
 
   const kho = locO(
     thu,
     barBeats,
-    vonO(options.thay ?? 'linh-nhi', options.doan ?? 'intro'),
+    vonO(options.thay ?? 'linh-nhi', options.doan ?? 'intro', options.gopThay === true),
   )
   if (kho.length === 0) return []
   const goc = gocTuyen(chu)
@@ -396,7 +410,21 @@ export function giaiDieuDaoLinhNhi(options: {
     /* Cùng bậc trước; không có thì cùng chức năng; vẫn không có thì lấy cả kho. */
     const dungBac = kho.filter((m) => m.o.bac === bac)
     const dungChuc = kho.filter((m) => chuc(m.o.bac!, thu) === chuc(bac, thu))
-    const ung = dungBac.length > 0 ? dungBac : dungChuc.length > 0 ? dungChuc : kho
+    let ung = dungBac.length > 0 ? dungBac : dungChuc.length > 0 ? dungChuc : kho
+    if (minorIntro) {
+      // Cùng gốc chưa đủ: v thứ không phải V7; ô đổi hợp âm không ghép lên một hợp âm giữ.
+      const quality = chord.quality.intervals.includes(3) ? 'm'
+        : chord.quality.intervals.includes(10) ? '7' : ''
+      const matched = ung.filter((m) => m.o.bac === bac && m.o.chat === quality)
+      if (matched.length) ung = matched
+      const sameSplit = ung.filter((m) => m.o.bac2 === bac2)
+      if (sameSplit.length) ung = sameSplit
+      const fits = ung.filter((m) => {
+        const pitches = m.o.n.map(([, pitch]) => pitch)
+        return Math.max(...pitches) - Math.min(...pitches) <= range.high - range.low
+      })
+      if (fits.length) ung = fits
+    }
 
     /*
       LƯỢT THỨ N LẤY ỨNG VIÊN HẠNG N.
@@ -427,8 +455,18 @@ export function giaiDieuDaoLinhNhi(options: {
         let d = truoc ? Math.abs(((((dauO(m) - cuoiO(truoc)) % 12) + 18) % 12) - 6) : 0
         /* Ở lại cùng một bài: đổi nguồn giữa câu là đứt hơi. */
         if (truoc && m.tuyen !== truoc.tuyen) d += 5
+        if (minorIntro && truoc && m.tuyen === truoc.tuyen && m.i === truoc.i) d += 8
         /* Ô đầu lấy ô đầu, ô cuối lấy ô cuối — hai đầu mang tính chất riêng. */
         if (o === 0 && m.i !== 0) d += 4
+        /*
+          #329 ô1 P(2) gap=2 phách (E5→E4). Sheet intro thứ n=8: ô1 tối thiểu 6 nốt,
+          gap 0,25–1,0. Cũ: không phạt.
+        */
+        if (o === 0 && m.o.n.length < 6) d += 8
+        if (o === 0 && m.o.n.length >= 2 && m.o.n[1]![0] - m.o.n[0]![0] >= 1.5) d += 6
+        if (!cuoi && m.o.n.length < 3) d += 5
+        /* #412: ô sau thưa. Sheet ô2 min 5, ô3 min 7 (n=8). Cũ: chỉ phạt <3. */
+        if (options.gopThay && o >= 1 && !cuoi && m.o.n.length < 5) d += 8
         if (cuoi !== m.cuoi) d += 6
         /*
           Ô nào về chỗ ô ấy. Thiếu luật này thì ô 1 và ô 6 Đừng Xa cùng đứng trên bậc
@@ -523,7 +561,8 @@ export function giaiDieuDaoLinhNhi(options: {
           được **nới ra** đúng như chị chơi, chứ không phải chỗ nào cũng siết.
         */
         let keo = 0
-        if (options.siet === true) {
+        const sietBuon = options.siet === true || (options.gopThay === true && thu)
+        if (sietBuon) {
           const dich = DICH_HOP[thu ? 'thu' : 'truong'][options.doan ?? 'intro']
           const trong = m.o.n.reduce(
             (a, [, cao]) => a + (tapHop.has((((cao % 12) + 12) % 12)) ? 1 : 0),
@@ -539,7 +578,27 @@ export function giaiDieuDaoLinhNhi(options: {
           let p = 0
           /* Quãng ba tăng với gốc — chỗ chói nhất, người dùng chỉ đích danh ở `Fadd2`. */
           if (soHop === 6) p += 1.5 + (k === 0 ? 2 : 0)
-          if (!GAM_TRUONG.has(soGam) && !tapHop.has(soGam) && !thu) p += 1.5
+          if (options.gopThay) {
+            if (soHop === 6) p += 2.5
+            if (!tapHop.has(soGam)) {
+              for (const t of tapHop) {
+                const d = Math.min((soGam - t + 12) % 12, (t - soGam + 12) % 12)
+                if (d === 1) {
+                  // Nốt lướt có lời giải liền bậc khác với nốt chỏi bị giữ; chọn cả ô, không xoá nốt.
+                  const next = m.o.n[k + 1]
+                  const resolves = next && Math.abs(next[1] - cao) <= 2 &&
+                    tapHop.has(((next[1] % 12) + 12) % 12)
+                  p += minorIntro && m.o.n[k]![2] <= 0.5 && resolves ? 0 : 3
+                  break
+                }
+              }
+            }
+          }
+          if (!thu && !GAM_TRUONG.has(soGam) && !tapHop.has(soGam)) p += 1.5
+          if (thu && !GAM_THU.has(soGam) && !tapHop.has(soGam)) p += 1.5
+          if (thu && soGam === 4 && !tapHop.has(4)) p += 2
+          /* 6 trưởng (Dorian) = tươi — buồn dùng ♭6. */
+          if (thu && soGam === 9 && !tapHop.has(9)) p += 1.5
           return a + p
         }, 0)
         d += chan + keo
@@ -553,6 +612,91 @@ export function giaiDieuDaoLinhNhi(options: {
           Trọng số 2: nhẹ hơn phép phạt đổi bài (5), nặng hơn phép phạt lệch chỗ (1,5).
         */
         if (m.muon) d += options.siet === true ? 7 : 2
+        /* Cà Pháo thứ n=1 bám 83% = chắc chắn. Buồn lấy Linh Nhi / Tôn Hùng trước. */
+        if (options.gopThay && thu && m.thay === 'ca-phao') d += 4
+        /*
+          Sheet intro trưởng n=6 và thứ n=7: 0 chuỗi lên ≥5. #191 có 1.
+        */
+        let run = 1
+        let maxRun = 1
+        for (let i = 1; i < m.o.n.length; i += 1) {
+          const step = m.o.n[i]![1] - m.o.n[i - 1]![1]
+          if (step >= 1 && step <= 2) {
+            run += 1
+            if (run > maxRun) maxRun = run
+          } else run = 1
+        }
+        if (maxRun >= 5) d += 5
+        if (thu) {
+          if (m.o.chat === '' && m.o.n.length >= 6 && m.o.bac !== null) {
+            const rai = m.o.n.every(([, cao]) =>
+              [0, 4, 7].includes((((cao - m.o.bac!) % 12) + 12) % 12),
+            )
+            if (rai) d += 7
+          }
+          /*
+            #337: chuyển thứ → trưởng còn tươi. G/F/C trong La thứ rải 1-3-5.
+            Chỉ gopThay (Tuấn) — GHÉP NGƯỢC không đụng.
+          */
+          if (
+            options.gopThay &&
+            chord.quality.intervals.includes(4) &&
+            !chord.quality.intervals.includes(3) &&
+            m.o.n.length >= 4
+          ) {
+            const raiT =
+              m.o.n.filter(([, cao]) =>
+                [0, 4, 7].includes((((cao - bac) % 12) + 12) % 12),
+              ).length / m.o.n.length
+            if (raiT >= 0.7) {
+              /* #411: V (E) đúng màu thứ — không phạt. ♭VII/♭III rải phô. */
+              if (bac === 7) {
+                /* giữ */
+              } else if (bac === 10 || bac === 3) d += 12 + (o <= 2 ? 4 : 0)
+              else d += 8 + (o < 2 ? 4 : 0)
+            }
+          }
+          /*
+            #393 đầu câu tươi: ô1 C–G–E = tam cung ♭III. Sheet intro thứ n=8: 0/8
+            mở 3 nốt đủ {3,7,10}. Cũ: không phạt. 1/174 ô sheet (kết Có Em Chờ).
+          */
+          if (options.gopThay && o === 0 && m.o.n.length >= 3) {
+            const mo = m.o.n.slice(0, 3).map(([, cao]) => (((cao % 12) + 12) % 12))
+            if ([3, 7, 10].every((p) => mo.includes(p))) d += 8
+          }
+          /* Sheet intro thứ n=7: lặp 4–16%. #191 = 1%. */
+          let lap = 0
+          let maxLap = 1
+          let runLap = 1
+          for (let i = 1; i < m.o.n.length; i += 1) {
+            if (m.o.n[i]![1] === m.o.n[i - 1]![1]) {
+              lap += 1
+              runLap += 1
+              if (runLap > maxLap) maxLap = runLap
+            } else runLap = 1
+          }
+          const tiLeLap = m.o.n.length > 1 ? lap / (m.o.n.length - 1) : 0
+          if (o === 0 && tiLeLap < 0.08) d += (0.08 - tiLeLap) * 15
+          /*
+            #395 từ E (ô2+): lặp / lủng. Sheet ô2+ n=56 lap tb 9,4% (2 ô =50%).
+            Cũ: chỉ phạt lặp THIẾU. Ô6 #395 = 60% + 4×D.
+          */
+          if (options.gopThay && o >= 1 && tiLeLap > 0.25) d += (tiLeLap - 0.25) * 20
+          if (options.gopThay && o >= 1 && maxLap >= 3) d += 6
+          /*
+            Để dành riêng n=6 vs Đã ổn ≥207 n=10: gãy 5,7 vs 4,1 /câu.
+            Luật 4: nhảy ≥5 rồi cùng chiều = gãy. Ô2 riêng 5/6 câu gay=4.
+          */
+          let gay = 0
+          const ns = m.o.n
+          for (let i = 1; i + 1 < ns.length; i += 1) {
+            const d1 = ns[i]![1] - ns[i - 1]![1]
+            const d2 = ns[i + 1]![1] - ns[i]![1]
+            const a = Math.abs(d1)
+            if (a >= 5 && a % 12 !== 0 && d1 * d2 > 0) gay += 1
+          }
+          if (gay > 1) d += gay * 2
+        }
         d += take === 0 ? 0 : rung(take * 977 + o * 31 + m.i * 7 + bam(m.tuyen)) * 9
         return { m, d }
       })
@@ -565,7 +709,8 @@ export function giaiDieuDaoLinhNhi(options: {
       Lượt 0 vẫn lấy hạng nhất ở MỌI ô, nên phép ghép ngược còn đứng.
     */
     const n = xep.length
-    const hang = hangGoc === 0 ? 0 : 1 + ((hangGoc - 1 + o) % Math.max(1, n - 1))
+    // Điểm đã có biến thiên theo take. Không xoay xuống cả ứng viên tệ nhất để lấy sự khác biệt.
+    const hang = minorIntro || hangGoc === 0 ? 0 : 1 + ((hangGoc - 1 + o) % Math.max(1, n - 1))
     const tot = xep[hang % n]?.m ?? null
     if (!tot) return []
     chon.push({ m: tot, chord })
@@ -629,31 +774,47 @@ export function giaiDieuDaoLinhNhi(options: {
   )
   if (moi.length === 0) return []
 
-  const ngoai = (k: number) =>
-    moi.reduce((a, n) => a + (n.note + k > range.high || n.note + k < range.low ? 1 : 0), 0)
   const tam = moi.reduce((a, n) => a + n.note, 0) / moi.length
   const neo = TAM[options.thay ?? 'linh-nhi']
   const doi = 12 * Math.round(((thu ? neo.thu : neo.truong) - tam) / 12)
-  void ngoai
   /*
-    ĐÃ BỎ: phép nhích thêm ±12 khi mức ấy có ÍT nốt lọt ra ngoài tầm hơn.
+    GẬP THEO Ô, không gập từng nốt.
 
-    Nó lật ngược thứ tự ưu tiên. Vốn ô lấy từ bản ký âm có vài **nốt đáp trầm** rất thấp
-    nằm ngay trên khuông tay phải — Đừng Xa xuống tới MIDI 52. Chỉ vài nốt ấy lọt dưới
-    đáy 57 là phép đếm chọn mức `+12`, và **cả câu bị đẩy lên một quãng tám**: đo được
-    tâm **80,7** thay vì 73,6, tức lệch 8,3 nửa cung — trong khi cả bốn tuyến nguồn đều
-    nằm ở 70,8–76,0.
+    `gap()` từng nốt phá đường đi trong ô — đúng lỗi bản 1, và tai nghe ra ở trần 84:
+    nốt cao được giữ, nốt lệch tầm bị ±12, câu gãy. Cũ: vài nốt trầm (Đừng Xa MIDI 52)
+    kéo CẢ CÂU +12 → tâm 80,7. Nay mỗi ô một k ∈ {-12,0,12}, hết nốt ngoài tầm nếu ô
+    vừa khoảng `range`; ô rộng hơn khoảng thì mới gập nốt biên.
 
-    Không cần phép nhích ấy nữa vì `gap()` ngay dưới đã GẬP từng nốt biên vào tầm. Gập
-    một hai nốt trầm là méo nhỏ; đẩy cả câu lên một quãng tám là đổi hẳn chỗ ngồi của
-    câu — đúng thứ người dùng nghe ra và chê ở các câu #3 và #7.
+    ponytail: nốt biên còn lọt thì vẫn ±12. Hết hẳn khi vốn ô hẹp hơn `range` hoặc nới tầm.
   */
-
-  /*
-    ponytail: nốt nào vẫn lọt ra ngoài thì GẬP vào bằng quãng tám. Ô của Một Cõi trải
-    rộng hơn cả tầm tay phải 57..95 nên không mức nào lọt hết; gập một nốt biên là méo
-    nhỏ hơn nhiều so với mất cả câu. Muốn hết méo thì phải nới `range`.
-  */
+  const ngoaiK = (ns: readonly number[], k: number) =>
+    ns.reduce((a, v) => a + (v + k > range.high || v + k < range.low ? 1 : 0), 0)
+  const kO: number[] = []
+  let cuoiOTruoc: number | null = null
+  const theoO = new Map<number, number[]>()
+  for (const n of moi) {
+    const ds = theoO.get(n.o) ?? []
+    ds.push(n.note + doi)
+    theoO.set(n.o, ds)
+  }
+  for (const o of [...theoO.keys()].sort((a, b) => a - b)) {
+    const ns = theoO.get(o)!
+    let best = 0
+    let diem = 1e9
+    for (const k of [-12, 0, 12]) {
+      const d =
+        ngoaiK(ns, k) * 1000 +
+        Math.abs(k) * 10 +
+        /* Cũ: ×1. ×10 giữ k=0 dù nối 15 nửa cung (A6→A4). */
+        (cuoiOTruoc === null ? 0 : Math.abs(ns[0]! + k - cuoiOTruoc) * 12)
+      if (d < diem) {
+        diem = d
+        best = k
+      }
+    }
+    kO[o] = best
+    cuoiOTruoc = ns[ns.length - 1]! + best
+  }
   const gap = (n: number) => {
     let v = n
     while (v > range.high) v -= 12
@@ -671,7 +832,7 @@ export function giaiDieuDaoLinhNhi(options: {
     const tai = n.o * barBeats + n.at
     const trong = hopAmO(n.o)
     const chord = [...trong].reverse().find((m) => m.tu <= tai + 1e-6)?.chord ?? chon[n.o]!.chord
-    let note = gap(n.note + doi)
+    let note = gap(n.note + doi + (kO[n.o] ?? 0))
     if (NOT_CAM && thu) {
       const cam = new Set(chord.quality.intervals.map((iv) => (chord.root + iv) % 12))
       if (((note % 12) + 12) % 12 === (chu + 10) % 12 && cam.has((chu + 11) % 12)) note = gap(note + 1)

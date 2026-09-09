@@ -100,6 +100,12 @@ const HO_CUA_FAMILY: Readonly<Record<string, string>> = Object.fromEntries(
   Object.entries(HO_DIEU).flatMap(([ho, mo]) => mo.families.map((f) => [f, ho])),
 )
 
+/** Bolero Pùng-Pắp Tuấn Lưu — không phải rải Linh Nhi. */
+export function laBoleroTuan(style: { family?: string }): boolean {
+  const f = style.family ?? ''
+  return f === 'bolero' || f === 'bolero-tu-n'
+}
+
 /** Điệu này thuộc họ nào. Điệu chưa gom vào họ nào thì trả `null`. */
 export function hoCuaDieu(styleId: string): string | null {
   const family = getStyle(styleId)?.family

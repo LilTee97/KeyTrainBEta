@@ -67,6 +67,14 @@ const SOLO_HIGH: MidiNote = 79
 
 /** Tầm câu solo mặc định. Điệu ballad có tầm riêng, xem `style/balladFamily.ts`. */
 export const SOLO_RANGE = { low: SOLO_LOW, high: SOLO_HIGH } as const
+/*
+  Trần nghe thử 84. Cũ 79 (= p75 Linh Nhi dạo trưởng, cắt 22,7% nốt, n=141).
+  84 phủ 94,3%. 90 và 91 mỗi cái 1 nốt (Mùa Xuân) — ngoại lệ, không lấy.
+  Triệu chứng lùi 79: tâm ~72, câu đụng trần, ô bị gập xuống quãng tám.
+*/
+export const SOLO_TRAN_MO: MidiNote = 84
+export const soloRange = (mo = false) =>
+  mo ? { low: SOLO_LOW, high: SOLO_TRAN_MO } : SOLO_RANGE
 /** Nâng cho câu lẻ trong cùng một lượt. */
 const PHRASE_LIFT = 5
 /** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */

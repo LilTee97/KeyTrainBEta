@@ -122,6 +122,22 @@ function boMaj7(chord: ParsedChord): ParsedChord {
   return { root: chord.root, quality: tron, source: symbol, symbol }
 }
 
+/** Ba nốt trơn. Đo dạo/giang/kết trưởng Linh Nhi: 90% trơn, add=0, maj7=0 (n=72 ô). */
+function tronBa(chord: ParsedChord): ParsedChord {
+  const iv = chord.quality.intervals
+  const q = getChordQuality(iv.includes(3) && !iv.includes(4) ? 'min' : 'maj')
+  if (!q) return chord
+  const root = lop(chord) as PitchClass
+  const symbol = `${pitchClassName(root)}${q.symbol}`
+  return {
+    root: chord.root,
+    quality: q,
+    source: symbol,
+    symbol,
+    ...(chord.bass !== undefined ? { bass: chord.bass } : {}),
+  }
+}
+
 /**
  * Ô CHIA ĐÔI: đoạn dạo chia thưa hơn đoạn hát, đúng một nửa.
  *
@@ -193,12 +209,35 @@ export function vonHopAmLinhNhi(options: {
   soO?: number
   /** Tỉ lệ ô chia đôi của ĐOẠN HÁT — xem `HE_SO_CHIA`. */
   tiLeChiaHat?: number
+  /**
+   * Ô tick: vòng dạo giống sheet trưởng. n=3 Linh Nhi. Mặc định tắt.
+   */
+  daoTruong?: boolean
+  /**
+   * Ô tick / Tuấn intro thứ: vòng dạo theo 8 sheet thứ, xoay `take`.
+   * Cũ n=3 khóa tonic%3 → A thứ luôn Đừng Xa. Lùi: intro thứ lại một vòng Am G F C.
+   */
+  daoThu?: boolean
+  /** Lượt phát — xoay mẫu sheet thứ. */
+  take?: number
+  /**
+   * Ô tick: vòng giang giống sheet thứ.
+   * n=3: Đừng Xa ♭VII–♭VI–♭III · Tình Em ♭VI–♭VII–♭III · Chiếc Lá V–i–♭VII.
+   * 2 thầy (Cà Pháo giang = i–ii lặp — không lấy).
+   */
+  giangThu?: boolean
 }): ParsedChord[] {
   const { kind, key, songChords } = options
   const soO = options.soO ?? SO_O
   if (!key || songChords.length === 0) return []
 
-  const kho = von(songChords)
+  const gocKho = von(songChords)
+  const thu = key.scale === 'minor'
+  const theoSheet =
+    (kind === 'intro' &&
+      ((thu && options.daoThu === true) || (!thu && options.daoTruong === true))) ||
+    (kind === 'interlude' && thu && options.giangThu === true)
+  const kho = theoSheet ? von(gocKho.map(tronBa)) : gocKho
   /*
     Dưới ba hợp âm thì không đủ vốn để sắp thành một vòng — trả rỗng, để đường
     dãy-bậc-cố-định cũ tiếp quản. Thà dùng vòng dựng sẵn còn hơn lặp hai hợp âm.
@@ -219,7 +258,109 @@ export function vonHopAmLinhNhi(options: {
   */
   const chu = kho.findIndex((chord) => lop(chord) === key.tonic)
   const bat = chu >= 0 ? chu : 0
-  const chon = Array.from({ length: soHopAm }, (_, i) => kho[(bat + i) % kho.length]!)
+  /*
+    Mẫu trưởng n=3 Linh Nhi. Mẫu thứ: intro Linh Nhi + giang ít trưởng.
+    Sheet Linh Nhi intro trưởng **30%** (11/37 ô, n=5 bài). Cũ: Tình Em/Đừng Xa giang ≥50%.
+  */
+  type Chat = 'm' | '' | '7'
+  const MAU_DAO_TRUONG = [
+    [0, 9, 4, 7, 0, 4, 0],
+    [0, 9, 2, 4, 9, 2, 4],
+    [0, 9, 2, 7, 9, 5, 2],
+  ] as const
+  const MAU_DAO_THU: readonly (readonly (readonly [number, Chat])[])[] = [
+    /* Đừng Xa dạo — bỏ ii (Bm khi Am) */
+    [[0, 'm'], [10, ''], [8, ''], [3, ''], [5, 'm'], [0, 'm']],
+    [[0, 'm'], [10, ''], [3, ''], [0, 'm'], [7, 'm'], [0, 'm']],
+    [[0, 'm'], [5, 'm'], [7, '7'], [0, 'm'], [5, 'm'], [7, '7']],
+    [[0, 'm'], [5, 'm'], [8, ''], [7, '7'], [0, 'm'], [5, 'm']],
+    [[0, 'm'], [3, ''], [5, 'm'], [7, 'm'], [0, 'm'], [5, 'm']],
+    [[0, 'm'], [7, '7'], [5, 'm'], [0, 'm'], [10, 'm'], [5, 'm']],
+  ]
+  const MAU_GIANG_THU = [
+    [0, 7, 10, 8, 3, 5],
+    [0, 8, 10, 3, 5, 7],
+    [0, 10, 5, 7, 0, 7],
+  ] as const
+  const dung = (bac: number, chat: Chat): ParsedChord | undefined => {
+    const q = getChordQuality(chat === 'm' ? 'min' : chat === '7' ? '7' : 'maj')
+    if (!q) return undefined
+    const root = (((key.tonic + bac) % 12) + 12) % 12 as PitchClass
+    const symbol = `${pitchClassName(root)}${q.symbol}`
+    return { root, quality: q, source: symbol, symbol }
+  }
+  const hopBac = (bac: number, chat?: Chat) => {
+    const gocPc = (((key.tonic + bac) % 12) + 12) % 12
+    const trong = kho.filter((c) => lop(c) === gocPc)
+    if (chat === 'm') {
+      const t = trong.find(laThu)
+      if (t) return t
+    } else if (chat === '7') {
+      const t = trong.find((c) => c.quality.intervals.includes(10))
+      if (t) return t
+    } else if (chat === '') {
+      const t = trong.find((c) => !laThu(c))
+      if (t) return t
+    }
+    // Vốn bài có E không được thay yêu cầu Em/E7 của mẫu sheet thứ bằng E.
+    if (theoSheet && thu && chat !== undefined) return dung(bac, chat)
+    if (trong[0]) return trong[0]
+    return theoSheet ? dung(bac, chat ?? '') : undefined
+  }
+  const moChu = (ds: ParsedChord[]) => {
+    const h = hopBac(0, thu ? 'm' : '')
+    if (!h) return ds
+    if (ds.length === 0) return [h]
+    if (lop(ds[0]!) === key.tonic) return ds
+    const ra = [h, ...ds]
+    return ra.filter((c, i) => i === 0 || lop(c) !== lop(ra[i - 1]!))
+  }
+  const theoMau = (): ParsedChord[] => {
+    const ra: ParsedChord[] = []
+    if (kind === 'interlude' && thu) {
+      const mau = MAU_GIANG_THU[(options.take ?? 0) % MAU_GIANG_THU.length]!
+      for (let i = 0; ra.length < soHopAm && i < mau.length * 4; i += 1) {
+        const bac = mau[i % mau.length]!
+        const h = hopBac(bac)
+        if (h) ra.push(h)
+      }
+      return moChu(ra)
+    }
+    if (thu) {
+      const mau = MAU_DAO_THU[(options.take ?? 0) % MAU_DAO_THU.length]!
+      /*
+        Intro thứ sheet hold=0 ở 4/8 bài (Đừng Xa, Lá Thư, Tình Em, Người hãy quên).
+        Lá Thư giang mới im·im — Am Am trên lưới. Không đẩy ô trùng gốc.
+      */
+      for (let i = 0; i < mau.length && ra.length < soHopAm; i += 1) {
+        const [bac, chat] = mau[i]!
+        if (bac === 2) continue
+        const h = hopBac(bac, chat)
+        if (!h) continue
+        if (ra.length > 0 && lop(h) === lop(ra[ra.length - 1]!)) continue
+        ra.push(h)
+      }
+      while (ra.length < soHopAm) {
+        const gocCuoi = ra.length === 0 ? -1 : lop(ra[ra.length - 1]!)
+        const h = hopBac(gocCuoi === key.tonic ? 5 : 0, 'm')
+        if (!h || lop(h) === gocCuoi) break
+        ra.push(h)
+      }
+      return moChu(ra)
+    }
+    const mau = MAU_DAO_TRUONG[(options.take ?? 0) % MAU_DAO_TRUONG.length]!
+    for (let i = 0; ra.length < soHopAm && i < mau.length * 4; i += 1) {
+      const h = hopBac(mau[i % mau.length]!)
+      if (h) ra.push(h)
+    }
+    return moChu(ra)
+  }
+  const tuMau = theoSheet ? theoMau() : []
+  const chon =
+    tuMau.length >= 2
+      ? tuMau
+      : Array.from({ length: soHopAm }, (_, i) => kho[(bat + i) % kho.length]!)
+  if (chon.length < 2) return []
 
   /*
     Ô CUỐI DẠO VÀ CUỐI GIANG LÀ BẬC V — cửa vào hát.
@@ -231,6 +372,11 @@ export function vonHopAmLinhNhi(options: {
   if (kind !== 'outro') {
     const nam = bacNam(key, kho)
     if (nam) chon[chon.length - 1] = nam
+  }
+  if (kind === 'intro' && thu && theoSheet) {
+    for (let i = chon.length - 1; i > 0; i -= 1) {
+      if (lop(chon[i]!) === lop(chon[i - 1]!)) chon.splice(i, 1)
+    }
   }
 
   /*

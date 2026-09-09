@@ -64,6 +64,11 @@ export interface PhraseChordOptions {
   thay?: SoloTeacher
   /** Đoạn dạo gốc trên lời bài, nếu có. */
   songIntro?: readonly ParsedChord[]
+  /** Ô tick: vòng dạo giống sheet trưởng. Mặc định tắt. */
+  daoTruong?: boolean
+  /** Ô tick: vòng dạo giống sheet thứ. Mặc định tắt. */
+  daoThu?: boolean
+  take?: number
 }
 
 /** Bỏ hợp âm lướt: chúng mượn phách của hợp âm trước, không phải ô của vòng. */
@@ -151,6 +156,9 @@ function borrowedChords(
   songIntro: readonly ParsedChord[] = [],
   /** Tỉ lệ ô chia đôi của đoạn hát — chỉ Linh Nhi dùng tới. */
   tiLeChiaHat = 0,
+  daoTruong = false,
+  daoThu = false,
+  take = 0,
 ): ParsedChord[] {
   const main = mainChords(songChords)
   if (main.length === 0) return []
@@ -164,12 +172,15 @@ function borrowedChords(
       Chạy trước dãy bậc cố định; bài dưới ba hợp âm thì nó trả rỗng và đường cũ
       tiếp quản.
     */
-    if (thay === 'linh-nhi') {
+    if (thay === 'linh-nhi' || daoThu) {
       const rut = vonHopAmLinhNhi({
         kind: 'intro',
         key,
         songChords: xuong,
         tiLeChiaHat,
+        ...(daoTruong ? { daoTruong: true } : {}),
+        ...(daoThu ? { daoThu: true } : {}),
+        take,
       })
       if (rut.length > 0) return rut
     }
@@ -246,6 +257,9 @@ export function phraseChords(
         options.thay,
         options.songIntro ?? [],
         options.tiLeChiaHat ?? 0,
+        options.daoTruong === true,
+        options.daoThu === true,
+        options.take ?? 0,
       )
     : []
   if (borrowed.length > 0) {

@@ -30,7 +30,24 @@ import { chamCauDao, luuBinhLuan, type CauDaoLuu } from './nguon'
  * Đừng dựng lại nếu không được yêu cầu. Cứu tự động nghĩa là mọi chữ gõ nháp đều chui
  * vào sổ, kể cả chữ người dùng đang định xoá đi viết lại.
  */
-export function OBinhLuan({ cau }: { cau: CauDaoLuu | null }) {
+function tenKhung(dieu?: string): string | null {
+  if (!dieu) return null
+  if (dieu === 'bolero-1' || dieu.startsWith('bolero-tu-n')) return 'Bolero Tuấn'
+  if (dieu.includes('linh-nhi-3')) return 'Bolero Linh Nhi 3'
+  if (dieu.includes('linh-nhi-2')) return 'Bolero Linh Nhi 2'
+  if (dieu.includes('linh-nhi')) return 'Bolero Linh Nhi'
+  if (dieu.includes('ca-phao') || dieu.startsWith('bossa-ca-phao')) return 'Cà Pháo'
+  if (dieu.includes('ton-hung')) return 'Tôn Hùng'
+  return dieu
+}
+
+export function OBinhLuan({
+  cau,
+  nhan = 'Câu dạo',
+}: {
+  cau: CauDaoLuu | null
+  nhan?: string
+}) {
   const [chu, setChu] = useState('')
   const [cham, setCham] = useState<'on' | 'chua-on' | null>(null)
   const [trangThai, setTrangThai] = useState<'nghi' | 'dang-gui' | 'xong' | 'hong'>('nghi')
@@ -43,6 +60,13 @@ export function OBinhLuan({ cau }: { cau: CauDaoLuu | null }) {
   }, [cau?.stt])
 
   if (!cau) return null
+  if (cau.stt <= 0) {
+    return (
+      <div className="mb-3 rounded-lg border border-line bg-black/20 p-3 text-xs text-rose-300">
+        Không ghi được — sổ chỉ chạy khi mở bằng npm run dev
+      </div>
+    )
+  }
 
   const tick = (gia: 'on' | 'chua-on') => {
     setCham(gia)
@@ -82,8 +106,18 @@ export function OBinhLuan({ cau }: { cau: CauDaoLuu | null }) {
     <div className="mb-3 rounded-lg border border-line bg-black/20 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/70">
         <span className="rounded bg-amber-key/20 px-2 py-0.5 font-semibold text-amber-key">
-          Câu dạo #{cau.stt}
+          {nhan} #{cau.stt}
         </span>
+        {tenKhung(cau.dieu) ? (
+          <span className="rounded bg-white/10 px-2 py-0.5 font-semibold text-cream">
+            {tenKhung(cau.dieu)}
+          </span>
+        ) : null}
+        {cau.giong ? (
+          <span className="rounded bg-white/10 px-2 py-0.5 font-semibold text-cream">
+            {cau.giong}
+          </span>
+        ) : null}
         <span>{cau.moi ? 'câu mới' : `câu cũ, đã phát ${cau.lanPhat} lần`}</span>
         <span className="text-white/50">· lưu trong Nguon.json</span>
       </div>
@@ -104,7 +138,7 @@ export function OBinhLuan({ cau }: { cau: CauDaoLuu | null }) {
               if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) gui()
             }}
             rows={2}
-            placeholder={`Câu dạo #${cau.stt} chưa ổn ở chỗ nào? (Ctrl+Enter để gửi)`}
+            placeholder={`${nhan} #${cau.stt}${cau.giong ? ` · ${cau.giong}` : ''} chưa ổn ở chỗ nào? (Ctrl+Enter để gửi)`}
             className="mt-2 w-full resize-y rounded-md border border-line bg-black/40 px-3 py-2 text-sm text-white placeholder:text-white/45 focus:border-amber-key focus:outline-none"
           />
           <div className="mt-2 flex items-center gap-3">

@@ -112,7 +112,7 @@ def hop_cua_o(hops, bar):
     return truoc, trong
 
 
-def tuyen_bai(song, doan):
+def tuyen_bai(song, doan, grid=None):
     ra = doc_bai(song)
     g = B.giong_ra_so(song.get('giong'))
     if not ra or not g:
@@ -130,14 +130,31 @@ def tuyen_bai(song, doan):
     # bang thanh mot moc go khong keu. Bat duoc bang test `tuyenSolo.test.ts`: Hong Kong
     # 1 doan dao co not do ngan 0. Not hoa my cung khong thuoc xuong song giai dieu —
     # bang giu not tren cung moi moc go, khong giu do trang tri.
+    def trong_doan(n):
+        for m in song.get('moc', []):
+            if n['bar'] != m['o']:
+                continue
+            if m['tu'] == doan and n['off'] >= m['phach']:
+                return False
+            if m['sang'] == doan and n['off'] < m['phach']:
+                return False
+        return True
+
     notes = [n for n in notes
-             if khoang[0] <= n['bar'] <= khoang[1] and n['dur'] > 0]
+             if khoang[0] <= n['bar'] <= khoang[1] and n['dur'] > 0 and trong_doan(n)]
     o_ra = []
-    for bar in range(khoang[0], khoang[1] + 1):
-        dau, dai = dau_o.get(bar), dai_o.get(bar)
+    cells = [(bar, start) for bar in range(khoang[0], khoang[1] + 1)
+             for start in (range(0, int(dai_o.get(bar, 0)), grid) if grid else [0])]
+    for bar, start in cells:
+        dau, dai = dau_o.get(bar), grid or dai_o.get(bar)
         if dau is None:
             continue
         truoc, trong = hop_cua_o(hops, bar)
+        if grid:
+            for at, el in trong:
+                if at < start:
+                    truoc = el
+            trong = [(at - start, el) for at, el in trong if start <= at < start + grid]
 
         bac = chat = bac2 = chia = None
         dau_el = trong[0][1] if trong and trong[0][0] <= 1e-6 else truoc
@@ -173,12 +190,13 @@ def tuyen_bai(song, doan):
         # `tuyenSolo.test.ts`. Do duoc 22 not nhu vay tren ca kho, deu o doan ket.
         at = collections.defaultdict(list)
         for n in notes:
-            if n['bar'] == bar and n['off'] < dai - 1e-6:
-                at[round(n['off'], 3)].append(n)
+            if n['bar'] == bar and start <= n['off'] < start + dai - 1e-6:
+                at[round(n['off'] - start, 3)].append(n)
         n_ra = []
         for moc in sorted(at):
             cao = max(at[moc], key=lambda n: n['midi'])
-            n_ra.append([moc, cao['midi'] - (60 + chu_am), round(cao['dur'], 3)])
+            duration = min(cao['dur'], dai - moc) if grid else cao['dur']
+            n_ra.append([moc, cao['midi'] - (60 + chu_am), round(duration, 3)])
         o_ra.append(dict(bac=bac, chat=chat if bac is not None else '',
                          bac2=bac2, chia=chia, n=n_ra))
     # SO PHACH MOT O: lay o HAY GAP NHAT trong doan, khong lay o dau tien. Doan ket
@@ -186,7 +204,7 @@ def tuyen_bai(song, doan):
     # phach, va moi not tu phach 2 tro di doc ra thanh vuot vach.
     dem = collections.Counter(dai_o.get(b) for b in range(khoang[0], khoang[1] + 1)
                               if dai_o.get(b))
-    phach = dem.most_common(1)[0][0] if dem else 4.0
+    phach = grid or (dem.most_common(1)[0][0] if dem else 4.0)
     # O LE DAI HON O CHUAN thi phan duoi cua no khong ghep duoc: bo ghep dat o vao mot
     # o dai `phach`, not nam ngoai khoang ay se roi ra ngoai vach. Cat di.
     for o in o_ra:
@@ -313,7 +331,15 @@ def emit_ts(muc):
             ra.append(
                 "\n      {{ bac: {}, chat: '{}', bac2: {}, chia: {}, n: [{}] }},".format(
                     so(o['bac']), o['chat'], so(o['bac2']), so(o['chia']), n))
-        ra.append('\n    ],\n  },')
+        ra.append('\n    ],')
+        if t.get('o4'):
+            ra.append('\n    o4: [')
+            for o in t['o4']:
+                n = ', '.join('[{}, {}, {}]'.format(so(a), so(b), so(c)) for a, b, c in o['n'])
+                ra.append("\n      {{ bac: {}, chat: '{}', bac2: {}, chia: {}, n: [{}] }},".format(
+                    so(o['bac']), o['chat'], so(o['bac2']), so(o['chia']), n))
+            ra.append('\n    ],')
+        ra.append('\n  },')
     return ''.join(ra)
 
 
@@ -390,6 +416,8 @@ export type TuyenSolo = {
   /** Số phách một ô của bản gốc. Chỉ ghép vào bài cùng số phách. */
   phach: number
   o: readonly OSolo[]
+  /** Ô 8 phách tách thành hai ô 4, KHÔNG tăng tốc; giữ hợp âm tại từng điểm cắt. */
+  o4?: readonly OSolo[]
 }
 
 /** Bảng tính từ MIDI `60 + chủ âm`. */
@@ -412,6 +440,9 @@ def sinh():
             t['dieu'] = song.get('genre') or ''
             t['giong'] = giong_chu(song, doan)
             t['id'] = '{}-{}'.format(khong_dau(song['name']), doan)
+            # Hoa Phượng kết có cả ô 8 và 4 phách; không vứt nửa sau ô 71–73.
+            if t['thu'] and any(d == 8 for d in doc_bai(song)[3].values()):
+                t['o4'] = tuyen_bai(song, doan, grid=4)['o']
             muc.append(t)
     return DAU_FILE + emit_ts(muc) + '\n]\n'
 
@@ -423,6 +454,9 @@ if __name__ == '__main__':
     elif arg == '--sinh':
         sys.stdout.reconfigure(encoding='utf-8')
         print(sinh(), end='')
+    elif arg == '--output':
+        from pathlib import Path
+        Path(sys.argv[2]).write_text(sinh(), encoding='utf-8')
     else:
         corpus = khung.nap_corpus()
         ra = []

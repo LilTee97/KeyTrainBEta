@@ -4,6 +4,7 @@ import {
   hoCuaDieu,
   kieuChoDiepKhuc,
   kieuChoSolo,
+  laBoleroTuan,
   kieuTrongHo,
 } from '../hoDieu'
 import { getStyle } from '../styleLibrary'
@@ -44,6 +45,12 @@ describe('họ điệu gom các kiểu lại', () => {
     Đây là chỗ người dùng bảo sửa: hai bolero của hai người soạn khác nhau phải
     là CÙNG MỘT HỌ, không phải hai điệu rời.
   */
+  it('laBoleroTuan chỉ Pùng-Pắp, không rải Linh Nhi', () => {
+    expect(laBoleroTuan(getStyle('bolero-1')!)).toBe(true)
+    expect(laBoleroTuan(getStyle('bolero-tu-n-improv-bai-04-00001')!)).toBe(true)
+    expect(laBoleroTuan(getStyle('bolero-linh-nhi-2')!)).toBe(false)
+  })
+
   it('bolero Tuấn Lưu và bolero Linh Nhi cùng một họ', () => {
     expect(hoCuaDieu('bolero-1')).toBe('bolero')
     expect(hoCuaDieu('bolero-linh-nhi')).toBe('bolero')

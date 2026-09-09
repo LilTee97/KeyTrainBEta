@@ -93,6 +93,9 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
     // Cho phép đọc mã nguồn PianoBrain nằm ngoài thư mục dự án.
     fs: { allow: [HERE, BRAIN] },
     watch: {

@@ -1929,6 +1929,23 @@ liền bậc cộng quãng ba **55% so với 38%**, và tỉ lệ nốt hợp â
 > **Cách đọc, người dùng đã xác nhận:** thứ tai nghe thành "tươi sáng" là **sự chắc chắn** —
 > nốt nằm trên hợp âm, bước đi nhỏ, càng về kết càng chắc.
 
+### "Man mác buồn" — chốt 7/9/2026, chiều ngược của tươi sáng
+
+Cùng ba trục, **giong của BÀI**. Cỡ mẫu thứ: Linh Nhi 4 bài · Cà Pháo **1** · Tôn Hùng 2 (0 trưởng).
+
+Không phải chọn `♭3` — gam ép, cùng bẫy với tươi sáng.
+
+| trục | đo được | ai |
+|---|---|---|
+| vốn hợp âm | bài thứ **át nhiều hơn** trưởng (LN 6% vs 2% n=70/65; CP 26% vs 9% n=27/100). Gốc thứ: i–iv–V; Tôn Hùng thêm **♭VI 19% · ♭VII 22%** | hai thầy có bài trưởng: cùng chiều |
+| tầm | CP thấp hơn 2,3 nửa cung; LN lệch 1,4 — **không hạ chị** | chỉ Cà Pháo |
+| bám nốt | LN rời 59,9% vs 70,2%, kết 50%, nhảy+8va 52%. CP n=1 **bám 83,6%** — ngược | không chung ba thầy |
+
+> **Người dùng chốt:** tươi sáng = **chắc chắn**. Man mác buồn = **không chắc + chỗ kéo**.
+> Kéo = át, vòng i · iv · V/V7 · ♭VI · ♭VII. Không chắc = rời/nhảy/lặp (chỉ chắc khi soạn Linh Nhi).
+
+Soạn thứ: **đừng siết như trưởng**. Luật rời/nhảy không áp Cà Pháo. Chi tiết số: `PianoBrain/knowledge/LUAT-SOAN-NOT.md`.
+
 **Việc cho KeyTrain, chưa làm:** bộ soạn hiện dùng **cùng một bộ luật cho cả hai giọng**.
 Muốn theo số đo này thì bài giọng trưởng phải siết về nốt hợp âm và siết thêm ở đoạn kết —
 nhưng đó là đổi lối chơi, nên phải dựng sau một ô tick nghe thử, đúng luật người dùng đã đặt.
@@ -2130,3 +2147,83 @@ giọng trưởng của chị có max 91, nhưng 90 và 91 mỗi cao độ đún
 vị mới dùng được: p50 76 · p75 **79** · p90 83 · p95 86 · p99 88. Trần app đúng bằng p75 của
 chị, tức nó cắt 22,7% vốn nốt và cắt đúng phần trên — đó là lời giải cho tâm app 72,1 so với
 75,3 của chị. Bộ đo: `PianoBrain/tools/sheet/tran_am.py`.
+
+### Ô tick trần 84 — mặc định tắt; trần cần nhưng chưa đủ
+
+Người dùng chốt: tick trần **84**, mặc định **TẮT**. Cũ **79**. 84 phủ 94,3% nốt dạo trưởng
+Linh Nhi (n=141); 79 chỉ 77,3% (= p75, cắt 22,7%). 90 và 91 mỗi cái 1 nốt — không lấy.
+
+Triệu chứng lùi 79: tâm ~72, câu đụng trần, ô bị gập xuống quãng tám.
+
+`boiSoTuoiSang` **trước = sau = 1,522** / bước nhỏ 55,3% (64 câu · 3074 nốt) — mặc định vẫn
+79 nên bội số không đổi.
+
+Tâm, cùng 10 vòng `daoTruongLinhNhi` (n=2765 nốt mỗi trần):
+
+    79 → 72,1    84 → 74,1    chị 75,3
+
+Cùng chiều trên *Hoa Trinh Nữ* 8 câu: 72,1 → 74,1. Lên **2,0**, còn thiếu **1,2** tới 75,3.
+Trần là điều kiện cần, chưa đủ — chỗ còn lại ở phép dời quãng tám.
+
+`daoTruongLinhNhi.test.ts` đã chuyển sang `SOLO_RANGE` (62–79). Test CAO ĐỘ **đỏ**: tầm 72,1
+cách 75,3 là 3,2 > 1,5. **Không hạ ngưỡng.** Ô tick: *Trần 84 (nghe thử)*, cạnh siết bám hợp âm.
+
+### Gập theo ô, không gập từng nốt
+
+Tai người dùng trên trần 84: *«bị gập nhiều chỗ»*. `gap()` từng nốt phá đường đi trong ô —
+nốt cao giữ, nốt lệch tầm ±12. Cũ đã biết lỗi này (bản 1) rồi vẫn để `gap()` từng nốt vì
+vài nốt trầm Đừng Xa (MIDI 52) từng kéo cả câu +12 (tâm 80,7).
+
+Nay mỗi ô một k ∈ {-12,0,12}: hết nốt ngoài tầm nếu ô vừa khoảng; ô rộng hơn mới gập nốt
+biên. Trần **giữ 79**. Tick 84 vẫn tắt.
+
+Cũ: tâm 72,1 (n=2765). Mới: **71,3**. Bội số **1,522** không đổi (64 câu). Tâm hơi tụt vì
+ô thấp được dời cả khối xuống thay vì chỉ gập một nốt lên. Triệu chứng lùi: câu gãy trong
+ô — nốt lên xuống một quãng tám giữa cụm.
+
+### Ô tick vòng dạo giống sheet trưởng — mặc định tắt
+
+Cũ: xoay vốn hợp âm bài từ chủ âm → *Hoa Trinh Nữ* ra **I-ii-iii-IV**. Ba đoạn dạo trưởng
+của chị (n=3) không bài nào đi dãy ấy: Mùa Xuân I-vi-iii-V · Biển Tình vi-iii-ii-I ·
+Đường Xưa IV-ii-I-vi.
+
+Tick bật + intro + major: lấy một trong ba mẫu (theo `tonic % 3`), hợp âm vẫn từ vốn bài,
+ô cuối vẫn bậc V. Giọng thứ không đổi. Cũ để lùi: intro lại leo gam I-ii-iii-IV.
+
+Ô: *Vòng dạo giống sheet trưởng (nghe thử)*, cạnh trần 84. `npx tsc` sạch. Vitest **2448
+đạt / 3 hỏng** (2 sẵn có + `daoTruong` tầm 71,3 — không hạ ngưỡng).
+
+Tick ấy lúc đầu chỉ đổi bậc, chất vẫn lấy vốn bài (`Am7 · Em7 · G7`). Sheet trưởng solo
+**90% ba nốt trơn** (n=72 ô, 3 bài), add=0, maj7=0. Nay bật tick thì rút về tam âm; tắt
+giữ màu bài. Cũ để lùi: intro lại `Am7/Em7/G9sus4`. Mặc định vẫn tắt.
+
+### Intro điệu bolero Tuấn chơi Pùng-Pắp hai tay, không rải Linh Nhi
+
+Cũ: chọn Bolero 1 (Tuấn) thì `kieuChoSolo` / nút Linh Nhi đẩy intro sang `bolero-linh-nhi-2`
+— LH rải 9 cú, RH giai điệu ghép ô. Tuấn là loài khác: LH phách 1+3, RH đảo phách 7 điểm,
+hai tay đã cài trong cell.
+
+Nay intro Tuấn xen hai loại ô, suy từ sheet (không phải mọi ô cùng một việc):
+
+- Linh Nhi intro **n=59 ô / 7 bài**: gd+rải 49% · gd+bass 25% · đệm đủ 17%
+- Cà Pháo intro **n=34 ô / 3 bài** (thiếu file Hồng Kông 1): đệm đủ 38% · gd+rải 29% · gd+bass 15%
+
+Tuấn không có rải. Còn **A = Pùng-Pắp hai tay**, **B = LH bass + RH giai điệu** (giữ đủ nốt
+bộ soạn, không tỉa 4 cú Pắp). ~1/3 ô A. Ô B: thêm **1 câu chạy 4 nốt** (gam, móc kép, nửa
+sau ô) — Linh Nhi 0,09 chuỗi/ô nên không chạy mọi ô. Hút bậc V cuối vòng **giữ**, kể cả khi
+tick trơn chất / intro Tuấn. Cũ: lưới mất dòng `G (hút)`.
+
+Ô B từ ô **3**: mọi ô giai điệu có LH Pắp (không xáo). Ô 1–2 không. Sheet 65/69 (94%).
+
+### Intro Bolero Tuấn — trưởng và thứ (chốt 7/9/2026)
+
+Khung chung: A Pùng-Pắp / B LH bass+RH giai điệu · Pắp LH từ ô 3 · 8 ô + hút V · chạy **4 nốt** (không 10 nốt lên — sheet intro trưởng n=6 và thứ n=7: **0** chuỗi ≥5). Tuấn 0 sheet.
+
+| | trưởng (tươi sáng = chắc chắn) | thứ (man mác buồn = không chắc + kéo) |
+|---|---|---|
+| vòng | xoay vốn bài; tick `daoTruong` = mẫu n=3 Linh Nhi, trơn, cửa V | **luôn** mẫu n=3 thầy i–♭VII–♭VI / i–♭VII–♭III / i–♭VI–♭VII, trơn, cửa V |
+| nốt | vốn intro trưởng, Ionian | vốn intro thứ, gam tự nhiên; 7 chỉ khi V |
+| chạy | 2×4 | 1×4 xuống |
+| phạt thêm | chuỗi lên ≥5 (chung) | + rải trưởng lặp, gãy luật 4, lặp <8%, bậc 3/6 trưởng; Cà Pháo thứ xếp sau |
+
+Cũ để lùi: intro thứ chạy C–D–E–F–G (#191, 1 chuỗi ≥5 vs sheet 0) và rải G trưởng; intro trưởng 10 nốt lên. Tai: Đã ổn Tuấn La thứ 13 câu / ~20 phút sau lần cắt chuỗi. Đừng chồng heuristic nữa trên intro — nghe take. Chi tiết màu: `LUAT-SOAN-NOT.md`. Giang: nốt lấy **ô giang** 3 thầy, không ô intro (Chiếc Lá dạo từng lọt).

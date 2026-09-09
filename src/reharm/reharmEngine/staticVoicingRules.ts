@@ -83,7 +83,19 @@ const MINOR_DEGREE_RULES: Record<number, { light: string; full: string }> = {
   7: { light: '7', full: '9' },
 }
 
-export type ColorIntensity = 'off' | 'light' | 'full' | 'linhNhi'
+export type ColorIntensity =
+  | 'off'
+  | 'light'
+  | 'full'
+  | 'linhNhi'
+  | 'caPhao'
+  | 'tonHung'
+
+export const MAU_THAY = ['linhNhi', 'caPhao', 'tonHung'] as const
+export const laMauThay = (
+  intensity: ColorIntensity | undefined,
+): intensity is (typeof MAU_THAY)[number] =>
+  intensity === 'linhNhi' || intensity === 'caPhao' || intensity === 'tonHung'
 
 /** Sheet Linh Nhi: I/IV Δ, ii/iii/vi m7, V7. Không add9 / 9sus4 / 7b9. */
 const LINH_NHI_MAJOR: Record<number, string> = {
@@ -103,6 +115,61 @@ const LINH_NHI_MINOR: Record<number, string> = {
   5: '7',
   6: 'maj7',
   7: '7',
+}
+
+/** Cà Pháo hát n=4: I add9, ii m9, V 9 — không 9sus4/7b9 (Khá). m11 chỉ bossa n=1. */
+const CA_PHAO_MAJOR: Record<number, string> = {
+  1: 'add9',
+  2: 'm9',
+  3: 'm7',
+  4: 'maj7',
+  5: '9',
+  6: 'm7',
+  7: 'm7b5',
+}
+const CA_PHAO_MINOR: Record<number, string> = {
+  1: 'm9',
+  2: 'm7b5',
+  3: 'maj7',
+  4: 'm9',
+  5: '9',
+  6: 'maj7',
+  7: '9',
+}
+
+/** Tôn Hùng hát n=2, chỉ giọng thứ: i trơn, v m7 (không V7). Trưởng 0 sheet — Δ/m7/V7. */
+const TON_HUNG_MAJOR: Record<number, string> = {
+  1: 'maj7',
+  2: 'm7',
+  3: 'm7',
+  4: '6',
+  5: '7',
+  6: 'm7',
+  7: 'm7b5',
+}
+const TON_HUNG_MINOR: Record<number, string> = {
+  1: 'min',
+  2: 'm7b5',
+  3: 'maj',
+  4: 'm7',
+  5: 'm7',
+  6: 'maj',
+  7: 'maj',
+}
+
+const BANG_THAY: Record<
+  (typeof MAU_THAY)[number],
+  { major: Record<number, string>; minor: Record<number, string> }
+> = {
+  linhNhi: { major: LINH_NHI_MAJOR, minor: LINH_NHI_MINOR },
+  caPhao: { major: CA_PHAO_MAJOR, minor: CA_PHAO_MINOR },
+  tonHung: { major: TON_HUNG_MAJOR, minor: TON_HUNG_MINOR },
+}
+
+const THAY_KHONG_BAC: Record<(typeof MAU_THAY)[number], { maj: string; min: string }> = {
+  linhNhi: { maj: 'maj7', min: 'm7' },
+  caPhao: { maj: 'add9', min: 'm9' },
+  tonHung: { maj: 'maj7', min: 'min' },
 }
 
 /**
@@ -571,10 +638,11 @@ export function colorChord(
 ): ParsedChord {
   const { intensity = 'full', susDominant = false } = options
   if (intensity === 'off') return chord
-  if (intensity === 'linhNhi') {
+  if (laMauThay(intensity)) {
     const id = chord.quality.id
-    if (id === 'maj') return withQuality(chord, 'maj7')
-    if (id === 'min') return withQuality(chord, 'm7')
+    const map = THAY_KHONG_BAC[intensity]
+    if (id === 'maj') return withQuality(chord, map.maj)
+    if (id === 'min') return withQuality(chord, map.min)
     return chord
   }
 
@@ -686,11 +754,12 @@ export function colorAnalyzedChord(
     preferInKey = true,
   } = options
   if (intensity === 'off') return analyzed.chord
-  if (intensity === 'linhNhi') {
+  if (laMauThay(intensity)) {
     const { chord, degree } = analyzed
     if (degree === null && analyzed.actsAsDominant) return withQuality(chord, '7')
     if (degree === null) return colorChord(chord, options)
-    const target = (scale === 'minor' ? LINH_NHI_MINOR : LINH_NHI_MAJOR)[degree]
+    const bang = BANG_THAY[intensity][scale === 'minor' ? 'minor' : 'major']
+    const target = bang[degree]
     return target ? withQuality(chord, target) : colorChord(chord, options)
   }
 

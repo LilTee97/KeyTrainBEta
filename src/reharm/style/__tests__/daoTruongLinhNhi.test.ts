@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { giaiDieuDaoLinhNhi } from '../giaiDieuDaoLinhNhi'
 import { TUYEN_SOLO } from '../tuyenSolo'
+import { SOLO_RANGE, soloRange } from '../../fillSoloGenerator/soloGenerator'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 
 /*
@@ -44,26 +45,31 @@ const VONG: readonly [string, number][] = [
 const GAM = [0, 2, 4, 5, 7, 9, 11]
 const LUOT = 6
 
-const chay = (txt: string, tonic: number, take: number) =>
+const chay = (
+  txt: string,
+  tonic: number,
+  take: number,
+  range: { low: number; high: number } = SOLO_RANGE,
+) =>
   giaiDieuDaoLinhNhi({
     left: [],
     chords: parseChordInput(txt).chords,
     beatsPerChord: 4,
     barBeats: 4,
-    range: { low: 57, high: 95 },
+    range,
     tonic: tonic as PitchClass,
     minor: false,
     take,
   })
 
 /** Đo cả mười vòng một lượt, trả về các tỉ lệ để so với bản ký âm. */
-function do10() {
+function do10(range: { low: number; high: number } = SOLO_RANGE) {
   let n = 0, hop = 0, lac = 0, cao = 0, b5 = 0
   const buoc: Record<string, number> = {}
   for (const [txt, tonic] of VONG) {
     const chords = parseChordInput(txt).chords
     for (let take = 0; take < LUOT; take += 1) {
-      const ev = chay(txt, tonic, take)
+      const ev = chay(txt, tonic, take, range)
       const notes = ev.map((e) => ({ b: e.startBeat, m: e.notes[0]! }))
       for (const { b, m } of notes) {
         n += 1
@@ -103,6 +109,15 @@ describe('đoạn dạo giọng trưởng — đo trên 10 vòng khác màu', ()
 
   it('cỡ mẫu đủ lớn để tin', () => {
     expect(r.n).toBeGreaterThan(2000)
+  })
+
+  it('IN TÂM trần 79 vs 84 — trần cần không đủ', () => {
+    const a = do10(SOLO_RANGE)
+    const b = do10(soloRange(true))
+    console.log(
+      `  tâm 79 = ${a.cao.toFixed(1)}   tâm 84 = ${b.cao.toFixed(1)}   chị 75,3  (n=${a.n} / ${b.n})`,
+    )
+    expect(a.n).toBeGreaterThan(2000)
   })
 
   it('CAO ĐỘ đúng tầm chị ấy — 75,3', () => {

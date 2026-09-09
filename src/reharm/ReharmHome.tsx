@@ -82,7 +82,7 @@ import type {
 } from './fillSoloGenerator/soloGenerator'
 import {
   NOTE_SOURCE_OPTIONS,
-  SOLO_RANGE,
+  soloRange,
   fillPositions,
   generateFillLine,
   generateSolo,
@@ -146,7 +146,7 @@ import {
   resolveStyleForChord,
   resolveStyleForSection,
 } from './style/sectionStyles'
-import { kieuChoSolo, thienVeCuaHo } from './style/hoDieu'
+import { kieuChoSolo, laBoleroTuan, thienVeCuaHo } from './style/hoDieu'
 import {
   melodyKind,
   noteSourceForTeacher,
@@ -163,7 +163,7 @@ import {
 import { khungChayNgon } from './style/khungChayNgon'
 import { vonHopAmLinhNhi } from './style/vonHopAmLinhNhi'
 import { giaiDieuDaoLinhNhi } from './style/giaiDieuDaoLinhNhi'
-import { luuCauDao, type CauDaoLuu } from './nguon/nguon'
+import { layCauOn, luuCauDao, suKienTuNot, type CauDaoLuu, type CauOn } from './nguon/nguon'
 import { OBinhLuan } from './nguon/OBinhLuan'
 import { conflictsByIndex } from './reharmEngine/colorConflicts'
 import {
@@ -628,6 +628,15 @@ export function ReharmHome() {
     Mặc định TẮT — đây là đổi lối chơi, luật người dùng đặt là phải nghe thử trước.
   */
   const [siet, setSiet] = useState(false)
+  /* Trần 84 nghe thử. Mặc định tắt — cũ 79. Xem SOLO_TRAN_MO. */
+  const [tranMo, setTranMo] = useState(false)
+  /* Vòng dạo giống 3 sheet trưởng. Mặc định tắt. Cũ: xoay vốn bài → I-ii-iii-IV. */
+  const [daoTruong, setDaoTruong] = useState(false)
+  const [daoThu, setDaoThu] = useState(false)
+  const [cauOnDs, setCauOnDs] = useState<CauOn[]>([])
+  const [ngheLaiStt, setNgheLaiStt] = useState(0)
+  const [giangThu, setGiangThu] = useState(false)
+  const [chayNgan, setChayNgan] = useState(false)
   /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
   const cauLinhNhi = soloThay === 'linh-nhi'
   const [chiecLa, setChiecLa] = useState(false)
@@ -696,6 +705,7 @@ export function ReharmHome() {
     ballad. Xem `style/balladFamily.ts`.
   */
   const ballad = isBalladStyle(styleId)
+  const tamSolo = ballad ? BALLAD_SOLO_RANGE : soloRange(tranMo)
 
   /*
     Chặn walking chạy ngầm.
@@ -801,6 +811,7 @@ export function ReharmHome() {
   const [songTitle, setSongTitle] = useState<string | null>(null)
   /* Câu dạo vừa lưu vào `Nguon.json` — ô bình luận gắn ý kiến vào đúng số này. */
   const [cauDaoLuu, setCauDaoLuu] = useState<CauDaoLuu | null>(null)
+  const [cauGiangLuu, setCauGiangLuu] = useState<CauDaoLuu | null>(null)
   /** Tăng lên mỗi lần lưu, để danh sách bài đọc lại kho. */
   const [saveCount, setSaveCount] = useState(0)
 
@@ -1390,7 +1401,7 @@ export function ReharmHome() {
         barBeats: phrasePulseBar,
         anchors,
         scale: phraseScale.pitchClasses,
-        range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+        range: tamSolo,
         take: spin + phraseSpin + playSpin.current,
         /*
           Rải mở rộng CHỈ ở giang tấu, và chỉ cho họ nào có số đo.
@@ -1404,7 +1415,7 @@ export function ReharmHome() {
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
-    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin],
+    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin, tamSolo],
   )
 
 
@@ -1537,6 +1548,11 @@ export function ReharmHome() {
         tiLeChiaHat,
         thay: thaySolo,
         songIntro: hopAmDaoGoc(),
+        ...(daoTruong ? { daoTruong: true } : {}),
+        ...(daoThu || (laBoleroTuan(style) && reharm.key?.scale === 'minor')
+          ? { daoThu: true }
+          : {}),
+        take: phraseSpin,
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
       /*
@@ -1544,7 +1560,7 @@ export function ReharmHome() {
         `daoDungXa.ts`. Không thêm ở đây thì lưới hiện tám ô còn tai nghe chín,
         và người dùng đọc lưới ra kết luận là nút tick chẳng làm gì.
       */
-      ...(thaySolo === 'linh-nhi' && reharm.key
+      ...(reharm.key && (thaySolo === 'linh-nhi' || daoTruong || daoThu || laBoleroTuan(style))
         ? [`${pitchClassName(normalizePitchClass(reharm.key.tonic + 7))} (hút)`]
         : []),
     ]
@@ -1556,6 +1572,10 @@ export function ReharmHome() {
     phraseOpening,
     thaySolo,
     hopAmDaoGoc,
+    daoTruong,
+    daoThu,
+    style,
+    phraseSpin,
   ])
 
   const outroSymbols = useMemo(
@@ -1862,6 +1882,40 @@ export function ReharmHome() {
       const last = picked[picked.length - 1]
       if (!first || !last) return null
 
+      if (laBoleroTuan(style) && reharm.key) {
+        const built = buildPhraseSection({
+          kind: 'interlude',
+          key: reharm.key,
+          style,
+          thay: thaySolo,
+          vongPhienKhuc,
+          tiLeChiaHat,
+          songIntro: hopAmDaoGoc(),
+          beatsPerChord: chordBeats,
+          dropRoot,
+          opening: nextFirst?.chord ?? recolored.find((c) => !c.passing) ?? null,
+          songChords: vongPhienKhuc,
+          take: phraseSpin + playSpin.current,
+          range: tamSolo,
+          ...(siet ? { siet: true } : {}),
+          ...(daoTruong ? { daoTruong: true } : {}),
+          ...(giangThu ? { giangThu: true } : {}),
+          solo: () => [],
+        })
+        if (built) {
+          return {
+            startBeat: first.start,
+            lengthBeats: built.lengthBeats,
+            chords: picked,
+            kyHieu: built.chords,
+            kyHieuBeats: built.beatsEach,
+            events: built.events.filter((e) => e.hand === 'left'),
+            solo: () => built.events.filter((e) => e.hand === 'right'),
+            exit: [],
+          }
+        }
+      }
+
       // Đã rút về màu cơ bản ở trên; **không** tô thêm màu cho giang tấu.
       const windowChords = picked.map((span) => span.chord)
       const runBeats = Math.max(0.5, last.beats - 1)
@@ -2026,7 +2080,7 @@ export function ReharmHome() {
                 chords: lastLoop ? lastLoopChords : windowChords,
                 beatsPerChord: chordBeats,
                 barBeats: phrasePulseBar,
-                range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+                range: tamSolo,
                 take: take + phraseSpin + playSpin.current,
                 ...(thienVeCuaHo(style.id)
                   ? { thienVe: thienVeCuaHo(style.id)! }
@@ -2069,7 +2123,7 @@ export function ReharmHome() {
                   chords: lastLoop ? lastLoopChords : windowChords,
                   beatsPerChord: chordBeats,
                   barBeats: phrasePulseBar,
-                  range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+                  range: tamSolo,
                   take: phraseSpin + playSpin.current,
                   tonic: reharm.key.tonic,
                   minor: reharm.key.scale === 'minor',
@@ -2122,7 +2176,7 @@ export function ReharmHome() {
               teacher: thaySolo,
               teacherKhung: 'interlude',
               tonHungGiang,
-              ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
+              range: tamSolo,
             }),
           ),
       }
@@ -2152,6 +2206,10 @@ export function ReharmHome() {
       phraseSpin,
       vongPhienKhuc,
       hopAmDaoGoc,
+      tamSolo,
+      giangThu,
+      siet,
+      tiLeChiaHat,
     ],
   )
 
@@ -2524,7 +2582,7 @@ export function ReharmHome() {
         storeScale: storeScaleInKey,
         // Câu chạy chia nhịp theo điệu: swing cho jazz, đảo phách cho bossa.
         feel: soloFeelFor(styleId),
-        ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
+        range: tamSolo,
       })
   }, [
     withPassing,
@@ -2536,6 +2594,7 @@ export function ReharmHome() {
     reharm.key,
     phraseSpin,
     ballad,
+    tamSolo,
     // Đổi điệu là đổi cách chia nhịp câu chạy — phải dựng lại.
     styleId,
   ])
@@ -2578,7 +2637,7 @@ export function ReharmHome() {
           melody: melodyKind(thaySolo),
           teacher: thaySolo,
           teacherKhung: 'intro',
-          ...(ballad ? { range: BALLAD_SOLO_RANGE } : {}),
+          range: tamSolo,
         }),
       ),
     [
@@ -2595,6 +2654,7 @@ export function ReharmHome() {
       style,
       thaySolo,
       builtLine,
+      tamSolo,
     ],
   )
 
@@ -2978,8 +3038,11 @@ export function ReharmHome() {
         base = [...base, { type: 'outro' as const }]
       }
     }
+    if (laBoleroTuan(style)) {
+      base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
+    }
     return base
-  }, [arrangement, songSources, chiecLa, thaySolo])
+  }, [arrangement, songSources, chiecLa, thaySolo, style])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3028,7 +3091,7 @@ export function ReharmHome() {
             const built = buildPhraseSection({
               kind,
               key: reharm.key,
-              style: styleSolo,
+              style: kind === 'intro' && laBoleroTuan(style) ? style : styleSolo,
               thay: thaySolo,
               vongPhienKhuc,
               tiLeChiaHat,
@@ -3086,9 +3149,13 @@ export function ReharmHome() {
                 không còn dồn hết vào một dòng.
               */
               take: phraseSpin + playSpin.current,
-              range: ballad ? BALLAD_SOLO_RANGE : SOLO_RANGE,
+              range: tamSolo,
               ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
               ...(siet ? { siet: true } : {}),
+              ...(daoTruong ? { daoTruong: true } : {}),
+              ...(daoThu ? { daoThu: true } : {}),
+              ...(giangThu ? { giangThu: true } : {}),
+              ...(chayNgan ? { chayNgan: true } : {}),
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, false),
             })
@@ -3128,6 +3195,7 @@ export function ReharmHome() {
         opening: recolored.find((chord) => !chord.passing) ?? null,
         songChords: hopAmChoDoan('intro'),
         take: phraseSpin + playSpin.current,
+        range: tamSolo,
         motif: 'chiec-la',
         solo: (chords) => phraseSolo(chords, 0, true),
       })
@@ -3171,12 +3239,17 @@ export function ReharmHome() {
       // `phraseSolo` nữa, nên phải khai riêng.
       phraseSpin,
       ballad,
+      tamSolo,
       buildEnding,
       buildRepeatEnding,
       varyOnRepeat,
       style.beatsPerMeasure,
       steps,
       chiecLa,
+      daoTruong,
+      daoThu,
+      giangThu,
+      chayNgan,
     ],
   )
 
@@ -3263,9 +3336,7 @@ export function ReharmHome() {
     const over =
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
-    return (
-      interludeWindow(over, null)?.chords.map((span) => span.chord.symbol) ?? []
-    )
+    return [...(interludeWindow(over, null)?.kyHieu ?? [])]
   }, [songSources, steps, interludeWindow])
 
   /**
@@ -3508,8 +3579,50 @@ export function ReharmHome() {
     [steps],
   )
 
+  const napCauOn = useCallback(() => {
+    void layCauOn().then(setCauOnDs)
+  }, [])
+
+  const phatCauOn = useCallback(
+    async (cau: CauOn) => {
+      await startAudio()
+      stopTimelineLoop()
+      pauseSource()
+      const events = suKienTuNot(cau.not)
+      const oNhip = style.beatsPerMeasure * (style.gridUnit ?? 1)
+      const length =
+        cau.soO > 0
+          ? cau.soO * oNhip
+          : Math.max(1, ...events.map((e) => e.startBeat + e.durationBeats))
+      const luu: CauDaoLuu = {
+        stt: cau.stt,
+        moi: false,
+        lanPhat: cau.lanPhat,
+        giong: cau.giong,
+        dieu: cau.dieu,
+        doan: cau.doan,
+      }
+      if (cau.doan === 'interlude') setCauGiangLuu(luu)
+      else setCauDaoLuu(luu)
+      startTimelineLoop(() => eventsForHand(events, hand), bpm, length, 0, true)
+    },
+    [style.beatsPerMeasure, style.gridUnit, hand, bpm],
+  )
+
   const playFromBeat = useCallback(
     async (beat: number, sourceBeat = beat) => {
+      if (ngheLaiStt > 0) {
+        let cau = cauOnDs.find((c) => c.stt === ngheLaiStt)
+        if (!cau) {
+          const ds = await layCauOn()
+          setCauOnDs(ds)
+          cau = ds.find((c) => c.stt === ngheLaiStt)
+        }
+        if (cau) {
+          await phatCauOn(cau)
+          return
+        }
+      }
       await startAudio()
       stopTimelineLoop()
       pauseSource()
@@ -3540,23 +3653,39 @@ export function ReharmHome() {
       */
       try {
         const luot = buildPass(base, song.soloTakes)
-        const dauBai = luot.sections?.[0]
-        if (dauBai && dauBai.startBeat === 0 && (luot.sections?.length ?? 0) > 1) {
+        const giong = reharm.key
+          ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
+          : ''
+        const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
+        const luuDoan = (
+          kind: 'intro' | 'interlude',
+          hopAm: readonly string[],
+          dat: (c: CauDaoLuu) => void,
+        ) => {
+          const span = luot.soloSpans?.find((s) => s.kind === kind)
+          if (!span) return
+          const events = luot.events
+            .filter(
+              (e) =>
+                e.startBeat >= span.startBeat - 1e-6 &&
+                e.startBeat < span.startBeat + span.lengthBeats - 1e-6,
+            )
+            .map((e) => ({ ...e, startBeat: e.startBeat - span.startBeat }))
           void luuCauDao({
-            events: luot.events.filter((e) => e.startBeat < dauBai.lengthBeats - 1e-6),
-            lengthBeats: dauBai.lengthBeats,
-            barBeats: style.beatsPerMeasure * (style.gridUnit ?? 1),
+            events,
+            lengthBeats: span.lengthBeats,
+            barBeats,
             bai: songTitle ?? '',
-            giong: reharm.key
-              ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
-              : '',
-            dieu: styleSolo.id,
-            /* Vòng hợp âm đúng như lưới đang bày ra cho người dùng nhìn. */
-            hopAm: introSymbols,
+            giong,
+            dieu: laBoleroTuan(style) ? style.id : styleSolo.id,
+            hopAm: span.chords.length > 0 ? span.chords : hopAm,
+            doan: kind,
           }).then((luu) => {
-            if (luu) setCauDaoLuu(luu)
+            if (luu) dat(luu)
           })
         }
+        luuDoan('intro', introSymbols, setCauDaoLuu)
+        luuDoan('interlude', interludeSymbols, setCauGiangLuu)
       } catch (loi) {
         console.warn('Nguon.json: không lưu được câu dạo, bỏ qua', loi)
       }
@@ -3589,6 +3718,10 @@ export function ReharmHome() {
       reharm.key,
       styleSolo.id,
       introSymbols,
+      interludeSymbols,
+      ngheLaiStt,
+      cauOnDs,
+      phatCauOn,
     ],
   )
 
@@ -4039,6 +4172,9 @@ export function ReharmHome() {
                   onClick={() => {
                     setChiecLa(false)
                     setSoloThay(nut.id)
+                    if (nut.id === 'linh-nhi') setIntensity('linhNhi')
+                    else if (nut.id === 'ca-phao') setIntensity('caPhao')
+                    else if (nut.id === 'ton-hung') setIntensity('tonHung')
                   }}
                   title={
                     khoa
@@ -4067,6 +4203,46 @@ export function ReharmHome() {
               onChange={() => setSiet((on) => !on)}
             />
             Siết bám hợp âm theo bản ký âm (nghe thử)
+          </label>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={tranMo}
+              onChange={() => setTranMo((on) => !on)}
+            />
+            Trần 84 (nghe thử)
+          </label>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={daoTruong}
+              onChange={() => setDaoTruong((on) => !on)}
+            />
+            Vòng dạo giống sheet trưởng (nghe thử)
+          </label>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={daoThu}
+              onChange={() => setDaoThu((on) => !on)}
+            />
+            Vòng dạo giống sheet thứ (nghe thử)
+          </label>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={giangThu}
+              onChange={() => setGiangThu((on) => !on)}
+            />
+            Vòng giang tấu giống sheet thứ (nghe thử)
+          </label>
+          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+            <input
+              type="checkbox"
+              checked={chayNgan}
+              onChange={() => setChayNgan((on) => !on)}
+            />
+            Câu chạy tự soạn (nghe thử)
           </label>
           {thaySolo === 'ton-hung' && (
             <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
@@ -4361,14 +4537,15 @@ export function ReharmHome() {
             toolbar={
               <div className="mb-3 border-b border-line pb-3">
                 {/* Ô bình luận nằm TRÊN nút phát, theo yêu cầu người dùng. */}
-                <OBinhLuan cau={cauDaoLuu} />
+                <OBinhLuan cau={cauDaoLuu} nhan="Câu dạo" />
+                <OBinhLuan cau={cauGiangLuu} nhan="Giang tấu" />
                 <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() =>
                     looping ? pausePlay() : void playFromBeat(0)
                   }
-                  disabled={timeline.length === 0}
+                  disabled={timeline.length === 0 && ngheLaiStt <= 0}
                   className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
                     looping
                       ? 'border border-rose-400/60 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
@@ -4377,10 +4554,31 @@ export function ReharmHome() {
                 >
                   {looping
                     ? '■ Dừng'
-                    : playsOnce
-                      ? '▶ Phát trọn bài'
-                      : '▶ Phát cả bài'}
+                    : ngheLaiStt > 0
+                      ? `▶ Nghe #${ngheLaiStt}`
+                      : playsOnce
+                        ? '▶ Phát trọn bài'
+                        : '▶ Phát cả bài'}
                 </button>
+                <select
+                  value={ngheLaiStt}
+                  onFocus={napCauOn}
+                  onChange={(e) => {
+                    const stt = Number(e.target.value)
+                    setNgheLaiStt(stt)
+                    const cau = cauOnDs.find((c) => c.stt === stt)
+                    if (cau) void phatCauOn(cau)
+                  }}
+                  className="max-w-xs rounded-md border border-line bg-black/40 px-2 py-1.5 text-xs text-white"
+                >
+                  <option value={0}>— soạn mới —</option>
+                  {cauOnDs.map((c) => (
+                    <option key={c.stt} value={c.stt}>
+                      #{c.stt} {c.doan === 'interlude' ? 'giang' : 'dạo'} · {c.giong}
+                      {c.bai ? ` · ${c.bai}` : ''}
+                    </option>
+                  ))}
+                </select>
                 </div>
               </div>
             }
@@ -4923,7 +5121,7 @@ export function ReharmHome() {
           Thêm màu hợp âm
         </h3>
         <p className="mb-3 text-xs leading-relaxed text-dim">
-          Khá: add9 / 9sus4 / 7b9. Linh Nhi (sheet): Δ, m7, V7 — không add9.
+          Khá: add9 / 9sus4 / 7b9. Linh Nhi: Δ m7 V7. Cà Pháo: add9 m9 9. Tôn Hùng thứ: i trơn, v m7 (n=2).
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -4934,6 +5132,8 @@ export function ReharmHome() {
                 ['light', 'Nhẹ'],
                 ['full', 'Đậm'],
                 ['linhNhi', 'Linh Nhi'],
+                ['caPhao', 'Cà Pháo'],
+                ['tonHung', 'Tôn Hùng'],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -4941,11 +5141,18 @@ export function ReharmHome() {
                 type="button"
                 onClick={() => {
                   setIntensity(value)
-                  if (value === 'linhNhi') {
+                  if (value === 'linhNhi' || value === 'caPhao' || value === 'tonHung') {
                     setSusDominant(false)
                     setAllowJazzColors(false)
                     setVaryOnRepeat(false)
                     setUseSlashChords(false)
+                    setSoloThay(
+                      value === 'linhNhi'
+                        ? 'linh-nhi'
+                        : value === 'caPhao'
+                          ? 'ca-phao'
+                          : 'ton-hung',
+                    )
                   }
                 }}
                 className={`rounded-lg border px-3 py-1.5 text-xs ${

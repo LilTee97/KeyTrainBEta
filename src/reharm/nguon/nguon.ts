@@ -19,15 +19,88 @@ import type { TimelineEvent } from '../style/types'
  */
 
 export type CauDaoLuu = {
-  /** Số thứ tự câu trong `Nguon.json`. Bình luận gắn vào số này. */
   stt: number
-  /** Câu này lần đầu xuất hiện, hay là câu cũ phát lại. */
   moi: boolean
-  /** Đã phát bao nhiêu lần tính cả lần này. */
   lanPhat: number
+  giong?: string
+  doan?: 'intro' | 'interlude'
+  dieu?: string
 }
 
 const GOC = '/__nguon'
+
+export type CauOn = {
+  stt: number
+  bai: string
+  giong: string
+  dieu: string
+  soO: number
+  lanPhat: number
+  not: readonly unknown[]
+  hopAm: readonly string[]
+  doan: 'intro' | 'interlude'
+}
+
+export function suKienTuNot(not: readonly unknown[]): TimelineEvent[] {
+  return (Array.isArray(not) ? not : []).flatMap((hang) => {
+    if (!Array.isArray(hang) || hang.length < 2) return []
+    const at = Number(hang[0])
+    const midi = Number(hang[1])
+    const du = Number(hang[2])
+    const tay = hang[3]
+    if (!Number.isFinite(at) || !Number.isFinite(midi)) return []
+    return [
+      {
+        notes: [midi],
+        startBeat: at,
+        durationBeats: Number.isFinite(du) && du > 0 ? du : 0.5,
+        hand: tay === 'T' ? ('left' as const) : ('right' as const),
+        velocity: 70,
+      },
+    ]
+  })
+}
+
+export async function layCauOn(): Promise<CauOn[]> {
+  try {
+    const res = await fetch(GOC)
+    if (!res.ok) return []
+    const so = (await res.json()) as { cau?: { cot?: string[]; dong?: unknown[][] } }
+    const cot = so.cau?.cot ?? []
+    const ix = (k: string) => cot.indexOf(k)
+    const iStt = ix('stt')
+    const iBai = ix('bai')
+    const iGiong = ix('giong')
+    const iDieu = ix('dieu')
+    const iSoO = ix('soO')
+    const iLan = ix('lanPhat')
+    const iNot = ix('not')
+    const iDg = ix('danhGia')
+    const iHop = ix('hopAm')
+    const iDoan = ix('doan')
+    return (so.cau?.dong ?? []).flatMap((d) => {
+      if (d[iDg] !== 'on') return []
+      const not = d[iNot]
+      if (!Array.isArray(not) || not.length === 0) return []
+      const lan = d[iLan]
+      return [
+        {
+          stt: Number(d[iStt]) || 0,
+          bai: String(d[iBai] ?? ''),
+          giong: String(d[iGiong] ?? ''),
+          dieu: String(d[iDieu] ?? ''),
+          soO: Number(d[iSoO]) || 0,
+          lanPhat: Array.isArray(lan) ? lan.length : 1,
+          not,
+          hopAm: Array.isArray(d[iHop]) ? (d[iHop] as string[]) : [],
+          doan: d[iDoan] === 'interlude' ? 'interlude' : 'intro',
+        },
+      ]
+    })
+  } catch {
+    return []
+  }
+}
 
 /** Rút gọn sự kiện thành `[phách, cao độ, số phách ngân, tay]` cho gọn sổ. */
 const gonNot = (events: readonly TimelineEvent[]) =>
@@ -52,6 +125,7 @@ export async function luuCauDao(thongTin: {
   dieu: string
   /** Ký hiệu hợp âm của chính câu dạo, đúng thứ tự ô. */
   hopAm: readonly string[]
+  doan?: 'intro' | 'interlude'
 }): Promise<CauDaoLuu | null> {
   const not = gonNot(thongTin.events)
   if (not.length === 0) return null
@@ -65,13 +139,14 @@ export async function luuCauDao(thongTin: {
         dieu: thongTin.dieu,
         soO: Math.max(1, Math.round(thongTin.lengthBeats / thongTin.barBeats)),
         hopAm: thongTin.hopAm,
+        doan: thongTin.doan ?? 'intro',
         not,
       }),
     })
-    if (!res.ok) return null
+    if (!res.ok) return { stt: 0, moi: false, lanPhat: 0 }
     return (await res.json()) as CauDaoLuu
   } catch {
-    return null
+    return { stt: 0, moi: false, lanPhat: 0 }
   }
 }
 

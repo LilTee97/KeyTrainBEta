@@ -25,6 +25,10 @@ describe('colorChord — Linh Nhi', () => {
     expect(colorChord(chord('C'), { intensity: 'linhNhi' }).symbol).toBe('Cmaj7')
     expect(colorChord(chord('Am'), { intensity: 'linhNhi' }).symbol).toBe('Am7')
     expect(colorChord(chord('G7'), { intensity: 'linhNhi' }).symbol).toBe('G7')
+    expect(colorChord(chord('C'), { intensity: 'caPhao' }).symbol).toBe('Cadd2')
+    expect(colorChord(chord('Am'), { intensity: 'caPhao' }).symbol).toBe('Am9')
+    expect(colorChord(chord('C'), { intensity: 'tonHung' }).symbol).toBe('Cmaj7')
+    expect(colorChord(chord('Am'), { intensity: 'tonHung' }).symbol).toBe('Am')
   })
 
   it('không đẩy lên 9 / 11', () => {
