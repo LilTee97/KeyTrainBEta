@@ -126,7 +126,7 @@ export interface CaPhaoSoloOptions {
    * | bài | thể loại | | |
    * |---|---|---|---|
    * | Bèo dạt mây trôi | ballad | 58% nhanh | **chạy** |
-   * | Hồng Kông 1 | bossa | | **chạy** |
+   * | Hồng Kông 1 | ballad (người dùng sửa 10/9/2026, trước ghi bossa) | | **chạy** |
    * | Yêu xa | ballad | 42% | trộn |
    * | Mơ | slow rock | 9% nhanh, 6 chùm ba + 28 đôi | **chùm** |
    * | Kém duyên | ballad | 0% nhanh, 35 chùm ba + 18 đôi | **chùm** |

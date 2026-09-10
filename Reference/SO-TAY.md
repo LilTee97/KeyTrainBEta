@@ -2783,3 +2783,16 @@ thứ hai. Đây không phải parser làm mất lời.
 cơ chế kéo thả riêng. Đánh dấu cũ không thể đoán ý định để tự sửa, nên người dùng cần xoá dấu
 cũ và bôi lại một lần; các dấu mới nhận đúng cả dòng đầu/cuối. Test `songSheetView.test.ts`
 canh trường hợp hai dòng biên bị `intersectsNode()` bỏ qua.
+
+### Hồng Kông 1 là ballad, không phải bossa nova — người dùng sửa 10/9/2026
+
+Nhãn `bossa nova` của Hồng Kông 1 đi từ lúc nạp kho PianoBrain (`1891a73`), không có căn cứ
+đo. Số đo nghiêng hẳn về ballad và đã nằm sẵn trong mã: `bossaCaPhao.test.ts` ghi *"tay trái
+Hồng Kông 1 gõ gần như móc đơn đều"* và loại bài này khỏi mẫu đệm bossa; hợp âm của bài là
+`major`×14 · `sus4`×9. Nên mẫu `bossa-ca-phao` **không đổi** — nó dựng từ *Người hãy quên em
+đi*, bài bossa duy nhất còn lại của Cà Pháo.
+
+Đã đổi `dieu` của ba tuyến `hong-kong-1-*` trong `tuyenSolo.ts` sang `'ballad'` và sửa bảng
+comment ở `hoDieu.ts`, `caPhaoSolo.ts`. Trường `dieu` hiện chỉ lọc ở nhánh Linh Nhi bolero
+(`minorSoloSource.ts`), nên Hồng Kông 1 đổi nhãn không đổi tiếng. Để lùi: đặt lại `'bossa
+nova'` ở ba tuyến ấy. PianoBrain đã sửa cùng lúc ở `328a5de`.

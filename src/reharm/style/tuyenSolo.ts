@@ -80,7 +80,7 @@ export const gocTuyen = (chu: PitchClass) => 60 + chu
 
 export const TUYEN_SOLO: readonly TuyenSolo[] = [
 
-  /* Hồng Kông 1 · intro · Đô trưởng · bossa nova · 15 ô · 87 nốt */
+  /* Hồng Kông 1 · intro · Đô trưởng · ballad (người dùng sửa 10/9/2026, trước ghi bossa nova) · 15 ô · 87 nốt */
   {
     id: 'hong-kong-1-intro',
     ten: 'Hồng Kông 1',
@@ -88,7 +88,7 @@ export const TUYEN_SOLO: readonly TuyenSolo[] = [
     doan: 'intro',
     thu: false,
     giong: 'Đô trưởng',
-    dieu: 'bossa nova',
+    dieu: 'ballad',
     chuGoc: 0,
     phach: 4,
     o: [
@@ -109,7 +109,7 @@ export const TUYEN_SOLO: readonly TuyenSolo[] = [
       { bac: 0, chat: '', bac2: null, chia: null, n: [[0, 4, 1], [1, 12, 1], [2, 7, 1], [2.5, 2, 0.5], [3, 4, 0.5], [3.5, -2, 0.5]] },
     ],
   },
-  /* Hồng Kông 1 · interlude · Đô trưởng · bossa nova · 19 ô · 177 nốt */
+  /* Hồng Kông 1 · interlude · Đô trưởng · ballad (người dùng sửa 10/9/2026, trước ghi bossa nova) · 19 ô · 177 nốt */
   {
     id: 'hong-kong-1-interlude',
     ten: 'Hồng Kông 1',
@@ -117,7 +117,7 @@ export const TUYEN_SOLO: readonly TuyenSolo[] = [
     doan: 'interlude',
     thu: false,
     giong: 'Đô trưởng',
-    dieu: 'bossa nova',
+    dieu: 'ballad',
     chuGoc: 0,
     phach: 4,
     o: [
@@ -142,7 +142,7 @@ export const TUYEN_SOLO: readonly TuyenSolo[] = [
       { bac: 5, chat: '', bac2: null, chia: null, n: [[0, 9, 1.5], [1.5, 19, 1.5], [2, 24, 0.5], [3, 24, 1], [3.5, 26, 0.5]] },
     ],
   },
-  /* Hồng Kông 1 · outro · Đô trưởng · bossa nova · 8 ô · 40 nốt */
+  /* Hồng Kông 1 · outro · Đô trưởng · ballad (người dùng sửa 10/9/2026, trước ghi bossa nova) · 8 ô · 40 nốt */
   {
     id: 'hong-kong-1-outro',
     ten: 'Hồng Kông 1',
@@ -150,7 +150,7 @@ export const TUYEN_SOLO: readonly TuyenSolo[] = [
     doan: 'outro',
     thu: false,
     giong: 'Đô trưởng',
-    dieu: 'bossa nova',
+    dieu: 'ballad',
     chuGoc: 0,
     phach: 2,
     o: [

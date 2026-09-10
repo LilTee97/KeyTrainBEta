@@ -258,7 +258,7 @@ const SOLO_TU_DO: readonly string[] = ['bossa-ca-phao']
  *
  * | bài | thể loại | câu chạy | tay phải | mốc gõ chung |
  * |-----|----------|----------|----------|--------------|
- * | Hồng Kông 1 | bossa | 8 | 12,5/ô | 39% |
+ * | Hồng Kông 1 | **ballad** (người dùng sửa 10/9/2026, trước ghi bossa) | 8 | 12,5/ô | 39% |
  * | Bèo dạt mây trôi | **ballad** | **4** | 10,5/ô | 20% |
  * | Yêu xa | **ballad** | **2** | 9,4/ô | 28% |
  * | Người hãy quên em đi | bossa | 1 | 14,6/ô | 30% |
@@ -290,7 +290,7 @@ const SOLO_TU_DO_HO: readonly string[] = ['ballad', 'slow-rock']
  * | Bèo dạt mây trôi | ballad | chạy — 58% nhanh, 122 mốc đơn |
  * | Yêu xa | ballad | trộn — 42% |
  * | Kém duyên | ballad | chùm — 0% nhanh, 35 chùm ba |
- * | Hồng Kông 1 | bossa | chạy |
+ * | Hồng Kông 1 | ballad (sửa 10/9/2026) | chạy |
  * | Người hãy quên em đi | bossa | chùm |
  * | **Mơ** | **slow rock** | **chùm — 9% nhanh, 6 chùm ba + 28 đôi** |
  *
