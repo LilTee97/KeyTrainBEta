@@ -249,6 +249,8 @@ export interface BuildArrangedSongOptions {
   interludeRange?: (
     over: SourceSection,
     next: SourceSection | null,
+    /** Lượt giang trong bài, để soạn CHUNG hai tay lại cho mỗi vòng. */
+    take: number,
   ) => {
     startBeat: number
     lengthBeats: number
@@ -269,6 +271,8 @@ export interface BuildArrangedSongOptions {
     kyHieu?: readonly string[]
     /** Mỗi hợp âm dài mấy phách, cùng độ dài với `kyHieu`. */
     kyHieuBeats?: readonly number[]
+    /** Hai tay đã được soạn chung: không dựng lại đệm/cài tay lần thứ hai. */
+    composed?: boolean
   } | null
   /**
    * Hợp âm cuối của **đoạn kết bài**, đã đổi màu.
@@ -473,11 +477,12 @@ export function buildArrangedSong(
     const next = nextSection(steps, index, sources)
 
     // Vòng ngắn nhặt từ đoạn, hoặc trọn đoạn nếu bên gọi không nhặt.
-    const range = interludeRange?.(over, next) ?? {
+    const firstRange = interludeRange?.(over, next, take) ?? {
       startBeat: over.startBeat,
       lengthBeats: over.lengthBeats,
     }
-    const loopBeats = range.lengthBeats
+    const loopBeats = firstRange.lengthBeats
+    if (loopBeats <= 0) continue
     const loops = Math.max(1, Math.floor(step.loops))
 
     sections.push({
@@ -495,6 +500,7 @@ export function buildArrangedSong(
     const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
 
     for (let loop = 0; loop < loops; loop += 1) {
+      const range = loop === 0 ? firstRange : interludeRange?.(over, next, take) ?? firstRange
       const at = cursor + loop * loopBeats
       const last = loop === loops - 1
       const length = last && turn ? played : loopBeats
@@ -539,6 +545,7 @@ export function buildArrangedSong(
         Pháo — tay phải cài vào KHE của tay trái, ngược hẳn. Xem `raiLinhNhi.ts`.
       */
       const woven =
+        !range.composed &&
         backing &&
         line &&
         !(
@@ -559,7 +566,7 @@ export function buildArrangedSong(
         ...(woven
           ? place(woven.left, at, length)
           : backing
-            ? place(interludeAccompaniment(backing), at, length)
+            ? place(range.composed ? backing : interludeAccompaniment(backing), at, length)
             : slice(forInterlude, range.startBeat, length, at)),
         ...(line
           ? place(woven ? woven.melody : line, at, length)

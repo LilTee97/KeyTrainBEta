@@ -49,6 +49,12 @@ describe('điệu nào thì chia nhịp nấy', () => {
     expect(soloFeelFor('hai-pop-ballad')).toBe('straight')
   })
 
+  it('nhãn đảo phách rộng không biến reggae, funk và salsa thành bossa', () => {
+    expect(soloFeelFor('reggae-1')).toBe('straight')
+    expect(soloFeelFor('funk-1')).toBe('straight')
+    expect(soloFeelFor('salsa-1')).toBe('straight')
+  })
+
   it('không biết điệu thì đều, không đoán', () => {
     expect(soloFeelFor(null)).toBe('straight')
     expect(soloFeelFor('điệu-không-có-thật')).toBe('straight')

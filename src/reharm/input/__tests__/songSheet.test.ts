@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { reharmonize } from '../../reharmEngine/reharmPipeline'
 import {
   SECTION_KIND_LABELS,
+  attachPhraseToSheet,
   buildSongSheet,
   flattenLines,
   layoutAnchors,
@@ -264,6 +265,24 @@ describe('mỗi đoạn chiếm những hợp âm nào', () => {
 
     expect(sectionChordRanges(built).map((range) => range.name)).toEqual([
       'Phiên khúc',
+    ])
+  })
+})
+
+describe('dòng hợp âm dạo và kết', () => {
+  it('hiện đúng dải hợp âm của câu đang phát, kể cả ô chia đôi', () => {
+    const song = parseSongText('[Phiên khúc]\nAm\nLời')
+    const sheet = buildSongSheet(song, song.chords)
+    const shown = attachPhraseToSheet(sheet, [], ['Dm', 'G', 'F', 'F', 'Am'])
+    const outro = shown.sections.at(-1)!
+
+    expect(outro.kind).toBe('outro')
+    expect(outro.lines[0]!.anchors.map((anchor) => anchor.symbol)).toEqual([
+      'Dm',
+      'G',
+      'F',
+      'F',
+      'Am',
     ])
   })
 })

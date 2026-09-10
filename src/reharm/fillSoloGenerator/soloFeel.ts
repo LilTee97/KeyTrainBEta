@@ -31,11 +31,17 @@ export type SoloFeel =
  */
 export function soloFeelFor(styleId: string | undefined | null): SoloFeel {
   if (!styleId) return 'straight'
-  switch (getStyle(styleId)?.feel) {
+  const style = getStyle(styleId)
+  switch (style?.feel) {
     case 'swing':
       return 'swing'
     case 'syncopated-3-3-2':
-      return 'bossa'
+      /*
+        `syncopated-3-3-2` là nhãn rộng của mẫu đệm, không đồng nghĩa bossa.
+        Reggae, funk, salsa... cũng mang nhãn này nhưng không được kéo phách 3
+        tới sớm như nhạc Brazil. Các điệu ấy lấy đảo phách từ chính `cell`.
+      */
+      return /bossa|samba/i.test(`${style.id} ${style.family}`) ? 'bossa' : 'straight'
     default:
       // Ballad, slow rock, pop, valse: đều. Không mượn cái nảy của jazz sang.
       return 'straight'

@@ -82,6 +82,61 @@ const shapeMiss = (profile: LineProfile) =>
   miss(profile.mixed, CA_PHAO_RANGE.mixed)
 
 describe('bộ soạn nhịp-trước', () => {
+  const GENRE_STYLES = [
+    'pop-1',
+    'rock-1',
+    'swing-1',
+    'waltz-1',
+    'reggae-1',
+    'salsa-1',
+    'tango-1',
+    'flamenco-1',
+  ] as const
+
+  it.each(GENRE_STYLES)('%s: tự soạn được câu ở đúng nhịp và tầm đàn', (styleId) => {
+    const { chords, bar, scale, anchors } = setup(styleId)
+    const line = buildLine({
+      chords,
+      beatsPerChord: bar,
+      barBeats: bar,
+      anchors,
+      scale,
+      range: { low: 60, high: 84 },
+      take: 3,
+      feel: soloFeelFor(styleId),
+    })
+
+    expect(line.length).toBeGreaterThan(8)
+    expect(
+      line.every((note) =>
+        note.startBeat >= 0 && note.startBeat < chords.length * bar
+      ),
+    ).toBe(true)
+    expect(line.every((note) => note.note >= 60 && note.note <= 84)).toBe(true)
+  })
+
+  it('pop, swing, reggae và tango không còn dùng cùng một lưới tiết tấu', () => {
+    const fingerprint = (styleId: string) => {
+      const { chords, bar, scale, anchors } = setup(styleId)
+      return buildLine({
+        chords,
+        beatsPerChord: bar,
+        barBeats: bar,
+        anchors,
+        scale,
+        range: { low: 60, high: 84 },
+        take: 3,
+        feel: soloFeelFor(styleId),
+      })
+        .map((note) => note.startBeat.toFixed(3))
+        .join(',')
+    }
+
+    expect(
+      new Set(['pop-1', 'swing-1', 'reggae-1', 'tango-1'].map(fingerprint)).size,
+    ).toBe(4)
+  })
+
   /*
     BA CHỈ SỐ NHỊP, cái mà bản trước hỏng và cái thước lúc ấy chưa nhìn ra.
 

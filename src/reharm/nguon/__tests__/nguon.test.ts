@@ -62,10 +62,11 @@ describe('Nguon.json — bảng câu dạo', () => {
     expect(dong[11]).toBe('intro')
   })
 
-  it('cột doan phân biệt intro và giang tấu; giong đi cùng câu', () => {
+  it('cột doan phân biệt dạo, giang tấu và kết bài; giong đi cùng câu', () => {
     const so = soRong()
     const dao = themCau(so, cau(A), 't1')
     const giang = themCau(so, { ...cau(B), doan: 'interlude', giong: 'A thứ' }, 't2')
+    const ket = themCau(so, { ...cau([[2, 81, 1, 'P']]), doan: 'outro' }, 't3')
     expect(dao.giong).toBe('D thứ')
     expect(dao.doan).toBe('intro')
     expect(dao.dieu).toBe('bolero-linh-nhi-3')
@@ -73,6 +74,8 @@ describe('Nguon.json — bảng câu dạo', () => {
     expect(giang.doan).toBe('interlude')
     expect(giang.dieu).toBe('bolero-linh-nhi-3')
     expect(so.cau.dong[1]![11]).toBe('interlude')
+    expect(ket.doan).toBe('outro')
+    expect(so.cau.dong[2]![11]).toBe('outro')
   })
 
   it('câu KHÁC thì đánh số tiếp', () => {

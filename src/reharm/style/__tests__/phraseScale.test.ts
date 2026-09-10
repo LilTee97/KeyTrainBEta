@@ -109,7 +109,7 @@ describe('hai định nghĩa gam Blues không được trôi khỏi nhau', () =>
 })
 
 /*
-  Bốn họ điệu mặc định ngẫu hứng trên **một gam** ở đoạn không lời.
+  Mọi họ điệu đều có thể dùng **một gam** ở đoạn không lời.
 
   Căn cứ là số đo trên bốn bản ký âm của Cà Pháo — item
   `ca-phao-cau-solo-tren-vong-hop-am` bên PianoBrain. Nguồn nốt cũ (`chordTone`)
@@ -117,7 +117,7 @@ describe('hai định nghĩa gam Blues không được trôi khỏi nhau', () =>
   đặt 52-67% / 45-57%; và nó rải hợp âm thuần 35-60% số câu trong khi người thật
   chỉ 5%.
 */
-describe('bốn họ điệu mặc định một gam', () => {
+describe('mọi họ điệu có mặc định một gam', () => {
   it.each(['slow-rock-duc-thinh-3', 'bolero-1', 'bossa-nova-1', 'pop-1', 'hai-pop-ballad'] as const)(
     '%s: thuộc diện mặc định một gam',
     (styleId) => {
@@ -125,8 +125,8 @@ describe('bốn họ điệu mặc định một gam', () => {
     },
   )
 
-  it.each(['swing-1', 'waltz-1'] as const)('%s: không đổi mặc định', (styleId) => {
-    expect(prefersSingleScale(getStyle(styleId)!)).toBe(false)
+  it.each(['swing-1', 'waltz-1', 'reggae-1', 'tango-1'] as const)('%s: cũng có một gam mặc định', (styleId) => {
+    expect(prefersSingleScale(getStyle(styleId)!)).toBe(true)
   })
 
   /* Slow rock vẫn ưu tiên Blues — luật riêng của nó, đứng trước luật chung. */

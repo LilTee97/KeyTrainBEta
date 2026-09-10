@@ -66,7 +66,7 @@ const COT_CAU = [
    * chắc trùng vòng đã phát, vì nó phụ thuộc lượt. Lưu thẳng là đọc thẳng.
    */
     'hopAm',
-    /** `'intro'` · `'interlude'`. Cột mới — dòng cũ không có thì coi là intro. */
+    /** `'intro'` · `'interlude'` · `'outro'`. Dòng cũ không có thì coi là intro. */
     'doan',
   ] as const
 
@@ -116,7 +116,7 @@ export function themCau(
   dieu: string
 } {
   const giong = String(than.giong ?? '')
-  const doan = than.doan === 'interlude' ? 'interlude' : 'intro'
+  const doan = than.doan === 'interlude' || than.doan === 'outro' ? than.doan : 'intro'
   const dieu = String(than.dieu ?? '')
   /*
     So bằng NỐT, không so bằng hợp âm: hai câu khác nhau vẫn có thể đứng trên cùng một

@@ -520,20 +520,9 @@ function clearLoopFollowUp(): void {
 }
 
 /**
- * Số lượt được dựng sẵn và nối vào một vòng lặp.
- *
- * Đoạn giang tấu phải mỗi lượt một khác, nhưng `Tone.Part` khi lặp thì phát
- * lại đúng bộ sự kiện cũ. Cách giải quyết: **nối sẵn nhiều lượt khác nhau
- * thành một vòng dài** rồi cho nó lặp.
- *
- * Ba lượt, vì bộ soạn xoay danh sách mẫu câu theo chu kỳ ba — lượt thứ tư
- * quay lại đúng lượt đầu, nối thêm chỉ tổ làm vòng dài ra mà không thêm gì mới.
- *
- * Cách này thay cho bản dùng `Tone.Loop` dựng lại lịch ở đầu mỗi lượt. Bản đó
- * hỏng vì lẫn hai đồng hồ: callback của `Tone.Loop` nhận thời gian của
- * **AudioContext** (để đưa thẳng cho `triggerAttackRelease`), nhưng
- * `Part.start()` lại nhận thời gian của **Transport**. Truyền nhầm giữa hai hệ
- * thì Part bị xếp lịch ở một chỗ vô nghĩa và không nốt nào kêu.
+ * Bước đếm còn dùng ở đường đổi điệu cũ trong ReharmHome.
+ * Không phải số câu dựng sẵn của bộ phát: startTimelineLoop gọi source(pass)
+ * lại ở mỗi vòng. Giang thứ Tuấn dùng bộ đếm riêng phraseTakes.
  */
 export const LOOP_PASSES = 3
 
@@ -591,16 +580,21 @@ export function startTimelineLoop(
     fireNotes(synthInstance, value.notes, value.duration, time, value.velocity)
   }
 
-  const attach = (hits: readonly ScheduledHit[], atBeat: number) => {
+  const attach = (hits: readonly ScheduledHit[], atBeat: number, boundaryTime?: number) => {
     const events: LoopEvent[] = []
     for (const hit of hits) {
       if (hit.notes.length === 0) continue
-      events.push({
+      const event: LoopEvent = {
         time: { '4n': atBeat + hit.startBeat },
         notes: hit.notes.map(toFrequency),
         duration: { '4n': Math.max(0.05, hit.durationBeats) },
         velocity: hit.velocity / 127,
-      })
+      }
+      // Transport đang duyệt tick đầu của lượt mới: Part thêm trong callback
+      // không nhận lại tick đó. Phát onset 0 bằng giờ AudioContext callback;
+      // mọi onset sau vẫn xếp bằng phách Transport, không lẫn hai đồng hồ.
+      if (boundaryTime !== undefined && hit.startBeat === 0) fire(boundaryTime, event)
+      else events.push(event)
     }
     const part = new Tone.Part<LoopEvent>(fire, events)
     part.loop = false
@@ -622,9 +616,10 @@ export function startTimelineLoop(
   } else {
     let gen = 0
     const arm = (atBeat: number) => {
-      loopFollowUp = Tone.getTransport().scheduleOnce(() => {
+      loopFollowUp = Tone.getTransport().scheduleOnce((time) => {
         gen += 1
-        attach(build(gen), atBeat)
+        // Callback ở đầu lượt KẾ; đặt nốt tại vạch này, không lùi một lượt vào quá khứ.
+        attach(build(gen), atBeat + passLength, time)
         arm(atBeat + passLength)
       }, { '4n': atBeat + passLength })
     }

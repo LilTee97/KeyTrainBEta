@@ -23,7 +23,7 @@ export type CauDaoLuu = {
   moi: boolean
   lanPhat: number
   giong?: string
-  doan?: 'intro' | 'interlude'
+  doan?: 'intro' | 'interlude' | 'outro'
   dieu?: string
 }
 
@@ -38,7 +38,7 @@ export type CauOn = {
   lanPhat: number
   not: readonly unknown[]
   hopAm: readonly string[]
-  doan: 'intro' | 'interlude'
+  doan: 'intro' | 'interlude' | 'outro'
 }
 
 export function suKienTuNot(not: readonly unknown[]): TimelineEvent[] {
@@ -93,7 +93,7 @@ export async function layCauOn(): Promise<CauOn[]> {
           lanPhat: Array.isArray(lan) ? lan.length : 1,
           not,
           hopAm: Array.isArray(d[iHop]) ? (d[iHop] as string[]) : [],
-          doan: d[iDoan] === 'interlude' ? 'interlude' : 'intro',
+          doan: d[iDoan] === 'interlude' || d[iDoan] === 'outro' ? d[iDoan] : 'intro',
         },
       ]
     })
@@ -125,7 +125,7 @@ export async function luuCauDao(thongTin: {
   dieu: string
   /** Ký hiệu hợp âm của chính câu dạo, đúng thứ tự ô. */
   hopAm: readonly string[]
-  doan?: 'intro' | 'interlude'
+  doan?: 'intro' | 'interlude' | 'outro'
 }): Promise<CauDaoLuu | null> {
   const not = gonNot(thongTin.events)
   if (not.length === 0) return null

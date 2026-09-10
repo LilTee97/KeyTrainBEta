@@ -1,5 +1,6 @@
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
+import { pitchClassName } from '../../shared/musicTheory/pitch'
 import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
@@ -14,6 +15,8 @@ import { cueChord, phraseChords } from './phraseChords'
 import { cueStrike, slowClose, tamBao } from './phraseCue'
 import { chiecLaMotif } from './chiecLaMotif'
 import { arcDungXa, hutDungXa } from './daoDungXa'
+import { turnaroundInto } from './turnaround'
+import { minorSoloSourceForTake, nguonKetThuBolero, planMinorOutro, planMinorInterlude } from './minorSoloSource'
 
 /**
  * Ráp một đoạn dạo đầu hoặc một đoạn kết.
@@ -80,6 +83,8 @@ export interface PhraseSectionOptions {
   daoThu?: boolean
   /** Ô tick nghe thử: vòng giang giống sheet thứ. */
   giangThu?: boolean
+  /** Giang thứ Tuấn: ii–V dặm hoặc V ngân; đích nằm ở đầu đoạn hát kế. */
+  interludeCadence?: 'dominant' | 'ii-v'
   /** Ô tick: câu chạy tự soạn 4/6. Tắt = chép sheet thứ. */
   chayNgan?: boolean
 }
@@ -97,6 +102,9 @@ export interface PhraseSection {
   chords: readonly string[]
   /** Mỗi hợp âm dài mấy phách, cùng độ dài với `chords`. */
   beatsEach: readonly number[]
+  /** Dấu vết của vòng outro kiểm chứng, không suy nguồn từ số lượt phát. */
+  sourcePhrase?: { id: string; fromBar: number; barCount: number; method?: 'motif-development' }
+  unavailableReason?: string
 }
 
 /**
@@ -118,18 +126,37 @@ function thuaTayPhai(
   dich: number,
   barBeats: number,
   soO: number,
+  /**
+   * Chênh số nốt mỗi ô giữa ô ĐẦU và ô CUỐI. `0` là mật độ phẳng như trước.
+   *
+   * Đoạn kết của bản ký âm **thưa dần**: đo 9 đoạn kết giọng thứ ba thầy
+   * (`PianoBrain/tools/sheet/ket_thu.py`), số nốt tay phải mỗi ô giảm **−3,4** từ
+   * nửa đầu sang nửa cuối. Hãm phẳng không ra dốc ấy — nó chỉ gỡ ô dày nhất, mà
+   * ô dày nhất có thể nằm ở đầu, giữa hay cuối.
+   */
+  doc = 0,
 ): TimelineEvent[] {
   if (soO <= 1 || melody.length <= dich * soO) return [...melody]
   const o = (e: TimelineEvent) => Math.floor(e.startBeat / barBeats)
   const cuoi = soO - 1
+  /* Hạn mức riêng cho từng ô: cao ở đầu, thấp ở cuối, trung bình vẫn là `dich`. */
+  const hanMuc = (bar: number) => dich + doc / 2 - (doc * bar) / Math.max(1, soO - 1)
   const con = [...melody]
   while (con.length > dich * soO) {
     const theoO = new Map<number, TimelineEvent[]>()
     for (const e of con) {
-      if (o(e) === cuoi) continue
+      /*
+        Hãm phẳng thì chừa ô chót ra — nó là chỗ câu đáp xuống, gỡ vào là cụt.
+        Hãm DỐC thì phải động tới ô chót, vì chính nó cần thưa nhất; chặn dưới ở
+        hai nốt bên dưới đã giữ cho ô không bị bỏ trắng.
+      */
+      if (doc === 0 && o(e) === cuoi) continue
       theoO.set(o(e), [...(theoO.get(o(e)) ?? []), e])
     }
-    const day = [...theoO.entries()].sort((a, b) => b[1].length - a[1].length)[0]
+    /* Gỡ ở ô VƯỢT HẠN MỨC CỦA CHÍNH NÓ nhiều nhất, không phải ô đông nhất. */
+    const day = [...theoO.entries()].sort(
+      (a, b) => b[1].length - hanMuc(b[0]) - (a[1].length - hanMuc(a[0])),
+    )[0]
     if (!day || day[1].length <= 2) break
     const xep = day[1].slice().sort((a, b) => a.startBeat - b.startBeat)
     let bo = xep[1]!
@@ -149,6 +176,135 @@ function thuaTayPhai(
 }
 
 /**
+ * Đoạn kết **dâng lên** ở nửa sau — dời cả cụm một quãng tám, không gập từng nốt.
+ *
+ * Đo 9 đoạn kết giọng thứ của ba thầy (`PianoBrain/tools/sheet/ket_thu.py`): cao độ
+ * tay phải nửa sau cao hơn nửa đầu **+8,2** nửa cung, **7 trên 9 bài đi lên**. Hai
+ * bài đi xuống đều là Tôn Hùng (n=2, quá mỏng để thành lối riêng).
+ *
+ * Chỗ này **ngược với trực giác**: đoạn kết không lắng xuống mà vọt lên rồi mới
+ * đóng. *Nỗi Buồn Hoa Phượng* +25,9 · *Có Em Chờ* +22,4. Người dùng giải thích khi
+ * trả lời phiếu chia đoạn: *"vì đó là kết bài nên chị Nhi muốn kéo dài câu hát ra
+ * giống như các ca sĩ vẫn hay làm khi biểu diễn."*
+ *
+ * Không mâu thuẫn với `slowClose`: hàm ấy giãn trường độ và bớt lực ở bốn phách
+ * cuối, không đụng cao độ. Đoạn dâng qua cả đoạn, ô chót mới chậm lại.
+ *
+ * Dời **cả cụm** đúng một quãng tám — luật chuyển giọng đã chốt: chỉnh quãng thì
+ * dời cả câu, gập từng nốt làm gãy đường nét. Không vừa tầm thì để nguyên.
+ */
+function dangCuoi(
+  melody: readonly TimelineEvent[],
+  barBeats: number,
+  soO: number,
+  high: number,
+  low: number,
+): TimelineEvent[] {
+  if (soO < 4) return [...melody]
+  const tuO = Math.ceil(soO / 2)
+  const nuaSau = (e: TimelineEvent) => Math.floor(e.startBeat / barBeats) >= tuO
+  const sau = melody.filter(nuaSau)
+  const truoc = melody.filter((e) => !nuaSau(e))
+  if (sau.length === 0 || truoc.length === 0) return [...melody]
+
+  const doi = (loc: (e: TimelineEvent) => boolean, d: number) =>
+    melody.map((e) =>
+      loc(e)
+        ? { ...e, notes: e.notes.map((n) => (n + d) as (typeof e.notes)[number]) }
+        : e,
+    )
+
+  /* Nâng nửa sau lên một quãng tám nếu còn vừa trần. */
+  if (Math.max(...sau.flatMap((e) => e.notes)) + 12 <= high) return doi(nuaSau, 12)
+
+  /*
+    Không nâng được thì **hạ nửa đầu** xuống một quãng tám — nửa sau vẫn cao hơn nửa
+    đầu, mà vẫn là dời cả cụm theo bội số 12 chứ không gập từng nốt.
+    Chỗ này cần từ khi câu đoạn kết dày lên: nốt cao hơn nên cộng 12 hay vượt trần.
+  */
+  if (Math.min(...truoc.flatMap((e) => e.notes)) - 12 >= low) return doi((e) => !nuaSau(e), -12)
+
+  /*
+    Cả hai đường trên chạm trần thì thử một cụm NHỎ HƠN: một phần tư cuối.
+
+    Câu đoạn kết của nhánh Linh Nhi vốn đã cao, nên nửa sau cộng 12 vượt trần 95 mà nửa
+    đầu trừ 12 lại xuống dưới sàn 57. Cụm một phần tư thường còn chỗ. Vẫn là dời cả cụm
+    theo bội số 12 — không gập từng nốt.
+  */
+  const tuBa = Math.max(tuO, soO - Math.max(1, Math.round(soO / 4)))
+  const cuoi = (e: TimelineEvent) => Math.floor(e.startBeat / barBeats) >= tuBa
+  const phanTu = melody.filter(cuoi)
+  if (phanTu.length > 0 && Math.max(...phanTu.flatMap((e) => e.notes)) + 12 <= high) {
+    return doi(cuoi, 12)
+  }
+  return [...melody]
+}
+
+/**
+ * Nốt tay phải **chót** của đoạn kết đáp xuống bậc 1 hoặc bậc 5.
+ *
+ * Đo 9 đoạn kết giọng thứ của ba thầy (`PianoBrain/tools/sheet/ket_thu.py`), bậc của
+ * nốt chót so với chủ âm: **5 ×4 · 1 ×2 · 2 ×1 · ♭7 ×1 · ♭3 ×1**. Sáu trên chín đáp
+ * xuống bậc 1 hoặc 5.
+ *
+ * App thì đáp **♭7 ở cả 24 lượt** — bậc mà bản ký âm chỉ dùng đúng một lần. Nốt chót là
+ * tiếng cuối cùng người nghe nghe được, nên chỗ này lệch là nghe ra ngay: câu treo lơ
+ * lửng thay vì đóng lại.
+ *
+ * **Đây là NẮN NỐT, và nó được cho phép riêng ở đây.** Người dùng chốt 9/9/2026: *"thấy
+ * cần nắn nốt thì nắn đi."* Ghi rõ ranh giới để đừng nới rộng: chỉ **một** nốt cuối cùng
+ * của **đoạn kết**, dời **tối thiểu** về bậc gần nhất. Mọi nốt khác vẫn phải đến từ một ô
+ * có thật của bản ký âm — luật "soạn chứ không sinh" không đổi.
+ *
+ * Chỗ đơn giản hoá, nói thẳng: bản ký âm còn 3/9 đoạn đáp ở bậc 2 · ♭7 · ♭3, app sẽ
+ * không có những màu ấy. Đổi lại nó không còn treo ở ♭7 mọi lượt. Triệu chứng để lùi:
+ * đoạn kết nghe quá "đóng", thiếu chỗ lửng.
+ */
+function dapChot(
+  melody: readonly TimelineEvent[],
+  tonic: number,
+  low: number,
+  high: number,
+): TimelineEvent[] {
+  if (melody.length === 0) return []
+  /*
+    Chạy SAU khi đã ráp cụm rải kết, vì nốt cuối cùng người nghe nghe thường nằm trong
+    cụm ấy chứ không nằm trong giai điệu: đo một lượt thật thì ba tiếng chót là
+    `C4 E4 G4` — cụm rải của hợp âm `C`, và `G` chính là ♭7 của La thứ.
+
+    Nắn nốt TRÊN CÙNG của cụm rải cũng là đổi thế bấm chứ không phá hợp âm: `C4 E4 G4`
+    thành `C4 E4 A4` là `Am/C`, vẫn nằm trong vốn hợp âm của bài.
+  */
+  const phai = melody.filter((e) => e.hand === 'right')
+  if (phai.length === 0) return [...melody]
+  let chot = phai[0]!
+  for (const e of phai) {
+    if (e.startBeat > chot.startBeat) chot = e
+    else if (e.startBeat === chot.startBeat && (e.notes[0] ?? 0) > (chot.notes[0] ?? 0)) chot = e
+  }
+  const cao = chot.notes[0]
+  if (cao === undefined) return [...melody]
+
+  const bac = (((cao - tonic) % 12) + 12) % 12
+  if (bac === 0 || bac === 7) return [...melody]
+
+  /* Dời tối thiểu: thử ±1, ±2 … cho tới khi chạm bậc 1 hoặc 5, và còn trong tầm. */
+  for (let d = 1; d <= 6; d += 1) {
+    for (const moi of [cao - d, cao + d]) {
+      const b = (((moi - tonic) % 12) + 12) % 12
+      if ((b === 0 || b === 7) && moi >= low && moi <= high) {
+        return melody.map((e) =>
+          e === chot
+            ? { ...e, notes: [moi as (typeof e.notes)[number], ...e.notes.slice(1)] }
+            : e,
+        )
+      }
+    }
+  }
+  return [...melody]
+}
+
+/**
  * Intro Tuấn: 2 câu chạy Cà Pháo. Giang: 5 câu. Hồng Kông 1: cụm 4–5 và 10–11.
  * Bass thưa trong cửa sổ chạy (ý người dùng; Linh Nhi ô 71 LH=0).
  */
@@ -163,6 +319,8 @@ function bacChay(minor: boolean, _len: boolean, isV: boolean): number[] {
 function laOPap(o: number, take: number, nhieu: boolean): boolean {
   /* #426: ô1 intro thứ không Pùng-Pắp — sheet 7/8 gõ phách 0. */
   if (nhieu && o === 0) return false
+  /* #540 + mẫu Đã ổn #544: sau ô mở, vào Pùng-Pắp ngay thay vì để hai ô đầu trôi. */
+  if (nhieu && o === 1) return true
   return (o + take) % 3 === 2
 }
 
@@ -260,10 +418,20 @@ function datChaySheet(
   tones: ReadonlySet<number>,
   take: number,
   later: boolean,
+  doan: 'intro' | 'outro' = 'intro',
 ): { melody: TimelineEvent[]; left: TimelineEvent[] } {
   // Lấy nguyên bốn nốt liền nhau của sheet thứ, cùng hoà âm; không dán một arpeggio i lên mọi ô.
   const pc = (n: number) => ((n % 12) + 12) % 12
-  const fragments = vonO('linh-nhi', 'intro', true).filter((t) => t.thu && t.phach === 4)
+  /*
+    Đoạn kết: khoá đủ bốn điều kiện (thầy + điệu + đoạn + thứ), và fragment lấy theo ĐÚNG
+    `source.id` chứ không phải cùng thầy.
+
+    Lọc theo `t.thay` là cách cũ: nó gom mọi bài của thầy ấy, kể cả bài khác điệu và khác
+    bài, rồi cắt bốn nốt liền ở đâu cũng được — đúng nghĩa vá câu từ nhiều nguồn.
+  */
+  const source = doan === 'outro' ? nguonKetThuBolero(take) : minorSoloSourceForTake(take, doan)
+  const fragments = (source ? vonO(source.thay, doan, true).filter((t) => t.id === source.id) : [])
+    .filter((t) => t.thu && t.phach === 4)
     .flatMap((t) => t.o).filter((o) => o.bac !== null && o.bac2 === null &&
       [0, o.chat === 'm' ? 3 : 4, 7, ...(o.chat === '7' ? [10] : [])]
         .every((d) => tones.has(pc(tonic + o.bac! + d))))
@@ -369,6 +537,7 @@ function chenChay(
   tonesTai: (o: number) => ReadonlySet<number>,
   nhieuPap = false,
   chayNgan = false,
+  doanChay: 'intro' | 'outro' = 'intro',
 ): { melody: TimelineEvent[]; left: TimelineEvent[] } {
   const os = oChayCac(soO, take, soCau, nhieuPap)
   const len = take % 8 < 3
@@ -383,8 +552,9 @@ function chenChay(
         barBeats,
         tonic,
         tonesTai(o),
-        take + i,
+        take,
         i > 0,
+        doanChay,
       )
       m = r.melody
       t = r.left
@@ -446,8 +616,29 @@ export function buildPhraseSection(
   } = options
 
   const tuan = laBoleroTuan(style)
+  const giangMoi = kind === 'interlude' && key?.scale === 'minor' && tuan
+  const interludePlan = giangMoi && key ? planMinorInterlude({
+    tonic: key.tonic, take: take ?? 0, range: options.range ?? { low: 57, high: 95 },
+    songChords: songChords ?? vongPhienKhuc ?? [], opening: options.opening,
+  }) : undefined
+  if (giangMoi && !interludePlan) {
+    return { events: [], lengthBeats: 0, chords: [], beatsEach: [],
+      unavailableReason: 'Chưa soạn được giang tấu thứ trong vốn hợp âm/tầm nốt này; cần i, iv và V trưởng. Không phát câu ghép cũ thay thế.',
+    }
+  }
+  const ketMotNguon = kind === 'outro' && key?.scale === 'minor' && tuan
+  const outroPlan = ketMotNguon && key ? planMinorOutro({
+    tonic: key.tonic, take: take ?? 0, range: options.range ?? { low: 57, high: 95 },
+    songChords: songChords ?? [],
+  }) : undefined
+  if (ketMotNguon && !outroPlan) {
+    return { events: [], lengthBeats: 0, chords: [], beatsEach: [],
+      unavailableReason: 'Chưa có outro thứ khớp vốn hợp âm và tầm nốt này. Có thể thử mở trần 84. Lượt này bỏ qua outro, không ghép nguồn khác hoặc gập nốt để cố phát.',
+    }
+  }
+  const coherentPlan = outroPlan ?? interludePlan
   const chords =
-    kind === 'interlude' && key
+    coherentPlan ? coherentPlan.chords : kind === 'interlude' && key
       ? (() => {
           const v = vonHopAmLinhNhi({
             kind: 'interlude',
@@ -478,8 +669,21 @@ export function buildPhraseSection(
     ấy ra. Không có bước này thì ô chia đôi kéo dài bằng một ô trọn và cả đoạn dạo dôi
     ra đúng bằng số ô đã chia.
   */
-  const beatsEach = nhipVong(chords, beatsPerChord)
-  const daoTuan = tuan && (kind === 'intro' || kind === 'interlude')
+  const beatsEach = coherentPlan?.beatsEach ?? nhipVong(chords, beatsPerChord)
+  /*
+    KHUNG BOLERO TUẤN — mở cho ĐOẠN KẾT ngày 9/9/2026.
+
+    Cờ này gác cả khối dựng khung của Codex: ô Pùng-Pắp, ô chạy, `datChaySheet` lấy bốn nốt
+    liền của sheet. Trước đó nó chỉ nhận `intro` và `interlude`, nên **đoạn kết chưa bao giờ
+    đi qua phương pháp mới** — nó chạy đường ghép ô cũ từ đầu tới cuối.
+
+    Người dùng nói thẳng: *"Có phải bạn vẫn luôn dùng phương pháp cũ của bạn để cho bộ soạn
+    tạo câu không? Những phương pháp mới được codex đưa ra và ghi vào bàn giao bạn phải làm
+    theo, không được mãi giữ cái của bạn nữa."*
+
+    Triệu chứng để lùi: đoạn kết mất chỗ lắng, Pùng-Pắp dồn dày như đoạn dạo.
+  */
+  const daoTuan = tuan && (kind === 'intro' || kind === 'interlude' || kind === 'outro')
 
   /*
     Đoạn kết: tay phải **chỉ ngẫu hứng**, không quạt đệm nữa.
@@ -580,7 +784,13 @@ export function buildPhraseSection(
           */
           undefined
       : undefined
-  const backing = soloLeftHand({
+  // renderPattern giữ pha cell trên toàn đoạn; soloLeftHand cũ khởi động lại
+  // mẫu ở MỖI hợp âm, sai pulse khi Hoa Phượng đổi hợp âm tại phách 2,5.
+  const outroComping = coherentPlan ? renderPattern(
+    voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }),
+    style, { beatsPerChord, beatsEach },
+  ) : undefined
+  const backing = outroComping?.filter((e) => e.hand === 'left') ?? soloLeftHand({
     chords,
     beatsEach,
     style,
@@ -611,9 +821,11 @@ export function buildPhraseSection(
         scale: key.scale,
       })
     : /* Bộ ghép ô thật đứng trước mọi bộ SINH. */
-      tuyenGhep && thaySolo
+      coherentPlan || (tuyenGhep && thaySolo)
     ? giaiDieuDaoLinhNhi({
-        thay: thaySolo,
+        ...(outroPlan ? { outroPlan } : {}),
+        ...(interludePlan ? { interludePlan } : {}),
+        thay: thaySolo ?? 'linh-nhi',
         doan: kind === 'outro' ? 'outro' : kind === 'interlude' ? 'interlude' : 'intro',
         ...(options.siet ? { siet: true } : {}),
         left: backing,
@@ -735,15 +947,46 @@ export function buildPhraseSection(
     ~1/3 ô A; intro thứ 2/3. Lệch theo `take`.
   */
   let traiCuoiX = traiCuoi
+  /*
+    Ô NÀO ĐANG QUẠT PÙNG-PẮP — ghi lại để `melodyGoc` đừng rút chùm của nó.
+
+    Xem chú thích ở `melodyGoc`: luật cũ rút mọi chùm nốt của đoạn kết còn một nốt, mà
+    **Pắp chính là cú gõ hợp âm tay phải**. Đo trước khi sửa (take 0–2, La thứ, nhánh
+    Linh Nhi): đoạn dạo 9–13 cú gõ chùm, đoạn kết **0**.
+  */
+  const oPapChum = new Set<number>()
   let phaiCuoi = phaiGd
-  if (daoTuan && style.cell) {
+  if (coherentPlan && style.cell) {
+    // Cú Pắp chỉ trả lời trong khoảng nghỉ thật, không thay cả ô giai điệu
+    // theo lịch A/B của intro. Không chồng hợp âm lên câu đang chạy/ngân.
+    const replies = outroComping!.filter((e) => e.hand === 'right' &&
+      e.startBeat < roundBeats - barBeats &&
+      !phaiGd.some((m) => m.startBeat < e.startBeat + e.durationBeats &&
+        m.startBeat + m.durationBeats > e.startBeat))
+    phaiCuoi = [...phaiGd, ...replies].sort((a, b) => a.startBeat - b.startBeat)
+  }
+  if (daoTuan && style.cell && !coherentPlan) {
     const full = renderPattern(
       voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }),
       style,
       { beatsPerChord, beatsEach },
     )
     const soO = Math.max(1, Math.round(roundBeats / barBeats))
-    const nhieuPap = kind === 'intro' && key?.scale === 'minor'
+    /*
+      KHUNG BOLERO TUẤN GIỌNG THỨ — mở cho ĐOẠN KẾT ngày 9/9/2026.
+
+      Cờ này bật toàn bộ phương pháp Codex dựng cho câu thứ: `laOPap` chọn ô Pùng-Pắp
+      (#426 ô1 không Pắp, #540 ô2 vào Pắp ngay), `oChayCac` chọn ô chạy, số câu chạy, và
+      `datChaySheet` lấy bốn nốt liền của sheet thay vì dán arpeggio.
+
+      Trước đó nó khoá cứng `kind === 'intro'`, nên đoạn kết chạy đường ghép ô cũ từ đầu
+      tới cuối — người dùng nói thẳng: *"Có phải bạn vẫn luôn dùng phương pháp cũ của bạn
+      để cho bộ soạn tạo câu không? Những phương pháp mới được codex đưa ra và ghi vào bàn
+      giao bạn phải làm theo."*
+
+      Triệu chứng để lùi: đoạn kết mất chỗ lắng, Pùng-Pắp dồn quá dày.
+    */
+    const nhieuPap = (kind === 'intro' || kind === 'outro') && key?.scale === 'minor'
     const papO = oXenPap(soO, take ?? 0, nhieuPap)
     const t: TimelineEvent[] = []
     const p: TimelineEvent[] = []
@@ -752,6 +995,7 @@ export function buildPhraseSection(
       if (laOPap(o, take ?? 0, nhieuPap) && (nhieuPap || !daoThu) && !(nhieuPap && o === soO - 1)) {
         t.push(...full.filter((e) => e.hand === 'left' && inO(e)))
         p.push(...full.filter((e) => e.hand === 'right' && inO(e)))
+        oPapChum.add(o)
       } else {
         t.push(...traiCuoi.filter(inO))
         if (papO.has(o)) {
@@ -800,6 +1044,7 @@ export function buildPhraseSection(
         tonesTai,
         nhieuPap,
         Boolean(chayNgan && nhieuPap),
+        kind === 'outro' ? 'outro' : 'intro',
       )
       phaiCuoi = r.melody.filter((e) => {
         // Giữ nốt lướt/treo của ô sheet đã chọn theo hoà âm; xoá từng nốt làm thủng câu (#412/#426).
@@ -909,8 +1154,8 @@ export function buildPhraseSection(
     Chỉ dọn Ô CHÓT: đó là chỗ tiếng báo đứng, và một khối hợp âm ngay cạnh nó
     là đúng thứ người dùng nghe ra thành "hai lần thông báo".
   */
-  const melody =
-    kind === 'intro'
+  const melodyGoc =
+    coherentPlan ? woven.melody : kind === 'intro'
       ? woven.melody.filter(
           (e) => e.notes.length < 2 || e.startBeat < roundBeats - beatsPerChord + 1e-6,
         )
@@ -926,6 +1171,23 @@ export function buildPhraseSection(
           Giữ luật cũ vì nó đến từ tai người dùng, và giữ đường nét bằng cách
           rút chùm còn nốt trên cùng thay vì xoá cả cú gõ. Câu chạy — thứ làm
           nên lối tự do — không đụng tới.
+
+          CHỪA Ô PÙNG-PẮP RA — sửa 10/9/2026.
+
+          Luật cũ chặn cả **Pắp**, vì Pắp chính là cú gõ hợp âm tay phải ở phách
+          0,5 · 1,5 · 2,5 · 3,5. Người dùng nghe ra: *"outro vẫn không hề có tiết
+          tấu Pùng Pắp của bolero Tuấn trong khi intro có và đánh rất đúng."*
+
+          Đo trước khi sửa (La thứ, nhánh Linh Nhi, take 0–2): đoạn dạo **13 · 9 ·
+          13** cú gõ chùm, đoạn kết **0 · 0 · 0**. Sau khi sửa: **12 · 8 · 12**,
+          đúng bốn phách Pắp, ở đúng những ô `laOPap` chọn.
+
+          Lo ngại cũ — tay phải vừa quạt vừa chạy câu — KHÔNG xảy ra ở đây: vòng
+          lặp `daoTuan` đã chia ô thành hai loại, ô Pùng-Pắp lấy tay phải từ mẫu
+          đệm còn ô kia lấy từ giai điệu, nên hai thứ không bao giờ chung một ô.
+          `oPapChum` giữ đúng danh sách ô loại một; mọi ô khác vẫn rút chùm như cũ.
+
+          Triệu chứng để lùi: đoạn kết nghe đục, hợp âm quạt đè lên câu chạy.
         */
         woven.melody
           /*
@@ -938,23 +1200,71 @@ export function buildPhraseSection(
           */
           .filter((e) => e.startBeat < roundBeats - 1 - 1e-6)
           .map((e) =>
-            e.notes.length > 1
+            e.notes.length > 1 &&
+            !oPapChum.has(Math.floor(e.startBeat / barBeats + 1e-9))
               ? { ...e, notes: [Math.max(...e.notes) as (typeof e.notes)[number]] }
               : e,
           )
-  /* Đoạn kết Linh Nhi: hãm tay phải về mật độ bản ký âm — xem `thuaTayPhai`. */
+  /*
+    Đoạn kết: hãm tay phải về mật độ bản ký âm — xem `thuaTayPhai`.
+
+    TRƯỚC 9/9/2026 chỉ Linh Nhi được hãm (`thaySolo === 'linh-nhi'`). Đo 9 đoạn
+    kết giọng thứ của **cả ba thầy** (`PianoBrain/tools/sheet/ket_thu.py`): số nốt
+    tay phải mỗi ô giảm **−3,4** từ nửa đầu sang nửa cuối, tức thưa dần là lối
+    chung chứ không riêng chị. App khi chưa hãm đi **ngược**: +0,6 nốt mỗi ô.
+    Triệu chứng để lùi: đoạn kết dày lên về cuối, nghe như chưa muốn dừng.
+  */
+  /*
+    ĐOẠN KẾT THỨ ĐIỆU BOLERO — KHÔNG chạy chuỗi hậu xử lý.
+
+    Codex chốt 10/9/2026: nhánh mới *"không được đồng thời xóa nốt bằng `thuaTayPhai`, nâng
+    nửa câu bằng `dangCuoi`, chèn run ngoài câu, đổi nốt cuối bằng `dapChot`, gập từng nốt về
+    tầm"*. Chỉ hai biến đổi được phép: **chuyển chủ âm/chức năng**, và **dời toàn phrase ±12**.
+
+    Lý do nghe được: từ khi đoạn kết lấy **một dải ô liên tiếp có thật** của một bài Linh Nhi,
+    câu ấy đã có sẵn motif, lấy đà, cao trào và chỗ nghỉ. Ba lớp hậu xử lý chồng lên chính là
+    thứ phá những nét ấy — mỗi lớp chữa một triệu chứng, cộng lại làm câu rời rạc. Người dùng
+    nghe ra: *"vẫn còn lủng củng"*.
+
+    Cả ba lớp giữ nguyên cho đoạn dạo, giang tấu và đoạn kết giọng trưởng.
+
+    Triệu chứng để lùi: đoạn kết dày đều, không thưa về cuối, hoặc trôi khỏi tầm.
+  */
+
+  // Mốc Pùng-Pắp là của phần đệm, không phải lưới cấm mọi onset khác của solo.
+  const melody = melodyGoc
+
   const melodyCuoi =
-    kind === 'outro' && thaySolo === 'linh-nhi'
+    kind === 'outro' && !ketMotNguon
       ? thuaTayPhai(
           melody,
           key?.scale === 'minor' ? 5.7 : 5.0,
           barBeats,
           Math.max(1, Math.round(roundBeats / barBeats)),
+          /* Dốc −3,4 nốt mỗi ô, đúng số đo 9 đoạn kết giọng thứ. */
+          3.4,
         )
       : melody
-  const whole = [...avoidMelodyClash(woven.left, melodyCuoi), ...melodyCuoi]
+  const melodyDang =
+    kind === 'outro' && !ketMotNguon
+      ? dangCuoi(
+          melodyCuoi,
+          barBeats,
+          Math.max(1, Math.round(roundBeats / barBeats)),
+          options.range?.high ?? 95,
+          options.range?.low ?? 57,
+        )
+      : melodyCuoi
+  const whole = [...avoidMelodyClash(woven.left, melodyDang), ...melodyDang]
   const ghep =
-    kind === 'outro' ? [...slowClose(whole, roundBeats), ...cue] : [...whole, ...cue]
+    kind === 'outro' && !ketMotNguon
+      ? dapChot(
+          [...slowClose(whole, roundBeats), ...cue],
+          key?.tonic ?? 0,
+          options.range?.low ?? 57,
+          options.range?.high ?? 95,
+        )
+      : [...(outroPlan ? slowClose(whole, roundBeats) : whole), ...cue]
 
   /*
     Cắt đuôi nốt đang ngân **sau khi đã ráp**, không chỉ trong từng tầng.
@@ -967,7 +1277,10 @@ export function buildPhraseSection(
     Chỉ cắt khi **cùng một tay** và **trùng cao độ**: hai tay chồng nhau là hoà
     âm, hai cao độ khác nhau chồng nhau là legato — cả hai đều đúng.
   */
-  const events = holdUntilStruckAgain(ghep)
+  const events = holdUntilStruckAgain(ghep).map((e) => interludePlan
+    // Tránh hai voice bass sau đổi tầm cùng rơi vào một phím và gõ đôi.
+    ? { ...e, notes: [...new Set(e.notes)] }
+    : e)
 
   /*
     Ô HÚT nối vào SAU vòng, không nằm trong vòng.
@@ -984,10 +1297,42 @@ export function buildPhraseSection(
   */
   const kyHieu = chords.map((chord) => chord.symbol)
 
+  if (interludePlan && opening) {
+    // Ô hút riêng như intro, nhưng hút về HỢP ÂM SẮP HÁT, không mặc định về i.
+    // Hai phách ngân + hai phách im nằm trọn trong ô này, không cộng nghỉ lẻ.
+    let pull = hutDungXa({ at: roundBeats, hut: chords.at(-1)!.root, barBeats })
+      .map((e) => ({ ...e, durationBeats: barBeats / 2 }))
+    let pullSymbols = [pitchClassName(chords.at(-1)!.root)]
+    let pullBeats = [barBeats]
+    if (options.interludeCadence === 'ii-v') {
+      // Chỉ mượn chức năng ii–V từ turnaround. I/i do đoạn HÁT chơi ở vạch kế,
+      // không chốt sớm rồi hút lần hai. Nhịp dặm là KT chuyển soạn, không chép sheet.
+      const cadence = turnaroundInto(opening, 2, chords.at(-1))?.chords.slice(0, 2)
+      if (cadence?.length === 2) {
+        const beat = barBeats / 4
+        pull = voiceLeadTwoHands(cadence, { dropRootFromRightHand: dropRoot }).flatMap((v, i) => {
+          const startBeat = roundBeats + i * beat
+          return [
+            { notes: v.left, startBeat, durationBeats: beat * 0.95,
+              hand: 'left' as const, velocity: 78, grace: false },
+            ...cueStrike(v.right, startBeat, { roll: false, beats: beat }),
+          ]
+        })
+        pullSymbols = cadence.map((c) => c.symbol)
+        // Ký hiệu V còn hiện trong khoảng nghỉ, nhưng hai tay đã nhả trước phách 3.
+        pullBeats = [beat, barBeats - beat]
+      }
+    }
+    return { events: [...events, ...pull], lengthBeats: roundBeats + barBeats,
+      chords: [...kyHieu, ...pullSymbols], beatsEach: [...beatsEach, ...pullBeats],
+      sourcePhrase: { id: interludePlan.sourceId, fromBar: interludePlan.fromBar,
+        barCount: interludePlan.bars.length, method: 'motif-development' } }
+  }
+
   if (
     key &&
     ((kind === 'intro' && (thay === 'linh-nhi' || daoTuan || daoTruong || daoThu)) ||
-      (kind === 'interlude' && (tuan || giangThu)))
+      (kind === 'interlude' && !interludePlan && (tuan || giangThu)))
   ) {
     return {
       chords: kyHieu,
@@ -1005,5 +1350,8 @@ export function buildPhraseSection(
   }
 
 
-  return { events, lengthBeats, chords: kyHieu, beatsEach }
+  return { events, lengthBeats, chords: kyHieu, beatsEach,
+    ...(coherentPlan ? { sourcePhrase: { id: coherentPlan.sourceId, fromBar: coherentPlan.fromBar,
+      barCount: coherentPlan.bars.length, ...(coherentPlan.method ? { method: coherentPlan.method } : {}) } } : {}),
+  }
 }

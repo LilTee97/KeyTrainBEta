@@ -26,14 +26,27 @@ import { vonHopAmLinhNhi } from './vonHopAmLinhNhi'
 const DEGREES: Readonly<Record<'intro' | 'outro', readonly number[]>> = {
   intro: [1, 5, 6, 4],
   /*
-    Kết bài dài **ba** ô: một ô dẫn ở bậc V rồi hai ô đậu lại ở bậc I.
+    Kết bài dài **tám** ô, mở bằng một ô dẫn ở bậc V và đậu lại ở bậc I.
 
-    Bộ não soạn câu rải ngược trên bậc I, chiếm hai ô. Ô bậc V đứng trước là
-    phần của KeyTrain — nó là chỗ *dẫn về*, để câu kết không rơi đột ngột từ
-    đoạn hát thẳng vào hợp âm chủ. Nốt não vì thế phải dời sang sau một ô.
+    TRƯỚC 9/9/2026 CHỖ NÀY LÀ `[5, 1, 1]` — ba ô. Luật ấy đặt khi chưa có bản ký
+    âm nào để đối chiếu. Đo 9 đoạn kết giọng thứ của ba thầy
+    (`PianoBrain/tools/sheet/ket_thu.py`): **3 tới 12 ô, trung bình 8,1**. Theo
+    chính sách "số đo từ sheet thắng luật tự đặt trước khi có sheet", ba ô phải
+    nhường. Triệu chứng để lùi: đoạn kết nghe cụt, vừa vào đã hết.
+
+    **Số đo chỉ nói ĐỘ DÀI, không nói vòng nào.** Dãy `V–I–IV` luân phiên dưới
+    đây là đường lui, chỉ chạy khi bài không có vòng để mượn — và nó chưa có
+    bằng chứng từ sheet. Đường chính vẫn là mượn hợp âm thật của bài
+    (`borrowedChords`).
+
+    Ô bậc V mở đầu giữ nguyên lý do cũ: nó là chỗ *dẫn về*, để câu kết không rơi
+    đột ngột từ đoạn hát thẳng vào hợp âm chủ.
   */
-  outro: [5, 1, 1],
+  outro: [5, 1, 4, 5, 1, 4, 5, 1],
 }
+
+/** Số ô của đoạn kết. Đo 9 đoạn kết giọng thứ: 3–12 ô, trung bình 8,1. */
+export const OUTRO_BARS = 8
 
 /** Ô đầu của đoạn kết là ô dẫn, nốt của não bắt đầu từ ô sau. */
 export const OUTRO_LEAD_BARS = 1
@@ -227,7 +240,20 @@ function borrowedChords(
     }
   })
 
-  return lead ? [lead, tonic, tonic] : [tonic, tonic, tonic]
+  /*
+    TÁM ô, không phải ba — xem chú thích của `DEGREES.outro`.
+
+    Thân đoạn mượn một cửa sổ hợp âm **có thật trong bài**, cùng bộ chọn với
+    đoạn dạo và giang tấu, để đoạn kết không kêu ra một vòng lạ so với bài. Ô dẫn
+    đứng đầu, hợp âm chủ đậu ở cuối.
+  */
+  const than = chooseInterludeWindow(main, tonic, OUTRO_BARS - 2)
+  const giua = than ? main.slice(than.from, than.to + 1) : main.slice(0, OUTRO_BARS - 2)
+  const day: ParsedChord[] = []
+  while (day.length < OUTRO_BARS - 2 && giua.length > 0) {
+    day.push(giua[day.length % giua.length]!)
+  }
+  return lead ? [lead, ...day, tonic] : [...day, tonic, tonic]
 }
 
 /**

@@ -7,6 +7,7 @@ import {
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { TimelineEvent } from '../style/types'
+import { applyFeel, snapToPulse, type SoloFeel } from './soloFeel'
 
 /**
  * Dựng một câu nhạc bằng cách **đặt nhịp trước, đặt nốt sau**.
@@ -64,6 +65,8 @@ export interface LineOptions {
   range: { low: number; high: number }
   /** Lượt chơi — đổi đường đi mà không đổi luật. */
   take?: number
+  /** Cách chia phách của điệu đang chơi. */
+  feel?: SoloFeel
   /**
    * RẢI MỞ RỘNG — lối tay phải ở đoạn giang tấu, thay cho câu chạy bước hẹp.
    *
@@ -363,7 +366,23 @@ export function buildLine(options: LineOptions): LineNote[] {
   const total = chords.length * beatsPerChord
 
   /* Bước 1 — nhịp trước: chỗ nào có tiếng, chỗ nào để trống. */
-  const onsets = rhythmTrack(total, barBeats, take)
+  /*
+    Vốn nhịp học từ sheet cho câu có hơi thở; `feel` và `anchors` đặt vốn ấy
+    vào đúng điệu đang chơi. Chỉ kéo những nốt đã ở gần mạch điệu — nốt nối
+    nằm giữa các cú gõ vẫn được giữ để hai tay không thành một bè.
+  */
+  const onsets = snapToPulse(
+    applyFeel(
+      rhythmTrack(total, barBeats, take).map((startBeat) => ({
+        startBeat,
+        durationBeats: 0.1,
+      })),
+      options.feel ?? 'straight',
+      barBeats,
+    ),
+    anchors,
+    barBeats,
+  ).map((note) => note.startBeat)
   if (onsets.length === 0) return []
 
   /*

@@ -1,7 +1,12 @@
 # Bàn giao từ Claude Code sang OpenCode
 
-Viết ngày **6/9/2026**. Người viết: Claude Code (Opus 5), chạy trong VS Code trên máy này.
-Người nhận: **OpenCode**, cùng máy, cùng hai repo.
+Viết ngày **6/9/2026**, cập nhật **9/9/2026**. Người viết: Claude Code (Opus 5), chạy
+trong VS Code trên máy này. Người nhận: **OpenCode** và **Codex**, cùng máy, cùng hai repo.
+
+> **BA agent cùng làm hai repo này**: Claude Code, OpenCode và Codex. Codex có bản bàn giao
+> riêng ở `Reference/BAN-GIAO-CODEX-SANG-CLAUDE-2026-09-09.md` — đọc cả hai, chúng bổ sung
+> cho nhau chứ không thay nhau. Codex đọc `AGENTS.md` ở gốc repo; file ấy là hướng dẫn viết
+> riêng cho Codex.
 
 Đọc hết file này trước khi gõ dòng lệnh đầu tiên. Nó nói ba thứ: **đang làm dở cái gì**,
 **đã biết chắc những gì**, và **chỗ nào tôi đã làm sai để bạn đừng lặp lại**.
@@ -46,13 +51,18 @@ một nhánh rẽ dữ liệu như thế rồi (`src/music_engine/`, trùng md5 
 
 **Trạng thái lúc bàn giao:**
 
-- PianoBrain — nhánh `ca-phao-va-mau-1-duc-thinh`, HEAD `44ba9ef`, `npm test` **269/269**,
-  cây làm việc **sạch**.
-- KeyTrain — nhánh `thuoc-cham-cau-solo`, HEAD `9af1b89`,
-  `npx tsc --noEmit -p tsconfig.app.json` **sạch**,
-  `npx vitest run` **2442 đạt / 2 hỏng** trên 2444, cây làm việc **sạch**.
+Đo lại **9/9/2026**:
 
-Hai cái hỏng là hỏng **từ trước**, không phải do việc đang làm — xem mục 6.
+- PianoBrain — nhánh `ca-phao-va-mau-1-duc-thinh`, HEAD `bbca08e`, `npm test` **269/269**.
+  Cây **có việc chưa commit** của agent khác (bốn file md, `corpus.json`, `data/sheet-solos/`
+  của bài *Nỗi buồn hoa phượng*, và `tuan-luu-piano.md` chưa theo dõi).
+- KeyTrain — nhánh `thuoc-cham-cau-solo`, HEAD `1781e1e`,
+  `npx vitest run` **2488 đạt / 6 hỏng** trên 2494. Cây **có việc chưa commit** của Codex:
+  `minorSoloSource.ts` (mới), `lineBuilder.ts`, `soloFeel.ts`, `phraseScale.ts`,
+  `phraseSection.ts`, `vonHopAmLinhNhi.ts`, `giaiDieuDaoLinhNhi.ts`, `ReharmHome.tsx` và
+  các test đi kèm. **Đừng reset, đừng checkout đè.**
+
+Sáu cái hỏng: hai cái hỏng từ trước, bốn cái mới — xem mục 6.
 
 ---
 
@@ -89,7 +99,13 @@ md và báo cho người dùng.
 | Linh Nhi | `linh-nhi-piano` | **7** | `linh-nhi-piano.md`, 1658 dòng |
 | Cà Pháo | `ca-phao` | **4** | `ca-phao.md`, 430 dòng |
 | Tôn Hùng | `ton-hung` | **2** (cả hai giọng thứ) | `ton-hung.md`, 345 dòng |
+| **Tuấn Lưu Piano** | `tuan-luu-piano` | **0** — học từ video, không sheet | `tuan-luu-piano.md`, 223 dòng (Codex dựng 7/9/2026) |
 | Hải | `hai-joseph` | **0** — 741 mục tri thức, không sheet | **chưa có**, người dùng chưa gọi làm |
+
+> **Thầy Tuấn Lưu có 0 bản ký âm.** Mọi con số trong file của thầy ấy **không** đo từ
+> MusicXML — chúng đến từ một video và các `cell` trong KeyTrain. Intro Bolero Tuấn trong app
+> là **luật app ghép khung đệm Tuấn với bằng chứng solo của thầy khác** (Linh Nhi / Cà Pháo).
+> Đừng viết rằng nó học từ solo của Tuấn.
 
 Vài số đo đã chốt, kèm cỡ mẫu:
 
@@ -161,10 +177,23 @@ Bộ sinh có mấy chỗ khó, đã ghi trong chính nó, đọc trước khi �
 (`dur > 0`), cắt nốt tràn qua vạch nhịp, **độ dài ô lấy theo giá trị hay gặp nhất chứ không
 lấy ô đầu**, ô lấy đà không phải ô bị chia đôi.
 
-### 5.2 Ô tick "siết bám hợp âm" — vừa xong, đang chờ tai người dùng
+### 5.2 Ô tick "siết bám hợp âm" — NAY ĐI NGƯỢC, đang đỏ
 
-Kéo mức bám hợp âm về đúng `DICH_HOP`, kéo **cả hai chiều**. Tổng sai lệch 28,6 → 22,6 điểm.
-**Mặc định TẮT.**
+Kéo mức bám hợp âm về đúng `DICH_HOP`, kéo **cả hai chiều**. Tổng sai lệch 28,6 → 22,6 điểm
+khi đo ngày 6/9/2026. **Mặc định TẮT.**
+
+> **HỎNG TỪ 9/9/2026.** Sau khi Codex sửa bộ soạn intro thứ, đoạn kết giọng trưởng đảo chiều:
+>
+> | | tắt siết | bật siết |
+> |---|---|---|
+> | 6/9 | 67,1% | **69,7%** ← tăng, đúng chiều |
+> | 9/9 | **70,1%** | **68,0%** ← giảm, sai chiều |
+>
+> Đọc cho đúng: **nền tự tốt lên** — tắt ô tick nay đạt 70,1% thay vì 67,1%, gần đích 75% của
+> bản ký âm hơn 3 điểm mà không cần ô tick nào. Nhưng phép chấm của ô tick vẫn kéo theo
+> `DICH_HOP` cũ nên bật lên lại tụt. `sietHopAm.test.ts` bắt đúng chỗ này và đang đỏ.
+> **Đừng hạ ngưỡng.** Ba đường xử — bỏ ô tick · đo lại `DICH_HOP` trên bộ soạn mới · để
+> nguyên vì đã mặc định tắt — đều là **đổi lối chơi**, phải hỏi người dùng. Chưa hỏi.
 
 > **Luật người dùng:** đổi một lối chơi thì dựng nó **sau một ô tick nghe thử**, đừng thay
 > thẳng bản đang có.
@@ -211,11 +240,9 @@ không", và đó là lý do bộ đo ấy ra đời.
    khuyến nghị sửa đầu tiên. Trần 79 chặn không cho câu đạt neo 75,3 của Linh Nhi (app thật
    ra 70,7), và nó kéo tụt cả vật liệu ô thật xuống quãng tám dưới. Tôi **chưa sửa** vì đang
    chờ người dùng cho biết nốt cao nhất trong sheet giọng trưởng của chị chạm tới đâu.
-2. **`daoTruongLinhNhi.test.ts` dùng `range {57, 95}`** trong khi app thật dùng
-   `SOLO_RANGE {62, 79}` — rộng hơn **21 nửa cung**. Nên nó báo tâm 75,8 đạt neo trong khi
-   app thật ra 70,7: **test xanh mà app vẫn lệch**. Đây là lỗi harness của chính tôi, tôi đã
-   nói ra và **chưa sửa**, vì sửa xong nó sẽ đỏ — và cái đỏ ấy chính là việc 1.
-   **Đừng hạ ngưỡng neo cho nó xanh.**
+2. ~~**`daoTruongLinhNhi.test.ts` dùng `range {57, 95}`**~~ — **ĐÃ XONG.** Codex sửa sang
+   `SOLO_RANGE`, và nó đỏ đúng như dự đoán: **tâm 71,3** so với neo 75,3. Cái đỏ ấy là thật
+   và nó chính là việc (1) ở trên. **Đừng hạ ngưỡng neo cho nó xanh.**
 3. Hai test đỏ sẵn có ở mục 6.
 
 ### 5.5 VIỆC GIAO CHO BẠN: so bài *Hoa Trinh Nữ* với đoạn dạo giọng trưởng của Linh Nhi
@@ -391,20 +418,30 @@ Hai chỗ số đo không quyết được, phải có tai người:
 
 ---
 
-## 6. Hai test đỏ — đừng "sửa" chúng
+## 6. SÁU test đỏ — đừng "sửa" chúng
 
-> **Luật người dùng: không nới test cho qua.**
+> **Luật người dùng: không nới test cho qua.** Codex cũng chép lại đúng luật này trong bản
+> bàn giao của họ: *"Không hạ ngưỡng chỉ để xanh. Ưu tiên lỗi nghe được trước."*
 
-| test | số | cần gì |
+Đo 9/9/2026 — **2488 đạt / 6 hỏng** trên 2494.
+
+| test | số | từ khi nào |
 |---|---|---|
-| `fillSoloGenerator/__tests__/phraseAcrossBar.test.ts:178` | 0,4738 so với ngưỡng ≥ 0,5 | tai người dùng |
-| `style/__tests__/handSplitAudit.test.ts:149` | ô 3 không có bước nửa cung nào | tai người dùng |
+| `phraseAcrossBar` | hơi dài 47,4% < 50% | trước 6/9 |
+| `handSplitAudit` | ô 3 không có bước nửa cung | trước 6/9 |
+| `daoTruong` | tâm Linh Nhi **71,3** thay vì 75,3 | **mới** — vì đã sửa sang `SOLO_RANGE`, xem 5.4(2) |
+| `sietHopAm` | kết giọng trưởng bật siết **68,0%** < tắt 70,1% | **mới** — hồi quy, xem 5.2 |
+| `tuyenSolo` | Cà Pháo trưởng tâm **72,6** so với 70,8, lệch 1,80 > ngưỡng 1,5 | **mới** |
+| `tuyenSolo` | Cà Pháo thứ tâm **74,0** so với 68,0, lệch 6,02 > ngưỡng 6 | **mới**, vừa quá ngưỡng |
 
-Cả hai đỏ **từ trước** phiên này. Chúng đang phơi ra một chỗ mã chưa đạt, không phải một
-ngưỡng đặt sai. Hạ ngưỡng là xoá mất thông tin.
+Hai cái đầu phơi ra chỗ mã chưa đạt và **cần tai người dùng**. Bốn cái sau xuất hiện sau khi
+Codex sửa bộ soạn intro thứ — chúng là **hồi quy có thật**, không phải ngưỡng đặt sai.
 
-Tương tự, `sietHopAm.test.ts` có một khẳng định **cố ý** nói *đoạn dạo giọng thứ vẫn cách
-đích trên 5 điểm* — để phiên sau đừng tưởng đã xong. Đừng "sửa" nó thành xanh đẹp.
+Hai cái `tuyenSolo` nói cùng một chuyện: neo tầm âm của Cà Pháo đã trôi. Cái thứ hai chỉ vượt
+ngưỡng **0,02** nên đừng đọc nó như một lỗi nặng riêng biệt.
+
+`sietHopAm.test.ts` còn một khẳng định **cố ý** nói *đoạn dạo giọng thứ vẫn cách đích trên 5
+điểm* — để phiên sau đừng tưởng đã xong. Đừng "sửa" nó thành xanh đẹp; nó vẫn đang xanh.
 
 ---
 
@@ -537,9 +574,34 @@ tầm âm dựa trên **max = 91**, trong khi 91 là đúng **một nốt** và 
 | **Thầy Hải** (`hai-joseph`) | 741 mục tri thức nhưng **không có sheet nào**; chưa có file md, người dùng chưa gọi làm |
 | **Tôn Hùng ở giọng trưởng** | cả hai bản ký âm đều giọng thứ. Cột trưởng trong `TAM` đang **mượn số của giọng thứ** — đừng đọc nó như số đo |
 | **Ba đoạn kết bội số dưới 1** | *Một Cõi* 0,656 · *Rừng Lá* 0,875 · *Lá Thư* báo hợp âm dày **7,00 nốt** (nghi ký hiệu đọc sai). Chưa soi |
-| **Hai test đỏ** | `phraseAcrossBar` 47,4% và `handSplitAudit` ô 3 — cần tai người dùng, xem mục 6 |
+| **Hai test đỏ cần tai người** | `phraseAcrossBar` 47,4% và `handSplitAudit` ô 3 — xem mục 6 |
+| **Bốn test đỏ mới, 9/9** | `daoTruong` · `sietHopAm` · hai cái `tuyenSolo` — hồi quy sau khi Codex sửa bộ soạn intro thứ. Xem mục 6 và 5.2 |
+| **Thầy Tuấn Lưu** | **0 bản ký âm.** Mọi số trong `tuan-luu-piano.md` đến từ một video và các `cell` KeyTrain, không từ MusicXML. Intro Bolero Tuấn là luật app ghép khung đệm Tuấn với solo của thầy khác — đừng viết là học từ solo Tuấn |
+| **Bốn điệu chưa có corpus** | swing · waltz · reggae · tango — Codex mở test cho chúng nhưng mới chứng minh engine chạy và giữ pulse khác nhau, **chưa** chứng minh solo đúng thầy đúng điệu về thẩm mỹ |
 | **Vốn giọng trưởng của Linh Nhi** | chỉ **ba** bài. Sàn sai số 0,103 nằm ở đây, chỉ thêm sheet mới hạ được |
 | **Cà Pháo giọng thứ** | đoạn dạo và giang chỉ **một** bài mỗi ô — đừng đặt luật từ đó |
+
+### Hai bản bàn giao bổ sung nhau — đọc cả hai
+
+`Reference/BAN-GIAO-CODEX-SANG-CLAUDE-2026-09-09.md` là bản của Codex. Chỗ **chỉ bản đó có**:
+
+- benchmark **#550** — intro thứ La thứ đã được người dùng chấm *Đã ổn*, vòng
+  `Am–Dm–Am–Dm–Am–Dm–Am–E`, nguồn Cà Pháo *Người Hãy Quên Em Đi* ở Rê thứ; chỉ lấy vòng và
+  đường nét, timing vẫn là Bolero Tuấn
+- luật **một câu = một thầy + một điệu + một đoạn nguồn**, không vá ô từ nhiều thầy
+- tách **hai lớp**: khung điệu (nhịp, accent, kỹ thuật tay trái của điệu đích) và ngữ pháp
+  câu nhạc (bậc, đường nét, mật độ, chỗ nghỉ) — sheet nguồn chỉ dạy lớp thứ hai
+- các câu đã chấm **#544 · #546 · #550 · #552**; #552 là *Chưa ổn* với lý do *"đúng tinh thần
+  nhưng chưa hay bằng các thầy"* — **"hợp lệ" chưa đồng nghĩa "hay"**
+
+Chỗ **chỉ bản này có**, Codex chưa nhắc:
+
+- ba bộ đo mới ở PianoBrain: `boi_so.py` · `cau_run.py` · `tran_am.py`, đều có `--kiem`
+- **Luật 13** trong `LUAT-SOAN-NOT.md`: chấm bám hợp âm bằng **bội số**, không bằng tỉ lệ thô
+- **14 mốc trong ô** của bài *Nỗi buồn hoa phượng* ở `corpus.json` trường `moc`
+- ba khái niệm của người dùng: **câu run** · **đàn mô phỏng giai điệu lời hát** · **ranh giới
+  đoạn nằm giữa ô, không ở vạch nhịp**
+- bẫy đo: phép so hai đoạn phải chạy **cả hai thước** — cao độ tuyệt đối *và* lớp cao độ
 
 ### Cách đo đúng cho những lỗ hay gặp
 

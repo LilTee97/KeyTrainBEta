@@ -33,17 +33,28 @@ describe('hợp âm đoạn dạo mượn từ bài', () => {
   })
 
   /*
-    Kết bài giữ hình ba ô — một ô dẫn rồi hai ô đậu lại — vì bộ não soạn câu rải
-    ngược trên hai ô chủ âm, và `OUTRO_LEAD_BARS` đếm đúng một ô dẫn ấy.
+    KẾT BÀI DÀI TÁM Ô TỪ 9/9/2026 — TRƯỚC ĐÓ BA Ô, LUẬT ẤY KHÔNG CÒN.
+
+    Hình ba ô (một ô dẫn rồi hai ô đậu) được đặt lúc chưa có bản ký âm nào của đoạn
+    kết để đối chiếu. Đo 9 đoạn kết giọng thứ của cả ba thầy
+    (`PianoBrain/tools/sheet/ket_thu.py`, có `--kiem`): **3 tới 12 ô, trung bình
+    8,1**; và **chỉ 4 trên 9 bài kết trên hợp âm bậc 1**.
+
+    Cùng lý do với hai lưới "rút hợp âm về chất cơ bản" đã xoá bên dưới: người dùng
+    chốt rằng luật họ tự đặt trước khi có tài liệu thì nhường cho số đo, bỏ hẳn chứ
+    không dung hoà. Triệu chứng để lùi: đoạn kết nghe cụt, vừa vào đã hết.
+
+    Giữ nguyên hai điều đã đúng: ô đầu là ô **dẫn** (khác hợp âm chủ), và ô cuối đậu
+    trên hợp âm chủ **của chính bài** — giữ màu, không phải La thứ trần.
   */
-  it('kết bài: một ô dẫn rồi hai ô đậu trên hợp âm chủ của chính bài', () => {
+  it('kết bài: ô dẫn ở đầu, tám ô, đậu trên hợp âm chủ của chính bài', () => {
     const outro = phraseChords('outro', KEY, { songChords: chords() })
-    expect(outro).toHaveLength(3)
-    expect(outro[1]!.symbol).toBe(outro[2]!.symbol)
-    expect(outro[1]!.root).toBe(9)
+    expect(outro).toHaveLength(8)
+    const cuoi = outro[outro.length - 1]!
+    expect(cuoi.root).toBe(9)
     // Màu của bài, không phải La thứ trần.
-    expect(outro[1]!.quality.id).not.toBe('min')
-    expect(outro[0]!.symbol).not.toBe(outro[1]!.symbol)
+    expect(cuoi.quality.id).not.toBe('min')
+    expect(outro[0]!.symbol).not.toBe(cuoi.symbol)
   })
 
   it('không có bài thì vẫn dựng theo bậc như cũ', () => {
@@ -141,7 +152,7 @@ describe('dạo đầu chọn hợp âm, không copy phiên khúc', () => {
       songChords: chords(),
       vongPhienKhuc: VONG,
     })
-    expect(outro).toHaveLength(3)
+    expect(outro).toHaveLength(8)
     expect(symbols(outro)).not.toEqual(symbols(VONG))
   })
 })

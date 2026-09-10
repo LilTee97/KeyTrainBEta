@@ -3,6 +3,7 @@ import type { ParsedChord } from '../types'
 import type { TimelineEvent } from './types'
 import type { SoloTeacher } from '../fillSoloGenerator/soloTeacher'
 import { TUYEN_SOLO, gocTuyen, type OSolo } from './tuyenSolo'
+import { minorSoloSourceForTake, nguonKetThuBolero, type MinorOutroPlan } from './minorSoloSource'
 
 /**
  * Giai điệu tay phải đoạn dạo — **ghép mảnh từ những ô nhịp có thật**.
@@ -295,6 +296,9 @@ const bam = (s: string) => {
 }
 
 export function giaiDieuDaoLinhNhi(options: {
+  /** Kế hoạch outro đã kiểm hoà âm/tầm; không chạy bộ ghép ô và gập nốt cũ. */
+  outroPlan?: MinorOutroPlan
+  interludePlan?: MinorOutroPlan
   left: readonly TimelineEvent[]
   chords: readonly ParsedChord[]
   beatsPerChord: number
@@ -324,6 +328,16 @@ export function giaiDieuDaoLinhNhi(options: {
   /** Intro Tuấn: vốn ô mọi thầy, cùng thứ/trưởng. Tuấn 0 sheet. */
   gopThay?: boolean
 }): TimelineEvent[] {
+  if (options.outroPlan || options.interludePlan) {
+    const plan = (options.outroPlan ?? options.interludePlan)!
+    return plan.bars.flatMap((bar, i) => bar.n.map(([at, pitch, duration]) => ({
+      notes: [(plan.pitchBase + pitch) as MidiNote],
+      startBeat: i * 4 + at,
+      durationBeats: Math.min(duration, plan.bars.length * 4 - (i * 4 + at)) * 0.9,
+      hand: 'right' as const,
+      velocity: at === 0 ? 76 : 66,
+    })))
+  }
   const { left, chords, beatsPerChord, barBeats, range } = options
   const take = options.take ?? 0
   if (chords.length === 0) return []
@@ -355,12 +369,62 @@ export function giaiDieuDaoLinhNhi(options: {
     options.tonic === undefined
       ? dau.quality.intervals.includes(3) && !dau.quality.intervals.includes(4)
       : options.minor !== false
-  const minorIntro = thu && options.gopThay === true && (options.doan ?? 'intro') === 'intro'
+  /*
+    ĐOẠN KẾT CŨNG ĐI ĐƯỜNG MỘT-NGUỒN, không riêng đoạn dạo — mở 9/9/2026.
+
+    Trước đó chỗ này khoá cứng `=== 'intro'`, nên giai điệu đoạn kết giọng thứ rơi về
+    vốn ô **gộp ba thầy** thay vì mượn nguyên một họ câu kết của một thầy. Người dùng chỉ
+    ra: chỉ nên mượn **tiết tấu** của đoạn dạo, còn giai điệu phải đối chiếu với các câu
+    solo trong sheet giọng thứ mà soạn.
+
+    Vốn có sẵn 9 tuyến đoạn kết giọng thứ (Linh Nhi 5 · Cà Pháo 2 · Tôn Hùng 2), trước
+    nay không đường nào dùng tới chúng theo lối này.
+  */
+  const doanNay = options.doan ?? 'intro'
+  /*
+    MỘT CÂU = MỘT THẦY + MỘT BÀI + MỘT LOẠI ĐOẠN. Áp cho cả đoạn dạo lẫn đoạn kết.
+
+    Luật của Codex, chép nguyên: *"Một phrase/section = một teacher + một source style +
+    một source song + đúng loại intro/interlude/outro. Không vá ô từ nhiều thầy."* Vòng hợp
+    âm bên `vonHopAmLinhNhi` dùng **đúng cùng phép chọn này**, nên hai bên luôn cùng nguồn.
+
+    ĐÃ MỞ CHO ĐOẠN KẾT, RỒI TỰ LÙI, RỒI KHÔI PHỤC — ghi lại để đừng lùi lần nữa. Lần lùi
+    ấy vì `baMonLinhNhi` MÓN 5 đỏ (mật độ tay phải đoạn kết thứ 3,25 nốt mỗi ô so với 5,7
+    của bản ký âm). Đó là **sai thứ tự ưu tiên**: một con số mật độ không được phép lật một
+    luật kiến trúc. Tệ hơn, sau khi lùi thì vòng hợp âm lấy từ một nguồn còn nốt lấy từ ba
+    thầy — đúng nghĩa chắp vá, và người dùng nghe ra ngay: *"giai điệu câu outro rất lủng
+    củng, rất dở và phô."*
+
+    Mật độ là việc phải chữa riêng, không phải lý do bỏ luật.
+  */
+  const minorNguon =
+    thu && options.gopThay === true && (doanNay === 'intro' || doanNay === 'outro')
+
+  /*
+    Tuấn không có sheet solo riêng. Mỗi lượt mượn NGUYÊN một họ câu thứ của một thầy,
+    thay vì trộn từng ô Cà Pháo · Tôn Hùng · Linh Nhi trong cùng một câu. Vòng hợp âm
+    bên `vonHopAmLinhNhi` dùng đúng cùng phép chọn này.
+  */
+  /*
+    ĐOẠN KẾT dùng bộ chọn khoá đủ bốn điều kiện — thầy + ĐIỆU + loại đoạn + màu giọng.
+
+    Bộ cũ chỉ lọc thầy + đoạn + thứ, nên hai đoạn kết `slow rock` của Linh Nhi (*Lá Thư
+    Trần Thế*, *Một Cõi Đi Về*) lọt vào vòng train Bolero. Xem `minorSoloSource.ts`.
+  */
+  const minorSource = !minorNguon
+    ? undefined
+    : doanNay === 'outro'
+      ? nguonKetThuBolero(take)
+      : minorSoloSourceForTake(take, doanNay)
+  const thayNguon = minorSource?.thay ?? options.thay ?? 'linh-nhi'
+  const vonNguon = minorSource
+    ? vonO(minorSource.thay, doanNay, true).filter((t) => t.id === minorSource.id)
+    : vonO(thayNguon, doanNay, options.gopThay === true)
 
   const kho = locO(
     thu,
     barBeats,
-    vonO(options.thay ?? 'linh-nhi', options.doan ?? 'intro', options.gopThay === true),
+    vonNguon,
   )
   if (kho.length === 0) return []
   const goc = gocTuyen(chu)
@@ -389,7 +453,36 @@ export function giaiDieuDaoLinhNhi(options: {
 
   const chon: { m: Manh; chord: ParsedChord }[] = []
   let truoc: Manh | null = null
-  for (let o = 0; o < soO; o += 1) {
+
+  /*
+    ĐOẠN KẾT: LẤY MỘT CỬA SỔ Ô LIÊN TIẾP CỦA NGUỒN, không chọn từng ô độc lập.
+
+    Đây là chỉ dẫn #2 của Codex, chép nguyên: *"Không được chọn độc lập ô tốt nhất cho từng
+    hợp âm rồi tạo thứ tự như `1 → 6 → 2 → 5`. Không dùng bộ xếp hạng từng ô hiện tại cho
+    nhánh này. Motif, lấy đà, cao trào, khoảng nghỉ và cadence phải còn nhận ra ở cấp toàn
+    đoạn."*
+
+    Bộ xếp hạng bên dưới chấm **từng ô một** theo bậc hợp âm và phép nối giọng. Nó giữ được
+    quan hệ giữa hai ô liền nhau, nhưng **không** giữ được đường cung của cả câu: ô 5 của
+    một bài có thể đứng trước ô 2 của chính bài ấy. Người dùng nghe ra là *"lủng củng"*.
+
+    Cửa sổ liên tiếp giữ nguyên trật tự thời gian của nguồn. `take` chỉ dịch điểm bắt đầu
+    **trong cùng một nguồn**, không đổi nguồn giữa câu.
+
+    Nguồn ngắn hơn số ô cần thì vòng lại từ đầu — vẫn là ô của đúng nguồn ấy, chỉ lặp cấu
+    trúc, không mượn bài khác.
+  */
+  const dungCuaSo = doanNay === 'outro' && minorSource !== undefined && kho.length > 0
+  if (dungCuaSo) {
+    const day = [...kho].sort((a, b) => a.i - b.i)
+    const batDau = day.length > soO ? take % (day.length - soO + 1) : 0
+    for (let o = 0; o < soO; o += 1) {
+      const m = day[(batDau + o) % day.length]!
+      chon.push({ m, chord: hopAmO(o)[0]!.chord })
+    }
+  }
+
+  for (let o = 0; !dungCuaSo && o < soO; o += 1) {
     const trongO = hopAmO(o)
     const chord = trongO[0]!.chord
     const bac = ((chord.root % 12) - chu + 12) % 12
@@ -411,7 +504,7 @@ export function giaiDieuDaoLinhNhi(options: {
     const dungBac = kho.filter((m) => m.o.bac === bac)
     const dungChuc = kho.filter((m) => chuc(m.o.bac!, thu) === chuc(bac, thu))
     let ung = dungBac.length > 0 ? dungBac : dungChuc.length > 0 ? dungChuc : kho
-    if (minorIntro) {
+    if (minorNguon) {
       // Cùng gốc chưa đủ: v thứ không phải V7; ô đổi hợp âm không ghép lên một hợp âm giữ.
       const quality = chord.quality.intervals.includes(3) ? 'm'
         : chord.quality.intervals.includes(10) ? '7' : ''
@@ -455,7 +548,7 @@ export function giaiDieuDaoLinhNhi(options: {
         let d = truoc ? Math.abs(((((dauO(m) - cuoiO(truoc)) % 12) + 18) % 12) - 6) : 0
         /* Ở lại cùng một bài: đổi nguồn giữa câu là đứt hơi. */
         if (truoc && m.tuyen !== truoc.tuyen) d += 5
-        if (minorIntro && truoc && m.tuyen === truoc.tuyen && m.i === truoc.i) d += 8
+        if (minorNguon && truoc && m.tuyen === truoc.tuyen && m.i === truoc.i) d += 8
         /* Ô đầu lấy ô đầu, ô cuối lấy ô cuối — hai đầu mang tính chất riêng. */
         if (o === 0 && m.i !== 0) d += 4
         /*
@@ -467,6 +560,18 @@ export function giaiDieuDaoLinhNhi(options: {
         if (!cuoi && m.o.n.length < 3) d += 5
         /* #412: ô sau thưa. Sheet ô2 min 5, ô3 min 7 (n=8). Cũ: chỉ phạt <3. */
         if (options.gopThay && o >= 1 && !cuoi && m.o.n.length < 5) d += 8
+        /*
+          ĐOẠN KẾT: phạt ô thưa ở MỌI ô, kể cả ô cuối.
+
+          Bản ký âm đo **5,7 nốt tay phải mỗi ô** ở đoạn kết giọng thứ (`baMonLinhNhi`
+          MÓN 5, gộp 4 bài Linh Nhi). Đi đường một-nguồn trên vòng hợp âm trơn thì vốn ô
+          hẹp lại, bộ ghép chọn phải những ô mỏng và câu tụt còn 3,25 — nghe lủng củng.
+
+          Chữa bằng cách **chọn ô dày hơn**, không phải bằng thêm nốt: mọi nốt vẫn đến từ
+          một ô có thật của bản ký âm. Luật `!cuoi` ở dòng trên chừa ô cuối ra vì đoạn dạo
+          cần ô cuối thưa để nhường chỗ vào hát; đoạn kết không có chỗ nào để nhường.
+        */
+        if (doanNay === 'outro' && m.o.n.length < 5) d += 8
         if (cuoi !== m.cuoi) d += 6
         /*
           Ô nào về chỗ ô ấy. Thiếu luật này thì ô 1 và ô 6 Đừng Xa cùng đứng trên bậc
@@ -588,7 +693,7 @@ export function giaiDieuDaoLinhNhi(options: {
                   const next = m.o.n[k + 1]
                   const resolves = next && Math.abs(next[1] - cao) <= 2 &&
                     tapHop.has(((next[1] % 12) + 12) % 12)
-                  p += minorIntro && m.o.n[k]![2] <= 0.5 && resolves ? 0 : 3
+                  p += minorNguon && m.o.n[k]![2] <= 0.5 && resolves ? 0 : 3
                   break
                 }
               }
@@ -710,7 +815,7 @@ export function giaiDieuDaoLinhNhi(options: {
     */
     const n = xep.length
     // Điểm đã có biến thiên theo take. Không xoay xuống cả ứng viên tệ nhất để lấy sự khác biệt.
-    const hang = minorIntro || hangGoc === 0 ? 0 : 1 + ((hangGoc - 1 + o) % Math.max(1, n - 1))
+    const hang = minorNguon || hangGoc === 0 ? 0 : 1 + ((hangGoc - 1 + o) % Math.max(1, n - 1))
     const tot = xep[hang % n]?.m ?? null
     if (!tot) return []
     chon.push({ m: tot, chord })
@@ -775,7 +880,7 @@ export function giaiDieuDaoLinhNhi(options: {
   if (moi.length === 0) return []
 
   const tam = moi.reduce((a, n) => a + n.note, 0) / moi.length
-  const neo = TAM[options.thay ?? 'linh-nhi']
+  const neo = TAM[thayNguon]
   const doi = 12 * Math.round(((thu ? neo.thu : neo.truong) - tam) / 12)
   /*
     GẬP THEO Ô, không gập từng nốt.

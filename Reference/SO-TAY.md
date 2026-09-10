@@ -2227,3 +2227,559 @@ Khung chung: A Pùng-Pắp / B LH bass+RH giai điệu · Pắp LH từ ô 3 · 
 | phạt thêm | chuỗi lên ≥5 (chung) | + rải trưởng lặp, gãy luật 4, lặp <8%, bậc 3/6 trưởng; Cà Pháo thứ xếp sau |
 
 Cũ để lùi: intro thứ chạy C–D–E–F–G (#191, 1 chuỗi ≥5 vs sheet 0) và rải G trưởng; intro trưởng 10 nốt lên. Tai: Đã ổn Tuấn La thứ 13 câu / ~20 phút sau lần cắt chuỗi. Đừng chồng heuristic nữa trên intro — nghe take. Chi tiết màu: `LUAT-SOAN-NOT.md`. Giang: nốt lấy **ô giang** 3 thầy, không ô intro (Chiếc Lá dạo từng lọt).
+
+## 9/9/2026 — Từ câu mẫu sang bộ soạn solo mọi điệu
+
+### Mục tiêu thật
+
+KT không chỉ chép cho giống sheet và cũng không chỉ soạn Bolero. Đích là tự tạo intro,
+giang tấu và outro có câu nhạc nghe hay, đúng tiết tấu điệu, đúng màu trưởng/thứ và vẫn
+nhận ra ảnh hưởng của từng thầy mà không vá từng ô từ nhiều nguồn.
+
+Hiện tại đây là **bộ soạn theo luật + thống kê từ kho sheet + phản hồi nghe**, chưa phải mô
+hình máy học. Vì thế chỉ được nói đã tổng quát hoá kỹ thuật; chưa được nói đã “thành thạo”
+một điệu khi chưa có sheet đúng điệu và lượt nghe xác nhận.
+
+### Hai lớp phải tách
+
+1. **Khung điệu:** số phách, độ dài ô, swing/straight, điểm nhấn của `cell`, kỹ thuật tay
+   trái và kiểu đệm của điệu đang chọn. Khung này không được thay bằng nhịp của sheet nguồn.
+2. **Ngữ pháp câu nhạc:** vòng theo bậc, đường nét cao độ, mật độ, chỗ nghỉ, mô-típ,
+   cách lấy đà và đáp xuống nốt ổn định. Lớp này được học từ sheet và phản hồi Đã ổn/Chưa ổn.
+
+Ví dụ #550 lấy vòng và đường nét tương đối từ một nguồn Cà Pháo Bossa Nova nhưng vẫn
+chơi trong khung Bolero Tuấn; không mang tiết tấu Bossa vào Bolero.
+
+### Một câu, một nguồn nhất quán
+
+- Mỗi lần soạn chọn đúng **một thầy + một điệu + một đoạn nguồn** cho cả câu/đoạn.
+- Không ghép ô Linh Nhi với ô Cà Pháo rồi ô Tôn Hùng trong cùng một câu.
+- Lần soạn khác được đổi nguồn để tạo biến thể.
+- Vòng nguồn đổi sang **bậc so với chủ âm**; giai điệu đổi sang khoảng cách so với chủ âm,
+  rồi dựng lại ở giọng bài. Giữ đúng chức năng và chất hợp âm: V7 không được biến thành V
+  chỉ vì cùng gốc.
+- Khi chỉnh quãng, dời cả câu/cụm theo quãng tám; tránh gập từng nốt làm gãy đường nét.
+
+### Màu trưởng/thứ là cổng bắt buộc
+
+- Trưởng: Ionian/ngũ cung trưởng, sáng nhưng vẫn có nốt ngoài hợp âm để thành giai điệu;
+  đáp ở chord tone tại điểm mạnh.
+- Thứ: Aeolian/ngũ cung thứ, giữ ♭6 và ♭7; chỉ nâng bậc 7 khi làm leading tone/át. ♭VI và
+  ♭VII trưởng vẫn là màu hợp lệ của giọng thứ. Phạt rải tam âm trưởng lặp, đường nhảy rộng
+  cùng chiều và mô-típ sáng vô cớ.
+
+### Mốc nghe #550 và bài học từ #552
+
+#550, La thứ, Bolero Tuấn, đã được đánh dấu **Đã ổn**. Tám ô chính đi
+`Am–Dm–Am–Dm–Am–Dm–Am–E`, tức i–iv lặp rồi cửa V; sau đó là ô hút. Nguồn nhất quán là
+Cà Pháo — *Người Hãy Quên Em Đi* ở Rê thứ, chuyển theo bậc/chủ âm sang La thứ. Ô 1 là
+giai điệu, ô 2 là Pùng-Pắp; không trộn Pùng-Pắp và tuyến giai điệu tự sinh trong cùng ô.
+Khung tiết tấu và tay trái vẫn là Bolero Tuấn.
+
+Đo 8 ô đầu: 66 điểm khởi phát = 8,25/ô; tâm khoảng MIDI 70,5; bước nhỏ ≤2 bán cung 55%;
+nhảy ≥7 bán cung 12%; lặp nốt 12%; mật độ từng ô 9–4–10–10–4–10–9–10. Đây là **một
+mốc nghe n=1**, không phải công thức phải ép mọi câu theo.
+
+#552 được đánh dấu **Chưa ổn**, dù bình luận xác nhận đã đúng tinh thần tự soạn, đúng tiết
+tấu và màu thứ; phần còn thiếu là độ hay như câu thầy. Điều đó bác bỏ giả định “đúng luật
+= hay”: vòng, gam và nhịp chỉ là điều kiện cần, còn phải học mô-típ, độ căng–nhả, khoảng
+nghỉ và hình dáng toàn câu.
+
+### Vòng học tiếp theo
+
+Mỗi vòng chỉ dùng một thầy + một điệu, sinh một nhóm nhỏ rồi dừng để nghe. So sánh câu
+Đã ổn và Chưa ổn có cùng điệu/giọng/vòng; giữ cả nốt, hợp âm và bình luận trong `Nguon.json`.
+Chỉ đưa khác biệt có bằng chứng vào luật và test. Khi điệu chưa có sheet đúng loại (swing,
+waltz, reggae, tango…), dùng ngữ pháp chung trên `cell` hiện tại nhưng phải ghi là bản tổng
+quát, chưa phải mô phỏng xác thực của thầy/điệu đó.
+
+Mã hiện tại đã đưa feel/pulse của từng style vào tuyến sheet, bật tuyến solo mặc định cho
+bài mới, ưu tiên một gam nhất quán và không còn coi reggae/funk/salsa là Bossa chỉ vì cùng
+nhãn đảo phách. Đây là nền kỹ thuật; chất lượng nghe vẫn phải qua vòng phản hồi trên.
+
+
+### Ô tick "siết bám hợp âm" nay ĐI NGƯỢC — nền đã tự tốt lên, ô tick thành có hại
+
+Đo lại 9/9/2026 sau khi Codex sửa bộ soạn intro thứ (`minorSoloSource.ts`, `phraseScale.ts`,
+`vonHopAmLinhNhi.ts`, `giaiDieuDaoLinhNhi.ts`).
+
+| đoạn kết giọng trưởng | tắt siết | bật siết |
+|---|---|---|
+| số cũ, 6/9/2026 | 67,1% | **69,7%** ← tăng, đúng chiều |
+| số nay, 9/9/2026 | **70,1%** | **68,0%** ← giảm, SAI CHIỀU |
+
+Đọc cho đúng: **nền tự tốt lên**. Khi tắt ô tick, bộ soạn nay đạt 70,1% thay vì 67,1% — gần
+đích 75% của bản ký âm hơn 3 điểm mà không cần ô tick nào. Nhưng phép chấm của ô tick vẫn kéo
+theo `DICH_HOP` cũ, nên bật lên lại **kéo tụt xuống 68,0%**.
+
+`sietHopAm.test.ts` bắt đúng chỗ này và đang đỏ. **Đừng hạ ngưỡng.** Ba đường xử, chưa chọn:
+
+1. **Bỏ ô tick** — nền đã đạt gần đích, ô tick không còn việc. Rẻ nhất, nhưng mất một nút
+   nghe thử người dùng có thể còn muốn.
+2. **Đo lại `DICH_HOP`** trên bộ soạn mới rồi chỉnh phép chấm — giữ ô tick nhưng cho nó kéo
+   đúng chiều.
+3. **Để nguyên, tắt mặc định** — ô tick vốn đã mặc định tắt nên tiếng hiện tại không bị ảnh
+   hưởng; chỉ là một nút bấm vào thì tệ đi.
+
+Phải hỏi người dùng vì đây là **đổi lối chơi**, không phải sửa lỗi.
+
+### `daoTruongLinhNhi.test.ts` đã sửa sang `SOLO_RANGE` — và nó đỏ, đúng như dự đoán
+
+Bàn giao 6/9/2026 ghi test này còn dùng `range {57, 95}` nên xanh giả ở tâm 75,8 trong khi
+app thật ra 70,7, và ghi *"sửa xong nó sẽ đỏ, và cái đỏ ấy là thật"*. Codex đã sửa; nay nó
+dùng `SOLO_RANGE` và báo **tâm 71,3** so với neo 75,3 của Linh Nhi.
+
+Nên việc 5.4(2) của bàn giao **đã xong**, và cái đỏ còn lại là việc 5.4(1) — trần `SOLO_RANGE`
+= 62–79 chặn không cho đạt neo. Số phân vị đã đo: **22,7% nốt của chị nằm trên 79**, trần 84
+phủ 94,3%. Người dùng chưa quyết mở trần.
+
+
+### Đoạn kết KHÔNG lắng xuống — nó dâng lên. Và app đang làm ngược
+
+Đo 9 đoạn kết giọng thứ của ba thầy (`PianoBrain/tools/sheet/ket_thu.py`, có `--kiem`) để
+soạn outro cho điệu Bolero Tuấn. Kết quả ngược với trực giác, nên ghi kỹ.
+
+| | bản ký âm (n=9) | app | |
+|---|---|---|---|
+| số ô | 3–12, tb **8,1** | **3** | `DEGREES.outro = [5,1,1]` |
+| cao độ nửa sau − nửa đầu | **+8,2** · lên 7/9 bài | **−3,7** · lên 7/24 | **ngược dấu** |
+| mật độ nốt RH mỗi ô | **−3,4** | **+0,6** | **ngược dấu** |
+| bậc nốt chót | 5×4 · 1×2 | 1×24 | cứng |
+| LH gõ một mình | 48% | 36% | chấp nhận được |
+
+**Đoạn kết vọt lên cao rồi mới đóng**, không lắng dần như tôi tưởng. *Nỗi Buồn Hoa Phượng*
++25,9 nửa cung, *Có Em Chờ* +22,4. Hai bài đi xuống đều của Tôn Hùng, n=2.
+
+Không mâu thuẫn với `slowClose` trong `phraseCue.ts` — hàm ấy chỉ giãn trường độ và bớt lực
+ở **4 phách cuối**, không đụng cao độ. Đoạn dâng qua cả đoạn, ô chót mới chậm lại.
+
+### ĐÃ SỬA 9/9/2026 — ba thay đổi, người dùng chọn sửa ngay dù Codex đang làm dở
+
+Tôi đã nêu nguy cơ giẫm chân lên cụm chưa commit của Codex; người dùng chọn sửa ngay.
+
+**1. `DEGREES.outro`: `[5, 1, 1]` → tám ô.** Luật ba ô đặt trước khi có sheet. Trong
+`borrowedChords`, đoạn kết nay là `[ô dẫn, …sáu ô mượn từ chính bài, hợp âm chủ]` — dùng
+`chooseInterludeWindow` như đoạn dạo, để đoạn kết không kêu ra một vòng lạ so với bài.
+Số đo chỉ nói **độ dài**, không nói vòng nào; dãy `V–I–IV` trong `DEGREES` chỉ là đường lui
+khi bài không có vòng để mượn, **chưa có bằng chứng từ sheet**.
+
+**2. `thuaTayPhai` mở cho mọi thầy ở đoạn kết, và hãm theo DỐC.** Trước đó chỉ Linh Nhi được
+hãm, và hãm về một mức **phẳng** — nó gỡ nốt ở ô đông nhất và cố ý chừa ô chót ra, nên không
+ra dốc. Nay thêm tham số `doc` (mặc định `0`, giữ nguyên hành vi cũ cho đoạn dạo): hạn mức
+giảm tuyến tính từ ô đầu tới ô cuối, và khi có dốc thì ô chót cũng bị gỡ — chặn dưới hai nốt
+vẫn giữ cho ô không bỏ trắng. Đoạn kết truyền `doc = 3.4`.
+
+**3. Thêm `dangCuoi`** — dời **cả cụm** nửa sau lên một quãng tám khi còn vừa tầm. Dời cả cụm
+chứ không gập từng nốt, đúng luật chuyển giọng đã chốt. Không vừa tầm thì để nguyên.
+
+| | trước | sau | bản ký âm |
+|---|---|---|---|
+| số ô | 3 | **8** | 8,1 |
+| cao độ nửa sau − nửa đầu | −3,7 · lên 7/24 | **+2,2 · lên 17/24** | +8,2 · lên 7/9 |
+| mật độ nốt RH mỗi ô | +0,6 | **−0,8** | −3,4 |
+| LH gõ một mình | 36% | 31% | 48% |
+| bậc nốt chót | 1×24 | 1×24 | 5×4 · 1×2 |
+
+**Bậc nốt chót chưa làm.** Bản ký âm đậu bậc 5 nhiều hơn bậc 1 (4/9 so với 2/9), app vẫn luôn
+bậc 1. Đổi nốt chót là chạm vào câu đáp — để sau khi nghe thử.
+
+Ba test cũ khẳng định hình ba ô đã được **viết lại**, không phải nới ngưỡng:
+`phraseBacking` và `phraseChordsBorrow` ×2 nay nói tám ô, ô đầu là ô dẫn, ô cuối đậu hợp âm
+chủ **của chính bài**. Cùng lối với mục "ĐÃ XOÁ HAI LƯỚI rút hợp âm về chất cơ bản" trong
+chính file test ấy.
+
+`npx tsc` sạch. vitest **2492 đạt / 6 hỏng** trên 2498 — đúng sáu cái Codex đã liệt kê, không
+thêm cái nào; bốn bài kiểm mới của `ketThuTuan.test.ts` đều xanh.
+
+**Chưa ai nghe.** Ba thay đổi trên đổi tiếng của mọi đoạn kết, và chúng **không** nằm sau ô
+tick — người dùng chọn sửa thẳng. Luật soạn đầy đủ ở
+`PianoBrain/knowledge/teachers/tuan-luu-piano.md` mục 3c.
+
+### Đoạn kết giọng thứ không hề dùng 9 tuyến kết có sẵn — khoá cứng ở một chữ
+
+Người dùng chỉ rõ chỗ tôi làm sai hướng: *"tôi chỉ yêu cầu bạn dựa vào tiết tấu intro chứ
+không phải soạn giai điệu theo khung của intro. Hãy đối chiếu với các câu solo trong các
+sheet thứ rồi soạn giai điệu cho outro."*
+
+`giaiDieuDaoLinhNhi.ts` có một dòng khoá cứng:
+
+    const minorIntro = thu && options.gopThay === true && (options.doan ?? 'intro') === 'intro'
+
+Nên đường **một nguồn nhất quán** — mượn nguyên một họ câu của một thầy thay vì vá ô từ ba
+thầy — chỉ chạy cho đoạn dạo. Đoạn kết giọng thứ rơi về vốn ô **gộp ba thầy**, dù
+`TUYEN_SOLO` có sẵn **9 tuyến đoạn kết giọng thứ**: Linh Nhi 5 · Cà Pháo 2 · Tôn Hùng 2.
+
+Đã mở cho `outro`: `minorIntroSourceForTake` thành `minorSoloSourceForTake(take, doan)` (tên
+cũ giữ làm lối tắt cho hai chỗ chỉ cần đoạn dạo), và cờ đổi tên `minorIntro` → `minorNguon`
+vì bốn chỗ dùng nó đều là luật chọn ô của đường một-nguồn, không phải luật riêng đoạn dạo.
+
+| | trước | sau | bản ký âm |
+|---|---|---|---|
+| LH gõ riêng · nhánh Linh Nhi | 28% | **44%** | 48% |
+| LH gõ riêng · nhánh mặc định | 31% | **42%** | 48% |
+| mật độ · nhánh Linh Nhi | −0,8 | **−1,0** | −3,4 |
+| cao độ · nhánh Linh Nhi | +1,6 | **+2,8** | +8,2 |
+
+Con số đáng chú ý là **tay trái gõ riêng**: lấy giai điệu từ tuyến kết thật kéo nó từ 28% lên
+44%, gần mốc 48% của bản ký âm. Hai tay đối đáp đúng lối hơn, mà không phải nắn một nốt nào.
+
+**Bàn đo phải chạy đúng nhánh app dùng.** Bản đầu của `ketThuTuan.test.ts` chỉ gọi không
+truyền `thay`, tức đo nhánh mặc định, trong khi bài thật đi nhánh `vonHopAmLinhNhi`. Nó báo
+xanh trong khi màn hình người dùng không đổi một ô. Nay chạy `describe.each` cả hai nhánh.
+Cùng họ với bẫy `daoTruongLinhNhi.test.ts` từng mắc.
+
+### Nốt chót đoạn kết: đã nắn, và đính chính hai chỗ tôi ghi sai
+
+Nốt tay phải chót của nhánh Linh Nhi trước đây là **♭7 ở cả 24 lượt**. Bản ký âm chót ở bậc
+**5 ×4 · 1 ×2 · 2 ×1 · ♭7 ×1 · ♭3 ×1** — sáu trên chín đáp xuống bậc 1 hoặc 5.
+
+**Đính chính 1.** Tôi từng viết "không đoạn nào chót ở ♭7". Sai — có **một** (Chiếc Lá Mùa
+Đông). Con số "không đoạn nào" là của **hợp âm cuối**, không phải nốt chót.
+
+**Đính chính 2.** Tôi từ chối nắn nốt vì "người dùng đã bác bốn lần". Câu ấy do chính agent
+viết ra rồi lặp qua nhiều file, **không có trích dẫn nguyên văn nào** đứng sau. Thứ người
+dùng thật sự bác là *rút luật ra rồi sinh nốt*. Khi được hỏi thẳng họ nói: *"thấy cần nắn nốt
+thì nắn đi."* Đã sửa lại câu ấy trong `PianoBrain/knowledge/teachers/ca-phao.md`.
+
+**Chỗ nốt chót thật sự nằm ở đâu.** Nắn trên giai điệu không ăn, vì nốt cuối cùng người nghe
+nghe nằm trong **cụm rải kết** chứ không trong giai điệu: đo một lượt thật thì ba tiếng chót
+là `C4 E4 G4` — cụm rải của hợp âm `C` (bậc ♭III, một màu kết hợp lệ, sheet có 1/7), và `G`
+chính là ♭7 của La thứ. Nên `dapChot` chạy **sau khi đã ráp cue**.
+
+Nắn nốt **trên cùng** của cụm rải cũng là đổi thế bấm chứ không phá hợp âm: `C4 E4 G4` thành
+`C4 E4 A4` là `Am/C`, vẫn nằm trong vốn hợp âm của bài.
+
+Ranh giới của phép nắn này, ghi để đừng nới rộng: **một** nốt cuối cùng của **đoạn kết**, dời
+**tối thiểu** về bậc 1 hoặc 5 gần nhất. Mọi nốt khác vẫn đến từ một ô có thật của bản ký âm.
+
+Kết quả: **♭7×24 → bậc 1×24** ở cả hai nhánh. Chưa khớp tỉ lệ sheet — bản ký âm chuộng bậc 5
+(4/9) hơn bậc 1 (2/9), app nay toàn bậc 1 vì dời tối thiểu từ ♭7 tới bậc 1 chỉ hai nửa cung
+còn tới bậc 5 là ba. Và 3/9 đoạn sheet đáp ở bậc 2 · ♭7 · ♭3 thì app không còn màu ấy.
+Triệu chứng để lùi: đoạn kết nghe quá "đóng", thiếu chỗ lửng.
+
+### Vòng kết trơn theo mẫu sheet — được hợp âm, mất mật độ tay phải
+
+Người dùng hỏi hai lần: *"sao intro thứ dùng các hợp âm giống trong sheet thứ nhưng outro
+lại dùng hợp âm ngoài"* rồi *"sao outro vẫn còn vòng hợp âm add9 vậy"*. Đã làm theo.
+
+Bật `theoSheet` cho `kind === 'outro' && thu` trong `vonHopAmLinhNhi.ts`. Cờ ấy kéo theo hai
+việc: vòng chép theo **mẫu của sheet** thay vì xoay vốn bài, và kho hợp âm đi qua `tronBa`.
+
+    trước:  Am(add9) Am(add9) Fadd2 Fadd2 Dm9 Dm9 Am(add9) Am(add9)
+    sau:    Am       Am       E     E     Bm  Bm  Am       Am
+
+**Số đo đứng sau việc này, đo 9/9/2026 trên đoạn không lời giọng thứ của ba thầy:**
+
+| đoạn | số hợp âm | trơn |
+|---|---|---|
+| dạo | 61 | **82%** |
+| giang tấu | 55 | **87%** |
+| **kết** | 43 | **74%** |
+
+Ba đoạn cùng một khoảng; đoạn kết chỉ kém đoạn dạo 8 điểm. Riêng Linh Nhi gần như tuyệt đối
+trơn ở cả hai. App trước đây cho đoạn kết lấy thẳng vốn hợp âm của bài, nên bài dùng màu thì
+đoạn kết ra **0% trơn** — lệch hẳn khỏi 74–82% của bản ký âm.
+
+Lần đầu người dùng hỏi, tôi trả lời rằng 74% không có nghĩa các thầy *rút* về chất trơn vì
+đoạn hát cũng 77%. Đúng về logic nhưng **không trả lời câu được hỏi** — câu hỏi là đoạn kết
+có trơn như đoạn dạo không, và số đo nói **có**.
+
+**GIÁ PHẢI TRẢ, chưa chữa được:** mật độ tay phải đoạn kết giọng thứ tụt còn **3,25 nốt mỗi
+ô**, bản ký âm đo **5,7** (gộp 4 bài Linh Nhi). `baMonLinhNhi` MÓN 5 đỏ hai khẳng định, và
+`ketThuTuan` nhánh Linh Nhi mất đường dâng.
+
+Khoanh nguyên nhân bằng phép thử tắt/bật: tắt `theoSheet` cho outro thì `baMonLinhNhi` xanh
+13/13, bật thì đỏ. Nên **vòng trơn là nguyên nhân**, không phải thứ khác. Vòng trơn làm ứng
+viên ô bị lọc hẹp hơn theo bậc và chất, nên bộ ghép chọn phải những ô thưa.
+
+**Đã thử và LÙI:** mở đường một-nguồn (`minorSoloSourceForTake(take, 'outro')`) cho đoạn kết.
+Nó không chữa được mật độ, mà còn làm mỏng thêm vốn ô. Đoạn kết nay giữ **vốn ô gộp ba
+thầy** — đúng chữ người dùng dùng, *"các sheet thứ"*, số nhiều. Cái đi theo mẫu sheet là
+**vòng hợp âm**, không phải phép chọn ô.
+
+**Một chỗ suýt phá luật có bằng chứng:** mẫu sheet đòi bậc II mà bài La thứ không có, thế là
+`hopBac` dựng ra `Bm` từ hư không — `vonHopAmLinhNhi.test.ts` bắt đúng ("KHÔNG sinh bậc nào
+ngoài bài", đo 7 bản ký âm, 16/20 đoạn). Đã chặn, nhưng **chỉ chặn cho `outro`**: chặn cả
+đoạn dạo thì hai bài kiểm khác đỏ, vì đoạn dạo cần dựng chất mới trên bậc đã có.
+
+### Đã chữa mật độ, và đã KHÔI PHỤC luật một-nguồn sau khi tự lùi khỏi nó
+
+Người dùng nghe và nói: *"giai điệu câu outro rất lủng củng, rất dở và phô"*, rồi hỏi thẳng
+tôi có học được luật của Codex không — *học từ thầy nào phải lấy cả vòng hợp âm của thầy đó
+và soạn nốt trên đó, không chắp vá mỗi ô một thầy*.
+
+**Tôi đã áp luật ấy cho đoạn kết, rồi tự lùi khỏi nó** vì `baMonLinhNhi` MÓN 5 đỏ (mật độ tay
+phải 3,25 nốt mỗi ô so với 5,7 của bản ký âm). Đó là **sai thứ tự ưu tiên**: một con số mật
+độ không được phép lật một luật kiến trúc. Tệ hơn, sau khi lùi thì **vòng hợp âm lấy từ một
+nguồn còn nốt lấy từ ba thầy** — đúng nghĩa chắp vá, và tai người dùng bắt được ngay.
+
+Đã khôi phục, và chữa mật độ bằng cách đúng: **chọn ô dày hơn**, không phải thêm nốt. Luật
+phạt ô thưa vốn có (`m.o.n.length < 5`) chỉ chạy khi gộp thầy và **chừa ô cuối ra** — vì đoạn
+dạo cần ô cuối thưa để nhường chỗ vào hát. Đoạn kết không có chỗ nào để nhường, nên phạt ở
+**mọi ô**. Mọi nốt vẫn đến từ một ô có thật của bản ký âm.
+
+`dangCuoi` cũng phải mở thêm hai đường, vì câu dày lên thì nốt cao lên: không nâng được nửa
+sau thì **hạ nửa đầu** −12, không được nữa thì thử cụm **một phần tư cuối**. Vẫn là dời cả
+cụm theo bội số 12, không gập từng nốt.
+
+| | trước | sau | bản ký âm |
+|---|---|---|---|
+| mật độ tay phải · `baMonLinhNhi` | 3,25 nốt/ô | **5,7** ✓ | 5,7 |
+| đi lên · nhánh mặc định | 17/24 | **20/24** | 7/9 |
+| đi lên · nhánh Linh Nhi | 10/24 | 10/24 | 7/9 |
+
+**Chỗ TRẦN ÂM chặn, không chữa bằng logic được.** Câu đoạn kết nhánh Linh Nhi trải từ **57
+tới 93** — chạm cả sàn lẫn trần của tầm `{57, 95}`, trung bình cao 89,6 và thấp 59,5. Nên
+không còn chỗ nào để dời quãng tám, cả ba đường của `dangCuoi` đều bí. Cùng loại với chuyện
+`SOLO_RANGE` 62–79 chặn đoạn dạo không đạt neo 75,3.
+
+Trạng thái: **2495 đạt / 7 hỏng** trên 2502 — sáu cái sẵn có của Codex cộng **một** cái của
+bàn đo đoạn kết (đường dâng ở nhánh Linh Nhi). Cái đỏ ấy phơi ra giới hạn tầm âm, **đừng nới
+ngưỡng để nó xanh**.
+
+### Đoạn kết chưa bao giờ đi qua phương pháp của Codex — chặn ở một dòng
+
+Người dùng hỏi thẳng: *"Có phải bạn vẫn luôn dùng phương pháp cũ của bạn để cho bộ soạn tạo
+câu không? Những phương pháp mới được codex đưa ra và ghi vào bàn giao bạn phải làm theo,
+không được mãi giữ cái của bạn nữa."*
+
+Đúng. Và chỗ chặn là **một dòng** trong `phraseSection.ts`:
+
+    const daoTuan = tuan && (kind === 'intro' || kind === 'interlude')
+
+Cờ ấy gác **cả khối** dựng khung của Codex — ô Pùng-Pắp (`laOPap`, `oXenPap`), ô chạy
+(`oChayCac`), và `datChaySheet` lấy bốn nốt liền của sheet thay vì dán arpeggio. Đoạn kết
+không nằm trong danh sách nên chạy đường ghép ô cũ từ đầu tới cuối, bất kể tôi sửa gì ở
+tầng trên.
+
+Cùng họ với hai chỗ khoá cứng đã gỡ trước đó trong cùng phiên: `minorIntroSourceForTake` chỉ
+lọc `doan === 'intro'`, và `minorIntro` trong `giaiDieuDaoLinhNhi.ts` cũng vậy. Ba chỗ, cùng
+một kiểu: phương pháp mới viết cho đoạn dạo rồi khoá lại ở đó.
+
+Đã mở cả ba, và cho `datChaySheet` nhận `doan` để đoạn kết học đúng 9 tuyến kết giọng thứ.
+
+| | trước | sau | bản ký âm |
+|---|---|---|---|
+| cao độ dâng · nhánh Linh Nhi | +0,8 · lên 10/24 | **+5,7 · lên 20/24** | +8,2 · lên 7/9 |
+| cao độ dâng · nhánh mặc định | +3,9 · lên 20/24 | **+4,1 · lên 20/24** | |
+| tay trái gõ riêng | 40% | **59%** | 48% |
+| mật độ nốt/ô | −0,8 | −0,1 | −3,4 |
+
+**Còn một đỏ, và nó thật:** mật độ nhánh mặc định ra **+0,4**, tức dày dần chứ không thưa
+dần. Khung Codex chèn câu chạy vào những ô sau, mà `thuaTayPhai` chạy **sau** khi chèn nên
+hãm vào chính câu chạy thì hỏng câu. Chưa có cách chữa không phá câu chạy — đừng nới ngưỡng
+để nó xanh.
+
+Trạng thái: **2495 đạt / 7 hỏng** trên 2502 — sáu cái sẵn có của Codex cộng đúng một cái này.
+
+### Đoạn kết thứ Bolero — làm theo chỉ dẫn Codex 10/9/2026, bốn mục đầu
+
+Người dùng chốt: *"Bỏ đi những cách soạn cũ của bạn và hãy làm theo codex, từ nay mỗi lần
+nhận chỉ dẫn của codex thì hãy làm theo và bỏ cách soạn cũ của bạn."*
+
+**#1 Lọc đủ bốn điều kiện.** `TUYEN_SOLO` vốn **đã có** trường `dieu` từ bộ sinh, không phải
+đụng `tuyen_o.py`. Thêm `nguonTheoKhoa` lọc `thầy + điệu + đoạn + màu giọng`, và
+`nguonKetThuBolero` khoá cứng `linh-nhi + bolero`. Không có nguồn thì trả `undefined`, không
+rơi ngầm sang thầy khác.
+
+Bắt được lỗi thật: trong tám đoạn kết của Linh Nhi, **hai đoạn là `slow rock`** — *Lá Thư
+Trần Thế* và *Một Cõi Đi Về* — mà chúng vẫn lọt vào vòng train Bolero. Lọc xong còn **ba**
+tuyến: *Đừng Xa* · *Rừng Lá Thấp* · *Nỗi Buồn Hoa Phượng*.
+
+**#3 Bỏ `ganNhat()`.** Thay bậc theo bán cung gần nhất **không phải** tương đương chức năng;
+một `II` bị thay bằng `♭III` là đổi hẳn hướng hoà thanh. Nay nguồn nào đòi chức năng vốn bài
+không có thì **loại cả nguồn** rồi thử nguồn kế. Kiểm được ngay: *Đừng Xa* cần bậc **II** mà
+bài La thứ của người dùng không có → bị loại đúng.
+
+**#6 Khoá theo `source.id`.** `datChaySheet` từng lọc `t.thay` — gom mọi bài của thầy ấy kể
+cả khác điệu khác bài rồi cắt bốn nốt liền ở đâu cũng được, đúng nghĩa vá câu từ nhiều nguồn.
+
+**#2 Cửa sổ ô LIÊN TIẾP thay cho chọn từng ô độc lập.** Đây là mục cho kết quả mạnh nhất.
+Bộ xếp hạng cũ chấm từng ô theo bậc hợp âm và phép nối giọng — giữ được quan hệ hai ô liền
+nhau nhưng **không** giữ đường cung cả câu: ô 5 của một bài có thể đứng trước ô 2 của chính
+bài ấy. Người dùng nghe ra là *"lủng củng"*.
+
+| trục | trước | sau | mốc Linh Nhi + Bolero (n=3) |
+|---|---|---|---|
+| cao độ dâng | +4,1 · lên 20/24 | **+9,5 · lên 24/24** | +14,2 · lên 3/3 |
+| mật độ nốt/ô | +0,4 | **−0,6** | −3,4 |
+| tay trái gõ riêng | 59% | **61%** | 45% |
+
+**Mốc phải đo lại theo đúng tập.** Số cũ (+8,2 · lên 7/9) gộp chín đoạn của ba thầy và nhiều
+điệu. Lọc đúng `Linh Nhi + Bolero + outro + thứ` còn ba bài: **+14,2 · lên 3/3 · mật độ −3,4
+· LH riêng 45%**. Đường dâng mạnh hơn hẳn. **n=3 — là quan sát, không phải hằng số.**
+
+**Một lỗi tự gây, đã sửa:** dùng `chon.length === 0` làm điều kiện `for` khiến vòng dừng ngay
+sau ô đầu tiên với **mọi** đoạn — 24 test đỏ. Thay bằng cờ `dungCuaSo` riêng.
+
+**Khử cặp hợp âm kề trùng** — ý người dùng, nêu bốn lần. Ô trùng ô trước thì thay bằng hợp âm
+khác **đã có trong chính vòng ấy**; trùng ở cuối thì đổi ô áp chót chứ không đổi ô chót, vì ô
+chót phải đậu hợp âm chủ. Bản ký âm CÓ giữ một hợp âm qua hai ô — đây là lựa chọn phối khí,
+không phải số đo.
+
+**Còn ba mục chưa làm:** #4 tách contour khỏi onset nguồn (sau khi lọc `dieu`, nguồn đã cùng
+điệu Bolero với đích nên rủi ro giảm hẳn, nhưng cell Tuấn vẫn có pulse riêng) · #5 dựng cú
+pháp outro riêng · #7 bỏ chuỗi hậu xử lý `thuaTayPhai → dangCuoi → dapChot`.
+
+`npx tsc` sạch. vitest **2496 đạt / 6 hỏng** — đúng sáu cái sẵn có của Codex.
+
+### Tiết tấu đoạn kết lệch vì onset lấy thẳng từ sheet nguồn — đặt lại vào lưới cell
+
+Người dùng nghe và tách được đúng hai lớp: *"giai điệu đã gần ổn rồi nhưng mà tiết tấu thì
+lệch với bolero Tuấn quá."*
+
+Đúng chỉ dẫn #4 của Codex. Câu lấy từ sheet Bolero của **Linh Nhi**, còn khung đang phát là
+cell Bolero của **Tuấn** — cùng họ điệu nhưng khác lưới gõ, mà `giaiDieuDaoLinhNhi.ts` phát
+thẳng `n.at` của nguồn làm `startBeat`.
+
+Lưới của `bolero-tu-n-improv-bai-04-00001`, đọc thẳng từ `cell` chứ không chép tay:
+
+    tay trái (Pùng)  0 · 2 · 3
+    tay phải (Pắp)   0,5 · 1,5 · 2,5 · 3,5
+    gộp              0 · 0,5 · 1,5 · 2 · 2,5 · 3 · 3,5      ← đúng "lưới 7 điểm" trong md Tuấn
+
+`datVaoLuoi()` đặt mỗi nốt về điểm lưới **gần nhất trong ô của nó**; hai nốt trùng điểm thì
+nốt sau lùi sang điểm còn trống kế tiếp — giữ thứ tự, không chồng. Hết chỗ thì để nguyên
+offset gốc, vì mất một nốt còn tệ hơn lệch nửa phách. **Không đổi cao độ, không thêm bớt
+nốt** — contour và số nốt mỗi ô giữ nguyên.
+
+| | trước | sau | bản ký âm |
+|---|---|---|---|
+| nốt tay phải rơi đúng lưới | — | **93%** (303/326) | — |
+| tay trái gõ một mình | 59–62% | **51–52%** | 45% |
+
+Tay trái gõ riêng tụt về gần mốc là dấu hiệu hai tay **khớp lưới với nhau** thay vì mỗi tay
+một nhịp. 7% nốt còn lệch là các ô có nhiều nốt hơn 7 điểm lưới — đúng thiết kế.
+
+`npx tsc` sạch. vitest **2496 đạt / 6 hỏng** — đúng sáu cái sẵn có của Codex.
+
+Đã làm **6 trên 9** mục: #1 lọc corpus · #2 cửa sổ liên tiếp · #3 bỏ `ganNhat` · #4 đặt onset
+vào lưới · #6 khoá `source.id` · #7 bỏ chuỗi hậu xử lý. Còn #5 (cú pháp outro riêng) và #8
+(test tám bất biến).
+
+---
+
+## 10/9/2026 — Chuyển soạn outro thứ Tuấn: sửa nền trước khi gọi là tự sáng tác
+
+Đánh giá lại sau khi nghe phản hồi “phô và lủng củng”: phần hướng dẫn cũ đúng ở chỗ phải giữ
+nguồn và màu giọng, nhưng mã còn làm trái nó. Hợp âm có thể lấy nguồn khác giai điệu, cửa sổ
+có thể quay từ cuối nguồn về đầu, `datVaoLuoi()` có thể đảo thứ tự onset, và `gap()` gập từng
+nốt. Vì vậy test thống kê không chứng minh câu nhạc đã đúng.
+
+### Quy tắc hiện hành cho **outro thứ · Bolero Tuấn**
+
+1. Chọn **một tiểu cú liên tiếp** từ cùng một `source.id`, đúng `linh-nhi + bolero + outro +
+   thứ`; không ghép ô của nhiều bài/thầy, không quay vòng nguồn.
+2. Hợp âm và nốt phải lấy từ **cùng kế hoạch nguồn**. Chuyển về chủ âm bài đích theo bậc và
+   chất; không có hợp âm tương thích trong vốn bài thì loại ứng viên, không thay bằng bậc
+   gần nhất.
+3. Tiểu cú phải đóng ở `i` và nốt cuối thuộc `1/b3/5`. Đây là điều kiện lọc cho vòng thử,
+   không phải tuyên bố mọi outro hay đều chỉ có một kiểu cadence.
+4. Giữ nghỉ, thứ tự, chia nhỏ phách và tension–resolution trong câu nguồn. **Không** ép mọi
+   onset solo vào bảy mốc Pùng-Pắp; các mốc này là xương sống phần đệm, không phải lưới cấm
+   của giai điệu.
+5. Đệm chạy đúng cell Bolero Tuấn suốt đoạn, không khởi động lại cell mỗi lần hợp âm đổi giữa
+   ô. RH Pắp chỉ trả lời ở khoảng trống thật của melody; không dùng lịch A/B hay câu chạy của
+   intro để thay nguyên ô outro.
+6. Chỉ được chuyển chủ âm và dời **cả tiểu cú** theo quãng tám khi vừa tầm. Không dùng
+   `gap()` từng nốt, `thuaTayPhai`, `dangCuoi`, `dapChot` hay nâng nửa câu để ép số đo.
+7. Không có ứng viên đúng tầm/hòa âm thì bỏ outro ở lượt ấy và báo lý do; không ngầm rơi về
+   nguồn khác, không tạo câu dự phòng nghe có vẻ hợp lệ.
+
+Mẫu kiểm chứng hiện tại là tiểu cú `noi-buon-hoa-phuong-outro`, `o4` index 1–4, chuyển Dm
+sang Am: `Dm | G → F | F | Am`, thời lượng `4, 2.5, 1.5, 4, 4`. Dùng `o4` vì nguồn có ô
+8 phách; không được dùng `o` đã làm mất nửa ô. *Đừng Xa Em Đêm Nay* tạm loại: bảng hiện rút
+ô 6 phách về 4 và làm mất chất `Edim`, chưa đủ tin cậy để làm mẫu sinh.
+
+### Phân biệt intro thứ đã ổn và outro thứ đang kiểm chứng
+
+| | Intro thứ #550 | Outro thứ mới |
+|---|---|---|
+| mục đích | báo/mở phần hát | đóng bài |
+| khung Tuấn | xen ô A Pùng-Pắp và ô B melody; hút V cuối | cell đệm xuyên suốt; Pắp chỉ đáp trong khoảng nghỉ; không hút V |
+| nguồn cao độ | một câu thứ nhất quán, chuyển theo chủ âm | một tiểu cú outro Bolero liên tiếp, hợp âm và nốt chung source |
+| tiết tấu melody | bỏ groove nguồn, đặt vai trò lên khung Tuấn | giữ onset/chia nhỏ phách câu nguồn; Tuấn nằm ở phần đệm |
+| hậu xử lý | không chồng Pùng-Pắp và melody cùng ô | không gập/xóa/nâng/đổi nốt để ép số đo |
+| trạng thái | #550 đã được người dùng chấm Đã ổn | mới qua kiểm chứng kỹ thuật, **chưa được người dùng chấm hay** |
+
+Không được gọi cả hai là “machine learning” hay “đã tự sáng tác xong”. Đây là **chuyển soạn
+có kiểm soát**. Bước sáng tác thực sự về sau phải rút motif, nốt neo, chỗ thở và giải tension
+từ nhiều solo cùng màu, rồi tạo tiểu cú mới có dấu vết biến đổi — không vá ô hay chép MIDI.
+
+### Sổ bình luận cho cả ba đoạn solo
+
+`Nguon.json` và ô `OBinhLuan` nay phân biệt `intro | interlude | outro`. Khi phát trọn bài,
+mỗi đoạn có span được lưu độc lập; ô Câu dạo, Giang tấu, Kết bài đều gắn đánh giá/bình luận
+vào đúng `stt` của câu vừa nghe. Nếu outro không sinh được vì thiếu ứng viên, không có câu để
+chấm và app hiện cảnh báo thay vì ghi nhầm câu khác.
+
+Kiểm tra của vòng này: `coherentMinorOutro.test.ts` kiểm source, onset, tầm, hợp âm chia và
+cadence; `nguon.test.ts` kiểm lưu ba loại đoạn. Build thành công. Toàn suite vẫn còn sáu lỗi
+cũ ngoài phạm vi vòng outro; không báo toàn bộ xanh.
+
+### Đoạn kết phát xong lại nhảy về đoạn dạo — hai lỗ ở tầng phát, không ở bộ soạn
+
+Người dùng nghe 10/9/2026: *"outro đang phát thì tự nhảy lên intro, hoặc thậm chí không
+thể phát khi đến outro, KT bỏ qua outro để phát intro và cứ lặp mà không kết bài."*
+
+Truy đường chạy từ nút phát (`playFromBeat`) tới `startTimelineLoop`, ra hai lỗ, cả hai
+trong `ReharmHome.tsx`:
+
+1. **`playsOnce` không tính bước `outro`.** Nó chỉ nhìn `section.ending`, còn bước
+   `{ type: 'outro' }` do `steps` tự thêm (Linh Nhi / giang thứ Tuấn) thì bỏ qua → bài có
+   đoạn kết vẫn chạy `once = false` → hết đoạn kết là vòng quay về đoạn dạo, lặp mãi.
+2. **`loopLengthBeats` lấy từ `song` — lượt của lần render trước.** `song` dựng ở pass 0
+   với take cũ; lượt phát dựng bằng `base + pass` sau khi `playSpin` đã tăng. Đo n=12 take,
+   Am · Bolero Tuấn: đoạn kết dài **21 · 17 · 25** phách tuỳ take (đoạn dạo cố định 36). Lệch
+   tới 8 phách → vòng quấn về đoạn dạo giữa đoạn kết, hoặc lệnh dừng (`passLength + 4`) cắt
+   ngang nó — đúng hai triệu chứng người dùng tả.
+
+Sửa: `playsOnce` nhận cả `step.type === 'outro'`; `playFromBeat` dựng lượt 0 một lần
+(`luotThu`), truyền `luotThu(0).totalBeats` cho engine và cho `buildPlaybackPass` dùng lại
+chính bản dựng ấy (câu lưu vào `Nguon.json` và câu phát vẫn là một).
+
+Chưa đụng: `song.totalBeats` vẫn dùng cho chỗ **sáng chữ hợp âm** (`% song.totalBeats` ở
+ba chỗ) và effect đổi điệu giữa chừng — vẫn lệch cùng kiểu, nhưng chỉ sai hiển thị/đổi điệu
+lúc đang phát, không sai tiếng. Để lùi: trả `playsOnce` về `section.ending` và
+`loopLengthBeats` thay cho `luotThu(0).totalBeats`; triệu chứng lùi là bài lặp lại từ đầu
+sau đoạn kết.
+
+Test: 2543/2549 xanh; 6 đỏ có sẵn trước khi sửa (đối chiếu bằng stash trên mã đã commit:
+4 đỏ y hệt; 2 còn lại sổ đã ghi là đỏ có chủ ý). **Chưa commit — chờ người dùng nghe.**
+
+### Bản nhạc phải lấy vòng của lượt audio thật, không dùng vòng minh hoạ
+
+Người dùng thấy dòng **Kết bài** hiện tám hợp âm (`Am C G C Am Em G Am`) nhưng tiếng dừng
+sau khoảng bốn ô. Đây không phải mặc định outro chỉ có bốn hợp âm và cũng không phải audio
+tự ý cắt một vòng tám ô. Lỗi là **hai nguồn dữ liệu khác nhau**:
+
+- `outroSymbols` là vòng ước lượng để dựng giao diện trước đây.
+- `buildPhraseSection()` / `planMinorOutro()` dựng câu thật theo lượt. Câu nguồn có thể có
+  bốn ô, năm ký hiệu vì có ô chia (ví dụ `Dm | G → F | F | Am`, thời lượng
+  `4, 2.5, 1.5, 4, 4`), và độ dài các lượt không nhất thiết giống nhau.
+
+Vì vậy không được dùng `phraseChords()`/`outroSymbols` làm sự thật cho bản nhạc, tô sáng hay
+nút bấm. `SoloSpan` của chính `SongTimeline` là nguồn duy nhất: `{ kind, startBeat,
+lengthBeats, chords, beatsEach }`.
+
+`ReharmHome` nay giữ `playingTimeline` khi `startTimelineLoop` dựng lượt 0 (và mỗi lượt sau),
+rồi dùng nó cho dòng Dạo đầu/Kết bài, hợp âm đang sáng, nút bấm phát từ hợp âm solo và dải
+Giang tấu khi đang phát. Khi không phát, giao diện dùng `song` xem trước; khi phát, nó phải
+dùng đúng lượt audio. Không gắn dạo/kết ước lượng vào `sheet` đầu vào của `songSources`: vừa
+tạo vòng phụ thuộc, vừa có thể cho người dùng một bản nhạc khác tiếng họ nghe. Bản để hiển thị
+chỉ được ráp từ `baseSheet` sau khi timeline đã dựng.
+
+Kiểm: `songSheet.test.ts` giữ nguyên cả năm ký hiệu của một outro có ô chia;
+`coherentMinorOutro.test.ts` kiểm nguồn, thời lượng chia, cadence và tầm. Build đạt.
+
+### Quét để đánh dấu đoạn: phải lấy cả hai dòng biên
+
+`Range.intersectsNode()` của trình duyệt có thể không tính phần tử nằm đúng mép vùng bôi.
+Do đó người dùng bôi từ câu đầu đến câu cuối nhưng nhãn **Phiên khúc** đôi khi bắt đầu ở câu
+thứ hai. Đây không phải parser làm mất lời.
+
+`SongSheetView` nay gộp các dòng giao với `Range` **và** dòng chứa `startContainer` /
+`endContainer`; sau đó lấy `min..max`. Vẫn giữ cách bôi chữ native của trình duyệt, không dựng
+cơ chế kéo thả riêng. Đánh dấu cũ không thể đoán ý định để tự sửa, nên người dùng cần xoá dấu
+cũ và bôi lại một lần; các dấu mới nhận đúng cả dòng đầu/cuối. Test `songSheetView.test.ts`
+canh trường hợp hai dòng biên bị `intersectsNode()` bỏ qua.

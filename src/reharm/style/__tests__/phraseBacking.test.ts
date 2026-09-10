@@ -40,12 +40,22 @@ describe('vòng hợp âm đoạn dạo', () => {
       'Am',
       'F',
     ])
-    // Ô bậc V đứng trước là chỗ dẫn về, để câu kết không rơi đột ngột.
-    expect(phraseChords('outro', KEY).map((c) => c.symbol)).toEqual([
-      'G',
-      'C',
-      'C',
-    ])
+    /*
+      KẾT BÀI DÀI TÁM Ô TỪ 9/9/2026, TRƯỚC ĐÓ LÀ BA — `['G', 'C', 'C']`.
+
+      Ba ô là luật đặt khi chưa có bản ký âm nào để đối chiếu. Đo 9 đoạn kết giọng
+      thứ của ba thầy (`PianoBrain/tools/sheet/ket_thu.py`): **3 tới 12 ô, trung
+      bình 8,1**. Người dùng đã chốt thành chính sách rằng số đo từ sheet thắng luật
+      tự đặt trước đó, và bỏ hẳn chứ không dung hoà.
+
+      Đây KHÔNG phải nới test cho qua: khẳng định cũ mã hoá một luật đã bị số đo
+      bác, nên nó phải nói lại cho đúng. Ô bậc V mở đầu giữ nguyên lý do cũ — chỗ
+      dẫn về, để câu kết không rơi đột ngột.
+    */
+    const outro = phraseChords('outro', KEY).map((c) => c.symbol)
+    expect(outro).toHaveLength(8)
+    expect(outro[0]).toBe('G')
+    expect(outro[outro.length - 1]).toBe('C')
   })
 
   it('vòng dạo đầu vẫn đúng bốn ô — hợp âm báo không nằm trong vòng', () => {

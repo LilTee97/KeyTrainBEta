@@ -37,6 +37,24 @@ const MARKABLE: readonly SongSectionKind[] = [
   'outro',
 ]
 
+/**
+ * `Range.intersectsNode` không tính nút nằm đúng mép của vùng bôi ở một số
+ * trình duyệt. Gộp thêm hai dòng chứa điểm đầu/cuối để người dùng kéo từ đầu
+ * câu đến cuối câu thì không bị rơi mất câu biên.
+ */
+export function selectedLineBounds(
+  intersected: readonly number[],
+  endpoints: readonly (number | null)[],
+): { from: number; to: number } | null {
+  const indices = [...intersected, ...endpoints].filter(
+    (index): index is number =>
+      typeof index === 'number' && Number.isInteger(index) && index >= 0,
+  )
+  if (indices.length === 0) return null
+
+  return { from: Math.min(...indices), to: Math.max(...indices) }
+}
+
 interface SongSheetViewProps {
   sheet: SongSheet
   /** Hợp âm đang vang, đếm từ 0. Rỗng nghĩa là đang không phát. */
@@ -245,14 +263,27 @@ export function SongSheetView({
       const range = selection.getRangeAt(0)
       const indices: number[] = []
 
+      const lineIndexAt = (node: Node) => {
+        const element =
+          node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement
+        const line = element?.closest<HTMLElement>('[data-line-index]')
+        if (!line || !root.contains(line)) return null
+
+        return Number(line.dataset.lineIndex)
+      }
+
       for (const element of root.querySelectorAll('[data-line-index]')) {
         if (range.intersectsNode(element)) {
           indices.push(Number(element.getAttribute('data-line-index')))
         }
       }
 
-      if (indices.length === 0) return
-      setPending({ from: Math.min(...indices), to: Math.max(...indices) })
+      const bounds = selectedLineBounds(indices, [
+        lineIndexAt(range.startContainer),
+        lineIndexAt(range.endContainer),
+      ])
+      if (!bounds) return
+      setPending(bounds)
     }
 
     window.addEventListener('pointerup', read)
@@ -324,7 +355,7 @@ export function SongSheetView({
           ) : (
             <>
               <span className="text-xs text-dim">
-                Bôi đen các dòng lời để tự chia phiên khúc, điệp khúc, giang tấu.
+                Bôi từ chữ đầu dòng đầu đến chữ cuối dòng cuối để chia đoạn.
               </span>
               {hasMarks && onClearMarks && (
                 <button

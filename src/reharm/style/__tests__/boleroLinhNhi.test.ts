@@ -426,7 +426,7 @@ describe('intro bolero Tuấn = Pùng-Pắp hai tay', () => {
     expect(von.every((t) => t.doan === 'interlude')).toBe(true)
   })
 
-  it('giang thứ: cùng khung trưởng nhưng vòng buồn, không bậc 3 trưởng', () => {
+  it('giang thứ: tám ô phát triển mô-típ, giữ màu thứ và dẫn về phần hát', () => {
     const chords = parseChordInput('Am Dm G C F E7 Am E7').chords
     const opts = {
       key: { tonic: 9 as PitchClass, scale: 'minor' as const },
@@ -439,23 +439,17 @@ describe('intro bolero Tuấn = Pùng-Pắp hai tay', () => {
       solo: () => [],
       songChords: chords,
     }
-    const dao = buildPhraseSection({ ...opts, kind: 'intro' })!
     const giang = buildPhraseSection({ ...opts, kind: 'interlude' })!
-    expect(giang.lengthBeats).toBeGreaterThan(dao.lengthBeats)
+    // Yêu cầu mới: không lấy độ dài/khung A-B của intro làm chuẩn giang tấu.
+    expect(giang.lengthBeats).toBe(36) // 8 ô câu + 1 ô hút/nghỉ theo phản hồi vòng 2.
+    expect(giang.sourcePhrase?.method).toBe('motif-development')
     expect(giang.chords[0]!.startsWith('A')).toBe(true)
-    expect(giang.chords[1]!.startsWith('D')).toBe(true)
+    expect(giang.chords[2]!.startsWith('D')).toBe(true)
     expect(giang.chords[giang.chords.length - 1]!.startsWith('E')).toBe(true)
     const rh = giang.events.filter((e) => e.hand === 'right' && e.notes.length === 1)
     const bac3 = rh.filter((e) => (((e.notes[0]! - 9) % 12) + 12) % 12 === 4)
     expect(bac3.length / Math.max(1, rh.length)).toBeLessThan(0.08)
-    const mocSau = [1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75]
-    const dem = (d: typeof dao) =>
-      d.events.filter(
-        (e) =>
-          e.hand === 'right' &&
-          mocSau.some((x) => Math.abs((e.startBeat % 4) - x) < 0.05),
-      ).length
-    expect(dem(giang)).toBeGreaterThan(dem(dao))
+    expect(rh.some((e) => e.startBeat % 4 === 0.5)).toBe(true)
     expect(giang.events.some((e) => e.startBeat >= giang.lengthBeats - 4.05)).toBe(true)
   })
 
@@ -497,7 +491,7 @@ describe('intro bolero Tuấn = Pùng-Pắp hai tay', () => {
     })!
     const beats = giang.beatsEach
     const pcsOf = (sym: string) => {
-      const c = input.find((x) => x.symbol === sym) ?? input[0]!
+      const c = parseChordInput(sym).chords[0]!
       return new Set(c.quality.intervals.map((iv) => (((c.root + iv) % 12) + 12) % 12))
     }
     let n = 0
@@ -509,7 +503,7 @@ describe('intro bolero Tuấn = Pùng-Pắp hai tay', () => {
       const tu = beats.slice(0, i).reduce((a, b) => a + b, 0)
       const den = tu + (beats[i] ?? 4)
       const tones = pcsOf(sym)
-      const root = (input.find((x) => x.symbol === sym) ?? input[0]!).root % 12
+      const root = parseChordInput(sym).chords[0]!.root % 12
       const rh = giang.events.filter(
         (e) => e.hand === 'right' && e.startBeat >= tu - 1e-6 && e.startBeat < den - 1e-6,
       )

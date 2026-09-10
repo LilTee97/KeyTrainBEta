@@ -139,6 +139,7 @@ import { cueChord, phraseChords } from './style/phraseChords'
 import { interludeChordsForTeacher } from './style/teacherSoloChords'
 import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
+import { createPhraseTakeSequence } from './playback/phraseTakes'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -194,7 +195,7 @@ import {
   soloChordAt,
   sourceBeatAt,
 } from './style/songStructure'
-import type { SectionKind } from './style/songStructure'
+import type { SectionKind, SongTimeline } from './style/songStructure'
 import type { ArrangementStep, SourceSection } from './style/arrangement'
 import {
   DEFAULT_REST_AFTER,
@@ -521,6 +522,19 @@ function VongPanel({
   )
 }
 
+/**
+ * Loại đoạn nào được phép soạn — mọi loại khác đang **ẩn**.
+ *
+ * Người dùng chốt 10/9/2026: chỉ giữ những đường **tai họ đã duyệt** hoặc **Codex đã đưa
+ * chỉ dẫn**. Ba đường còn lại đang chạy chuỗi luật cũ mà Codex đã bác, nên tắt và chờ.
+ *
+ * Nhận `kind` kiểu `string` **có chủ đích**, để TypeScript không thu hẹp kiểu của biến
+ * gọi vào tại chỗ dùng.
+ */
+function coChiDanCodex(kind: string, boleroTuan: boolean, thu: boolean): boolean {
+  return kind === 'intro' || (kind === 'outro' && boleroTuan && thu)
+}
+
 export function ReharmHome() {
   const audioReady = useAudioStore((state) => state.ready)
   const volumeDb = useAudioStore((state) => state.volumeDb)
@@ -606,6 +620,10 @@ export function ReharmHome() {
   */
   const [lickyMode, setLickyMode] = useState<LickyMode>('clone')
   const [phraseSpin, setPhraseSpin] = useState(0)
+  /** Dải dạo/kết của đúng lượt đang phát, không phải vòng xem trước. */
+  const [playingTimeline, setPlayingTimeline] = useState<
+    Pick<SongTimeline, 'totalBeats' | 'soloSpans'> | null
+  >(null)
   const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
   const [mutedHeld, setMutedHeld] = useState<ReadonlySet<number>>(new Set())
   const [slashEdits, setSlashEdits] = useState<Record<number, boolean>>({})
@@ -636,6 +654,7 @@ export function ReharmHome() {
   const [cauOnDs, setCauOnDs] = useState<CauOn[]>([])
   const [ngheLaiStt, setNgheLaiStt] = useState(0)
   const [giangThu, setGiangThu] = useState(false)
+  const [interludeCadence, setInterludeCadence] = useState<'dominant' | 'ii-v'>('ii-v')
   const [chayNgan, setChayNgan] = useState(false)
   /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
   const cauLinhNhi = soloThay === 'linh-nhi'
@@ -770,19 +789,12 @@ export function ReharmHome() {
    * rock và pop vào hẳn khoảng hình câu; bolero còn lệch vì có cặp cọc cách
    * nhau nửa phách.
    *
-   * MẶC ĐỊNH TẮT. Người dùng nghe thử và bác: "các đoạn solo giờ nghe loạn quá."
-   *
-   * Số liệu nói nó gần người thật hơn ở ba chỉ số bề mặt, nhưng ba chỉ số ấy đo
-   * CHẤT LIỆU chứ không đo CẤU TRÚC. Đo tiếp thì thấy chỗ hỏng: câu của bộ này
-   * chỉ có **3 cỡ nhịp khác nhau**, trong khi người thật dùng 7 tới 22 và sổ mẫu
-   * Licky dùng 6. Mọi quyết định trong bộ này là về cao độ; nhịp thì luôn chia
-   * đều khoảng trống giữa hai cọc. Một dòng nốt đều tăm tắp thì tai không tách
-   * được câu, và đó là thứ nghe ra thành "loạn".
-   *
-   * Giữ lại để so, không bỏ: phần đóng cọc theo hoà âm và nhịp của điệu vẫn
-   * đúng. Thứ thiếu là nhịp của chính câu nhạc.
+   * Bản chia đều đầu tiên từng bị người dùng bác là "loạn". Bộ hiện tại đã đổi
+   * sang dựng nhịp trước: dùng vốn nhịp đo từ sheet, có chỗ thở thật, rồi mới
+   * đặt cao độ và neo nhẹ vào mạch của điệu. Vì vậy bài mới dùng bộ này mặc định;
+   * công tắc vẫn giữ để nghe đối chiếu với sổ mẫu Licky.
    */
-  const [lineSolo, setLineSolo] = useState(false)
+  const [lineSolo, setLineSolo] = useState(true)
   /** Số hợp âm mỗi câu nhạc. Hết câu thì nghỉ lấy hơi. */
   /**
    * Độ dài câu nhạc, mặc định **bốn hợp âm**.
@@ -804,7 +816,11 @@ export function ReharmHome() {
 
   /** Lần bấm phát thứ mấy, để câu giang tấu không lặp lại giữa các lần phát. */
   const playRound = useRef(0)
-  const playSpin = useRef(0)
+  /* Mở lại trang không được quay về lượt 0 rồi soạn lại đúng các câu cũ. */
+  const playSpin = useRef(Date.now() % 1_000_000_000)
+  // Giang mới không cộng hai bộ đếm của intro. Giữ cùng lượt khi dựng để lưu/phát.
+  const interludeTakes = useRef(createPhraseTakeSequence(Date.now() % 1_000_000_000))
+  const activeInterludePass = useRef<((pass: number) => number) | null>(null)
 
   /** Bài đang mở từ kho; rỗng nghĩa là bài chưa lưu lần nào. */
   const [songId, setSongId] = useState<string | null>(null)
@@ -812,6 +828,7 @@ export function ReharmHome() {
   /* Câu dạo vừa lưu vào `Nguon.json` — ô bình luận gắn ý kiến vào đúng số này. */
   const [cauDaoLuu, setCauDaoLuu] = useState<CauDaoLuu | null>(null)
   const [cauGiangLuu, setCauGiangLuu] = useState<CauDaoLuu | null>(null)
+  const [cauKetLuu, setCauKetLuu] = useState<CauDaoLuu | null>(null)
   /** Tăng lên mỗi lần lưu, để danh sách bài đọc lại kho. */
   const [saveCount, setSaveCount] = useState(0)
 
@@ -1403,6 +1420,7 @@ export function ReharmHome() {
         scale: phraseScale.pitchClasses,
         range: tamSolo,
         take: spin + phraseSpin + playSpin.current,
+        feel: soloFeelFor(style.id),
         /*
           Rải mở rộng CHỈ ở giang tấu, và chỉ cho họ nào có số đo.
 
@@ -1587,32 +1605,9 @@ export function ReharmHome() {
     [reharm.key, hopAmChoDoan, thaySolo],
   )
 
-  const sheet = useMemo(() => {
-    if (!baseSheet) return null
-    /*
-      BẢNG NHẠC PHẢI BÀY ĐÚNG THỨ TỰ SẼ PHÁT, không bày `arrangement` thô.
-
-      `arrangement` chỉ có giá trị khi người dùng TỰ sắp bố cục; mặc định nó là `null`.
-      Bản cũ viết `arrangement ?? []` rồi hỏi mảng rỗng ấy có đoạn dạo không — luôn
-      không — nên bản nhạc đã tái hoà âm **không hiện hàng hợp âm dạo và kết**, dù bấm
-      phát thì hai đoạn ấy vẫn kêu.
-
-      `steps` mới là thứ tự thật, và nó ÉP thêm dạo/giang/kết khi chọn Linh Nhi hoặc
-      Chiếc Lá. Nhưng `steps` khai sau `sheet` (nó cần `songSources`), nên ở đây chép
-      lại đúng hai luật ép ấy — không chép cả `steps` được.
-
-      Ai sửa luật ép trong `steps` thì phải sửa cả chỗ này, nếu không bản nhạc lại lệch
-      với tiếng nghe được.
-    */
-    const daSap = arrangement ?? []
-    const epDao = thaySolo === 'linh-nhi' || chiecLa
-    const epKet = thaySolo === 'linh-nhi'
-    const intro =
-      epDao || daSap.some((step) => step.type === 'intro') ? introSymbols : []
-    const outro =
-      epKet || daSap.some((step) => step.type === 'outro') ? outroSymbols : []
-    return attachPhraseToSheet(baseSheet, intro, outro)
-  }, [baseSheet, arrangement, introSymbols, outroSymbols, thaySolo, chiecLa])
+  // Dạo/kết chỉ gắn vào bản ĐỂ HIỆN sau khi dòng thời gian đã dựng xong.
+  // Nếu gắn vòng ước lượng ở đây, nó dễ khác câu audio thật đang phát.
+  const sheet = baseSheet
 
   /** Dòng thời gian phần đệm theo điệu đang chọn. */
 
@@ -1775,8 +1770,21 @@ export function ReharmHome() {
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
    */
   const interludeWindow = useCallback(
-    (over: SourceSection, _next: SourceSection | null) => {
+    (over: SourceSection, _next: SourceSection | null, interludeTake = 0) => {
       const spans = mainChordSpans(withPassing, chordBeats)
+      if (laBoleroTuan(style) && reharm.key?.scale === 'minor') {
+        const nextChord = _next ? spans.find((s) => Math.abs(s.start - _next.startBeat) < 0.001)?.chord : null
+        const built = buildPhraseSection({ kind: 'interlude', key: reharm.key, style,
+          beatsPerChord: chordBeats, dropRoot, opening: nextChord ?? null,
+          interludeCadence,
+          songChords: sequence.chords, range: tamSolo, take: interludeTake,
+          solo: () => [] })!
+        return { startBeat: over.startBeat, lengthBeats: built.lengthBeats,
+          kyHieu: built.chords, kyHieuBeats: built.beatsEach,
+          events: built.events.filter((e) => e.hand === 'left'),
+          solo: () => built.events.filter((e) => e.hand === 'right'), exit: [],
+          composed: true, unavailableReason: built.unavailableReason }
+      }
       const verse =
         songSources?.find((source) => /điệp\s*khúc/i.test(source.name)) ??
         over
@@ -2208,6 +2216,7 @@ export function ReharmHome() {
       hopAmDaoGoc,
       tamSolo,
       giangThu,
+      interludeCadence,
       siet,
       tiLeChiaHat,
     ],
@@ -2858,7 +2867,7 @@ export function ReharmHome() {
     setPhraseScaleId(saved.phraseScaleId ?? null)
 
     setInterludeChords(saved.interludeChords ?? DEFAULT_INTERLUDE_CHORDS)
-    setLineSolo(saved.lineSolo === true)
+    setLineSolo(saved.lineSolo !== false)
     setChordsPerPhrase(saved.chordsPerPhrase)
   }, [])
 
@@ -3014,7 +3023,8 @@ export function ReharmHome() {
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(() => {
     let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
-    const themSolo = thaySolo === 'linh-nhi' || chiecLa
+    const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
+    const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan
     if (!themSolo) return base
     base = base.filter((step) => {
       if (step.type !== 'section' || !songSources) return true
@@ -3023,13 +3033,16 @@ export function ReharmHome() {
     if (!base.some((step) => step.type === 'intro')) {
       base = [{ type: 'intro' as const, restAfter: 0 }, ...base]
     }
-    if (thaySolo === 'linh-nhi' && songSources && songSources.length > 0) {
+    if ((thaySolo === 'linh-nhi' || giangThuTuan) && songSources && songSources.length > 0) {
       if (!base.some((step) => step.type === 'interlude')) {
         const chorus = songSources.findIndex((source) => /điệp/i.test(source.name))
         const over = chorus >= 0 ? chorus : Math.max(0, songSources.length - 1)
         const giang = { type: 'interlude' as const, over, loops: 2, restAfter: 0 }
         const ket = base.findIndex((step) => step.type === 'outro')
-        base =
+        const afterChorus = base.findIndex((step) => step.type === 'section' && step.source === over)
+        base = giangThuTuan && afterChorus >= 0
+          ? [...base.slice(0, afterChorus + 1), giang, { type: 'section' as const, source: over }, ...base.slice(afterChorus + 1)]
+          :
           ket >= 0
             ? [...base.slice(0, ket), giang, ...base.slice(ket)]
             : [...base, giang]
@@ -3042,7 +3055,7 @@ export function ReharmHome() {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangement, songSources, chiecLa, thaySolo, style])
+  }, [arrangement, songSources, chiecLa, thaySolo, style, reharm.key])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3052,10 +3065,11 @@ export function ReharmHome() {
    * không quay về đúng câu của lần thứ nhất.
    */
   const buildPass = useCallback(
-    (pass: number, takesPerPass: number) => {
+    (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
-        return buildArrangedSong({
+        const phraseWarnings: string[] = []
+        const arranged = buildArrangedSong({
           accompaniment: yieldToFill(
             giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
             fills(pass),
@@ -3065,7 +3079,16 @@ export function ReharmHome() {
           sources: songSources,
           steps,
           turnaround: undefined,
-          interludeRange: interludeWindow,
+          // Mở riêng giang tấu THỨ Tuấn đã có bộ phát triển mô-típ mới.
+          interludeRange: laBoleroTuan(style) && reharm.key?.scale === 'minor'
+            ? (over, next, take) => {
+                const made = interludeWindow(over, next, interludeTake + take)
+                if (made && 'unavailableReason' in made && made.unavailableReason) {
+                  phraseWarnings.push(made.unavailableReason)
+                }
+                return made
+              }
+            : undefined,
           /*
             Nốt đoạn dạo hỏi não ngay lúc dựng dòng thời gian. Não im thì bước
             dạo chiếm 0 phách, bài chạy y như không có nó.
@@ -3080,6 +3103,40 @@ export function ReharmHome() {
           */
           phrase: (kind) => {
             /*
+              ĐƯỜNG CHƯA CÓ CHỈ DẪN CODEX — ẨN, KHÔNG soạn bằng luật cũ của Claude.
+
+              Người dùng chốt 10/9/2026: *"hãy bỏ ba đường này hoặc ẩn chúng, chờ đến khi
+              nào có chỉ dẫn cách làm từ codex đưa sang thì nhận đó rồi thay vào mà làm."*
+
+              Ba đường bị ẩn là ba đường **chưa ai nghe bao giờ**:
+                · đoạn kết giọng thứ ở điệu KHÔNG phải Bolero Tuấn
+                · đoạn kết giọng TRƯỞNG
+                · giang tấu khác nhánh thứ Tuấn (nhánh thứ Tuấn đã mở qua interludeRange)
+
+              Chúng đang chạy chuỗi luật cũ của Claude: `theoSheet` · `nguonKhaThi` ·
+              `KET_DUOC` · `khongKeTrung` · `NHIP.outro = 1,0` · `thuaTayPhai` ·
+              `dangCuoi` · `dapChot` — toàn những phép Codex đã bác cho đoạn kết thứ
+              Bolero Tuấn (xem `Reference/PHUONG-PHAP-SOAN-OUTRO.md` mục 9).
+
+              GIỮ LẠI ba đường tai người dùng đã duyệt: intro thứ · intro trưởng
+              (*"intro trưởng thì giữ lại vì nó hay"*) · đoạn kết thứ Bolero Tuấn.
+
+              ẨN Ở ĐÂY, KHÔNG TẮT TRONG BỘ SOẠN. 50 file kiểm chạm giang tấu; tắt trong
+              `buildPhraseSection` là làm đỏ hàng loạt, mà nới test cho qua thì người dùng
+              đã cấm. Ẩn ở ranh giới app thì engine còn nguyên để đo, app không phát nữa,
+              và khi Codex đưa chỉ dẫn thì thay engine rồi mở lại bằng một dòng.
+
+              MỞ LẠI: thêm loại đoạn ấy vào `coChiDan` bên dưới.
+            */
+            if (
+              !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor')
+            ) {
+              phraseWarnings.push(
+                'Đoạn kết đang ẩn ở đường này — giọng trưởng, hoặc điệu không phải Bolero Tuấn. Chưa có chỉ dẫn soạn từ Codex, và luật cũ đã bị bác. Bài kết mà không có đoạn kết.',
+              )
+              return { events: [], lengthBeats: 0, chords: [], beatsEach: [] }
+            }
+            /*
               Phần ráp nằm ở `style/phraseSection.ts`.
 
               Trước đây nó nằm ngay trong đây, tức trong thân một component React
@@ -3091,7 +3148,38 @@ export function ReharmHome() {
             const built = buildPhraseSection({
               kind,
               key: reharm.key,
-              style: kind === 'intro' && laBoleroTuan(style) ? style : styleSolo,
+              /*
+                ĐOẠN KẾT CŨNG NHẬN ĐIỆU BOLERO TUẤN — sửa 10/9/2026.
+
+                Trước đó điều kiện là `kind === 'intro' && laBoleroTuan(style)`, nên chỉ đoạn
+                dạo nhận điệu đang chọn; đoạn kết nhận `styleSolo`, và `styleSolo` của họ
+                Bolero là `bolero-linh-nhi-2` (`hoDieu.ts` `soloUuTien`). Điệu ấy có
+                `family = 'bolero-linh-nhi-2'` nên `laBoleroTuan` trả `false`, và `cell.right`
+                của nó **rỗng** — không có cú Pắp nào.
+
+                Một chữ `false` ấy tắt năm thứ cùng lúc trong `phraseSection.ts`: `daoTuan`
+                (cả khung Pùng-Pắp), `gopThay` → `minorNguon` → `minorSource` → `dungCuaSo`
+                (cửa sổ ô liên tiếp), và `ketMotNguon` (nên chuỗi hậu xử lý cũ chạy lại còn
+                `datVaoLuoi` không chạy). Tức năm chỉ dẫn Codex #1 #2 #4 #6 #7 đã dựng xong
+                đều nằm sau một cổng đóng.
+
+                Người dùng nghe ra: *"outro vẫn không hề có tiết tấu Pùng Pắp của bolero Tuấn
+                trong khi intro có và đánh rất đúng."*
+
+                Đo trước khi sửa (La thứ, `thay='linh-nhi'`, take 0–2, cú gõ hợp âm tay phải):
+                dạo **13 · 9 · 13** · kết **0 · 0 · 0**. Onset trên lưới 7 điểm của Bolero
+                Tuấn: dạo 71–95% · kết **69–71%**.
+
+                Giang tấu đã đi đúng đường này từ trước — xem cổng `laBoleroTuan(style)` riêng
+                của nó ở chỗ dựng đoạn giang. Nay dạo · giang · kết cùng nhận điệu đang chọn.
+
+                Triệu chứng để lùi: đoạn kết nghe ra điệu Bolero Tuấn thay vì lối rải Linh Nhi
+                mà người dùng quen — lúc ấy trả về `kind === 'intro' && laBoleroTuan(style)`.
+              */
+              style:
+                laBoleroTuan(style) && (kind === 'intro' || kind === 'outro')
+                  ? style
+                  : styleSolo,
               thay: thaySolo,
               vongPhienKhuc,
               tiLeChiaHat,
@@ -3159,6 +3247,7 @@ export function ReharmHome() {
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, false),
             })
+            if (built?.unavailableReason) phraseWarnings.push(built.unavailableReason)
             if (!built) return brainPhrase({ kind, key: reharm.key })
             return built
           },
@@ -3168,6 +3257,7 @@ export function ReharmHome() {
           ending: buildEnding,
           repeatEnding: varyOnRepeat ? buildRepeatEnding : undefined,
         })
+        return { ...arranged, phraseWarnings }
       }
 
       const body = buildSongTimeline({
@@ -3254,7 +3344,8 @@ export function ReharmHome() {
   )
 
   /** Lần phát đầu — dùng cho hiển thị và cho các nút phát một lượt. */
-  const song = useMemo(() => buildPass(0, 0), [buildPass])
+  const [interludeDisplayTake, setInterludeDisplayTake] = useState<number | null>(null)
+  const song = useMemo(() => buildPass(0, 0, interludeDisplayTake ?? undefined), [buildPass, interludeDisplayTake])
 
   /**
    * Hợp âm đang vang, quy về số thứ tự trên bản nhạc.
@@ -3303,18 +3394,24 @@ export function ReharmHome() {
    */
   const activeSolo = useMemo(() => {
     if (!looping) return null
-    const total = song.totalBeats
+    const timeline = playingTimeline ?? song
+    const total = timeline.totalBeats
     if (total <= 0) return null
-    return soloChordAt(song.soloSpans, positionBeats % total)
-  }, [looping, positionBeats, song.soloSpans, song.totalBeats])
+    return soloChordAt(timeline.soloSpans, positionBeats % total)
+  }, [looping, positionBeats, playingTimeline, song])
+
+  const timelineHien = looping && playingTimeline ? playingTimeline : song
 
   const soloScaleLabel = useMemo(() => {
+    // Nhánh giang thứ này soạn theo chức năng hợp âm, không dùng gam ngũ cung
+    // do bộ gợi ý cho phần hát trả về; đừng hiển thị nhầm là gam đang phát.
+    if (laBoleroTuan(style) && reharm.key?.scale === 'minor') return null
     const idx = activeChordIndex ?? selectedIndex
     if (idx === null) return null
     const chord = recolored.filter((item) => !item.passing)[idx]
     if (!chord) return null
     return scaleLabelForChord(chord, reharm.key)
-  }, [activeChordIndex, selectedIndex, recolored, reharm.key])
+  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style])
 
 
   const timeline = song.events
@@ -3331,13 +3428,16 @@ export function ReharmHome() {
    * cũng ra cùng một khoảng khi bài có điệp khúc.
    */
   const interludeSymbols = useMemo(() => {
+    if (laBoleroTuan(style) && reharm.key?.scale === 'minor') {
+      return [...(timelineHien.soloSpans.find((span) => span.kind === 'interlude')?.chords ?? [])]
+    }
     if (!songSources || songSources.length === 0) return []
     if (!steps.some((step) => step.type === 'interlude')) return []
     const over =
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -3346,7 +3446,7 @@ export function ReharmHome() {
    * ra được vòng giang tấu. Gắn ở đó là vòng phụ thuộc quẩn.
    */
   const sheetHien = useMemo(() => {
-    if (!sheet) return null
+    if (!baseSheet) return null
     /*
       Giang tấu mượn vòng của đoạn nào — lấy từ chính bước giang tấu trong thứ tự chơi.
       Bản nhạc chưa có đoạn giang tấu thì đoạn mới được chèn ngay sau đoạn ấy.
@@ -3354,8 +3454,18 @@ export function ReharmHome() {
     const buoc = steps.find((step) => step.type === 'interlude')
     const sauDoan =
       buoc && songSources ? (songSources[buoc.over]?.name ?? null) : null
-    return attachInterludeToSheet(sheet, interludeSymbols, sauDoan)
-  }, [sheet, interludeSymbols, steps, songSources])
+    const phrase = (kind: 'intro' | 'outro') =>
+      timelineHien.soloSpans.find((span) => span.kind === kind)?.chords ?? []
+    return attachInterludeToSheet(
+      attachPhraseToSheet(
+        baseSheet,
+        steps.some((step) => step.type === 'intro') ? phrase('intro') : [],
+        steps.some((step) => step.type === 'outro') ? phrase('outro') : [],
+      ),
+      interludeSymbols,
+      sauDoan,
+    )
+  }, [baseSheet, interludeSymbols, steps, songSources, timelineHien])
 
   /*
     Đăng bài đang mở lên kho dùng chung, để tab Luyện đệm lấy về.
@@ -3557,7 +3667,8 @@ export function ReharmHome() {
    */
   const passAt = useCallback(
     (pass: number) => {
-      return buildPass(playRound.current + pass, song.soloTakes).events
+      return buildPass(playRound.current + pass, song.soloTakes,
+        activeInterludePass.current?.(pass) ?? 0).events
     },
     [buildPass, song.soloTakes],
   )
@@ -3574,8 +3685,16 @@ export function ReharmHome() {
    * đầu lại từ đầu. Bài chưa đánh dấu kết thì vẫn lặp, vì lúc đó nó là vòng để
    * tập chứ không phải một bài trọn vẹn.
    */
+  /*
+    Bước `outro` do não soạn thêm vào (xem `steps`) cũng là một cái kết. Bản
+    trước chỉ nhìn `section.ending` nên bài có đoạn kết vẫn `once = false`:
+    phát xong đoạn kết là vòng quay về đoạn dạo, lặp mãi không kết.
+  */
   const playsOnce = useMemo(
-    () => steps.some((step) => step.type === 'section' && step.ending),
+    () =>
+      steps.some(
+        (step) => step.type === 'outro' || (step.type === 'section' && !!step.ending),
+      ),
     [steps],
   )
 
@@ -3603,6 +3722,7 @@ export function ReharmHome() {
         doan: cau.doan,
       }
       if (cau.doan === 'interlude') setCauGiangLuu(luu)
+      else if (cau.doan === 'outro') setCauKetLuu(luu)
       else setCauDaoLuu(luu)
       startTimelineLoop(() => eventsForHand(events, hand), bpm, length, 0, true)
     },
@@ -3629,6 +3749,8 @@ export function ReharmHome() {
       playSpin.current += 1
       setPhraseSpin((spin) => spin + 1)
       const base = playSpin.current * 31 + 7
+      const interludePass = interludeTakes.current.start(song.soloTakes)
+      activeInterludePass.current = interludePass
 
       /*
         LƯU CÂU DẠO NGAY LÚC BẤM PHÁT — xem `nguon/nguon.ts`.
@@ -3644,60 +3766,79 @@ export function ReharmHome() {
       /*
         SỔ GHI KHÔNG ĐƯỢC LÀM GÃY VIỆC PHÁT NHẠC.
 
-        Chỗ này gọi `buildPass` THÊM một lần, ngay trong tay xử lý cú bấm. Vòng phát
-        chính gọi nó bên trong `startTimelineLoop`, nơi lỗi được nuốt; gọi thêm ở đây
-        thì lỗi văng thẳng ra tay xử lý sự kiện và làm sập cả trang — người dùng thấy
-        app tự nạp lại khi bấm phát với một điệu nhất định.
-
-        `nguon.ts` đã nuốt lỗi mạng, nhưng chưa nuốt lỗi DỰNG. Nay bọc cả khối.
+        Dựng mỗi lượt một lần rồi dùng đúng events đó cho cả lưu và phát.
+        Vòng tự chạy tiếp cũng cập nhật thẻ bình luận, không để thẻ chỉ câu lượt đầu.
+        Lỗi ghi sổ không được chặn tiếng; không bốc một câu khác để lưu riêng.
       */
-      try {
-        const luot = buildPass(base, song.soloTakes)
-        const giong = reharm.key
-          ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
-          : ''
-        const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
-        const luuDoan = (
-          kind: 'intro' | 'interlude',
-          hopAm: readonly string[],
-          dat: (c: CauDaoLuu) => void,
-        ) => {
-          const span = luot.soloSpans?.find((s) => s.kind === kind)
-          if (!span) return
-          const events = luot.events
-            .filter(
-              (e) =>
-                e.startBeat >= span.startBeat - 1e-6 &&
-                e.startBeat < span.startBeat + span.lengthBeats - 1e-6,
-            )
-            .map((e) => ({ ...e, startBeat: e.startBeat - span.startBeat }))
-          void luuCauDao({
-            events,
-            lengthBeats: span.lengthBeats,
-            barBeats,
-            bai: songTitle ?? '',
-            giong,
-            dieu: laBoleroTuan(style) ? style.id : styleSolo.id,
-            hopAm: span.chords.length > 0 ? span.chords : hopAm,
-            doan: kind,
-          }).then((luu) => {
-            if (luu) dat(luu)
-          })
+      /*
+        ĐỘ DÀI VÒNG PHẢI LẤY TỪ LƯỢT ĐANG PHÁT, KHÔNG LẤY TỪ `song`.
+
+        `song` dựng ở pass 0 với take của lần render trước; lượt phát dựng bằng
+        `base + pass` với `playSpin` vừa tăng. Đoạn kết đổi độ dài theo take —
+        đo n=12 take, Am Bolero Tuấn: 21 · 17 · 25 phách — nên `song.totalBeats`
+        lệch tới 8 phách so với lượt thật: vòng quấn về đoạn dạo giữa đoạn kết,
+        hoặc lệnh dừng cắt ngang nó. Dựng lượt 0 một lần, lấy đúng độ dài ấy,
+        và cho `buildPlaybackPass` dùng lại chính bản dựng đó.
+      */
+      const daDung = new Map<number, ReturnType<typeof buildPass>>()
+      const luotThu = (pass: number) => {
+        let luot = daDung.get(pass)
+        if (!luot) {
+          luot = buildPass(base + pass, song.soloTakes, interludePass(pass))
+          daDung.set(pass, luot)
         }
-        luuDoan('intro', introSymbols, setCauDaoLuu)
-        luuDoan('interlude', interludeSymbols, setCauGiangLuu)
-      } catch (loi) {
-        console.warn('Nguon.json: không lưu được câu dạo, bỏ qua', loi)
+        return luot
+      }
+      const buildPlaybackPass = (pass: number) => {
+        const take = interludePass(pass)
+        const luot = luotThu(pass)
+        setPlayingTimeline({ totalBeats: luot.totalBeats, soloSpans: luot.soloSpans })
+        setInterludeDisplayTake(take) // Vòng tự động: ký hiệu phải đổi theo vòng ĐANG PHÁT.
+        try {
+          const giong = reharm.key
+            ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
+            : ''
+          const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
+          const luuDoan = (
+            kind: 'intro' | 'interlude' | 'outro',
+            hopAm: readonly string[],
+            dat: (c: CauDaoLuu) => void,
+          ) => {
+            const span = luot.soloSpans?.find((s) => s.kind === kind)
+            if (!span) return
+            const events = luot.events
+              .filter(
+                (e) =>
+                  e.startBeat >= span.startBeat - 1e-6 &&
+                  e.startBeat < span.startBeat + span.lengthBeats - 1e-6,
+              )
+              .map((e) => ({ ...e, startBeat: e.startBeat - span.startBeat }))
+            void luuCauDao({
+              events,
+              lengthBeats: span.lengthBeats,
+              barBeats,
+              bai: songTitle ?? '',
+              giong,
+              dieu: laBoleroTuan(style) ? style.id : styleSolo.id,
+              hopAm: span.chords.length > 0 ? span.chords : hopAm,
+              doan: kind,
+            }).then((luu) => {
+              if (luu) dat(luu)
+            })
+          }
+          luuDoan('intro', introSymbols, setCauDaoLuu)
+          luuDoan('interlude', interludeSymbols, setCauGiangLuu)
+          luuDoan('outro', outroSymbols, setCauKetLuu)
+        } catch (loi) {
+          console.warn('Nguon.json: không lưu được câu dạo, bỏ qua', loi)
+        }
+        return eventsForHand(luot.events, hand)
       }
 
       startTimelineLoop(
-        (pass) =>
-          eventsForHand(
-            buildPass(base + pass, song.soloTakes).events,
-            hand,
-          ),
+        buildPlaybackPass,
         bpm,
-        loopLengthBeats,
+        luotThu(0).totalBeats,
         beat,
         playsOnce,
       )
@@ -3709,7 +3850,6 @@ export function ReharmHome() {
       song.soloTakes,
       hand,
       bpm,
-      loopLengthBeats,
       playsOnce,
       advanceRound,
       style.beatsPerMeasure,
@@ -3749,7 +3889,7 @@ export function ReharmHome() {
       fallback: readonly string[],
     ) => {
       const dang = activeSolo?.span.kind === kind ? activeSolo.span : null
-      const span = dang ?? song.soloSpans.find((one) => one.kind === kind) ?? null
+      const span = dang ?? timelineHien.soloSpans.find((one) => one.kind === kind) ?? null
       if (!span) return { label, chords: fallback, activeIndex: null }
       return {
         label,
@@ -3762,7 +3902,7 @@ export function ReharmHome() {
         },
       }
     },
-    [activeSolo, song.soloSpans, playFromBeat],
+    [activeSolo, timelineHien.soloSpans, playFromBeat],
   )
 
   const pausePlay = useCallback(() => {
@@ -4236,6 +4376,25 @@ export function ReharmHome() {
             />
             Vòng giang tấu giống sheet thứ (nghe thử)
           </label>
+          {laBoleroTuan(style) && reharm.key?.scale === 'minor' && (
+            <div className="mt-1.5 text-xs text-dim">
+              <label className="flex items-center gap-2">
+                Hút cuối giang tấu
+                <select className="rounded border border-edge bg-panel px-2 py-1"
+                  value={interludeCadence}
+                  onChange={(e) => setInterludeCadence(e.target.value as 'dominant' | 'ii-v')}>
+                  <option value="ii-v">ii–V dặm → vào hát</option>
+                  <option value="dominant">V ngân (cách trước)</option>
+                </select>
+              </label>
+              <p className="mt-1.5">
+                Giang tấu thứ Tuấn: 8 ô có câu chạy vừa/dài, thêm 1 ô hút, nghỉ 2 phách cuối.
+                Mỗi lượt đổi vòng hòa âm phù hợp và soạn nốt cùng vòng đó.
+                Vòng ii–V tính theo hợp âm sắp hát; I/i vào cùng phần hát.
+                Không cần bật ô “Vòng giang tấu giống sheet thứ”. Đang nghe thử, chưa được duyệt.
+              </p>
+            </div>
+          )}
           <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
             <input
               type="checkbox"
@@ -4536,9 +4695,13 @@ export function ReharmHome() {
             onToggleSlash={toggleSlash}
             toolbar={
               <div className="mb-3 border-b border-line pb-3">
+                {song.phraseWarnings?.map((warning) => (
+                  <p key={warning} role="status" className="mb-3 text-amber-400">{warning}</p>
+                ))}
                 {/* Ô bình luận nằm TRÊN nút phát, theo yêu cầu người dùng. */}
                 <OBinhLuan cau={cauDaoLuu} nhan="Câu dạo" />
                 <OBinhLuan cau={cauGiangLuu} nhan="Giang tấu" />
+                <OBinhLuan cau={cauKetLuu} nhan="Kết bài" />
                 <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
@@ -4566,6 +4729,11 @@ export function ReharmHome() {
                   onChange={(e) => {
                     const stt = Number(e.target.value)
                     setNgheLaiStt(stt)
+                    if (stt === 0) {
+                      setCauDaoLuu(null)
+                      setCauGiangLuu(null)
+                      setCauKetLuu(null)
+                    }
                     const cau = cauOnDs.find((c) => c.stt === stt)
                     if (cau) void phatCauOn(cau)
                   }}
@@ -4574,7 +4742,7 @@ export function ReharmHome() {
                   <option value={0}>— soạn mới —</option>
                   {cauOnDs.map((c) => (
                     <option key={c.stt} value={c.stt}>
-                      #{c.stt} {c.doan === 'interlude' ? 'giang' : 'dạo'} · {c.giong}
+                      #{c.stt} {c.doan === 'interlude' ? 'giang' : c.doan === 'outro' ? 'kết' : 'dạo'} · {c.giong}
                       {c.bai ? ` · ${c.bai}` : ''}
                     </option>
                   ))}

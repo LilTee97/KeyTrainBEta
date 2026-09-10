@@ -210,6 +210,8 @@ export function soloChordAt(
 }
 
 export interface SongTimeline {
+  /** Đoạn chủ động không sinh được; hiển thị để không bỏ đoạn âm thầm. */
+  phraseWarnings?: readonly string[]
   events: TimelineEvent[]
   totalBeats: number
   sections: PlacedSection[]

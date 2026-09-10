@@ -186,10 +186,10 @@ export function bluesChoice(
 /**
  * Điệu này có nên ngẫu hứng trên **một gam** ở đoạn không lời không.
  *
- * Bốn họ: slow rock, bolero, bossa nova, ballad. Căn cứ là số đo trên bốn bản
- * ký âm của Cà Pháo (nguồn `ca-phao-piano-covers` bên PianoBrain): **hai bài
- * bossa nova, một ballad, một slow rock nhịp 4/4** — không có bolero, và không
- * có bài slow rock nhịp kép 6/8 nào.
+ * Mọi điệu đều cần một mặc định để bộ soạn có thể tự viết câu. Một gam là mặc
+ * định an toàn khi vòng hoà âm chủ yếu trong giọng; điệu có hoà âm đổi gam như
+ * jazz vẫn có thể chọn lại mục "nhiều gam". Đây là mặc định, không phải tuyên
+ * bố rằng corpus hiện có đã dạy đủ tiết tấu của mọi thể loại.
  *
  * Con số dưới đây là khoảng của **cả bốn bài**, cố ý không tách theo thể loại:
  * nhiều nhất hai bài một thể loại, và hai bài bossa đã tự trùm gần trọn khoảng
@@ -214,8 +214,7 @@ export function bluesChoice(
  * nhiều gam thì lựa chọn của người dùng thắng.
  */
 export function prefersSingleScale(style: { id: string; family: string }): boolean {
-  return /slow-rock|bolero|bossa|ballad|^pop$/i.test(style.family) ||
-    /ballad/i.test(style.id)
+  return style.id.length > 0
 }
 
 /** Điệu này có phải họ slow rock / nhịp kép không — chỗ Blues được ưu tiên. */

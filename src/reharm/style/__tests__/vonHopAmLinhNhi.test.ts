@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { vonHopAmLinhNhi, nhipVong } from '../vonHopAmLinhNhi'
+import { minorIntroSourceForTake } from '../minorSoloSource'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 
 /*
@@ -49,16 +50,30 @@ describe('vốn hợp âm rút từ bài', () => {
   })
 
   /*
-    Nhịp hoà âm: dạo và giang ≈ 1,0 hợp âm mỗi ô; kết ≈ 0,45. Đoạn kết chậm lại
-    bằng cách GIỮ mỗi hợp âm nhiều ô, không phải bằng cách ngắn đi.
+    Ý NGƯỜI DÙNG THẮNG SỐ ĐO Ở CHỖ NÀY — ghi rõ để phiên sau đừng "sửa lại cho đúng".
+
+    Khẳng định cũ: *đoạn kết đổi hợp âm chậm hơn hẳn* — `rieng(ket) < rieng(dao) * 0,7`.
+    Nó có **số đo thật** đứng sau: bảy đoạn kết giọng thứ của bản ký âm cho nhịp hoà âm
+    `0,27 · 0,50 · 0,57 · 0,64 · 0,78 · 0,92 · 1,00`, trung vị **0,64**, trong khi đoạn dạo
+    và giang tấu ≈ 1,0. Đoạn kết chậm lại bằng cách **giữ mỗi hợp âm nhiều ô**.
+
+    Nhưng giữ nhiều ô nghĩa là **có ô đứng cạnh một ô trùng nó**, và người dùng nêu ba lần
+    liền rằng họ không muốn thấy điều đó: *"lại bị hiện tượng 2 hợp âm kề nhau"* · *"sao kết
+    bài còn nguyên vẫn 2 hợp âm giống nhau đứng kế bên nhau"*. Hai điều ấy không dung hoà
+    được — "chậm" chính là "giữ lâu", mà "giữ lâu" chính là "lặp liền".
+
+    Người dùng chọn không lặp. `NHIP.outro` thành **1,0**, một đầu của dải đã đo (*Có Em
+    Chờ* đúng 7 hợp âm trên 7 ô), nên vẫn nằm trong bằng chứng — chỉ là không còn ở trung vị.
+
+    Đây là **lựa chọn phối khí**, không phải số đo. Đổi lại thì mất đặc trưng hoà âm chậm ở
+    đoạn kết. Triệu chứng để lùi: đoạn kết đổi hợp âm quá gấp, nghe không kịp lắng.
   */
-  it('đoạn kết đổi hợp âm chậm hơn hẳn, mà vẫn đủ số ô', () => {
+  it('đoạn kết không có hai ô liền cùng hợp âm, mà vẫn đủ số ô', () => {
     const dao = vonHopAmLinhNhi({ kind: 'intro', key: AM, songChords: BAI })
     const ket = vonHopAmLinhNhi({ kind: 'outro', key: AM, songChords: BAI })
     expect(ket.length).toBe(dao.length)
-    const rieng = (cs: readonly { root: number }[]) =>
-      cs.filter((c, i) => i === 0 || c.root !== cs[i - 1]!.root).length
-    expect(rieng(ket)).toBeLessThan(rieng(dao) * 0.7)
+    const keTrung = ket.filter((c, i) => i > 0 && c.root === ket[i - 1]!.root).length
+    expect(keTrung, `${keTrung} cặp kề trùng`).toBe(0)
   })
 
   it('mở trên hợp âm chủ khi bài có', () => {
@@ -98,7 +113,7 @@ describe('vốn hợp âm rút từ bài', () => {
     expect(bac(ra[ra.length - 1]!)).toBe(7)
   })
 
-  it('daoThu take xoay mẫu — take 1 = Rừng Lá i–♭VII–♭III', () => {
+  it('daoThu take xoay sang Cà Pháo — Người Hãy Quên Em Đi i–iv–i', () => {
     const ra = vonHopAmLinhNhi({
       kind: 'intro',
       key: AM,
@@ -107,15 +122,27 @@ describe('vốn hợp âm rút từ bài', () => {
       take: 1,
     })
     const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
-    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 10, 3])
+    expect(minorIntroSourceForTake(1)?.thay).toBe('ca-phao')
+    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 5, 0])
     expect(bac(ra[ra.length - 1]!)).toBe(7)
   })
 
-  it('daoThu intro thứ: trưởng trơn ≤ ~44% (Linh Nhi dạo 30%, Đừng Xa 44%)', () => {
-    const laTruong = (c: { quality: { intervals: readonly number[] } }) =>
-      c.quality.intervals.includes(4) &&
-      !c.quality.intervals.includes(3) &&
-      !c.quality.intervals.includes(10)
+  it('daoThu lấy bậc và chất hợp âm trực tiếp từ sheet thứ đã chọn', () => {
+    const chat = (c: { quality: { intervals: readonly number[] } }) =>
+      c.quality.intervals.includes(3) ? 'm' : c.quality.intervals.includes(10) ? '7' : ''
+    for (let take = 0; take < 6; take += 1) {
+      const source = minorIntroSourceForTake(take)!
+      const bars = source.phach === 8 && source.o4 ? source.o4 : source.o
+      const expected = bars.filter((o) => o.bac !== null).slice(0, 7)
+        .map((o, i) => [i === 0 ? 0 : o.bac, i === 0 ? 'm' : o.chat === 'm' ? 'm' : o.chat === '7' ? '7' : ''])
+      const actual = vonHopAmLinhNhi({
+        kind: 'intro', key: AM, songChords: BAI, daoThu: true, take,
+      }).slice(0, expected.length).map((c) => [((c.root - 9 + 12) % 12), chat(c)])
+      expect(actual, `${source.ten} — ${source.thay}`).toEqual(expected)
+    }
+  })
+
+  it('daoThu intro thứ: luôn xác lập i thứ; cho phép ♭VI/♭VII trưởng đúng sheet Tôn Hùng', () => {
     for (let take = 0; take < 6; take += 1) {
       const ra = vonHopAmLinhNhi({
         kind: 'intro',
@@ -124,13 +151,14 @@ describe('vốn hợp âm rút từ bài', () => {
         daoThu: true,
         take,
       })
-      const vong = ra.slice(0, -1)
-      const pct = vong.filter(laTruong).length / Math.max(1, vong.length)
-      expect(pct, `take ${take}`).toBeLessThanOrEqual(0.45)
+      expect(lop(ra[0]!.root), `take ${take}`).toBe(9)
+      expect(ra[0]!.quality.intervals).toContain(3)
+      expect(ra.some((c) => lop(c.root) === 9 || lop(c.root) === 2), `take ${take}`).toBe(true)
     }
   })
 
-  it('intro thứ daoThu: không hai ô cùng gốc sát nhau (n=6 mẫu)', () => {
+  it('intro thứ daoThu: giữ cả hợp âm lặp qua hai ô khi sheet viết như vậy', () => {
+    let coLap = false
     for (let take = 0; take < 6; take += 1) {
       const ra = vonHopAmLinhNhi({
         kind: 'intro',
@@ -140,10 +168,9 @@ describe('vốn hợp âm rút từ bài', () => {
         take,
       })
       const g = ra.map((c) => lop(c.root))
-      for (let i = 1; i < g.length; i += 1) {
-        expect(g[i], `take ${take} ô ${i}`).not.toBe(g[i - 1])
-      }
+      if (g.some((x, i) => i > 0 && x === g[i - 1])) coLap = true
     }
+    expect(coLap).toBe(true)
   })
 
   it('TICK giangThu: mẫu giang Đừng Xa ♭VII-♭VI-♭III, cửa V (n=3 bài, 2 thầy)', () => {
@@ -159,7 +186,8 @@ describe('vốn hợp âm rút từ bài', () => {
     expect(bac(ra[ra.length - 1]!)).toBe(7)
   })
 
-  it('vòng solo Am không có Bm (ii); luôn mở chủ âm', () => {
+  it('vòng solo Am giữ được ii thật của Nỗi Buồn Hoa Phượng; luôn mở chủ âm', () => {
+    let coBacHai = false
     for (let take = 0; take < 6; take += 1) {
       const ra = vonHopAmLinhNhi({
         kind: 'intro',
@@ -169,8 +197,9 @@ describe('vốn hợp âm rút từ bài', () => {
         take,
       })
       expect(lop(ra[0]!.root), `take ${take}`).toBe(9)
-      expect(ra.every((c) => lop(c.root) !== 11), `Bm take ${take}`).toBe(true)
+      if (ra.some((c) => lop(c.root) === 11)) coBacHai = true
     }
+    expect(coBacHai).toBe(true)
   })
 
   it('daoTruong xoay theo take, vẫn mở I', () => {

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
-import { giaiDieuDaoLinhNhi } from '../giaiDieuDaoLinhNhi'
+import { giaiDieuDaoLinhNhi, vonO } from '../giaiDieuDaoLinhNhi'
 import { TUYEN_SOLO } from '../tuyenSolo'
 import { SOLO_RANGE } from '../../fillSoloGenerator/soloGenerator'
 import type { PitchClass } from '../../../shared/musicTheory/types'
+import { minorIntroSourceForTake } from '../minorSoloSource'
 
 /*
   ĐOẠN DẠO LINH NHI — GHÉP MẢNH TỪ NHỮNG Ô NHỊP CÓ THẬT.
@@ -414,6 +415,17 @@ describe('đoạn dạo Linh Nhi — ghép mảnh', () => {
         du.length === 3 && du.every((p) => CE_G.has(p)),
         `take ${take} mở ${dau.join(',')}`,
       ).toBe(false)
+    }
+  })
+
+  it('intro thứ Bolero Tuấn xoay một sheet nhất quán qua đủ ba thầy', () => {
+    expect([0, 1, 2, 3, 4, 5].map((take) => minorIntroSourceForTake(take)?.thay))
+      .toEqual(['linh-nhi', 'ca-phao', 'ton-hung', 'linh-nhi', 'ca-phao', 'ton-hung'])
+    for (let take = 0; take < 6; take += 1) {
+      const source = minorIntroSourceForTake(take)!
+      const von = vonO(source.thay, 'intro', true).filter((t) => t.id === source.id)
+      expect(von).toHaveLength(1)
+      expect(von[0]!.thay).toBe(source.thay)
     }
   })
 
