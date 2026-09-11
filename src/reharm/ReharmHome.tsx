@@ -146,6 +146,7 @@ import {
   hasTonicVariant,
   resolveStyleForChord,
   resolveStyleForSection,
+  sectionCellBreaks,
 } from './style/sectionStyles'
 import { kieuChoSolo, laBoleroTuan, thienVeCuaHo } from './style/hoDieu'
 import {
@@ -1663,8 +1664,9 @@ export function ReharmHome() {
 
       Người dùng chỉ bấm một điệu trên bảng chọn; chuyện phiên khúc chơi khác
       điệp khúc là việc của phần đệm, không bắt họ canh giữa bài mà bấm tay.
-      Điệu không có bản điệp khúc thì `resolveStyleForSection` trả về chính nó,
-      `cellAt` luôn ra cùng một ô nhịp, và cả bài chạy như trước.
+      Điệu không có bản điệp khúc thì `resolveStyleForSection` trả về chính nó.
+      Việc mở lại mẫu ở đầu đoạn là riêng: CP cải tiến giữ đúng điệu nhưng
+      phải mở ô A khi sang phiên khúc mới, kể cả đoạn trước có số ô lẻ.
 
       `cellBreaks` là mốc vào đoạn: không có nó thì ô nhịp đang chạy tràn qua
       vạch, và bản điệp khúc phải chờ hết ô mới vào — với ô nhịp bốn ô thì trễ
@@ -1737,7 +1739,7 @@ export function ReharmHome() {
       : []
 
     const breaks = [
-      ...(swaps ? songSources!.map((source) => source.startBeat) : []),
+      ...sectionCellBreaks(style.id, songSources),
       ...splitStarts,
     ]
 

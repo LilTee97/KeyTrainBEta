@@ -2796,3 +2796,54 @@ Hồng Kông 1 gõ gần như móc đơn đều"* và loại bài này khỏi m�
 comment ở `hoDieu.ts`, `caPhaoSolo.ts`. Trường `dieu` hiện chỉ lọc ở nhánh Linh Nhi bolero
 (`minorSoloSource.ts`), nên Hồng Kông 1 đổi nhãn không đổi tiếng. Để lùi: đặt lại `'bossa
 nova'` ở ba tuyến ấy. PianoBrain đã sửa cùng lúc ở `328a5de`.
+
+### Bossa CP cải tiến: học từ sheet, biên soạn theo tai nghe — 11/9/2026
+
+Mẫu nền Bossa Cà Pháo được rút từ hai ô 9–10 của MusicXML *Người hãy quên em
+đi* và đối chiếu với lần lặp 17–18. `Bossa CP cải tiến` không phải bản chép
+nguyên xi: đó là bản **biên soạn KeyTrain** trên mẫu nền ấy, được người dùng
+nghe nhiều lượt và xác nhận là hay. Phải giữ ranh giới này trong cả tên UI,
+tài liệu và mã nguồn: “dựa trên Cà Pháo” là đúng; gán mọi tiếng của bản cải tiến
+cho Cà Pháo là sai. Hồng Kông 1 vẫn là ballad/pop nhấn lệch, không phải corpus
+cho bossa.
+
+Mẫu CP cải tiến dài hai ô 4/4. Nửa A giữ mô hình rút từ sheet. Nửa B dùng chuỗi
+đã duyệt: bass 7 ở 4.0 (1/2 phách), chát 8 ở 4.5 (1 phách), bass 9 ở 5.5
+(1/2), chát 10 ở 6.0 (1), chát 11 ở 7.0 (1/2, nhấn), rồi bass dẫn ở 7.5
+(1/2, rất nhẹ). Bass dẫn là một nốt chromatic dẫn vào **hợp âm thật** của ô
+sau, chỉ tạo khi hợp âm đổi ngay đầu ô sau; không thay bằng cả hợp âm sau và
+không có ở cuối bài.
+
+Điểm phương pháp quan trọng nhất: tách **lúc tiếng kế tiếp vào** khỏi **tiếng
+trước ngân bao lâu**. Mỗi nốt/sự kiện phải có ít nhất onset, duration,
+velocity và vai trò hoà âm. Khi chỉnh groove, đổi từng quan hệ một (onset,
+độ ngân/khoảng nghỉ hoặc lực nhấn), rồi nghe lại. Di chuyển onset và duration
+cùng lúc theo cảm giác làm mất nguyên nhân của thay đổi. Test xanh chỉ chứng
+minh lịch nốt/invariant đúng; không chứng minh tiết tấu nghe hay.
+
+Mẫu hai ô phải reset về nửa A tại đầu mọi đoạn nhạc. Nếu để cell 8 phách chạy
+liên tục, phiên khúc mới sau số ô lẻ sẽ rơi vào nửa B và nghe như bị đổi điệu.
+Đó là lỗi căn chỉnh chu kỳ, không phải biến thể biểu diễn. Kiểm bằng test đầu
+đoạn 4, 6, 12, 14, 20 phách và bằng nghe thực tế qua nhiều đoạn.
+
+### Quy trình rút điệu có thể dùng cho mọi sheet
+
+1. Ghi corpus trước: thầy, bài, nhãn điệu đang là giả thuyết, file nguồn, ô
+   dùng để dựng và ô dùng để đối chiếu. Không kết luận điệu chỉ từ tên bài hay
+   một sheet.
+2. Chuyển sheet thành timeline theo phách. Nốt có `chord` là cùng onset; `tie`
+   là ngân, không phải re-attack; tôn trọng `backup`/`forward` trong MusicXML.
+3. Tách bass, hợp âm đỡ, giai điệu/rải và nốt dẫn. Đàn piano solo có thể trộn
+   chúng trong cùng một tay nên không được coi mọi nốt chồng là pattern đệm.
+4. So các ô cùng chức năng hoà âm để tìm cell lặp 1–n ô. Giữ A/B khác nhau,
+   không bình quân hoá làm mất nhấn–nhả, câu hỏi–đáp và khoảng thở.
+5. Tách **khung điệu** (nhịp, mật độ, điểm nhấn, khoảng nghỉ, vai trò) khỏi
+   **chất liệu** (bậc nốt, voicing, chromatic, voice-leading). Khi tái dùng ở
+   tông khác, chuyển chất liệu theo bậc/chức năng của hợp âm, không bê cao độ
+   tuyệt đối.
+6. Gắn nhãn bằng chứng: *nguồn đo được*, *candidate cần thêm corpus*, hoặc
+   *biên soạn KT đã được người dùng nghe duyệt*. Chỉ cái đầu mới được phát biểu
+   là thủ pháp của thầy.
+7. Kiểm bằng tai trên cả vòng, ranh giới đoạn và nhiều bài; test phải kiểm
+   timeline/tổng phách/đích hoà âm/điều kiện biên. Khi tai và test mâu thuẫn,
+   đo lại hoặc xem lại giả định — không dùng test để áp đặt một groove chưa ổn.

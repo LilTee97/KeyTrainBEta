@@ -22,7 +22,7 @@ describe('tách thầy khi sinh solo', () => {
   it('nút thầy trỏ đúng điệu', () => {
     expect(styleIdForTeacher('ton-hung')).toBe('ton-hung-ballad')
     expect(styleIdForTeacher('linh-nhi')).toBe('bolero-linh-nhi-2')
-    expect(styleIdForTeacher('ca-phao')).toBe('bossa-ca-phao-som')
+    expect(styleIdForTeacher('ca-phao')).toBe('ca-phao-bossa-sheet-9-10')
   })
 
   it('Cà Pháo bossa và Linh Nhi bolero mỗi người một lối', () => {

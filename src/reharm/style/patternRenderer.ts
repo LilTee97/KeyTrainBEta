@@ -494,6 +494,8 @@ function renderWithCell(
           về hợp âm hiện tại, thà mất cử chỉ còn hơn mất tiếng.
         */
         const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
+        if (hit.requireNextChord && (sauDo === undefined ||
+          Math.abs(sauDo - startBeat - hit.durationBeats) > EPSILON)) continue
         const voicing = (sauDo !== undefined ? voicingAt(sauDo) : undefined) ?? voicingAt(startBeat)
         if (!voicing) continue
 
@@ -569,8 +571,10 @@ function renderWithCell(
 
         if (hand === 'left') {
           const index = indexAt(startBeat)
-          // Ngắn hơn ô nhịp của chính mẫu đang chạy, chứ không phải một con số cứng.
-          const short = durations[index] < (cellAt?.(startBeat) ?? fallback!).lengthBeats - EPSILON
+          // So với MỘT ô nhịp, không phải cả chu kỳ mẫu (có thể 2–4 ô).
+          // Nếu so với cell 8 phách, hợp âm đủ 4 phách cũng bị ép bass thể bấm,
+          // kéo D2 lên D3 trong khi nốt tiếp cận và bậc 5 vẫn nằm ở quãng tám 2.
+          const short = durations[index] < pattern.beatsPerMeasure * (pattern.gridUnit ?? 1) - EPSILON
           if (short && !rootForced.has(index)) {
             rootForced.add(index)
             const bass = voicing.left.length > 0 ? Math.min(...voicing.left) : undefined

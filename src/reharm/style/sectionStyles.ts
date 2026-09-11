@@ -110,12 +110,26 @@ const VERSE_OF: Readonly<Record<string, string>> = Object.fromEntries(
 )
 
 /** Tên chính thức của điệu: alias (`ballad`, `hai-pop-ballad-1`…) quy về một mối. */
-const canonical = (styleId: string): string => getStyle(styleId)?.id ?? styleId
+function canonical(styleId: string): string {
+  return getStyle(styleId)?.id ?? styleId
+}
 
 /** Điệu này có bản điệp khúc riêng không — dùng để bày ghi chú trên giao diện. */
 export function hasChorusVariant(styleId: string): boolean {
   const id = canonical(styleId)
   return id in CHORUS_PAIRS || id in VERSE_OF
+}
+
+/** Các đầu đoạn cần mở lại mẫu đệm; độc lập với việc chọn biến thể điệu. */
+export function sectionCellBreaks(
+  styleId: string,
+  sections: readonly { startBeat: number }[] | null,
+): number[] {
+  // CP cải tiến có câu hai ô A–B nhưng không có biến thể điệp khúc.
+  // Sau đoạn dài số ô lẻ phải mở lại A, không lấy nửa B của chu kỳ toàn bài.
+  const restart = hasChorusVariant(styleId) || hasTonicVariant(styleId)
+    || canonical(styleId) === 'ca-phao-bossa-improved'
+  return restart ? sections?.map(section => section.startBeat) ?? [] : []
 }
 
 /**

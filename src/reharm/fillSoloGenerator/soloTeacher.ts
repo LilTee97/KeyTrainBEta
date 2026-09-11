@@ -20,7 +20,7 @@ export const SOLO_THAY_NUT: readonly {
   styleId: string | null
 }[] = [
   { id: null, label: 'Theo đệm', styleId: null },
-  { id: 'ca-phao', label: 'Cà Pháo', styleId: 'bossa-ca-phao-som' },
+  { id: 'ca-phao', label: 'Cà Pháo', styleId: 'ca-phao-bossa-sheet-9-10' },
   { id: 'linh-nhi', label: 'Linh Nhi', styleId: 'bolero-linh-nhi-2' },
   { id: 'ton-hung', label: 'Tôn Hùng', styleId: 'ton-hung-ballad' },
 ]
