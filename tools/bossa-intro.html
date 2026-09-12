@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KT · nghe thử intro thứ Bossa CP cải tiến</title>
+<style>
+  :root { color-scheme: dark; font: 18px/1.6 system-ui; background: #1c1917; color: #eee6dc }
+  body { max-width: 850px; margin: 40px auto; padding: 0 24px }
+  h1 { font-size: 1.6rem; color: #e7ac57 }
+  button, select, input { font: inherit; padding: 8px 14px; margin: 5px; border-radius: 8px }
+  button { cursor: pointer } button:disabled { cursor: wait; opacity: .6 }
+  #chords { padding: 18px; border: 1px solid #72573a; border-radius: 12px }
+  small { color: #c7b5a2 } a { color: #e7ac57 } summary { cursor: pointer }
+</style>
+<h1>Intro thứ · Bossa CP cải tiến</h1>
+<p>Bản thử KT phát triển từ intro <i>Người hãy quên em đi</i>, ô 1–8.
+  Giữ mẫu đệm CP cải tiến; không lấy tiết tấu Ballad. Chưa được nghe duyệt.</p>
+<p><label>Giọng <select id="key"><option value="9">La thứ</option><option value="2">Rê thứ</option>
+  <option value="7">Sol thứ</option><option value="0">Đô thứ</option><option value="5">Fa thứ</option></select></label>
+  <label>BPM <input id="bpm" type="number" min="50" max="180" value="110" size="3"></label>
+  <label>Bản <select id="take"><option value="0">1</option><option value="1">2</option>
+    <option value="2">3</option><option value="3">4</option></select></label></p>
+<p id="chords"></p>
+<button id="play">▶ Nghe một lượt</button><button id="stop">■ Dừng</button>
+<p id="status" role="status" aria-live="polite"></p>
+<small>8 ô intro + 1 ô chủ âm để nghe điểm vào hát. Không có lời hát, không sửa bài đã lưu.
+  Tầm giai điệu D4–C6. Bốn biến thể có chủ ý, không phải bộ học vô hạn.</small>
+<details><summary>Dữ liệu kiểm tra bản đang nghe</summary><pre id="data"></pre></details>
+<p><a href="/">Về KeyTrain</a></p>
+<script type="module">
+import { buildPhraseSection } from '/src/reharm/style/phraseSection.ts'
+import { CA_PHAO_BOSSA_IMPROVED as style } from '/src/reharm/style/styleLibrary/caPhaoBossa.ts'
+import { parseChordInput } from '/src/reharm/input/chordInputParser.ts'
+import { pitchClassName } from '/src/shared/musicTheory/pitch.ts'
+import { voiceLeadTwoHands } from '/src/reharm/voicingGenerator/handSplitVoicing.ts'
+import { renderPattern } from '/src/reharm/style/patternRenderer.ts'
+import { startAudio, startTimelineLoop, stopTimelineLoop, usePlaybackStore } from '/src/shared/audio/audioEngine.ts'
+const el = id => document.getElementById(id)
+let result, hits, loading = false, cancelled = false
+function build() {
+  stopTimelineLoop()
+  const tonic = Number(el('key').value)
+  const opening = parseChordInput(pitchClassName(tonic) + 'm').chords[0]
+  result = buildPhraseSection({ kind: 'intro', key: { tonic, scale: 'minor' }, style,
+    beatsPerChord: 4, dropRoot: true, opening, solo: () => [],
+    range: { low: 62, high: 84 }, take: Number(el('take').value) })
+  hits = [...result.events, ...renderPattern(voiceLeadTwoHands([opening]), style, { beatsPerChord: 4 })
+    .map(e => ({ ...e, startBeat: e.startBeat + 32 }))]
+  el('chords').textContent = result.chords.map((c, i) => `${c} (${result.beatsEach[i]} phách)`).join(' · ') + ` → ${opening.symbol}`
+  el('data').textContent = JSON.stringify({ source: result.sourcePhrase, introBeats: result.lengthBeats,
+    events: result.events.length, firstChord: result.chords[0], lastChord: result.chords.at(-1) }, null, 2)
+  el('status').textContent = result.unavailableReason || 'Sẵn sàng. Nghe riêng tiết tấu, màu hợp âm và nét giai điệu.'
+  el('play').disabled = !!result.unavailableReason
+}
+el('play').onclick = async () => {
+  if (loading) return
+  const bpm = Number(el('bpm').value)
+  if (!Number.isFinite(bpm) || bpm < 50 || bpm > 180) { el('status').textContent = 'BPM từ 50 đến 180.'; return }
+  loading = true; cancelled = false; el('play').disabled = true
+  el('status').textContent = 'Đang chuẩn bị tiếng đàn…'
+  try { await startAudio(); if (!cancelled) startTimelineLoop(hits, bpm, 36, 0, true) }
+  catch (error) { el('status').textContent = `Không phát được: ${error.message}` }
+  finally { loading = false; el('play').disabled = !!result.unavailableReason }
+}
+el('stop').onclick = () => { cancelled = true; stopTimelineLoop(); el('status').textContent = 'Đã dừng.' }
+for (const id of ['key', 'take']) el(id).onchange = () => { cancelled = true; build() }
+usePlaybackStore.subscribe(state => {
+  if (state.looping) el('status').textContent = state.positionBeats < 32
+    ? `Intro · ô ${Math.floor(state.positionBeats / 4) + 1}/8`
+    : state.positionBeats < 36 ? 'Chủ âm · điểm vào hát' : 'Ngân kết; không lặp lại.'
+  else if (!loading) el('status').textContent = 'Đã dừng. Bạn có thể nghe lại hoặc chọn bản khác.'
+})
+window.addEventListener('pagehide', stopTimelineLoop)
+build()
+</script>
+</html>

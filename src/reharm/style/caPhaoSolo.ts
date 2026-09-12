@@ -2,9 +2,110 @@ import { chordTonesStrict } from '../fillSoloGenerator/soloVocabulary'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { TimelineEvent } from './types'
+import type { PhraseSection, PhraseSectionOptions } from './phraseSection'
+import { parseChordInput } from '../input/chordInputParser'
+import { pitchClassName } from '../../shared/musicTheory/pitch'
+import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
+import { renderPattern } from './patternRenderer'
 
 /**
- * CÂU SOLO TỰ DO KIỂU CÀ PHÁO.
+ * Một vòng thử, học NGUYÊN intro Người hãy quên em đi (XML 1–8, Dm).
+ * Không dùng TUYEN_SOLO cũ: dữ liệu đó tách sai chùm/tie và làm mất màu m9/m11.
+ * KT phát triển nét 9–1–b7–5, đáp iv, nhắc lại, rồi iv–V; không chép cả câu.
+ * Timing là biên soạn trên cell CP cải tiến, KHÔNG dùng feel/snap Bolero hay
+ * mô hình ngũ cung Hongkong 1. Giữ nguyên onset/gate của LH, RH đệm chỉ đáp ở khe.
+ */
+export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSection {
+  const unavailable = (why: string): PhraseSection => ({
+    events: [], lengthBeats: 0, chords: [], beatsEach: [], unavailableReason: why,
+  })
+  const { key, style } = options
+  if (!key || key.scale !== 'minor' || style.id !== 'ca-phao-bossa-improved' ||
+    style.beatsPerMeasure !== 4 || (style.gridUnit ?? 1) !== 1) {
+    return unavailable('Intro thử chỉ dành cho Bossa CP cải tiến, giọng thứ, nhịp 4/4.')
+  }
+  const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass
+  const chord = (root: number, suffix: string) =>
+    parseChordInput(pitchClassName(pc(root)) + suffix).chords[0]!
+  const i = chord(key.tonic, 'm9'), iv = chord(key.tonic + 5, 'm11')
+  const opening = options.opening ?? chord(key.tonic, 'm')
+  const dominant = chord(opening.root + 7, '7')
+  // Màu mở rộng là lựa chọn intro, không sửa hòa âm phần hát. Giữ đủ 8 ô.
+  const chords = [i, iv, chord(key.tonic, 'm11'), iv, i, iv,
+    chord(key.tonic, 'm11'), chord(key.tonic + 5, 'm7'), dominant]
+  const beatsEach = [4, 4, 4, 4, 4, 4, 3.5, 2, 2.5]
+  const range = options.range ?? { low: 60, high: 84 }
+  if (!Number.isFinite(range.low) || !Number.isFinite(range.high) || range.low > range.high) {
+    return unavailable('Tầm nốt intro không hợp lệ.')
+  }
+  // Đặt TOÀN đường nét (5…15 so với tonic) vào tầm trước khi phát; không gập từng nốt.
+  const bases = Array.from({ length: 11 }, (_, octave) => key.tonic + octave * 12)
+    .filter(base => base + 5 >= range.low && base + 15 <= range.high)
+    .sort((a, b) => Math.abs(a + 10 - (range.low + range.high) / 2) -
+      Math.abs(b + 10 - (range.low + range.high) / 2))
+  const base = bases[0]
+  if (base === undefined) return unavailable('Tầm nốt quá hẹp cho đường nét intro Bossa thứ; thử mở khoảng C4–C6.')
+  // ponytail: 4 biến thể có chủ ý, chưa phải học tự động vô hạn; chờ nghe duyệt vòng này.
+  const take = Number.isFinite(options.take) ? Math.max(0, Math.floor(options.take!)) % 4 : 0
+  const call = take % 2 ? [12, 14, 10, 7] : [14, 12, 10, 7]
+  const callTimes = take < 2 ? [0, 1, 2.5, 3.5] : [0.5, 1, 2.5, 3.5]
+  // [onset, cao độ tương đối, gate]: gate độc lập với onset tiếng kế.
+  type Note = [number, number, number]
+  const phrases: Note[][] = [
+    call.map((n, index) => [callTimes[index]!, n, [0.45, 1.25, 0.75, 0.45][index]!] as Note),
+    [[0.5, 8, 0.9], [1.5, 12, 0.45], [2, 10, 0.45], [2.5, 7, 0.45], [3, 5, 0.5]],
+    [[0, 14, 0.45], [0.5, 15, 0.45], [1, 14, 1.25], [2.5, 10, 0.75], [3.5, 7, 0.45]],
+    [[0.5, 7, 0.22], [0.75, 8, 0.22], [1, 12, 0.22], [1.25, 15, 0.22],
+      [1.5, 12, 0.45], [2, 10, 0.75], [3, 5, 0.5]],
+    call.map((n, index) => [callTimes[index]!, n, [0.45, 1.25, 0.75, 0.45][index]!] as Note),
+    [[0.5, 7, 0.45], [1, 8, 0.45], [1.5, 10, 0.45], [2, 8, 0.45], [2.5, 7, 0.45], [3, 5, 0.5]],
+    [[0, 5, 0.22], [0.25, 6, 0.22], [0.5, 7, 0.45], [1, 14, 1.25], [2.5, 12, 0.45], [3, 10, 0.45]],
+    [[0.5, 8, 0.45], [1, 12, 0.45]],
+  ]
+  if (take >= 2) {
+    // Phát triển cùng nguồn: thay nét hồi đáp, không đổi thầy hoặc bốc từng ô từ kho.
+    phrases[2] = [[0, 12, 0.9], [1, 14, 0.45], [1.5, 15, 0.45], [2.5, 14, 0.45], [3, 10, 0.45]]
+  }
+  const melody: TimelineEvent[] = phrases.flatMap((bar, index) => bar.map(([at, n, dur]) => ({
+    startBeat: index * 4 + at, notes: [(base + n) as MidiNote], durationBeats: dur,
+    hand: 'right' as const, velocity: index % 2 && at === 3 ? 82 : dur < 0.25 ? 62 : 74,
+  })))
+  const cadenceBases = Array.from({ length: 11 }, (_, octave) => dominant.root + octave * 12)
+    .filter(root => root + 4 >= range.low && root + 7 <= range.high)
+    .sort((a, b) => Math.abs(a + 4 - (base + 12)) - Math.abs(b + 4 - (base + 12)))
+  if (cadenceBases[0] === undefined) return unavailable('Không đặt được câu hút về hợp âm mở bài trong tầm nốt này.')
+  ;[4, 7, 4].forEach((interval, index) => melody.push({
+    startBeat: 29.5 + index * 0.5, durationBeats: 0.45,
+    notes: [(cadenceBases[0]! + interval) as MidiNote], hand: 'right', velocity: 70 - index * 4,
+  }))
+  // Cần biết đích thật để bass 31.5 giải xuống đầu phần hát; không xuất thêm ô hát này.
+  const backing = renderPattern(voiceLeadTwoHands([...chords, opening], {
+    dropRootFromRightHand: options.dropRoot,
+  }), style, { beatsPerChord: 4, beatsEach: [...beatsEach, 4] })
+    .filter(event => event.startBeat < 32)
+  const overlap = (a: TimelineEvent, b: TimelineEvent) =>
+    a.startBeat < b.startBeat + b.durationBeats - 1e-6 && b.startBeat < a.startBeat + a.durationBeats - 1e-6
+  // Giữ bass/cú chát LH của đúng cell. RH chỉ chèn khi CẢ trường độ nằm trong khe giai điệu.
+  // Ô chót chừa phách cuối cho ca sĩ, bass dẫn vẫn còn nửa phách riêng.
+  const events = backing.filter(e => e.hand === 'left' ||
+    (e.startBeat + e.durationBeats <= 31 && !melody.some(m => overlap(m, e))))
+  for (const m of melody) {
+    const clash = events.some(e => e.hand === 'left' && overlap(e, m) && e.notes.some(n =>
+      Math.abs(n - m.notes[0]!) <= 1))
+    if (clash) return unavailable('Intro thử va chạm hai tay trong tầm hiện tại. Chưa phát câu sửa gập nốt; hãy đổi tầm nốt.')
+  }
+  return { events: [...events, ...melody].sort((a, b) => a.startBeat - b.startBeat),
+    lengthBeats: 32, chords: chords.map(c => c.symbol), beatsEach,
+    sourcePhrase: { id: 'nguoi-hay-quen-em-di-intro', fromBar: 1, barCount: 8, method: 'motif-development' },
+  }
+}
+
+/**
+ * CÂU SOLO TỰ DO KIỂU CÀ PHÁO — NHÁNH CŨ.
+ * Cảnh báo audit 12/9/2026: các thống kê dưới là mô tả lịch sử, không phải
+ * luật tổng quát đã xác nhận. Nhánh này từng trộn Hongkong (ballad) và Người
+ * hãy quên (bossa). Intro thứ CP cải tiến ở trên không dùng nó. Xem báo cáo
+ * Reference/CA-PHAO-HOA-AM-VOICING-INTRO-BOSSA-2026-09-12.md trước khi mở rộng.
  *
  * Người dùng đọc hai bản ký âm rồi kết luận, và số đo đứng về phía họ từng ý
  * một: ở đoạn solo, người soạn này **không chơi mẫu đệm bossa nữa**. Anh biến
@@ -42,7 +143,7 @@ import type { TimelineEvent } from './types'
  *
  * ```
  * D4 G4 A4 B4 D5 G5 A5 B5 D6 G6 A6 B6
- * bước [+5 +2 +2 +3] lặp — thang NGŨ CUNG, ba quãng tám, nốt móc ba
+ * bước [+5 +2 +2 +3] lặp — hình BỐN nốt tương thích ngũ cung, nốt móc ba
  * vào ở offset 1,625 (lệch phách), đáp xuống phách 4 bằng một nốt dài
  * ```
  *
