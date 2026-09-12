@@ -2905,3 +2905,24 @@ mới chuyển sang bài đích.
 
 Kiểm cuối: cùng đầu vào/ngữ cảnh phải ra cùng vòng và voicing; nghe trên cả câu hát,
 không chỉ nghe hợp âm rời. Ghi rõ nguồn đo được, suy luận hay biên soạn KT đã duyệt.
+
+### Nút "Bossa test 1" — bản dựng lại Bossa CP cải tiến, tách riêng để nghe đối chiếu (12/9/2026)
+
+Người dùng yêu cầu: từ ba file ghi chép ở commit `64496ba` (`CA-PHAO-MAU-GIANG-KET-BOSSA-2026-09-12.md`,
+`CA-PHAO.md`, `SO-TAY.md`) tạo lại điệu Bossa CP cải tiến thành **một nút riêng**, không chồng lên nút cũ.
+
+- `CA_PHAO_BOSSA_TEST_1` (`caPhaoBossa.ts`): id `ca-phao-bossa-test-1`, họ riêng nên `StylePicker` ra nút
+  mới "Bossa test 1". Cell **viết thẳng từ lời mô tả** trong ghi chép (ô A: bass 1½ · tiếp cận dưới bậc 5
+  ở 2& · bậc 5 ở 3; RH chát 2, 3&, 4& — ô B: bùm 7 · chát 8 ngân 1 · bùm 9 · chát 10 ngân 1 · chát 11 ½ ·
+  bass dẫn ½), không spread từ bản cũ. Kết quả: **cùng tập sự kiện với bản đã duyệt** (khác thứ tự mảng
+  tay trái, tiếng dựng ra y hệt — `bossaTest1.test.ts` kiểm cả hai). Cố ý: đây là bản tái tạo để đối
+  chiếu; muốn thử gì thì sửa ở test 1, bản đã duyệt đứng yên.
+- **Gom mười chỗ so cứng** `style.id === 'ca-phao-bossa-improved'` (ReharmHome ×6, caPhaoSolo ×2,
+  phraseSection, sectionStyles) về `laBossaCP()` + `BOSSA_CP_IDS`. Trước đây thêm một nút thử là phải
+  sửa mười chỗ, sót một chỗ là nút mới mất intro/giang/outro thứ. `hoDieu` cũng nhận họ mới vào nhóm
+  bossa và `SOLO_TU_DO`.
+- Kiểm: intro/giang/outro thứ của test 1 `toEqual` nút cũ cùng take (Am, thầy Cà Pháo). tsc sạch;
+  2597/2603, 6 đỏ cũ. **Chưa nghe** — chờ người dùng.
+
+Để lùi: bỏ `CA_PHAO_BOSSA_TEST_1` khỏi `VERIFIED_STYLES` và hai danh sách trong `hoDieu.ts`; `laBossaCP`
+vẫn đúng với một id.

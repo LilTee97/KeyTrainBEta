@@ -1,3 +1,4 @@
+import { laBossaCP } from './styleLibrary/caPhaoBossa'
 import type { ScaleType } from '../../shared/musicTheory/scales'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
@@ -596,7 +597,7 @@ export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
   if (options.key?.scale === 'minor' &&
-    options.style.id === 'ca-phao-bossa-improved' &&
+    laBossaCP(options.style) &&
     (!options.thay || options.thay === 'ca-phao') && !options.motif) {
     return options.kind === 'intro' ? caPhaoBossaMinorIntro(options) : caPhaoBossaMinorSolo(options)
   }

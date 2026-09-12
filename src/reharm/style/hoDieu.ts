@@ -75,7 +75,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   bossa: {
     ten: 'Bossa Nova',
-    families: ['bossa', 'bossa-clave', 'hai-bossa-nova', 'bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved'],
+    families: ['bossa', 'bossa-clave', 'hai-bossa-nova', 'bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved', 'ca-phao-bossa-test-1'],
   },
   rumba: {
     ten: 'Rumba',
@@ -249,7 +249,7 @@ const RAI_THEO_TAY_TRAI: readonly string[] = ['bolero', 'bossa']
  * Linh Nhi (mốc gõ chung ở giang tấu tụt còn 30-39%, tức hai tay rời ra). Các
  * điệu bossa khác vẫn giữ lối bám tay trái như người dùng đã yêu cầu.
  */
-const SOLO_TU_DO: readonly string[] = ['bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved']
+const SOLO_TU_DO: readonly string[] = ['bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved', 'ca-phao-bossa-test-1']
 
 /**
  * HỌ nào cũng chơi lối tự do ấy — mở theo SỐ ĐO, không theo cảm tính.

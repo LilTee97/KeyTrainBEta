@@ -1,3 +1,4 @@
+import { laBossaCP } from './styleLibrary/caPhaoBossa'
 import { chordTonesStrict } from '../fillSoloGenerator/soloVocabulary'
 import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
@@ -20,7 +21,7 @@ export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSect
     events: [], lengthBeats: 0, chords: [], beatsEach: [], unavailableReason: why,
   })
   const { key, style } = options
-  if (!key || key.scale !== 'minor' || style.id !== 'ca-phao-bossa-improved' ||
+  if (!key || key.scale !== 'minor' || !laBossaCP(style) ||
     style.beatsPerMeasure !== 4 || (style.gridUnit ?? 1) !== 1) {
     return unavailable('Intro thử chỉ dành cho Bossa CP cải tiến, giọng thứ, nhịp 4/4.')
   }
@@ -108,7 +109,7 @@ export function caPhaoBossaMinorSolo(options: PhraseSectionOptions): PhraseSecti
   const { key, style } = options
   const empty = (why: string): PhraseSection => ({ events: [], chords: [], beatsEach: [],
     lengthBeats: 0, unavailableReason: why })
-  if (!key || key.scale !== 'minor' || style.id !== 'ca-phao-bossa-improved')
+  if (!key || key.scale !== 'minor' || !laBossaCP(style))
     return empty('Câu mới cần Bossa CP cải tiến và giọng thứ.')
   const outro = options.kind === 'outro'
   const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass

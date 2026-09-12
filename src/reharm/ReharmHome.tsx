@@ -141,6 +141,7 @@ import { interludeChordsForTeacher } from './style/teacherSoloChords'
 import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
+import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -1778,7 +1779,7 @@ export function ReharmHome() {
   const interludeWindow = useCallback(
     (over: SourceSection, _next: SourceSection | null, interludeTake = 0, lastLoop = true) => {
       const spans = mainChordSpans(withPassing, chordBeats)
-      if ((laBoleroTuan(style) || (style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor') {
+      if ((laBoleroTuan(style) || (laBossaCP(style) && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor') {
         const nextChord = _next && lastLoop ? spans.find((s) => Math.abs(s.start - _next.startBeat) < 0.001)?.chord : null
         const built = buildPhraseSection({ kind: 'interlude', key: reharm.key, style,
           beatsPerChord: chordBeats, dropRoot, opening: nextChord ?? null,
@@ -2497,8 +2498,8 @@ export function ReharmHome() {
 
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useCallback(
-    (take: number) =>
-      soloToTimeline(
+    (take: number) => {
+      const line = soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
           sectionEnds: transitions,
@@ -2547,8 +2548,12 @@ export function ReharmHome() {
                 })
             : undefined,
         }),
-      ),
+      )
+      return laBossaCP(style) ? bossaFillsInGaps(line, accompaniment) : line
+    },
     [
+      style,
+      accompaniment,
       withPassing,
       chordBeats,
       soloDirection,
@@ -3030,7 +3035,7 @@ export function ReharmHome() {
   const steps = useMemo(() => {
     let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
-    const cpBossaMinor = style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
+    const cpBossaMinor = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
     const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor
     if (!themSolo) return base
     base = base.filter((step) => {
@@ -3087,7 +3092,7 @@ export function ReharmHome() {
           steps,
           turnaround: undefined,
           // Mở riêng giang tấu THỨ Tuấn đã có bộ phát triển mô-típ mới.
-          interludeRange: (laBoleroTuan(style) || (style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor'
+          interludeRange: (laBoleroTuan(style) || (laBossaCP(style) && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor'
             ? (over, next, take, lastLoop) => {
                 const made = interludeWindow(over, next, interludeTake + take, lastLoop)
                 if (made && 'unavailableReason' in made && made.unavailableReason) {
@@ -3137,7 +3142,7 @@ export function ReharmHome() {
             */
             if (
               !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor',
-                style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')
+                laBossaCP(style) && thaySolo === 'ca-phao')
             ) {
               phraseWarnings.push(
                 'Đoạn kết ở đường này hiện chỉ mở cho giọng thứ Bolero Tuấn hoặc Bossa CP cải tiến với thầy Cà Pháo. Bài sẽ kết mà không thêm outro.',
@@ -3436,7 +3441,7 @@ export function ReharmHome() {
    * cũng ra cùng một khoảng khi bài có điệp khúc.
    */
   const interludeSymbols = useMemo(() => {
-    if ((laBoleroTuan(style) || style.id === 'ca-phao-bossa-improved') && reharm.key?.scale === 'minor') {
+    if ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor') {
       return [...(timelineHien.soloSpans.find((span) => span.kind === 'interlude')?.chords ?? [])]
     }
     if (!songSources || songSources.length === 0) return []

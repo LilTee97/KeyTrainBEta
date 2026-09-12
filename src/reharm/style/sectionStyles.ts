@@ -1,3 +1,4 @@
+import { laBossaCP } from './styleLibrary/caPhaoBossa'
 import { getStyle } from './styleLibrary'
 import type { SectionKind } from './songStructure'
 
@@ -128,7 +129,7 @@ export function sectionCellBreaks(
   // CP cải tiến có câu hai ô A–B nhưng không có biến thể điệp khúc.
   // Sau đoạn dài số ô lẻ phải mở lại A, không lấy nửa B của chu kỳ toàn bài.
   const restart = hasChorusVariant(styleId) || hasTonicVariant(styleId)
-    || canonical(styleId) === 'ca-phao-bossa-improved'
+    || laBossaCP(canonical(styleId))
   return restart ? sections?.map(section => section.startBeat) ?? [] : []
 }
 
