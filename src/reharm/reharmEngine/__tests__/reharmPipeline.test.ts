@@ -293,10 +293,10 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     ).toEqual(['Am7', 'Dm7', 'E7', 'Am7'])
   })
 
-  it('Cà Pháo: I add9, ii m9, V 9 (n=4 hát)', () => {
+  it('Cà Pháo ballad: trưởng maj7, thứ m7, át 7 khi chưa biết nốt hát', () => {
     expect(
       final('C Am F G', { intensity: 'caPhao', key: { tonic: 0, scale: 'major' } }),
-    ).toEqual(['Cadd2', 'Am7', 'Fmaj7', 'G9'])
+    ).toEqual(['Cmaj7', 'Am7', 'Fmaj7', 'G7'])
   })
 
   it('Tôn Hùng thứ: i trơn, v m7 (n=2, 0 sheet trưởng)', () => {

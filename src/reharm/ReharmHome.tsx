@@ -100,6 +100,7 @@ import {
   orderedKeys,
 } from './reharmEngine/keyDetection'
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
+import { hoCuaDieu } from './style/hoDieu'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -1036,6 +1037,7 @@ export function ReharmHome() {
     // Chạy vòng đầu để lấy danh sách gợi ý, rồi lọc ra những cái đã chấp nhận.
     const firstPass = reharmonize(sequence.chords, {
       intensity,
+      teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
       tonicColor,
       majorColor,
@@ -1075,6 +1077,7 @@ export function ReharmHome() {
 
     const result = reharmonize(sequence.chords, {
       intensity,
+      teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
       tonicColor,
       majorColor,
@@ -1106,6 +1109,7 @@ export function ReharmHome() {
     useSlashChords,
     varyOnRepeat,
     rawSectionRanges,
+    style.id,
     style.beatsPerMeasure,
     manualKey,
     acceptedPassing,
@@ -5291,7 +5295,7 @@ export function ReharmHome() {
           Thêm màu hợp âm
         </h3>
         <p className="mb-3 text-xs leading-relaxed text-dim">
-          Khá: add9 / 9sus4 / 7b9. Linh Nhi: Δ m7 V7. Cà Pháo: add9 m9 9. Tôn Hùng thứ: i trơn, v m7 (n=2).
+          Cà Pháo: màu theo điệu và chức năng hợp âm, thế bấm học từ sheet. Giữ các màu bạn đã ghi trong lời gốc.
         </p>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -5481,7 +5485,9 @@ export function ReharmHome() {
             {sequence.chords.map((original, index) => {
               const after = recolored[index]
               const changed = after && after.symbol !== original.symbol
-              const upper = after ? bestUpperStructure(after) : null
+              const upper = after && intensity !== 'caPhao' ? bestUpperStructure(after) : null
+              const cpHands = intensity === 'caPhao'
+                ? twoHands.filter((_, at) => !withPassing[at]?.passing)[index] : null
 
               return (
                 <div
@@ -5516,6 +5522,13 @@ export function ReharmHome() {
                       title="Cách bấm dễ hơn: tay phải bấm hợp âm đơn giản này, tay trái giữ nốt bass"
                     >
                       = {upper.label}
+                    </span>
+                  )}
+
+                  {cpHands && (
+                    <span className="font-mono text-[11px] text-teal-key">
+                      LH {cpHands.left.map(n => pitchClassName(normalizePitchClass(n)) + (Math.floor(n / 12) - 1)).join('–')}
+                      {' · RH '}{cpHands.right.map(n => pitchClassName(normalizePitchClass(n)) + (Math.floor(n / 12) - 1)).join('–')}
                     </span>
                   )}
 

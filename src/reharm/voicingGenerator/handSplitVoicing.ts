@@ -1,5 +1,6 @@
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
+import { CA_PHAO_VOICINGS } from '../reharmEngine/caPhaoHarmony'
 import type { ChooseVoicingOptions } from '../reharmEngine/voiceLeadingOptimizer'
 import {
   RIGHT_HAND_HIGH,
@@ -170,6 +171,7 @@ export function clampToHandRegister(
 const BASS_ANCHOR: MidiNote = 43
 
 export interface TwoHandVoicing {
+  voicingStyle?: 'ca-phao'
   /** Nốt tay trái, thường là một nốt bass. */
   left: MidiNote[]
   /** Nốt tay phải, phần hợp âm. */
@@ -254,9 +256,27 @@ export function voiceLeadTwoHands(
   // Hợp âm ít nốt thì tay phải bấm trọn, nên vẫn dẫn bè được như cũ.
   const rightVoicings = voiceLeadSequence(chords, voicingOptions)
 
+  let previousRight: readonly number[] = []
+
   return chords.map((chord, index) => {
     const chordSize = chord.quality.intervals.length
     const bassNote = bassNoteFor(chord)
+
+    const template = chord.voicingStyle === 'ca-phao' ? CA_PHAO_VOICINGS[chord.quality.id] : undefined
+    if (template) {
+      // Giữ cả hình bấm, dời theo quãng tám và chọn gần thế trước. Không gập từng nốt.
+      const candidates = Array.from({ length: 8 }, (_, octave) =>
+        template.map(interval => chord.root + octave * 12 + interval))
+        .filter(notes => notes[0]! >= 60 && notes.at(-1)! <= 84)
+      const center = previousRight.length ? previousRight.reduce((a, b) => a + b, 0) / previousRight.length : 69
+      candidates.sort((a, b) => Math.abs(a.reduce((x, y) => x + y, 0) / a.length - center) -
+        Math.abs(b.reduce((x, y) => x + y, 0) / b.length - center))
+      const right = candidates[0]
+      if (right) {
+        previousRight = right
+        return { left: [bassNote], right, symbol: chord.symbol, voicingStyle: 'ca-phao' }
+      }
+    }
 
     // Hợp âm dày: xếp chồng từ nốt bass rồi cắt đôi cho hai tay.
     if (leftHandNoteCount(chordSize, leftHandShare) > 1) {

@@ -4,6 +4,8 @@ import type { ChordQuality, PitchClass } from '../shared/musicTheory/types'
 
 /** Một hợp âm đã đọc được từ chuỗi người dùng nhập. */
 export interface ParsedChord {
+  /** Chọn thế bấm có nguồn; đi theo hợp âm qua các đường phát/transpose. */
+  voicingStyle?: 'ca-phao'
   root: PitchClass
   quality: ChordQuality
   /**

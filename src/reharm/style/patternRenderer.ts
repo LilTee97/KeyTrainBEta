@@ -512,7 +512,9 @@ function renderWithCell(
           source,
           hit.voice,
           hit.toneIndex,
-          hit.tones,
+          hand === 'right' && voicing.voicingStyle === 'ca-phao' &&
+            (hit.tones?.length ?? 0) >= 2 && hit.tones!.every(t => !t.fromRoot && !t.semitones)
+            ? undefined : hit.tones,
           rootPc,
           near,
           [...voicing.left, ...voicing.right],
@@ -559,6 +561,7 @@ function renderWithCell(
           hỏng hoà âm. Đổi cái sau lấy cái trước là đúng chiều.
         */
         const twoHanded =
+          voicing.voicingStyle !== 'ca-phao' &&
           (pattern.cell?.right.length ?? 0) > 0 &&
           !(hand === 'left' && (hit.tones?.length ?? 0) > 0)
         const split = twoHanded
