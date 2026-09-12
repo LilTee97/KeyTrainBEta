@@ -2869,3 +2869,39 @@ khung tiết tấu, vòng/cadence và đường nét giai điệu; không đổi
 Hồ sơ nguồn, phần KT biên soạn và invariant phát nằm ở
 `Reference/CA-PHAO-MAU-GIANG-KET-BOSSA-2026-09-12.md`. Chỉ cải tiến vòng tiếp
 theo khi người dùng nêu rõ chỗ lệch thuộc tiết tấu, hòa âm hay giai điệu.
+
+### Cách rút hợp âm Cà Pháo từ sheet để tái hòa âm — 12/9/2026
+
+Mục tiêu không phải đếm xem Cà Pháo dùng bao nhiêu `m9` rồi ép nó lên mọi
+hợp âm thứ. Phải rút **quyết định hòa âm theo chức năng và ngữ cảnh**, sau đó
+mới chuyển sang bài đích.
+
+1. **Chọn corpus đúng thầy, đúng giọng, đúng điệu.** Bossa thứ Cà Pháo hiện chỉ
+   dựa vào *Người hãy quên em đi*; không mượn Ballad Hồng Kông 1 làm luật Bossa. Các
+   sheet trưởng/ballad chỉ là bằng chứng cho màu hay voicing cùng vai trò, không cho phép
+   chép tiết tấu sang Bossa.
+2. **Đọc nội dung tại chỗ, không tin mù quáng nhãn hợp âm.** Tại mỗi ô, ghi bass, chùm RH,
+   onset, tie và nốt nối. Nốt có thẻ `chord` chung onset; `tie` là ngân, không là gõ lại. Ví dụ
+   ô 9 *Người hãy quên em đi* có nhãn XML D9add#11, nhưng C–E–F–A trên bass D cho
+   bằng chứng Dm9 trong ngữ cảnh này.
+3. **Tách ba lớp:** (a) hợp âm gốc/bass hoặc slash, (b) màu tension thực sự vang trong voicing,
+   (c) nốt dẫn hay giai điệu. Bass chromatic tiếp cận, nốt qua hoặc nốt hát không tự động
+   biến hợp âm thành mode/tension khác.
+4. **Gán chức năng trước khi gán màu.** Phân biệt `v` thứ với `V7`: v thứ có thể giữ m7,
+   còn V7 phải có bậc 7 trưởng để kéo về i. Hợp âm trưởng chỉ coi là át phụ khi
+   đường đi thực sự giải quyết (ví dụ G→C); bVII không giải quyết không bị ép thành 7.
+5. **Chuyển theo bậc/chức năng, không chép cao độ.** Đo root và tension so với tonic của
+   sheet, rồi dựng lại trên tonic bài đích. Giữ nốt bass đảo nếu có; không thay bậc không
+   tương thích bằng bậc gần nhất. Không có chức năng vốn bài thì loại candidate.
+6. **Áp bảng màu có bằng chứng, rồi mới chọn thế bấm.** Bossa thứ: triad i→m9, iv→m11;
+   Ballad thứ thiên m7; trưởng I/IV→maj7; át→7. Màu tập hợp này chỉ được áp khi hợp
+   âm gốc là triad. Hợp âm đã ghi màu, slash hoặc tension trong lời nhập phải được giữ nguyên.
+7. **Voicing là bằng chứng riêng.** Giữ cụm nốt có nguồn trong tầm vừa tay (ví dụ m9
+   = b7–9–b3–5, m11 = b7–9–b3–11, maj9 = 7–9–3); LH giữ bass thật. RH có thể lược nốt,
+   nhưng vốn nốt hòa âm đầy đủ vẫn phải còn để bass/rải đọc đúng bậc 5, 7, 9, 11.
+8. **Kiểm giai điệu hát là giới hạn bắt buộc.** KT chưa có melody hát phân tích đầu vào,
+   vì vậy không được khẳng định mọi tension đều hợp nốt hát. Giữ màu người dùng ghi và
+   để màu có nguy cơ va chạm thành candidate/nghe thử, không coi là luật chung.
+
+Kiểm cuối: cùng đầu vào/ngữ cảnh phải ra cùng vòng và voicing; nghe trên cả câu hát,
+không chỉ nghe hợp âm rời. Ghi rõ nguồn đo được, suy luận hay biên soạn KT đã duyệt.
