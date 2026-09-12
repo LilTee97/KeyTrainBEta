@@ -37,5 +37,7 @@ describe('Màu + voicing Cà Pháo từ sheet', () => {
     expect(hands[1]!.right.map(n => n % 12)).toEqual([0, 4, 5, 7])
     expect(hands[2]!.right.map(n => n % 12)).toEqual([7, 1, 5])
     expect(result.final.every(c => c.voicingStyle === 'ca-phao')).toBe(true)
+    const events = renderPattern(voiceLeadTwoHands(make('Dm11', true).final), CA_PHAO_BOSSA_IMPROVED, { beatsPerChord: 8 })
+    expect(events.find(e => e.hand === 'left' && e.startBeat === 2)!.notes.map(n => n % 12)).toEqual([9])
   })
 })

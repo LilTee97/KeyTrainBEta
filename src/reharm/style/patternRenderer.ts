@@ -517,7 +517,7 @@ function renderWithCell(
             ? undefined : hit.tones,
           rootPc,
           near,
-          [...voicing.left, ...voicing.right],
+          voicing.harmonicNotes ?? [...voicing.left, ...voicing.right],
           hand === 'left'
             ? { low: LEFT_ARPEGGIO_LOW, high: pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH }
             : undefined,

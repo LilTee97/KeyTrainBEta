@@ -2,6 +2,8 @@
 
 Ngày 12/9/2026. Phân tích theo MusicXML và các ranh lời–đàn người dùng đã xác nhận; **không phải kết luận sau khi nghe video**. Intro mới là bản thử để nghe, chưa được duyệt.
 
+Cập nhật sau đó: người dùng đã duyệt intro. Nút màu/voicing và giang–kết mới được mô tả trong `CA-PHAO-MAU-GIANG-KET-BOSSA-2026-09-12.md`; nhận xét về nút cũ bên dưới là hiện trạng tại thời điểm báo cáo ban đầu.
+
 ## 1. Phạm vi và độ chắc chắn
 
 Đối chiếu sâu bảy sheet trong `D:/PianoBrain/video/Ca_Phao`:

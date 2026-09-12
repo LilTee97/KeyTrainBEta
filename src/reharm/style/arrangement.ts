@@ -251,6 +251,7 @@ export interface BuildArrangedSongOptions {
     next: SourceSection | null,
     /** Lượt giang trong bài, để soạn CHUNG hai tay lại cho mỗi vòng. */
     take: number,
+    lastLoop?: boolean,
   ) => {
     startBeat: number
     lengthBeats: number
@@ -477,13 +478,13 @@ export function buildArrangedSong(
     const next = nextSection(steps, index, sources)
 
     // Vòng ngắn nhặt từ đoạn, hoặc trọn đoạn nếu bên gọi không nhặt.
-    const firstRange = interludeRange?.(over, next, take) ?? {
+    const loops = Math.max(1, Math.floor(step.loops))
+    const firstRange = interludeRange?.(over, next, take, loops === 1) ?? {
       startBeat: over.startBeat,
       lengthBeats: over.lengthBeats,
     }
     const loopBeats = firstRange.lengthBeats
     if (loopBeats <= 0) continue
-    const loops = Math.max(1, Math.floor(step.loops))
 
     sections.push({
       kind: 'interlude',
@@ -500,7 +501,7 @@ export function buildArrangedSong(
     const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
 
     for (let loop = 0; loop < loops; loop += 1) {
-      const range = loop === 0 ? firstRange : interludeRange?.(over, next, take) ?? firstRange
+      const range = loop === 0 ? firstRange : interludeRange?.(over, next, take, loop === loops - 1) ?? firstRange
       const at = cursor + loop * loopBeats
       const last = loop === loops - 1
       const length = last && turn ? played : loopBeats

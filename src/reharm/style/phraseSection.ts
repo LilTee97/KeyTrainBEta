@@ -7,7 +7,7 @@ import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
-import { caPhaoSolo, caPhaoBossaMinorIntro } from './caPhaoSolo'
+import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo } from './caPhaoSolo'
 import { giaiDieuDaoLinhNhi, vonO } from './giaiDieuDaoLinhNhi'
 import { nhipVong, vonHopAmLinhNhi } from './vonHopAmLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
@@ -595,10 +595,10 @@ function oXenPap(soO: number, take: number, nhieuPap = false): Set<number> {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
-  if (options.kind === 'intro' && options.key?.scale === 'minor' &&
+  if (options.key?.scale === 'minor' &&
     options.style.id === 'ca-phao-bossa-improved' &&
     (!options.thay || options.thay === 'ca-phao') && !options.motif) {
-    return caPhaoBossaMinorIntro(options)
+    return options.kind === 'intro' ? caPhaoBossaMinorIntro(options) : caPhaoBossaMinorSolo(options)
   }
   const {
     kind,

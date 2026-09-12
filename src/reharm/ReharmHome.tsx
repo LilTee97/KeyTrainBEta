@@ -533,8 +533,8 @@ function VongPanel({
  * Nhận `kind` kiểu `string` **có chủ đích**, để TypeScript không thu hẹp kiểu của biến
  * gọi vào tại chỗ dùng.
  */
-function coChiDanCodex(kind: string, boleroTuan: boolean, thu: boolean): boolean {
-  return kind === 'intro' || (kind === 'outro' && boleroTuan && thu)
+function coChiDanCodex(kind: string, boleroTuan: boolean, thu: boolean, cpBossa = false): boolean {
+  return kind === 'intro' || (kind === 'outro' && (boleroTuan || cpBossa) && thu)
 }
 
 export function ReharmHome() {
@@ -1776,10 +1776,10 @@ export function ReharmHome() {
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
    */
   const interludeWindow = useCallback(
-    (over: SourceSection, _next: SourceSection | null, interludeTake = 0) => {
+    (over: SourceSection, _next: SourceSection | null, interludeTake = 0, lastLoop = true) => {
       const spans = mainChordSpans(withPassing, chordBeats)
-      if (laBoleroTuan(style) && reharm.key?.scale === 'minor') {
-        const nextChord = _next ? spans.find((s) => Math.abs(s.start - _next.startBeat) < 0.001)?.chord : null
+      if ((laBoleroTuan(style) || (style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor') {
+        const nextChord = _next && lastLoop ? spans.find((s) => Math.abs(s.start - _next.startBeat) < 0.001)?.chord : null
         const built = buildPhraseSection({ kind: 'interlude', key: reharm.key, style,
           beatsPerChord: chordBeats, dropRoot, opening: nextChord ?? null,
           interludeCadence,
@@ -3030,7 +3030,8 @@ export function ReharmHome() {
   const steps = useMemo(() => {
     let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
-    const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan
+    const cpBossaMinor = style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
+    const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor
     if (!themSolo) return base
     base = base.filter((step) => {
       if (step.type !== 'section' || !songSources) return true
@@ -3039,14 +3040,14 @@ export function ReharmHome() {
     if (!base.some((step) => step.type === 'intro')) {
       base = [{ type: 'intro' as const, restAfter: 0 }, ...base]
     }
-    if ((thaySolo === 'linh-nhi' || giangThuTuan) && songSources && songSources.length > 0) {
+    if ((thaySolo === 'linh-nhi' || giangThuTuan || cpBossaMinor) && songSources && songSources.length > 0) {
       if (!base.some((step) => step.type === 'interlude')) {
         const chorus = songSources.findIndex((source) => /điệp/i.test(source.name))
         const over = chorus >= 0 ? chorus : Math.max(0, songSources.length - 1)
         const giang = { type: 'interlude' as const, over, loops: 2, restAfter: 0 }
         const ket = base.findIndex((step) => step.type === 'outro')
         const afterChorus = base.findIndex((step) => step.type === 'section' && step.source === over)
-        base = giangThuTuan && afterChorus >= 0
+        base = (giangThuTuan || cpBossaMinor) && afterChorus >= 0
           ? [...base.slice(0, afterChorus + 1), giang, { type: 'section' as const, source: over }, ...base.slice(afterChorus + 1)]
           :
           ket >= 0
@@ -3086,9 +3087,9 @@ export function ReharmHome() {
           steps,
           turnaround: undefined,
           // Mở riêng giang tấu THỨ Tuấn đã có bộ phát triển mô-típ mới.
-          interludeRange: laBoleroTuan(style) && reharm.key?.scale === 'minor'
-            ? (over, next, take) => {
-                const made = interludeWindow(over, next, interludeTake + take)
+          interludeRange: (laBoleroTuan(style) || (style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor'
+            ? (over, next, take, lastLoop) => {
+                const made = interludeWindow(over, next, interludeTake + take, lastLoop)
                 if (made && 'unavailableReason' in made && made.unavailableReason) {
                   phraseWarnings.push(made.unavailableReason)
                 }
@@ -3135,10 +3136,11 @@ export function ReharmHome() {
               MỞ LẠI: thêm loại đoạn ấy vào `coChiDan` bên dưới.
             */
             if (
-              !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor')
+              !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor',
+                style.id === 'ca-phao-bossa-improved' && thaySolo === 'ca-phao')
             ) {
               phraseWarnings.push(
-                'Đoạn kết đang ẩn ở đường này — giọng trưởng, hoặc điệu không phải Bolero Tuấn. Chưa có chỉ dẫn soạn từ Codex, và luật cũ đã bị bác. Bài kết mà không có đoạn kết.',
+                'Đoạn kết ở đường này hiện chỉ mở cho giọng thứ Bolero Tuấn hoặc Bossa CP cải tiến với thầy Cà Pháo. Bài sẽ kết mà không thêm outro.',
               )
               return { events: [], lengthBeats: 0, chords: [], beatsEach: [] }
             }
@@ -3434,7 +3436,7 @@ export function ReharmHome() {
    * cũng ra cùng một khoảng khi bài có điệp khúc.
    */
   const interludeSymbols = useMemo(() => {
-    if (laBoleroTuan(style) && reharm.key?.scale === 'minor') {
+    if ((laBoleroTuan(style) || style.id === 'ca-phao-bossa-improved') && reharm.key?.scale === 'minor') {
       return [...(timelineHien.soloSpans.find((span) => span.kind === 'interlude')?.chords ?? [])]
     }
     if (!songSources || songSources.length === 0) return []

@@ -172,6 +172,8 @@ const BASS_ANCHOR: MidiNote = 43
 
 export interface TwoHandVoicing {
   voicingStyle?: 'ca-phao'
+  /** Vốn nốt đầy đủ để bass không mất bậc khi RH lược nốt. */
+  harmonicNotes?: MidiNote[]
   /** Nốt tay trái, thường là một nốt bass. */
   left: MidiNote[]
   /** Nốt tay phải, phần hợp âm. */
@@ -274,7 +276,8 @@ export function voiceLeadTwoHands(
       const right = candidates[0]
       if (right) {
         previousRight = right
-        return { left: [bassNote], right, symbol: chord.symbol, voicingStyle: 'ca-phao' }
+        return { left: [bassNote], right, symbol: chord.symbol, voicingStyle: 'ca-phao',
+          harmonicNotes: chord.quality.intervals.map(interval => chord.root + interval) }
       }
     }
 

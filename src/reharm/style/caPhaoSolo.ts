@@ -100,6 +100,105 @@ export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSect
   }
 }
 
+/** Giang: phát triển cửa sổ 45–48 Người hãy quên (hai câu 4 ô).
+ * Kết: 96–101, giữ hướng bII–V–i, chuyển hai ô kết trưởng nguồn về thứ.
+ * KT biên soạn trên pulse CP cải tiến; không đổi intro đã nghe duyệt.
+ */
+export function caPhaoBossaMinorSolo(options: PhraseSectionOptions): PhraseSection {
+  const { key, style } = options
+  const empty = (why: string): PhraseSection => ({ events: [], chords: [], beatsEach: [],
+    lengthBeats: 0, unavailableReason: why })
+  if (!key || key.scale !== 'minor' || style.id !== 'ca-phao-bossa-improved')
+    return empty('Câu mới cần Bossa CP cải tiến và giọng thứ.')
+  const outro = options.kind === 'outro'
+  const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass
+  const chord = (offset: number, suffix: string): ParsedChord => ({
+    ...parseChordInput(pitchClassName(pc(key.tonic + offset)) + suffix).chords[0]!, voicingStyle: 'ca-phao',
+  })
+  const opening = options.opening ?? chord(0, 'm')
+  const nextRoot = pc(opening.root - key.tonic)
+  const chords = outro
+    ? [chord(0, 'm11'), chord(1, '9'), chord(7, '7b13'), chord(0, 'm9'),
+      chord(2, 'm7b5'), chord(7, '7'), chord(0, 'm9'), chord(0, 'm')]
+    : [chord(0, 'm9'), chord(2, 'm7b5'), chord(7, '7'), chord(0, 'm11'),
+      chord(2, 'm7b5'), chord(7, '7'), chord(0, 'm9'), chord(2, 'm7b5'),
+      chord(7, '7'), chord(0, 'm11'), chord(nextRoot + 2, opening.quality.intervals.includes(3) ? 'm7b5' : 'm7'),
+      chord(nextRoot + 7, '7')]
+  const beatsEach = outro ? [4, 2, 2, 4, 2, 2, 4, 4] : [4, 2, 2, 4, 2, 2, 4, 2, 2, 4, 2, 2]
+  const lengthBeats = outro ? 24 : 32
+  const range = options.range ?? { low: 62, high: 84 }
+  const bases = Array.from({ length: 11 }, (_, octave) => key.tonic + octave * 12)
+    .filter(base => base + 5 >= range.low && base + 15 <= range.high)
+    .sort((a, b) => Math.abs(a + 10 - (range.low + range.high) / 2) - Math.abs(b + 10 - (range.low + range.high) / 2))
+  const base = bases[0]
+  if (base === undefined) return empty('Tầm câu quá hẹp; bật Trần 84 để giữ nguyên đường nét Bossa.')
+  const take = Number.isFinite(options.take) ? Math.abs(Math.floor(options.take!)) % 4 : 0
+  type Note = [number, number | number[], number]
+  const call: Note[] = take % 2
+    ? [[0.5, 12, .45], [1, 14, .9], [2.5, 10, .45], [3.5, 7, .45]]
+    : [[0, 14, .9], [1.5, 12, .45], [2.5, 10, .75], [3.5, 7, .45]]
+  const dominantAnswer: Note[] = [[.5, 12, .45], [1, 8, .45], [1.5, 5, .45],
+    [2, 11, .45], [2.5, 14, .45], [3, 11, .5]]
+  const run = (pitches: number[], at: number): Note[] => pitches.map((pitch, index) =>
+    [at + index * .25, pitch, index === pitches.length - 1 ? .45 : .22])
+  // Nét rải cùng họ hợp âm, bước liền và điểm đáp — không gam ngũ cung cố định.
+  const bars: Note[][] = outro ? [
+    [[0, [7, 12, 15], .75], [1.5, 14, .45], [2.5, 12, .75]],
+    [[.5, [5, 11, 15], .45], [1.25, 15, .22], [2, [5, 11, 15], .75], [3, 14, .45], [3.5, 11, .45]],
+    call,
+    dominantAnswer,
+    [...run(take % 2 ? [7, 10, 12, 14, 15, 14, 12] : [15, 14, 12, 10, 7, 10, 12], .5), [3, 7, .5]],
+    [[0, [7, 12, 15], 4]],
+  ] : [
+    call,
+    dominantAnswer,
+    [[0, [7, 10, 15], .75], ...run([7, 10, 12, 14, 15, 14, 12, 10], 1.5)],
+    [[.5, 12, .45], [1, 8, .45], [1.5, 5, .45], [2, 11, .9], [3, 14, .45]],
+    call,
+    [[0, 12, .45], [.5, 8, .22], [.75, 5, .22], [1, 8, .22], [1.25, 12, .22],
+      [1.5, 8, .22], [1.75, 5, .22], [2, 11, .45], [2.5, 14, .45], [3, 11, .5]],
+    [[0, 5, .22], [.25, 6, .22], [.5, 7, .45], [1, 14, .75],
+      ...run(take >= 2 ? [15, 14, 12, 10, 7] : [7, 10, 12, 14, 15], 2)],
+    [], // ii–V về ĐÍCH thật, dựng dưới đây.
+  ]
+  if (outro && take >= 2) {
+    bars[0] = [[.5, [7, 12, 15], .75], [2, 14, .45], [3, 12, .75]]
+  }
+  const melody: TimelineEvent[] = bars.flatMap((notes, bar) => notes.map(([at, notes, gate]) => ({
+    startBeat: bar * 4 + at, durationBeats: gate,
+    notes: (Array.isArray(notes) ? notes : [notes]).map(n => (base + n) as MidiNote),
+    hand: 'right' as const, velocity: outro && bar >= 4 ? 62 : gate < .3 ? 61 : 75,
+  })))
+  if (!outro) {
+    const ending = [chords.at(-2)!, chords.at(-1)!]
+    for (const [index, c] of ending.entries()) {
+      const tones = index === 0 ? [3, 7 - (c.quality.id === 'm7b5' ? 1 : 0), 10] : [4, 7, 4]
+      const roots = Array.from({ length: 10 }, (_, octave) => c.root + 12 * octave)
+        .filter(root => root + Math.min(...tones) >= range.low && root + Math.max(...tones) <= range.high)
+        .sort((a, b) => Math.abs(a + tones[0]! - (base + 12)) - Math.abs(b + tones[0]! - (base + 12)))
+      if (roots[0] === undefined) return empty('Câu hút chưa vừa tầm nốt; bật Trần 84.')
+      tones.forEach((tone, at) => melody.push({ notes: [roots[0]! + tone], hand: 'right',
+        startBeat: 28 + index * 2 + at * .25, durationBeats: at === 2 ? .45 : .22, velocity: 65 }))
+    }
+  }
+  const harmony = [...chords, ...(!outro ? [opening] : [])]
+  const backing = renderPattern(voiceLeadTwoHands(harmony), style, {
+    beatsPerChord: 4, beatsEach: [...beatsEach, ...(!outro ? [4] : [])],
+  }).filter(e => e.startBeat < lengthBeats && (!outro || e.startBeat < 20))
+  const overlap = (a: TimelineEvent, b: TimelineEvent) =>
+    a.startBeat < b.startBeat + b.durationBeats - 1e-6 && b.startBeat < a.startBeat + a.durationBeats - 1e-6
+  const events = backing.filter(e => e.hand === 'left' ||
+    ((!outro ? e.startBeat + e.durationBeats <= 31 : true) && !melody.some(m => overlap(m, e))))
+  if (outro) {
+    const tonicBass = voiceLeadTwoHands([chords.at(-1)!])[0]!.left[0]!
+    events.push({ notes: [tonicBass], hand: 'left', startBeat: 20, durationBeats: 4, velocity: 58 })
+  }
+  return { events: [...events, ...melody].sort((a, b) => a.startBeat - b.startBeat), lengthBeats,
+    chords: chords.map(c => c.symbol), beatsEach,
+    sourcePhrase: { id: 'nguoi-hay-quen-em-di-' + (outro ? 'outro' : 'interlude'),
+      fromBar: outro ? 96 : 45, barCount: outro ? 6 : 4, method: 'motif-development' } }
+}
+
 /**
  * CÂU SOLO TỰ DO KIỂU CÀ PHÁO — NHÁNH CŨ.
  * Cảnh báo audit 12/9/2026: các thống kê dưới là mô tả lịch sử, không phải
