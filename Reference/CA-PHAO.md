@@ -7,6 +7,25 @@ là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 
 ## Bossa CP cải tiến
 
+### Bộ ba solo thứ đã được người dùng duyệt — 12/9/2026
+
+Người dùng đã duyệt bằng tai **intro, giang tấu và outro giọng thứ** khi đi
+cùng `Bossa CP cải tiến`. Đây là chuẩn tham chiếu hiện tại của KT cho Bossa
+thứ, không phải bằng chứng rằng mọi biến thể hoặc mọi giọng đều đã duyệt.
+
+| Đoạn | Khung đã duyệt ở Am | Điều phải giữ |
+| --- | --- | --- |
+| Intro | 8 ô, câu mở–đáp rồi iv–V vào bài | Giữ nguyên bản intro đã duyệt |
+| Giang | `Am9 | Bm7b5 E7 | Am11 | Bm7b5 E7 | Am9 | Bm7b5 E7 | Am11 | ii–V về đích` | Chạy ngón, khoảng thở RH cuối và hút đúng hợp âm phần hát |
+| Outro | `Am11 | Bb9 E7b13 | Am9 | Bm7b5 E7 | Am9 | Am` | Thu mật độ, LH chủ âm và RH 5–1–b3 ngân đủ ô cuối |
+
+Giang/outro phát triển từ các cửa sổ liên tục trong *Người hãy quên em đi*;
+không ghép chắp vá ô của nhiều thầy. V7 ở phần giang và kết i thứ ở outro là
+biên soạn KT để tạo lực hút/kết theo yêu cầu, không được gọi là chép nguyên
+văn sheet. Khi lặp hai vòng giang, chỉ vòng cuối mới đổi ii–V theo hợp âm đầu
+của phần hát; vòng trước về chỗ lặp. Bốn biến thể hiện có là các biến thể hữu
+hạn đã soạn, không phải bộ học tự động vô hạn.
+
 ### Nguồn và ranh giới của việc học
 
 - Mẫu nền rút từ hai ô 9–10 của sheet MusicXML *Người hãy quên em đi* của Cà

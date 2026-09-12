@@ -2847,3 +2847,25 @@ liên tục, phiên khúc mới sau số ô lẻ sẽ rơi vào nửa B và nghe
 7. Kiểm bằng tai trên cả vòng, ranh giới đoạn và nhiều bài; test phải kiểm
    timeline/tổng phách/đích hoà âm/điều kiện biên. Khi tai và test mâu thuẫn,
    đo lại hoặc xem lại giả định — không dùng test để áp đặt một groove chưa ổn.
+
+### Mốc đã duyệt: bộ ba solo thứ cho Bossa CP cải tiến — 12/9/2026
+
+Người dùng đã nghe và duyệt **cả intro, giang tấu và outro giọng thứ** của
+`Bossa CP cải tiến`. Đây là mốc chất lượng đã chốt, không phải chỉ “test phát
+được”. Khi sửa về sau phải so sánh lại với bộ ba này theo ba mặt độc lập:
+khung tiết tấu, vòng/cadence và đường nét giai điệu; không đổi cả ba cùng lúc.
+
+- Intro giữ nguyên bản đã duyệt; không áp template voicing mới ngược vào intro.
+- Giang: 8 ô, mô-típ gọi–đáp và chạy ngón, hai vòng thì chỉ vòng cuối mới hút
+  ii–V về hợp âm đầu của phần hát. Vòng trước giải về chỗ lặp, tránh tạo cảm
+  giác câu nào cũng chấm dứt.
+- Outro: 6 ô, giảm mật độ về cuối và ngân i thứ trọn ô cuối. Nguồn *Người hãy
+  quên em đi* thực tế kết D trưởng; kết thứ trong KT là biên soạn đã được người
+  dùng duyệt, không được ghi là nguyên văn Cà Pháo.
+- Nút Cà Pháo dùng màu theo ngữ cảnh và voicing có nguồn đo, nhưng chưa có dữ
+  liệu giai điệu hát để khẳng định mọi tension hợp mọi bài. Giữ các màu người
+  dùng đã nhập và bass đảo; bấm lại cùng ngữ cảnh phải cho cùng kết quả.
+
+Hồ sơ nguồn, phần KT biên soạn và invariant phát nằm ở
+`Reference/CA-PHAO-MAU-GIANG-KET-BOSSA-2026-09-12.md`. Chỉ cải tiến vòng tiếp
+theo khi người dùng nêu rõ chỗ lệch thuộc tiết tấu, hòa âm hay giai điệu.

@@ -1,7 +1,9 @@
 # Cà Pháo: màu, voicing, giang tấu và outro Bossa cải tiến
 
 Ngày 12/9/2026. Nối tiếp `CA-PHAO-HOA-AM-VOICING-INTRO-BOSSA-2026-09-12.md`.
-Intro đã được người dùng duyệt; hai câu mới dưới đây CHƯA được duyệt bằng tai.
+Người dùng đã duyệt bằng tai cả **intro, giang tấu và outro** giọng thứ của
+Bossa CP cải tiến. Các phần dưới đây ghi đúng mốc đã duyệt này; không suy rộng
+rằng mọi biến thể/tông khác đã được duyệt.
 
 ## Nút Cà Pháo thực hiện gì
 
@@ -51,4 +53,4 @@ Giữ cell 8 phách CP cải tiến đã duyệt; onset và gate độc lập. B
 - Test giang/outro: 12 chủ âm ×4 bản, độ dài, cuối thứ, nghỉ RH trước hát, câu chạy, không va nửa cung cùng vùng giữa hai tay; test ráp hai vòng + phần hát + outro ngân hết. Test intro cũ vẫn qua. Đây là kiểm kỹ thuật, không phải bằng chứng câu nghe hay.
 - Build production thành công. Toàn bộ suite: 2587 qua, 6 lỗi cũ còn lại ở phraseAcrossBar, daoTruongLinhNhi, handSplitAudit, sietHopAm, tuyenSolo (2). Không sửa ngưỡng để làm xanh suite.
 - Tầm quá hẹp không chứa cả nét câu thì báo không soạn được, không gập từng nốt để cố phát. Trần 84 cho phép kiểm mọi giọng; Am cũng cần được kiểm với trần 79 của app.
-- Sau vòng này chờ người dùng nghe giang/outro: phân biệt phản hồi về tiết tấu, vòng hợp âm và giai điệu. Chưa tự chạy vòng cải tiến thứ hai. Chỉ ghi Sổ tay khi người dùng yêu cầu.
+- Mốc nghe duyệt đã được chốt ngày 12/9/2026: intro, giang và outro thứ đều đạt. Nếu mở vòng cải tiến mới, người dùng cần chỉ rõ phần cần đổi là tiết tấu, vòng hợp âm hay giai điệu; không sửa đồng thời toàn câu đã duyệt.
