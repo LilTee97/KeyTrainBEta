@@ -2,7 +2,7 @@ import type { StylePattern } from '../types'
 import { ONEMOTION_STYLES, styleFamilies } from './onemotion'
 import { HAI_STYLES } from './haiStyles'
 import { TON_HUNG_STYLES } from './tonHungStyles'
-import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED, CA_PHAO_BOSSA_TEST_1 } from './caPhaoBossa'
+import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from './caPhaoBossa'
 import testerStylesJson from './testerStyles.json'
 
 const DELETED_KEY = 'keytrain-deleted-styles'
@@ -521,7 +521,6 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   ...TON_HUNG_STYLES,
   CA_PHAO_BOSSA,
   CA_PHAO_BOSSA_IMPROVED,
-  CA_PHAO_BOSSA_TEST_1,
   ...BOLERO_STYLES,
   ...TESTER_STYLES,
 ]

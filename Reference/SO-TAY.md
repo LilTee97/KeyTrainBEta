@@ -3004,3 +3004,10 @@ Kiểm khi chốt: 47/47 test liên quan đạt; production build đạt. Snapsh
 Toàn suite: 2.601 đạt / 2.607, còn đúng 6 lỗi đã bàn giao ở `phraseAcrossBar`,
 `daoTruongLinhNhi`, `handSplitAudit`, `sietHopAm`, `tuyenSolo` (2 lỗi);
 không nới các ngưỡng này và không sửa thêm âm thanh sau khi người dùng duyệt.
+
+### Đã bỏ nút "Bossa test 1" (13/9/2026)
+
+Người dùng yêu cầu xoá. Bản dựng lại hoá ra **trùng hệt** bản đã duyệt (cùng tập sự kiện, tiếng y hệt),
+nên nút thử không cho nghe ra gì mới. Gỡ `CA_PHAO_BOSSA_TEST_1`, họ `ca-phao-bossa-test-1` khỏi
+`hoDieu.ts`, và `bossaTest1.test.ts`. **Giữ** `laBossaCP()` / `BOSSA_CP_IDS` — mười chỗ so id đã gom về
+một hàm là đúng dù chỉ còn một id; muốn thêm nút thử sau này chỉ cần thêm id vào tập ấy.
