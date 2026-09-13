@@ -142,6 +142,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
+import { bossaBackingSteps, buildBossaRhythmOnly } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -924,6 +925,7 @@ export function ReharmHome() {
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
   const style = getStyle(styleId) ?? BALLAD
+  const bossaRhythmOnly = style.id === 'ca-phao-bossa-improved'
 
   /*
     Kiểu dùng cho CÂU SOLO — dạo đầu, giang tấu, kết bài.
@@ -1751,7 +1753,7 @@ export function ReharmHome() {
     const played = renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach,
-      muteWindows,
+      muteWindows: bossaRhythmOnly ? [] : muteWindows,
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
@@ -1771,7 +1773,7 @@ export function ReharmHome() {
     if (!walk) return played
 
     return [...played.filter((event) => event.hand !== 'left'), ...walk.events]
-  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, bossaRhythmOnly])
 
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
@@ -2499,6 +2501,7 @@ export function ReharmHome() {
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useCallback(
     (take: number) => {
+      if (bossaRhythmOnly) return []
       const line = soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
@@ -2554,6 +2557,7 @@ export function ReharmHome() {
     [
       style,
       accompaniment,
+      bossaRhythmOnly,
       withPassing,
       chordBeats,
       soloDirection,
@@ -2582,6 +2586,7 @@ export function ReharmHome() {
    * lại lượt trước.
    */
   const soloTake = useMemo(() => {
+    if (bossaRhythmOnly) return () => []
     const args = {
       beatsPerChord: chordBeats,
       direction: soloDirection,
@@ -2617,6 +2622,7 @@ export function ReharmHome() {
     tamSolo,
     // Đổi điệu là đổi cách chia nhịp câu chạy — phải dựng lại.
     styleId,
+    bossaRhythmOnly,
   ])
 
   /**
@@ -3034,6 +3040,7 @@ export function ReharmHome() {
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
   const steps = useMemo(() => {
     let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
+    if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
     const cpBossaMinor = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
     const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor
@@ -3067,7 +3074,7 @@ export function ReharmHome() {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangement, songSources, chiecLa, thaySolo, style, reharm.key])
+  }, [arrangement, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3078,6 +3085,7 @@ export function ReharmHome() {
    */
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
+      if (bossaRhythmOnly) return buildBossaRhythmOnly(accompaniment, oneLoopBeats, songSources, steps)
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
         const phraseWarnings: string[] = []
@@ -3329,6 +3337,7 @@ export function ReharmHome() {
     },
     [
       accompaniment,
+      bossaRhythmOnly,
       fills,
       soloTake,
       oneLoopBeats,
@@ -3744,7 +3753,7 @@ export function ReharmHome() {
 
   const playFromBeat = useCallback(
     async (beat: number, sourceBeat = beat) => {
-      if (ngheLaiStt > 0) {
+      if (!bossaRhythmOnly && ngheLaiStt > 0) {
         let cau = cauOnDs.find((c) => c.stt === ngheLaiStt)
         if (!cau) {
           const ds = await layCauOn()
@@ -3855,11 +3864,12 @@ export function ReharmHome() {
         beat,
         playsOnce,
       )
-      startSourceAtBeat(sourceBeat, bpm, !playsOnce)
+      if (!bossaRhythmOnly) startSourceAtBeat(sourceBeat, bpm, !playsOnce)
       advanceRound()
     },
     [
       buildPass,
+      bossaRhythmOnly,
       song.soloTakes,
       hand,
       bpm,
@@ -3971,8 +3981,8 @@ export function ReharmHome() {
       from,
       playsOnce,
     )
-    startSourceAtBeat(from, bpm, !playsOnce)
-  }, [styleId, passAt, hand, bpm, loopLengthBeats, playsOnce])
+    if (!bossaRhythmOnly) startSourceAtBeat(from, bpm, !playsOnce)
+  }, [styleId, passAt, hand, bpm, loopLengthBeats, playsOnce, bossaRhythmOnly])
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -4712,9 +4722,11 @@ export function ReharmHome() {
                   <p key={warning} role="status" className="mb-3 text-amber-400">{warning}</p>
                 ))}
                 {/* Ô bình luận nằm TRÊN nút phát, theo yêu cầu người dùng. */}
-                <OBinhLuan cau={cauDaoLuu} nhan="Câu dạo" />
-                <OBinhLuan cau={cauGiangLuu} nhan="Giang tấu" />
-                <OBinhLuan cau={cauKetLuu} nhan="Kết bài" />
+                {!bossaRhythmOnly && <>
+                  <OBinhLuan cau={cauDaoLuu} nhan="Câu dạo" />
+                  <OBinhLuan cau={cauGiangLuu} nhan="Giang tấu" />
+                  <OBinhLuan cau={cauKetLuu} nhan="Kết bài" />
+                </>}
                 <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
@@ -4730,14 +4742,15 @@ export function ReharmHome() {
                 >
                   {looping
                     ? '■ Dừng'
-                    : ngheLaiStt > 0
+                    : !bossaRhythmOnly && ngheLaiStt > 0
                       ? `▶ Nghe #${ngheLaiStt}`
                       : playsOnce
                         ? '▶ Phát trọn bài'
                         : '▶ Phát cả bài'}
                 </button>
                 <select
-                  value={ngheLaiStt}
+                  disabled={bossaRhythmOnly}
+                  value={bossaRhythmOnly ? 0 : ngheLaiStt}
                   onFocus={napCauOn}
                   onChange={(e) => {
                     const stt = Number(e.target.value)
@@ -4829,7 +4842,7 @@ export function ReharmHome() {
         </div>
       )}
 
-      {songSources && (
+      {songSources && !bossaRhythmOnly && (
         <ArrangementEditor
           sources={songSources}
           steps={steps}
@@ -5242,8 +5255,8 @@ export function ReharmHome() {
             >
               <input
                 type="checkbox"
-                checked={sourceOn}
-                disabled={!hasSource}
+                checked={sourceOn && !bossaRhythmOnly}
+                disabled={!hasSource || bossaRhythmOnly}
                 onChange={(event) => {
                   const on = event.target.checked
                   setSourceOn(on)

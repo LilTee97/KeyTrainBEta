@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const audio = vi.hoisted(() => ({
   scheduled: [] as { callback: (time: number) => void; beat: number }[],
-  parts: [] as { events: { time: { '4n': number }; notes: number[] }[]; dispose: () => void }[],
+  parts: [] as { events: { time: { '4n': number }; notes: number[] }[]; fire: (time: number, value: unknown) => void; dispose: () => void }[],
   attack: vi.fn(),
 }))
 vi.mock('tone', () => {
@@ -26,7 +26,7 @@ vi.mock('tone', () => {
     },
     Part: class {
       dispose = vi.fn()
-      constructor(_fire: unknown, public events: (typeof audio.parts)[number]['events']) {
+      constructor(public fire: (time: number, value: unknown) => void, public events: (typeof audio.parts)[number]['events']) {
         audio.parts.push(this)
       }
       start() {}
@@ -38,6 +38,11 @@ vi.mock('tone', () => {
 })
 
 import { startAudio, startTimelineLoop, stopTimelineLoop, useAudioStore } from '../audioEngine'
+import { parseChordInput } from '../../../reharm/input/chordInputParser'
+import { voiceLeadTwoHands } from '../../../reharm/voicingGenerator/handSplitVoicing'
+import { renderPattern } from '../../../reharm/style/patternRenderer'
+import { CA_PHAO_BOSSA_IMPROVED } from '../../../reharm/style/styleLibrary/caPhaoBossa'
+import { buildBossaRhythmOnly } from '../../../reharm/playback/bossaRhythmOnly'
 
 afterEach(() => {
   stopTimelineLoop()
@@ -47,6 +52,32 @@ afterEach(() => {
 })
 
 describe('lượt phát tự động nằm đúng trên đồng hồ Transport', () => {
+  it('Bossa CP: tiếng 2, 3, 6 tới nhạc cụ; Bùm 3 rõ hơn bum 4, không đổi nhịp', async () => {
+    useAudioStore.setState({ instrument: 'synth' })
+    await startAudio()
+    const hands = voiceLeadTwoHands(parseChordInput('Am9 Dm11 E7 Am9').chords)
+    const backing = renderPattern(hands, CA_PHAO_BOSSA_IMPROVED)
+    const song = buildBossaRhythmOnly(backing, 16, null, [])
+    startTimelineLoop(song.events, 110, song.totalBeats)
+    const part = audio.parts[0]!
+    for (const [beat, velocity] of [[1, 68], [1.5, 58], [2, 51], [3.5, 44]]) {
+      const event = part.events.find(e => e.time['4n'] === beat)!
+      expect(event.notes.length).toBeGreaterThan(0)
+      part.fire(10 + beat * 60 / 110, event)
+      expect(audio.attack).toHaveBeenLastCalledWith(event.notes,
+        { '4n': .5 }, 10 + beat * 60 / 110, velocity / 127)
+    }
+    const third = backing.find(e => e.startBeat === 1.5)!
+    const fourth = backing.find(e => e.startBeat === 2)!
+    expect(third.velocity).toBeGreaterThan(fourth.velocity)
+    expect(third.notes[0]).toBe(fourth.notes[0] - 1)
+    expect(third.startBeat + third.durationBeats).toBe(fourth.startBeat)
+    const fifth = part.events.filter(e => e.time['4n'] === 2.5)
+    expect(fifth).toHaveLength(2)
+    const fifthBass = fifth.find(e => e.notes.length === 1)!
+    part.fire(12, fifthBass)
+    expect(audio.attack).toHaveBeenLastCalledWith(fifthBass.notes, { '4n': 1.5 }, 12, 34 / 127)
+  })
   it('đổi câu qua bốn vòng; onset đầu không mất, nốt sau không bị đặt vào quá khứ', async () => {
     useAudioStore.setState({ instrument: 'synth' })
     await startAudio()

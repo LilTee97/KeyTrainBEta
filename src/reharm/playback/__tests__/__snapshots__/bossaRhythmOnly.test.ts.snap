@@ -1,0 +1,237 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`giữ nhịp 6 tiếng ô A nguồn, nhấn rõ Bùm 3; thêm đúng 5 tiếng ô B 1`] = `
+{
+  "left": [
+    {
+      "beat": 0,
+      "durationBeats": 1.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 0,
+        },
+        {
+          "fromRoot": true,
+          "semitones": 12,
+          "toneIndex": 0,
+        },
+      ],
+      "velocityScale": 0.9,
+    },
+    {
+      "beat": 1.5,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "semitones": -1,
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.85,
+    },
+    {
+      "beat": 2,
+      "durationBeats": 2,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.75,
+    },
+    {
+      "beat": 1,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.55,
+    },
+    {
+      "beat": 2.5,
+      "durationBeats": 1.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.5,
+    },
+    {
+      "beat": 4,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 0,
+        },
+      ],
+      "velocityScale": 0.65,
+    },
+    {
+      "beat": 5.5,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 0,
+        },
+      ],
+      "velocityScale": 0.65,
+    },
+    {
+      "beat": 4.5,
+      "durationBeats": 1,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 2,
+        },
+        {
+          "fromRoot": true,
+          "semitones": 12,
+          "toneIndex": 0,
+        },
+        {
+          "fromRoot": true,
+          "semitones": 12,
+          "toneIndex": 1,
+        },
+      ],
+      "velocityScale": 0.45,
+    },
+    {
+      "beat": 6,
+      "durationBeats": 1,
+      "tones": [
+        {
+          "fromRoot": true,
+          "toneIndex": 2,
+        },
+        {
+          "fromRoot": true,
+          "semitones": 12,
+          "toneIndex": 0,
+        },
+        {
+          "fromRoot": true,
+          "semitones": 12,
+          "toneIndex": 1,
+        },
+      ],
+      "velocityScale": 0.45,
+    },
+    {
+      "beat": 7.5,
+      "durationBeats": 0.5,
+      "requireNextChord": true,
+      "som": true,
+      "tones": [
+        {
+          "fromRoot": true,
+          "semitones": 1,
+          "toneIndex": 0,
+        },
+      ],
+      "velocityScale": 0.45,
+    },
+  ],
+  "lengthBeats": 8,
+  "right": [
+    {
+      "beat": 1,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+        {
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.85,
+    },
+    {
+      "beat": 2.5,
+      "durationBeats": 1,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+        {
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.72,
+    },
+    {
+      "beat": 3.5,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+        {
+          "toneIndex": 2,
+        },
+      ],
+      "velocityScale": 0.55,
+    },
+    {
+      "beat": 4.5,
+      "durationBeats": 1,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+      ],
+      "velocityScale": 0.6,
+    },
+    {
+      "beat": 6,
+      "durationBeats": 1,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+      ],
+      "velocityScale": 0.6,
+    },
+    {
+      "beat": 7,
+      "durationBeats": 0.5,
+      "tones": [
+        {
+          "toneIndex": 0,
+        },
+        {
+          "toneIndex": 1,
+        },
+      ],
+      "velocityScale": 0.9,
+    },
+  ],
+}
+`;

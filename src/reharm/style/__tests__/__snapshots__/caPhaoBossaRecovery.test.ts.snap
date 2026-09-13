@@ -1,0 +1,18 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`giữ nguyên toàn bộ bản đã duyệt: nốt, hai tay, lực, gate, hòa âm và cadence 1`] = `
+[
+  [
+    "intro",
+    "083fbdb9e6d0c83e099be35beb3b1c709cff073c94a5c499f11126b49e4b6227",
+  ],
+  [
+    "interlude",
+    "57386ed3ffbf2afa02fe0abd4839e38a3c7e63726942a9d106dd9c179c476f11",
+  ],
+  [
+    "outro",
+    "dc4e6e0f1e0e2274be8bebea41fb5b9ca9e30d7d17224ae0d7a1e14d17290d67",
+  ],
+]
+`;

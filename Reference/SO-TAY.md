@@ -2799,6 +2799,11 @@ nova'` ở ba tuyến ấy. PianoBrain đã sửa cùng lúc ở `328a5de`.
 
 ### Bossa CP cải tiến: học từ sheet, biên soạn theo tai nghe — 11/9/2026
 
+**Cập nhật 13/9/2026:** phần khung đệm của mốc này đã được thay thế bằng
+“Khung đệm chính thức Bossa CP cải tiến” ở cuối sổ và bảng đầy đủ trong
+`Reference/CA-PHAO.md`. Giữ phần dưới làm lịch sử phương pháp, không dùng
+mô tả “nửa A giữ mô hình sheet” để phục hồi đè lên khung mới.
+
 Mẫu nền Bossa Cà Pháo được rút từ hai ô 9–10 của MusicXML *Người hãy quên em
 đi* và đối chiếu với lần lặp 17–18. `Bossa CP cải tiến` không phải bản chép
 nguyên xi: đó là bản **biên soạn KeyTrain** trên mẫu nền ấy, được người dùng
@@ -2807,12 +2812,10 @@ tài liệu và mã nguồn: “dựa trên Cà Pháo” là đúng; gán mọi 
 cho Cà Pháo là sai. Hồng Kông 1 vẫn là ballad/pop nhấn lệch, không phải corpus
 cho bossa.
 
-Mẫu CP cải tiến dài hai ô 4/4. Nửa A giữ mô hình rút từ sheet. Nửa B dùng chuỗi
-đã duyệt: bass 7 ở 4.0 (1/2 phách), chát 8 ở 4.5 (1 phách), bass 9 ở 5.5
-(1/2), chát 10 ở 6.0 (1), chát 11 ở 7.0 (1/2, nhấn), rồi bass dẫn ở 7.5
-(1/2, rất nhẹ). Bass dẫn là một nốt chromatic dẫn vào **hợp âm thật** của ô
-sau, chỉ tạo khi hợp âm đổi ngay đầu ô sau; không thay bằng cả hợp âm sau và
-không có ở cuối bài.
+Mẫu CP cải tiến dài hai ô 4/4. Bản chính thức 13/9 giữ onset nửa A nhưng đã
+thêm quãng tám Bùm 1, bass đỡ chát 2/chát 5, tăng lực chát 2 và Bùm 3.
+Không còn dùng nửa A nguyên trạng của sheet làm khung chính thức. Chi tiết
+cả 11 tiếng, bass dẫn và độ ngân thực phát nằm ở mục chốt mới bên dưới.
 
 Điểm phương pháp quan trọng nhất: tách **lúc tiếng kế tiếp vào** khỏi **tiếng
 trước ngân bao lâu**. Mỗi nốt/sự kiện phải có ít nhất onset, duration,
@@ -2849,6 +2852,11 @@ liên tục, phiên khúc mới sau số ô lẻ sẽ rơi vào nửa B và nghe
    đo lại hoặc xem lại giả định — không dùng test để áp đặt một groove chưa ổn.
 
 ### Mốc đã duyệt: bộ ba solo thứ cho Bossa CP cải tiến — 12/9/2026
+
+**Trạng thái sau quyết định 13/9/2026:** bộ ba này là tham chiếu lịch sử,
+đang tạm ngưng phát theo yêu cầu dựng lại đệm. Không tự bật lại solo khi
+chốt điệu. Khi người dùng yêu cầu làm solo tiếp, tuyệt đối không thay khung
+đệm hát chính thức 13/9 để phục vụ solo.
 
 Người dùng đã nghe và duyệt **cả intro, giang tấu và outro giọng thứ** của
 `Bossa CP cải tiến`. Đây là mốc chất lượng đã chốt, không phải chỉ “test phát
@@ -2908,6 +2916,10 @@ không chỉ nghe hợp âm rời. Ghi rõ nguồn đo được, suy luận hay 
 
 ### Nút "Bossa test 1" — bản dựng lại Bossa CP cải tiến, tách riêng để nghe đối chiếu (12/9/2026)
 
+**Phạm vi lịch sử:** các so sánh “giống bản đã duyệt” dưới đây nói về bản
+12/9 tại thời điểm tạo nút, không phải khung chính thức 13/9. `Bossa test 1`
+là nút độc lập; không ép CP cải tiến hiện tại trở lại giống test 1.
+
 Người dùng yêu cầu: từ ba file ghi chép ở commit `64496ba` (`CA-PHAO-MAU-GIANG-KET-BOSSA-2026-09-12.md`,
 `CA-PHAO.md`, `SO-TAY.md`) tạo lại điệu Bossa CP cải tiến thành **một nút riêng**, không chồng lên nút cũ.
 
@@ -2926,3 +2938,69 @@ Người dùng yêu cầu: từ ba file ghi chép ở commit `64496ba` (`CA-PHAO
 
 Để lùi: bỏ `CA_PHAO_BOSSA_TEST_1` khỏi `VERIFIED_STYLES` và hai danh sách trong `hoDieu.ts`; `laBossaCP`
 vẫn đúng với một id.
+
+### Khung đệm chính thức Bossa CP cải tiến — người dùng duyệt 13/9/2026
+
+Người dùng xác nhận “điệu đã ổn” và yêu cầu lấy khung hiện tại làm chính thức,
+**thay thế khung cũ**. Mốc này ưu tiên hơn mọi mô tả khung CP cải tiến trước
+đó, kể cả `64496ba` và các bản dựng thử. Đây là biên soạn KT dựa trên Bossa
+Cà Pháo mới (ô XML 9–10 *Người hãy quên em đi*, đối chiếu 17–18), không phải
+bản chép nguyên sheet. Chỉ chốt nút `ca-phao-bossa-improved`, không đổi mẫu
+nguồn hoặc nút riêng `Bossa test 1`.
+
+**Bùm₁ – chát₂ – Bùm₃-bum₄ – chát₅ – chát₆ | bùm₇ – chát₈ – bùm₉ – chát₁₀ – CHÁT₁₁ → bass dẫn.**
+
+Hai ô 4/4, 8 phách, mặc định 110 BPM. Onset từ đầu cell (đếm từ 0):
+`0, 1, 1.5, 2, 2.5, 3.5 | 4, 4.5, 5.5, 6, 7`; bass dẫn phụ ở `7.5`.
+
+| Tiếng | Cách đánh đã chốt | Ngân (phách) | Lực RH / LH |
+| --- | --- | --- | --- |
+| Bùm 1 | LH bass gốc + quãng tám cùng lúc | 1½ | — / .90 |
+| Chát 2 | RH hợp âm, thêm LH bậc 5 đỡ | ½ | .85 / .55 |
+| Bùm 3 | LH dưới bậc 5 nửa cung, rõ hơn bum 4 | ½ | — / .85 |
+| Bum 4 | LH bậc 5 | ½ thực phát tới tiếng 5 | — / .75 |
+| Chát 5 | RH hợp âm + LH nhắc nhẹ cùng bass tiếng 4 | RH 1; LH 1½ | .72 / .50 |
+| Chát 6 | RH hợp âm | ½ | .55 / — |
+| Bùm 7 | LH bass gốc | ½ | — / .65 |
+| Chát 8 | RH hợp âm + LH cụm 5–8–10 theo hợp âm | 1 | .60 / .45 |
+| Bùm 9 | Như Bùm 7 | ½ | — / .65 |
+| Chát 10 | Như chát 8 | 1 | .60 / .45 |
+| CHÁT 11 | RH hợp âm, nhấn | ½ | .90 / — |
+| Bass dẫn | LH trên bass hợp âm kế tiếp nửa cung | ½ | — / .45 |
+
+Lực trên là `velocityScale`; ranh giới hợp âm/đoạn có thể cắt ngân theo
+renderer. Bass ở chát 5 đánh cùng chát, không thêm tiếng chính thứ 12.
+Duration thô của bum 4 trong cell là 2 nhưng `holdUntilStruckAgain` nhả tại
+offset 2.5 để bass tiếng 5 gõ lại; LH tiếng 5 ngân đến 4. Không khôi phục
+ngân bum 4 chồng lên lần gõ lại. Chát 8 nối ngay bùm 9, không nghỉ; bass dẫn
+đánh **sau** CHÁT 11, không cùng lúc. Chỉ thêm bass dẫn nếu hợp âm kế tiếp
+bắt đầu đúng đầu ô sau, không ở cuối bài. Đầu mỗi đoạn hát mở lại nửa A.
+
+**Ràng buộc cho mọi phát triển solo/fill về sau:**
+
+- Tuyệt đối không thay đổi cấu trúc khung này trong phần đệm hát: không mất,
+  thêm hay dời tiếng; không đổi ngân, nhấn, vai trò tay hoặc chu kỳ để nhường
+  chỗ cho câu solo/fill. Soạn mới mỗi lượt chỉ được thay câu solo, không được
+  làm phần hát của cùng đầu vào đổi theo take/seed.
+- Dạo/giang/kết là đoạn riêng. Quay lại phần hát phải trả đúng khung chính
+  thức. Fill không vừa khe thì bỏ hoặc soạn lại fill, không sửa đệm.
+- Hiện vẫn **chỉ đệm**, không tự bật lại dạo/giang/kết/fill; các câu cũ chỉ
+  giữ để tham chiếu. Chỉ mở lại khi người dùng yêu cầu tiếp.
+- Khi làm solo trở lại, phải kiểm timeline đệm hát trước/sau qua nhiều lượt,
+  nhiều giọng và ranh giới đoạn. Không đổi kỳ vọng test để hợp thức hóa một
+  khung chưa duyệt. Muốn đổi chính khung phải xin duyệt riêng theo phản hồi cụ thể.
+
+Thông số tái tạo đầy đủ, phân biệt duration thô/thực phát và các mốc velocity
+ở [MD Cà Pháo](CA-PHAO.md), mục “Khung đệm chính thức”. Mã gốc là
+`CA_PHAO_BOSSA_IMPROVED` trong `src/reharm/style/styleLibrary/caPhaoBossa.ts`.
+`buildBossaRhythmOnly` ráp phần hát không sửa event đệm và không xóa bài/câu
+solo đã lưu. Các kiểm hồi quy liên quan: `bossaRhythmOnly.test.ts`,
+`caPhaoBossaSheet.test.ts`, `caPhaoBossaSections.test.ts`, `timelineLoop.test.ts`.
+Đánh giá “đã ổn” ở mốc này do người dùng nghe duyệt, không suy ra từ test xanh.
+
+Kiểm khi chốt: 47/47 test liên quan đạt; production build đạt. Snapshot của
+`bossaRhythmOnly.test.ts` khóa nguyên cell chính thức. `bossaTest1.test.ts`
+đối chiếu mốc lịch sử 12/9, không còn ép nút chính thức giống bản thử cũ.
+Toàn suite: 2.601 đạt / 2.607, còn đúng 6 lỗi đã bàn giao ở `phraseAcrossBar`,
+`daoTruongLinhNhi`, `handSplitAudit`, `sietHopAm`, `tuyenSolo` (2 lỗi);
+không nới các ngưỡng này và không sửa thêm âm thanh sau khi người dùng duyệt.

@@ -53,7 +53,10 @@ export const CA_PHAO_BOSSA: StylePattern = {
 }
 
 /** Biến thể theo phản hồi người dùng, KHÔNG phải bản chép ô 10 của Cà Pháo.
- * Giữ ô A; ô B nối liền: bùm 7(4) 0.5 → chát 8(4.5) 1 → bùm 9(5.5) 0.5
+ * Khung chính thức được người dùng nghe duyệt 13/9/2026 (Reference/CA-PHAO.md).
+ * Solo/fill tuyệt đối không được thay cấu trúc này trong phần đệm hát.
+ * Ô A giữ onset nguồn, thêm quãng tám/bass đỡ/lực theo phản hồi; ô B nối liền:
+ * bùm 7(4) 0.5 → chát 8(4.5) 1 → bùm 9(5.5) 0.5
  * → chát 10(6) 1 → chát 11(7) 0.5 → bass dẫn(7.5) 0.5.
  * Cặp 9–10 lặp cách đánh 7–8; không nghỉ sau tiếng 8.
  * Bass dẫn là nốt trên bass kế tiếp nửa cung,
@@ -69,31 +72,31 @@ export const CA_PHAO_BOSSA_IMPROVED: StylePattern = {
   sourceVideos: ['Biến thể KT theo phản hồi người dùng; nền Người hãy quên em đi, ô XML 9–10'],
   cell: {
     lengthBeats: 8,
-    // Viết trực tiếp khung đã chốt, không biến đổi ô B từ mẫu rút sheet.
+    // Ô A giữ nhịp nguồn; BÙM 3 phải rõ hơn bum 4, không chìm sau chát 2.
     left: [
-      { beat: 0, durationBeats: 1.5, velocityScale: .9, tones: [{ toneIndex: 0, fromRoot: true }] },
-      { beat: 1.5, durationBeats: .5, velocityScale: .55, tones: [{ toneIndex: 2, fromRoot: true, semitones: -1 }] },
-      { beat: 2, durationBeats: 2, velocityScale: .75, tones: [{ toneIndex: 2, fromRoot: true }] },
-      { beat: 4, durationBeats: .5, velocityScale: .65, tones: [{ toneIndex: 0, fromRoot: true }] },
-      { beat: 5.5, durationBeats: .5, velocityScale: .65, tones: [{ toneIndex: 0, fromRoot: true }] },
-      ...[4.5, 6].map(beat => ({ beat, durationBeats: 1, velocityScale: .45, tones: [
-        { toneIndex: 2, fromRoot: true },
-        { toneIndex: 0, fromRoot: true, semitones: 12 },
-        { toneIndex: 1, fromRoot: true, semitones: 12 },
-      ] })),
+      ...CA_PHAO_BOSSA.cell!.left.filter(hit => hit.beat < 4)
+        .map(hit => hit.beat === 0
+          ? { ...hit, tones: [{ toneIndex: 0, fromRoot: true }, { toneIndex: 0, fromRoot: true, semitones: 12 }] }
+          : hit.beat === 1.5 ? { ...hit, velocityScale: .85 } : hit),
+      // Đỡ chát 2 bằng bậc 5: dày hơn mà không gõ lại quãng tám đang ngân của Bùm 1.
+      { beat: 1, durationBeats: .5, velocityScale: .55, tones: [{ toneIndex: 2, fromRoot: true }] },
+      // Chát 5 nhắc nhẹ bass bum 4: gõ lại cùng bậc 5 ở 3&, ngân tới hết ô.
+      // holdUntilStruckAgain nhả bum 4 tại đây, không chồng hai lần cùng phím.
+      { beat: 2.5, durationBeats: 1.5, velocityScale: .5, tones: [{ toneIndex: 2, fromRoot: true }] },
+      // Bùm 7/9 và chát 8/10 lấy thế bấm ô B nguồn, đặt lại theo khung người dùng.
+      ...[4, 5.5].map(beat => ({ ...CA_PHAO_BOSSA.cell!.left[3], beat, durationBeats: .5, velocityScale: .65 })),
+      ...[4.5, 6].map(beat => ({ ...CA_PHAO_BOSSA.cell!.left[4], beat, durationBeats: 1, velocityScale: .45 })),
       { beat: 7.5, durationBeats: .5, velocityScale: .45, som: true,
         requireNextChord: true, tones: [{ toneIndex: 0, fromRoot: true, semitones: 1 }] },
     ],
     right: [
-      { beat: 1, durationBeats: .5, velocityScale: .65, tones: [{ toneIndex: 0 }, { toneIndex: 1 }, { toneIndex: 2 }] },
-      { beat: 2.5, durationBeats: 1, velocityScale: .72, tones: [{ toneIndex: 0 }, { toneIndex: 1 }, { toneIndex: 2 }] },
-      { beat: 3.5, durationBeats: .5, velocityScale: .55, tones: [{ toneIndex: 0 }, { toneIndex: 1 }, { toneIndex: 2 }] },
-      { beat: 4.5, durationBeats: 1, velocityScale: .6, tones: [{ toneIndex: 0 }, { toneIndex: 1 }] },
-      { beat: 6, durationBeats: 1, velocityScale: .6, tones: [{ toneIndex: 0 }, { toneIndex: 1 }] },
-      { beat: 7, durationBeats: .5, velocityScale: .9, tones: [{ toneIndex: 0 }, { toneIndex: 1 }] },
+      ...CA_PHAO_BOSSA.cell!.right.filter(hit => hit.beat < 4)
+        .map(hit => hit.beat === 1 ? { ...hit, velocityScale: .85 } : hit),
+      ...[4.5, 6].map(beat => ({ ...CA_PHAO_BOSSA.cell!.right[3], beat, durationBeats: 1, velocityScale: .6 })),
+      { ...CA_PHAO_BOSSA.cell!.right[3], beat: 7, durationBeats: .5, velocityScale: .9 },
     ],
   },
-  note: 'Chát 8 ngân 1 → bùm 9 dài ½ → chát 10 dài 1 → chát 11 dài ½ → bass dẫn ½. Tất cả nối liền, không nghỉ sau tiếng 8. Cặp 9–10 như 7–8. Giữ câu 8 phách/BPM; biến thể KT.',
+  note: 'Khung chính thức đã duyệt 13/9/2026 · CHỈ ĐỆM, chưa bật lại solo/fill. 11 tiếng: Bùm chát Bùm-bum chát chát | bùm chát bùm chát CHÁT. Chát 8 (1) → bùm 9 (½) → chát 10 (1) → chát 11 (½) → bass dẫn nhẹ (½). Không nghỉ giữa 8–9; giữ câu 8 phách, 110 BPM.',
 }
 
 /**

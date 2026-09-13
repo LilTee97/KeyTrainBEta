@@ -7,11 +7,14 @@ là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 
 ## Bossa CP cải tiến
 
-### Bộ ba solo thứ đã được người dùng duyệt — 12/9/2026
+### Bộ ba solo thứ — mốc lưu trữ 12/9/2026, hiện tạm ngưng
 
 Người dùng đã duyệt bằng tai **intro, giang tấu và outro giọng thứ** khi đi
-cùng `Bossa CP cải tiến`. Đây là chuẩn tham chiếu hiện tại của KT cho Bossa
-thứ, không phải bằng chứng rằng mọi biến thể hoặc mọi giọng đều đã duyệt.
+cùng `Bossa CP cải tiến` ở mốc 12/9. Sau đó người dùng yêu cầu dựng lại phần
+đệm và tạm bỏ solo/fill. Bộ ba dưới đây chỉ còn là **tham chiếu lịch sử**,
+không phải cấu hình phát hiện tại và không được tự bật lại. Khung đệm chính
+thức là bản duyệt 13/9/2026 ở mục kế tiếp; khi làm solo trở lại phải giữ
+nguyên khung đó trong phần đệm hát. Việc duyệt cũ không bao trùm mọi biến thể/giọng.
 
 | Đoạn | Khung đã duyệt ở Am | Điều phải giữ |
 | --- | --- | --- |
@@ -39,30 +42,81 @@ hạn đã soạn, không phải bộ học tự động vô hạn.
 - Mẫu gồm hai ô 4/4 (8 phách). A và B là hai nửa có vai trò khác nhau; không
   bình quân chúng thành một ô chung rồi lặp lại.
 
-### Khung đang dùng
+### Khung đệm chính thức — người dùng duyệt bằng tai 13/9/2026
 
-Nửa A giữ mạch lấy từ sheet: bass gốc mở ô, tiếng hợp âm ở phách sau, một bass
-ngắn tạo giật, bass/hợp âm tiếp tục đỡ câu hát. Nửa B là đoạn cải tiến có nhịp
-đẩy về ô kế:
+**Khung này thay thế mọi khung CP cải tiến trước đó**, kể cả bản mô tả ở
+`64496ba` và các lần dựng thử sau đó. Chỉ áp dụng cho nút `Bossa CP cải tiến`
+(`ca-phao-bossa-improved`); không sửa mẫu nguồn `Bossa Nova Cà Pháo (mới)` hay
+nút đối chiếu `Bossa test 1`. Ghi chép cũ trong audit/hồ sơ solo là lịch sử,
+không được dùng để ghi đè khung chính thức này.
 
-| Vị trí trong 2 ô | Vai trò | Trường độ / lực |
-| --- | --- | --- |
-| 4.0 | bùm 7 (bass) | 1/2 phách, nhẹ (`.65`) |
-| 4.5 | chát 8 | 1 phách, vừa (`.60`) |
-| 5.5 | bùm 9 (bass) | 1/2 phách, nhẹ (`.65`) |
-| 6.0 | chát 10 | 1 phách, vừa (`.60`) |
-| 7.0 | chát 11 | 1/2 phách, nhấn hơn (`.90`) |
-| 7.5 | bass dẫn | 1/2 phách, phớt nhẹ (`.45`) |
+**Bùm₁ – chát₂ – Bùm₃-bum₄ – chát₅ – chát₆ | bùm₇ – chát₈ – bùm₉ – chát₁₀ – CHÁT₁₁ → bass dẫn.**
 
-Bass dẫn chỉ là **một nốt** dẫn chromatic vào bass của hợp âm thật kế tiếp;
-không được thay bằng cả hợp âm kế tiếp, không chơi ở cuối bài, và chỉ được tạo
-khi đổi hợp âm đúng đầu ô sau. Tiếng 7–11 phải nối theo đúng mốc trên: việc một
-tiếng vào lúc nào và tiếng trước ngân bao lâu là hai thông số độc lập.
+Hai ô 4/4, tổng 8 phách, BPM mặc định 110. Offset dưới đây tính từ 0 trong
+cell, không phải số thứ tự phách đọc thành tiếng. LH = tay trái, RH = tay phải.
+Trường độ là số phách phát sau khi xử lý gõ lại cùng phím, với hợp âm đủ dài;
+ranh giới hợp âm/đoạn có thể cắt ngân theo renderer. Lực là `velocityScale`,
+không phải âm lượng nghe tuyệt đối.
+
+| Tiếng | Offset | Cách đánh | Trường độ | Lực RH / LH |
+| --- | --- | --- | --- | --- |
+| 1 — Bùm | 0 | LH bass gốc + quãng tám, cùng lúc | 1½ | — / .90 |
+| 2 — chát | 1 | RH hợp âm + LH bậc 5 đỡ | ½ cả hai tay | .85 / .55 |
+| 3 — Bùm | 1.5 | LH một nốt dưới bậc 5 nửa cung, tiếp cận tiếng 4 | ½ | — / .85 |
+| 4 — bum | 2 | LH bậc 5 | ½ thực phát, nhả khi tiếng 5 gõ lại | — / .75 |
+| 5 — chát | 2.5 | RH hợp âm + LH nhắc nhẹ đúng nốt bass tiếng 4 | RH 1; LH 1½ tới offset 4 | .72 / .50 |
+| 6 — chát | 3.5 | RH hợp âm | ½ | .55 / — |
+| 7 — bùm | 4 | LH bass gốc | ½ | — / .65 |
+| 8 — chát | 4.5 | RH hợp âm + cụm LH 5–8–10 theo hợp âm | 1 cả hai tay | .60 / .45 |
+| 9 — bùm | 5.5 | LH bass gốc, như tiếng 7 | ½ | — / .65 |
+| 10 — chát | 6 | Hai tay như tiếng 8 | 1 cả hai tay | .60 / .45 |
+| 11 — CHÁT | 7 | RH hợp âm, nhấn | ½ | .90 / — |
+| Bass dẫn phụ | 7.5 | LH một nốt trên bass hợp âm kế tiếp nửa cung | ½ | — / .45 |
+
+Chi tiết phải giữ khi tái tạo:
+
+- Bùm 1 dày bằng hai nốt cách quãng tám, không thêm onset. Chát 2 mạnh hơn
+  bản cũ và có bass đỡ; Bùm 3 phải rõ, không chìm giữa chát 2 và bum 4.
+- Chát 5 có một nốt bass nhẹ **đúng cùng onset** để nối Bùm 3–bum 4–chát 5;
+  đây không phải tiếng chính thứ 12. LH tiếng 4 trong cell gốc vẫn ghi duration
+  2, nhưng `holdUntilStruckAgain` nhả tại offset 2.5 để gõ lại tiếng 5:
+  không kéo hai lần cùng phím chồng nhau, không nhầm duration thô với tiếng thực phát.
+- Chuẩn kiểm với velocity nền 80, hệ số LH .85: Bùm 1 = 61; chát 2 RH/LH =
+  68/37; Bùm 3 = 58; bum 4 = 51; chát 5 RH/LH = 58/34. Nốt LH của chát 5
+  nhẹ hơn bum 4. Giữ tương quan lực, không tăng toàn bộ điệu để chữa một tiếng.
+- Không nghỉ giữa chát 8 và bùm 9. Cặp 9–10 lặp cách đánh 7–8; chát 10 nối
+  CHÁT 11, rồi mới bass dẫn ở 7.5, **không gộp bass dẫn vào tiếng 11**.
+- Bass dẫn chỉ là một nốt trên bass đích nửa cung rồi giải xuống. Chỉ tạo khi
+  có ranh giới hợp âm kế tiếp đúng đầu ô sau; không thay bằng cả hợp âm mới,
+  không tự thêm ở cuối bài hoặc giữa một hợp âm đang giữ xuyên đầu ô sau.
+- Nốt chuyển theo hợp âm/tông; thế RH dùng cơ chế voicing hiện có (voicing
+  Cà Pháo có thể dùng đầy đủ template). Không cố định mọi hợp âm thành cùng
+  số nốt hoặc bê cao độ tuyệt đối từ một giọng.
 
 Nút `Bossa CP cải tiến` phải mở lại từ nửa A tại mọi đầu đoạn bài. Nếu để vòng
 8 phách chạy xuyên cả bài, một phiên khúc mới sau số ô lẻ có thể bắt đầu từ nửa
 B (nhóm 7–11), nên nghe như đổi điệu. Đây là lỗi căn chỉnh chu kỳ chứ không phải
 một biến thể biểu diễn có chủ ý.
+
+### Bất biến bắt buộc khi làm solo/fill sau này
+
+- **Tuyệt đối không để solo, fill hoặc việc soạn mới mỗi lần phát thay đổi
+  cấu trúc khung đệm hát chính thức.** Không xóa/thêm/dời tiếng đệm, đổi độ ngân,
+  lực nhấn, vai trò hai tay hay nhịp chu kỳ để nhường chỗ cho solo/fill.
+- Dạo, giang, kết là các đoạn riêng. Khi trở lại lời hát, dùng đúng khung trên
+  và mở lại nửa A tại đầu đoạn. Biến thể solo/take/seed không được làm đổi
+  timeline đệm của cùng đầu vào; không áp `muteWindows`, `giveCompingToLeft`
+  hoặc `yieldToFill` làm mất/chuyển tiếng chát của phần hát.
+- Nếu fill không vừa khe còn trống thì bỏ/soạn lại fill, không sửa khung đệm.
+  Muốn đổi khung phải có yêu cầu cụ thể mới của người dùng và duyệt riêng.
+- Hiện **chỉ phát đệm, chưa bật lại dạo/giang/kết/fill**. `buildBossaRhythmOnly`
+  giữ nguyên các event đệm khi ráp bài; không xóa dữ liệu bài/câu solo đã lưu.
+- Mã tham chiếu: `src/reharm/style/styleLibrary/caPhaoBossa.ts`
+  (`CA_PHAO_BOSSA_IMPROVED`). Kiểm hồi quy: `bossaRhythmOnly.test.ts`
+  (11 onset, chi tiết tiếng 1–5 trên 12 giọng và ráp bài không mất tiếng),
+  `caPhaoBossaSheet.test.ts`, `caPhaoBossaSections.test.ts` và `timelineLoop.test.ts`.
+  Khi mở lại solo phải bổ sung kiểm so sánh đệm hát trước/sau qua nhiều take;
+  không cập nhật kỳ vọng test theo một khung mới chưa được duyệt.
 
 ### Cách tạo và chỉnh mẫu
 

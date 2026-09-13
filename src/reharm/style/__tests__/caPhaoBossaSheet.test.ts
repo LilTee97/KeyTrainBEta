@@ -3,21 +3,54 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { soloTeacherOf } from '../../fillSoloGenerator/soloTeacher'
 import { hoCuaDieu, kieuTrongHo } from '../hoDieu'
-import { renderPattern } from '../patternRenderer'
+import { giveCompingToLeft, renderPattern, yieldToFill } from '../patternRenderer'
 import { getStyle, getVisibleStyles, styleFamilies } from '../styleLibrary'
-import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from '../styleLibrary/caPhaoBossa'
+import { bossaFillsInGaps, CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from '../styleLibrary/caPhaoBossa'
 
 const render = (text = 'Dm7 Gm7 C7 Fmaj7', beatsEach?: number[]) =>
   renderPattern(voiceLeadTwoHands(parseChordInput(text).chords), CA_PHAO_BOSSA, { beatsPerChord: 4, beatsEach })
 
 describe('Bossa CP cải tiến: chát-bum chát CHÁT', () => {
+  it('fill không chuyển chát sang tay trái hoặc xóa bass ở đường phát', () => {
+    for (const chords of ['Dm7 Gm7 C7 Fmaj7', 'Cmaj7 Am7 Dm7 G7']) {
+      const backing = renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), CA_PHAO_BOSSA_IMPROVED)
+      const comp = backing.find(e => e.startBeat === 4.5 && e.hand === 'right')!
+      const bass = backing.find(e => e.startBeat === 5.5 && e.hand === 'left')!
+      const fills = [
+        { ...comp, startBeat: 4.75, durationBeats: .25 },
+        { ...bass, durationBeats: .25 },
+      ]
+      const mix = (line: typeof fills) => yieldToFill(giveCompingToLeft(backing, line), line)
+      // Tái hiện lỗi của bước nhường đệm cho fill, không chỉ kiểm bảng cell.
+      expect(mix(fills)).not.toEqual(backing)
+      const safe = bossaFillsInGaps(fills, backing)
+      expect(safe).toEqual([])
+      expect(mix(safe)).toEqual(backing)
+    }
+  })
+
+  it('giữ nguyên câu fill vừa khe, bỏ cả câu bị đụng chát thay vì cắt thủng câu', () => {
+    const backing = renderPattern(voiceLeadTwoHands(parseChordInput('Dm7 Gm7').chords), CA_PHAO_BOSSA_IMPROVED)
+    const note = backing.find(e => e.hand === 'right')!
+    const safe = [0, .25].map(startBeat => ({ ...note, startBeat, durationBeats: .25 }))
+    const colliding = [.875, 1.125].map(startBeat => ({ ...note, startBeat, durationBeats: .125 }))
+    const fills = [...safe, ...colliding]
+    expect(bossaFillsInGaps(fills, backing)).toEqual(safe)
+    expect(fills).toEqual([...safe, ...colliding])
+    expect(bossaFillsInGaps([], backing)).toEqual([])
+  })
+
   it('tiếng 8 nối ngay bùm 9 rồi chát 10–11 và bass dẫn, giữ trường độ', () => {
     for (const chords of ['Dm7 Gm7 C7 Fmaj7 Dm7', 'Am7 Dm7 G7 Cmaj7 Am7']) {
       const events = renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), CA_PHAO_BOSSA_IMPROVED, { beatsPerChord: 4 })
       const original = render(chords)
       for (const offset of [0, 8]) {
-        expect(events.filter(e => e.startBeat >= offset && e.startBeat < offset + 4))
-          .toEqual(original.filter(e => e.startBeat >= offset && e.startBeat < offset + 4))
+        // Ngoài bè bass thêm ở chát 5, giữ tiếng 3–6; bum 4 nhả khi bass được gõ lại.
+        expect(events.filter(e => e.startBeat > offset + 1 && e.startBeat < offset + 4 &&
+          !(e.hand === 'left' && e.startBeat === offset + 2.5)))
+          .toEqual(original.filter(e => e.startBeat > offset + 1 && e.startBeat < offset + 4)
+            .map(e => e.hand === 'left' && e.startBeat === offset + 1.5 ? { ...e, velocity: 58 }
+              : e.hand === 'left' && e.startBeat === offset + 2 ? { ...e, durationBeats: .5 } : e))
         const tail = events.filter(e => e.startBeat >= offset + 4 && e.startBeat < offset + 8)
         expect([...new Set(tail.map(e => e.startBeat - offset))]).toEqual([4, 4.5, 5.5, 6, 7, 7.5])
         expect(tail.filter(e => e.startBeat === offset + 4).map(e => e.hand)).toEqual(['left'])
