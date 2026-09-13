@@ -73,8 +73,9 @@ export const SOLO_RANGE = { low: SOLO_LOW, high: SOLO_HIGH } as const
   Triệu chứng lùi 79: tâm ~72, câu đụng trần, ô bị gập xuống quãng tám.
 */
 export const SOLO_TRAN_MO: MidiNote = 84
+const SOLO_OPEN_RANGE = { low: SOLO_LOW, high: SOLO_TRAN_MO } as const
 export const soloRange = (mo = false) =>
-  mo ? { low: SOLO_LOW, high: SOLO_TRAN_MO } : SOLO_RANGE
+  mo ? SOLO_OPEN_RANGE : SOLO_RANGE
 /** Nâng cho câu lẻ trong cùng một lượt. */
 const PHRASE_LIFT = 5
 /** Trần tuyệt đối, để lượt sau không leo hết bàn phím. */

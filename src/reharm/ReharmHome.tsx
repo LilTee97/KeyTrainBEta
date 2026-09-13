@@ -3368,6 +3368,13 @@ export function ReharmHome() {
   /** Lần phát đầu — dùng cho hiển thị và cho các nút phát một lượt. */
   const [interludeDisplayTake, setInterludeDisplayTake] = useState<number | null>(null)
   const song = useMemo(() => buildPass(0, 0, interludeDisplayTake ?? undefined), [buildPass, interludeDisplayTake])
+  // Con trỏ cập nhật mỗi móc kép. Không chạy lại bộ soạn chỉ để đếm nốt:
+  // tính toán này từng chặn lịch audio, khiến tiếng tới trễ rồi dồn nhanh.
+  const soloNoteCount = useMemo(() => laBossaCP(style)
+    ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
+      s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
+    : soloTake(0).length, [style, song, soloTake])
+  const fillNoteCount = useMemo(() => fills(0).length, [fills])
 
   /**
    * Hợp âm đang vang, quy về số thứ tự trên bản nhạc.
@@ -5292,8 +5299,8 @@ export function ReharmHome() {
             )}
 
             <span className="font-mono text-[11px] text-dim">
-              {loopLengthBeats} phách · giang tấu {soloTake(0).length} nốt ·{' '}
-              {fills(0).length} nốt fill
+              {loopLengthBeats} phách · giang tấu {soloNoteCount} nốt ·{' '}
+              {fillNoteCount} nốt fill
             </span>
 
             {!audioReady && (
