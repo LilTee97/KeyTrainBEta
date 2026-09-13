@@ -3011,3 +3011,28 @@ Người dùng yêu cầu xoá. Bản dựng lại hoá ra **trùng hệt** bả
 nên nút thử không cho nghe ra gì mới. Gỡ `CA_PHAO_BOSSA_TEST_1`, họ `ca-phao-bossa-test-1` khỏi
 `hoDieu.ts`, và `bossaTest1.test.ts`. **Giữ** `laBossaCP()` / `BOSSA_CP_IDS` — mười chỗ so id đã gom về
 một hàm là đúng dù chỉ còn một id; muốn thêm nút thử sau này chỉ cần thêm id vào tập ấy.
+
+### Bossa CP cải tiến ở Mi thứ: intro rỗng → cả ba đoạn "không hiện, không phát" (13/9/2026)
+
+Người dùng: bài Mi thứ (Am7 B7 Em7), bật dạo/giang/kết trong Thứ tự chơi mà bản nhạc không hiện vòng
+hợp âm câu solo, cũng không phát. Hợp âm trên bản nhạc lấy từ `timelineHien.soloSpans` — chính thứ bộ
+phát dùng — nên hai triệu chứng chung một gốc: bộ soạn trả rỗng.
+
+Đo: `buildPhraseSection` với tầm app `soloRange(false)` = 62–79, hợp âm mở Am7: **Mi thứ intro rỗng**
+("va chạm hai tay"), giang/kết vẫn ra nốt; La thứ ra đủ. Gốc trong `caPhaoBossaMinorIntro`: lấy đúng
+`bases[0]` (quãng tám của nét) và `cadenceBases[0]` (vị trí cụm hút) rồi chạm tay trái là bỏ cuộc. Mi thứ
+trong tầm 62–79 chỉ có một base (E4), cụm hút B7 rơi 63/66, chạm nốt E4 của cú chát LH.
+
+Sửa: thử lần lượt mọi cặp (base × cadence) hợp lệ, lấy cặp đầu không chạm — vẫn dịch **nguyên nét** theo
+quãng tám, không gập từng nốt (đúng luật Codex). Quét 12 giọng thứ × 3 đoạn × 2 take với tầm app: Mi thứ
+qua; **F, F#, G, Ab thứ vẫn rỗng cả ba đoạn** vì nét 5…15 không lọt cửa sổ base [57,64] — chủ ý Codex
+("tầm hẹp thì báo, không gập"), app có ô Trần mở (84) cho các giọng ấy; không đụng.
+`caPhaoBossaEmIntro.test.ts` khoá: Mi thứ đủ ba đoạn; 8/12 giọng ra intro, 4 giọng báo "Tầm nốt quá hẹp".
+
+Chưa xác nhận được vì sao giang/kết cũng không phát ở máy người dùng — engine ra nốt cho Mi thứ. Nếu
+sau sửa vẫn mất giang/kết thì xem thầy solo đang chọn (cổng `thaySolo === 'ca-phao'`) và bảng cảnh báo
+`phraseWarnings` dưới nút Phát.
+
+**`caPhaoSolo.ts` để trong working tree, chưa commit riêng được**: file đang mang thay đổi dở của Codex
+(`developBossaMelody`, import `licky/cpLick` chưa track). Commit riêng file này sẽ gãy build. Sửa của tôi
+nằm ở khối "THỬ LẦN LƯỢT CÁC VỊ TRÍ QUÃNG TÁM"; ai commit `caPhaoSolo.ts` kế tiếp mang theo nó.
