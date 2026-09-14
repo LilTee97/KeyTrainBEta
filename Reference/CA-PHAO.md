@@ -100,6 +100,10 @@ một biến thể biểu diễn có chủ ý.
 
 ### Bất biến bắt buộc khi làm solo/fill sau này
 
+**Phạm vi lịch sử:** các lệnh cấm tuyệt đối bên dưới là mốc chốt 13/9 trước khi
+cho phép CP Lick phối lại hai tay tại câu chêm. Với CP Lick/Run, áp dụng ngoại lệ
+đã duyệt ở mục “CP Lick và CP Run” phía dưới; ngoài cửa chêm vẫn giữ nguyên khung.
+
 - **Tuyệt đối không để solo, fill hoặc việc soạn mới mỗi lần phát thay đổi
   cấu trúc khung đệm hát chính thức.** Không xóa/thêm/dời tiếng đệm, đổi độ ngân,
   lực nhấn, vai trò hai tay hay nhịp chu kỳ để nhường chỗ cho solo/fill.
@@ -136,6 +140,95 @@ một biến thể biểu diễn có chủ ý.
 6. Nghe ở đúng BPM và cùng vòng hợp âm, lặp qua ranh giới đoạn. Test mã chỉ xác
    nhận lịch nốt, thời lượng, điều kiện bass dẫn và việc reset mẫu; nó không
    thể chứng minh groove nghe hay. Quyết định cuối là nghe của người chơi.
+
+## CP Lick và CP Run — bộ soạn chính thức, người dùng duyệt 14/9/2026
+
+Người dùng xác nhận **“bộ soạn CP Lick và CP Run đã ổn”** và yêu cầu lưu cách hoạt
+động vào sổ tay và MD Cà Pháo. Đây là duyệt bộ fill/run hiện tại; không tự mở rộng
+thành duyệt mọi solo dài, mọi giọng hoặc nguồn sheet chưa đủ bằng chứng.
+
+### Nguồn câu và kỹ thuật
+
+- Runtime: `src/reharm/licky/cpLick.ts`; corpus `cpPhrases.json` phiên bản 2;
+  tái đo bằng `tools/cp_lick_corpus.py`, nguồn mặc định `D:/PianoBrain`.
+- Đã đo 9 sheet đang hoạt động; xuất **697 mảnh** từ 7 sheet đủ điều kiện, trong
+  đó **294 mảnh có `supportComplete`** trước các bộ lọc điệu/giọng/tầm tay. Các mảnh
+  có thể chồng cửa nguồn; không gọi đây là 697 câu độc lập của Cà Pháo.
+- Ballad lấy từ Hồng Kông 1, Có Em Chờ, Ngày mai em đi, Để Em Rời Xa, Chưa Bao Giờ,
+  Chúng Ta Không Thuộc Về Nhau. Bossa lấy từ Người hãy quên em đi (D thứ).
+  Kém duyên và Yêu xa đã đo nhưng chưa xuất câu vì còn thiếu xác nhận nguồn.
+- Vốn thực hành: câu ngắn có khoảng thở, lệch phách, xen đơn nốt/chùm hợp âm,
+  rải/chuyển quãng và nốt tiếp cận. Chọn cử chỉ có trong **đúng họ điệu**, không
+  ghép run ballad vào bossa chỉ vì đủ số phách. Chưa đủ bằng chứng cho pedal,
+  grace không trường độ hay mọi thủ pháp hòa âm thành luật tự động.
+- `CP Run` là mảnh có ít nhất 4 attack đơn nốt ở tay chạy; chùm nhiều nốt cùng
+  onset là hợp âm/fill, không tách thành run. Tay kia đi cùng phần hỗ trợ nguồn.
+
+### Quy trình runtime để tái tạo
+
+1. `planCpLicks` nhận hợp âm đã tái hòa âm và thời lượng thực, điệu, chủ âm/mode,
+   timeline đệm, nhãn cuối dòng (`breaths`), nhãn có lời (`vocal`), mốc nối đoạn,
+   yêu cầu thủ công `extraFills/extraRuns`, vị trí bỏ qua `skip`, số lượt `take`.
+   Chưa có giọng trưởng/thứ hoặc nguồn đúng họ → không sinh, trả lý do. Chế độ
+   `vocal === 'full'` không sinh kể cả có yêu cầu thủ công.
+2. Chỉ chọn trên hợp âm chính. Tự động chọn cuối dòng lời hoặc mốc chuyển đoạn;
+   không có nhãn lời thì lấy mỗi hợp âm chính thứ 4 làm gợi ý. Bỏ chỗ đang có lời,
+   trừ yêu cầu thủ công; `skip` luôn được tôn trọng. Hai chỗ tự chọn cách nhau ít
+   nhất 2 ô, tính từ cuối hợp âm chứa câu trước đến cuối hợp âm đang xét.
+3. Cuối dòng thường chọn fill. Cuối đoạn ưu tiên run rồi mới thử fill nếu run
+   không vừa. Người dùng yêu cầu CP Run thì chỉ tìm run, thiếu mẫu phải báo chỗ
+   chưa chèn, không âm thầm đổi thành fill. Yêu cầu CP Lick thủ công chọn fill.
+4. Lọc mảnh đúng họ điệu, số phách/ô và `supportComplete`; ưu tiên kho cùng mode.
+   Chỉ khi kho cùng mode rỗng mới dùng mode kia và soạn lại nốt. Không có kho
+   bossa trưởng riêng: bossa trưởng hiện là biên soạn lại từ nguồn thứ.
+5. Xoay ứng viên bằng `abs(trunc(take)*37 + mainIndex*7) % pool.length`, lấy mảnh
+   đầu đặt được. Cửa dài tối đa 2 phách và không dài hơn hợp âm đang xét. Tìm
+   điểm vào từ cuối hợp âm lùi lại từng ¼ phách, không vượt hai phách cuối;
+   `start % meter` phải trùng `source.offset % meter`. Giữ onset tương đối,
+   khoảng nghỉ và gate từng nốt của cả hai tay; **không tăng BPM/nén run để nhét**.
+6. `placeCpPhrase` chuyển cao độ tương đối theo chủ âm rồi dời nguyên cử chỉ
+   theo octave vào LH 36–60 hoặc RH 60–84. Nếu vượt tầm thì bỏ ứng viên, không
+   gấp riêng đỉnh câu. Với take chẵn, cùng mode, mọi nốt hợp gam/hợp âm và nốt
+   đầu/cuối thuộc hợp âm, có thể chuyển nguyên nốt. Nếu không đủ điều kiện,
+   chọn nốt gần hình nguồn: phách nguyên theo chord tone, phách lẻ theo hợp
+   gam + nốt hợp âm; nốt cuối ưu tiên nốt chung với hợp âm kế, nếu có.
+7. Màu hợp âm thật được ưu tiên: E7 trong Am vẫn có G#, bỏ G tự nhiên cạnh
+   bậc ba trưởng; hợp âm thứ không lẫn bậc ba trưởng. Nốt approach nửa cung chỉ
+   giữ khi nguồn có bước đó, đơn nốt, gate ≤¼ phách, ở phách lẻ, tới nốt hợp lệ
+   kế tiếp cách ≤½ phách. Loại chùm bị soạn trùng phím và hai tay giữ/gõ cùng phím.
+8. Trả **cùng một kế hoạch** gồm `events`, `backing`, `placements` (nguồn, cửa,
+   vị trí, fill/run), `skipped`, `reason`. `ReharmHome.buildPass` lấy cả đệm và
+   câu từ kế hoạch này; không ghép nốt take mới với cửa cắt đệm của take cũ.
+
+### Phối đệm, giao diện và bảo toàn nhịp
+
+Ngày 13/9 người dùng cho phép thay tiếng đệm **trong cửa fill/run/nối** theo
+cách phối hai tay có trong sheet. Đây là ngoại lệ chính thức của điều cấm cũ:
+
+- `cpBacking` thay đệm trong cửa nửa kín `[start, end)`. Nốt đệm bắt đầu trước
+  cửa được nhả tại đầu cửa nếu đang ngân qua; nốt bắt đầu trong cửa bị thay
+  bằng phần hai tay nguồn. Nếu nốt đệm giao cửa còn ngân vượt cuối cửa thì
+  bỏ ứng viên. Không bịa cú gõ lại ở cuối cửa. Nguồn nghỉ tay nào thì giữ nghỉ.
+- Giữ nguyên mọi event không giao cửa, tổng phách và BPM. Ngoài cửa CP,
+  Bossa CP cải tiến giữ khung **11 tiếng/8 phách** đã duyệt, đầu đoạn hát mở
+  lại nửa A. Không áp thêm `giveCompingToLeft`/`yieldToFill` của bộ cũ lên kế hoạch CP.
+- Velocity câu chêm là 52, nhóm cuối 58: lựa chọn biên soạn KT, không phải
+  lực đo từ audio nguồn. Không tự tăng lực hoặc sửa khung sau mốc duyệt này.
+- Ô **CP Lick** mặc định tắt và lưu theo bài. Bật thì thay bộ fill/run cũ,
+  chuột phải dùng **CP Lick / CP Run**; không dùng mật độ Licky/Kingsley.
+  Tắt quay lại bộ cũ; riêng Bossa CP cải tiến tắt câu chêm, không tắt solo thứ.
+- Lượt phát mới xoay nguồn/soạn nốt theo take; cùng dữ liệu + take tái tạo cùng
+  kế hoạch. Lặp đoạn trong cùng lượt giữ cùng kế hoạch. Không bảo đảm vô hạn câu
+  khác nhau nếu chỉ còn ít ứng viên vừa cửa. Solo dạo/giang/kết dùng bộ riêng.
+- **Không soạn chỉ để cập nhật con trỏ/số nốt.** Giữ bản sửa `2a45131`: thống kê
+  được memo hóa; tầm solo kể cả Trần 84 giữ tham chiếu ổn định. Lỗi tua nhanh/chậm
+  trước đó do tính toán trên luồng giao diện gây gửi nốt trễ, không do khung
+  11 tiếng. Không chữa lỗi hiệu năng bằng cách sửa tiết tấu hay tốc độ điệu.
+
+Cuối dòng lời chỉ là vị trí nghỉ **ước lượng**, chưa có timestamp giọng hát.
+Chưa có dữ liệu đúng điệu/đúng cửa thì báo thiếu; không coi mốc duyệt này là trả
+lời cho [phiếu dữ liệu còn thiếu](PHIEU-HOI-CP-LICK-2026-09-13.md).
+Bảng nguồn, số đo, lệnh tái tạo và kiểm hồi quy: [CP-LICK.md](CP-LICK.md).
 
 ## Quy trình rút điệu từ sheet cho các thầy và các điệu khác
 
