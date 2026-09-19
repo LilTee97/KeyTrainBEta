@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { parseChordInput } from '../input/chordInputParser'
 import {
   semitonesToKey,
@@ -17,6 +18,16 @@ const symbols = (
   transposeChords(chords(text), semitones, style).map((chord) => chord.symbol)
 
 describe('nâng hạ tone', () => {
+  it('ô Giọng cho sửa cả trưởng/thứ mà không tự dịch hợp âm; Tone vẫn độc lập', () => {
+    const app=readFileSync(new URL('../ReharmHome.tsx',import.meta.url),'utf8')
+    const select=app.slice(app.indexOf('function KeySelect('),app.indexOf('function VongPanel('))
+    expect(select).toContain('const keys = orderedKeys()')
+    expect(select).not.toContain('scaleFilter')
+    expect(app).toContain('const effectiveTranspose = transpose')
+    expect(app).toContain('onChange={setManualKey}')
+    expect(app).toContain('shiftKeyId(key, applied)')
+    expect(app).not.toContain('semitonesToKey(chartKey.tonic')
+  })
   it('dịch nốt gốc đúng số nửa cung', () => {
     expect(symbols('C Am F G', 2)).toEqual(['D', 'Bm', 'G', 'A'])
     expect(transposeSymbol('Csus4', 2)).toBe('Dsus4')

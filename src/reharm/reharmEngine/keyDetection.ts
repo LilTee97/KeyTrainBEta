@@ -300,6 +300,25 @@ function scoreKey(
   if (scale === 'minor') {
     score +=
       EARLY_MINOR_CADENCE_WEIGHT * earlyMinorCadenceStrength(chords, tonic)
+  } else {
+    // ii7 -> V7 -> I/iii: the latter is a tonic substitute in a turnaround.
+    // A following VI7 tonicizes ii, not necessarily a new minor key. Counting
+    // A7 -> Dm alone overvalued Dm in Dm7 G7 Em7 A7 / Dm7 G7 Cmaj7 A7.
+    let turnarounds = 0
+    const openingWindow = Math.max(8, Math.ceil(chords.length * 0.4))
+    for (let i = 0; i < Math.min(openingWindow, chords.length - 2); i++) {
+      const [ii, v, arrival] = chords.slice(i, i + 3)
+      if (ii.root !== normalizePitchClass(tonic + 2) || !ii.quality.intervals.includes(3) ||
+        ii.quality.intervals.includes(6) || v.root !== normalizePitchClass(tonic + 7) ||
+        !actsAsDominant(v)) continue
+      if (arrival.root === tonic && arrival.quality.intervals.includes(4) ||
+        arrival.root === normalizePitchClass(tonic + 4) && arrival.quality.intervals.includes(3))
+        turnarounds++
+    }
+    // Do not let the relative-major chorus override an established minor verse.
+    const relativeMinor = normalizePitchClass(tonic + 9)
+    score += 4 * Math.min(1, turnarounds / 2) *
+      (1 - earlyMinorCadenceStrength(chords, relativeMinor))
   }
 
   // Vòng càng ngắn thì chỗ mở và chỗ đóng càng ít có nghĩa — xem `TRUSTED_LENGTH`.

@@ -129,6 +129,14 @@ describe('bài Mi thứ có điệp khúc dùng Sol tương đối', () => {
 })
 
 describe('thời lượng hợp âm có tính vào', () => {
+  it('Thôi em đừng đi: turnaround ii–V–iii–VI7 belongs to C, not Dm', () => {
+    const intro='Dm7 G7 Em7 A7 Dm7 G7 Cmaj7 A7'
+    const verse=intro+' Dm7 G7 Em7 A7 Dm7 G7 Cmaj7 Fmaj7'
+    expect(guess(intro)[0]?.label).toBe('C')
+    expect(guess(verse)[0]?.label).toBe('C')
+    expect(guess('Em7 A7 F#m7 B7 Em7 A7 Dmaj7 B7')[0]?.label).toBe('D')
+    expect(guess('Dm7 Gm7 A7 Dm Dm7 Gm7 A7 Dm')[0]?.label).toBe('Dm')
+  })
   it('hợp âm ngân lâu nói lên giọng nhiều hơn hợp âm lướt qua', () => {
     /*
       Cùng ba hợp âm Đô, Sol, Fa. Chia đều thì bài ở Đô trưởng; nhưng nếu bài

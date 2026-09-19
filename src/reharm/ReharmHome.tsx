@@ -40,7 +40,6 @@ import {
 } from './chordTiming'
 import { parseChordInput } from './input/chordInputParser'
 import {
-  semitonesToKey,
   shiftKeyId,
   transposeChords,
   transposeLabel,
@@ -439,18 +438,13 @@ function KeySelect({
   value,
   onChange,
   detectedLabel,
-  scaleFilter,
 }: {
   value: string
   onChange: (value: string) => void
   /** Giọng **app tự dò ra**, không phải giọng đang chọn. */
   detectedLabel: string | undefined
-  /** Chỉ hiện các giọng cùng tính chất (major/minor) với bài hiện tại. */
-  scaleFilter?: 'major' | 'minor' | null
 }) {
-  const keys = scaleFilter
-    ? orderedKeys().filter((k) => k.scale === scaleFilter)
-    : orderedKeys()
+  const keys = orderedKeys()
 
   return (
     <label className="flex items-center gap-2 text-xs text-dim">
@@ -458,7 +452,8 @@ function KeySelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        title="Đổi cả bài sang giọng này. Chọn Tự dò nếu muốn để app đoán lại."
+        aria-label="Giọng bài hát"
+        title="Xác định giọng trưởng/thứ, giữ nguyên cao độ hợp âm. Dùng Tone −/+ để chuyển tông cả bài."
         className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
       >
         <option value="">
@@ -861,14 +856,9 @@ export function ReharmHome() {
     }
   }, [manualKey])
 
-  /**
-   * Ô Giọng đang chọn thì tone phải khớp giọng đó — không để kẹt
-   * "E thứ" mà hợp âm vẫn ở G.
-   */
-  const effectiveTranspose =
-    lockedKey && chartKey
-      ? semitonesToKey(chartKey.tonic, lockedKey.tonic)
-      : transpose
+  // Correcting a detection is NOT transposing the chart (Dm -> C must not
+  // turn its Dm7 G7 into Cm7 F7). Only the Tone controls move the pitches.
+  const effectiveTranspose = transpose
 
   const soundingStyle = chartKey
     ? accidentalStyleFor(
@@ -1150,11 +1140,6 @@ export function ReharmHome() {
     [reharm.colored, colorEdits, slashEdits],
   )
   const passingSuggestions = reharm.passingSuggestions
-
-  /** Tính chất giọng hiện tại (để lọc ô Giọng chỉ hiện trưởng hoặc thứ). */
-  const currentKeyScale: 'major' | 'minor' | null = manualKey
-    ? (manualKey.split(':')[1] as 'major' | 'minor')
-    : (reharm.key?.scale ?? reharm.keyCandidates[0]?.scale ?? null)
 
   /**
    * Bật tắt một hợp âm lướt, **áp cho mọi chỗ có cùng hợp âm đích**.
@@ -4757,18 +4742,8 @@ export function ReharmHome() {
 
             <KeySelect
               value={manualKey}
-              onChange={(value) => {
-                setManualKey(value)
-                if (!value || !chartKey) {
-                  if (!value) setTranspose(0)
-                  return
-                }
-                setTranspose(
-                  semitonesToKey(chartKey.tonic, Number(value.split(':')[0])),
-                )
-              }}
+              onChange={setManualKey}
               detectedLabel={reharm.keyCandidates[0]?.label}
-              scaleFilter={currentKeyScale}
             />
           </div>
 
