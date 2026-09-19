@@ -125,6 +125,7 @@ interface SongSheetViewProps {
    * sổ ấy 19% — khớp. Sổ Licky là sổ chung, không mang hình câu của thầy nào.
    */
   cauLinhNhi?: boolean
+  cpLick?: boolean
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
   fillRestAt?: (chordIndex: number) => number
@@ -220,6 +221,7 @@ export function SongSheetView({
   runAt,
   onToggleRun,
   cauLinhNhi,
+  cpLick,
   fillRestAt,
   onSetFillRest,
   colorHintAt,
@@ -521,6 +523,7 @@ export function SongSheetView({
           }
           run={runAt?.(menu.chordIndex) ?? null}
           cauLinhNhi={cauLinhNhi}
+          cpLick={cpLick}
           onToggleRun={
             onToggleRun
               ? () => {
@@ -595,6 +598,7 @@ export function ChordContextMenu({
   run,
   onToggleRun,
   cauLinhNhi,
+  cpLick,
   fillRest,
   onSetFillRest,
   colorHint,
@@ -627,6 +631,7 @@ export function ChordContextMenu({
   onToggleFill?: () => void
   /** Đang chọn thầy Linh Nhi — đổi nhãn menu và nguồn câu. */
   cauLinhNhi?: boolean
+  cpLick?: boolean
   run?: boolean | null
   onToggleRun?: () => void
   fillRest?: number
@@ -909,14 +914,14 @@ export function ChordContextMenu({
       {(onToggleFill && fill !== null) || (onToggleRun && run !== null) ? (
         <>
           <div className="my-1 border-t border-line" />
-          {onToggleFill && fill !== null && !transition && (
+          {onToggleFill && fill !== null && (!transition || cpLick) && (
             <button
               type="button"
               onClick={onToggleFill}
               className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
             >
               <span className={fill ? 'text-cream' : 'text-amber-key'}>
-                {cauLinhNhi
+                {cpLick ? (fill ? 'Bỏ CP Lick' : 'CP Lick') : cauLinhNhi
                   ? fill
                     ? 'Bỏ Linh Fill'
                     : 'Linh Fill'
@@ -925,20 +930,20 @@ export function ChordContextMenu({
                     : 'Licky Fills'}
               </span>
               <span className="text-[10px] text-dim">
-                {cauLinhNhi
+                {cpLick ? 'Phối hai tay theo câu Cà Pháo · chỉ thay đệm trong câu chêm' : cauLinhNhi
                   ? 'Câu fill rút từ bản ký âm Linh Nhi'
                   : 'Câu lick chêm cuối ô hợp âm này'}
               </span>
             </button>
           )}
-          {onToggleRun && run !== null && !transition && (
+          {onToggleRun && run !== null && (!transition || cpLick) && (
             <button
               type="button"
               onClick={onToggleRun}
               className="flex w-full flex-col gap-0.5 rounded px-2.5 py-1.5 text-left text-xs hover:bg-white/8"
             >
               <span className={run ? 'text-cream' : 'text-amber-key'}>
-                {cauLinhNhi
+                {cpLick ? (run ? 'Bỏ CP Run' : 'CP Run') : cauLinhNhi
                   ? run
                     ? 'Bỏ Linh Run'
                     : 'Linh Run'
@@ -947,13 +952,13 @@ export function ChordContextMenu({
                     : 'Licky Runs'}
               </span>
               <span className="text-[10px] text-dim">
-                {cauLinhNhi
+                {cpLick ? 'Câu chạy và tay đệm theo sheet Cà Pháo · giữ nhịp nguồn' : cauLinhNhi
                   ? 'Câu chạy ngón rút từ bản ký âm Linh Nhi'
                   : 'Câu chạy ngón từ sổ Licky'}
               </span>
             </button>
           )}
-          {onSetFillRest && (fill === true || run === true) && !transition && (
+          {onSetFillRest && (fill === true || run === true) && !transition && !cpLick && (
             <>
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Thêm nghỉ sau câu
@@ -1405,7 +1410,7 @@ function ChordLabel({
         anchor.heldLabel
           ? `Xoay màu cùng gốc: ${anchor.heldLabel}`
           : hasRun
-            ? 'Có câu chạy ngón Licky · bấm để phát từ đây'
+            ? 'Có câu chạy ngón · bấm để phát từ đây'
             : hasFill
             ? 'Có câu fill · bấm để phát từ đây, chuột phải hoặc nhấn giữ để tắt fill'
             : 'Bấm để phát từ đây, chuột phải hoặc nhấn giữ để đổi thời lượng'

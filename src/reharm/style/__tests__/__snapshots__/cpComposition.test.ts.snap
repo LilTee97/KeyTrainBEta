@@ -1,0 +1,30 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`approved Bossa rhythm and techniques remain fixed while training pitches 1`] = `
+{
+  "major/false/interlude/0": "811659dc941f1882f3866781a7610fd78f1efff31ec79c6149145535c712e4eb",
+  "major/false/interlude/3": "22e27238179ca646244d6a9cf6e3fe3ce1d4b0d6d8e2ea4ab4e5f06f0a0b06e7",
+  "major/false/intro/0": "b24ee256a8e7c2d56226a9e205d7c985fb1306d526ac977e824e12a5038766d7",
+  "major/false/intro/3": "b28c9f2b488e3a4e72257529167f8b3f482a748d735651216e4b808c35a7c57f",
+  "major/false/outro/0": "cae31285b11db4fbc8e6c50cb642220216c47fa7cba6f4e3b6e7723655f5ca34",
+  "major/false/outro/3": "cae31285b11db4fbc8e6c50cb642220216c47fa7cba6f4e3b6e7723655f5ca34",
+  "major/true/interlude/0": "084e0be263337fb5463b3d6c1a2f81f9d98660f631dfe4c6ee00d6a8f73bcdc9",
+  "major/true/interlude/3": "d70d0ab0a602963a81eb89bc487b69e4f0071aab69b97ed7203e5d161a280fa6",
+  "major/true/intro/0": "cded54fd7bc5d62e5e6b7490b31e07061f750170030cd0d32fd8aebb6900ae26",
+  "major/true/intro/3": "b5a605d863812cb3e02e1685f4b3c08c2b9c71694a30c06af2ba3c82e0d8d66f",
+  "major/true/outro/0": "32f994ca91e72cc9eabe64f04d068bf752a44f820b9d2bda279b7d3295134ee6",
+  "major/true/outro/3": "5005a0821fbbbbe4e0e37e4781003f6175ee7befcf2b769e968cf547aa385c72",
+  "minor/false/interlude/0": "813ef7e4123def3eedbe0d80d349bbbd3b33e0a37aac6bd86af911b6a828881c",
+  "minor/false/interlude/3": "22e27238179ca646244d6a9cf6e3fe3ce1d4b0d6d8e2ea4ab4e5f06f0a0b06e7",
+  "minor/false/intro/0": "b24ee256a8e7c2d56226a9e205d7c985fb1306d526ac977e824e12a5038766d7",
+  "minor/false/intro/3": "b28c9f2b488e3a4e72257529167f8b3f482a748d735651216e4b808c35a7c57f",
+  "minor/false/outro/0": "cae31285b11db4fbc8e6c50cb642220216c47fa7cba6f4e3b6e7723655f5ca34",
+  "minor/false/outro/3": "cae31285b11db4fbc8e6c50cb642220216c47fa7cba6f4e3b6e7723655f5ca34",
+  "minor/true/interlude/0": "084e0be263337fb5463b3d6c1a2f81f9d98660f631dfe4c6ee00d6a8f73bcdc9",
+  "minor/true/interlude/3": "dd760958e3c2090f69a40d1f5e4e524585f91b4a63e43eeb51b63047889e799d",
+  "minor/true/intro/0": "cded54fd7bc5d62e5e6b7490b31e07061f750170030cd0d32fd8aebb6900ae26",
+  "minor/true/intro/3": "e5962d2c246ab2ee328ccad6d0f551b356571cf11e2a9a186ff1f6680d01dfb2",
+  "minor/true/outro/0": "32f994ca91e72cc9eabe64f04d068bf752a44f820b9d2bda279b7d3295134ee6",
+  "minor/true/outro/3": "5005a0821fbbbbe4e0e37e4781003f6175ee7befcf2b769e968cf547aa385c72",
+}
+`;

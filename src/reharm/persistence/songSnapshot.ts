@@ -50,6 +50,13 @@ export interface SongSnapshot {
   colorEdits?: Record<number, string>
   slashEdits?: Record<number, boolean>
   lickyFills?: boolean
+  /** CP Lick replaces fill/run only, never the accompaniment or full solo sections. */
+  cpLick?: boolean
+  /** Complete CP instrumental sections; absent in older songs means off. */
+  caPhaoFull?: boolean
+  caPhaoSoloMode?: 'compose' | 'simulate'
+  caPhaoFullSource?: string
+  caPhaoKeyboardRange?: { low: number; high: number }
   lickyRuns?: boolean
   linhNhiFills?: boolean
   linhNhiRuns?: boolean

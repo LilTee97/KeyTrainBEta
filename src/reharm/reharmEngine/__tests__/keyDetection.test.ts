@@ -111,6 +111,23 @@ describe('bài hopamchuan Phố Không Em', () => {
   })
 })
 
+describe('bài Mi thứ có điệp khúc dùng Sol tương đối', () => {
+  it('không để đoạn kết ở G lấn át các câu B7 → Em lặp từ đầu bài', () => {
+    /*
+      Đúng vòng người dùng đang mở: phần đầu lặp B7 → Em, còn bốn câu cuối
+      kết ở G (giọng trưởng tương đối). Nguồn ghi rõ Tone Em; trước đây điểm
+      kết cố định làm bộ dò trả G.
+    */
+    const henHo =
+      'Am7 B7 Em Em7 Am7 B7 Em7 Am7 B7 Em Em7 Am7 B7 Em7 ' +
+      'Am7 D7 G Gm7 Am/F# B7 Em Am7 D7 G D/F# Em7 Am7 A7/A# B7 Em ' +
+      'A7 D7sus4 D7 G D/F# Em A7 D7sus4 D7 G D/F# ' +
+      'Em A7 D7sus4 D7 G D/F# Em A7 D7sus4 D7 G'
+
+    expect(guess(henHo)[0]?.label).toBe('Em')
+  })
+})
+
 describe('thời lượng hợp âm có tính vào', () => {
   it('hợp âm ngân lâu nói lên giọng nhiều hơn hợp âm lướt qua', () => {
     /*

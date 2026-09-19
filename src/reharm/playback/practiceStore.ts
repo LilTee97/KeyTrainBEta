@@ -50,6 +50,7 @@ export interface PracticeGrid {
   onRemovePassingHere?: (slotId: string) => void
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  cpLick?: boolean
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
   fillRestAt?: (chordIndex: number) => number

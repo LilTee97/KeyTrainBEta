@@ -8,7 +8,8 @@ import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
-import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo } from './caPhaoSolo'
+import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
+import { composeCpSolo } from './cpComposition'
 import { giaiDieuDaoLinhNhi, vonO } from './giaiDieuDaoLinhNhi'
 import { nhipVong, vonHopAmLinhNhi } from './vonHopAmLinhNhi'
 import { avoidMelodyClash, interlockHands, soloLeftHand } from './soloLeftHand'
@@ -29,6 +30,15 @@ import { minorSoloSourceForTake, nguonKetThuBolero, planMinorOutro, planMinorInt
  * bắt được đúng thứ người ta nghe.
  */
 export interface PhraseSectionOptions {
+  /** Color Cà Pháo: recompose harmony, rhythm and melody, not archive playback. */
+  caPhaoCompose?: boolean
+  /** Whole-source simulation: no development or cadence substitution. */
+  caPhaoSimulate?: boolean
+  /** Opt-in complete CP sheet sections; false/absent leaves the existing solo untouched. */
+  caPhaoFull?: boolean
+  caPhaoFullSource?: string
+  /** Actual available keys for full CP solos, independent of the short-solo range. */
+  caPhaoKeyboardRange?: { low: MidiNote; high: MidiNote }
   kind: 'intro' | 'outro' | 'interlude'
   key: { tonic: PitchClass; scale: ScaleType } | null
   style: StylePattern
@@ -104,8 +114,13 @@ export interface PhraseSection {
   /** Mỗi hợp âm dài mấy phách, cùng độ dài với `chords`. */
   beatsEach: readonly number[]
   /** Dấu vết của vòng outro kiểm chứng, không suy nguồn từ số lượt phát. */
-  sourcePhrase?: { id: string; fromBar: number; barCount: number; method?: 'motif-development' }
+  sourcePhrase?: { id: string; fromBar: number; barCount: number; method?: 'motif-development' | 'full-sheet' | 'cp-composition'; song?: string }
+  developmentSources?: { id: string; song: string; genre: string; mode: string;
+    sourceBar: number; targetBar: number; method: 'contour-on-bossa-rhythm' }[]
   unavailableReason?: string
+  adaptationNote?: string
+  compositionSources?: { bar: number; start: number; end: number; harmony: string; melody: string; rhythm: string;
+    donorGenre: string; mode: string; sourceKind: string }[]
 }
 
 /**
@@ -596,6 +611,9 @@ function oXenPap(soO: number, take: number, nhieuPap = false): Set<number> {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
+  if (options.thay === 'ca-phao' && options.caPhaoSimulate) return caPhaoFullSolo({...options,take:0})
+  if (options.caPhaoCompose && options.thay === 'ca-phao') return composeCpSolo(options)
+  if (options.caPhaoFull && options.thay === 'ca-phao') return caPhaoFullSolo(options)
   if (options.key?.scale === 'minor' &&
     laBossaCP(options.style) &&
     (!options.thay || options.thay === 'ca-phao') && !options.motif) {

@@ -330,6 +330,8 @@ export interface BuildArrangedSongOptions {
    * Bỏ trống thì tỉa như cũ — xem `khongTiaTayTrai`.
    */
   styleId?: string
+  /** Full sheet phrases already assign hands, including intentional hand crossings. */
+  preserveSoloHands?: boolean
 }
 
 /**
@@ -597,7 +599,9 @@ export function buildArrangedSong(
   return {
     // Nốt tay trái nằm hẳn trên vùng tay phải thì nhãn tay ấy sai — xem
     // `fixHandByRegister`. Chặn ở đây, chỗ mọi tầng tiếng đổ về.
-    events: fixHandByRegister(events).sort((a, b) => a.startBeat - b.startBeat),
+    events: (options.preserveSoloHands ? events.flatMap(e =>
+      soloSpans.some(s => e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)
+        ? [e] : fixHandByRegister([e])) : fixHandByRegister(events)).sort((a, b) => a.startBeat - b.startBeat),
     totalBeats: cursor,
     sections,
     segments,

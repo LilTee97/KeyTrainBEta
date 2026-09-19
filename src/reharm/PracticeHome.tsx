@@ -119,6 +119,7 @@ export function PracticeHome() {
               onRemovePassingHere={grid?.onRemovePassingHere}
               fillAt={grid?.fillAt}
               onToggleFill={grid?.onToggleFill}
+              cpLick={grid?.cpLick}
               runAt={grid?.runAt}
               onToggleRun={grid?.onToggleRun}
               fillRestAt={grid?.fillRestAt}

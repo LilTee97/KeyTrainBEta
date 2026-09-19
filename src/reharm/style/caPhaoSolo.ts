@@ -8,6 +8,287 @@ import { parseChordInput } from '../input/chordInputParser'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { renderPattern } from './patternRenderer'
+import { scaleTones } from '../reharmEngine/keyDetection'
+import { cpGenre, cpPhrases } from '../licky/cpLick'
+import fullSolos from './caPhaoFullSolos.json'
+type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony'> & {
+  harmony: { at: number; root: number; suffix: string; bass: number | null }[]
+}
+
+export function caPhaoFullSources(style: PhraseSectionOptions['style'], key: PhraseSectionOptions['key']) {
+  const genre = cpGenre(style)
+  return [...new Set(fullSolos.sections.filter(s => s.mode === key?.scale &&
+    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre).map(s => s.song))]
+}
+
+/** Develop melodic notes, keeping written chord gestures, rests, tuplets and cadences.
+ * Vocabulary comes only from complete CP sections of this genre AND mode.
+ * Source accidentals and their immediate resolutions stay intact, not scale-snapped.
+ */
+function developFullSolo(source: FullSolo, take: number) {
+  if (!take) return source
+  const pc = (n: number) => ((n % 12) + 12) % 12
+  const vocabulary = new Set(fullSolos.sections.filter(s => s.genre === source.genre && s.mode === source.mode)
+    .flatMap(s => s.events.filter(e => e.hand === 'right').flatMap(e => e.tones.map(pc))))
+  const events = source.events.map(e => ({ ...e, tones: [...e.tones] }))
+  const right = events.filter(e => e.hand === 'right').sort((a, b) => a.at - b.at)
+  const allowedAt = (at: number) => {
+    const h = source.harmony.findLast(h => h.at <= at)!
+    const chord = parseChordInput(pitchClassName(h.root as PitchClass) + h.suffix).chords[0]
+    const allowed = new Set<number>(scaleTones(0, source.mode as 'minor' | 'major'))
+    if (chord) {
+      chord.quality.intervals.forEach(n => allowed.add(pc(h.root + n)))
+      if (chord.quality.intervals.includes(3)) allowed.delete(pc(h.root + 4))
+      else if (chord.quality.intervals.includes(4)) allowed.delete(pc(h.root + 3))
+    }
+    return allowed
+  }
+  let point = 0
+  for (let i = 0; i < right.length; i++) {
+    const e = right[i], old = e.tones[0]
+    if (e.tones.length !== 1 || e.carry || e.at >= source.lengthBeats - source.barLengths.at(-1)! ||
+      source.graces.some(g => g.hand === e.hand && Math.abs(g.at - e.at) < 1e-5)) continue
+    const before = right[i - 1], after = right[i + 1]
+    const allowed = allowedAt(e.at)
+    if (!allowed.has(pc(old))) continue
+    // Do not detach a written chromatic approach from its target.
+    if ([before, after].some(n => n?.tones.length === 1 && Math.abs(n.tones[0] - old) === 1)) continue
+    const candidates = Array.from({ length: 9 }, (_, n) => old - 4 + n).filter(n =>
+      allowed.has(pc(n)) && vocabulary.has(pc(n)) &&
+      (!before || before.tones.length !== 1 || Math.sign(n - before.tones[0]) === Math.sign(old - before.tones[0])) &&
+      (!after || after.tones.length !== 1 || Math.sign(after.tones[0] - n) === Math.sign(after.tones[0] - old)) &&
+      !events.some(l => l.hand === 'left' && l.at < e.at + e.gates[0] - 1e-5 &&
+        e.at < l.at + Math.max(...l.gates) - 1e-5 && l.tones.some(t => Math.abs(t - n) <= 1)))
+    if (candidates.length < 2) continue
+    candidates.sort((a, b) => Math.abs(a - old) - Math.abs(b - old) || a - b)
+    e.tones[0] = candidates[Math.floor(take / 2 ** (point % 10)) % candidates.length]
+    point++
+  }
+  return { ...source, events }
+}
+
+/** User-marked vocal pickups in Bossa bars 8/48 are not instrumental melody.
+ * Keep the half-beat paired gesture, but end on V's 3rd/5th into the actual next chord.
+ * This is KT's CP-derived lead-in, not a verbatim transcription of the vocal pickup.
+ */
+function leadFullSoloInto(source: FullSolo, options: PhraseSectionOptions): FullSolo {
+  if (source.vocalPickupAt === null || !options.key) return source
+  const at = source.vocalPickupAt
+  const target = options.opening ?? parseChordInput(pitchClassName(options.key.tonic) +
+    (options.key.scale === 'minor' ? 'm' : '')).chords[0]
+  const shift = ((target.root - options.key.tonic + 18) % 12) - 6
+  const cadenceAt = source.harmony.at(-2)!.at // intro iv starts at 27.5; interlude ii at 28
+  const pc = (n: number) => ((n % 12) + 12) % 12
+  const third = target.quality.intervals.includes(3) ? 3 : 4
+  const events = source.events.filter(e => e.hand !== 'right' || e.at < at).map(e => ({ ...e,
+    tones: e.tones.map(n => {
+      const h = source.harmony.findLast(h => h.at <= e.at)!
+      const fifth = e.at >= cadenceAt && third === 4 && h.suffix === 'm7b5' && pc(n-h.root) === 6 ? 1 : 0
+      return n + fifth + (e.at >= cadenceAt ? shift : 0)
+    }),
+    gates: e.gates.map(g => e.hand === 'right' ? Math.min(g, at - e.at) : g),
+  }))
+  const previous = events.filter(e => e.hand === 'right').at(-1)!
+  const root = 12 * Math.round((Math.max(...previous.tones) - shift) / 12) + shift
+  const pairs = [[2, 5], [0, third], [-1, 2]] // V:5/b7 → target:1/3 → V:3/5
+  pairs.forEach((pair, i) => events.push({ ...previous, at: at + i * .5,
+    tones: pair.map(n => root + n), gates: [.5, .5], carry: false,
+    arpeggiate: false, articulations: [], parallelMajor: false }))
+  const harmony = source.harmony.map(h => h.at < cadenceAt ? h : ({ ...h,
+    root: pc(h.root + shift), bass: h.bass === null ? null : pc(h.bass + shift),
+    // Source interlude iiø–V11: major destinations use ii7, not iiø7.
+    suffix: h.suffix === 'm7b5' && third === 4 ? 'm7' : h.suffix,
+  }))
+  const graces = source.graces.map(g => ({ ...g, tone: g.tone + (g.at >= cadenceAt ? shift : 0) }))
+  return { ...source, events, harmony, graces }
+}
+
+/** Keep whole phrases. Fit the chosen keyboard by moving gestures, never deleting notes.
+ * A narrow keyboard may require register resets, explicitly reported to the player.
+ */
+export function caPhaoFullSolo(options: PhraseSectionOptions): PhraseSection {
+  const empty = (why: string): PhraseSection => ({ events: [], lengthBeats: 0,
+    chords: [], beatsEach: [], unavailableReason: why })
+  const key = options.key
+  if (!key || !['major', 'minor'].includes(key.scale)) return empty('CP full cần xác định giọng trưởng hoặc thứ.')
+  const genre = cpGenre(options.style)
+  const pool = fullSolos.sections.filter(s => s.kind === options.kind && s.mode === key.scale &&
+    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre)
+    .sort((a, b) => b.lengthBeats - a.lengthBeats || a.id.localeCompare(b.id))
+  if (!pool.length) return empty(`Chưa có solo Cà Pháo full đúng họ điệu và giọng ${key.scale === 'minor' ? 'thứ' : 'trưởng'} này; không ghép nguồn khác điệu hoặc đổi màu giọng.`)
+  const take = Number.isFinite(options.take) ? Math.abs(Math.trunc(options.take!)) : 0
+  // Source length must not change during playback/repeats or chord-click seeking.
+  // Change source explicitly; each play develops notes on that full structure.
+  const selected = pool.find(s => s.song === options.caPhaoFullSource) ?? pool[0]
+  const reference = options.caPhaoSimulate ? {...selected,harmony:selected.writtenHarmony} : leadFullSoloInto(selected, options)
+  // Outro Người hãy quên kết D trưởng. Giữ câu nhưng chuyển bậc 3/6/7
+  // của hai ô kết về thứ, không đưa F# trưởng vào câu kết của bài thứ.
+  const tone = (n: number, parallel: boolean) => {
+    const degree = (n % 12 + 12) % 12
+    return !options.caPhaoSimulate && parallel && [4, 9, 11].includes(degree) ? n - 1 : n
+  }
+  const source = developFullSolo({ ...reference,
+    events: reference.events.map(e => ({ ...e, tones: e.tones.map(n => tone(n, e.parallelMajor)), parallelMajor: false })),
+    graces: reference.graces.map(g => ({ ...g, tone: tone(g.tone, g.parallelMajor), parallelMajor: false })),
+  }, options.caPhaoSimulate ? 0 : take)
+  const range = options.caPhaoKeyboardRange ?? { low: 36, high: 96 }
+  if (!Number.isInteger(range.low) || !Number.isInteger(range.high) ||
+    range.low < 0 || range.high > 127 || range.high - range.low < 24)
+    return empty('Tầm đàn CP full không hợp lệ; cần ít nhất hai quãng tám và hai đầu nằm trong MIDI 0–127.')
+  const octaves = Array.from({ length: 21 }, (_, i) => (i - 10) * 12)
+  const pitchesOf = (e: typeof source.events[number]) => [...e.tones.map(n => tone(n, e.parallelMajor)),
+    ...source.graces.filter(g => g.hand === e.hand && Math.abs(g.at - e.at) < 1e-5).map(g => tone(g.tone, g.parallelMajor))]
+  const fits = (pitches: number[]) => octaves.filter(o =>
+    pitches.every(n => n + key.tonic + o >= range.low && n + key.tonic + o <= range.high))
+  const whole = fits(source.events.flatMap(pitchesOf))
+    .sort((a, b) => Math.abs(key.tonic - source.tonic + a) - Math.abs(key.tonic - source.tonic + b))
+  const shifts = new Map<typeof source.events[number], number>()
+  const occupied: { start: number; end: number; notes: number[] }[] = []
+  let barEnd = 0
+  const barEnds = source.barLengths.map(length => (barEnd += length))
+  const barAt = (at: number) => barEnds.findIndex(end => at < end - 1e-5)
+  let resetCount = 0
+  // Preserve an entire hand if it fits; otherwise split at actual rests / barlines.
+  // Only split a still-too-wide gesture when the keyboard physically cannot hold it.
+  for (const hand of ['right', 'left']) {
+    const groups = source.events.filter(e => e.hand === hand).sort((a, b) => a.at - b.at)
+    let previousTop: number | undefined
+    let previousShift: number | undefined
+    for (let i = 0; i < groups.length;) {
+      let stop = groups.length
+      let candidates = whole.length ? whole : fits(groups.slice(i).flatMap(pitchesOf))
+      if (!candidates.length) {
+        stop = i + 1
+        while (stop < groups.length && barAt(groups[stop].at) === barAt(groups[i].at) &&
+          groups[stop].at <= groups[stop - 1].at + Math.max(...groups[stop - 1].gates) + .25 &&
+          fits(groups.slice(i, stop + 1).flatMap(pitchesOf)).length) stop++
+        candidates = fits(groups.slice(i, stop).flatMap(pitchesOf))
+      }
+      if (!candidates.length) return empty('Một thế hợp âm full rộng hơn tầm đàn đã chọn; hãy mở tầm. Không bỏ nốt để giả làm câu đầy đủ.')
+      const chunk = groups.slice(i, stop)
+      const target = range.low + (range.high - range.low) * (hand === 'right' ? .68 : .25)
+      const score = (o: number) => {
+        const pitches = chunk.flatMap(e => e.tones.map(n => tone(n, e.parallelMajor) + key.tonic + o))
+        const clashes = hand === 'left' ? chunk.reduce((sum, e) => sum + occupied.filter(r =>
+          r.start < e.at + Math.max(...e.gates) - 1e-5 && e.at < r.end - 1e-5 &&
+          e.tones.some(n => r.notes.includes(tone(n, e.parallelMajor) + key.tonic + o))).length, 0) : 0
+        const firstTop = Math.max(...chunk[0].tones.map(n => tone(n, chunk[0].parallelMajor))) + key.tonic + o
+        return clashes * 1000 + Math.abs(pitches.reduce((a, b) => a + b, 0) / pitches.length - target) +
+          (previousTop === undefined ? 0 : Math.abs(firstTop - previousTop) * 2) +
+          (previousShift === undefined || o === previousShift ? 0 : 8)
+      }
+      const chosen = whole.length ? whole[0] : candidates.sort((a, b) => score(a) - score(b))[0]
+      if (previousShift !== undefined && chosen !== previousShift) resetCount++
+      for (const e of chunk) {
+        shifts.set(e, key.tonic + chosen)
+        if (hand === 'right') occupied.push({ start: e.at, end: e.at + Math.max(...e.gates),
+          notes: e.tones.map(n => tone(n, e.parallelMajor) + key.tonic + chosen) })
+      }
+      const last = chunk.at(-1)!
+      previousTop = Math.max(...last.tones.map(n => tone(n, last.parallelMajor))) + key.tonic + chosen
+      previousShift = chosen
+      i = stop
+    }
+  }
+  const events: TimelineEvent[] = []
+  for (const e of source.events) {
+    const shift = shifts.get(e)!
+    const graces = source.graces.filter(g => g.hand === e.hand && Math.abs(g.at - e.at) < 1e-5)
+    // Grace has no duration in XML. Borrow at most 1/4 of the principal gate,
+    // without moving the barline; this realization is KT's, not measured audio.
+    const graceStep = Math.min(1 / 16, Math.min(...e.gates) / (4 * Math.max(1, graces.length)))
+    const lead = graces.length * graceStep
+    graces.forEach((g, i) => events.push({ hand: g.hand as 'left' | 'right',
+      notes: [tone(g.tone, g.parallelMajor) + shift], startBeat: e.at + i * graceStep,
+      durationBeats: graceStep, velocity: 58 }))
+    e.tones.forEach((n, i) => {
+      const roll = e.arpeggiate ? Math.min(.035, Math.min(...e.gates) / (4 * e.tones.length)) * i : 0
+      const duration = (e.gates[i] - lead - roll) * (e.articulations.includes('staccato') ? .5 : 1)
+      events.push({ notes: [tone(n, e.parallelMajor) + shift], hand: e.hand as 'left' | 'right',
+        startBeat: e.at + lead + roll, durationBeats: duration,
+        velocity: e.articulations.includes('accent') ? 80 : e.hand === 'left' ? 64 : 72 })
+    })
+  }
+  const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass
+  const chords = source.harmony.map(h => pitchClassName(pc(key.tonic + h.root)) + h.suffix +
+    (h.bass === null ? '' : '/' + pitchClassName(pc(key.tonic + h.bass))))
+  return { events: events.sort((a, b) => a.startBeat - b.startBeat), lengthBeats: source.lengthBeats,
+    chords, beatsEach: source.harmony.map((h, i) => (source.harmony[i + 1]?.at ?? source.lengthBeats) - h.at),
+    sourcePhrase: { id: source.id, song: source.song, fromBar: source.fromBar,
+      barCount: source.barLengths.length, method: 'full-sheet' },
+    adaptationNote: whole.length ? undefined : `Đã đặt lại quãng âm hai tay cho tầm MIDI ${range.low}–${range.high}${resetCount ? `, ${resetCount} chỗ đổi quãng theo cụm` : ''}; giữ số nốt, độ dài và tiết tấu nguồn.` }
+}
+
+/** Source contour only: the approved Bossa rhythm, chords and cadence stay in charge.
+ * Takes 0–3 retain the archived four versions for exact comparison.
+ * Each later section develops ONE song/section; never imports a ballad LH cell or timing.
+ */
+function developBossaMelody(melody: TimelineEvent[], backing: readonly TimelineEvent[],
+  chords: readonly ParsedChord[], beatsEach: readonly number[], options: PhraseSectionOptions) {
+  const take = Number.isFinite(options.take) ? Math.max(0, Math.floor(options.take!)) : 0
+  const key = options.key!
+  const range = options.range ?? { low: 62, high: 84 }
+  const traces: NonNullable<PhraseSection['developmentSources']> = []
+  if (take < 4) return { melody, traces }
+  const pc = (n: number) => (n % 12 + 12) % 12
+  const eligible = cpPhrases.filter(p => p.hand === 'right' && p.evidence === `instrumental-${options.kind}` &&
+    p.notes.length >= 4 && Math.max(...p.notes.map(n => n.tones.at(-1)!)) - Math.min(...p.notes.map(n => n.tones.at(-1)!)) <= range.high - range.low)
+  const songs = [...new Set(eligible.map(p => p.song))]
+  const song = songs[Math.floor((take - 4) / 4) % songs.length]
+  const book = eligible.filter(p => p.song === song)
+  let cursor = 0
+  const harmony = chords.map((chord, i) => {
+    const start = cursor
+    cursor += beatsEach[i]
+    return { chord, start, end: cursor }
+  })
+  const result = [...melody]
+  // Preserve cadential bars, the bII–V outro gesture and the explicit chromatic approach.
+  const bars = options.kind === 'intro' ? [0, 1, 2, 3, 4, 5]
+    : options.kind === 'outro' ? [0, 2, 4] : [0, 2, 4, 5]
+  for (const bar of bars) {
+    const indices = melody.map((event, i) => ({ event, i })).filter(({ event }) =>
+      event.notes.length === 1 && event.startBeat >= bar * 4 && event.startBeat < (bar + 1) * 4)
+    if (indices.length < 3) continue
+    const pool = book.filter(p => p.notes.length >= indices.length)
+    if (!pool.length) continue
+    const offset = ((take - 4) * 7 + bar % 4) % pool.length
+    for (let attempt = 0; attempt < pool.length; attempt++) {
+      const source = pool[(offset + attempt) % pool.length]
+      const contour = source.notes.slice(0, indices.length).map(n => n.tones.at(-1)!)
+      const originalFirst = indices[0].event.notes[0]
+      const shift = originalFirst - contour[0]
+      // Move the whole source contour; reject broad gestures rather than fold their peaks.
+      const wanted = contour.map(n => n + shift)
+      if (Math.min(...wanted) < range.low || Math.max(...wanted) > range.high) continue
+      const made: TimelineEvent[] = []
+      for (const [j, { event }] of indices.entries()) {
+        const chord = harmony.find(h => h.start <= event.startBeat && event.startBeat < h.end)!.chord
+        const stable = new Set(chord.quality.intervals.map(n => pc(chord.root + n)))
+        const allowed = new Set([...scaleTones(key.tonic, key.scale), ...stable])
+        if (chord.quality.intervals.includes(4)) allowed.delete(pc(chord.root + 3))
+        else if (chord.quality.intervals.includes(3)) allowed.delete(pc(chord.root + 4))
+        const landing = j === indices.length - 1
+        const ladder = Array.from({ length: range.high - range.low + 1 }, (_, i) => range.low + i)
+          .filter(n => (landing ? stable : allowed).has(pc(n)))
+          .filter(n => !backing.some(b => b.hand === 'left' &&
+            b.startBeat < event.startBeat + event.durationBeats - 1e-6 &&
+            event.startBeat < b.startBeat + b.durationBeats - 1e-6 && b.notes.some(l => Math.abs(l - n) <= 1)))
+          .filter(n => !j || Math.sign(n - made[j - 1].notes[0]) === Math.sign(contour[j] - contour[j - 1]) || n === made[j - 1].notes[0])
+        if (!ladder.length) break
+        ladder.sort((a, b) => Math.abs(a - wanted[j]) - Math.abs(b - wanted[j]) || a - b)
+        made.push({ ...event, notes: [ladder[0] as MidiNote] })
+      }
+      if (made.length !== indices.length || new Set(made.map(n => n.notes[0])).size < 3) continue
+      if (made.every((e, i) => e.notes[0] === indices[i].event.notes[0])) continue
+      indices.forEach(({ i }, j) => { result[i] = made[j] })
+      traces.push({ id: source.id, song: source.song, genre: source.genre, mode: source.mode,
+        sourceBar: source.bar, targetBar: bar + 1, method: 'contour-on-bossa-rhythm' })
+      break
+    }
+  }
+  return { melody: result, traces }
+}
 
 /**
  * Một vòng thử, học NGUYÊN intro Người hãy quên em đi (XML 1–8, Dm).
@@ -44,9 +325,8 @@ export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSect
     .filter(base => base + 5 >= range.low && base + 15 <= range.high)
     .sort((a, b) => Math.abs(a + 10 - (range.low + range.high) / 2) -
       Math.abs(b + 10 - (range.low + range.high) / 2))
-  const base = bases[0]
-  if (base === undefined) return unavailable('Tầm nốt quá hẹp cho đường nét intro Bossa thứ; thử mở khoảng C4–C6.')
-  // ponytail: 4 biến thể có chủ ý, chưa phải học tự động vô hạn; chờ nghe duyệt vòng này.
+  if (bases[0] === undefined) return unavailable('Tầm nốt quá hẹp cho đường nét intro Bossa thứ; thử mở khoảng C4–C6.')
+  // Bốn khung lưu trữ; take >= 4 phát triển thêm cao độ từ kho contour phía trên.
   const take = Number.isFinite(options.take) ? Math.max(0, Math.floor(options.take!)) % 4 : 0
   const call = take % 2 ? [12, 14, 10, 7] : [14, 12, 10, 7]
   const callTimes = take < 2 ? [0, 1, 2.5, 3.5] : [0.5, 1, 2.5, 3.5]
@@ -67,18 +347,6 @@ export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSect
     // Phát triển cùng nguồn: thay nét hồi đáp, không đổi thầy hoặc bốc từng ô từ kho.
     phrases[2] = [[0, 12, 0.9], [1, 14, 0.45], [1.5, 15, 0.45], [2.5, 14, 0.45], [3, 10, 0.45]]
   }
-  const melody: TimelineEvent[] = phrases.flatMap((bar, index) => bar.map(([at, n, dur]) => ({
-    startBeat: index * 4 + at, notes: [(base + n) as MidiNote], durationBeats: dur,
-    hand: 'right' as const, velocity: index % 2 && at === 3 ? 82 : dur < 0.25 ? 62 : 74,
-  })))
-  const cadenceBases = Array.from({ length: 11 }, (_, octave) => dominant.root + octave * 12)
-    .filter(root => root + 4 >= range.low && root + 7 <= range.high)
-    .sort((a, b) => Math.abs(a + 4 - (base + 12)) - Math.abs(b + 4 - (base + 12)))
-  if (cadenceBases[0] === undefined) return unavailable('Không đặt được câu hút về hợp âm mở bài trong tầm nốt này.')
-  ;[4, 7, 4].forEach((interval, index) => melody.push({
-    startBeat: 29.5 + index * 0.5, durationBeats: 0.45,
-    notes: [(cadenceBases[0]! + interval) as MidiNote], hand: 'right', velocity: 70 - index * 4,
-  }))
   // Cần biết đích thật để bass 31.5 giải xuống đầu phần hát; không xuất thêm ô hát này.
   const backing = renderPattern(voiceLeadTwoHands([...chords, opening], {
     dropRootFromRightHand: options.dropRoot,
@@ -86,19 +354,46 @@ export function caPhaoBossaMinorIntro(options: PhraseSectionOptions): PhraseSect
     .filter(event => event.startBeat < 32)
   const overlap = (a: TimelineEvent, b: TimelineEvent) =>
     a.startBeat < b.startBeat + b.durationBeats - 1e-6 && b.startBeat < a.startBeat + a.durationBeats - 1e-6
-  // Giữ bass/cú chát LH của đúng cell. RH chỉ chèn khi CẢ trường độ nằm trong khe giai điệu.
-  // Ô chót chừa phách cuối cho ca sĩ, bass dẫn vẫn còn nửa phách riêng.
-  const events = backing.filter(e => e.hand === 'left' ||
-    (e.startBeat + e.durationBeats <= 31 && !melody.some(m => overlap(m, e))))
-  for (const m of melody) {
-    const clash = events.some(e => e.hand === 'left' && overlap(e, m) && e.notes.some(n =>
-      Math.abs(n - m.notes[0]!) <= 1))
-    if (clash) return unavailable('Intro thử va chạm hai tay trong tầm hiện tại. Chưa phát câu sửa gập nốt; hãy đổi tầm nốt.')
+  /*
+    THỬ LẦN LƯỢT CÁC VỊ TRÍ QUÃNG TÁM — sửa 13/9/2026.
+
+    Bản trước lấy `bases[0]` và `cadenceBases[0]` rồi va chạm tay trái là bỏ cuộc. Mi thứ
+    trong tầm app 62–79 chỉ có một base (E4), câu hút B7 rơi vào 63/66 và chạm nốt E4 của cú
+    chát LH → intro rỗng cho MỌI bài Mi thứ (người dùng: "bật câu solo mà không thấy vòng
+    hợp âm, cũng không phát"). La thứ tình cờ không chạm nên không ai thấy.
+
+    Vẫn đúng luật Codex: dịch NGUYÊN cả nét theo quãng tám (base) và nguyên cụm hút (cadence),
+    không gập từng nốt. Chỉ khi mọi cặp đều chạm mới báo không soạn được.
+  */
+  const cadenceCandidates = (base: number) => Array.from({ length: 11 }, (_, octave) => dominant.root + octave * 12)
+    .filter(root => root + 4 >= range.low && root + 7 <= range.high)
+    .sort((a, b) => Math.abs(a + 4 - (base + 12)) - Math.abs(b + 4 - (base + 12)))
+  if (cadenceCandidates(bases[0]).length === 0) return unavailable('Không đặt được câu hút về hợp âm mở bài trong tầm nốt này.')
+  for (const base of bases) for (const cadenceBase of cadenceCandidates(base)) {
+    let melody: TimelineEvent[] = phrases.flatMap((bar, index) => bar.map(([at, n, dur]) => ({
+      startBeat: index * 4 + at, notes: [(base + n) as MidiNote], durationBeats: dur,
+      hand: 'right' as const, velocity: index % 2 && at === 3 ? 82 : dur < 0.25 ? 62 : 74,
+    })))
+    ;[4, 7, 4].forEach((interval, index) => melody.push({
+      startBeat: 29.5 + index * 0.5, durationBeats: 0.45,
+      notes: [(cadenceBase + interval) as MidiNote], hand: 'right', velocity: 70 - index * 4,
+    }))
+    const developed = developBossaMelody(melody, backing, chords, beatsEach, options)
+    melody = developed.melody
+    // Giữ bass/cú chát LH của đúng cell. RH chỉ chèn khi CẢ trường độ nằm trong khe giai điệu.
+    // Ô chót chừa phách cuối cho ca sĩ, bass dẫn vẫn còn nửa phách riêng.
+    const events = backing.filter(e => e.hand === 'left' ||
+      (e.startBeat + e.durationBeats <= 31 && !melody.some(m => overlap(m, e))))
+    const clash = melody.some(m => events.some(e => e.hand === 'left' && overlap(e, m) &&
+      e.notes.some(n => Math.abs(n - m.notes[0]!) <= 1)))
+    if (clash) continue
+    return { events: [...events, ...melody].sort((a, b) => a.startBeat - b.startBeat),
+      lengthBeats: 32, chords: chords.map(c => c.symbol), beatsEach,
+      sourcePhrase: { id: 'nguoi-hay-quen-em-di-intro', fromBar: 1, barCount: 8, method: 'motif-development' },
+      ...(developed.traces.length ? { developmentSources: developed.traces } : {}),
+    }
   }
-  return { events: [...events, ...melody].sort((a, b) => a.startBeat - b.startBeat),
-    lengthBeats: 32, chords: chords.map(c => c.symbol), beatsEach,
-    sourcePhrase: { id: 'nguoi-hay-quen-em-di-intro', fromBar: 1, barCount: 8, method: 'motif-development' },
-  }
+  return unavailable('Intro thử va chạm hai tay ở mọi vị trí quãng tám trong tầm hiện tại. Chưa phát câu sửa gập nốt; hãy đổi tầm nốt.')
 }
 
 /** Giang: phát triển cửa sổ 45–48 Người hãy quên (hai câu 4 ô).
@@ -165,7 +460,7 @@ export function caPhaoBossaMinorSolo(options: PhraseSectionOptions): PhraseSecti
   if (outro && take >= 2) {
     bars[0] = [[.5, [7, 12, 15], .75], [2, 14, .45], [3, 12, .75]]
   }
-  const melody: TimelineEvent[] = bars.flatMap((notes, bar) => notes.map(([at, notes, gate]) => ({
+  let melody: TimelineEvent[] = bars.flatMap((notes, bar) => notes.map(([at, notes, gate]) => ({
     startBeat: bar * 4 + at, durationBeats: gate,
     notes: (Array.isArray(notes) ? notes : [notes]).map(n => (base + n) as MidiNote),
     hand: 'right' as const, velocity: outro && bar >= 4 ? 62 : gate < .3 ? 61 : 75,
@@ -186,6 +481,8 @@ export function caPhaoBossaMinorSolo(options: PhraseSectionOptions): PhraseSecti
   const backing = renderPattern(voiceLeadTwoHands(harmony), style, {
     beatsPerChord: 4, beatsEach: [...beatsEach, ...(!outro ? [4] : [])],
   }).filter(e => e.startBeat < lengthBeats && (!outro || e.startBeat < 20))
+  const developed = developBossaMelody(melody, backing, chords, beatsEach, options)
+  melody = developed.melody
   const overlap = (a: TimelineEvent, b: TimelineEvent) =>
     a.startBeat < b.startBeat + b.durationBeats - 1e-6 && b.startBeat < a.startBeat + a.durationBeats - 1e-6
   const events = backing.filter(e => e.hand === 'left' ||
@@ -196,6 +493,7 @@ export function caPhaoBossaMinorSolo(options: PhraseSectionOptions): PhraseSecti
   }
   return { events: [...events, ...melody].sort((a, b) => a.startBeat - b.startBeat), lengthBeats,
     chords: chords.map(c => c.symbol), beatsEach,
+    ...(developed.traces.length ? { developmentSources: developed.traces } : {}),
     sourcePhrase: { id: 'nguoi-hay-quen-em-di-' + (outro ? 'outro' : 'interlude'),
       fromBar: outro ? 96 : 45, barCount: outro ? 6 : 4, method: 'motif-development' } }
 }

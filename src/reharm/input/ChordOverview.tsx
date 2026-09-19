@@ -231,6 +231,7 @@ interface ChordOverviewProps {
   onRemovePassingHere?: (slotId: string) => void
   fillAt?: (chordIndex: number) => boolean | null
   onToggleFill?: (chordIndex: number) => void
+  cpLick?: boolean
   runAt?: (chordIndex: number) => boolean | null
   onToggleRun?: (chordIndex: number) => void
   fillRestAt?: (chordIndex: number) => number
@@ -279,6 +280,7 @@ export function ChordOverview({
   onRemovePassingHere,
   fillAt,
   onToggleFill,
+  cpLick,
   runAt,
   onToggleRun,
   fillRestAt,
@@ -455,6 +457,7 @@ export function ChordOverview({
 
       {menu && chordIndexAt && (
         <ChordContextMenu
+          cpLick={cpLick}
           menu={menu}
           paired={
             pairedChords ? isPaired(pairedChords, menu.chordIndex) : false

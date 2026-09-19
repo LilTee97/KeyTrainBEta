@@ -96,7 +96,7 @@ export const CA_PHAO_BOSSA_IMPROVED: StylePattern = {
       { ...CA_PHAO_BOSSA.cell!.right[3], beat: 7, durationBeats: .5, velocityScale: .9 },
     ],
   },
-  note: 'Khung chính thức đã duyệt 13/9/2026 · CHỈ ĐỆM, chưa bật lại solo/fill. 11 tiếng: Bùm chát Bùm-bum chát chát | bùm chát bùm chát CHÁT. Chát 8 (1) → bùm 9 (½) → chát 10 (1) → chát 11 (½) → bass dẫn nhẹ (½). Không nghỉ giữa 8–9; giữ câu 8 phách, 110 BPM.',
+  note: 'Khung chính thức đã duyệt 13/9/2026 · Chọn thầy Cà Pháo và giọng thứ để mở dạo/giang/kết soạn mới; CP Lick là tùy chọn riêng. 11 tiếng: Bùm chát Bùm-bum chát chát | bùm chát bùm chát CHÁT. Chát 8 (1) → bùm 9 (½) → chát 10 (1) → chát 11 (½) → bass dẫn nhẹ (½). Không nghỉ giữa 8–9; giữ câu 8 phách, 110 BPM.',
 }
 
 /** Mọi id được coi là "Bossa CP cải tiến". Nút thử "Bossa test 1" (12/9/2026) đã bỏ theo yêu cầu 13/9/2026;

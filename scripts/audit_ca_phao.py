@@ -72,6 +72,8 @@ def audit(path):
                         info['attacks'].append(dict(at=round(onset,6),dur=round(duration,6),pitch=name,midi=midi,
                             hand=int(el.findtext('staff') or 1) if len(parts)==1 else part_index+1,
                             voice=el.findtext('voice') or '1',grace=grace,
+                            articulations=[a.tag for a in el.findall('notations/articulations/*')],
+                            arpeggiate=el.find('notations/arpeggiate') is not None,
                             ties=[t.get('type') for t in el.findall('tie')]))
                     if not chord:
                         previous=onset

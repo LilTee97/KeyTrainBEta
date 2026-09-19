@@ -121,7 +121,7 @@ import type {
 import { haiPalette } from './brain/haiPalette'
 import { brainFill } from './brain/fillFromBrain'
 import { brainInterludeWindow } from './brain/interlude'
-import { caPhaoSolo } from './style/caPhaoSolo'
+import { caPhaoSolo, caPhaoFullSources } from './style/caPhaoSolo'
 import {
   doVongHoaThanh,
   doiGiong,
@@ -142,7 +142,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
-import { bossaBackingSteps, buildBossaRhythmOnly } from './playback/bossaRhythmOnly'
+import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
   isSplitAwareStyle,
@@ -211,6 +211,7 @@ import { chooseChorusLoop } from './style/interludeLoop'
 import type { EndingMode } from './style/endingChord'
 import { endingChordFor } from './style/endingChord'
 import type { LickyMode } from './licky/types'
+import { planCpLicks } from './licky/cpLick'
 
 
 /**
@@ -610,6 +611,11 @@ export function ReharmHome() {
   const [extraRuns, setExtraRuns] = useState<ReadonlySet<number>>(new Set())
   const [fillRests, setFillRests] = useState<Record<number, number>>({})
   const [lickyFills, setLickyFills] = useState(true)
+  const [cpLickSelected, setCpLick] = useState(false)
+  const [caPhaoFull, setCaPhaoFull] = useState(false)
+  const [caPhaoSoloMode, setCaPhaoSoloMode] = useState<'compose' | 'simulate'>('compose')
+  const [caPhaoFullSource, setCaPhaoFullSource] = useState('')
+  const [caPhaoKeyboardRange, setCaPhaoKeyboardRange] = useState({ low: 36, high: 96 })
   const [lickyRuns, setLickyRuns] = useState(false)
   /*
     CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY, KHÔNG CÒN Ô TICK RIÊNG.
@@ -626,8 +632,9 @@ export function ReharmHome() {
   const [phraseSpin, setPhraseSpin] = useState(0)
   /** Dải dạo/kết của đúng lượt đang phát, không phải vòng xem trước. */
   const [playingTimeline, setPlayingTimeline] = useState<
-    Pick<SongTimeline, 'totalBeats' | 'soloSpans'> | null
+    SongTimeline | null
   >(null)
+  const playbackSong = useRef<SongTimeline | null>(null)
   const [colorEdits, setColorEdits] = useState<Record<number, string>>({})
   const [mutedHeld, setMutedHeld] = useState<ReadonlySet<number>>(new Set())
   const [slashEdits, setSlashEdits] = useState<Record<number, boolean>>({})
@@ -666,6 +673,8 @@ export function ReharmHome() {
   const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
+  // Color owns the composer, including old snapshots with cpLick:false.
+  const cpLick = intensity === 'caPhao' || cpLickSelected
   const [susDominant, setSusDominant] = useState(true)
   /** Màu của chủ âm — quyết định gu chung của cả vòng. */
   const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
@@ -925,7 +934,6 @@ export function ReharmHome() {
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
   const style = getStyle(styleId) ?? BALLAD
-  const bossaRhythmOnly = style.id === 'ca-phao-bossa-improved'
 
   /*
     Kiểu dùng cho CÂU SOLO — dạo đầu, giang tấu, kết bài.
@@ -1121,6 +1129,14 @@ export function ReharmHome() {
     halvedBeats,
     mutedHeld,
   ])
+
+  const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
+  const cpComposeOn = intensity === 'caPhao'
+  const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
+  const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
+  const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key), [style, reharm.key])
+  const cpFullSource = cpFullSources.includes(caPhaoFullSource) ? caPhaoFullSource : ''
+  const bossaRhythmOnly = laBossaCP(style) && !bossaSoloOn && !cpFullOn && !cpComposeOn
 
   const recolored = useMemo(
     () =>
@@ -1753,7 +1769,7 @@ export function ReharmHome() {
     const played = renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach,
-      muteWindows: bossaRhythmOnly ? [] : muteWindows,
+      muteWindows: laBossaCP(style) || cpLick ? [] : muteWindows,
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
@@ -1773,7 +1789,7 @@ export function ReharmHome() {
     if (!walk) return played
 
     return [...played.filter((event) => event.hand !== 'left'), ...walk.events]
-  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, bossaRhythmOnly])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key?.tonic])
 
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
@@ -2253,6 +2269,17 @@ export function ReharmHome() {
     [sheet],
   )
 
+  const cpPlan = useCallback((take: number) => planCpLicks({
+    chords: withPassing, style, key: reharm.key, backing: accompaniment,
+    beatsPerChord: chordBeats, breaths, vocal: singing,
+    sectionEnds: new Set(transitions.keys()), extraFills, extraRuns, skip: mutedFills,
+    fullTransitions: intensity === 'caPhao', keyboard: caPhaoKeyboardRange,
+    transitionDelays: new Map([...transitions].map(([i, run]) => [i, run.octaves <= 0 ? Infinity : run.delayBeats ?? 0])),
+    take: take + phraseSpin + playSpin.current,
+  }), [withPassing, style, reharm.key, accompaniment, chordBeats, breaths, singing,
+    transitions, extraFills, extraRuns, mutedFills, phraseSpin, intensity, caPhaoKeyboardRange])
+  const cpPreview = useMemo(() => cpLick ? cpPlan(0) : null, [cpLick, cpPlan])
+
   /**
    * Những chỗ **chêm được** câu fill, chưa tính lựa chọn tắt của người dùng.
    *
@@ -2261,7 +2288,7 @@ export function ReharmHome() {
    */
   const fillEligible = useMemo(
     () =>
-      new Set(
+      cpPreview ? new Set(cpPreview.placements.filter(p => p.kind === 'fill').map(p => p.mainIndex)) : new Set(
         fillPositions(withPassing, {
           density: fillDensity,
           breaths,
@@ -2269,7 +2296,7 @@ export function ReharmHome() {
           always: new Set([...transitionAt, ...extraFills, ...extraRuns]),
         }).map((position) => position.mainIndex),
       ),
-    [withPassing, fillDensity, breaths, transitionAt, extraFills, extraRuns, chordBeats],
+    [withPassing, fillDensity, breaths, transitionAt, extraFills, extraRuns, chordBeats, cpPreview],
   )
 
   /**
@@ -2296,6 +2323,7 @@ export function ReharmHome() {
 
   const fillAt = useCallback(
     (chordIndex: number) => {
+      if (cpLick) return extraFills.has(chordIndex) || (fillEligible.has(chordIndex) && !mutedFills.has(chordIndex))
       if (transitions.has(chordIndex)) return null
       if (extraFills.has(chordIndex)) return true
       if (extraRuns.has(chordIndex)) {
@@ -2305,21 +2333,22 @@ export function ReharmHome() {
       if (fullMeasureAt(chordIndex)) return false
       return null
     },
-    [transitions, extraFills, extraRuns, fillEligible, mutedFills, fullMeasureAt],
+    [transitions, extraFills, extraRuns, fillEligible, mutedFills, fullMeasureAt, cpLick],
   )
 
   const runAt = useCallback(
     (chordIndex: number) => {
+      if (cpLick) return extraRuns.has(chordIndex) || !!cpPreview?.placements.some(p => p.mainIndex === chordIndex && p.kind === 'run')
       if (transitions.has(chordIndex)) return null
       if (extraRuns.has(chordIndex)) return true
       if (fullMeasureAt(chordIndex)) return false
       return null
     },
-    [extraRuns, fullMeasureAt, transitions],
+    [extraRuns, fullMeasureAt, transitions, cpLick, cpPreview],
   )
 
   const toggleFill = useCallback((chordIndex: number) => {
-    if (transitions.has(chordIndex)) return
+    if (!cpLick && transitions.has(chordIndex)) return
     setPhraseSpin((spin) => spin + 1)
     const on =
       extraFills.has(chordIndex) ||
@@ -2350,7 +2379,7 @@ export function ReharmHome() {
         return next
       })
     }
-  }, [transitions, extraFills, fillEligible, mutedFills])
+  }, [transitions, extraFills, fillEligible, mutedFills, cpLick])
 
   const cycleColor = useCallback(
     (chordIndex: number) => {
@@ -2456,8 +2485,15 @@ export function ReharmHome() {
   }, [transitions])
 
   const toggleRun = useCallback((chordIndex: number) => {
-    if (transitions.has(chordIndex)) return
+    if (!cpLick && transitions.has(chordIndex)) return
+    const on = extraRuns.has(chordIndex) || !!(cpLick && cpPreview?.placements.some(p => p.mainIndex === chordIndex && p.kind === 'run'))
     setPhraseSpin((spin) => spin + 1)
+    if (cpLick) setMutedFills(current => {
+      const next = new Set(current)
+      if (on) next.add(chordIndex)
+      else next.delete(chordIndex)
+      return next
+    })
     setExtraFills((current) => {
       if (!current.has(chordIndex)) return current
       const next = new Set(current)
@@ -2466,7 +2502,7 @@ export function ReharmHome() {
     })
     setExtraRuns((current) => {
       const next = new Set(current)
-      if (next.has(chordIndex)) next.delete(chordIndex)
+      if (on) next.delete(chordIndex)
       else next.add(chordIndex)
       return next
     })
@@ -2478,7 +2514,7 @@ export function ReharmHome() {
         return next
       })
     }
-  }, [transitions, extraRuns])
+  }, [transitions, extraRuns, cpLick, cpPreview])
 
   const fillRestAt = useCallback(
     (chordIndex: number) => fillRests[chordIndex] ?? 0,
@@ -2501,7 +2537,8 @@ export function ReharmHome() {
   /** Câu fill dùng cho đoạn có lời — ngắn, chỉ chêm ở khe hở. */
   const fills = useCallback(
     (take: number) => {
-      if (bossaRhythmOnly) return []
+      if (cpLick) return cpPlan(take).events
+      if (laBossaCP(style)) return []
       const line = soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
@@ -2557,7 +2594,8 @@ export function ReharmHome() {
     [
       style,
       accompaniment,
-      bossaRhythmOnly,
+      cpLick,
+      cpPlan,
       withPassing,
       chordBeats,
       soloDirection,
@@ -2734,6 +2772,11 @@ export function ReharmHome() {
       lickyFills,
       lickyRuns,
       lickyMode,
+      cpLick,
+      caPhaoFull,
+      caPhaoSoloMode,
+      caPhaoFullSource,
+      caPhaoKeyboardRange,
       acceptedPassing,
       styleId,
       beatsPerChord,
@@ -2784,6 +2827,11 @@ export function ReharmHome() {
       cauLinhNhi,
       lickyMode,
       acceptedPassing,
+      cpLick,
+      caPhaoFull,
+      caPhaoSoloMode,
+      caPhaoFullSource,
+      caPhaoKeyboardRange,
       styleId,
       beatsPerChord,
       importedBeats,
@@ -2835,6 +2883,11 @@ export function ReharmHome() {
     setColorEdits(saved.colorEdits ?? {})
     setSlashEdits(saved.slashEdits ?? {})
     setLickyFills(saved.lickyFills ?? true)
+    setCpLick(saved.intensity !== 'caPhao' && (saved.cpLick ?? false))
+    setCaPhaoFull(saved.caPhaoFull ?? false)
+    setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
+    setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
+    setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
     setLickyRuns(saved.lickyRuns ?? false)
     setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)
@@ -3038,9 +3091,15 @@ export function ReharmHome() {
   )
 
   /** Thứ tự đang dùng: do người dùng sắp, hoặc mặc định từng đoạn một lượt. */
+  const arrangementSteps = useMemo(
+    () => arrangement ?? (songSources ? defaultArrangement(songSources) : []),
+    [arrangement, songSources],
+  )
+
   const steps = useMemo(() => {
-    let base = arrangement ?? (songSources ? defaultArrangement(songSources) : [])
+    let base = arrangementSteps
     if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
+    if ((bossaSoloOn || cpFullOn || cpComposeOn) && songSources) return bossaSoloSteps(base, songSources)
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
     const cpBossaMinor = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
     const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor
@@ -3074,7 +3133,7 @@ export function ReharmHome() {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangement, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly])
+  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3085,16 +3144,33 @@ export function ReharmHome() {
    */
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
-      if (bossaRhythmOnly) return buildBossaRhythmOnly(accompaniment, oneLoopBeats, songSources, steps)
+      // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
+      const cpPass = cpLick ? cpPlan(pass) : null
+      if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
+      if (bossaSoloOn || cpFullOn || cpComposeOn) {
+        const spans = mainChordSpans(withPassing, chordBeats)
+        return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
+          (kind, take, nextStart) => buildPhraseSection({ kind, key: reharm.key, style, thay: 'ca-phao',
+            caPhaoCompose: cpComposeOn && !cpSimulationOn,
+            caPhaoSimulate: cpSimulationOn,
+            caPhaoFull: cpFullOn,
+            caPhaoFullSource: cpFullSource,
+            caPhaoKeyboardRange,
+            beatsPerChord: chordBeats, dropRoot,
+            opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
+            take: cpComposeOn ? phraseSpin + playSpin.current + pass * 17 + take : cpFullOn ? phraseSpin : 4 + phraseSpin + playSpin.current + pass * 17 + take,
+            range: tamSolo, solo: () => [],
+          })!, cpPass?.events ?? [], cpFullOn || cpComposeOn)
+      }
       // Có cấu trúc thật thì chơi đúng thứ tự đó, không lặp mẫu dựng sẵn.
       if (songSources && steps.length > 0) {
         const phraseWarnings: string[] = []
         const arranged = buildArrangedSong({
-          accompaniment: yieldToFill(
+          accompaniment: cpPass ? cpPass.backing : yieldToFill(
             giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
             fills(pass),
           ),
-          fills: (take) => fills(take + pass * 11),
+          fills: (take) => cpPass ? cpPass.events : fills(take + pass * 11),
           solo: (take) => soloToTimeline(soloTake(take + pass * takesPerPass)),
           sources: songSources,
           steps,
@@ -3275,18 +3351,18 @@ export function ReharmHome() {
           restAfterInterlude: DEFAULT_REST_AFTER,
           beatsPerMeasure: style.beatsPerMeasure,
           styleId: styleSolo.id,
-          ending: buildEnding,
-          repeatEnding: varyOnRepeat ? buildRepeatEnding : undefined,
+          ending: cpLick ? undefined : buildEnding,
+          repeatEnding: !cpLick && varyOnRepeat ? buildRepeatEnding : undefined,
         })
         return { ...arranged, phraseWarnings }
       }
 
       const body = buildSongTimeline({
-        accompaniment: yieldToFill(
+        accompaniment: cpPass ? cpPass.backing : yieldToFill(
           giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
           fills(pass),
         ),
-        fills,
+        fills: cpPass ? cpPass.events : fills,
         solo: (take) => soloToTimeline(soloTake(take)),
         loopLengthBeats: oneLoopBeats,
         form: SONG_FORMS[0],
@@ -3338,8 +3414,21 @@ export function ReharmHome() {
     [
       accompaniment,
       bossaRhythmOnly,
+      bossaSoloOn,
+      cpFullOn,
+      cpComposeOn,
+      cpSimulationOn,
+      cpFullSource,
+      caPhaoKeyboardRange,
+      withPassing,
+      chordBeats,
+      dropRoot,
+      reharm.key,
+      style,
+      cpLick,
       fills,
       soloTake,
+      cpPlan,
       oneLoopBeats,
       songSources,
 
@@ -3373,7 +3462,9 @@ export function ReharmHome() {
   const soloNoteCount = useMemo(() => laBossaCP(style)
     ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : soloTake(0).length, [style, song, soloTake])
+    : cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
+      s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
+    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn])
   const fillNoteCount = useMemo(() => fills(0).length, [fills])
 
   /**
@@ -3395,11 +3486,12 @@ export function ReharmHome() {
   const activeChordIndex = useMemo(() => {
     if (!looping || !sheet) return null
 
-    const total = song.totalBeats
+    const timeline = playingTimeline ?? song
+    const total = timeline.totalBeats
     if (total <= 0) return null
 
     const sourceBeat = sourceBeatAt(
-      song.segments,
+      timeline.segments,
       positionBeats % total,
     )
     if (sourceBeat === null) return null
@@ -3412,7 +3504,7 @@ export function ReharmHome() {
     }
 
     return mainIndex >= 0 ? mainIndex : null
-  }, [looping, sheet, positionBeats, song, withPassing, chordBeats])
+  }, [looping, sheet, positionBeats, playingTimeline, song, withPassing, chordBeats])
 
   /**
    * Hợp âm nào của đoạn KHÔNG LỜI đang vang.
@@ -3457,7 +3549,7 @@ export function ReharmHome() {
    * cũng ra cùng một khoảng khi bài có điệp khúc.
    */
   const interludeSymbols = useMemo(() => {
-    if ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor') {
+    if (cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
       return [...(timelineHien.soloSpans.find((span) => span.kind === 'interlude')?.chords ?? [])]
     }
     if (!songSources || songSources.length === 0) return []
@@ -3466,7 +3558,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -3595,6 +3687,7 @@ export function ReharmHome() {
       },
       fillAt,
       onToggleFill: toggleFill,
+      cpLick,
       runAt,
       onToggleRun: toggleRun,
       fillRestAt,
@@ -3642,6 +3735,7 @@ export function ReharmHome() {
     recolored,
     fillAt,
     toggleFill,
+    cpLick,
     runAt,
     toggleRun,
     fillRestAt,
@@ -3759,8 +3853,8 @@ export function ReharmHome() {
   )
 
   const playFromBeat = useCallback(
-    async (beat: number, sourceBeat = beat) => {
-      if (!bossaRhythmOnly && ngheLaiStt > 0) {
+    async (beat: number, sourceBeat = beat, recompose = false) => {
+      if (recompose && !bossaRhythmOnly && ngheLaiStt > 0) {
         let cau = cauOnDs.find((c) => c.stt === ngheLaiStt)
         if (!cau) {
           const ds = await layCauOn()
@@ -3772,11 +3866,20 @@ export function ReharmHome() {
           return
         }
       }
+      // Capture before stopTimelineLoop clears the playing flag. Seeking must
+      // reuse exactly the heard take, not the independently generated preview.
+      const heard = looping && playbackSong.current ? playbackSong.current : song
       await startAudio()
       stopTimelineLoop()
       pauseSource()
+      if (!recompose) {
+        playbackSong.current = heard
+        setPlayingTimeline(heard)
+        startTimelineLoop(eventsForHand(heard.events, hand), bpm, heard.totalBeats, beat, playsOnce)
+        if (!bossaRhythmOnly) startSourceAtBeat(sourceBeat, bpm, !playsOnce)
+        return
+      }
       playSpin.current += 1
-      setPhraseSpin((spin) => spin + 1)
       const base = playSpin.current * 31 + 7
       const interludePass = interludeTakes.current.start(song.soloTakes)
       activeInterludePass.current = interludePass
@@ -3796,33 +3899,26 @@ export function ReharmHome() {
         SỔ GHI KHÔNG ĐƯỢC LÀM GÃY VIỆC PHÁT NHẠC.
 
         Dựng mỗi lượt một lần rồi dùng đúng events đó cho cả lưu và phát.
-        Vòng tự chạy tiếp cũng cập nhật thẻ bình luận, không để thẻ chỉ câu lượt đầu.
+        Tua và vòng tự chạy tiếp dùng nguyên câu; không ghi thành một câu mới.
         Lỗi ghi sổ không được chặn tiếng; không bốc một câu khác để lưu riêng.
       */
       /*
         ĐỘ DÀI VÒNG PHẢI LẤY TỪ LƯỢT ĐANG PHÁT, KHÔNG LẤY TỪ `song`.
 
         `song` dựng ở pass 0 với take của lần render trước; lượt phát dựng bằng
-        `base + pass` với `playSpin` vừa tăng. Đoạn kết đổi độ dài theo take —
+        `base` với `playSpin` vừa tăng. Đoạn kết đổi độ dài theo take —
         đo n=12 take, Am Bolero Tuấn: 21 · 17 · 25 phách — nên `song.totalBeats`
         lệch tới 8 phách so với lượt thật: vòng quấn về đoạn dạo giữa đoạn kết,
         hoặc lệnh dừng cắt ngang nó. Dựng lượt 0 một lần, lấy đúng độ dài ấy,
-        và cho `buildPlaybackPass` dùng lại chính bản dựng đó.
+        rồi dùng cùng bản dựng cho lưu, phát, hiển thị và tua.
       */
-      const daDung = new Map<number, ReturnType<typeof buildPass>>()
-      const luotThu = (pass: number) => {
-        let luot = daDung.get(pass)
-        if (!luot) {
-          luot = buildPass(base + pass, song.soloTakes, interludePass(pass))
-          daDung.set(pass, luot)
-        }
-        return luot
-      }
-      const buildPlaybackPass = (pass: number) => {
-        const take = interludePass(pass)
-        const luot = luotThu(pass)
-        setPlayingTimeline({ totalBeats: luot.totalBeats, soloSpans: luot.soloSpans })
-        setInterludeDisplayTake(take) // Vòng tự động: ký hiệu phải đổi theo vòng ĐANG PHÁT.
+      const luot = buildPass(base, song.soloTakes, interludePass(0))
+      const buildPlaybackPass = () => {
+        playbackSong.current = luot
+        setPlayingTimeline(luot)
+        // CP displays the realized soloSpans. Rebuilding its preview here would
+        // run the composer again just as audio starts and can interrupt timing.
+        if (!cpComposeOn) setInterludeDisplayTake(interludePass(0))
         try {
           const giong = reharm.key
             ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
@@ -3865,9 +3961,10 @@ export function ReharmHome() {
       }
 
       startTimelineLoop(
-        buildPlaybackPass,
+        // Repeat the authored take unchanged. Only the full-play button composes.
+        buildPlaybackPass(),
         bpm,
-        luotThu(0).totalBeats,
+        luot.totalBeats,
         beat,
         playsOnce,
       )
@@ -3877,18 +3974,20 @@ export function ReharmHome() {
     [
       buildPass,
       bossaRhythmOnly,
-      song.soloTakes,
+      cpComposeOn,
+      song,
+      looping,
       hand,
       bpm,
       playsOnce,
       advanceRound,
-      style.beatsPerMeasure,
-      style.gridUnit,
+      style,
       songTitle,
       reharm.key,
       styleSolo.id,
       introSymbols,
       interludeSymbols,
+      outroSymbols,
       ngheLaiStt,
       cauOnDs,
       phatCauOn,
@@ -3897,11 +3996,12 @@ export function ReharmHome() {
 
   const playFromSourceBeat = useCallback(
     (sourceBeat: number) => {
+      const heard = looping && playbackSong.current ? playbackSong.current : song
       const at =
-        arrangedBeatAt(song.segments, sourceBeat, song.sections) ?? sourceBeat
+        arrangedBeatAt(heard.segments, sourceBeat, heard.sections) ?? sourceBeat
       void playFromBeat(at, sourceBeat)
     },
-    [song.segments, song.sections, playFromBeat],
+    [song, looping, playFromBeat],
   )
 
   /**
@@ -3948,13 +4048,15 @@ export function ReharmHome() {
   useEffect(() => {
     setPracticeTransport({
       playFrom: playFromSourceBeat,
-      playAll: () => void playFromBeat(0),
+      playAll: () => void playFromBeat(0, 0, true),
       pause: pausePlay,
       stop: stopPlay,
       onTone: (delta) => setTranspose((value) => value + delta),
       toneLabel: transposeLabel(transpose),
-      sourceBeat: (arranged) =>
-        sourceBeatAt(song.segments, arranged % Math.max(1, song.totalBeats)),
+      sourceBeat: (arranged) => {
+        const heard = playbackSong.current ?? song
+        return sourceBeatAt(heard.segments, arranged % Math.max(1, heard.totalBeats))
+      },
     })
   }, [
     setPracticeTransport,
@@ -3963,8 +4065,7 @@ export function ReharmHome() {
     pausePlay,
     stopPlay,
     transpose,
-    song.segments,
-    song.totalBeats,
+    song,
   ])
 
   useEffect(() => {
@@ -4086,7 +4187,7 @@ export function ReharmHome() {
         ))}
       </div>
 
-      {soloScaleLabel && (
+      {soloScaleLabel && !cpFullOn && (
         <p className="text-sm font-semibold text-amber-key">
           Gam giang tấu: {soloScaleLabel}
         </p>
@@ -4132,7 +4233,7 @@ export function ReharmHome() {
                 )
               : null
           }
-          onPlay={() => void playFromBeat(0)}
+          onPlay={() => void playFromBeat(0, 0, true)}
           onPause={pausePlay}
           onStop={stopPlay}
           onSeekBeat={(beat) => {
@@ -4193,6 +4294,7 @@ export function ReharmHome() {
           }
           fillAt={fillAt}
           onToggleFill={toggleFill}
+          cpLick={cpLick}
           runAt={runAt}
           onToggleRun={toggleRun}
           fillRestAt={fillRestAt}
@@ -4311,6 +4413,12 @@ export function ReharmHome() {
             onSelect={(id) => {
               setStyleId(id)
               const next = getStyle(id)
+              if (next && laBossaCP(next)) {
+                // Bossa CP chỉ có bộ solo Cà Pháo giọng thứ đã được duyệt;
+                // đổi điệu thì không giữ lại thầy khác từ lựa chọn trước.
+                setSoloThay('ca-phao')
+                setIntensity('caPhao')
+              }
               if (next?.family === 'flamenco') void setInstrument('guitar')
               if (!lockSongBpm && next) setBpm(next.bpm)
             }}
@@ -4677,6 +4785,7 @@ export function ReharmHome() {
               section.lines.some((line) => line.lyric.trim().length > 0),
             ) && (
           <SongSheetView
+            cpLick={cpLick}
             cauLinhNhi={cauLinhNhi}
             sheet={sheetHien}
             activeIndex={activeChordIndex}
@@ -4738,7 +4847,7 @@ export function ReharmHome() {
                 <button
                   type="button"
                   onClick={() =>
-                    looping ? pausePlay() : void playFromBeat(0)
+                    looping ? pausePlay() : void playFromBeat(0, 0, true)
                   }
                   disabled={timeline.length === 0 && ngheLaiStt <= 0}
                   className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
@@ -4841,7 +4950,7 @@ export function ReharmHome() {
             </span>{' '}
             ·{' '}
             <span className="text-rose-300 underline decoration-double decoration-2 underline-offset-4">
-              Licky Runs
+              {cpLick ? 'CP Run' : 'Licky Runs'}
             </span>{' '}
             ·{' '}
             <span className="overline decoration-1">chia đôi ô nhịp</span>
@@ -4849,10 +4958,10 @@ export function ReharmHome() {
         </div>
       )}
 
-      {songSources && !bossaRhythmOnly && (
+      {songSources && (
         <ArrangementEditor
           sources={songSources}
-          steps={steps}
+          steps={bossaRhythmOnly ? arrangementSteps : steps}
           onChange={setArrangement}
         />
       )}
@@ -4885,7 +4994,86 @@ export function ReharmHome() {
           </span>
         </div>
 
+        <label className="mb-2 flex items-center gap-2 text-sm text-cream">
+          <input type="checkbox" checked={cpLick} disabled={intensity === 'caPhao'} onChange={event => {
+            stopPlay()
+            setCpLick(event.target.checked)
+          }} />
+          CP Lick
+          <span className="text-xs text-dim">{intensity === 'caPhao'
+            ? 'Mặc định theo màu Cà Pháo · thay hoàn toàn Licky Fill/Run'
+            : 'Phối hai tay theo sheet tại câu chêm · giữ khung ngoài câu'}</span>
+        </label>
+        {cpPreview && <p role="status" className="mb-2 text-xs text-amber-400">
+          {cpPreview.reason ?? `CP Lick: ${cpPreview.placements.length} chỗ đặt được trong lượt xem trước. Cuối dòng lời là chỗ nghỉ ước lượng, cần nghe duyệt.`}
+          {cpPreview.skipped.length > 0 && ` Chưa có câu hai tay đủ dữ liệu khớp nhịp ở hợp âm số ${cpPreview.skipped.map(i => i + 1).join(', ')}.`}
+        </p>}
+
         <div className="flex flex-col gap-3">
+          {cpLick && intensity === 'caPhao' && <p className="text-xs text-dim">
+            Màu Cà Pháo bật CP Lick và CP Run advanced: 8–12 nốt, khoảng 2–4 phách,
+            soạn từ nét chạy trong sheet; độ dài thay đổi mỗi lượt, không đổi mốc vào đoạn sau;
+            cửa chuyển đoạn ước lượng theo nhãn đoạn, có thể chỉnh chỗ vào bằng chuột phải. Nguồn lượt xem trước:
+            {cpPreview?.placements.filter(p => p.source.id.startsWith('cp-transition-')).map(p =>
+              ` Hợp âm ${p.mainIndex + 1}: CP Run advanced từ ${p.source.song}, ô ${p.source.bar} (${p.source.notes.length} nốt tay phải, ${p.end-p.start} phách).`).join('')}
+          </p>}
+          {cpComposeOn && <label className="flex items-center gap-2 text-sm text-cream">Cách tạo solo CP
+            <select aria-label="Cách tạo solo CP" value={caPhaoSoloMode} onChange={event => {
+              stopPlay(); setCaPhaoSoloMode(event.target.value === 'simulate' ? 'simulate' : 'compose')
+            }}>
+              <option value="compose">Soạn câu mới</option>
+              <option value="simulate">Mô phỏng nguyên câu sheet</option>
+            </select>
+          </label>}
+          <label className="flex items-center gap-2 text-sm text-cream">
+            <input type="checkbox" checked={caPhaoFull || cpSimulationOn} disabled={cpSimulationOn} onChange={event => {
+              stopPlay()
+              setCaPhaoFull(event.target.checked)
+              if (event.target.checked) setSoloThay('ca-phao')
+            }} />
+            Câu solo Cà Pháo full
+          </label>
+          {cpFullOn && <p className="text-xs text-amber-400">
+            {cpSimulationOn ? 'Mô phỏng cả câu cùng điệu/giọng, không ghép hoặc soạn lại. Giữ cả đuôi pickup và kết đổi màu nếu có trong nguồn; chỉ chuyển tone/quãng cho tầm đàn. Chưa hỗ trợ mô phỏng chéo điệu.' : 'Full: câu mới dài hơn, thêm chỗ phát triển và chạy nốt. Tầm đàn giới hạn cả hai tay; không đổi khung đệm hát.'}
+          </p>}
+          {(caPhaoFull || cpComposeOn) && <div className="flex flex-wrap items-center gap-2 text-xs">
+            {(!cpComposeOn || cpSimulationOn) && <label>Nguồn solo full{' '}
+              <select aria-label="Nguồn solo full" value={cpFullSource} onChange={event => {
+                stopPlay(); setCaPhaoFullSource(event.target.value)
+              }}>
+                <option value="">Ưu tiên đoạn đầy đủ dài nhất</option>
+                {cpFullSources.map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+            </label>}
+            <label>Tầm đàn cho solo full{' '}
+              <select aria-label="Tầm đàn cho solo full" value={`${caPhaoKeyboardRange.low}:${caPhaoKeyboardRange.high}`}
+                onChange={event => {
+                  if (!event.target.value) return
+                  stopPlay()
+                  const [low, high] = event.target.value.split(':').map(Number)
+                  setCaPhaoKeyboardRange({ low, high })
+                }}>
+                <option value="">Tùy chỉnh hai đầu MIDI</option>
+                <option value="48:84">37 phím · C3–C6</option>
+                <option value="36:84">49 phím · C2–C6</option>
+                <option value="36:96">61 phím · C2–C7</option>
+                <option value="28:103">76 phím · E1–G7</option>
+                <option value="21:108">88 phím · A0–C8</option>
+              </select>
+            </label>
+            <label>Nốt thấp (MIDI){' '}<input aria-label="Nốt thấp solo full" type="number" min={0} max={103}
+              className="w-16" value={caPhaoKeyboardRange.low} onChange={event => {
+                stopPlay(); setCaPhaoKeyboardRange(r => ({ ...r, low: Number(event.target.value) }))
+              }} /></label>
+            <label>Nốt cao (MIDI){' '}<input aria-label="Nốt cao solo full" type="number" min={24} max={127}
+              className="w-16" value={caPhaoKeyboardRange.high} onChange={event => {
+                stopPlay(); setCaPhaoKeyboardRange(r => ({ ...r, high: Number(event.target.value) }))
+              }} /></label>
+          </div>}
+          {cpComposeOn && !cpSimulationOn && <p className="text-xs text-dim">Soạn mới: ý câu hỏi–đáp → phát triển mô-típ → hợp âm, tiết tấu và nốt mới → dẫn/kết. Không lấy câu sheet làm nền. Chỉ bấm Phát trọn bài mới soạn lại; bấm hợp âm khi đang phát chỉ tua trong câu đang nghe. Giữ khung đệm hát.</p>}
+          {cpFullOn && !cpComposeOn && <p className="text-xs text-dim">Mỗi lần phát soạn lại nốt trên khung full của nguồn đã chọn, đúng màu trưởng/thứ; không đổi số ô giữa các lượt lặp.</p>}
+          {(cpFullOn || cpComposeOn) && 'phraseSources' in song && Array.isArray(song.phraseSources) && <p className="text-xs text-dim">{song.phraseSources.join(' · ')}</p>}
+          {bossaSoloOn && !cpFullOn && !cpComposeOn && <p className="text-xs text-amber-400">Bossa CP thứ: đã mở lại dạo · giang · kết. Soạn mới mỗi lần phát; khung đệm hát giữ nguyên ngoài câu CP Lick.</p>}
           {thaySolo ? (
             <p className="text-[10px] leading-snug text-dim">
               Nốt dạo / giang / kết theo sheet thầy, không dùng gam hay nguồn nốt
@@ -5098,13 +5286,15 @@ export function ReharmHome() {
             >
               Mật độ câu fill
             </h4>
+            {cpLick && <p className="mb-2 text-xs text-dim">CP Lick tự chọn cuối câu và khe trống; không dùng mật độ Licky hoặc câu lót Kingsley.</p>}
             <div className="flex flex-wrap gap-2">
               {DENSITY_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   type="button"
+                  disabled={cpLick}
                   onClick={() => setFillDensity(option.id)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  className={`rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
                     fillDensity === option.id
                       ? 'border-amber-key bg-amber-key/15 text-amber-key'
                       : 'border-line bg-white/4 text-dim hover:bg-white/8'
@@ -5174,6 +5364,7 @@ export function ReharmHome() {
                   <input
                     type="checkbox"
                     checked={brainFills}
+                    disabled={cpLick}
                     onChange={(event) => setBrainFills(event.target.checked)}
                     className="accent-teal-key"
                   />
@@ -5341,6 +5532,7 @@ export function ReharmHome() {
                 key={value}
                 type="button"
                 onClick={() => {
+                  stopPlay()
                   setIntensity(value)
                   if (value === 'linhNhi' || value === 'caPhao' || value === 'tonHung') {
                     setSusDominant(false)

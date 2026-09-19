@@ -56,6 +56,16 @@ const OPEN_WEIGHT = 2
 const CLOSE_WEIGHT = 3
 /** Có bậc năm thật sự **giải quyết** về chủ âm. */
 const CADENCE_WEIGHT = 3
+/**
+ * Ưu tiên nhẹ cho bậc năm → chủ âm thứ xuất hiện ngay từ phần đầu bài.
+ *
+ * Nhiều bài pop dùng hợp âm trưởng tương đối ở điệp khúc (ví dụ D7 → G)
+ * nhưng phần phiên khúc đã xác lập giọng thứ bằng B7 → Em. Chỉ nhìn hợp âm
+ * cuối sẽ để điệp khúc lấn át toàn bộ bài; dấu hiệu sớm, lặp lại là cách cân
+ * lại mà không phá luật kết bài của các vòng thật sự ở giọng trưởng.
+ */
+const EARLY_MINOR_CADENCE_WEIGHT = 3
+const EARLY_CADENCE_ENOUGH = 2
 
 /**
  * Dài bao nhiêu hợp âm thì mới tin hẳn vào chỗ bài mở và bài đóng.
@@ -241,6 +251,38 @@ function cadenceStrength(
   return Math.min(1, found / ENOUGH_CADENCES)
 }
 
+/**
+ * Mức bằng chứng V7 → i ở phần đầu bài, trong khoảng 0-1.
+ *
+ * Chỉ dùng cho ứng viên thứ. Cửa sổ 40% đủ bao trọn phần phiên khúc ngắn,
+ * đồng thời bỏ qua các cú kết ở điệp khúc/đoạn cuối vốn dễ làm giọng trưởng
+ * song song thắng điểm kết. Không cộng dồn vô hạn: hai lần lặp đã đủ tin.
+ */
+function earlyMinorCadenceStrength(
+  chords: readonly ParsedChord[],
+  tonic: PitchClass,
+): number {
+  const window = Math.max(2, Math.ceil(chords.length * 0.4))
+  const fifth = normalizePitchClass(tonic + 7)
+  let found = 0
+
+  for (let index = 0; index < Math.min(window, chords.length - 1); index += 1) {
+    const chord = chords[index]!
+    const next = chords[index + 1]!
+
+    if (
+      chord.root === fifth &&
+      next.root === tonic &&
+      chord.symbol !== next.symbol &&
+      actsAsDominant(chord)
+    ) {
+      found += 1
+    }
+  }
+
+  return Math.min(1, found / EARLY_CADENCE_ENOUGH)
+}
+
 /** Chấm điểm một giọng ứng viên. */
 function scoreKey(
   chords: readonly ParsedChord[],
@@ -254,6 +296,11 @@ function scoreKey(
     FIT_WEIGHT * scaleFit(chords, weights, tones) +
     TONIC_WEIGHT * tonicShare(chords, weights, tonic) +
     CADENCE_WEIGHT * cadenceStrength(chords, tonic)
+
+  if (scale === 'minor') {
+    score +=
+      EARLY_MINOR_CADENCE_WEIGHT * earlyMinorCadenceStrength(chords, tonic)
+  }
 
   // Vòng càng ngắn thì chỗ mở và chỗ đóng càng ít có nghĩa — xem `TRUSTED_LENGTH`.
   const edges = Math.min(1, chords.length / TRUSTED_LENGTH)

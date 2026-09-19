@@ -7,14 +7,81 @@ là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 
 ## Bossa CP cải tiến
 
-### Bộ ba solo thứ — mốc lưu trữ 12/9/2026, hiện tạm ngưng
+### Học lại hòa âm–giai điệu theo ngữ cảnh — 18/9/2026, chờ nghe duyệt
+
+Người dùng không chấp nhận kết quả vòng nắn nốt 17/9. **Không phải bỏ phân biệt
+trưởng/thứ**: bỏ cách sửa từng nốt riêng lẻ theo màu giọng sau khi câu đã phối xong.
+Đã bỏ `refineBossaPitches` và trọng số Bossa:Ballad 3:1 của vòng đó. Vòng trước
+chỉ đổi nốt trên cùng, không đổi vòng hợp âm; chưa đủ bằng chứng để quy toàn bộ
+cảm giác hòa âm xấu đi cho riêng lớp sửa ấy.
+
+Đọc lại MusicXML bằng `python -B -X utf8 tools/cp_solo_habits.py --minor-context`:
+12 đoạn của 4 sheet thứ xác nhận giọng (Người hãy quên em đi, Để Em Rời Xa,
+Chưa Bao Giờ, Chúng Ta Không Thuộc Về Nhau). Phần chuyển trưởng song song và
+pickup lời đã đánh dấu không được dùng để học nốt thứ. Hai bài chưa rõ giọng
+vẫn không dùng làm nguồn cao độ. Xem mục 10 trong
+[phân tích nguồn](CP-THOI-QUEN-SOLO-2026-09-17.md).
+
+Đã sửa trong bộ soạn hiện có, không tạo engine thứ hai:
+
+- `cpMelodicContexts` giữ **bậc gốc + loại hợp âm + nốt ngân + quãng đi tới**.
+  Khi soạn thứ Bossa, ưu tiên bằng chứng Bossa cùng chức năng; chỉ lấy ngữ cảnh
+  tương ứng từ sheet thứ khác nếu Bossa chưa có. Không để số lượng Ballad lấn át.
+- Chọn nốt ngay trong đường giai điệu được tìm cho cả câu, không nắn từng nốt
+  sau khi phối bass. Không loại máy móc nốt màu cọ sát nếu Bossa có nốt ngân
+  đó trên đúng chức năng hợp âm; vẫn kiểm tầm đàn, hướng nối và hòa âm địa phương.
+- i/iv trong phần thân ưu tiên m9/m11 đã thấy ở Bossa thay vì bị tần suất m7
+  Ballad làm nhạt màu. Giữ dominant/cú bII9→V7(b13) theo đích hòa âm địa phương,
+  không biến tất cả hợp âm trên cùng bậc thành một chất cố định.
+- Chốt ii hoặc iv dẫn vào phần hát **trước** khi tính bII→V của cụm trước đó.
+  Sửa trường hợp cụm giật vẫn hướng về ii tạm dù hợp âm kế đã đổi thành iv.
+- Không sửa bộ lập bố cục, mốc gõ, nhấn/nghỉ, tốc độ, khung hát 11 tiếng,
+  CP Lick/Run, mô phỏng sheet hay thao tác tua. Không lấy tiết tấu Ballad sang.
+  Phát trọn bài mới sinh câu mới; click hợp âm vẫn dùng câu đã nghe.
+
+Snapshot 24 cấu hình được đo lại trên **engine mốc duyệt, trước các sửa mới**,
+nay so mốc đánh/độ ngân dài nhất mỗi tay mỗi mốc/lực/động tác/chỗ đổi hợp âm.
+Không khóa cao độ bass, vòng hay số bè vì lượt này được phép sửa hòa âm.
+Snapshot này không chứng minh mọi gate bè trong giống hệt; các test bổ sung
+vẫn kiểm nhấn nhiều bè, bass, cú giật, nối ô và giới hạn tầm đàn. Không cập nhật
+kỳ vọng snapshot từ kết quả engine mới để làm test qua.
+
+Đây là một vòng sửa có giới hạn, **chưa được duyệt bằng tai**. Chưa tự mở rộng
+vòng hòa âm Ballad hay mọi biến âm ghi trên sheet thành luật dùng tự do.
+Sao lưu trước lượt: `D:/KeyTrain-backups/cp-context-20260918-092356`.
+
+### Hướng học lại solo — 17/9/2026, đối chiếu lại mốc nghe hay
+
+Người dùng bác cách giữ nguyên toàn bộ solo *Người hãy quên em đi* rồi thay nốt.
+Đã đo lại 9 sheet về vị trí kỹ thuật, tiết tấu, nghỉ/ngân, đường chạy và phối tay;
+bình luận #1143 lúc 15:07 cùng vòng và 111 nốt được chuyển sang MD thầy ở PianoBrain.
+Xem [phân tích và đặc tả bộ soạn](CP-THOI-QUEN-SOLO-2026-09-17.md).
+Đã triển khai một vòng trong `cpComposition.ts`: chọn bố cục kỹ thuật mới từ
+các động tác Bossa hai ô, soạn vòng hòa âm mới theo chức năng, lấy mô-típ và
+đường chạy cùng màu trưởng/thứ từ các sheet khác. Không giữ thứ tự toàn bộ solo
+nguồn rồi chỉ thay nốt. Intro/giang có vùng dẫn về hợp âm thật của đoạn kế tiếp.
+Chi tiết và giới hạn ở mục 9 của bản phân tích; không dùng test khớp nguyên
+timeline nguồn làm bằng chứng đã tự soạn. Khung đệm hát 11 tiếng vẫn giữ nguyên.
+
+Người dùng làm rõ: mốc nghe hay là **sau lượt sửa hai file trong ảnh
+`+145/-89`**, không phải duyệt chung mọi câu hiện tại; nghe về sau không còn hay.
+Đã được phép khôi phục và đối chiếu nhật ký: sau lượt đó không có sửa thuật toán
+âm nhạc, chỉ tài liệu và một dòng comment trong `cpComposition.ts`. Đã trả comment
+về mốc ảnh, giữ nguyên file test; không giả vờ đây là thay đổi âm thanh.
+Sao lưu tại `D:/KeyTrain-backups/bossa-restore-20260917-233651`.
+Chưa xác định ID câu/seed của lần nghe hay; khác take là một khả năng cần kiểm
+tra, chưa phải kết luận nguyên nhân. Không tự train hoặc duyệt hàng loạt.
+
+### Bộ ba solo thứ — mốc lưu trữ 12/9/2026, mở lại nghe thử 13/9
 
 Người dùng đã duyệt bằng tai **intro, giang tấu và outro giọng thứ** khi đi
 cùng `Bossa CP cải tiến` ở mốc 12/9. Sau đó người dùng yêu cầu dựng lại phần
-đệm và tạm bỏ solo/fill. Bộ ba dưới đây chỉ còn là **tham chiếu lịch sử**,
-không phải cấu hình phát hiện tại và không được tự bật lại. Khung đệm chính
-thức là bản duyệt 13/9/2026 ở mục kế tiếp; khi làm solo trở lại phải giữ
-nguyên khung đó trong phần đệm hát. Việc duyệt cũ không bao trùm mọi biến thể/giọng.
+đệm và tạm bỏ solo/fill. Theo yêu cầu mới ngày 13/9, đã mở lại bộ ba thứ
+và thêm soạn mới mỗi lần phát; **bản phát triển đang chờ nghe duyệt**.
+Khung đệm chính thức vẫn là bản duyệt 13/9/2026 ở mục kế tiếp; không đổi nó
+trong phần đệm hát ngoài cửa CP Lick được cho phép riêng.
+Việc duyệt cũ không bao trùm mọi biến thể/giọng. Chi tiết nguồn và cách tái tạo:
+[Bossa CP solo thứ — khôi phục và phát triển](BOSSA-CP-SOLO-2026-09-13.md).
 
 | Đoạn | Khung đã duyệt ở Am | Điều phải giữ |
 | --- | --- | --- |
@@ -26,8 +93,9 @@ Giang/outro phát triển từ các cửa sổ liên tục trong *Người hãy 
 không ghép chắp vá ô của nhiều thầy. V7 ở phần giang và kết i thứ ở outro là
 biên soạn KT để tạo lực hút/kết theo yêu cầu, không được gọi là chép nguyên
 văn sheet. Khi lặp hai vòng giang, chỉ vòng cuối mới đổi ii–V theo hợp âm đầu
-của phần hát; vòng trước về chỗ lặp. Bốn biến thể hiện có là các biến thể hữu
-hạn đã soạn, không phải bộ học tự động vô hạn.
+của phần hát; vòng trước về chỗ lặp. Take 0–3 giữ nguyên bản lưu trữ;
+take từ 4 phát triển đường nét từ các sheet đủ bằng chứng trên nhịp Bossa.
+Đây là vốn câu hữu hạn được KT biên soạn lại, không phải bộ học tự động vô hạn.
 
 ### Nguồn và ranh giới của việc học
 
