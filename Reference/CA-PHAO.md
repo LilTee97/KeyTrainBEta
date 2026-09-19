@@ -7,6 +7,65 @@ là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 
 ## Bossa CP cải tiến
 
+### Mốc hiện hành đã duyệt và đóng băng — 19/9/2026
+
+Người dùng xác nhận: **“các câu solo hiện tại đã đạt rồi, giữ nguyên ngay mức
+này và đừng sửa thêm gì nữa mà hãy commit luôn”**. Mốc mã là **`bcddfd0`**
+(`feat: freeze user-approved CP solo and lick composition`). Đây là mốc bộ
+soạn hiện tại được nghe duyệt, không phải chỉ mốc tài liệu hay snapshot test.
+Các nhãn “chờ nghe duyệt” ngày 17–18/9 bên dưới là lịch sử trước xác nhận này;
+không dùng chúng làm lý do tiếp tục train. Không suy rộng thành chứng nhận
+mọi take ngẫu nhiên, mọi giọng hoặc mọi điệu đều đã được nghe riêng.
+
+**Quy tắc bảo toàn:** giữ nguyên bố cục, hòa âm, giai điệu, phối hai tay,
+bass, dặm/cú giật, nhấn–nghỉ, onset/gate và phần dẫn intro/giang. Không tự
+train thêm, đổi nguồn hay nới luật nốt sau mốc này; chỉ sửa âm nhạc khi có
+phản hồi cụ thể mới. Khung hát 11 tiếng/8 phách vẫn giữ ngoài các cửa CP
+Lick/Run được phép phối lại. Phát trọn bài mới soạn lượt mới; click hợp âm
+trong lúc phát không soạn lại. Giữ cả đường full/rút gọn và mô phỏng hiện có.
+
+Để hiểu/tái tạo đúng mốc, đọc `src/reharm/style/cpComposition.ts` cùng
+`caPhaoSolo.ts`, `caPhaoFullSolos.json`, các test/snapshot và tích hợp
+`ReharmHome.tsx` trong **cùng commit**, không phục dựng từ một file đơn lẻ:
+
+- Chọn giai điệu trong cả đường câu theo ngữ cảnh hợp âm địa phương. Không
+  khôi phục hậu xử lý `refineBossaPitches` của vòng 17/9 đã bị bác.
+- `cpMelodicContexts` giữ nốt trước–nốt màu–nốt giải, hướng đi, độ ngân,
+  mode và chức năng/chất hợp âm; loại pickup lời và phần trưởng song song
+  đã đánh dấu khỏi các sự kiện được học ở đây. `cpHasApproach` kiểm ngữ cảnh
+  chuẩn bị và giải của chromatic ngắn trong câu thứ, không cho thêm tùy tiện.
+- Trong đường nhanh giọng thứ, ba mốc cách nhau không quá ½ phách, mỗi mốc
+  tối đa hai bè và cùng hợp âm, không chọn hai bước nhảy liên tiếp đều từ
+  5 bán âm trở lên. Giữ cú nhảy đơn, đường vòng và kỹ thuật dặm; không sửa
+  lưới tiết tấu để xử lý chỗ chỏi giai điệu.
+- Chọn màu hợp âm **Cà Pháo** tự dùng CP Lick/Run thay Licky, kể cả bài lưu
+  cũ có `cpLick: false` (`intensity === 'caPhao' || cpLickSelected`). Mô tả
+  “ô CP Lick mặc định tắt” ở mốc 14/9 bên dưới không còn chi phối chế độ màu
+  Cà Pháo hiện tại. Không sửa thuật toán fill/run trong lượt chốt này.
+
+Commit giữ được bộ soạn và nguồn dữ liệu, **không giữ riêng một lần phát
+ngẫu nhiên**. Muốn đối chiếu đúng câu đã nghe cần giữ cả bài/cấu hình và
+take/seed; không hứa checkout commit sẽ tự phát lại đúng câu ấy.
+
+### Sửa nhận diện giọng, độc lập với mốc solo — 19/9/2026
+
+Commit **`e47147a`** chỉ sửa dò/chọn giọng và test, không sửa bộ solo:
+
+- *Thôi em đừng đi*: vòng `Dm7 G7 Em7 A7 / Dm7 G7 Cmaj7 A7` thuộc ngữ cảnh
+  C trưởng; không kết luận Dm chỉ vì mở bằng Dm7 và có A7→Dm7. Bộ dò cộng
+  bằng chứng ii–V–I/iii đầu bài, có chặn để đoạn trưởng tương đối không
+  lấn giọng thứ đã thiết lập ở phiên khúc (hồi quy *Cánh hồng phai* vẫn Em).
+- Ô **Giọng** hiện đủ 12 trưởng + 12 thứ và Tự dò. Chọn C trưởng để sửa
+  nhận diện **không dịch** Dm7 G7 thành Cm7 F7. **Tone −/+** mới dịch cao độ
+  toàn bài. Sửa mode không có nghĩa tự đổi mọi hợp âm thứ thành hợp âm trưởng.
+- Đã kiểm trực tiếp bài đang mở: Tự dò C; chọn C giữ nguyên hợp âm; Tone +
+  chuyển Db và Tone − trả C. Không tự lưu đè bài trong thư viện.
+
+Kiểm tại mốc mã: **333/333 test liên quan (17 file)** và production build
+qua; so mã solo với `bcddfd0` không khác. Đây không phải kết quả toàn suite
+hay bằng chứng nghe duyệt thêm các câu trưởng. Lượt ghi tài liệu không đổi
+mã, dữ liệu nốt hoặc take đang phát.
+
 ### Học lại hòa âm–giai điệu theo ngữ cảnh — 18/9/2026, chờ nghe duyệt
 
 Người dùng không chấp nhận kết quả vòng nắn nốt 17/9. **Không phải bỏ phân biệt

@@ -3121,3 +3121,65 @@ Không phục dựng bộ soạn chỉ bằng một file solo hoặc commit tài
 
 Kiểm tại lượt ghi tài liệu: `npm test -- cpLick playbackRenderCost bossaRhythmOnly`
 đạt 12/12 test (3 file). Lượt này chỉ sửa tài liệu, không đổi mã hoặc dữ liệu nhạc.
+
+## 19/9/2026 — Chốt solo Cà Pháo đã duyệt; tách sửa giọng khỏi chuyển tông
+
+### Mốc âm nhạc phải giữ nguyên
+
+Người dùng xác nhận **“các câu solo hiện tại đã đạt rồi, giữ nguyên ngay mức
+này và đừng sửa thêm gì nữa mà hãy commit luôn”**. Đã đóng gói triển khai CP
+hiện hành vào **`bcddfd0`** (`feat: freeze user-approved CP solo and lick
+composition`), gồm mã, dữ liệu nguồn, tích hợp UI/phát và test liên quan;
+không còn tình trạng chỉ commit tài liệu nhưng bỏ triển khai trong working
+tree như ghi chú 14/9 phía trên.
+
+- Dừng train tại mốc này. Giữ nguyên tiết tấu, bố cục kỹ thuật, vòng hợp âm,
+  giai điệu, phối tay/bass, dặm/cú giật và dẫn intro/giang sang đoạn kế tiếp.
+  Không tự “cải thiện” thêm nếu chưa có phản hồi cụ thể mới.
+- Khung hát Bossa CP cải tiến vẫn 11 tiếng/8 phách ngoài cửa CP Lick/Run
+  được cho phép phối lại. Solo full/rút gọn, mô phỏng và cách soạn hiện có
+  được giữ; chỉ Phát trọn bài sinh lượt mới, click hợp âm khi phát không sinh lại.
+- Giữ cách chọn nốt theo ngữ cảnh hòa âm trong `cpComposition.ts`, không
+  quay lại nắn nốt đơn lẻ bằng `refineBossaPitches`. Kiểm chromatic có chuẩn
+  bị/giải theo nguồn; tránh hai bước nhảy liên tiếp ≥5 bán âm trong nhóm
+  ba mốc nhanh cùng hợp âm, giọng thứ, tối đa hai bè/mốc. Đây là luật đã có
+  ở mốc duyệt, không phải đề xuất train mới.
+- Chọn màu **Cà Pháo** tự dùng CP Lick/Run thay Licky, kể cả bài cũ lưu ô CP
+  Lick tắt. Mô tả ô tick ở ngày 14/9 là trạng thái lịch sử; mã hiện hành dùng
+  `intensity === 'caPhao' || cpLickSelected`.
+- “Đã duyệt” là xác nhận của người dùng về mức bộ soạn vừa nghe, không phải
+  suy từ test xanh hoặc đã nghe mọi take/mọi giọng. Các ghi chú chờ nghe của
+  ngày 17–18/9 được thay bằng xác nhận này, không phải lý do tiếp tục sửa.
+
+Chi tiết nguồn và ràng buộc: [CA-PHAO.md](CA-PHAO.md), mục “Mốc hiện hành đã
+duyệt và đóng băng”. Khi phục dựng phải lấy triển khai cùng commit, không chỉ
+một file solo. Commit không lưu một lần phát ngẫu nhiên cụ thể: đối chiếu đúng
+câu cần cả bài, cấu hình và take/seed. Không reset rộng để tìm lại câu nghe hay.
+
+### Sửa dò C trưởng và cho phép sửa giọng thủ công
+
+Commit riêng **`e47147a`** (`fix: detect major turnarounds and allow independent
+key correction`), không đổi thuật toán/dữ liệu solo ở `bcddfd0`.
+
+Lỗi báo cáo: *Thôi em đừng đi* là C trưởng nhưng dò Dm, danh sách lại chỉ hiện
+giọng thứ. Bộ dò đã đánh giá quá mạnh A7→Dm trong vòng
+`Dm7 G7 Em7 A7 / Dm7 G7 Cmaj7 A7`; A7 có thể dẫn phụ về ii, không đủ để kết
+luận chủ âm Dm. Sửa `keyDetection.ts` nhận thêm ii–V–I/iii ở đầu bài, hạn chế
+điểm cộng khi phiên khúc đã thiết lập giọng thứ tương đối. Hồi quy bảo vệ
+*Cánh hồng phai* ở Em và vòng thật sự Dm vẫn qua.
+
+Quy ước giao diện hiện hành trong `ReharmHome.tsx`:
+
+- **Giọng**: đủ 24 lựa chọn trưởng/thứ + Tự dò, dùng xác định/sửa chủ âm và
+  mode, giữ cao độ hợp âm đang có. `onChange={setManualKey}`.
+- **Tone −/+**: chuyển tông toàn bài; `effectiveTranspose = transpose`.
+  Không suy khoảng chuyển tông từ giọng tự dò sang giọng người dùng sửa.
+- Chọn C trưởng không tự đổi Dm7 G7 thành Cm7 F7, cũng không ép mọi hợp âm
+  thành hợp âm trưởng. Bộ soạn nhận giọng đã xác định, không cần train lại.
+
+Đã kiểm trực tiếp bài trong KT: tự dò C; chọn C giữ nguyên hợp âm; tăng nửa
+cung sang Db, hạ lại C. Chưa lưu đè bài trong thư viện thay người dùng.
+**333/333 test liên quan ở 17 file** qua (engine, transpose, persistence,
+CP composition); production build qua, còn cảnh báo bundle >500 kB.
+Không tuyên bố toàn suite dự án đã qua. Các file solo đối chiếu với `bcddfd0`
+không khác. Lượt ghi sổ này chỉ thay hai tài liệu, không đổi nhạc hoặc mã.
