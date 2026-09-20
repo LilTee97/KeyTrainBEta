@@ -1,8 +1,10 @@
-# Anh cứ đi đi (CP): đề xuất chia đoạn
+# Anh cứ đi đi (CP): chia đoạn và cửa lời đã chốt
 
-20/9/2026. **Bản đề xuất để người dùng duyệt, chưa ghi vào corpus hoặc dữ liệu
-huấn luyện.** Đã di chuyển file theo yêu cầu người dùng, không sửa nội dung.
-Chưa tạo nút điệu cho bài này.
+20/9/2026. **Người dùng đã chốt ba cửa lời: "33 A 37 A 62 A".**
+Các mốc chính xác được ghi dưới đây; khung còn lại vẫn là đề xuất, không coi
+câu trả lời này là duyệt toàn bộ khung, giọng hoặc thể loại. Chưa ghi vào
+corpus hoặc dữ liệu huấn luyện. Đã di chuyển file theo yêu cầu người dùng,
+không sửa nội dung. Chưa tạo nút điệu cho bài này.
 
 ## Nguồn
 
@@ -24,25 +26,26 @@ do chính CP soạn. Không suy diễn rằng mọi chi tiết chép đều đú
   Đây là lấy đà; không ép thành một ô đủ 4 phách khi tính thời gian.
 - Ô 68 có Eb7 dài 2 phách rồi nghỉ 2 phách. Vạch kết ở 67 **không phải hết
   file**; không bỏ tiếng cuối ở 68.
-- Không có lyric, rehearsal hay nhãn verse/chorus trong XML. Tên chức năng
-  dưới đây là **suy luận từ mô-típ và câu kết**, chưa phải nhãn đã xác nhận.
+- Không có lyric, rehearsal hay nhãn verse/chorus trong XML. Ba cửa lời ở
+  33/37/62 đã được người dùng xác nhận; các mốc còn lại là suy luận từ mô-típ
+  và câu kết, chưa được xác nhận riêng.
 - Hóa biểu bốn giáng, các câu nhiều lần giải về Fm: **ứng viên giọng Fa thứ**,
   chưa tự đăng ký giọng hoặc thể loại vào corpus.
 
 ## Khung đề xuất
 
-| Phần | Khung ô nhịp để duyệt | Mốc tinh cần kiểm |
+| Phần | Khung ô nhịp | Mốc tinh và trạng thái |
 |---|---|---|
 | Dạo đầu riêng | Tạm đề xuất **không có** | Ô 0 lấy đà vào câu chính, không tự coi 1–8 là intro |
 | Phiên 1 | **1–16**, kèm lấy đà ô 0 | Chia câu A 1–8 và câu A' 9–16, chưa gán A' là tiền điệp |
-| Điệp 1 | **17–32** | Có thể còn nốt kết F5 đầu ô 33 |
-| Giang tấu | **33–37** | Có thể bắt đầu sau F5 ngân ở 33, kết trước lấy đà ở 37 |
-| Phiên 2 | **38–45** | Lấy đà F4–G4–Ab4 có thể bắt đầu từ cuối 37 |
-| Điệp 2 | **46–61** | Có thể còn nốt kết C5/F5 đầu ô 62 |
-| Kết bài | **62–68** | Có thể bắt đầu sau nốt kết đầu 62, không phải ngay đầu ô |
+| Điệp 1 | **17–32**, thêm đầu ô 33 | Đã chốt: F5 đầu 33 còn thuộc điệp, tới offset 1.5 |
+| Giang tấu | **một phần 33–37** | Đã chốt: từ 33 offset 1.5 đến trước 37 offset 2.5 |
+| Phiên 2 | **38–45**, lấy đà ở 37 | Đã chốt: F4 tại 37 offset 2.5 mở lấy đà phiên 2 |
+| Điệp 2 | **46–61**, thêm đầu ô 62 | Đã chốt: C5/F5 đầu 62 còn thuộc điệp, tới offset .75 |
+| Kết bài | **một phần 62–68** | Đã chốt điểm bắt đầu: F4 tại 62 offset .75 |
 
-Không dùng các khoảng nguyên ô ở bảng này để cắt solo/fill tự động trước khi
-chốt cửa lời. Một ô có thể chứa cả nốt cuối giai điệu hát và câu đàn bắt đầu.
+Không dùng khoảng nguyên ô để thay thế các cửa lời đã chốt. Một ô có thể chứa
+cả nốt cuối giai điệu hát và câu đàn bắt đầu. Chưa tự cắt hoặc huấn luyện solo.
 
 ## Vì sao chọn các mốc này
 
@@ -69,20 +72,34 @@ ngân rồi lấy đà vào 38. Đây là ứng viên giang tấu, không chỉ 
 F4–G4–Ab4–Bb4–C5. Những ô 63–68 phát triển câu kết, không quay lại mô-típ
 phiên/điệp; tới 66 giảm `mp`, rồi rải lên quãng cao ở 67–68.
 
-## Ba cửa lời cần bạn chốt
+## Ba cửa lời đã được người dùng chốt
 
-Quy ước: **offset 0 = phách 1**. Các ranh giới là đề xuất chức năng, không
-phải khẳng định phần trước chắc chắn là lời và phần sau chắc chắn là solo.
+Nguồn xác nhận trực tiếp: **"33 A 37 A 62 A"**.
+Quy ước: **offset 0 = phách 1**, đơn vị nốt đen; khoảng đoạn lấy đầu,
+không lấy cuối. Đây là mốc vai trò câu nhạc, không phải lệnh cắt mọi tiếng
+đệm đang ngân ở cả hai tay tại ranh giới.
 
 1. **33, offset 1.5 (phách 2&):** F5 ở đầu ô ngân tới đây, rồi RH bắt đầu
-   F4–G4–Ab4. Đề xuất giang tấu bắt đầu tại F4 này; F5 đầu 33 còn thuộc
-   nốt kết điệp 1. Nếu F5 đã là nốt mở giang thì mốc chuyển về offset 0.
+   F4–G4–Ab4. **Giang tấu bắt đầu tại F4 này**; F5 đầu 33 còn thuộc
+   nốt kết điệp 1, không đưa F5 đó vào câu giang.
 2. **37, offset 2.5 (phách 3&):** F4 bắt đầu, nối qua offset 3, rồi G4 ở
-   3.25 và Ab4 ở 3.5 dẫn sang C5 đầu 38. Đề xuất đây là lấy đà của phiên 2,
-   không gom toàn bộ ô 37 vào giang.
+   3.25 và Ab4 ở 3.5 dẫn sang C5 đầu 38. **Đây là lấy đà của phiên 2**;
+   giang kết thúc trước F4 tại offset 2.5. Phần nối F4 tại offset 3 vẫn
+   thuộc phiên 2, không phải một cú gõ mới hoặc phần giang còn sót.
 3. **62, offset .75 (phách 1a):** cụm C5/F5 đầu ô kết thúc, RH bắt đầu
-   F4–G4–Ab4–Bb4–C5. Đề xuất outro bắt đầu ở F4 này; cụm đầu 62 còn là
-   kết điệp 2. Nếu cụm đầu ô đã thuộc outro, mốc chuyển về offset 0.
+   F4–G4–Ab4–Bb4–C5. **Outro bắt đầu ở F4 này**; cụm C5/F5 đầu 62 còn là
+   kết điệp 2, không đưa cụm đó vào câu kết độc lập.
+
+Biểu diễn mốc để chuyển vào dữ liệu khi đăng ký nguồn:
+
+```json
+{
+  "interlude_start": { "measure": 33, "offset": 1.5 },
+  "interlude_end_exclusive": { "measure": 37, "offset": 2.5 },
+  "verse_2_pickup_start": { "measure": 37, "offset": 2.5 },
+  "outro_start": { "measure": 62, "offset": 0.75 }
+}
+```
 
 Không quy đổi ra giây video bằng BPM cố định: bản thu có thể nhả/ngân tự do
 và có khoảng đầu video. Chưa gắn chính xác lời ca nên tránh tạo mốc thời gian
@@ -94,5 +111,6 @@ trông chính xác hơn bằng chứng đang có.
 python -B scripts/audit_ca_phao.py "D:/PianoBrain/video/Ca_Phao/Anh Cu Di Di- Ca Phao.mxl" 0 1 8 9 16 17 25 32 33 37 38 45 46 54 61 62 67 68
 ```
 
-Sau khi người dùng duyệt khung và ba cửa lời mới đăng ký nguồn/biên đoạn;
-việc dùng sheet để học tiết tấu hoặc solo là bước riêng, chưa thực hiện.
+Ba cửa lời đã chốt; phần còn lại của khung, giọng và thể loại chưa coi là
+được duyệt bởi câu trả lời này. Việc đăng ký corpus và dùng sheet để học
+tiết tấu hoặc solo là bước riêng, chưa thực hiện.
