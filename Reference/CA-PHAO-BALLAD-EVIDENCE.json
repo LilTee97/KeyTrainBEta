@@ -1,0 +1,3836 @@
+{
+  "units": "quarter notes, zero-based measure offsets; written durations, not pedal audio",
+  "method": "LH attack groups exclude grace/tie-stop; RH is retained for manual melody/comping review.",
+  "excluded": "Deferred sheets and non-ballad corpus entries are not analyzed.",
+  "songs": [
+    {
+      "song": "Hồng Kông 1",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\hongkong-1-chuyen-tinh-luot-qua-nguyen-trong-tai-hong-kong-1-advanced-da-don.musicxml",
+      "sha256": "6212da4ee2fbf98b13a56dcd5c8de5aab5b52601d916bcc062cdaba3d43cbd10",
+      "scope": "annotated singing",
+      "measuredBars": 65,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 315,
+        "downbeatBars": 56,
+        "chordAttacks": 33,
+        "offbeatAttacks": 150,
+        "tieContinuationsExcluded": 51
+      },
+      "sections": {
+        "verse": {
+          "bars": 16,
+          "attacks": 63,
+          "notes": 71
+        },
+        "chorus": {
+          "bars": 15,
+          "attacks": 81,
+          "notes": 87
+        },
+        "verse_2": {
+          "bars": 7,
+          "attacks": 32,
+          "notes": 38
+        },
+        "chorus_2": {
+          "bars": 27,
+          "attacks": 139,
+          "notes": 160
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.5,
+            2.5,
+            3.0
+          ],
+          "count": 14,
+          "bars": [
+            25,
+            34,
+            36,
+            38,
+            39,
+            42,
+            75,
+            82,
+            83,
+            84,
+            85,
+            87,
+            90,
+            93
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.5
+          ],
+          "count": 5,
+          "bars": [
+            22,
+            26,
+            27,
+            66,
+            71
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+            3.5
+          ],
+          "count": 3,
+          "bars": [
+            23,
+            45,
+            80
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0
+          ],
+          "count": 3,
+          "bars": [
+            35,
+            37,
+            46
+          ]
+        },
+        {
+          "onsets": [],
+          "count": 2,
+          "bars": [
+            16,
+            67
+          ]
+        }
+      ],
+      "representatives": {}
+    },
+    {
+      "song": "Co Em Cho",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\Co Em Cho-Ca Phao.mxl",
+      "sha256": "b982c803e961e71175187f691f014224be1eaac9e6bb793d745ed78706e33ec3",
+      "scope": "annotated singing",
+      "measuredBars": 49,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 326,
+        "downbeatBars": 49,
+        "chordAttacks": 82,
+        "offbeatAttacks": 203,
+        "tieContinuationsExcluded": 0
+      },
+      "sections": {
+        "verse": {
+          "bars": 16,
+          "attacks": 108,
+          "notes": 153
+        },
+        "chorus": {
+          "bars": 8,
+          "attacks": 57,
+          "notes": 70
+        },
+        "verse_2": {
+          "bars": 8,
+          "attacks": 55,
+          "notes": 82
+        },
+        "chorus_2": {
+          "bars": 7,
+          "attacks": 45,
+          "notes": 71
+        },
+        "chorus_mod": {
+          "bars": 10,
+          "attacks": 61,
+          "notes": 78
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.75,
+            2.25,
+            2.5,
+            2.75,
+            3.0
+          ],
+          "count": 2,
+          "bars": [
+            10,
+            18
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.75,
+            1.0,
+            1.75,
+            2.5,
+            3.0,
+            3.5
+          ],
+          "count": 2,
+          "bars": [
+            29,
+            37
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.75,
+            1.0,
+            2.0,
+            2.25,
+            3.0,
+            3.5
+          ],
+          "count": 2,
+          "bars": [
+            31,
+            47
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.75,
+            2.25
+          ],
+          "count": 1,
+          "bars": [
+            9
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.75,
+            2.25,
+            3.0,
+            3.5
+          ],
+          "count": 1,
+          "bars": [
+            11
+          ]
+        }
+      ],
+      "representatives": {
+        "10": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "G",
+              "kind": "minor-seventh",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.5,
+              "pitch": "D4",
+              "midi": 62,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 1.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.25,
+              "dur": 0.25,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.75,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 1.0,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.75,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.5,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.25,
+              "dur": 0.25,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.25,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "D3",
+              "midi": 50,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "18": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "G",
+              "kind": "minor-seventh",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "D4",
+              "midi": 62,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.5,
+              "pitch": "D4",
+              "midi": 62,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.5,
+              "pitch": "D4",
+              "midi": 62,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 1.0,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.75,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.75,
+              "pitch": "Db4",
+              "midi": 61,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.75,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.75,
+              "dur": 0.25,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.75,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 0.75,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.5,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.5,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.25,
+              "dur": 0.25,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.25,
+              "pitch": "G2",
+              "midi": 43,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Gb2",
+              "midi": 42,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "E3",
+              "midi": 52,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        }
+      }
+    },
+    {
+      "song": "Ngay mai em di",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\Ngay mai em di-Ca Phao.mxl",
+      "sha256": "475ca2e4ed866fecd3d60b07d1e7b1f5e70ce716956215a3f24d52ae2891959d",
+      "scope": "annotated singing",
+      "measuredBars": 64,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 314,
+        "downbeatBars": 64,
+        "chordAttacks": 60,
+        "offbeatAttacks": 157,
+        "tieContinuationsExcluded": 0
+      },
+      "sections": {
+        "verse": {
+          "bars": 16,
+          "attacks": 90,
+          "notes": 102
+        },
+        "chorus": {
+          "bars": 16,
+          "attacks": 76,
+          "notes": 109
+        },
+        "verse_2": {
+          "bars": 16,
+          "attacks": 82,
+          "notes": 91
+        },
+        "chorus_2": {
+          "bars": 16,
+          "attacks": 66,
+          "notes": 89
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.5,
+            2.5,
+            3.0
+          ],
+          "count": 4,
+          "bars": [
+            35,
+            36,
+            43,
+            71
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0
+          ],
+          "count": 3,
+          "bars": [
+            21,
+            29,
+            65
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5
+          ],
+          "count": 3,
+          "bars": [
+            23,
+            49,
+            80
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.5,
+            2.5
+          ],
+          "count": 3,
+          "bars": [
+            40,
+            73,
+            86
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ],
+          "count": 2,
+          "bars": [
+            24,
+            63
+          ]
+        }
+      ],
+      "representatives": {
+        "21": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "C",
+              "kind": "minor-seventh",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.25,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 0.5,
+              "pitch": "C3",
+              "midi": 48,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 3.0,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "29": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "C",
+              "kind": "minor-seventh",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.25,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.25,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.75,
+              "dur": 0.25,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 0.5,
+              "pitch": "C3",
+              "midi": 48,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 3.0,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "35": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "Eb",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.25,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.0,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.0,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 0.0,
+              "dur": 1.0,
+              "pitch": "Eb2",
+              "midi": 39,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 1.0,
+              "pitch": "Eb2",
+              "midi": 39,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.25,
+              "pitch": "Eb3",
+              "midi": 51,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "43": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "Eb",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.25,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.0,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.0,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "F4",
+              "midi": 65,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 0.0,
+              "dur": 1.0,
+              "pitch": "Eb2",
+              "midi": 39,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 1.0,
+              "pitch": "Eb2",
+              "midi": 39,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.25,
+              "pitch": "Eb3",
+              "midi": 51,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Eb3",
+              "midi": 51,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        }
+      }
+    },
+    {
+      "song": "Kém duyên",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\kem-duyen.mxl",
+      "sha256": "abd91b99f7ed95534cf21207e5cc6adfc124d552863a32602b6e5160b6ddbbd9",
+      "scope": "outside annotated solos; tentative",
+      "measuredBars": 59,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 243,
+        "downbeatBars": 58,
+        "chordAttacks": 45,
+        "offbeatAttacks": 96,
+        "tieContinuationsExcluded": 33
+      },
+      "sections": {},
+      "patterns": [
+        {
+          "onsets": [
+            0,
+            1.0,
+            1.5,
+            2.5,
+            3.0
+          ],
+          "count": 9,
+          "bars": [
+            18,
+            19,
+            22,
+            23,
+            52,
+            56,
+            57,
+            64,
+            65
+          ]
+        },
+        {
+          "onsets": [
+            0
+          ],
+          "count": 5,
+          "bars": [
+            1,
+            2,
+            3,
+            26,
+            60
+          ]
+        },
+        {
+          "onsets": [
+            0,
+            0.5,
+            1.0,
+            1.5,
+            2.0
+          ],
+          "count": 4,
+          "bars": [
+            8,
+            12,
+            43,
+            46
+          ]
+        },
+        {
+          "onsets": [
+            0,
+            2.0
+          ],
+          "count": 4,
+          "bars": [
+            14,
+            24,
+            40,
+            58
+          ]
+        },
+        {
+          "onsets": [
+            0,
+            0.5,
+            1.0,
+            1.5
+          ],
+          "count": 4,
+          "bars": [
+            16,
+            25,
+            42,
+            59
+          ]
+        }
+      ],
+      "representatives": {}
+    },
+    {
+      "song": "Yêu xa",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\yeu-xa-ca-phao-cove.mxl",
+      "sha256": "c5319db4d489e1d611d243cf805d5ba52320239c4eb58dd67dfc19b5c00e117e",
+      "scope": "outside annotated solos; tentative",
+      "measuredBars": 86,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 437,
+        "downbeatBars": 84,
+        "chordAttacks": 88,
+        "offbeatAttacks": 223,
+        "tieContinuationsExcluded": 0
+      },
+      "sections": {},
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0
+          ],
+          "count": 9,
+          "bars": [
+            11,
+            27,
+            29,
+            37,
+            62,
+            75,
+            92,
+            94,
+            102
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5
+          ],
+          "count": 8,
+          "bars": [
+            35,
+            39,
+            55,
+            67,
+            77,
+            79,
+            82,
+            83
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0
+          ],
+          "count": 5,
+          "bars": [
+            21,
+            24,
+            33,
+            61,
+            81
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5
+          ],
+          "count": 4,
+          "bars": [
+            13,
+            25,
+            65,
+            73
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.5,
+            2.5,
+            3.5
+          ],
+          "count": 3,
+          "bars": [
+            14,
+            30,
+            95
+          ]
+        }
+      ],
+      "representatives": {}
+    },
+    {
+      "song": "Để Em Rời Xa",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\De Em Roi Xa-Ca Phao.mxl",
+      "sha256": "c4d780b7b37c89b1e7891daca40bc13fbca5ffba8c5600cf25ea04350aaaba4b",
+      "scope": "annotated singing",
+      "measuredBars": 53,
+      "omittedNonFourBeatBars": [
+        10,
+        11,
+        23
+      ],
+      "left": {
+        "attacks": 369,
+        "downbeatBars": 51,
+        "chordAttacks": 60,
+        "offbeatAttacks": 219,
+        "tieContinuationsExcluded": 49
+      },
+      "sections": {
+        "verse": {
+          "bars": 14,
+          "attacks": 86,
+          "notes": 106
+        },
+        "chorus": {
+          "bars": 7,
+          "attacks": 51,
+          "notes": 61
+        },
+        "verse_2": {
+          "bars": 16,
+          "attacks": 109,
+          "notes": 131
+        },
+        "chorus_2": {
+          "bars": 8,
+          "attacks": 59,
+          "notes": 69
+        },
+        "chorus_mod": {
+          "bars": 8,
+          "attacks": 64,
+          "notes": 73
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            3.25,
+            3.5,
+            3.75
+          ],
+          "count": 2,
+          "bars": [
+            5,
+            33
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            3.0,
+            3.5
+          ],
+          "count": 2,
+          "bars": [
+            15,
+            32
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.25,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+            3.5
+          ],
+          "count": 2,
+          "bars": [
+            38,
+            58
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            2.75,
+            3.5
+          ],
+          "count": 1,
+          "bars": [
+            4
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.25,
+            0.5,
+            0.75,
+            1.0,
+            2.75,
+            3.5
+          ],
+          "count": 1,
+          "bars": [
+            6
+          ]
+        }
+      ],
+      "representatives": {}
+    },
+    {
+      "song": "Chưa Bao Giờ (Trung Quân)",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\Chua Bao Gio Trung Quan-Ca Phao.mxl",
+      "sha256": "2baa462b684359d0b9f74ebbcb9739f297d30162722c0f0999cbc4f85cd86208",
+      "scope": "annotated singing",
+      "measuredBars": 60,
+      "omittedNonFourBeatBars": [
+        17
+      ],
+      "left": {
+        "attacks": 414,
+        "downbeatBars": 60,
+        "chordAttacks": 32,
+        "offbeatAttacks": 241,
+        "tieContinuationsExcluded": 26
+      },
+      "sections": {
+        "verse": {
+          "bars": 8,
+          "attacks": 42,
+          "notes": 48
+        },
+        "prechorus": {
+          "bars": 8,
+          "attacks": 54,
+          "notes": 61
+        },
+        "chorus": {
+          "bars": 9,
+          "attacks": 73,
+          "notes": 74
+        },
+        "verse_2": {
+          "bars": 7,
+          "attacks": 47,
+          "notes": 52
+        },
+        "prechorus_2": {
+          "bars": 8,
+          "attacks": 56,
+          "notes": 63
+        },
+        "chorus_2": {
+          "bars": 9,
+          "attacks": 77,
+          "notes": 84
+        },
+        "coda": {
+          "bars": 8,
+          "attacks": 55,
+          "notes": 59
+        },
+        "tag": {
+          "bars": 3,
+          "attacks": 10,
+          "notes": 10
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            2.0,
+            2.5,
+            3.0
+          ],
+          "count": 3,
+          "bars": [
+            68,
+            69,
+            74
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            2.0
+          ],
+          "count": 1,
+          "bars": [
+            9
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            2.0,
+            2.5,
+            3.0
+          ],
+          "count": 1,
+          "bars": [
+            10
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            0.75,
+            2.0,
+            2.5
+          ],
+          "count": 1,
+          "bars": [
+            11
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.0,
+            2.0,
+            2.5,
+            3.0,
+            3.25,
+            3.5
+          ],
+          "count": 1,
+          "bars": [
+            12
+          ]
+        }
+      ],
+      "representatives": {
+        "69": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "C",
+              "kind": "minor-seventh",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 0,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 0.25,
+              "dur": 0.5,
+              "pitch": "Ab4",
+              "midi": 68,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.333333,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.333333,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.333333,
+              "dur": 0.333333,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.666667,
+              "dur": 0.333333,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.75,
+              "pitch": "Bb4",
+              "midi": 70,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.75,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.75,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 3.0,
+              "dur": 0.25,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 3.0,
+              "dur": 0.25,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 3.25,
+              "dur": 0.75,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.25,
+              "dur": 0.75,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 1.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "C3",
+              "midi": 48,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Bb3",
+              "midi": 58,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "74": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "Eb",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            },
+            {
+              "at": 3.0,
+              "root": "Db",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "Eb5",
+              "midi": 75,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "Eb4",
+              "midi": 63,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.25,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.25,
+              "dur": 0.25,
+              "pitch": "Ab4",
+              "midi": 68,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.25,
+              "pitch": "Ab5",
+              "midi": 80,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.25,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 1.0,
+              "pitch": "Ab4",
+              "midi": 68,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 1.0,
+              "pitch": "F5",
+              "midi": 77,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "Ab4",
+              "midi": 68,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "Ab5",
+              "midi": 80,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 0.0,
+              "dur": 0.5,
+              "pitch": "G3",
+              "midi": 55,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.5,
+              "dur": 1.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "Db2",
+              "midi": 37,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "Db3",
+              "midi": 49,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 1.0,
+              "pitch": "Db3",
+              "midi": 49,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        }
+      }
+    },
+    {
+      "song": "Chúng Ta Không Thuộc Về Nhau",
+      "file": "D:\\PianoBrain\\video\\Ca_Phao\\Chung Ta Khong Thuoc Ve Nhau-Ca Phao.mxl",
+      "sha256": "8da91d81196ace31d7ccf39a4d8d7070295471259b20bcbc488101b00bb4dcfc",
+      "scope": "annotated singing",
+      "measuredBars": 40,
+      "omittedNonFourBeatBars": [],
+      "left": {
+        "attacks": 161,
+        "downbeatBars": 40,
+        "chordAttacks": 20,
+        "offbeatAttacks": 100,
+        "tieContinuationsExcluded": 31
+      },
+      "sections": {
+        "verse": {
+          "bars": 8,
+          "attacks": 31,
+          "notes": 34
+        },
+        "prechorus": {
+          "bars": 8,
+          "attacks": 39,
+          "notes": 49
+        },
+        "chorus": {
+          "bars": 8,
+          "attacks": 29,
+          "notes": 29
+        },
+        "prechorus_2": {
+          "bars": 7,
+          "attacks": 27,
+          "notes": 33
+        },
+        "chorus_2": {
+          "bars": 9,
+          "attacks": 35,
+          "notes": 43
+        }
+      },
+      "patterns": [
+        {
+          "onsets": [
+            0.0,
+            1.5,
+            2.5
+          ],
+          "count": 7,
+          "bars": [
+            15,
+            27,
+            31,
+            54,
+            59,
+            60,
+            63
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.5
+          ],
+          "count": 3,
+          "bars": [
+            11,
+            13,
+            28
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            0.5,
+            1.5,
+            2.5
+          ],
+          "count": 3,
+          "bars": [
+            29,
+            30,
+            58
+          ]
+        },
+        {
+          "onsets": [
+            0.0
+          ],
+          "count": 2,
+          "bars": [
+            9,
+            51
+          ]
+        },
+        {
+          "onsets": [
+            0.0,
+            1.0,
+            1.5,
+            2.5
+          ],
+          "count": 2,
+          "bars": [
+            22,
+            62
+          ]
+        }
+      ],
+      "representatives": {
+        "15": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "A",
+              "kind": "minor",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "start"
+              ]
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": [
+                "stop"
+              ]
+            },
+            {
+              "at": 1.5,
+              "dur": 0.25,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.25,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.75,
+              "dur": 0.25,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 1.5,
+              "pitch": "A2",
+              "midi": 45,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 1.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 1.0,
+              "pitch": "E3",
+              "midi": 52,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.5,
+              "pitch": "A3",
+              "midi": 57,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "27": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "A",
+              "kind": "minor",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "A4",
+              "midi": 69,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.25,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.25,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.25,
+              "dur": 0.5,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "A4",
+              "midi": 69,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "G4",
+              "midi": 67,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "A4",
+              "midi": 69,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 1.5,
+              "pitch": "A2",
+              "midi": 45,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 1.0,
+              "pitch": "A2",
+              "midi": 45,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.5,
+              "pitch": "E3",
+              "midi": 52,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        },
+        "59": {
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "A",
+              "kind": "minor",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "E4",
+              "midi": 64,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0,
+              "dur": 0.75,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "A4",
+              "midi": 69,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.75,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 0.5,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.0,
+              "dur": 0.25,
+              "pitch": "G5",
+              "midi": 79,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.25,
+              "dur": 0.5,
+              "pitch": "E5",
+              "midi": 76,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.75,
+              "dur": 0.25,
+              "pitch": "D5",
+              "midi": 74,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "C4",
+              "midi": 60,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.0,
+              "dur": 0.5,
+              "pitch": "C5",
+              "midi": 72,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 3.5,
+              "dur": 0.5,
+              "pitch": "A4",
+              "midi": 69,
+              "hand": 1,
+              "voice": "1",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 0.0,
+              "dur": 1.5,
+              "pitch": "A2",
+              "midi": 45,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 1.5,
+              "dur": 1.0,
+              "pitch": "A2",
+              "midi": 45,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.5,
+              "pitch": "D3",
+              "midi": 50,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            },
+            {
+              "at": 2.5,
+              "dur": 1.5,
+              "pitch": "E3",
+              "midi": 52,
+              "hand": 2,
+              "voice": "2",
+              "grace": false,
+              "articulations": [],
+              "arpeggiate": false,
+              "ties": []
+            }
+          ],
+          "length": 4.0
+        }
+      }
+    }
+  ]
+}

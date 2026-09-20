@@ -129,7 +129,7 @@ export function sectionCellBreaks(
   // CP cải tiến có câu hai ô A–B nhưng không có biến thể điệp khúc.
   // Sau đoạn dài số ô lẻ phải mở lại A, không lấy nửa B của chu kỳ toàn bài.
   const restart = hasChorusVariant(styleId) || hasTonicVariant(styleId)
-    || laBossaCP(canonical(styleId))
+    || laBossaCP(canonical(styleId)) || canonical(styleId) === 'ca-phao-ballad-signature'
   return restart ? sections?.map(section => section.startBeat) ?? [] : []
 }
 

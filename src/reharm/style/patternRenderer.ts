@@ -7,6 +7,7 @@ import {
   type TwoHandVoicing,
 } from '../voicingGenerator/handSplitVoicing'
 import type { HitVoice, RhythmCell, StylePattern, TimelineEvent } from './types'
+import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
 
 /**
  * Biến chuỗi thế bấm hai tay thành dòng thời gian các tiếng đàn.
@@ -570,7 +571,10 @@ function renderWithCell(
               hand === 'right' ? raw : voicing.right,
             )
           : { left: hand === 'left' ? [...raw] : [...voicing.left], right: [...voicing.right] }
-        let notes = hand === 'left' ? split.left : split.right
+        // Ballad CP giữ bè trong đã rút gọn cả khi dùng thế bấm màu CP.
+        // Các điệu cũ giữ nguyên cách phát hợp âm đã được nghe duyệt.
+        let notes = hand === 'left' ? split.left
+          : CP_BALLAD_IDS.includes(pattern.id) ? raw : split.right
 
         if (hand === 'left') {
           const index = indexAt(startBeat)
