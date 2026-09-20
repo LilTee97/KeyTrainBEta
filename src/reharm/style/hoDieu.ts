@@ -1,6 +1,7 @@
 import { ALL_STYLES, getStyle } from './styleLibrary'
 import type { StylePattern } from './types'
 import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
+import { CP_BALLAD_SONG_FAMILIES } from './styleLibrary/caPhaoBalladSongs'
 
 /**
  * HỌ ĐIỆU — một họ chứa nhiều KIỂU ĐỆM, và các kiểu ấy dùng lẫn nhau được.
@@ -72,7 +73,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   ballad: {
     ten: 'Ballad',
-    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad', ...CP_BALLAD_IDS],
+    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad', ...CP_BALLAD_IDS, ...CP_BALLAD_SONG_FAMILIES],
   },
   bossa: {
     ten: 'Bossa Nova',

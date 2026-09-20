@@ -1,5 +1,6 @@
 import { getStyle } from './styleLibrary'
 import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
+import { CP_BALLAD_SONG_IDS } from './styleLibrary/caPhaoBalladSongs'
 
 /**
  * Họ **ballad**: những điệu mà mấy thủ pháp đệm chậm mới có nghĩa.
@@ -29,6 +30,7 @@ export const BALLAD_FAMILY_IDS: readonly string[] = [
   'hai-pop-ballad-free-chorus',
   'ton-hung-ballad',
   ...CP_BALLAD_IDS,
+  ...CP_BALLAD_SONG_IDS,
 ]
 
 const BALLAD = new Set(BALLAD_FAMILY_IDS)

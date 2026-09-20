@@ -79,6 +79,7 @@ export function StylePicker({
                       setMenu({ id: entry.styles[0].id, x: e.clientX, y: e.clientY })
                     }}
                     title={entry.styles[0].note}
+                    aria-pressed={active}
                     className={`cursor-context-menu rounded-lg border px-3 py-1.5 text-xs ${
                       active
                         ? ballad
@@ -138,7 +139,10 @@ export function StylePicker({
                 setMenu({ id: style.id, x: e.clientX, y: e.clientY })
               }}
               title={style.note}
-              className="cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] border-line bg-white/3 text-dim hover:bg-white/8"
+              aria-pressed={style.id === selectedId}
+              className={`cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] ${style.id === selectedId
+                ? isBalladStyle(style.id) ? 'border-teal-key bg-teal-key/20 text-teal-key' : 'border-amber-key bg-amber-key/15 text-amber-key'
+                : 'border-line bg-white/3 text-dim hover:bg-white/8'}`}
             >
               {style.name}
             </button>

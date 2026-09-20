@@ -1,5 +1,11 @@
 # Ballad CP: tiết tấu từ sheet và bản tổng hợp
 
+> **Đã thay hướng làm ngày 20/9/2026 theo phản hồi người dùng.** Nội dung dưới
+> đây lưu lịch sử lần dựng đầu, không còn là đặc tả triển khai mới. Không khôi
+> phục các nút người dùng đã ẩn, không tạo thêm nút tổng hợp "nét CP".
+> Phân tích hiện hành: [Có Em Chờ và Ngày mai em đi](CA-PHAO-BALLAD-SONGS.md).
+> Chỉ thêm hai họ nút theo bài, mỗi họ có phiên/điệp; đối chiếu chung chỉ là báo cáo.
+
 Ngày phân tích: 19/9/2026; hoàn tất kiểm tra 20/9/2026. Trạng thái: **đã đo ký âm, đã biên soạn để thử;
 chưa được người dùng nghe duyệt**. Mốc duyệt solo CP ngày 19/9 không áp dụng
 cho các điệu đệm mới này.

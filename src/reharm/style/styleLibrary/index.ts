@@ -4,6 +4,7 @@ import { HAI_STYLES } from './haiStyles'
 import { TON_HUNG_STYLES } from './tonHungStyles'
 import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from './caPhaoBossa'
 import { CA_PHAO_BALLAD } from './caPhaoBallad'
+import { CP_BALLAD_SONG_STYLES } from './caPhaoBalladSongs'
 import testerStylesJson from './testerStyles.json'
 
 const DELETED_KEY = 'keytrain-deleted-styles'
@@ -523,6 +524,7 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   CA_PHAO_BOSSA,
   CA_PHAO_BOSSA_IMPROVED,
   ...CA_PHAO_BALLAD,
+  ...CP_BALLAD_SONG_STYLES,
   ...BOLERO_STYLES,
   ...TESTER_STYLES,
 ]

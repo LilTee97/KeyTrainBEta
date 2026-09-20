@@ -18,6 +18,8 @@ import type { SectionKind } from './songStructure'
  * có bản điệp khúc mà tự ghép bừa một điệu khác vào là đổi bài của người ta.
  */
 export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
+  'ca-phao-ballad-co-em-cho': 'ca-phao-ballad-co-em-cho-chorus',
+  'ca-phao-ballad-ngay-mai-em-di': 'ca-phao-ballad-ngay-mai-em-di-chorus',
   'hai-pop-ballad': 'hai-pop-ballad-chorus',
   'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
   'hai-slow-rock': 'hai-slow-rock-chorus',
