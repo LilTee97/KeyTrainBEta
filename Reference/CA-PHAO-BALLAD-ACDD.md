@@ -68,7 +68,12 @@ ID điệp của bài cũ vẫn dùng được. Không phục hồi các nút ch
 
 ## Chuyển Đoạn B9sus4
 
-Trước đây nền bị mute theo cấu hình câu chạy chuyển đoạn, kể cả khi `vocal='full'`
+**Cập nhật tiếp sau phản hồi:** bản chỉ giữ nền dưới đây chưa đủ yêu cầu. Câu chuyển
+đã được soạn riêng theo ACDD16 và đối chiếu 9 sheet; chạy ở cuối cửa, không dùng khoảng
+im 2 phách cũ. Có thêm phách dẫn bass giữa hợp âm. Xem
+[Câu nối ballad CP](CA-PHAO-BALLAD-TRANSITIONS.md) để tái tạo trạng thái hiện tại.
+
+Ở bản lỗi đầu, nền bị mute theo cấu hình câu chạy chuyển đoạn, kể cả khi `vocal='full'`
 khiến câu chạy trả mảng rỗng. Kết quả có thể là cả ô không có tiếng.
 
 Với ACDD, không tạo cửa sổ mute nền chỉ vì có mốc chuyển đoạn. Fill tự sinh chỉ được

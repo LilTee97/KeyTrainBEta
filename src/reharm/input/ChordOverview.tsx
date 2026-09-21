@@ -244,6 +244,7 @@ interface ChordOverviewProps {
   slashHintAt?: (chordIndex: number) => string | null
   onToggleSlash?: (chordIndex: number) => void
   transitionAt?: (chordIndex: number) => TransitionOption | null
+  cpBalladTransition?: boolean
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   onRemoveChord?: (index: number) => void
@@ -293,6 +294,7 @@ export function ChordOverview({
   slashHintAt,
   onToggleSlash,
   transitionAt,
+  cpBalladTransition,
   onToggleTransition,
   onSetTransition,
   onRemoveChord,
@@ -507,6 +509,7 @@ export function ChordOverview({
               : undefined
           }
           transition={transitionAt?.(menu.chordIndex) ?? null}
+          cpBalladTransition={cpBalladTransition}
           canMarkTransition={onToggleTransition !== undefined}
           onToggleTransition={
             onToggleTransition

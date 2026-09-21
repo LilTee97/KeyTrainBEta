@@ -142,6 +142,7 @@ interface SongSheetViewProps {
    * người hát ngân cho hết câu, và ô ấy chạy ngón thay vì quạt hợp âm.
    */
   transitionAt?: (chordIndex: number) => TransitionOption | null
+  cpBalladTransition?: boolean
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   slashHintAt?: (chordIndex: number) => string | null
@@ -230,6 +231,7 @@ export function SongSheetView({
   heldBusyAt,
   onToggleHeldMute,
   transitionAt,
+  cpBalladTransition,
   onToggleTransition,
   onSetTransition,
   slashHintAt,
@@ -498,6 +500,7 @@ export function SongSheetView({
               : undefined
           }
           transition={transitionAt?.(menu.chordIndex) ?? null}
+          cpBalladTransition={cpBalladTransition}
           canMarkTransition={onToggleTransition !== undefined}
           onToggleTransition={
             onToggleTransition
@@ -609,6 +612,7 @@ export function ChordContextMenu({
   slashHint,
   onToggleSlash,
   transition,
+  cpBalladTransition,
   canMarkTransition,
   onToggleTransition,
   onSetTransition,
@@ -645,6 +649,7 @@ export function ChordContextMenu({
   onToggleSlash?: () => void
   /** Đang là mốc chuyển đoạn không, và chơi ô nối thế nào. */
   transition: TransitionOption | null
+  cpBalladTransition?: boolean
   canMarkTransition: boolean
   onToggleTransition?: () => void
   onSetTransition?: (run: TransitionOption) => void
@@ -778,6 +783,14 @@ export function ChordContextMenu({
           */}
           {transition && onSetTransition && (
             <>
+              {cpBalladTransition ? (
+                <label className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-cream">
+                  <input type="checkbox" checked={transition.octaves > 0}
+                    onChange={event => onSetTransition({ ...transition, octaves: event.target.checked ? 2 : 0 })}
+                    className="accent-amber-key" />
+                  Câu chuyển đoạn CP
+                </label>
+              ) : <>
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Chạy mấy quãng tám ở ô nối
               </p>
@@ -806,9 +819,9 @@ export function ChordContextMenu({
                   )
                 })}
               </div>
-
+              </>}
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
-                Đệm hợp âm rồi mới chạy ngón
+                {cpBalladTransition ? 'Đệm ít nhất trước câu chạy' : 'Đệm hợp âm rồi mới chạy ngón'}
               </p>
               <div className="flex gap-1 px-2.5 py-1">
                 {(
@@ -835,6 +848,7 @@ export function ChordContextMenu({
                 ))}
               </div>
 
+              {!cpBalladTransition && <>
               <p className="px-2.5 pt-1 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
                 Im mấy phách cuối ô nối
               </p>
@@ -854,6 +868,7 @@ export function ChordContextMenu({
                   </button>
                 ))}
               </div>
+              </>}
             </>
           )}
         </>

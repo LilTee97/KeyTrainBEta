@@ -141,6 +141,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
+import { acddConnections } from './style/acddConnections'
 import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
@@ -1745,13 +1746,16 @@ export function ReharmHome() {
       ...splitStarts,
     ]
 
-    const played = renderPattern(twoHands, style, {
+    const rendered = renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach,
       muteWindows: laBossaCP(style) || cpLick ? [] : muteWindows,
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
+    const played = style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn
+      ? acddConnections(rendered, withPassing, { beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows })
+      : rendered
 
     if (!walkingOn) return played
 
@@ -1768,7 +1772,7 @@ export function ReharmHome() {
     if (!walk) return played
 
     return [...played.filter((event) => event.hand !== 'left'), ...walk.events]
-  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key?.tonic])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions])
 
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
@@ -2521,7 +2525,7 @@ export function ReharmHome() {
       const line = soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
-          sectionEnds: transitions,
+          sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitions,
           beatsPerChord: chordBeats,
           // Điệu nào khai chỗ đứng của câu lót thì theo nó; không khai thì để
           // `generateFillLine` tự chọn như cũ.
@@ -2539,7 +2543,8 @@ export function ReharmHome() {
           direction: soloDirection,
           density: fillDensity,
           key: reharm.key,
-          skipFills: mutedFills,
+          skipFills: style.family === 'ca-phao-ballad-acdd' && !walkingOn
+            ? new Set([...mutedFills, ...transitions.keys()]) : mutedFills,
           extraFills: new Set(
             [...extraFills].filter((index) => !transitions.has(index)),
           ),
@@ -2569,12 +2574,13 @@ export function ReharmHome() {
         }),
       )
       // The ACDD arpeggio already crosses hands; fills may use gaps, not move its RH to LH.
-      return style.family === 'ca-phao-ballad-acdd'
+      return style.family === 'ca-phao-ballad-acdd' && !walkingOn
         ? bossaFillsInGaps(line, accompaniment) : line
     },
     [
       style,
       accompaniment,
+      walkingOn,
       cpLick,
       cpPlan,
       withPassing,
@@ -3678,6 +3684,7 @@ export function ReharmHome() {
       slashHintAt,
       onToggleSlash: toggleSlash,
       transitionAt: (chordIndex) => transitions.get(chordIndex) ?? null,
+      cpBalladTransition: style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn,
       onToggleTransition: markTransition,
       onSetTransition: (chordIndex, run) =>
         setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
@@ -3709,6 +3716,8 @@ export function ReharmHome() {
     })
   }, [
     setPracticeGrid,
+    style.family,
+    walkingOn,
     withPassing,
     chordBeats,
     sequence.chords.length,
@@ -4269,6 +4278,7 @@ export function ReharmHome() {
             })
           }}
           transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
+          cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn}
           onToggleTransition={markTransition}
           onSetTransition={(chordIndex, run) =>
             setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
@@ -4784,6 +4794,7 @@ export function ReharmHome() {
               )
             }
             transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
+            cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn}
             onToggleTransition={markTransition}
             onSetTransition={(chordIndex, run) =>
               setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))

@@ -132,6 +132,7 @@ export function PracticeHome() {
               interlude={song.interlude}
               leadOut={song.leadOut}
               transitionAt={grid?.transitionAt}
+              cpBalladTransition={grid?.cpBalladTransition}
               onToggleTransition={grid?.onToggleTransition}
               onSetTransition={grid?.onSetTransition}
               onRemoveChord={grid?.onRemoveChord}
