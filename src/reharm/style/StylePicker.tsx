@@ -6,6 +6,7 @@ import {
   restoreHiddenStyles,
 } from './styleLibrary'
 import { isBalladStyle } from './balladFamily'
+import { resolveStyleForSection } from './sectionStyles'
 import type { StylePattern } from './types'
 import { useEffect, useRef, useState } from 'react'
 
@@ -30,9 +31,11 @@ export function StylePicker({
   const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const styles = getVisibleStyles()
+  // Section variants remain playable but are not independent picker choices.
+  const styles = getVisibleStyles().filter(style => resolveStyleForSection(style.id, 'verse') === style.id)
+  const selectedBaseId = resolveStyleForSection(selectedId, 'verse')
   const daAn = hiddenBuiltIns()
-  const selected = styles.find((style) => style.id === selectedId) ?? styles[0]
+  const selected = styles.find((style) => style.id === selectedBaseId) ?? styles[0]
   const meters = [
     ...new Set(styles.map((style) => style.timeSignature)),
   ].sort((a, b) => meterRank(a) - meterRank(b))
@@ -66,7 +69,7 @@ export function StylePicker({
             </p>
             <div className="flex flex-wrap gap-2">
               {families.map((entry) => {
-                const active = entry.styles.some((style) => style.id === selectedId)
+                const active = entry.styles.some((style) => style.id === selectedBaseId)
                 const ballad = entry.styles.some((style) => isBalladStyle(style.id))
                 return (
                   <button
@@ -139,8 +142,8 @@ export function StylePicker({
                 setMenu({ id: style.id, x: e.clientX, y: e.clientY })
               }}
               title={style.note}
-              aria-pressed={style.id === selectedId}
-              className={`cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] ${style.id === selectedId
+              aria-pressed={style.id === selectedBaseId}
+              className={`cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] ${style.id === selectedBaseId
                 ? isBalladStyle(style.id) ? 'border-teal-key bg-teal-key/20 text-teal-key' : 'border-amber-key bg-amber-key/15 text-amber-key'
                 : 'border-line bg-white/3 text-dim hover:bg-white/8'}`}
             >

@@ -55,6 +55,8 @@ export interface RhythmHit {
       toneIndex: number
       semitones?: number
       fromRoot?: boolean
+      /** Written color when this degree is absent from the input chord. */
+      fallbackInterval?: number
     }[]
     /**
      * Đánh hợp âm kế tiếp sớm, bỏ cắt ngân tại ranh giới hợp âm.
@@ -155,6 +157,8 @@ export interface StylePattern {
    * đang chơi nốt gốc hai lần sẽ hoá thành nốt gốc rồi bậc 8.
    */
   leftHandTop?: number
+  /** Fixed RH register for a scored two-hand arpeggio; avoids nearest-octave folding. */
+  rightHandRegister?: { rootFloor: number; low: number; high: number }
 
   /**
    * Trần số cú gõ tay trái ở đoạn solo, nếu điệu này cần nới.

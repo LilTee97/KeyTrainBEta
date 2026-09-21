@@ -133,6 +133,7 @@ function degreeTone(
   near?: MidiNote,
   soundingNotes: readonly MidiNote[] = notes,
   register?: { low: number; high: number },
+  fallbackInterval?: number,
 ): MidiNote {
   const floor = notes[0]
   const sounding = new Set(soundingNotes.map((note) => ((note % 12) + 12) % 12))
@@ -146,7 +147,8 @@ function degreeTone(
 
   if (toneIndex > 0) {
     let found: number | null = null
-    for (const group of DEGREE_CHAIN[toneIndex] ?? []) {
+    const chain = DEGREE_CHAIN[toneIndex] ?? []
+    for (const group of fallbackInterval === undefined ? chain : chain.slice(0, 1)) {
       for (const step of group) {
         if (sounding.has((rootPc + step) % 12)) {
           found = (rootPc + step) % 12
@@ -155,7 +157,7 @@ function degreeTone(
       }
       if (found !== null) break
     }
-    const ideal = DEGREE_CHAIN[toneIndex]?.[0]?.[0] ?? 0
+    const ideal = fallbackInterval ?? DEGREE_CHAIN[toneIndex]?.[0]?.[0] ?? 0
     pitchClass = found ?? (rootPc + ideal) % 12
   }
 
@@ -261,6 +263,7 @@ function notesForVoice(
     toneIndex: number
     semitones?: number
     fromRoot?: boolean
+    fallbackInterval?: number
   }[],
   rootPc?: number,
   near?: MidiNote,
@@ -281,6 +284,7 @@ function notesForVoice(
               here,
               soundingNotes ?? notes,
               register,
+              spec.fallbackInterval,
             )
           : pickTone(notes, spec.toneIndex, spec.semitones ?? 0)
       here = note
@@ -522,7 +526,9 @@ function renderWithCell(
           voicing.harmonicNotes ?? [...voicing.left, ...voicing.right],
           hand === 'left'
             ? { low: LEFT_ARPEGGIO_LOW, high: pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH }
-            : undefined,
+            : pattern.rightHandRegister
+              ? { low: pattern.rightHandRegister.rootFloor, high: pattern.rightHandRegister.high }
+              : undefined,
         )
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
@@ -612,7 +618,9 @@ function renderWithCell(
   return [
     ...events,
     ...missingChordHits(events, voicings, starts, releaseRatio).filter(
-      (event) => !inMuteWindow(event.startBeat, muteWindows),
+      (event) => !inMuteWindow(event.startBeat, muteWindows)
+        // ACDD deliberately omits melody-only RH bars; keep those rests.
+        && !(pattern.family === 'ca-phao-ballad-acdd' && event.hand === 'right'),
     ),
   ]
 }
@@ -812,9 +820,16 @@ export function renderPattern(
   return holdUntilStruckAgain(
     clipToChords(muted, starts).map((event) => ({
       ...event,
-      notes: event.notes.map((note) =>
-        clampToHandRegister(note, event.hand, leftTop),
-      ),
+      notes: event.notes.map((note) => {
+        if (event.hand === 'right' && pattern.rightHandRegister) {
+          const { low, high } = pattern.rightHandRegister
+          let pitch = note
+          while (pitch > high) pitch -= 12
+          while (pitch < low) pitch += 12
+          return pitch as MidiNote
+        }
+        return clampToHandRegister(note, event.hand, leftTop)
+      }),
     })),
   ).sort((a, b) => a.startBeat - b.startBeat)
 }

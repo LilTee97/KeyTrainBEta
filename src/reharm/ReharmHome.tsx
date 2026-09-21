@@ -148,7 +148,9 @@ import {
   hasTonicVariant,
   resolveStyleForChord,
   resolveStyleForSection,
+  getSectionPlaybackStyle,
   sectionCellBreaks,
+  transitionMuteWindows,
 } from './style/sectionStyles'
 import { kieuChoSolo, laBoleroTuan, thienVeCuaHo } from './style/hoDieu'
 import {
@@ -923,7 +925,7 @@ export function ReharmHome() {
    * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
-  const style = getStyle(styleId) ?? BALLAD
+  const style = getStyle(resolveStyleForSection(styleId, 'verse')) ?? BALLAD
 
   /*
     Kiểu dùng cho CÂU SOLO — dạo đầu, giang tấu, kết bài.
@@ -1285,15 +1287,7 @@ export function ReharmHome() {
    */
   const muteWindows = useMemo(() => {
     const spans = mainChordSpans(withPassing, chordBeats)
-    const windows: { from: number; to: number }[] = []
-    for (const [main, run] of transitions) {
-      if (run.octaves <= 0) continue
-      const span = spans[main]
-      if (!span) continue
-      const from = span.start + (run.delayBeats ?? 0)
-      const to = span.start + span.beats
-      if (from < to) windows.push({ from, to })
-    }
+    const windows = transitionMuteWindows(style.id, spans, transitions)
     for (const [key, rest] of Object.entries(fillRests)) {
       if (rest <= 0) continue
       const main = Number(key)
@@ -1306,7 +1300,7 @@ export function ReharmHome() {
       }
     }
     return windows
-  }, [transitions, withPassing, chordBeats, fillRests])
+  }, [transitions, withPassing, chordBeats, fillRests, style.id])
 
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
@@ -1723,7 +1717,7 @@ export function ReharmHome() {
         goc !== undefined && goc !== null && chord
           ? resolveStyleForChord(theoDoan, chord.root, goc)
           : theoDoan
-      return getStyle(chon)?.cell ?? style.cell
+      return getSectionPlaybackStyle(chon)?.cell ?? style.cell
     }
 
     const swaps =
@@ -2574,7 +2568,9 @@ export function ReharmHome() {
             : undefined,
         }),
       )
-      return laBossaCP(style) ? bossaFillsInGaps(line, accompaniment) : line
+      // The ACDD arpeggio already crosses hands; fills may use gaps, not move its RH to LH.
+      return style.family === 'ca-phao-ballad-acdd'
+        ? bossaFillsInGaps(line, accompaniment) : line
     },
     [
       style,
@@ -2996,7 +2992,7 @@ export function ReharmHome() {
         khúc mà lùi về mẫu phiên khúc thì nghe như tụt lực ngay nốt cuối.
       */
       const closingStyle =
-        getStyle(
+        getSectionPlaybackStyle(
           resolveStyleForSection(
             style.id,
             source.kind === 'chorus' ? 'chorus' : 'verse',
@@ -3057,7 +3053,7 @@ export function ReharmHome() {
         khúc mà lùi về mẫu phiên khúc thì nghe như tụt lực ngay nốt cuối.
       */
       const closingStyle =
-        getStyle(
+        getSectionPlaybackStyle(
           resolveStyleForSection(
             style.id,
             source.kind === 'chorus' ? 'chorus' : 'verse',

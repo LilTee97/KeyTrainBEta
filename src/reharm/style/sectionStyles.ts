@@ -1,6 +1,7 @@
 import { laBossaCP } from './styleLibrary/caPhaoBossa'
-import { getStyle } from './styleLibrary'
+import { ALL_STYLES, getStyle } from './styleLibrary'
 import type { SectionKind } from './songStructure'
+import type { TransitionRun } from '../fillSoloGenerator/soloGenerator'
 
 /**
  * Điệu nào có **bản riêng cho đoạn điệp khúc**.
@@ -18,6 +19,7 @@ import type { SectionKind } from './songStructure'
  * có bản điệp khúc mà tự ghép bừa một điệu khác vào là đổi bài của người ta.
  */
 export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
+  'ca-phao-ballad-acdd': 'ca-phao-ballad-acdd-chorus',
   'ca-phao-ballad-co-em-cho': 'ca-phao-ballad-co-em-cho-chorus',
   'ca-phao-ballad-ngay-mai-em-di': 'ca-phao-ballad-ngay-mai-em-di-chorus',
   'hai-pop-ballad': 'hai-pop-ballad-chorus',
@@ -112,6 +114,12 @@ const VERSE_OF: Readonly<Record<string, string>> = Object.fromEntries(
   Object.entries(CHORUS_PAIRS).map(([verse, chorus]) => [chorus, verse]),
 )
 
+/** Hidden section buttons still supply the internal cell of a visible style. */
+export function getSectionPlaybackStyle(styleId: string) {
+  return getStyle(styleId) ?? (styleId in VERSE_OF
+    ? ALL_STYLES.find(style => style.id === styleId) : undefined)
+}
+
 /** Tên chính thức của điệu: alias (`ballad`, `hai-pop-ballad-1`…) quy về một mối. */
 function canonical(styleId: string): string {
   return getStyle(styleId)?.id ?? styleId
@@ -121,6 +129,24 @@ function canonical(styleId: string): string {
 export function hasChorusVariant(styleId: string): boolean {
   const id = canonical(styleId)
   return id in CHORUS_PAIRS || id in VERSE_OF
+}
+
+/** ACDD keeps its sung backing at transitions; an absent run must not silence the chord. */
+export function transitionMuteWindows(
+  styleId: string,
+  spans: readonly { start: number; beats: number }[],
+  transitions: ReadonlyMap<number, TransitionRun>,
+): { from: number; to: number }[] {
+  if (resolveStyleForSection(styleId, 'verse') === 'ca-phao-ballad-acdd') return []
+  const windows: { from: number; to: number }[] = []
+  for (const [main, run] of transitions) {
+    const span = spans[main]
+    if (!span || run.octaves <= 0) continue
+    const from = span.start + (run.delayBeats ?? 0)
+    const to = span.start + span.beats
+    if (from < to) windows.push({ from, to })
+  }
+  return windows
 }
 
 /** Các đầu đoạn cần mở lại mẫu đệm; độc lập với việc chọn biến thể điệu. */
@@ -138,9 +164,8 @@ export function sectionCellBreaks(
 /**
  * Điệu nên dùng cho một đoạn.
  *
- * Nhận cả bản phiên khúc lẫn bản điệp khúc làm đầu vào, nên người dùng bấm bản
- * nào trên bảng chọn cũng ra kết quả như nhau — bấm "điệp khúc" rồi nghe cả bài
- * thì phiên khúc vẫn tự lùi về bản phiên khúc.
+ * Nhận cả ID phiên lẫn ID điệp của bài lưu cũ. Bảng chọn chỉ bày điệu chính;
+ * mẫu điệp là biến thể nội bộ, rời điệp thì tự quay về phiên.
  *
  * Đoạn giang tấu MẶC ĐỊNH tính như phiên khúc: nó là chỗ nghỉ giữa hai lần cao
  * trào, chứ không phải cao trào. Điệu nào muốn ngược lại thì khai báo trong

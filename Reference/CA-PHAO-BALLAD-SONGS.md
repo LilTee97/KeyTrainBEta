@@ -140,10 +140,12 @@ Không tạo nút tiết tấu cho nhóm này.
 | Ballad Ngày mai em đi | ô 21–22 | ô 35–36 | mỗi mẫu 8 phách |
 
 Giữ đầy đủ onset/trường độ attack LH trong các cặp liên tiếp, không ghép ô
-phiên với ô điệp thành một loop "chung". Nhấn nút tên bài mở lựa chọn phiên/điệp.
+phiên với ô điệp thành một loop "chung". Mỗi bài chỉ có một nút tên bài;
+không còn lựa chọn phiên/điệp riêng (cập nhật 21/9/2026).
 Khi bài đã gắn đoạn, cơ chế hiện có tự chuyển đúng biến thể và mở lại đầu
 câu ở ranh giới đoạn, kể cả đoạn trước dài số ô lẻ. Chưa có nhãn đoạn thì
-chơi mẫu được chọn. Không thay nhãn/tiết tấu của bài khác hay tự chia đoạn.
+chơi mẫu phiên. Không thay nhãn/tiết tấu của bài khác hay tự chia đoạn.
+Nút ACDD mới được phân tích riêng trong [báo cáo ACDD](CA-PHAO-BALLAD-ACDD.md).
 
 ### Rút gọn RH và điều chỉnh cao độ
 
