@@ -69,7 +69,16 @@ bằng chứng rằng mọi mốc phải chạy lên hai quãng tám hoặc ph�
   trên hợp âm cuối thực sự và chỉ khi đủ cửa.
 
 Tỷ lệ/mẫu áp dụng này là cách phối theo yêu cầu người dùng, không khẳng định mọi sheet
-CP dùng chung một run. Chưa thêm nút hay đổi tiết tấu Có Em Chờ/Ngày mai em đi.
+CP dùng chung một run. Không thêm nút; không đổi tiết tấu Ngày mai em đi.
+
+### Bổ sung Có Em Chờ theo yêu cầu tiếp theo
+
+- Dùng chung `balladChordLeads` trong `src/reharm/style/cpBalladConnections.ts` cho
+  cả phiên và điệp Có Em Chờ. Chỉ thay LH ở phách cuối, giữ RH và khung trước đó.
+- Các điều kiện tránh ô ngắn, bass lặp, câu chạy sẵn, hợp âm lướt và khoảng nghỉ
+  giống ACDD. Mốc chuyển đoạn Có Em Chờ vẫn theo cơ chế cũ, không chép run ACDD sang.
+- Fill tùy ý chỉ được chen vào khe trống của tay chơi để không xóa/phủ câu dẫn.
+  CP Lick và walking vẫn là chế độ riêng. Chưa nghe duyệt phần bổ sung này.
 
 ## Tái Tạo
 

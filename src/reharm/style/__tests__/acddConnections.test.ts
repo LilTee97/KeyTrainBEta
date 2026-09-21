@@ -7,7 +7,7 @@ import evidence from '../../../../Reference/CA-PHAO-BALLAD-TRANSITIONS.json'
 import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { generateFillLine } from '../../fillSoloGenerator/soloGenerator'
-import { acddConnections, acddRunPitches } from '../acddConnections'
+import { acddConnections, acddRunPitches, balladChordLeads } from '../cpBalladConnections'
 import { renderPattern } from '../patternRenderer'
 import { getStyle } from '../styleLibrary'
 import { bossaFillsInGaps } from '../styleLibrary/caPhaoBossa'
@@ -159,5 +159,49 @@ describe('ACDD connections from CP boundary evidence', () => {
         expect(out.every(e => e.durationBeats > 0 && e.startBeat + e.durationBeats <= (e.startBeat < 4 ? 4 : 8))).toBe(true)
       }
     }
+  })
+})
+
+describe('Co Em Cho one-beat chord leads', () => {
+  it('links the pictured progression in both sections, preserving RH, earlier beats and slash bass', () => {
+    const chords = parse('Gadd2 D9/F# Em(add9) D9 Cadd2 Bm7 Em(add9) Am9')
+      .map((c, i) => ({ ...c, beats: i === 5 || i === 6 ? 2 : 4 }))
+    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-co-em-cho-chorus']) {
+      const songStyle = getStyle(id)!
+      const plain = renderPattern(voiceLeadTwoHands(chords), songStyle, { beatsEach: chords.map(c => c.beats) })
+      const out = balladChordLeads(plain, chords, {
+        beatsPerChord: 4, transitions: new Map(), key: { tonic: 7, scale: 'major' },
+      })
+      expect(out.filter(e => e.hand === 'right')).toEqual(plain.filter(e => e.hand === 'right'))
+      for (const start of [3, 7, 11, 15, 19]) {
+        const lead = out.filter(e => e.hand === 'left' && e.startBeat >= start && e.startBeat < start + 1)
+        expect(lead.map(e => e.startBeat - start)).toEqual([0, .5, .75])
+        expect(lead.map(e => e.durationBeats)).toEqual([.5, .25, .25])
+        expect(lead.at(-1)!.startBeat + lead.at(-1)!.durationBeats).toBe(start + 1)
+        expect(out.filter(e => e.startBeat >= start - 3 && e.startBeat < start)
+          .map(e => [e.startBeat, e.notes, e.velocity]))
+          .toEqual(plain.filter(e => e.startBeat >= start - 3 && e.startBeat < start)
+            .map(e => [e.startBeat, e.notes, e.velocity]))
+      }
+      expect(out.filter(e => e.hand === 'left' && e.startBeat >= 3 && e.startBeat < 4).map(e => e.notes[0]))
+        .toEqual([47, 50, 52])
+      expect(out.filter(e => e.startBeat >= 20)).toEqual(plain.filter(e => e.startBeat >= 20))
+      expect(Math.max(...out.map(e => e.startBeat + e.durationBeats)))
+        .toBe(Math.max(...plain.map(e => e.startBeat + e.durationBeats)))
+    }
+  })
+
+  it('keeps existing section transitions and rejects an optional fill colliding with the lead', () => {
+    const chords = parse('Gadd2 D9/F# B9sus4 Em(add9)')
+    const songStyle = getStyle('ca-phao-ballad-co-em-cho')!
+    const muteWindows = [{ from: 8, to: 12 }]
+    const plain = renderPattern(voiceLeadTwoHands(chords), songStyle, { muteWindows })
+    const out = balladChordLeads(plain, chords, {
+      beatsPerChord: 4, transitions: new Map([[2, { octaves: 2, restBeats: 2 }]]), muteWindows,
+    })
+    expect(out.filter(e => e.startBeat >= 8)).toEqual(plain.filter(e => e.startBeat >= 8))
+    const note = { hand: 'left' as const, notes: [47], durationBeats: .25, velocity: 50 }
+    const fills = [{ ...note, startBeat: 3.75 }, { ...note, startBeat: 9 }]
+    expect(bossaFillsInGaps(fills, out)).toEqual([fills[1]])
   })
 })

@@ -47,7 +47,7 @@ export function acddConnections(
     muteWindows?: readonly { from: number; to: number }[]
   },
 ): TimelineEvent[] {
-  const { beatsPerChord, transitions, key, muteWindows = [] } = options
+  const { beatsPerChord, transitions } = options
   const starts = chordStarts(chords, beatsPerChord)
   let result = [...backing]
   let mainIndex = -1
@@ -84,6 +84,30 @@ export function acddConnections(
       })
       continue
     }
+  }
+  return balladChordLeads(result, chords, options)
+}
+
+/** Shared one-beat links for ACDD and Co Em Cho; section runs keep priority. */
+export function balladChordLeads(
+  backing: readonly TimelineEvent[],
+  chords: readonly ParsedChord[],
+  options: {
+    beatsPerChord: number
+    transitions: ReadonlyMap<number, TransitionRun>
+    key?: SongKey | null
+    muteWindows?: readonly { from: number; to: number }[]
+  },
+): TimelineEvent[] {
+  const { beatsPerChord, transitions, key, muteWindows = [] } = options
+  const starts = chordStarts(chords, beatsPerChord)
+  let result = [...backing]
+  let mainIndex = -1
+  for (let index = 0; index < chords.length - 1; index++) {
+    const chord = chords[index], next = chords[index + 1]
+    if (!chord.passing) mainIndex++
+    if (next.passing || transitions.has(mainIndex)) continue
+    const start = starts[index], end = starts[index + 1]
     if (chord.passing || end - start < 4 || (chord.bass ?? chord.root) === (next.bass ?? next.root)) continue
     const from = end - 1
     if (muteWindows.some(w => w.from < end && w.to > from)) continue

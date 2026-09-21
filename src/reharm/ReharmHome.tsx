@@ -141,7 +141,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
-import { acddConnections } from './style/acddConnections'
+import { acddConnections, balladChordLeads } from './style/cpBalladConnections'
 import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
@@ -1755,6 +1755,8 @@ export function ReharmHome() {
     })
     const played = style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn
       ? acddConnections(rendered, withPassing, { beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows })
+      : style.family === 'ca-phao-ballad-co-em-cho' && !cpLick && !walkingOn
+        ? balladChordLeads(rendered, withPassing, { beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows })
       : rendered
 
     if (!walkingOn) return played
@@ -2573,8 +2575,8 @@ export function ReharmHome() {
             : undefined,
         }),
       )
-      // The ACDD arpeggio already crosses hands; fills may use gaps, not move its RH to LH.
-      return style.family === 'ca-phao-ballad-acdd' && !walkingOn
+      // Preserve the CP backing and its bass links; optional fills use free space.
+      return (style.family === 'ca-phao-ballad-acdd' || style.family === 'ca-phao-ballad-co-em-cho') && !walkingOn
         ? bossaFillsInGaps(line, accompaniment) : line
     },
     [
