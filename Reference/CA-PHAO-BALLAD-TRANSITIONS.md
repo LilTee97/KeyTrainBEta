@@ -91,3 +91,24 @@ Kiểm: nguồn ACDD16, B9sus4 không thêm D#, không bị fill lọc mất, đ
 nghỉ 2 phách lưu cũ không còn tạo im cuối, hợp âm giữ 8 phách, delay/tắt run, 12 giọng,
 slash bass, ô ngắn, hợp âm lướt, nốt ngân không chồng lên LH dẫn, menu CP và menu cũ.
 Sau khi nghe chốt, cần ghi quyết định vào `Reference/SO-TAY.md`; chưa tự sửa Sổ tay.
+
+## 22/9/2026: Giữ Phách Dẫn Khi Bật Màu CP Và Solo Full
+
+- Lỗi: màu Cà Pháo bật `cpLick`, nhưng phần thêm phách dẫn Có Em Chờ/ACDD lại
+  bị chặn bởi `!cpLick`. Solo full không trực tiếp gây lỗi; phối hợp các lựa chọn
+  khiến đường phát CP dùng khung chưa có câu dẫn.
+- `planCpBalladBacking` dựng câu dẫn trước khi lên kế hoạch lick, không phụ thuộc
+  màu hợp âm, solo full hay kiểu soạn/mô phỏng. ACDD giữ cả câu chuyển riêng.
+- Các cửa nối được trả về bằng `protectedWindows`; `planCpLicks` phải bỏ qua
+  mọi câu thường hoặc câu chuyển nâng cao có cửa thay đệm giao với chúng.
+  Không sửa nốt/tần suất CP Lick ở ngoài cửa bảo vệ; không thay thuật toán Bossa.
+- `cpBalladChordLeads: true` nằm trong cấu hình chung của sheet ballad CP:
+  Có Em Chờ, ACDD, Ngày mai em đi và các bài mới thêm qua cùng cấu hình đều
+  giữ phách dẫn. Mẫu đã có bass chạy cuối ô được giữ, không chồng thêm mẫu mới.
+  Điệu khai báo ở nơi khác phải mang cờ này; không suy nguồn CP chỉ từ tên điệu.
+- Walking bass vẫn là lựa chọn thay tuyến trầm riêng. Hợp âm ngắn, bass lặp,
+  hợp âm lướt và khoảng nghỉ chủ động giữ các điều kiện loại trừ cũ.
+- Kiểm thử `cpBalladBacking.test.ts`: sáu biến thể phiên/điệp, CP Lick thường/
+  chuyển nâng cao, đầy lời, lệnh chêm thủ công, nhiều take, phát ghép solo full
+  thật và bảo vệ câu chuyển ACDD tới đầu hợp âm kế. Bản soạn solo Có Em Chờ
+  đang phát triển là hạng mục riêng, không coi bản sửa này là duyệt solo.

@@ -6,6 +6,7 @@ const common = {
   timeSignature: '4/4', beatsPerMeasure: 4,
   feel: 'straight-block-chord' as const,
   verified: true, releaseRatio: 1, leftHandTop: 67,
+  cpBalladChordLeads: true,
 }
 const tone = (toneIndex: number, semitones = 0) => ({ toneIndex, semitones, fromRoot: true })
 const hit = (beat: number, durationBeats: number, tones: RhythmHit['tones'],

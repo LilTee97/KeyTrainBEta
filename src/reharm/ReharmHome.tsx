@@ -141,7 +141,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
-import { acddConnections, balladChordLeads } from './style/cpBalladConnections'
+import { planCpBalladBacking } from './style/cpBalladConnections'
 import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
@@ -1659,7 +1659,7 @@ export function ReharmHome() {
    * thứ tự chơi chỉ làm việc với mốc phách, còn muốn biết hút về đâu thì phải
     * đọc được hợp âm đầu tiên của đoạn kế tiếp.
     */
-  const accompaniment = useMemo(() => {
+  const accompanimentPlan = useMemo(() => {
     const beatsEach = chordDurations(withPassing, chordBeats)
 
     /*
@@ -1753,13 +1753,12 @@ export function ReharmHome() {
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
-    const played = style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn
-      ? acddConnections(rendered, withPassing, { beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows })
-      : style.family === 'ca-phao-ballad-co-em-cho' && !cpLick && !walkingOn
-        ? balladChordLeads(rendered, withPassing, { beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows })
-      : rendered
+    const plan = planCpBalladBacking(rendered, withPassing, {
+      style, walkingOn, beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows,
+    })
+    const played = plan.backing
 
-    if (!walkingOn) return played
+    if (!walkingOn) return plan
 
     /*
       Walking bass thay **tuyến trầm** của ô nhịp, không thay cả phần đệm: tay
@@ -1771,10 +1770,11 @@ export function ReharmHome() {
       beatsPerChord: chordBeats,
       beatsEach,
     })
-    if (!walk) return played
+    if (!walk) return plan
 
-    return [...played.filter((event) => event.hand !== 'left'), ...walk.events]
+    return { backing: [...played.filter((event) => event.hand !== 'left'), ...walk.events], protectedWindows: [] }
   }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions])
+  const accompaniment = accompanimentPlan.backing
 
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
@@ -2256,12 +2256,13 @@ export function ReharmHome() {
 
   const cpPlan = useCallback((take: number) => planCpLicks({
     chords: withPassing, style, key: reharm.key, backing: accompaniment,
+    protectedWindows: accompanimentPlan.protectedWindows,
     beatsPerChord: chordBeats, breaths, vocal: singing,
     sectionEnds: new Set(transitions.keys()), extraFills, extraRuns, skip: mutedFills,
     fullTransitions: intensity === 'caPhao', keyboard: caPhaoKeyboardRange,
     transitionDelays: new Map([...transitions].map(([i, run]) => [i, run.octaves <= 0 ? Infinity : run.delayBeats ?? 0])),
     take: take + phraseSpin + playSpin.current,
-  }), [withPassing, style, reharm.key, accompaniment, chordBeats, breaths, singing,
+  }), [withPassing, style, reharm.key, accompaniment, accompanimentPlan.protectedWindows, chordBeats, breaths, singing,
     transitions, extraFills, extraRuns, mutedFills, phraseSpin, intensity, caPhaoKeyboardRange])
   const cpPreview = useMemo(() => cpLick ? cpPlan(0) : null, [cpLick, cpPlan])
 
@@ -2576,7 +2577,7 @@ export function ReharmHome() {
         }),
       )
       // Preserve the CP backing and its bass links; optional fills use free space.
-      return (style.family === 'ca-phao-ballad-acdd' || style.family === 'ca-phao-ballad-co-em-cho') && !walkingOn
+      return style.cpBalladChordLeads && !walkingOn
         ? bossaFillsInGaps(line, accompaniment) : line
     },
     [
@@ -3686,7 +3687,7 @@ export function ReharmHome() {
       slashHintAt,
       onToggleSlash: toggleSlash,
       transitionAt: (chordIndex) => transitions.get(chordIndex) ?? null,
-      cpBalladTransition: style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn,
+      cpBalladTransition: style.family === 'ca-phao-ballad-acdd' && !walkingOn,
       onToggleTransition: markTransition,
       onSetTransition: (chordIndex, run) =>
         setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
@@ -4280,7 +4281,7 @@ export function ReharmHome() {
             })
           }}
           transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-          cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn}
+          cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !walkingOn}
           onToggleTransition={markTransition}
           onSetTransition={(chordIndex, run) =>
             setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
@@ -4796,7 +4797,7 @@ export function ReharmHome() {
               )
             }
             transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-            cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !cpLick && !walkingOn}
+            cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !walkingOn}
             onToggleTransition={markTransition}
             onSetTransition={(chordIndex, run) =>
               setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))

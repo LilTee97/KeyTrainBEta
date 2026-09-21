@@ -5,7 +5,24 @@ import type { TransitionRun } from '../fillSoloGenerator/soloGenerator'
 import type { SongKey } from '../fillSoloGenerator/soloVocabulary'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import type { ParsedChord } from '../types'
-import type { TimelineEvent } from './types'
+import type { StylePattern, TimelineEvent } from './types'
+
+type ConnectionOptions = {
+  beatsPerChord: number
+  transitions: ReadonlyMap<number, TransitionRun>
+  key?: SongKey | null
+  muteWindows?: readonly { from: number; to: number }[]
+}
+type ConnectionPlan = { backing: TimelineEvent[]; protectedWindows: { start: number; end: number }[] }
+
+/** Accompaniment policy, independent of chord color, CP Lick and solo length. */
+export function planCpBalladBacking(backing: readonly TimelineEvent[], chords: readonly ParsedChord[],
+  options: ConnectionOptions & { style: StylePattern; walkingOn?: boolean }): ConnectionPlan {
+  if (!options.style.cpBalladChordLeads || options.walkingOn)
+    return { backing: [...backing], protectedWindows: [] }
+  return options.style.family === 'ca-phao-ballad-acdd'
+    ? planAcddConnections(backing, chords, options) : planBalladChordLeads(backing, chords, options)
+}
 
 const pc = (pitch: number) => ((pitch % 12) + 12) % 12
 
@@ -40,16 +57,17 @@ function replaceLeft(backing: readonly TimelineEvent[], from: number, to: number
 export function acddConnections(
   backing: readonly TimelineEvent[],
   chords: readonly ParsedChord[],
-  options: {
-    beatsPerChord: number
-    transitions: ReadonlyMap<number, TransitionRun>
-    key?: SongKey | null
-    muteWindows?: readonly { from: number; to: number }[]
-  },
+  options: ConnectionOptions,
 ): TimelineEvent[] {
+  return planAcddConnections(backing, chords, options).backing
+}
+
+function planAcddConnections(backing: readonly TimelineEvent[], chords: readonly ParsedChord[],
+  options: ConnectionOptions): ConnectionPlan {
   const { beatsPerChord, transitions } = options
   const starts = chordStarts(chords, beatsPerChord)
   let result = [...backing]
+  const protectedWindows: ConnectionPlan['protectedWindows'] = []
   let mainIndex = -1
   for (let index = 0; index < chords.length - 1; index++) {
     const chord = chords[index], next = chords[index + 1]
@@ -59,6 +77,8 @@ export function acddConnections(
     if (next.passing) continue
     const transition = transitions.get(mainIndex)
     if (transition) {
+      // The style owns this boundary, including a manually disabled run.
+      protectedWindows.push({ start, end })
       if (transition.octaves <= 0) continue
       const available = beatsOf(chord, beatsPerChord)
       const delay = Math.max(0, Math.min(transition.delayBeats ?? 0, available))
@@ -85,23 +105,25 @@ export function acddConnections(
       continue
     }
   }
-  return balladChordLeads(result, chords, options)
+  const leads = planBalladChordLeads(result, chords, options)
+  return { backing: leads.backing, protectedWindows: [...protectedWindows, ...leads.protectedWindows] }
 }
 
 /** Shared one-beat links for ACDD and Co Em Cho; section runs keep priority. */
 export function balladChordLeads(
   backing: readonly TimelineEvent[],
   chords: readonly ParsedChord[],
-  options: {
-    beatsPerChord: number
-    transitions: ReadonlyMap<number, TransitionRun>
-    key?: SongKey | null
-    muteWindows?: readonly { from: number; to: number }[]
-  },
+  options: ConnectionOptions,
 ): TimelineEvent[] {
+  return planBalladChordLeads(backing, chords, options).backing
+}
+
+function planBalladChordLeads(backing: readonly TimelineEvent[], chords: readonly ParsedChord[],
+  options: ConnectionOptions): ConnectionPlan {
   const { beatsPerChord, transitions, key, muteWindows = [] } = options
   const starts = chordStarts(chords, beatsPerChord)
   let result = [...backing]
+  const protectedWindows: ConnectionPlan['protectedWindows'] = []
   let mainIndex = -1
   for (let index = 0; index < chords.length - 1; index++) {
     const chord = chords[index], next = chords[index + 1]
@@ -111,6 +133,7 @@ export function balladChordLeads(
     if (chord.passing || end - start < 4 || (chord.bass ?? chord.root) === (next.bass ?? next.root)) continue
     const from = end - 1
     if (muteWindows.some(w => w.from < end && w.to > from)) continue
+    protectedWindows.push({ start: from, end })
     // Already running at the end? Keep it, instead of stacking another phrase on top.
     if (backing.filter(e => e.hand === 'left' && e.startBeat >= from && e.startBeat < end).length > 1) continue
     const tones = key ? scaleTones(key.tonic, key.scale) : new Set(chordPitchClasses(chord.root, chord.quality))
@@ -127,5 +150,5 @@ export function balladChordLeads(
     }))
     result = replaceLeft(result, from, end, notes)
   }
-  return result
+  return { backing: result, protectedWindows }
 }

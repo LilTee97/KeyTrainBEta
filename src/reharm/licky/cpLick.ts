@@ -154,6 +154,8 @@ export interface CpLickOptions {
   style: StylePattern
   key: SongKey | null
   backing: readonly TimelineEvent[]
+  /** Windows owned by the style's bass links/runs, not available for replacement. */
+  protectedWindows?: readonly { start: number; end: number }[]
   beatsPerChord: number
   breaths?: ReadonlySet<number>
   vocal?: 'full' | ReadonlySet<number>
@@ -175,6 +177,8 @@ export function planCpLicks(options: CpLickOptions) {
   const placements: { mainIndex: number; kind: 'fill' | 'run'; source: CpPhrase; events: TimelineEvent[];
     start: number; end: number; advanced?: boolean }[] = []
   const skipped: number[] = []
+  const protectedAt = (start: number, end: number) => options.protectedWindows?.some(w =>
+    start < w.end - 1e-6 && end > w.start + 1e-6)
   if (reason || !key || vocal === 'full') return { events: [], backing: [...backing], placements, skipped, reason }
   const book = cpPhrases.filter(p => p.genre === cpGenre(style))
   const starts = chordStarts(chords, beatsPerChord)
@@ -205,6 +209,7 @@ export function planCpLicks(options: CpLickOptions) {
         for (const source of [...pool.slice(offset), ...pool.slice(0,offset)]) {
           for (const phrase of advancedCpRuns(source, take + main, end-windowStart)) {
           const start = end-phrase.span // variable run length, fixed entry into the next section
+          if (protectedAt(start, end)) continue
           if (Math.abs(start*4-Math.round(start*4)) > .001) continue
           const keyboard = options.keyboard ?? { low: 36, high: 96 }
           const composeTake = Math.trunc(take)*2+1 // recompose; do not select the exact-note clone path
@@ -256,6 +261,7 @@ export function planCpLicks(options: CpLickOptions) {
           start >= Math.max(starts[i] + (transition ? options.transitionDelays?.get(main) ?? 0 : 0), end - 2) - 1e-6; start -= .25) {
           // Preserve the source's position inside the bar, not just its fast/slow durations.
           if (Math.abs(start % phrase.meter - phrase.offset % phrase.meter) > .001) continue
+          if (protectedAt(start, start + phrase.span)) continue
           const lead = placeCpPhrase(phrase, chord, chords[i + 1], key, start, take)
           if (!lead.length) continue
           const support = phrase.support.length ? placeCpPhrase({ ...phrase, notes: phrase.support,

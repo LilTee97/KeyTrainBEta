@@ -120,6 +120,8 @@ export interface StylePattern {
    * 6/8 của thầy Hải không khai nên giữ nguyên hành vi cũ.
    */
   fillBeats?: number
+  /** Sheet-derived CP ballads retain bass links even when CP Lick/solo is enabled. */
+  cpBalladChordLeads?: boolean
   /**
    * Câu lót nhiều nhất mấy nốt. Bỏ trống thì `placeLick` tự chọn 3-6.
    *
