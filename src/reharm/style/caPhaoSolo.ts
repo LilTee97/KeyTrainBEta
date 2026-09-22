@@ -11,7 +11,7 @@ import { renderPattern } from './patternRenderer'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import { cpGenre, cpPhrases } from '../licky/cpLick'
 import fullSolos from './caPhaoFullSolos.json'
-type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony'> & {
+export type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony'> & {
   harmony: { at: number; root: number; suffix: string; bass: number | null }[]
 }
 
@@ -131,6 +131,19 @@ export function caPhaoFullSolo(options: PhraseSectionOptions): PhraseSection {
     events: reference.events.map(e => ({ ...e, tones: e.tones.map(n => tone(n, e.parallelMajor)), parallelMajor: false })),
     graces: reference.graces.map(g => ({ ...g, tone: tone(g.tone, g.parallelMajor), parallelMajor: false })),
   }, options.caPhaoSimulate ? 0 : take)
+  return renderCpFullSolo(source, options)
+}
+
+/** Shared realization; callers select/transform a measured phrase before rendering. */
+export function renderCpFullSolo(source: FullSolo, options: PhraseSectionOptions): PhraseSection {
+  const empty = (why: string): PhraseSection => ({ events: [], lengthBeats: 0,
+    chords: [], beatsEach: [], unavailableReason: why })
+  const key = options.key
+  if (!key) return empty('CP full cần xác định giọng.')
+  const tone = (n: number, parallel: boolean) => {
+    const degree = (n % 12 + 12) % 12
+    return !options.caPhaoSimulate && parallel && [4, 9, 11].includes(degree) ? n - 1 : n
+  }
   const range = options.caPhaoKeyboardRange ?? { low: 36, high: 96 }
   if (!Number.isInteger(range.low) || !Number.isInteger(range.high) ||
     range.low < 0 || range.high > 127 || range.high - range.low < 24)

@@ -30,9 +30,9 @@ export function buildBossaSoloSong(accompaniment: readonly TimelineEvent[], loop
   const build = (kind: 'intro' | 'interlude' | 'outro', take: number, nextStart?: number) => {
     const made = phrase(kind, take, nextStart)
     if (made.unavailableReason) warnings.push(made.unavailableReason)
-    if (made.sourcePhrase?.method === 'full-sheet' || made.sourcePhrase?.method === 'cp-composition') {
+    if (made.sourcePhrase?.method === 'full-sheet' || made.sourcePhrase?.method === 'cp-composition' || made.sourcePhrase?.method === 'source-variation') {
       const s = made.sourcePhrase
-      phraseSources.push(`${kind === 'intro' ? 'Dạo' : kind === 'outro' ? 'Kết' : 'Giang'}: ${s.method === 'cp-composition' ? 'câu mới CP' : s.song ?? s.id} · ${s.barCount} ô · ${made.lengthBeats} phách`)
+      phraseSources.push(`${kind === 'intro' ? 'Dạo' : kind === 'outro' ? 'Kết' : 'Giang'}: ${s.method === 'cp-composition' ? 'câu mới CP' : s.method === 'source-variation' ? `biến thể ${s.song ?? s.id}` : s.song ?? s.id} · ${s.barCount} ô · ${made.lengthBeats} phách`)
       if (made.adaptationNote) phraseSources.push(made.adaptationNote)
     }
     return made

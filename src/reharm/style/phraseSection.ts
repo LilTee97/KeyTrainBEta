@@ -114,7 +114,7 @@ export interface PhraseSection {
   /** Mỗi hợp âm dài mấy phách, cùng độ dài với `chords`. */
   beatsEach: readonly number[]
   /** Dấu vết của vòng outro kiểm chứng, không suy nguồn từ số lượt phát. */
-  sourcePhrase?: { id: string; fromBar: number; barCount: number; method?: 'motif-development' | 'full-sheet' | 'cp-composition'; song?: string }
+  sourcePhrase?: { id: string; fromBar: number; barCount: number; method?: 'motif-development' | 'full-sheet' | 'cp-composition' | 'source-variation'; song?: string }
   developmentSources?: { id: string; song: string; genre: string; mode: string;
     sourceBar: number; targetBar: number; method: 'contour-on-bossa-rhythm' }[]
   unavailableReason?: string

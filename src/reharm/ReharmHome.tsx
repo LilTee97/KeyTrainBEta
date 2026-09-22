@@ -1125,6 +1125,7 @@ export function ReharmHome() {
 
   const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
   const cpComposeOn = intensity === 'caPhao'
+  const coEmChoSolo = style.family === 'ca-phao-ballad-co-em-cho'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
   const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
   const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key), [style, reharm.key])
@@ -5006,7 +5007,7 @@ export function ReharmHome() {
             <select aria-label="Cách tạo solo CP" value={caPhaoSoloMode} onChange={event => {
               stopPlay(); setCaPhaoSoloMode(event.target.value === 'simulate' ? 'simulate' : 'compose')
             }}>
-              <option value="compose">Soạn câu mới</option>
+              <option value="compose">{coEmChoSolo ? 'Biến thể theo Có Em Chờ' : 'Soạn câu mới'}</option>
               <option value="simulate">Mô phỏng nguyên câu sheet</option>
             </select>
           </label>}
@@ -5018,7 +5019,7 @@ export function ReharmHome() {
             }} />
             Câu solo Cà Pháo full
           </label>
-          {cpFullOn && <p className="text-xs text-amber-400">
+          {cpFullOn && !(cpComposeOn && coEmChoSolo && !cpSimulationOn) && <p className="text-xs text-amber-400">
             {cpSimulationOn ? 'Mô phỏng cả câu cùng điệu/giọng, không ghép hoặc soạn lại. Giữ cả đuôi pickup và kết đổi màu nếu có trong nguồn; chỉ chuyển tone/quãng cho tầm đàn. Chưa hỗ trợ mô phỏng chéo điệu.' : 'Full: câu mới dài hơn, thêm chỗ phát triển và chạy nốt. Tầm đàn giới hạn cả hai tay; không đổi khung đệm hát.'}
           </p>}
           {(caPhaoFull || cpComposeOn) && <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -5055,7 +5056,7 @@ export function ReharmHome() {
                 stopPlay(); setCaPhaoKeyboardRange(r => ({ ...r, high: Number(event.target.value) }))
               }} /></label>
           </div>}
-          {cpComposeOn && !cpSimulationOn && <p className="text-xs text-dim">Soạn mới: ý câu hỏi–đáp → phát triển mô-típ → hợp âm, tiết tấu và nốt mới → dẫn/kết. Không lấy câu sheet làm nền. Chỉ bấm Phát trọn bài mới soạn lại; bấm hợp âm khi đang phát chỉ tua trong câu đang nghe. Giữ khung đệm hát.</p>}
+          {cpComposeOn && !cpSimulationOn && !coEmChoSolo && <p className="text-xs text-dim">Soạn mới: ý câu hỏi–đáp → phát triển mô-típ → hợp âm, tiết tấu và nốt mới → dẫn/kết. Không lấy câu sheet làm nền. Chỉ bấm Phát trọn bài mới soạn lại; bấm hợp âm khi đang phát chỉ tua trong câu đang nghe. Giữ khung đệm hát.</p>}
           {cpFullOn && !cpComposeOn && <p className="text-xs text-dim">Mỗi lần phát soạn lại nốt trên khung full của nguồn đã chọn, đúng màu trưởng/thứ; không đổi số ô giữa các lượt lặp.</p>}
           {(cpFullOn || cpComposeOn) && 'phraseSources' in song && Array.isArray(song.phraseSources) && <p className="text-xs text-dim">{song.phraseSources.join(' · ')}</p>}
           {bossaSoloOn && !cpFullOn && !cpComposeOn && <p className="text-xs text-amber-400">Bossa CP thứ: đã mở lại dạo · giang · kết. Soạn mới mỗi lần phát; khung đệm hát giữ nguyên ngoài câu CP Lick.</p>}
