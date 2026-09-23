@@ -4821,9 +4821,6 @@ export function ReharmHome() {
             onToggleSlash={toggleSlash}
             toolbar={
               <div className="mb-3 border-b border-line pb-3">
-                {song.phraseWarnings?.map((warning) => (
-                  <p key={warning} role="status" className="mb-3 text-amber-400">{warning}</p>
-                ))}
                 {/* Ô bình luận nằm TRÊN nút phát, theo yêu cầu người dùng. */}
                 {!bossaRhythmOnly && <>
                   <OBinhLuan cau={cauDaoLuu} nhan="Câu dạo" />
@@ -5059,6 +5056,9 @@ export function ReharmHome() {
           </div>}
           {cpFullOn && !cpComposeOn && <p className="text-xs text-dim">Mỗi lần phát soạn lại nốt trên khung full của nguồn đã chọn, đúng màu trưởng/thứ; không đổi số ô giữa các lượt lặp.</p>}
           {(cpFullOn || cpComposeOn) && 'phraseSources' in song && Array.isArray(song.phraseSources) && <p className="text-xs text-dim">{song.phraseSources.join(' · ')}</p>}
+          {[...new Set(song.phraseWarnings)].map(warning => (
+            <p key={warning} role="status" className="text-sm text-amber-400">{warning}</p>
+          ))}
           {bossaSoloOn && !cpFullOn && !cpComposeOn && <p className="text-xs text-amber-400">Bossa CP thứ: đã mở lại dạo · giang · kết. Soạn mới mỗi lần phát; khung đệm hát giữ nguyên ngoài câu CP Lick.</p>}
           {thaySolo ? (
             <p className="text-[10px] leading-snug text-dim">
