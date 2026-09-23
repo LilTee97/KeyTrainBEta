@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { soloChordAt, type SoloSpan } from '../songStructure'
+import { displayedSoloSpan, soloChordAt, type SoloSpan } from '../songStructure'
 import { attachInterludeToSheet } from '../../input/songSheet'
 import type { SongSheet } from '../../input/songSheet'
 
@@ -25,6 +25,18 @@ const dai = (
 })
 
 describe('soloChordAt — hợp âm nào đang vang', () => {
+  it('shows the current interlude take including chords beyond the first take length (#1330)', () => {
+    const first = dai('interlude', 32, ['Am7', 'D7', 'Gmaj7'], [4, 4, 4])
+    const second = dai('interlude', 44, ['Cmaj7', 'Bm7', 'Em7', 'Am7', 'D9sus4', 'D7'], [4, 4, 4, 4, 2, 2])
+    const spans = [first, second]
+    const active = soloChordAt(spans, 62)!
+    const shown = displayedSoloSpan(spans, 'interlude', active.span)!
+    expect(active.index).toBe(5)
+    expect(shown.chords[active.index]).toBe('D7')
+    expect(shown.startBeat + shown.beatsEach.slice(0, active.index).reduce((a, b) => a + b, 0)).toBe(62)
+    expect(displayedSoloSpan(spans, 'interlude')).toBe(first)
+    expect(displayedSoloSpan(spans, 'outro', second)).toBeNull()
+  })
   const spans = [
     dai('intro', 0, ['Dm', 'Gm', 'A7', 'Dm'], [4, 4, 4, 4]),
     dai('interlude', 32, ['F', 'C'], [4, 4]),

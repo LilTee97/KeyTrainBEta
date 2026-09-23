@@ -7,6 +7,33 @@ là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 
 ## Train Solo Ballad CP — Phản Hồi 23/09/2026
 
+### Train Theo Bình Luận Đã Lưu
+
+Đã đọc trực tiếp `Nguon.json`, chỉ lọc điệu `ca-phao-ballad-co-em-cho`,
+giọng G trưởng. Không dùng bình luận Bolero/Bossa cũ để train ballad.
+
+- **#1299:** nghe còn màu thứ. Ưu tiên câu mở có hợp âm chủ trưởng trong hai
+  ô đầu; không cấm iii/vi hay đổi nhận diện giọng để che vấn đề.
+- **#1302, #1306, #1320, #1321, #1327:** hụt/ngắt hoặc chững ở Bm7–Em7, D,
+  Cmaj7, Am7 và Em/G. Đo có trường hợp RH nghỉ thật (#1306: .75 phách), nhưng
+  nhiều câu không có khoảng im RH tổng quá .5 phách: tiếng bè trong còn ngân
+  không chứng minh đường giai điệu liền. Sửa lựa chọn/nối mẫu và độ ngân đỉnh.
+- **#1326, #1332:** phô hoặc lệch mạch ở Cmaj7, Em/G, Am7, D9sus4. Tăng kiểm
+  quãng nối giữa hai mẫu; không kết luận mọi nốt ngoài hợp âm đều sai.
+- **#1330:** đoạn đầu đến Cmaj7 thứ nhất được khen; Cmaj7 kế làm mất mạch.
+  Dùng đoạn đầu làm tham khảo, không gắn nhãn cả câu là xấu. Phản ánh hợp âm
+  ngừng sáng trong khi nhạc tiếp tục có lỗi giao diện khả dĩ: bản lời lấy dải
+  giang đầu, còn con trỏ theo lượt hiện tại. Đã cho cả hai dùng cùng lượt.
+- **Đã ổn:** giữ nguyên #1304, #1328, #1329, #1331. #1329 là dạo; ba câu kia
+  là kết. Không lấy mật độ kết ngân dài làm tiêu chuẩn cho thân giang.
+
+Không sửa/xóa/chấm lại `Nguon.json`, không tái soạn đè câu người dùng đã duyệt.
+Bản ghi cũ thiếu seed, thời lượng từng hợp âm và dấu nguồn, nên chưa tái tạo
+đúng cấu hình sinh ban đầu. Phân tích từ nốt đã lưu là chính; không gọi câu
+mới cùng vòng hợp âm là bản tái hiện chính xác câu cũ. File cũ có 11 tên cột
+nhưng dòng mới có loại đoạn ở vị trí 12; khi đối chiếu đã đọc riêng phần này.
+Các thay đổi chỉ áp dụng lượt **Soạn câu mới**, không đổi câu lưu để nghe lại.
+
 **Phạm vi: train bộ soạn cho điệu ballad, không phải Bossa CP cải tiến.**
 Người dùng đánh giá solo **Ballad Có Em Chờ tạm ổn, 7/10**, nhưng yêu cầu
 train tiếp để sát các câu CP đã soạn trong sheet. Đây là mốc phản hồi để

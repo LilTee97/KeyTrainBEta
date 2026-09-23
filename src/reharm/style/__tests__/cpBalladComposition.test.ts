@@ -17,6 +17,23 @@ const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 4, scale: 
   thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [] }
 
 describe('shared, source-audited CP ballad composer', () => {
+  it('establishes major and connects episode registers for the saved G-major feedback', () => {
+    for (let take = 0; take < 24; take++) for (const kind of ['intro', 'interlude'] as const) {
+      const made = buildPhraseSection({ ...base, kind, take, key: { tonic: 7, scale: 'major' } })!
+      expect(made.unavailableReason).toBeUndefined()
+      let cursor = 0
+      const opening = made.chords.filter((_, i) => { const at = cursor; cursor += made.beatsEach[i]; return at < 8 })
+      expect(parseChordInput(opening.join(' ')).chords.some(c => c.root === 7 && c.quality.intervals.includes(4))).toBe(true)
+      const right = made.events.filter(e => e.hand === 'right' && !e.grace)
+      for (let beat = 8; beat < made.lengthBeats; beat += 8) {
+        const before = Math.max(...right.filter(e => e.startBeat < beat).map(e => e.startBeat))
+        const after = Math.min(...right.filter(e => e.startBeat >= beat).map(e => e.startBeat))
+        const last = Math.max(...right.filter(e => e.startBeat === before).flatMap(e => e.notes))
+        const next = Math.max(...right.filter(e => e.startBeat === after).flatMap(e => e.notes))
+        expect(Math.abs(next - last)).toBeLessThanOrEqual(7)
+      }
+    }
+  })
   it('inventories all divided ballad solos, without inventing keys or learning vocal pickups', () => {
     expect(cpBalladEvidence).toMatchObject({ sheets: 9, sections: 25, knownModeSections: 20 })
     expect(cpBalladEvidence.harmonicGestures).toBeGreaterThan(20)

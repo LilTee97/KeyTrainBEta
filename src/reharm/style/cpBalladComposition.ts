@@ -218,8 +218,13 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const joined = routes.filter(g => (!previous || canJoin(previous, g.harmony[0])) &&
       canContinue(g.harmony.at(-1)!, (lengthBeats - at - 16) / 8))
     if (!joined.length) return empty('Không nối được vòng hòa âm ballad đã học; bỏ câu thay vì ghép tùy ý.')
-    const preferred = joined.filter(g => g.source.song === ownSong && !routeIds.includes(g.id))
-    const g = pick(preferred.length && random() < .4 ? preferred : joined)
+    // Establish major before visiting vi/iii; major-mode data alone can still
+    // open with an unbroken relative-minor episode (#1299).
+    const anchored = at === 0 && key.scale === 'major' && kind !== 'outro'
+      ? joined.filter(g => g.harmony.some(h => h.root === 0 && chordOf(h).quality.intervals.includes(4))) : []
+    const pool = anchored.length ? anchored : joined
+    const preferred = pool.filter(g => g.source.song === ownSong && !routeIds.includes(g.id))
+    const g = pick(preferred.length && random() < .4 ? preferred : pool)
     routeIds.push(g.id)
     harmony.push(...g.harmony.map(h => ({ ...h, at: at + h.at, source: g.id })))
   }
@@ -251,6 +256,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const used = new Set<string>()
   const usedTechniques = new Set<string>()
   let statement: Gesture | undefined
+  let previousRhythm: Gesture | undefined
+  let previousMelody: Gesture | undefined
   for (let start = 0; start < lengthBeats; start += 8) {
     const ranked = native.flatMap(g => {
       const fit = fitGesture(g, backing, start, bpm)
@@ -263,16 +270,21 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
         const target = harmony[chordIndex(start + fit.warp(e.at))]
         return sum + (source && functionOf(source) === functionOf(target) ? 0 : 1)
       }, 0) / g.right.length
+      const previousDensity = previousRhythm?.right.filter(e => e.at >= 4).length ?? 0
+      const firstDensity = g.right.filter(e => e.at < 4).length
+      const slowdown = previousDensity ? Math.max(0, previousDensity / firstDensity - 1.5) : 0
+      const continuation = previousMelody?.source.id === g.source.id && near(previousMelody.from + 8, g.from)
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
         mismatch * .65 + (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
+        slowdown * 1.2 - (continuation ? .4 : 0) +
         (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
     let { g, fit } = ranked[0]
     // Recall the statement once with new harmony/register, not independent random bars.
     if (start === lengthBeats - 16 && start > 8 && statement) {
-      const recall = fitGesture(statement, backing, start, bpm)
-      if (recall) { g = statement; fit = recall }
+      const recall = ranked.find(candidate => candidate.g === statement)
+      if (recall && recall.score <= ranked[0].score + .2) { g = statement; fit = recall.fit }
     }
     statement ??= g
     used.add(g.id)
@@ -282,7 +294,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (ownSong && !native.some(t => t.source.song === ownSong) && start === 8) {
       const ownTiming = cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
-        return adapted ? [{ t, adapted }] : []
+        return adapted && (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
+          2 * t.right.filter(e => e.at < 4).length) ? [{ t, adapted }] : []
       }).sort((a, b) => (a.adapted.cost - .22 * gestureTechniques(a.t).filter(t => !usedTechniques.has(t)).length) -
         (b.adapted.cost - .22 * gestureTechniques(b.t).filter(t => !usedTechniques.has(t)).length))
       if (ownTiming.length) { const t = pick(ownTiming.slice(0, 4)); rhythm = t.t; fit = t.adapted }
@@ -292,11 +305,15 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (rhythm === g && random() < .25 && gestureTechniques(g).every(t => usedTechniques.has(t))) {
       const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
-        return adapted && Math.abs(t.right.length - g.right.length) <= 3 ? [{ t, adapted }] : []
+        return adapted && Math.abs(t.right.length - g.right.length) <= 3 &&
+          (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
+            2 * t.right.filter(e => e.at < 4).length) ? [{ t, adapted }] : []
       })
       if (timing.length) { const t = pick(timing); rhythm = t.t; fit = t.adapted }
     }
     gestureTechniques(rhythm).forEach(t => usedTechniques.add(t))
+    previousRhythm = rhythm
+    previousMelody = g
     soloPunches.push(...fit.punches.map(at => start + at))
     const sourceTops = g.right.map(e => Math.max(...e.tones))
     const midpoint = (Math.min(...sourceTops) + Math.max(...sourceTops)) / 2
@@ -380,8 +397,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const silence = cut < 0 ? 0 : Math.max(0, nextAt - harmony[cut].at - .5)
       const collapsed = before !== undefined && delta === 0 && Math.abs(s.motion) >= 1
       const reversed = delta * s.motion < 0 && Math.abs(s.motion) >= 1
+      const join = before !== undefined && Math.floor(prevSlot.at / 8) !== Math.floor(s.at / 8)
+      const joinLeap = join ? Math.max(0, Math.abs(delta) - 4) * 3 : 0
       const cost = path.cost + Math.abs(delta - s.motion) * .55 + Math.abs(n - centers[i]) * .25 + leap * .3 +
-        silence * 12 + (collapsed ? 2.5 : 0) + (reversed ? 1.5 : 0) +
+        silence * 12 + joinLeap + (collapsed ? 2.5 : 0) + (reversed ? 1.5 : 0) +
         (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -1.6 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
       return [{ notes: [...path.notes, n], cost, unresolved: stable[ci].has(pc(n)) ? 0 : path.unresolved + 1 }]
     })).sort((a, b) => a.cost - b.cost)
@@ -458,6 +477,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const sourceIndex = Math.max(0, s.gates.length - notes.length + j)
       let gate = Math.min(s.gates[sourceIndex] ?? s.gate, lengthBeats - s.at)
       if (!s.staccato && next - s.at <= 1 && gate >= (next - s.at) * .7) gate = Math.max(gate, next - s.at)
+      // A tiny written release after a held top voice must not become a hole
+      // masked by inner-voice sustain (#1320/#1321). Keep actual rests/staccato.
+      if (n === top && !s.staccato && gate >= .5 && next - s.at <= 2 && next - s.at - gate <= .251)
+        gate = Math.max(gate, next - s.at)
       if (s.staccato) gate *= .55
       if (cluster && n === neighbor) gate = Math.min(gate, .125, next - s.at)
       if (n === top && nextTop !== undefined && [1, 11].includes(pc(nextTop - top)) && gate > next - s.at + .125)

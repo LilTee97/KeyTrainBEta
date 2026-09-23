@@ -209,6 +209,11 @@ export function soloChordAt(
   return null
 }
 
+/** Sheet labels and seeking must follow the same take as the sounding solo. */
+export function displayedSoloSpan(spans: readonly SoloSpan[], kind: SoloSpan['kind'], active?: SoloSpan | null) {
+  return active?.kind === kind ? active : spans.find(span => span.kind === kind) ?? null
+}
+
 export interface SongTimeline {
   /** Đoạn chủ động không sinh được; hiển thị để không bỏ đoạn âm thầm. */
   phraseWarnings?: readonly string[]

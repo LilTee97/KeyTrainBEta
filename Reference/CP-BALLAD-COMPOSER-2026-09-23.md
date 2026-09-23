@@ -5,6 +5,57 @@ Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 2
 
 ## Train Ballad Sau Đánh Giá 7/10
 
+### Lượt Theo Bình Luận Trong Nguon.json
+
+Đối chiếu 9 câu Có Em Chờ G trưởng chưa ổn (#1299, #1302, #1306, #1320,
+#1321, #1326, #1327, #1330, #1332) và 4 câu đã ổn (#1304, #1328, #1329,
+#1331). Nhận xét từng câu được ghi ở `CA-PHAO.md`; không trộn bình luận Bossa.
+
+Phân tích note rows `[beat, midi, gate, hand]` của câu lưu:
+#1306 có khoảng im RH 22.25–23; #1320 có tiếng đỉnh tại 8 ngân 1.5 rồi đỉnh
+kế ở 9.75; #1321 có đỉnh tại 24 ngân 1.5 rồi tiếng kế 25.75. Bè trong có
+thể còn vang, nhưng không lấp được khoảng hụt của giai điệu. #1327 giảm rõ
+số điểm gõ RH ở khối 32–40 so với khối trước. Không coi mọi khoảng nghỉ là lỗi.
+Các câu được duyệt vẫn có tiết tấu dài/ngắn luân phiên và quãng nhảy: phải
+giữ diễn tiến có chuẩn bị, không san hết thành móc đơn hoặc cấm quãng tám.
+
+Sửa nhánh ballad:
+- Câu trưởng mở bằng route có chủ trưởng trong hai ô đầu khi có route hợp lệ;
+  không loại hợp âm thứ thuộc giọng trưởng, không thay nhánh minor/outro.
+- Chấm chi phí khi mẫu kế có số điểm gõ nửa đầu ít đột ngột so với nửa cuối
+  mẫu trước; ưu tiên nhẹ đoạn tiếp liền của cùng nguồn. Recall mô-típ không
+  còn cưỡng ép bất chấp độ khớp, mẫu nhịp mượn cũng phải kiểm giảm mật độ.
+- Phạt quãng nối quá bốn bán cung tại biên hai ô trong tìm đường cao độ.
+  Đây là ưu tiên mềm, không cắt/gấp riêng nốt sau khi soạn xong.
+- Nốt đỉnh ngân >=.5 có khe nhả <=.25 trước nốt kế (cách <=2 phách) được nối
+  ngân nếu không staccato. Hòa âm thay đổi vẫn cắt nốt không hợp; không kéo
+  qua nghỉ dài, không thêm điểm gõ, không đổi bộ đệm hát. Đây là biên soạn
+  legato theo phản hồi, không phải chép nguyên gate từ MusicXML.
+- UI bản lời và dải bấm/tua dùng cùng `displayedSoloSpan`: hợp âm theo đúng
+  lượt giang đang phát, không dùng số hợp âm lượt đầu cho lượt thứ hai.
+
+Kiểm thử riêng: 24 take G trưởng, cả dạo/giang full, có chủ trưởng trong hai
+ô mở; 192 biên hai ô không có quãng nối quá quãng năm. Kiểm hồi quy UI-data
+dùng lượt giang thứ hai có nhiều hợp âm hơn lượt đầu, vẫn chọn đúng D7 cuối.
+Đây là kiểm thuật toán/mapping, chưa phải nghe duyệt hoặc tự động kiểm UI live.
+
+Không ghi lại câu được duyệt. SHA-256 của JSON mảng nốt để so sau:
+
+| Câu | SHA-256 |
+|---|---|
+| 1304 | `8fa581ffe4658630fea43ead1e8ad28706adb28095af1c6184bdb091933b453c` |
+| 1328 | `2d2317c712f07d11c43f32a0767ee5224f6f686d1b04e38d7a5ab20827b6853a` |
+| 1329 | `3b8dda541cc1a084c092489e9471c175b4a22b17e5bde91f8e185c80d76e7277` |
+| 1331 | `49b3f26793adb2c7987cf3ecab8b723ed2f3dd4cac4b0149a7acd54e61cf3316` |
+
+Sổ chưa lưu take/seed/beat hợp âm của các câu trên; đã thử đối chiếu nhưng
+không tái tạo được chính xác. Không khẳng định đã sửa đúng MIDI của từng câu
+cũ; sửa quy tắc sinh câu mới theo các biểu hiện đo được và nhận xét người dùng.
+
+Kiểm hồi quy lượt này: **88/88 đạt trong 8 file**, gồm Bossa đóng băng, phách
+dẫn và mapping lượt giang. ESLint không lỗi, còn 7 cảnh báo Hook có sẵn trong
+ReharmHome. Chưa chạy toàn suite; chưa có nghe duyệt sau lượt train này.
+
 Phản hồi 23/09/2026: Có Em Chờ tạm ổn **7/10**, còn lặp nốt, phô/chói và
 thiếu kỹ thuật so với sheet; người dùng yêu cầu train tiếp. Đây không phải
 duyệt đóng băng. Phản hồi gốc được ghi trong `CA-PHAO.md`, riêng mục ballad.

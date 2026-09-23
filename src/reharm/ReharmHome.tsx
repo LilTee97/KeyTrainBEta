@@ -199,6 +199,7 @@ import {
   buildSongTimeline,
   arrangedBeatAt,
   soloChordAt,
+  displayedSoloSpan,
   sourceBeatAt,
 } from './style/songStructure'
 import type { SectionKind, SongTimeline } from './style/songStructure'
@@ -3542,7 +3543,8 @@ export function ReharmHome() {
    */
   const interludeSymbols = useMemo(() => {
     if (cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
-      return [...(timelineHien.soloSpans.find((span) => span.kind === 'interlude')?.chords ?? [])]
+      const span = displayedSoloSpan(timelineHien.soloSpans, 'interlude', activeSolo?.span)
+      return [...(span?.chords ?? [])]
     }
     if (!songSources || songSources.length === 0) return []
     if (!steps.some((step) => step.type === 'interlude')) return []
@@ -3550,7 +3552,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -4014,7 +4016,7 @@ export function ReharmHome() {
       fallback: readonly string[],
     ) => {
       const dang = activeSolo?.span.kind === kind ? activeSolo.span : null
-      const span = dang ?? timelineHien.soloSpans.find((one) => one.kind === kind) ?? null
+      const span = displayedSoloSpan(timelineHien.soloSpans, kind, dang)
       if (!span) return { label, chords: fallback, activeIndex: null }
       return {
         label,
