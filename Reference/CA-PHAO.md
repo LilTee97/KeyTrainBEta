@@ -5,6 +5,22 @@ Nó không biến mọi quyết định nghe hay trong app thành thủ pháp đ
 là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 [CA-PHAO-BOSSA-AUDIT.md](CA-PHAO-BOSSA-AUDIT.md).
 
+## Mô Phỏng Solo Ballad Có Em Chờ - 24/09/2026
+
+Phản hồi: mô phỏng không giống sheet, bỏ nhiều phần. Lượt này **sửa mô phỏng
+ballad**, không train tiếp chế độ Soạn câu mới và không sửa Bossa đã duyệt.
+
+- Xác minh giang bị cắt ở ô 55, thiếu hai phách đầu ô 56 (4 nốt RH + 4 nốt LH).
+- Tầm đàn 61 phím làm renderer đổi quãng từng tay/cụm; đủ số nốt vẫn sai đường
+  chạy cao-thấp. Mô phỏng nay chuyển tone đồng đều cả câu, báo nốt vượt tầm đàn.
+- Khôi phục lực đánh ghi trong MusicXML Có Em Chờ, chỉ dùng khi mô phỏng;
+  không còn san tất cả RH về 72 và LH về 64. Không gọi đây là lực đo bản thu.
+- Đổi cách tạo solo bỏ lựa chọn nghe lại câu cũ, tránh nút Phát vẫn phát bản lưu.
+
+Đủ dạo 168 / giang 194 / kết 111 note-on sau gộp tie; giang dài 34 phách.
+93 kiểm thử liên quan + build qua, chưa nghe duyệt. Chi tiết nguồn, mốc ô,
+giới hạn và lệnh tái tạo: [đối chiếu Có Em Chờ](CO-EM-CHO-SOLO-2026-09-22.md#kiểm-lại-mô-phỏng-24092026).
+
 ## Train Solo Ballad CP — Phản Hồi 23/09/2026
 
 ### Train Theo Bình Luận Đã Lưu

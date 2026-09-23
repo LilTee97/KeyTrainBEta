@@ -5006,6 +5006,7 @@ export function ReharmHome() {
           {cpComposeOn && <label className="flex items-center gap-2 text-sm text-cream">Cách tạo solo CP
             <select aria-label="Cách tạo solo CP" value={caPhaoSoloMode} onChange={event => {
               stopPlay(); setCaPhaoSoloMode(event.target.value === 'simulate' ? 'simulate' : 'compose')
+              setNgheLaiStt(0)
             }}>
               <option value="compose">Soạn câu mới</option>
               <option value="simulate">Mô phỏng nguyên câu sheet</option>
@@ -5020,7 +5021,7 @@ export function ReharmHome() {
             Câu solo Cà Pháo full
           </label>
           {cpFullOn && <p className="text-xs text-amber-400">
-            {cpSimulationOn ? 'Mô phỏng cả câu cùng điệu/giọng, không ghép hoặc soạn lại. Giữ cả đuôi pickup và kết đổi màu nếu có trong nguồn; chỉ chuyển tone/quãng cho tầm đàn. Chưa hỗ trợ mô phỏng chéo điệu.' : 'Full: câu mới dài hơn, thêm chỗ phát triển và chạy nốt. Tầm đàn giới hạn cả hai tay; không đổi khung đệm hát.'}
+            {cpSimulationOn ? 'Mô phỏng nguyên câu sheet, chuyển tone đồng đều cho cả hai tay; không bẻ quãng theo tầm đàn. Giữ cả pickup và kết đổi màu trong nguồn.' : 'Full: câu mới dài hơn, thêm chỗ phát triển và chạy nốt. Tầm đàn giới hạn cả hai tay; không đổi khung đệm hát.'}
           </p>}
           {(caPhaoFull || cpComposeOn) && <div className="flex flex-wrap items-center gap-2 text-xs">
             {(!cpComposeOn || cpSimulationOn) && <label>Nguồn solo full{' '}

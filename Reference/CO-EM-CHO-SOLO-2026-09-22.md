@@ -136,3 +136,67 @@ Không có bài Để nhớ một thời ta đã yêu trong thư viện tab th�
 kiểm trên bài thật và không khẳng định chất lượng âm nhạc chỉ từ test.
 
 Sau khi nghe chốt, nhắc ghi `Reference/SO-TAY.md`; chưa tự ghi Sổ tay.
+
+## Kiểm Lại Mô Phỏng 24/09/2026
+
+Phạm vi lần này là **mô phỏng solo ballad**, không sửa bộ Soạn câu mới.
+Các mô tả bộ soạn ngày 22/9 phía trên là lịch sử, không phải đường mô phỏng.
+
+Nguồn đọc lại: `D:\PianoBrain\video\Ca_Phao\Co Em Cho-Ca Phao.mxl`, SHA256
+`b982c803e961e71175187f691f014224be1eaac9e6bb793d745ed78706e33ec3`.
+Đọc từng note cả hai staff, backup/forward, chord, duration, ties và dynamics.
+Không cộng lại octave-shift lên pitch đã ghi quãng thực. Các cụm kề nửa cung
+trong file có `<chord/>`, không tự đổi thành grace hoặc sửa nốt cho êm hơn.
+
+### Những Sai Lệch Đã Xác Minh
+
+1. Kho full dùng `sections.interlude.bars=[48,55]`, bỏ qua ghi chú `cua_loi`
+   rằng hai phách đầu ô 56 vẫn thuộc giang. Bổ sung RH Bb3/F4 tại 56:0,
+   Bb3/Eb4 tại 56:1, cùng LH Eb2, Bb2, Eb3, G3. Giang từ 32 thành 34 phách.
+   Đầu điệp nâng giọng từ 56:2 không được lấy vào giang.
+2. Giới hạn MIDI 36-96 khiến từng tay hoặc từng cụm bị dịch quãng độc lập.
+   Đặc biệt outro thực trải E1-Eb7 (28-99), không thể vừa 61 phím bằng một
+   phép chuyển quãng đồng đều. Mô phỏng nay giữ một quãng chuyển cho cả hai
+   tay và báo tầm thực nếu vượt đàn. Tầm luyện/soạn mới vẫn như cũ; không tự
+   đổi giá trị tầm đàn đã lưu. Giới hạn MIDI tuyệt đối vẫn 0-127.
+3. Lực RH 72 / LH 64 trước đây xóa tương phản nguồn. Export bổ sung velocity
+   từng nốt Có Em Chờ, runtime chỉ dùng chúng khi `caPhaoSimulate=true`.
+   Ví dụ ô 5:2.25 Bb6/C7 lực 94, đáp thấp C4/D4/G4 tại 5:3 lực 56.
+   Chuyển thuộc tính dynamics bằng `round(percent * 0.9)` theo
+   [MusicXML note dynamics](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/).
+4. Chọn nghe lại một câu lưu có thể ưu tiên hơn đường mô phỏng hiện tại.
+   Đổi menu Cách tạo solo CP nay xóa lựa chọn nghe lại đó, không xóa câu lưu.
+
+### Chi Tiết Phải Giữ
+
+- Dạo ô 1-8: 32 phách, 168 note-on; giữ chùm ba thật ô 2 và chạy leo tầng
+  ô 5, đáp cao-thấp rồi octave đi xuống ô 6, ii-V và câu hạ ô 7-8.
+- Giang ô 48 đến 56:2: 34 phách, 194 note-on; B5/C6 nối 50:3.5 qua đầu
+  ô 51 phải ngân .75 phách, không gõ lại tie-stop. Ô 53 nhắc cử chỉ ô 5
+  nhưng đỉnh muộn .25 phách; giữ LH riêng, không thay bằng loop đệm hát.
+- Kết ô 66-72: 28 phách, 111 note-on; giọng E trưởng, không phải C# thứ.
+  Giữ bass E1 ở ô 70, chùm ba chạy lên, Eb7 ở 71:1.25 ngân 3 phách qua 72:0.
+- Đây là mô phỏng nguyên phần in: vẫn có pickup lời C5/D5 cuối ô 8 và nốt
+  lời ngân đầu ô 48. Kho train `cpBalladSolos.json` vẫn loại chúng; không
+  nhập ngược dữ liệu mô phỏng vào học đệm hát/Soạn câu mới.
+- Khi ghép vào bài khác, mỗi đoạn chuyển từ giọng riêng sang giọng bài.
+  Không có nghĩa KT tái hiện toàn bộ diễn tiến nâng Eb lên E của bản gốc.
+
+### Tái Kiểm Và Giới Hạn
+
+```powershell
+python -X utf8 -B scripts/audit_ca_phao.py --self-check
+python -X utf8 -B tools/cp_full_solos.py --check
+python -X utf8 -B tools/cp_ballad_solos.py --check
+npx vitest run src/reharm/style/__tests__/caPhaoFullSolo.test.ts src/reharm/style/__tests__/cpBalladComposition.test.ts src/reharm/style/__tests__/cpBalladBacking.test.ts src/reharm/style/__tests__/cpComposition.test.ts src/reharm/style/__tests__/caPhaoBossaRecovery.test.ts src/reharm/style/__tests__/caPhaoBossaMinorSolo.test.ts src/reharm/playback/__tests__/bossaRhythmOnly.test.ts src/reharm/style/__tests__/arrangement.test.ts
+npm run build
+```
+
+93 test / 8 file qua. Kiểm từng onset/gate/pitch/hand/velocity của Có Em Chờ
+qua 12 giọng, giữ nguyên nốt giữa tầm 61/88 phím, ráp dạo/giang lặp/kết và
+giữ đệm hát. 18 đoạn full khác không đổi dữ liệu; kho train ballad không đổi.
+Lint các file sửa: 0 lỗi, 7 cảnh báo hook cũ; build còn cảnh báo bundle lớn.
+Máy chủ 5174 trả HTTP 200; kiểm giao diện bị chặn tại trang lỗi kết nối của
+công cụ trình duyệt, chưa nghe thử bản phát thực. Test không chứng minh giống
+âm sắc, pedal, rubato hoặc diễn tấu bản thu; chỉ xác minh dữ liệu ký âm và
+timeline dựng được. Chờ người dùng nghe duyệt, không ghi trạng thái đã duyệt.

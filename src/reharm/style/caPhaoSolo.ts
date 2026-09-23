@@ -11,8 +11,11 @@ import { renderPattern } from './patternRenderer'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import { cpGenre, cpPhrases } from '../licky/cpLick'
 import fullSolos from './caPhaoFullSolos.json'
-export type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony'> & {
+export type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony' | 'events'> & {
   harmony: { at: number; root: number; suffix: string; bass: number | null }[]
+  events: (Omit<typeof fullSolos.sections[number]['events'][number], 'articulations'> & {
+    articulations: string[]; velocities?: number[]
+  })[]
 }
 
 export function caPhaoFullSources(style: PhraseSectionOptions['style'], key: PhraseSectionOptions['key'], simulate = false) {
@@ -157,10 +160,15 @@ export function renderCpFullSolo(source: FullSolo, options: PhraseSectionOptions
   const octaves = Array.from({ length: 21 }, (_, i) => (i - 10) * 12)
   const pitchesOf = (e: typeof source.events[number]) => [...e.tones.map(n => tone(n, e.parallelMajor)),
     ...source.graces.filter(g => g.hand === e.hand && Math.abs(g.at - e.at) < 1e-5).map(g => tone(g.tone, g.parallelMajor))]
+  // Simulation must preserve the intervals between BOTH hands, even on a small keyboard.
+  // Report unavailable physical keys instead of folding a written run into another octave.
+  const limits = options.caPhaoSimulate ? { low: 0, high: 127 } : range
   const fits = (pitches: number[]) => octaves.filter(o =>
-    pitches.every(n => n + key.tonic + o >= range.low && n + key.tonic + o <= range.high))
+    pitches.every(n => n + key.tonic + o >= limits.low && n + key.tonic + o <= limits.high))
   const whole = fits(source.events.flatMap(pitchesOf))
     .sort((a, b) => Math.abs(key.tonic - source.tonic + a) - Math.abs(key.tonic - source.tonic + b))
+  if (options.caPhaoSimulate && !whole.length)
+    return empty('Câu nguồn vượt tầm MIDI 0–127; không bẻ quãng để giả làm mô phỏng nguyên câu.')
   const shifts = new Map<typeof source.events[number], number>()
   const occupied: { start: number; end: number; notes: number[] }[] = []
   let barEnd = 0
@@ -225,17 +233,22 @@ export function renderCpFullSolo(source: FullSolo, options: PhraseSectionOptions
       const duration = (e.gates[i] - lead - roll) * (e.articulations.includes('staccato') ? .5 : 1)
       events.push({ notes: [tone(n, e.parallelMajor) + shift], hand: e.hand as 'left' | 'right',
         startBeat: e.at + lead + roll, durationBeats: duration,
-        velocity: e.articulations.includes('accent') ? 80 : e.hand === 'left' ? 64 : 72 })
+        velocity: options.caPhaoSimulate && e.velocities?.[i] !== undefined ? e.velocities[i]
+          : e.articulations.includes('accent') ? 80 : e.hand === 'left' ? 64 : 72 })
     })
   }
   const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass
   const chords = source.harmony.map(h => pitchClassName(pc(key.tonic + h.root)) + h.suffix +
     (h.bass === null ? '' : '/' + pitchClassName(pc(key.tonic + h.bass))))
+  const pitches = events.flatMap(e => e.notes)
+  const outsideKeyboard = options.caPhaoSimulate && pitches.some(n => n < range.low || n > range.high)
   return { events: events.sort((a, b) => a.startBeat - b.startBeat), lengthBeats: source.lengthBeats,
     chords, beatsEach: source.harmony.map((h, i) => (source.harmony[i + 1]?.at ?? source.lengthBeats) - h.at),
     sourcePhrase: { id: source.id, song: source.song, fromBar: source.fromBar,
       barCount: source.barLengths.length, method: 'full-sheet' },
-    adaptationNote: whole.length ? undefined : `Đã đặt lại quãng âm hai tay cho tầm MIDI ${range.low}–${range.high}${resetCount ? `, ${resetCount} chỗ đổi quãng theo cụm` : ''}; giữ số nốt, độ dài và tiết tấu nguồn.` }
+    adaptationNote: outsideKeyboard
+      ? `Mô phỏng cần MIDI ${Math.min(...pitches)}–${Math.max(...pitches)}, vượt tầm đàn ${range.low}–${range.high}; phát đủ nốt, giữ nguyên quãng giữa hai tay.`
+      : whole.length ? undefined : `Đã đặt lại quãng âm hai tay cho tầm MIDI ${range.low}–${range.high}${resetCount ? `, ${resetCount} chỗ đổi quãng theo cụm` : ''}; giữ số nốt, độ dài và tiết tấu nguồn.` }
 }
 
 /** Source contour only: the approved Bossa rhythm, chords and cadence stay in charge.

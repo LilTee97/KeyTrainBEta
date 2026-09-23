@@ -49,7 +49,8 @@ def analyze():
     for song in corpus['songs']:
         if song.get('teacher') != 'ca-phao': continue
         path = cp.bac_not.tim_file(song)
-        data = audit.audit(path)
+        co_em_cho = song['file'].startswith('Co Em')
+        data = audit.audit(path, dynamics=co_em_cho)
         starts, cursor = {}, 0
         for bar, info in data.items():
             starts[int(bar)] = cursor
@@ -69,6 +70,10 @@ def analyze():
             bossa_outro = song['file'].startswith('nguoihay') and kind == 'outro'
             if bossa_outro: key = (2, 'minor')
             begin, end = starts[lo], starts[hi] + data[str(hi)]['length']
+            # corpus.cua_loi explicitly includes both closing gestures in 56:0..2.
+            # Keep the full printed opening/pickups in simulation, not training cuts.
+            if co_em_cho and kind == 'interlude':
+                hi, end = 56, starts[56] + 2
             report = dict(kind=kind, bars=[lo, hi], declaredBars=[lo, declared_hi], beats=end-begin)
             row['sections'].append(report)
             if not key:
@@ -94,6 +99,10 @@ def analyze():
                     articulations=sorted({a for n in ornaments for a in n['articulations']}),
                     carry=g['at'] < begin,
                     parallelMajor=bossa_outro and g['bar'] >= 100))
+                if co_em_cho:
+                    events[-1]['velocities'] = [next((n['velocity'] for n in ornaments
+                        if n['midi'] == pitch + tonic and 'velocity' in n),
+                        64 if g['hand'] == 2 else 72) for pitch in pitches]
             graces = [dict(at=round(n['beat']-begin, 6), tone=n['midi']-tonic,
                            hand='right' if n['hand'] == 1 else 'left',
                            parallelMajor=bossa_outro and n['bar'] >= 100)
@@ -125,7 +134,7 @@ def analyze():
             sections.append(dict(id=f"{song['file'].rsplit('.',1)[0]}:{kind}", song=song['name'],
                 genre=song['genre'], mode=mode, tonic=tonic, kind=kind, fromBar=lo,
                 vocalPickupAt=30.5 if song['file'].startswith('nguoihay') and kind in ('intro', 'interlude') else None,
-                barLengths=[data[str(b)]['length'] for b in range(lo,hi+1)], lengthBeats=end-begin,
+                barLengths=[min(data[str(b)]['length'], end-starts[b]) for b in range(lo,hi+1)], lengthBeats=end-begin,
                 events=events, graces=graces, harmony=harmony_events,
                 writtenHarmony=written_harmony if bossa_outro else harmony_events,
                 techniques=report['techniques']))
@@ -145,6 +154,14 @@ if __name__ == '__main__':
     assert bossa['fromBar'] == 41 and bossa['lengthBeats'] == 32
     assert any(e['carry'] for e in bossa['events'])
     assert any(abs(e['at']-22-1/3) < 1e-4 for e in bossa['events'])  # bar 46, actual triplet
+    cec = {s['kind']: s for s in result['sections'] if s['song'] == 'Co Em Cho'}
+    assert cec['interlude']['lengthBeats'] == 34 and cec['interlude']['barLengths'][-1] == 2
+    tail = [e for e in cec['interlude']['events'] if e['hand'] == 'right' and e['at'] >= 32]
+    assert [(e['at'], e['tones'], e['gates']) for e in tail] == [(32, [55, 62], [1, 1]), (33, [55, 60], [1, 1])]
+    # Bar 5: peak C7 followed by the quiet C4/D4/G4 response, not equal accents.
+    intro = cec['intro']['events']
+    assert next(e for e in intro if e['hand'] == 'right' and e['at'] == 18.25)['velocities'] == [94, 94]
+    assert next(e for e in intro if e['hand'] == 'right' and e['at'] == 19)['velocities'] == [56, 56, 56]
     for s in result['sections']:
         assert sum(s['barLengths']) == s['lengthBeats']
         assert all(0 <= e['at'] < s['lengthBeats'] and all(0 < gate <= s['lengthBeats']-e['at']+1e-5 for gate in e['gates']) for e in s['events'])

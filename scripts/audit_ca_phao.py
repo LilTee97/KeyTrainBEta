@@ -31,7 +31,7 @@ def pitch(el):
     return name, (octv + 1) * 12 + STEP[step] + alt
 
 
-def audit(path):
+def audit(path, *, dynamics=False):
     root = load(path)
     result = {}
     parts = root.findall('part')
@@ -75,6 +75,9 @@ def audit(path):
                             articulations=[a.tag for a in el.findall('notations/articulations/*')],
                             arpeggiate=el.find('notations/arpeggiate') is not None,
                             ties=[t.get('type') for t in el.findall('tie')]))
+                        if dynamics and el.get('dynamics') is not None:
+                            # MusicXML note dynamics is a percentage of MIDI forte 90.
+                            info['attacks'][-1]['velocity'] = max(0, min(127, round(float(el.get('dynamics')) * .9)))
                     if not chord:
                         previous=onset
                         if not grace:

@@ -12,7 +12,7 @@ import { bossaSoloSteps, buildBossaSoloSong } from '../../playback/bossaRhythmOn
 import type { PitchClass } from '../../../shared/musicTheory/types'
 import { readSnapshot } from '../../persistence/songSnapshot'
 import { scaleTones } from '../../reharmEngine/keyDetection'
-import { caPhaoFullSources } from '../caPhaoSolo'
+import { caPhaoFullSources, type FullSolo } from '../caPhaoSolo'
 
 const ballad = ALL_STYLES.find(s => cpGenre(s) === 'ballad')!
 const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 2, scale: 'minor' },
@@ -48,6 +48,83 @@ it('does not silently substitute a missing simulation section or a future named 
   const made = buildPhraseSection({ ...base, style: ballad, caPhaoSimulate: true, caPhaoFullSource: 'Co Em Cho' })!
   expect(made.events).toEqual([])
   expect(made.unavailableReason).toContain('không tự thay nguồn')
+})
+
+it('simulates every Co Em Cho note, gate and dynamic with one transpose across both hands in all keys', () => {
+  const style = ALL_STYLES.find(s => s.id === 'ca-phao-ballad-co-em-cho')!
+  const coEmCho: FullSolo[] = sources.sections.filter(s => s.song === 'Co Em Cho')
+  for (const source of coEmCho) {
+    const kind = source.kind as PhraseSectionOptions['kind']
+    expect(source.events.reduce((n, e) => n + e.tones.length, 0))
+      .toBe({ intro: 168, interlude: 194, outro: 111 }[kind])
+    for (let tonic = 0; tonic < 12; tonic++) {
+      const options = { ...base, style, kind, caPhaoSimulate: true, caPhaoCompose: true,
+        caPhaoKeyboardRange: { low: 36, high: 96 }, key: { tonic: tonic as PitchClass, scale: 'major' as const } }
+      const made = buildPhraseSection(options)!
+      const delta = ((tonic - source.tonic + 6) % 12 + 12) % 12 - 6
+      const expected = source.events.flatMap(e => e.tones.map((n, i) => ({
+        notes: [n + source.tonic + delta], hand: e.hand, startBeat: e.at,
+        durationBeats: e.gates[i], velocity: e.velocities![i],
+      }))).sort((a, b) => a.startBeat - b.startBeat)
+      // Equidistant tritone transposition may choose the upper octave, but never per hand/chunk.
+      const uniformShift = made.events[0].notes[0] - expected[0].notes[0]
+      expect([0, 12]).toContain(uniformShift)
+      expect(made.events).toEqual(expected.map(e => ({ ...e, notes: [e.notes[0] + uniformShift] })))
+      expect(made.lengthBeats).toBe(source.lengthBeats)
+      expect(buildPhraseSection({ ...options, take: 99 })!.events).toEqual(made.events)
+      expect(buildPhraseSection({ ...options, caPhaoKeyboardRange: { low: 21, high: 108 } })!.events).toEqual(made.events)
+      const outside = made.events.some(e => e.notes[0] < 36 || e.notes[0] > 96)
+      expect(Boolean(made.adaptationNote?.includes('vượt tầm đàn'))).toBe(outside)
+    }
+  }
+})
+
+it('retains the Co Em Cho run, triplet, tied peak, low bass and bar-56 closing gestures', () => {
+  const style = ALL_STYLES.find(s => s.id === 'ca-phao-ballad-co-em-cho')!
+  const options = { ...base, style, caPhaoSimulate: true, key: { tonic: 3 as const, scale: 'major' as const } }
+  const intro = buildPhraseSection({ ...options, kind: 'intro' })!
+  const rh = (events: typeof intro.events, at: number) => events.filter(e => e.hand === 'right' && e.startBeat === at)
+  expect(rh(intro.events, 18.25).map(e => [e.notes[0], e.velocity])).toEqual([[94, 94], [96, 94]])
+  expect(rh(intro.events, 19).map(e => [e.notes[0], e.velocity])).toEqual([[60, 56], [62, 56], [67, 56]])
+  expect(intro.events.some(e => Math.abs(e.startBeat - (7 + 1 / 3)) < 1e-5)).toBe(true)
+  const giang = buildPhraseSection(options)!
+  expect(giang.lengthBeats).toBe(34)
+  expect(rh(giang.events, 11.5).map(e => [e.notes[0], e.durationBeats])).toEqual([[83, .75], [84, .75]])
+  expect(rh(giang.events, 12)).toEqual([]) // bar 51 continues the tie, not a fresh strike
+  expect(rh(giang.events, 32).map(e => e.notes[0])).toEqual([58, 65])
+  expect(rh(giang.events, 33).map(e => e.notes[0])).toEqual([58, 63])
+  expect(giang.beatsEach.reduce((a, b) => a + b, 0)).toBe(34)
+  const outro = buildPhraseSection({ ...options, kind: 'outro', key: { tonic: 4, scale: 'major' } })!
+  expect(outro.events.some(e => e.notes[0] === 28 && e.startBeat === 16)).toBe(true)
+  expect(rh(outro.events, 21.25).map(e => [e.notes[0], e.durationBeats])).toEqual([[99, 3]])
+  expect(rh(outro.events, 24)).toEqual([])
+})
+
+it('assembles the complete Co Em Cho simulation without trimming either hand or changing gates/dynamics', () => {
+  const style = ALL_STYLES.find(s => s.id === 'ca-phao-ballad-co-em-cho')!
+  const phrase = (kind: PhraseSectionOptions['kind']) => buildPhraseSection({ ...base, style, kind,
+    caPhaoSimulate: true, key: { tonic: 7, scale: 'major' }, caPhaoKeyboardRange: { low: 36, high: 96 } })!
+  const backing = renderPattern(voiceLeadTwoHands(parseChordInput('G C D7 G').chords), style)
+  const song = buildBossaSoloSong(backing, 16,
+    [{ name: 'Phiên', kind: 'verse', startBeat: 0, lengthBeats: 16 }],
+    [{ type: 'intro', restAfter: 0 }, { type: 'section', source: 0 },
+      { type: 'interlude', over: 0, loops: 2, restAfter: 0 }, { type: 'outro' }], phrase, [], true)
+  expect(song.soloSpans.map(s => s.lengthBeats)).toEqual([32, 34, 34, 28])
+  expect(song.totalBeats).toBe(144)
+  for (const span of song.soloSpans) {
+    const expected = phrase(span.kind).events
+    const actual = song.events.filter(e => e.startBeat >= span.startBeat && e.startBeat < span.startBeat + span.lengthBeats)
+    expect(actual).toHaveLength(expected.length)
+    actual.forEach((e, i) => {
+      expect(e.notes).toEqual(expected[i].notes)
+      expect(e.hand).toBe(expected[i].hand)
+      expect(e.velocity).toBe(expected[i].velocity)
+      expect(e.startBeat - span.startBeat).toBeCloseTo(expected[i].startBeat, 5)
+      expect(e.durationBeats).toBeCloseTo(expected[i].durationBeats, 5)
+    })
+  }
+  expect(song.events.filter(e => e.startBeat >= 32 && e.startBeat < 48)
+    .map(e => ({ ...e, startBeat: e.startBeat - 32 }))).toEqual(backing)
 })
 
 it('full Bossa includes all bars 41–48, ties, chord gestures, triplets, chromatic run and grace', () => {
