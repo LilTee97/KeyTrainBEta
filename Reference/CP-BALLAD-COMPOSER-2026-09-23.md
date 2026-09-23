@@ -3,6 +3,53 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Lượt Sửa Sau Phản Hồi Nghe
+
+Người dùng báo solo Có Em Chờ sơ sài, ngắt quãng và thiếu kỹ thuật. Đối chiếu đầu ra
+commit `4ef8456` với dữ liệu nguồn cho thấy:
+
+- Các ô kết 71–72 Có Em Chờ, 79–80 Chưa Bao Giờ, 72–73 Để Em Rời Xa có câu rải
+  ngắn rồi ngân/nghỉ dài. Bộ chọn cũ ưu tiên chúng vì dễ khớp bass; đặt vào thân
+  dạo/giang làm mất câu nhạc, nhất là khi hợp âm mới cắt tiếng ngân.
+- Ràng buộc mọi cú dặm phải trùng bass mẫu đệm hát loại nhiều cử chỉ hai tay.
+  Việc nắn mọi mốc bass cũng dễ làm mất chùm ba hoặc kéo rộng khoảng nghỉ.
+- Ép mọi nốt lướt giải quyết ngay vào nốt hợp âm, cùng lực hút quãng âm quá yếu,
+  làm méo đường giai điệu hoặc đẩy câu rải ngày càng lên cao.
+- Hàm cắt tiếng lặp áp cho cả cụm có thể cắt cả bè trên khi chỉ một bè trong gõ lại.
+
+Sửa trong bộ soạn ballad, không sửa dữ liệu nguồn, bộ đệm hát hoặc Bossa:
+
+1. Thân câu chọn cử chỉ có hoạt động ở cả hai ô; ô kết thưa vẫn có trong kho phân
+   tích nhưng không được tái dùng làm thân câu. Điểm rơi kết bài vẫn được soạn riêng.
+2. So sánh giữ nguyên thời điểm với ánh xạ sang nhịp đích; không chọn ánh xạ tạo
+   thêm khoảng im. Giữ mọi điểm bass của điệu, cho thêm đúng cú dặm hai tay có
+   chứng cứ nguồn trong solo. Quy tắc này thay giới hạn LH tuyệt đối ở bản đầu.
+3. Giữ hình lên/xuống và độ mở quãng của câu nguồn trong tầm đàn; ưu tiên câu cùng
+   vòng hòa âm khi khớp. Đường liền bậc có chứng cứ được đi qua tối đa hai nốt lướt
+   trước khi về nốt hợp âm, không tự thêm thang âm chạy cho mọi chỗ.
+4. Cụm hợp âm giữ dáng bè gần nguồn, có thể có quãng hai phù hợp hợp âm. Khi gõ
+   lại, chỉ cắt đúng cao độ lặp; giữ bè khác còn ngân. Tăng ưu tiên nốt chung khi
+   một tiếng dài đi qua chỗ đổi hợp âm, tránh cắt tiếng rồi bỏ trống.
+
+Mẫu tái hiện: điệu `ca-phao-ballad-co-em-cho`, `take: 0`, full, tonic 4,
+`opening: null`, `dropRoot: true`, BPM mặc định điệu, tầm đàn mặc định 36–96.
+Đếm điểm gõ RH theo thời điểm, không đếm từng nốt trong cụm là một cú riêng:
+
+| Dạo | Trước | Sau | Khoảng im RH dài nhất trước/sau |
+|---|---:|---:|---:|
+| E trưởng | 27 | 66 | 0.5 / 0.5 phách |
+| E thứ | 28 | 54 | 4 / 0.5 phách |
+
+Số nốt không phải mục tiêu tối ưu hay chứng nhận nghệ thuật. Giữ khoảng thở có
+trong nguồn; không kéo ngân tất cả các tiếng hoặc lấp mọi chỗ nghỉ bằng nốt mới.
+Kiểm thử bổ sung đo riêng khoảng im RH, giữ chùm ba/quãng tám/dặm hai tay, giữ
+ngân từng bè và chứng cứ cho bass thêm trong solo. Ma trận 12 giọng trưởng/thứ,
+các điệu CP, phách dẫn sau ráp bài và snapshot Bossa: **70/70 đạt**. Build và lint
+hai file TypeScript chỉnh sửa đạt; build còn cảnh báo bundle lớn có sẵn.
+Không chạy lại toàn bộ suite trong lượt này; kết quả toàn dự án bên dưới thuộc
+lượt triển khai đầu. Chờ người dùng nghe lại bằng Phát trọn bài, không chỉ tua
+trong câu đang lưu. Chưa có xác nhận chất lượng giai điệu sau lần sửa này.
+
 ## Nguồn và phép đo
 
 Đọc lại MusicXML/MXL gốc, không lấy sổ solo cũ làm chân lý. Chỉ phân tích dạo,

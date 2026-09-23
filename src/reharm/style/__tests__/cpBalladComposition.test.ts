@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPhraseSection, type PhraseSectionOptions } from '../phraseSection'
-import { cpBalladEvidence, cpBalladGestures } from '../cpBalladComposition'
+import { cpBalladEvidence, cpBalladGestures, holdCpBalladVoices } from '../cpBalladComposition'
 import corpus from '../cpBalladSolos.json'
 import { getStyle } from '../styleLibrary'
 import { CP_BALLAD_SONG_STYLES } from '../styleLibrary/caPhaoBalladSongs'
@@ -80,18 +80,77 @@ describe('shared, source-audited CP ballad composer', () => {
     }
   })
 
-  it('keeps each target LH grid and adapts RH differently between CEC and ACDD', () => {
+  it('keeps every target bass attack, with only source-attested joint solo punches added', () => {
     const rhythms = new Set<string>()
     for (const style of CP_BALLAD_SONG_STYLES) {
       const made = buildPhraseSection({ ...base, style, take: 2 })!
       expect(made.unavailableReason).toBeUndefined()
       const chords = parseChordInput(made.chords.join(' ')).chords.map(c => ({ ...c, voicingStyle: 'ca-phao' as const }))
       const reference = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: true }), style, { beatsEach: made.beatsEach })
-      expect([...new Set(made.events.filter(e => e.hand === 'left').map(e => e.startBeat))])
-        .toEqual([...new Set(reference.filter(e => e.hand === 'left').map(e => e.startBeat))])
+      const bass = [...new Set(made.events.filter(e => e.hand === 'left').map(e => e.startBeat))]
+      const original = [...new Set(reference.filter(e => e.hand === 'left').map(e => e.startBeat))]
+      expect(bass).toEqual(expect.arrayContaining(original))
+      for (const at of bass.filter(at => !original.includes(at))) {
+        expect(made.events.some(e => e.hand === 'right' && Math.abs(e.startBeat - at) < .001)).toBe(true)
+        const trace = made.compositionSources!.find(t => at >= t.start && at < t.end)!
+        const source = cpBalladGestures.find(g => trace.rhythm.startsWith(g.id + ' ->'))!
+        const local = at % 8
+        expect(source.right.some(r => r.tones.length >= 3 && Math.abs(r.at - local) <= .501 &&
+          source.left.some(l => Math.abs(l.at - r.at) < .001))).toBe(true)
+      }
       rhythms.add(JSON.stringify(made.events.filter(e => e.hand === 'right').map(e => e.startBeat)))
     }
     expect(rhythms.size).toBeGreaterThan(3)
+  })
+
+  it('does not mistake ending decay for an active melody or hide RH gaps behind a sounding bass', () => {
+    for (const scale of ['major', 'minor'] as const) for (const kind of ['intro', 'interlude', 'outro'] as const)
+      for (let take = 0; take < 12; take++) {
+        const made = buildPhraseSection({ ...base, kind, take, key: { tonic: 4, scale } })!
+        expect(made.unavailableReason).toBeUndefined()
+        const right = made.events.filter(e => e.hand === 'right')
+        let until = 0
+        for (const e of right) {
+          expect(e.startBeat - until, `${scale}/${kind}/${take} at ${e.startBeat}`).toBeLessThanOrEqual(1.5)
+          until = Math.max(until, e.startBeat + e.durationBeats)
+        }
+        for (const trace of made.compositionSources!) {
+          const g = cpBalladGestures.find(g => trace.rhythm.startsWith(g.id + ' ->'))!
+          expect(g.right.at(-1)!.at).toBeGreaterThanOrEqual(6)
+          for (const start of [0, 4]) expect(g.right.filter(e => e.at >= start && e.at < start + 4).length).toBeGreaterThanOrEqual(3)
+        }
+      }
+  })
+
+  it('recovers written subdivisions, melodic development and two-hand gestures in CEC solos', () => {
+    let triplets = 0, joint = 0, octaves = 0
+    for (let take = 0; take < 8; take++) {
+      const made = buildPhraseSection({ ...base, kind: 'intro', take, key: { tonic: 3, scale: 'major' } })!
+      const right = made.events.filter(e => e.hand === 'right')
+      const onsets = [...new Set(right.map(e => e.startBeat))]
+      const tops = onsets.map(at => Math.max(...right.filter(e => e.startBeat === at).flatMap(e => e.notes)))
+      expect(onsets.length).toBeGreaterThanOrEqual(40)
+      expect(Math.max(...tops) - Math.min(...tops)).toBeGreaterThanOrEqual(12)
+      expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(36)
+      for (const at of onsets) {
+        const notes = right.filter(e => e.startBeat === at).flatMap(e => e.notes)
+        if (Math.abs(at * 4 - Math.round(at * 4)) > .01) triplets++
+        if (notes.some(n => notes.includes(n + 12))) octaves++
+        if (notes.length >= 3 && made.events.some(e => e.hand === 'left' && Math.abs(e.startBeat - at) < .001)) joint++
+      }
+    }
+    expect(triplets).toBeGreaterThan(0)
+    expect(joint).toBeGreaterThan(0)
+    expect(octaves).toBeGreaterThan(0)
+  })
+
+  it('retains the held melody when only an inner chord voice is struck again', () => {
+    const held = holdCpBalladVoices([
+      { hand: 'right', notes: [60, 64, 67], startBeat: 0, durationBeats: 4, velocity: 78 },
+      { hand: 'right', notes: [60, 65], startBeat: 1, durationBeats: .5, velocity: 74 },
+    ])
+    expect(held).toContainEqual({ hand: 'right', notes: [60], startBeat: 0, durationBeats: 1, velocity: 78 })
+    expect(held).toContainEqual({ hand: 'right', notes: [64, 67], startBeat: 0, durationBeats: 4, velocity: 78 })
   })
 
   it('resolves to the real next chord and closes outros on the correct mode tonic', () => {

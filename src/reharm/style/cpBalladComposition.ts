@@ -86,7 +86,7 @@ export const cpBalladEvidence = {
 }
 
 /** Align source LH anchors to the active groove; reject destructive time warps. */
-function adapt(g: Gesture, backing: TimelineEvent[], start: number, bpm: number) {
+function adapt(g: Gesture, backing: TimelineEvent[], start: number, bpm: number, keepTiming = false) {
   const left = [...new Set(backing.filter(e => e.hand === 'left' && e.startBeat >= start && e.startBeat < start + 8)
     .map(e => e.startBeat - start))]
   const knots = [{ x: 0, y: 0 }]
@@ -101,6 +101,7 @@ function adapt(g: Gesture, backing: TimelineEvent[], start: number, bpm: number)
   }
   if (knots.at(-1)!.x !== 8) return null
   const warp = (x: number) => {
+    if (keepTiming) return x
     const i = Math.max(0, knots.findLastIndex(k => k.x <= x))
     const a = knots[i], b = knots[i + 1] ?? a
     const y = a === b ? a.y : a.y + (x - a.x) * (b.y - a.y) / (b.x - a.x)
@@ -110,21 +111,53 @@ function adapt(g: Gesture, backing: TimelineEvent[], start: number, bpm: number)
   if (right.some((e, i) => e.at < 0 || e.at >= 8 || e.gates.some(d => d <= 0) ||
     i > 0 && (e.at - right[i - 1].at < .12 || (e.at - right[i - 1].at) * 60 / bpm < .075)) ||
     right.some((e, i) => Math.abs(e.at - g.right[i].at) > .501)) return null
+  let sourceEnd = 0, targetEnd = 0
+  for (let i = 0; i < right.length; i++) {
+    const sourceGap = Math.max(0, g.right[i].at - sourceEnd)
+    if (Math.max(0, right[i].at - targetEnd) > sourceGap + .001) return null
+    sourceEnd = Math.max(sourceEnd, g.right[i].at + Math.max(...g.right[i].gates))
+    targetEnd = Math.max(targetEnd, right[i].at + Math.max(...right[i].gates))
+  }
   // Off-grid source groups survive only under rigid translation, never as newly
   // invented tuplets created by squeezing straight notes onto unrelated accents.
   if (right.some((e, i) => !near(g.right[i].at * 4, Math.round(g.right[i].at * 4)) &&
     !near(e.at - g.right[i].at, right[Math.max(0, i - 1)].at - g.right[Math.max(0, i - 1)].at))) return null
-  // A source's joint chord accent must remain joint. Single-note answers can
-  // move between bass attacks, but a two-hand punch cannot silently lose its bass.
-  if (g.right.some((e, i) => e.tones.length >= 3 && g.left.some(l => near(l.at, e.at)) &&
-    !left.some(t => near(t, right[i].at)))) return null
+  // Preserve written joint punches as solo support, not extra sung backing.
+  const punches = g.right.flatMap((e, i) => e.tones.length >= 3 && g.left.some(l => near(l.at, e.at)) &&
+    !left.some(t => near(t, right[i].at)) ? [right[i].at] : [])
   const matches = g.left.filter(e => left.some(t => near(t, warp(e.at)))).length
-  return { right, warp, cost: 1 - matches / Math.max(1, g.left.length) +
+  return { right, warp, punches, cost: 1 - matches / Math.max(1, g.left.length) + punches.length * .08 +
     right.reduce((sum, e, i) => sum + Math.abs(e.at - g.right[i].at), 0) / right.length }
 }
 
+function fitGesture(g: Gesture, backing: TimelineEvent[], start: number, bpm: number) {
+  // Already in 4/4: keep the written subdivisions unless aligning to this
+  // groove is actually a better fit. Warping every bass note erased triplets.
+  return [adapt(g, backing, start, bpm, true), adapt(g, backing, start, bpm)]
+    .filter(f => f !== null).sort((a, b) => a.cost - b.cost)[0]
+}
+
+function activeGesture(g: Gesture) {
+  // A closing flourish + a bar of decay belongs at the ending, not between
+  // two active sentences. Inventory it, but don't recycle it as a body cell.
+  return [0, 4].every(start => g.right.filter(e => e.at >= start && e.at < start + 4).length >= 3) &&
+    g.right[0].at <= 1 && g.right.at(-1)!.at >= 6
+}
+
 type Slot = { at: number; gate: number; gates: number[]; voices: number; octave: boolean; motion: number; sourceTone: number;
-  sourceChord: Harmony; staccato: boolean; roll: boolean; grace: boolean }
+  sourceChord: Harmony; height: number; intervals: number[]; stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
+
+export function holdCpBalladVoices(events: TimelineEvent[]): TimelineEvent[] {
+  // Retrigger only the repeated voice, not an entire chord containing it.
+  const sustained = holdUntilStruckAgain(events.flatMap(e => e.notes.map(n => ({ ...e, notes: [n] }))))
+  const grouped = new Map<string, TimelineEvent>()
+  for (const e of sustained) {
+    const id = JSON.stringify({ ...e, notes: [] }), prior = grouped.get(id)
+    if (prior) prior.notes.push(...e.notes)
+    else grouped.set(id, { ...e, notes: [...e.notes] })
+  }
+  return [...grouped.values()].sort((a, b) => a.startBeat - b.startBeat)
+}
 
 export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const empty = (unavailableReason: string): PhraseSection => ({ events: [], chords: [], beatsEach: [], lengthBeats: 0, unavailableReason })
@@ -147,7 +180,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const lengthBeats = bars * 4
   const ownSong = style.family.includes('co-em-cho') ? 'Co Em Cho' : style.family.includes('acdd') ? 'Anh Cu Di Di' :
     style.family.includes('ngay-mai') ? 'Ngay mai em di' : ''
-  const native = cpBalladGestures.filter(g => g.source.mode === key.scale)
+  const native = cpBalladGestures.filter(g => g.source.mode === key.scale && activeGesture(g))
   const routes = harmonicGestures.filter(g => g.source.mode === key.scale)
   if (!routes.length || !native.length) return empty('Chưa đủ câu ballad có giọng/hòa âm kiểm chứng.')
   const harmony: Array<Harmony & { source: string }> = []
@@ -194,21 +227,24 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: options.dropRoot }), style, { beatsEach })
   const slots: Slot[] = [], traces: NonNullable<PhraseSection['compositionSources']> = []
   const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean }> = []
+  const soloPunches: number[] = []
   const used = new Set<string>()
   let statement: Gesture | undefined
   for (let start = 0; start < lengthBeats; start += 8) {
     const ranked = native.flatMap(g => {
-      const fit = adapt(g, backing, start, bpm)
+      const fit = fitGesture(g, backing, start, bpm)
       if (!fit) return []
       const density = g.right.length / 8
+      const route = harmony[chordIndex(start)].source
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
-        (g.source.song === ownSong ? -.1 : 0) + (density > 3 && !options.caPhaoFull ? .6 : 0) + random() * .75 }]
+        (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
+        (density > 3 && !options.caPhaoFull ? .6 : 0) + random() * .75 }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
     let { g, fit } = ranked[0]
     // Recall the statement once with new harmony/register, not independent random bars.
     if (start === lengthBeats - 16 && start > 8 && statement) {
-      const recall = adapt(statement, backing, start, bpm)
+      const recall = fitGesture(statement, backing, start, bpm)
       if (recall) { g = statement; fit = recall }
     }
     statement ??= g
@@ -217,20 +253,30 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     // Unknown-mode scores can teach coordinated timing only. Their pitches and
     // harmony never enter the line; resample the known-mode contour by phase.
     if (random() < .25) {
-      const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown').flatMap(t => {
-        const adapted = adapt(t, backing, start, bpm)
+      const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
+        const adapted = fitGesture(t, backing, start, bpm)
         return adapted && Math.abs(t.right.length - g.right.length) <= 3 ? [{ t, adapted }] : []
       })
       if (timing.length) { const t = pick(timing); rhythm = t.t; fit = t.adapted }
     }
+    soloPunches.push(...fit.punches.map(at => start + at))
+    const sourceTops = g.right.map(e => Math.max(...e.tones))
+    const midpoint = (Math.min(...sourceTops) + Math.max(...sourceTops)) / 2
+    const contourScale = Math.min(1, 24 / Math.max(1, Math.max(...sourceTops) - Math.min(...sourceTops)))
     fit.right.forEach((e, i) => {
       const phase = rhythm.right[i].at / 8
       const sourceIndex = Math.max(0, g.right.findLastIndex(n => n.at / 8 <= phase + .001))
       const src = g.right[sourceIndex], before = g.right[Math.max(0, sourceIndex - 1)]
+      const after = g.right[sourceIndex + 1]
       const h = g.source.harmony.findLast(h => h.at <= g.from + src.at)!
       slots.push({ at: start + e.at, gate: e.gates.at(-1)!, gates: e.gates, voices: Math.min(4, e.tones.length),
         octave: e.tones.some(n => e.tones.includes(n + 12)),
-        motion: Math.max(-12, Math.min(12, Math.max(...src.tones) - Math.max(...before.tones))),
+        motion: Math.max(-12, Math.min(12, (Math.max(...src.tones) - Math.max(...before.tones)) * contourScale)),
+        height: (Math.max(...src.tones) - midpoint) * contourScale,
+        intervals: e.tones.map(n => n - Math.max(...e.tones)),
+        stepwise: !!after && after.at - src.at <= .501 && src.at - before.at <= .501 &&
+          [Math.max(...src.tones) - Math.max(...before.tones), Math.max(...after.tones) - Math.max(...src.tones)]
+            .every(d => Math.abs(d) > 0 && Math.abs(d) <= 2),
         sourceTone: pc(Math.max(...src.tones) - h.root), sourceChord: h,
         staccato: e.articulations.some(a => a === 'staccato'), roll: e.arpeggiate,
         grace: rhythm.graces.some(n => n.hand === 'right' && near(n.at, rhythm.right[i].at)) })
@@ -252,13 +298,15 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const pitches = Array.from({ length: range.high - range.low + 1 }, (_, i) => i + range.low)
   const scale = new Set(degreesOf(key.scale).map(d => pc(key.tonic + d.semitones)))
   const stable = chords.map(c => new Set(c.quality.intervals.map(n => pc(c.root + n))))
-  // Small continuous beam: penalize loops/leaps, retain contour and local chord
-  // roles. Weak passing notes MUST resolve by step at the following attack.
-  let paths = [{ notes: [] as number[], cost: 0 }]
-  const centers = lineSlots.map(s => range.low + (range.high - range.low) * (.4 + .15 * Math.sin(s.at / lengthBeats * Math.PI)))
+  // Source-attested scalar runs may cross two passing tones before landing.
+  // Forcing EVERY passing tone to land immediately turns scales into arpeggios.
+  let paths = [{ notes: [] as number[], cost: 0, unresolved: 0 }]
+  const centers = lineSlots.map(s => Math.max(range.low + 5, Math.min(range.high - 2,
+    range.low + (range.high - range.low) * (.45 + .1 * Math.sin(s.at / lengthBeats * Math.PI)) + s.height)))
   for (let i = 0; i < lineSlots.length; i++) {
     const s = lineSlots[i], ci = chordIndex(s.at), c = chords[ci], final = i === lineSlots.length - 1
-    const shortWeak = s.at % 1 !== 0 && Math.min(s.gate, (lineSlots[i + 1]?.at ?? lengthBeats) - s.at) <= .5 && s.voices === 1
+    const shortWeak = (s.at % 1 !== 0 || s.stepwise) &&
+      Math.min(s.gate, (lineSlots[i + 1]?.at ?? lengthBeats) - s.at) <= .5 && (s.voices === 1 || s.octave)
     const candidates = pitches.filter(n => final ? (kind === 'outro' ? pc(n) === key.tonic :
       stable[ci].has(pc(n)) && [pc(target.root - 1), pc(target.root + 2)].includes(pc(n))) :
       stable[ci].has(pc(n)) || shortWeak && scale.has(pc(n)) &&
@@ -267,18 +315,32 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const nextPaths = paths.flatMap(path => allowed.flatMap(n => {
       const before = path.notes.at(-1), prevSlot = lineSlots[i - 1]
       const passing = before !== undefined && !stable[chordIndex(prevSlot.at)].has(pc(before))
-      if (before !== undefined && (Math.abs(n - before) > 12 || passing && (Math.abs(n - before) > 2 || !stable[ci].has(pc(n))))) return []
+      if (before !== undefined && (Math.abs(n - before) > 12 || passing &&
+        (Math.abs(n - before) > 2 || n === before || !stable[ci].has(pc(n)) &&
+          (!s.stepwise || path.unresolved >= 2 || Math.sign(n - before) !== Math.sign(before - path.notes.at(-2)!))))) return []
       const delta = before === undefined ? 0 : n - before
       const repeat = path.notes.length >= 2 && n === path.notes.at(-1) && n === path.notes.at(-2)
       const loop = path.notes.length >= 3 && n === path.notes.at(-2) && path.notes.at(-1) === path.notes.at(-3)
       const role = chordType(c) === chordType(chordOf(s.sourceChord)) && pc(n - c.root) === s.sourceTone
       const leap = Math.max(0, Math.abs(delta) - 5)
-      const cost = path.cost + Math.abs(delta - s.motion) * .22 + Math.abs(n - centers[i]) * .05 + leap * .6 +
-        (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -.8 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
-      return [{ notes: [...path.notes, n], cost }]
+      const nextAt = lineSlots[i + 1]?.at ?? lengthBeats
+      const cut = harmony.findIndex((h, k) => k > ci && h.at < Math.min(s.at + s.gate, nextAt) && !stable[k].has(pc(n)))
+      const silence = cut < 0 ? 0 : Math.max(0, nextAt - harmony[cut].at - .5)
+      const cost = path.cost + Math.abs(delta - s.motion) * .4 + Math.abs(n - centers[i]) * .3 + leap * .3 +
+        silence * 12 + (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -.8 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
+      return [{ notes: [...path.notes, n], cost, unresolved: stable[ci].has(pc(n)) ? 0 : path.unresolved + 1 }]
     })).sort((a, b) => a.cost - b.cost)
     if (!nextPaths.length) return empty('Không tìm được giai điệu nối đúng hòa âm trong tầm đàn; bỏ câu lỗi.')
-    paths = nextPaths.slice(0, 10)
+    const endings = new Set<string>()
+    paths = nextPaths.filter(p => {
+      const id = `${p.notes.slice(-2)}:${p.unresolved}`
+      if (endings.has(id)) return false
+      endings.add(id)
+      return true
+    }).slice(0, 10)
+    // Don't prune every stable branch just before the next harmonic change.
+    const resolved = nextPaths.find(p => p.unresolved === 0)
+    if (resolved && !paths.some(p => p.unresolved === 0)) paths[paths.length - 1] = resolved
   }
   const melody = paths[0].notes
   // Only corpus-attested lower-neighbor preparations, resolved immediately.
@@ -295,8 +357,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const top = melody[i], ci = chordIndex(s.at), notes = [top]
     if (s.octave && top - 12 >= range.low && stable[ci].has(pc(top))) notes.unshift(top - 12)
     while (notes.length < s.voices) {
-      const choices = pitches.filter(n => n < top - 2 && n >= top - 12 &&
-        notes.every(held => Math.abs(held - n) >= 3) && stable[ci].has(pc(n)))
+      const interval = s.intervals[Math.max(0, s.intervals.length - notes.length - 1)] ?? -4 * notes.length
+      const choices = pitches.filter(n => n < top && n >= top - 12 &&
+        notes.every(held => Math.abs(held - n) >= 2) && stable[ci].has(pc(n)))
+        .sort((a, b) => Math.abs(b - top - interval) - Math.abs(a - top - interval))
       if (!choices.length) break
       notes.push(choices.at(-1)!)
       notes.sort((a, b) => a - b)
@@ -330,9 +394,16 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
         a.tone === pc(top - 1 - chords[ci].root) && a.to === pc(top - chords[ci].root)))
       right.push({ hand: 'right', notes: [top - 1], startBeat: s.at - .1, durationBeats: .1, velocity: 54, grace: true })
   })
-  // The destination groove owns LH attacks. Source gestures may add octave/chord
-  // support or sustain ONLY on those attacks, below the sounding RH voices.
-  const left = backing.filter(e => e.hand === 'left').map(e => {
+  // Keep every destination bass attack and add only source-attested joint
+  // solo punches. Never add these to the sung accompaniment renderer.
+  const bassEvents = backing.filter(e => e.hand === 'left')
+  for (const at of [...new Set(soloPunches)]) {
+    if (!right.some(e => near(e.startBeat, at)) || bassEvents.some(e => near(e.startBeat, at))) continue
+    const c = chords[chordIndex(at)]
+    bassEvents.push({ hand: 'left', startBeat: at, durationBeats: .5,
+      notes: [36 + (c.bass ?? c.root)], velocity: 74 })
+  }
+  const left = bassEvents.sort((a, b) => a.startBeat - b.startBeat).map(e => {
     const ci = chordIndex(e.startBeat), chord = chords[ci]
     const gesture = leftGestures.find(g => near(g.at, e.startBeat))
     const gate = Math.min(Math.max(e.durationBeats, gesture?.gate ?? 0),
@@ -354,7 +425,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     return { ...e, notes: notes.sort((a, b) => a - b), durationBeats: gate }
   })
   if (left.some(e => e.notes.some(n => !Number.isFinite(n)))) return empty('Không đủ tầm bass cho câu solo này.')
-  return { events: holdUntilStruckAgain([...left, ...right].sort((a, b) => a.startBeat - b.startBeat)), lengthBeats,
+  return { events: holdCpBalladVoices([...left, ...right]), lengthBeats,
     chords: chords.map(c => c.symbol), beatsEach, compositionSources: traces,
     sourcePhrase: { id: 'cp-original', fromBar: 1, barCount: bars, method: 'cp-composition' },
     adaptationNote: `Nguồn câu: ${[...new Set(traces.map(t => cpBalladGestures.find(g => g.id === t.melody)!.source.song))].join(', ')}.` }
