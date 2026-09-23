@@ -5,6 +5,29 @@ Nó không biến mọi quyết định nghe hay trong app thành thủ pháp đ
 là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 [CA-PHAO-BOSSA-AUDIT.md](CA-PHAO-BOSSA-AUDIT.md).
 
+## Train Solo Ballad CP — Phản Hồi 23/09/2026
+
+**Phạm vi: train bộ soạn cho điệu ballad, không phải Bossa CP cải tiến.**
+Người dùng đánh giá solo **Ballad Có Em Chờ tạm ổn, 7/10**, nhưng yêu cầu
+train tiếp để sát các câu CP đã soạn trong sheet. Đây là mốc phản hồi để
+đối chiếu, **chưa phải duyệt đóng băng** và không phải điểm chấm bằng kiểm thử.
+
+- **Giai điệu:** chưa sát sheet; nhiều chỗ lặp nốt, còn phô và chói tai.
+  Ưu tiên giữ đường câu, vai trò nốt trên hợp âm và cách giải quyết của nguồn,
+  không chỉ tăng số nốt hoặc thêm chromatic cho có kỹ thuật.
+- **Kỹ thuật:** tương đối ổn nhưng vẫn còn nhiều thủ pháp trong các solo ballad
+  chưa được đưa vào bộ soạn. Học lại dạo/giang/kết đã chia đoạn, bổ sung theo
+  chứng cứ ô nhịp và kiểm tra khả năng chuyển sang tiết tấu đang chơi.
+- Phân biệt trưởng/thứ; nguồn chưa xác nhận giọng chỉ được dạy tiết tấu.
+  Không lấy giai điệu lời hát làm mẫu đệm. Giữ phách dẫn giữa hợp âm và
+  khung đệm Có Em Chờ/ACDD; không thay bản mô phỏng nguyên câu sheet.
+- Lượt sửa phải ghi riêng: nhịp, hòa âm, chọn nốt/kỹ thuật; kiểm thử kỹ thuật
+  không thay nghe duyệt. Chưa có bài đang nghe, loại đoạn hoặc take cụ thể
+  cho những chỗ phô, nên không khẳng định đã tái hiện đúng mọi chỗ người dùng báo.
+
+Chi tiết nguồn, phép đo và các lượt sửa:
+[Bộ soạn solo Ballad CP](CP-BALLAD-COMPOSER-2026-09-23.md).
+
 ## Bossa CP cải tiến
 
 ### Mốc hiện hành đã duyệt và đóng băng — 19/9/2026

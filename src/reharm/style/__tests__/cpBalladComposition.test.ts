@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPhraseSection, type PhraseSectionOptions } from '../phraseSection'
-import { cpBalladEvidence, cpBalladGestures, holdCpBalladVoices } from '../cpBalladComposition'
+import { cpBalladApproaches, cpBalladEvidence, cpBalladGestures, holdCpBalladVoices } from '../cpBalladComposition'
 import corpus from '../cpBalladSolos.json'
 import { getStyle } from '../styleLibrary'
 import { CP_BALLAD_SONG_STYLES } from '../styleLibrary/caPhaoBalladSongs'
@@ -137,7 +137,11 @@ describe('shared, source-audited CP ballad composer', () => {
       const right = made.events.filter(e => e.hand === 'right')
       const onsets = [...new Set(right.map(e => e.startBeat))]
       const tops = onsets.map(at => Math.max(...right.filter(e => e.startBeat === at).flatMap(e => e.notes)))
-      expect(onsets.length).toBeGreaterThanOrEqual(40)
+      const sourceAttacks = made.compositionSources!.filter(t => t.start % 8 === 0).reduce((sum, t) =>
+        sum + cpBalladGestures.find(g => t.rhythm.startsWith(g.id + ' ->'))!.right.length, 0)
+      // Density belongs to the selected written phrase, not an arbitrary quota.
+      // Only the final half-beat may be replaced by the composed cadence.
+      expect(onsets.length).toBeGreaterThanOrEqual(sourceAttacks - 3)
       expect(Math.max(...tops) - Math.min(...tops)).toBeGreaterThanOrEqual(12)
       expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(36)
       for (const at of onsets) {
@@ -180,13 +184,84 @@ describe('shared, source-audited CP ballad composer', () => {
       for (let take = 0; take < 12; take++) {
         const made = buildPhraseSection({ ...base, take, key: { tonic: 4, scale } })!
         const techniques = new Set(made.compositionTechniques?.map(t => t.kind))
-        if (techniques.size === 3) complete++
+        if (techniques.size >= 3) complete++
         expect(techniques.has('octave-line')).toBe(true)
         expect(techniques.size).toBeGreaterThanOrEqual(2)
       }
       // No quota forces a chromatic ornament when its harmony cannot resolve it.
       expect(complete).toBeGreaterThanOrEqual(scale === 'major' ? 10 : 6)
     }
+  })
+
+  it('preserves moving source contours instead of collapsing them into repeated notes', () => {
+    for (const scale of ['major', 'minor'] as const) {
+      let moving = 0, collapsed = 0, attacks = 0, repeated = 0
+      for (let take = 0; take < 12; take++) {
+        const made = buildPhraseSection({ ...base, take, key: { tonic: 4, scale } })!
+        expect(made.unavailableReason).toBeUndefined()
+        const right = made.events.filter(e => e.hand === 'right' && !e.grace)
+        const onsets = [...new Set(right.map(e => e.startBeat))].sort((a, b) => a - b)
+        const tops = onsets.map(at => Math.max(...right.filter(e => e.startBeat === at).flatMap(e => e.notes)))
+        for (let i = 1; i < onsets.length; i++) {
+          attacks++
+          if (tops[i] === tops[i - 1]) repeated++
+          const at = onsets[i], trace = made.compositionSources!.find(t => t.start <= at && at < t.end)!
+          // Compare native timing only: cross-sheet contours are interpolated.
+          if (!trace.rhythm.startsWith(trace.melody + ' ->') || at % 8 === 0 || at >= made.lengthBeats - .5) continue
+          const g = cpBalladGestures.find(g => g.id === trace.melody)!
+          const ix = g.right.findIndex(e => Math.abs(e.at - at % 8) < .001)
+          if (ix <= 0 || Math.abs(g.right[ix - 1].at - onsets[i - 1] % 8) > .001) continue
+          if (Math.max(...g.right[ix].tones) !== Math.max(...g.right[ix - 1].tones)) {
+            moving++
+            if (tops[i] === tops[i - 1]) collapsed++
+          }
+        }
+      }
+      expect(moving).toBeGreaterThan(200)
+      expect(collapsed / moving).toBeLessThan(.08)
+      expect(repeated / attacks).toBeLessThan(scale === 'major' ? .12 : .21)
+    }
+  })
+
+  it('transfers written thirds/sixths and contextual semitone approaches, with traceable source evidence', () => {
+    const found = new Set<string>()
+    for (const scale of ['major', 'minor'] as const) for (let take = 0; take < 12; take++) {
+      const made = buildPhraseSection({ ...base, take, key: { tonic: 4, scale } })!
+      const right = made.events.filter(e => e.hand === 'right' && !e.grace)
+      for (const t of made.compositionTechniques ?? []) {
+        if (!['third-dyad', 'sixth-dyad', 'semitone-approach'].includes(t.kind)) continue
+        found.add(t.kind)
+        const g = cpBalladGestures.find(g => g.id === t.source)!
+        const notes = right.filter(e => Math.abs(e.startBeat - t.startBeat) < .001).flatMap(e => e.notes)
+        if (t.kind === 'semitone-approach') {
+          const nextAt = Math.min(...right.filter(e => e.startBeat > t.startBeat + .001).map(e => e.startBeat))
+          const next = Math.max(...right.filter(e => e.startBeat === nextAt).flatMap(e => e.notes))
+          const direction = next - Math.max(...notes)
+          expect(Math.abs(direction)).toBe(1)
+          expect(cpBalladApproaches.some(a => a.source === g.source.id && a.mode === scale &&
+            Math.abs(a.at - (g.from + t.startBeat % 8)) <= .501 && a.direction === direction)).toBe(true)
+          expect(right.filter(e => e.startBeat === t.startBeat).every(e => e.durationBeats <= .334)).toBe(true)
+        } else {
+          const intervals = t.kind === 'third-dyad' ? [3, 4] : [8, 9]
+          expect(notes.length).toBe(2)
+          expect(intervals).toContain(Math.max(...notes) - Math.min(...notes))
+          expect(g.right.some(e => Math.abs(e.at - t.startBeat % 8) <= .501 && e.tones.length === 2 &&
+            intervals.includes(e.tones[1] - e.tones[0]))).toBe(true)
+        }
+      }
+      // A newly voiced semitone must not leave the old melodic pitch ringing.
+      const onsets = [...new Set(right.map(e => e.startBeat))].sort((a, b) => a - b)
+      for (let i = 1; i < onsets.length; i++) {
+        const at = onsets[i], prior = onsets[i - 1]
+        const top = Math.max(...right.filter(e => e.startBeat === at).flatMap(e => e.notes))
+        const oldTop = Math.max(...right.filter(e => e.startBeat === prior).flatMap(e => e.notes))
+        if (![1, 11].includes((top - oldTop + 120) % 12)) continue
+        for (const old of right.filter(e => e.startBeat === prior && e.notes.includes(oldTop)))
+          expect(old.startBeat + old.durationBeats).toBeLessThanOrEqual(at + .125 + .001)
+      }
+    }
+    expect(found).toEqual(new Set(['third-dyad', 'sixth-dyad', 'semitone-approach']))
+    expect(cpBalladApproaches.some(a => a.source === 'Co Em Cho-Ca Phao:intro' && a.direction === -1)).toBe(true)
   })
 
   it('renders source-attested neighbour clusters briefly, with a stronger melody and nearby resolution in both modes', () => {

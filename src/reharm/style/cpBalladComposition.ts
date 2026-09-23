@@ -70,8 +70,9 @@ export const cpBalladApproaches = corpus.sections.filter(s => s.mode !== 'unknow
     const before = r[j], next = r[j + 2], h = s.harmony.findLast(h => h.at <= e.at)
     if (!h || !chordOf(h) || e.tones.length !== 1 || Math.max(...e.gates) > .334 ||
       e.at - before.at > .501 || next.at - e.at > .501 || s.harmony.findLast(h => h.at <= next.at) !== h ||
-      Math.max(...next.tones) - e.tones[0] !== 1) return []
-    return [{ source: s.id, mode: s.mode, root: h.root, type: chordType(chordOf(h)),
+      Math.abs(Math.max(...next.tones) - e.tones[0]) !== 1) return []
+    return [{ source: s.id, at: e.at, direction: Math.max(...next.tones) - e.tones[0],
+      mode: s.mode, root: h.root, type: chordType(chordOf(h)),
       from: pc(Math.max(...before.tones) - h.root), tone: pc(e.tones[0] - h.root),
       to: pc(Math.max(...next.tones) - h.root) }]
   })
@@ -140,7 +141,13 @@ function fitGesture(g: Gesture, backing: TimelineEvent[], start: number, bpm: nu
 function activeGesture(g: Gesture) {
   // A closing flourish + a bar of decay belongs at the ending, not between
   // two active sentences. Inventory it, but don't recycle it as a body cell.
-  return [0, 4].every(start => g.right.filter(e => e.at >= start && e.at < start + 4).length >= 3) &&
+  let until = 0
+  const continuous = g.right.every(e => {
+    const gap = e.at - until
+    until = Math.max(until, e.at + Math.max(...e.gates))
+    return gap <= 1.5
+  })
+  return continuous && [0, 4].every(start => g.right.filter(e => e.at >= start && e.at < start + 4).length >= 3) &&
     g.right[0].at <= 1 && g.right.at(-1)!.at >= 6
 }
 
@@ -157,6 +164,7 @@ function gestureTechniques(g: Gesture) {
 
 type Slot = { at: number; gate: number; gates: number[]; voices: number; octave: boolean; motion: number; sourceTone: number;
   sourceChord: Harmony; height: number; intervals: number[]; source: string; cluster: boolean;
+  approach?: typeof cpBalladApproaches[number]; dyad: 'third' | 'sixth' | undefined;
   stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
 
 export function holdCpBalladVoices(events: TimelineEvent[]): TimelineEvent[] {
@@ -250,8 +258,13 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const density = g.right.length / 8
       const route = harmony[chordIndex(start)].source
       const newTechniques = gestureTechniques(g).filter(tag => !usedTechniques.has(tag)).length
+      const mismatch = g.right.reduce((sum, e) => {
+        const source = g.harmony.findLast(h => h.at <= e.at)
+        const target = harmony[chordIndex(start + fit.warp(e.at))]
+        return sum + (source && functionOf(source) === functionOf(target) ? 0 : 1)
+      }, 0) / g.right.length
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
-        (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
+        mismatch * .65 + (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
         (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
@@ -288,17 +301,21 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const sourceTops = g.right.map(e => Math.max(...e.tones))
     const midpoint = (Math.min(...sourceTops) + Math.max(...sourceTops)) / 2
     const contourScale = Math.min(1, 24 / Math.max(1, Math.max(...sourceTops) - Math.min(...sourceTops)))
+    // Different onset counts must not stamp the same sampled pitch repeatedly.
+    // Interpolate the ordered contour only for a borrowed rhythm, not native ties.
+    const positions = fit.right.map((_, i) => rhythm === g ? i : i * (g.right.length - 1) / (fit.right.length - 1))
+    const tops = positions.map(p => sourceTops[Math.floor(p)] +
+      (sourceTops[Math.ceil(p)] - sourceTops[Math.floor(p)]) * (p % 1))
     fit.right.forEach((e, i) => {
-      const phase = rhythm.right[i].at / 8
-      const sourceIndex = Math.max(0, g.right.findLastIndex(n => n.at / 8 <= phase + .001))
+      const sourceIndex = Math.round(positions[i])
       const src = g.right[sourceIndex], before = g.right[Math.max(0, sourceIndex - 1)]
       const after = g.right[sourceIndex + 1]
       const rhythmNext = rhythm.right[i + 1]
       const h = g.source.harmony.findLast(h => h.at <= g.from + src.at)!
       slots.push({ at: start + e.at, gate: e.gates.at(-1)!, gates: e.gates, voices: Math.min(4, e.tones.length),
         octave: e.tones.some(n => e.tones.includes(n + 12)),
-        motion: Math.max(-12, Math.min(12, (Math.max(...src.tones) - Math.max(...before.tones)) * contourScale)),
-        height: (Math.max(...src.tones) - midpoint) * contourScale,
+        motion: Math.max(-12, Math.min(12, (tops[i] - tops[Math.max(0, i - 1)]) * contourScale)),
+        height: (tops[i] - midpoint) * contourScale,
         intervals: e.tones.map(n => n - Math.max(...e.tones)),
         source: rhythm.id,
         cluster: !!rhythmNext && rhythmNext.at - rhythm.right[i].at <= .751 &&
@@ -308,6 +325,9 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
           [Math.max(...src.tones) - Math.max(...before.tones), Math.max(...after.tones) - Math.max(...src.tones)]
             .every(d => Math.abs(d) > 0 && Math.abs(d) <= 2),
         sourceTone: pc(Math.max(...src.tones) - h.root), sourceChord: h,
+        approach: rhythm === g ? cpBalladApproaches.find(a => a.source === g.source.id && near(a.at, g.from + src.at)) : undefined,
+        dyad: e.tones.length === 2 ? [3, 4].includes(e.tones[1] - e.tones[0]) ? 'third' :
+          [8, 9].includes(e.tones[1] - e.tones[0]) ? 'sixth' : undefined : undefined,
         staccato: e.articulations.some(a => a === 'staccato'), roll: e.arpeggiate,
         grace: rhythm.graces.some(n => n.hand === 'right' && near(n.at, rhythm.right[i].at)) })
     })
@@ -324,7 +344,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const lastAt = lengthBeats - (kind === 'outro' ? 4 : .5)
   const finalSlot = { ...slots.at(-1)!, at: lastAt, gate: lengthBeats - lastAt, voices: kind === 'outro' ? 3 : 1,
     gates: Array(3).fill(lengthBeats - lastAt) as number[],
-    motion: -2, octave: false, cluster: false, staccato: false, roll: false, grace: false }
+    motion: -2, octave: false, cluster: false, approach: undefined, dyad: undefined,
+    staccato: false, roll: false, grace: false }
   const lineSlots = [...slots.filter(s => s.at < lastAt), finalSlot]
   const pitches = Array.from({ length: range.high - range.low + 1 }, (_, i) => i + range.low)
   const scale = new Set(degreesOf(key.scale).map(d => pc(key.tonic + d.semitones)))
@@ -357,8 +378,11 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const nextAt = lineSlots[i + 1]?.at ?? lengthBeats
       const cut = harmony.findIndex((h, k) => k > ci && h.at < Math.min(s.at + s.gate, nextAt) && !stable[k].has(pc(n)))
       const silence = cut < 0 ? 0 : Math.max(0, nextAt - harmony[cut].at - .5)
-      const cost = path.cost + Math.abs(delta - s.motion) * .4 + Math.abs(n - centers[i]) * .3 + leap * .3 +
-        silence * 12 + (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -.8 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
+      const collapsed = before !== undefined && delta === 0 && Math.abs(s.motion) >= 1
+      const reversed = delta * s.motion < 0 && Math.abs(s.motion) >= 1
+      const cost = path.cost + Math.abs(delta - s.motion) * .55 + Math.abs(n - centers[i]) * .25 + leap * .3 +
+        silence * 12 + (collapsed ? 2.5 : 0) + (reversed ? 1.5 : 0) +
+        (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -1.6 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
       return [{ notes: [...path.notes, n], cost, unresolved: stable[ci].has(pc(n)) ? 0 : path.unresolved + 1 }]
     })).sort((a, b) => a.cost - b.cost)
     if (!nextPaths.length) return empty('Không tìm được giai điệu nối đúng hòa âm trong tầm đàn; bỏ câu lỗi.')
@@ -374,14 +398,20 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (resolved && !paths.some(p => p.unresolved === 0)) paths[paths.length - 1] = resolved
   }
   const melody = paths[0].notes
-  // Only corpus-attested lower-neighbor preparations, resolved immediately.
+  // Keep the donor's exact preparation/approach/resolution context in either
+  // direction. No global sprinkling of chromatic notes onto unrelated slots.
   for (let i = 1; i < melody.length - 1; i++) {
-    const s = lineSlots[i], ci = chordIndex(s.at), c = chords[ci], n = melody[i + 1] - 1
+    const s = lineSlots[i], a = s.approach, ci = chordIndex(s.at), c = chords[ci]
+    if (!a) continue
+    const n = melody[i + 1] - a.direction
     if (s.voices !== 1 || s.at % 1 === 0 || s.gate > .334 || lineSlots[i + 1].at - s.at > .334 ||
-      chordIndex(lineSlots[i + 1].at) !== ci || !stable[ci].has(pc(melody[i + 1])) || n < range.low ||
+      chordIndex(lineSlots[i + 1].at) !== ci || !stable[ci].has(pc(melody[i + 1])) || n < range.low || n > range.high ||
       Math.abs(n - melody[i - 1]) > 4 || !stable[chordIndex(lineSlots[i - 1].at)].has(pc(melody[i - 1]))) continue
-    if (cpBalladApproaches.some(a => a.mode === key.scale && a.root === pc(c.root - key.tonic) && a.type === chordType(c) &&
-      a.from === pc(melody[i - 1] - c.root) && a.tone === pc(n - c.root) && a.to === pc(melody[i + 1] - c.root))) melody[i] = n
+    if (a.mode === key.scale && a.type === chordType(c) && a.root === pc(c.root - key.tonic) &&
+      a.from === pc(melody[i - 1] - c.root) && a.tone === pc(n - c.root) && a.to === pc(melody[i + 1] - c.root)) {
+      melody[i] = n
+      techniques.push({ source: s.source, startBeat: s.at, kind: 'semitone-approach' })
+    }
   }
   const right: TimelineEvent[] = []
   lineSlots.forEach((s, i) => {
@@ -392,6 +422,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     while (notes.length < s.voices) {
       const interval = s.intervals[Math.max(0, s.intervals.length - notes.length - 1)] ?? -4 * notes.length
       const choices = pitches.filter(n => n < top && n >= top - 12 &&
+        (!s.dyad || (s.dyad === 'third' ? [3, 4] : [8, 9]).includes(top - n)) &&
         notes.every(held => Math.abs(held - n) >= 2) && stable[ci].has(pc(n)))
         .sort((a, b) => Math.abs(b - top - interval) - Math.abs(a - top - interval))
       if (!choices.length) break
@@ -419,6 +450,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       techniques.push({ source: s.source, startBeat: s.at, kind: 'neighbor-cluster' })
     }
     if (s.octave && notes.includes(top - 12)) techniques.push({ source: s.source, startBeat: s.at, kind: 'octave-line' })
+    if (s.dyad && notes.length === 2 && (s.dyad === 'third' ? [3, 4] : [8, 9]).includes(top - notes[0]))
+      techniques.push({ source: s.source, startBeat: s.at, kind: s.dyad === 'third' ? 'third-dyad' : 'sixth-dyad' })
     // Keep unequal inner/top holds. A changing chord clips only incompatible
     // voices, not the whole sonority; repeated punches are revoiced chord tones.
     const voiced = notes.map((n, j) => {
@@ -427,6 +460,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       if (!s.staccato && next - s.at <= 1 && gate >= (next - s.at) * .7) gate = Math.max(gate, next - s.at)
       if (s.staccato) gate *= .55
       if (cluster && n === neighbor) gate = Math.min(gate, .125, next - s.at)
+      if (n === top && nextTop !== undefined && [1, 11].includes(pc(nextTop - top)) && gate > next - s.at + .125)
+        gate = next - s.at
       for (let k = ci + 1; k < harmony.length && harmony[k].at < s.at + gate; k++)
         if (!stable[k].has(pc(n))) { gate = harmony[k].at - s.at; break }
       const phraseLift = Math.round(4 * Math.sin(s.at / lengthBeats * Math.PI))

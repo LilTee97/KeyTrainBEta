@@ -3,6 +3,79 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Train Ballad Sau Đánh Giá 7/10
+
+Phản hồi 23/09/2026: Có Em Chờ tạm ổn **7/10**, còn lặp nốt, phô/chói và
+thiếu kỹ thuật so với sheet; người dùng yêu cầu train tiếp. Đây không phải
+duyệt đóng băng. Phản hồi gốc được ghi trong `CA-PHAO.md`, riêng mục ballad.
+
+Đọc lại cả 25 đoạn/9 sheet qua `tools/cp_ballad_solos.py --check`: dữ liệu khớp
+file nguồn. Lượt này không sửa corpus, không thêm nguồn Bossa, không học phần hát.
+Chưa có take/bài/ô phát cụ thể cho từng chỗ phô người dùng báo; các phép đo dưới
+đây tái hiện điểm yếu của bộ soạn, không xác nhận đúng mọi câu người dùng đã nghe.
+
+### Chứng Cứ Và Điểm Yếu
+
+- Chọn vòng và chọn giai điệu trước đây chỉ có ưu tiên nhẹ khi trùng cell.
+  Cùng mode chưa đủ: đường nốt đẹp trên hợp âm nguồn có thể méo khi ép lên
+  chức năng khác. Chấm thêm độ khớp chức năng tại các điểm gõ sau ánh xạ thời gian.
+- Ghép tiết tấu từ sheet khác lấy nốt bằng chỉ số thời gian làm tròn xuống,
+  nên nhiều điểm gõ mới có thể dùng lại một nốt nguồn. Thay bằng nội suy đường
+  cao độ theo thứ tự điểm gõ, giữ hai đầu. Đây là biên soạn, không gọi là chép sheet.
+- Tăng ưu tiên vai trò nốt trên hợp âm và hướng đi của đường nguồn; phạt riêng
+  trường hợp nguồn chuyển động mà đầu ra đứng nốt/đi ngược. Nốt lặp có chủ ý
+  trong nguồn vẫn được phép; không áp quy tắc cấm mọi tiếng lặp.
+- Bè đôi quãng ba/sáu có trong nhiều solo: Có Em Chờ dạo ô 2, giang ô 52,
+  kết ô 68; Hồng Kông 1 dạo ô 3/9; Để Em Rời Xa giang ô 29; ACDD giang ô 34/36.
+  Kho Có Em Chờ có 6/5/7 điểm gõ đúng hai nốt cách 3, 4, 8 hoặc 9 bán cung
+  ở dạo/giang/kết. Đây là các điểm gõ, không phải 18 kỹ thuật độc lập.
+- Nguồn có tiếp cận giải xuống nửa cung, không chỉ giải lên: Có Em Chờ dạo
+  ô 2, offset toàn đoạn 7.333333, vai trò b7–b6–5 trên hợp âm thứ; Hồng Kông 1
+  giang ô 52, offset 22.25/23.25, vai trò 5–4–3 trên hợp âm trưởng.
+  Quan hệ nửa cung không đồng nghĩa mọi nốt đó là chromatic ngoài gam.
+
+### Phép Chuyển Thể
+
+1. Bè đôi giữ loại quãng ba/sáu tại chính điểm nguồn có hai bè, nếu cả hai nốt
+   khớp hợp âm đích và tầm đàn. Không tìm được thì bỏ bè phụ, không đổi thành
+   quãng khác hoặc thêm nốt chói cho đủ số bè. Trace `third-dyad`/`sixth-dyad`
+   chỉ ghi khi đầu ra thực sự có cặp quãng đó.
+2. Tiếp cận lên/xuống dùng đúng ngữ cảnh ba nốt của donor, cùng mode/chức năng/
+   chất hợp âm. Phải ngắn, ở phách lẻ, chuẩn bị ổn định và giải ngay vào nốt
+   hợp âm. Không rải chromatic bằng kho nốt chung; không lấy cao độ nguồn khác
+   mode khi mượn nhịp. Trace `semitone-approach` ghi khi thỏa điều kiện.
+3. Nếu tiếng giai điệu mới cách tiếng trước nửa cung, không để tiếng giai điệu
+   cũ ngân đè dài hơn .125 phách qua điểm mới. Không cắt toàn bộ cụm, không đổi
+   hàm ngân chung của Bossa; nốt kề chủ ý vẫn ngắn/nhẹ theo luật đã có.
+4. Loại cell thân câu vốn có khoảng im RH quá 1.5 phách; giữ các ô kết thưa
+   trong dữ liệu nhưng không dùng chúng để làm thân câu hoạt động.
+
+### Kiểm Chứng
+
+Mẫu đo: Có Em Chờ, giang full, tonic 4, trưởng/thứ, take 0–11, opening null,
+dropRoot true, BPM điệu, tầm 36–96. Đếm đỉnh RH mỗi onset, không đếm từng bè.
+
+| Chế độ | Lặp nốt ngay trước, bản 4822795 | Sau sửa |
+|---|---:|---:|
+| Trưởng | 203/1258, 16.1% | 106/1216, 8.7% |
+| Thứ | 237/997, 23.8% | 176/1007, 17.5% |
+
+Nguồn chọn thay đổi nên tổng điểm gõ khác; không đọc bảng thành A/B nghe cùng
+một câu nguyên xi hoặc điểm chất lượng nghệ thuật. Kiểm thử riêng còn so đường
+nguồn đang đi với đầu ra đứng nốt, kiểm chứng bè đôi/tiếp cận có nguồn và nhả
+tiếng kề, không chỉ đếm nốt cho dày.
+
+Điều chỉnh hai phép kiểm cũ: mật độ so với số điểm gõ của câu nguồn được chọn
+(chừa đuôi cadence), thay vì ép mọi dạo có ít nhất 40 điểm; độ đa dạng kỹ thuật
+tính cả loại mới, không bắt mọi lượt phải có đủ ba loại cũ. Không nới kiểm
+khoảng im, phách dẫn, mode, tầm đàn hoặc Bossa để làm xanh kết quả.
+
+**77/77 kiểm thử liên quan đạt**; build và ESLint ba file TypeScript chỉnh sửa
+đạt. Build còn cảnh báo bundle lớn có sẵn; không chạy toàn suite lượt này.
+Giữ mô phỏng nguyên câu, đệm hát và phách dẫn.
+Bản này vẫn chờ nghe duyệt mới. Không tuyên bố đã học đủ pedal, rubato, lực
+ngón hoặc mọi kỹ thuật từ sheet; không tăng dày trang trí để thay cho giai điệu.
+
 ## Sửa Nhầm Nguồn Mô Phỏng
 
 Sau mốc `9512c77`, ảnh người dùng cho thấy đang chọn "Mô phỏng nguyên câu sheet"
