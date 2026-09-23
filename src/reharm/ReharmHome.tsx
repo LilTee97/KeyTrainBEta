@@ -1127,7 +1127,7 @@ export function ReharmHome() {
   const cpComposeOn = intensity === 'caPhao'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
   const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
-  const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key), [style, reharm.key])
+  const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key, cpSimulationOn), [style, reharm.key, cpSimulationOn])
   const cpFullSource = cpFullSources.includes(caPhaoFullSource) ? caPhaoFullSource : ''
   const bossaRhythmOnly = laBossaCP(style) && !bossaSoloOn && !cpFullOn && !cpComposeOn
 
@@ -5025,10 +5025,10 @@ export function ReharmHome() {
           </p>}
           {(caPhaoFull || cpComposeOn) && <div className="flex flex-wrap items-center gap-2 text-xs">
             {(!cpComposeOn || cpSimulationOn) && <label>Nguồn solo full{' '}
-              <select aria-label="Nguồn solo full" value={cpFullSource} onChange={event => {
+              <select aria-label="Nguồn solo full" value={cpFullSource} disabled={cpSimulationOn && !!style.cpSoloSong} onChange={event => {
                 stopPlay(); setCaPhaoFullSource(event.target.value)
               }}>
-                <option value="">Ưu tiên đoạn đầy đủ dài nhất</option>
+                <option value="">{cpSimulationOn && style.cpSoloSong ? style.cpSoloSong : 'Ưu tiên đoạn đầy đủ dài nhất'}</option>
                 {cpFullSources.map(name => <option key={name} value={name}>{name}</option>)}
               </select>
             </label>}

@@ -122,6 +122,8 @@ export interface StylePattern {
   fillBeats?: number
   /** Sheet-derived CP ballads retain bass links even when CP Lick/solo is enabled. */
   cpBalladChordLeads?: boolean
+  /** Named source for sheet-specific CP solo simulation; never substitute another song. */
+  cpSoloSong?: string
   /**
    * Câu lót nhiều nhất mấy nốt. Bỏ trống thì `placeLick` tự chọn 3-6.
    *

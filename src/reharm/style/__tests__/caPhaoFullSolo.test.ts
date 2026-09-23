@@ -12,6 +12,7 @@ import { bossaSoloSteps, buildBossaSoloSong } from '../../playback/bossaRhythmOn
 import type { PitchClass } from '../../../shared/musicTheory/types'
 import { readSnapshot } from '../../persistence/songSnapshot'
 import { scaleTones } from '../../reharmEngine/keyDetection'
+import { caPhaoFullSources } from '../caPhaoSolo'
 
 const ballad = ALL_STYLES.find(s => cpGenre(s) === 'ballad')!
 const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 2, scale: 'minor' },
@@ -20,6 +21,34 @@ const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 2, scale: 
 const expectedNotes = (source: typeof sources.sections[number]) => source.events
   .filter(e => source.vocalPickupAt === null || e.hand !== 'right' || e.at < source.vocalPickupAt)
   .reduce((n,e) => n+e.tones.length, source.graces.length + (source.vocalPickupAt === null ? 0 : 6))
+
+it('pins sheet-specific simulation to its named song, including stale saved source choices', () => {
+  for (const style of ALL_STYLES.filter(s => s.cpSoloSong === 'Co Em Cho' || s.cpSoloSong === 'Ngay mai em di')) {
+    expect(caPhaoFullSources(style, { tonic: 4, scale: 'major' }, true)).toEqual([style.cpSoloSong])
+    expect(caPhaoFullSources(style, { tonic: 4, scale: 'minor' }, true)).toEqual([])
+    for (const kind of ['intro', 'interlude', 'outro'] as const) {
+      const options = { ...base, style, kind, caPhaoSimulate: true, caPhaoFullSource: 'Chưa Bao Giờ (Trung Quân)' }
+      const major = buildPhraseSection({ ...options, key: { tonic: 4, scale: 'major' } })!
+      expect(major.unavailableReason).toBeUndefined()
+      expect(major.sourcePhrase?.song).toBe(style.cpSoloSong)
+      const minor = buildPhraseSection({ ...options, key: { tonic: 4, scale: 'minor' } })!
+      expect(minor.unavailableReason).toContain('Không thay bằng sheet khác')
+      expect(minor.events).toEqual([])
+    }
+  }
+})
+
+it('does not silently substitute a missing simulation section or a future named sheet', () => {
+  for (const style of [{ ...ballad, cpSoloSong: 'Missing future ballad' },
+    ALL_STYLES.find(s => s.id === 'ca-phao-ballad-acdd')!]) {
+    const made = buildPhraseSection({ ...base, style, caPhaoSimulate: true })!
+    expect(made.events).toEqual([])
+    expect(made.unavailableReason).toContain('Không thay bằng sheet khác')
+  }
+  const made = buildPhraseSection({ ...base, style: ballad, caPhaoSimulate: true, caPhaoFullSource: 'Co Em Cho' })!
+  expect(made.events).toEqual([])
+  expect(made.unavailableReason).toContain('không tự thay nguồn')
+})
 
 it('full Bossa includes all bars 41–48, ties, chord gestures, triplets, chromatic run and grace', () => {
   const made = buildPhraseSection(base)!

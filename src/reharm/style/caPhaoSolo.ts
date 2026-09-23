@@ -15,10 +15,11 @@ export type FullSolo = Omit<typeof fullSolos.sections[number], 'harmony'> & {
   harmony: { at: number; root: number; suffix: string; bass: number | null }[]
 }
 
-export function caPhaoFullSources(style: PhraseSectionOptions['style'], key: PhraseSectionOptions['key']) {
+export function caPhaoFullSources(style: PhraseSectionOptions['style'], key: PhraseSectionOptions['key'], simulate = false) {
   const genre = cpGenre(style)
   return [...new Set(fullSolos.sections.filter(s => s.mode === key?.scale &&
-    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre).map(s => s.song))]
+    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre &&
+    (!simulate || !style.cpSoloSong || s.song === style.cpSoloSong)).map(s => s.song))]
 }
 
 /** Develop melodic notes, keeping written chord gestures, rests, tuplets and cadences.
@@ -112,14 +113,19 @@ export function caPhaoFullSolo(options: PhraseSectionOptions): PhraseSection {
   const key = options.key
   if (!key || !['major', 'minor'].includes(key.scale)) return empty('CP full cần xác định giọng trưởng hoặc thứ.')
   const genre = cpGenre(options.style)
+  const namedSong = options.caPhaoSimulate ? options.style.cpSoloSong : undefined
+  if (namedSong && !caPhaoFullSources(options.style, key, true).includes(namedSong))
+    return empty(`Không có câu mô phỏng ${namedSong} đúng giọng ${key.scale === 'minor' ? 'thứ' : 'trưởng'}. Không thay bằng sheet khác; chọn Soạn câu mới để chuyển thể theo giọng bài.`)
   const pool = fullSolos.sections.filter(s => s.kind === options.kind && s.mode === key.scale &&
-    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre)
+    (s.genre === 'bossa nova' ? 'bossa' : s.genre) === genre && (!namedSong || s.song === namedSong))
     .sort((a, b) => b.lengthBeats - a.lengthBeats || a.id.localeCompare(b.id))
   if (!pool.length) return empty(`Chưa có solo Cà Pháo full đúng họ điệu và giọng ${key.scale === 'minor' ? 'thứ' : 'trưởng'} này; không ghép nguồn khác điệu hoặc đổi màu giọng.`)
   const take = Number.isFinite(options.take) ? Math.abs(Math.trunc(options.take!)) : 0
   // Source length must not change during playback/repeats or chord-click seeking.
   // Change source explicitly; each play develops notes on that full structure.
-  const selected = pool.find(s => s.song === options.caPhaoFullSource) ?? pool[0]
+  const selected = namedSong ? pool[0] : pool.find(s => s.song === options.caPhaoFullSource) ?? pool[0]
+  if (options.caPhaoSimulate && !namedSong && options.caPhaoFullSource && selected.song !== options.caPhaoFullSource)
+    return empty(`Không có đoạn mô phỏng từ ${options.caPhaoFullSource} đúng điệu/giọng; không tự thay nguồn.`)
   const reference = options.caPhaoSimulate ? {...selected,harmony:selected.writtenHarmony} : leadFullSoloInto(selected, options)
   // Outro Người hãy quên kết D trưởng. Giữ câu nhưng chuyển bậc 3/6/7
   // của hai ô kết về thứ, không đưa F# trưởng vào câu kết của bài thứ.

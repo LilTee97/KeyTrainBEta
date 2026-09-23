@@ -144,6 +144,17 @@ function activeGesture(g: Gesture) {
     g.right[0].at <= 1 && g.right.at(-1)!.at >= 6
 }
 
+function gestureTechniques(g: Gesture) {
+  return [
+    g.right.some(e => e.tones.some(n => e.tones.includes(n + 12))) && 'octaves',
+    g.right.some(e => e.tones.includes(Math.max(...e.tones) - 1)) && 'clusters',
+    g.right.some(e => !near(e.at * 4, Math.round(e.at * 4))) && 'subdivisions',
+    g.right.some(e => e.tones.length >= 3 && g.left.some(l => near(l.at, e.at))) && 'punches',
+    g.left.some(l => l.tones.length >= 2 && g.right.some(r => r.at < l.at &&
+      r.at + Math.max(...r.gates) > l.at + .125)) && 'answers',
+  ].filter((tag): tag is string => typeof tag === 'string')
+}
+
 type Slot = { at: number; gate: number; gates: number[]; voices: number; octave: boolean; motion: number; sourceTone: number;
   sourceChord: Harmony; height: number; intervals: number[]; source: string; cluster: boolean;
   stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
@@ -179,8 +190,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(random() * xs.length)]
   const bars = options.caPhaoFull ? kind === 'interlude' ? 12 : kind === 'intro' ? 8 : 6 : kind === 'interlude' ? 8 : 4
   const lengthBeats = bars * 4
-  const ownSong = style.family.includes('co-em-cho') ? 'Co Em Cho' : style.family.includes('acdd') ? 'Anh Cu Di Di' :
-    style.family.includes('ngay-mai') ? 'Ngay mai em di' : ''
+  const ownSong = style.cpSoloSong ?? ''
   const native = cpBalladGestures.filter(g => g.source.mode === key.scale && activeGesture(g))
   const routes = harmonicGestures.filter(g => g.source.mode === key.scale)
   if (!routes.length || !native.length) return empty('Chưa đủ câu ballad có giọng/hòa âm kiểm chứng.')
@@ -231,6 +241,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean; source: string; answer: boolean }> = []
   const soloPunches: number[] = []
   const used = new Set<string>()
+  const usedTechniques = new Set<string>()
   let statement: Gesture | undefined
   for (let start = 0; start < lengthBeats; start += 8) {
     const ranked = native.flatMap(g => {
@@ -238,9 +249,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       if (!fit) return []
       const density = g.right.length / 8
       const route = harmony[chordIndex(start)].source
+      const newTechniques = gestureTechniques(g).filter(tag => !usedTechniques.has(tag)).length
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
         (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
-        (density > 3 && !options.caPhaoFull ? .6 : 0) + random() * .75 }]
+        (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
     let { g, fit } = ranked[0]
@@ -258,18 +270,20 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const ownTiming = cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
         return adapted ? [{ t, adapted }] : []
-      }).sort((a, b) => a.adapted.cost - b.adapted.cost)
+      }).sort((a, b) => (a.adapted.cost - .22 * gestureTechniques(a.t).filter(t => !usedTechniques.has(t)).length) -
+        (b.adapted.cost - .22 * gestureTechniques(b.t).filter(t => !usedTechniques.has(t)).length))
       if (ownTiming.length) { const t = pick(ownTiming.slice(0, 4)); rhythm = t.t; fit = t.adapted }
     }
     // Unknown-mode scores can teach coordinated timing only. Their pitches and
     // harmony never enter the line; resample the known-mode contour by phase.
-    if (rhythm === g && random() < .25) {
+    if (rhythm === g && random() < .25 && gestureTechniques(g).every(t => usedTechniques.has(t))) {
       const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
         return adapted && Math.abs(t.right.length - g.right.length) <= 3 ? [{ t, adapted }] : []
       })
       if (timing.length) { const t = pick(timing); rhythm = t.t; fit = t.adapted }
     }
+    gestureTechniques(rhythm).forEach(t => usedTechniques.add(t))
     soloPunches.push(...fit.punches.map(at => start + at))
     const sourceTops = g.right.map(e => Math.max(...e.tones))
     const midpoint = (Math.min(...sourceTops) + Math.max(...sourceTops)) / 2
@@ -396,7 +410,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       !notes.includes(neighbor) && !stable[ci].has(pc(neighbor))
     if (cluster) {
       // The cluster replaces an inner voice rather than making every punch denser.
-      if (notes.length >= s.voices && notes.length > 1) notes.shift()
+      if (notes.length >= s.voices && notes.length > 1) {
+        const inner = notes.findIndex(n => n !== top && (!s.octave || n !== top - 12))
+        if (inner >= 0) notes.splice(inner, 1)
+      }
       notes.push(neighbor)
       notes.sort((a, b) => a - b)
       techniques.push({ source: s.source, startBeat: s.at, kind: 'neighbor-cluster' })

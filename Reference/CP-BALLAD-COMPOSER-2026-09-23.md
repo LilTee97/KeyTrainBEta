@@ -3,6 +3,37 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Sửa Nhầm Nguồn Mô Phỏng
+
+Sau mốc `9512c77`, ảnh người dùng cho thấy đang chọn "Mô phỏng nguyên câu sheet"
+nhưng điệu Có Em Chờ lại phát nguồn Chưa Bao Giờ. Nguyên nhân đã tái hiện: nhánh
+full chỉ lọc genre + mode + loại đoạn rồi ưu tiên đoạn dài nhất, không ràng buộc
+bài gốc của nút điệu. Đây là lỗi chọn nguồn, không phải bằng chứng bộ soạn mới
+đã phát câu đó; `caPhaoSimulate` đi thẳng vào nhánh mô phỏng trước nhánh compose.
+
+- `cpSoloSong` gắn bài gốc cho cả phiên/điệp Có Em Chờ, Ngày mai em đi và ACDD.
+  Mô phỏng khóa nguồn theo trường này, kể cả khi bản lưu cũ còn tên bài khác.
+  Nút điệu sheet mới cần khai trường này để có cùng bảo vệ.
+- Không tìm được nguồn đúng mode/đoạn thì trả lý do và không phát sheet thay thế.
+  Có Em Chờ gốc là trưởng; không tự đổi thành thứ rồi gọi đó là nguyên câu.
+  ACDD chưa có trong kho full cũ nên báo thiếu mô phỏng, không lấy Chưa Bao Giờ.
+  Kho ballad đã phân tích cho compose vẫn có ACDD; hai kho có phạm vi khác nhau.
+- UI nguồn mô phỏng khóa theo tên bài; nhánh compose vẫn học chéo sheet đúng mode.
+  Không tự đổi lựa chọn chế độ đã lưu của người dùng.
+
+Train tiếp ở nhánh compose: ưu tiên kỹ thuật chưa xuất hiện trong câu (quãng tám,
+cụm nửa cung, chia nhỏ nhịp, dặm hai tay, LH đáp dưới RH ngân), thay vì chỉ chọn
+cell dễ khớp. Không cho lần thay tiết tấu ngẫu nhiên xóa mất kỹ thuật mới của
+cell đã chọn. Khi thêm cụm nửa cung, giữ cặp quãng tám nếu tầm đàn cho phép.
+Các điều kiện nhịp, mode và giải quyết nốt vẫn có quyền loại ứng viên; không ép
+mọi câu phải có mọi kỹ thuật. Trên 12 lượt giang full E trưởng kiểm tra, cả 12
+có ba loại được ghi trace: neighbor-cluster, octave-line, left-answer. Không
+dùng kết quả đếm này để khẳng định chất lượng nghe hay như bản biểu diễn gốc.
+
+Kiểm tra: **75/75** bài liên quan đạt; build đạt; lint không lỗi, còn 7 cảnh báo
+Hook sẵn có. Bossa và phách dẫn sau ráp bài đều qua hồi quy. Không chạy toàn suite.
+Chưa nghe duyệt bản mới; cần kiểm riêng mô phỏng đúng nguồn và compose mới.
+
 ## Bổ Sung Kỹ Thuật Sau Mốc 02dfd38
 
 Người dùng nghe thấy câu đã tạm được nhưng kỹ thuật còn kém sinh động so với

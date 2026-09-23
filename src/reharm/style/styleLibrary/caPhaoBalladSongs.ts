@@ -16,6 +16,7 @@ const bass = (beat: number, duration: number) => hit(beat, duration, [tone(0)], 
 const coEmCho: StylePattern = {
   ...common, id: 'ca-phao-ballad-co-em-cho',
   name: 'Có Em Chờ · Phiên khúc', family: 'ca-phao-ballad-co-em-cho',
+  cpSoloSong: 'Co Em Cho',
   familyName: 'Ballad Có Em Chờ', variant: 1, bpm: 75,
   sourceVideos: ['Cà Pháo · Có Em Chờ · phiên ô XML 9–10; đối chiếu 17–18'],
   note: 'Phiên: bass ngân xen móc kép cuối câu. Hai ô 9–10, bè trong rút gọn; chờ nghe duyệt.',
@@ -41,6 +42,7 @@ const coEmCho: StylePattern = {
 const coEmChoChorus: StylePattern = {
   ...common, id: 'ca-phao-ballad-co-em-cho-chorus',
   name: 'Có Em Chờ · Điệp khúc', family: coEmCho.family,
+  cpSoloSong: coEmCho.cpSoloSong,
   familyName: coEmCho.familyName, variant: 2, bpm: 75,
   sourceVideos: ['Cà Pháo · Có Em Chờ · điệp ô XML 25–26; đối chiếu 41–42'],
   note: 'Điệp: bass rải rộng, bè trong nhấn lệch móc kép. Ô 25–26, bỏ melody và pickup phụ thuộc hòa âm; chờ nghe duyệt.',
@@ -67,6 +69,7 @@ const coEmChoChorus: StylePattern = {
 const ngayMai: StylePattern = {
   ...common, id: 'ca-phao-ballad-ngay-mai-em-di',
   name: 'Ngày mai em đi · Phiên khúc', family: 'ca-phao-ballad-ngay-mai-em-di',
+  cpSoloSong: 'Ngay mai em di',
   familyName: 'Ballad Ngày mai em đi', variant: 1, bpm: 83,
   sourceVideos: ['Cà Pháo · Ngày mai em đi · phiên ô XML 21–22; đối chiếu 29–30, 65'],
   note: 'Phiên: rải 1–5–8 rồi ngân, ô sau đáp lại bằng bass cao. Ô 21–22; chờ nghe duyệt.',
@@ -87,6 +90,7 @@ const ngayMai: StylePattern = {
 const ngayMaiChorus: StylePattern = {
   ...common, id: 'ca-phao-ballad-ngay-mai-em-di-chorus',
   name: 'Ngày mai em đi · Điệp khúc', family: ngayMai.family,
+  cpSoloSong: ngayMai.cpSoloSong,
   familyName: ngayMai.familyName, variant: 2, bpm: 83,
   sourceVideos: ['Cà Pháo · Ngày mai em đi · điệp ô XML 35–36; đối chiếu 43–44, 71–72'],
   note: 'Điệp: bass thấp xen cụm cao, nhấn 2& và 3&, có nhả trước phách 4. Ô 35–36; chờ nghe duyệt.',
@@ -146,6 +150,7 @@ const acddVerseBars = [ACDD_MAIN, ACDD_MAIN, ACDD_EIGHT, ACDD_MAIN, ACDD_MAIN, A
 const acdd: StylePattern = {
   ...acddCommon, id: 'ca-phao-ballad-acdd', name: 'Ballad ACDD',
   family: 'ca-phao-ballad-acdd', familyName: 'Ballad ACDD', variant: 1, bpm: 63,
+  cpSoloSong: 'Anh Cu Di Di',
   sourceVideos: ['Cà Pháo · Anh cứ đi đi · nền dặm ô 40; xen rải từ cử chỉ ô 10, đã bỏ melody; điệp 17–20'],
   note: 'ACDD: dặm hai tay làm nền, xen rải tám tiếng nhấn 1–5–8, ngân liền; tự đổi ở điệp. Chờ nghe duyệt.',
   cell: {
@@ -158,6 +163,7 @@ const acdd: StylePattern = {
 const acddChorus: StylePattern = {
   ...acddCommon, id: 'ca-phao-ballad-acdd-chorus', name: 'ACDD · Điệp khúc',
   family: acdd.family, familyName: acdd.familyName, variant: 2, bpm: 63,
+  cpSoloSong: acdd.cpSoloSong,
   sourceVideos: ['Cà Pháo · Anh cứ đi đi · điệp ô XML 17–20; đối chiếu 46–49'],
   note: 'Điệp ACDD: bass thấp/cao đan xen, bè trong đáp lệch phách. Bỏ melody nhân quãng tám; chờ nghe duyệt.',
   cell: {

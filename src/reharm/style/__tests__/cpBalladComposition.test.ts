@@ -174,6 +174,21 @@ describe('shared, source-audited CP ballad composer', () => {
     }
   })
 
+  it('spreads complementary source techniques through CEC interludes instead of repeatedly choosing only easy cells', () => {
+    for (const scale of ['major', 'minor'] as const) {
+      let complete = 0
+      for (let take = 0; take < 12; take++) {
+        const made = buildPhraseSection({ ...base, take, key: { tonic: 4, scale } })!
+        const techniques = new Set(made.compositionTechniques?.map(t => t.kind))
+        if (techniques.size === 3) complete++
+        expect(techniques.has('octave-line')).toBe(true)
+        expect(techniques.size).toBeGreaterThanOrEqual(2)
+      }
+      // No quota forces a chromatic ornament when its harmony cannot resolve it.
+      expect(complete).toBeGreaterThanOrEqual(scale === 'major' ? 10 : 6)
+    }
+  })
+
   it('renders source-attested neighbour clusters briefly, with a stronger melody and nearby resolution in both modes', () => {
     for (const scale of ['major', 'minor'] as const) {
       let clusters = 0, answers = 0
