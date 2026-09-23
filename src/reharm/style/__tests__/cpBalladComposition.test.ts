@@ -80,7 +80,7 @@ describe('shared, source-audited CP ballad composer', () => {
     }
   })
 
-  it('keeps every target bass attack, with only source-attested joint solo punches added', () => {
+  it('keeps every target bass attack, with only source-attested punches or held-melody answers added', () => {
     const rhythms = new Set<string>()
     for (const style of CP_BALLAD_SONG_STYLES) {
       const made = buildPhraseSection({ ...base, style, take: 2 })!
@@ -91,12 +91,20 @@ describe('shared, source-audited CP ballad composer', () => {
       const original = [...new Set(reference.filter(e => e.hand === 'left').map(e => e.startBeat))]
       expect(bass).toEqual(expect.arrayContaining(original))
       for (const at of bass.filter(at => !original.includes(at))) {
-        expect(made.events.some(e => e.hand === 'right' && Math.abs(e.startBeat - at) < .001)).toBe(true)
         const trace = made.compositionSources!.find(t => at >= t.start && at < t.end)!
         const source = cpBalladGestures.find(g => trace.rhythm.startsWith(g.id + ' ->'))!
         const local = at % 8
-        expect(source.right.some(r => r.tones.length >= 3 && Math.abs(r.at - local) <= .501 &&
-          source.left.some(l => Math.abs(l.at - r.at) < .001))).toBe(true)
+        const answer = made.compositionTechniques?.find(t => t.kind === 'left-answer' && t.startBeat === at)
+        if (answer) {
+          expect(answer.source).toBe(source.id)
+          expect(source.left.some(l => l.tones.length >= 2 && Math.abs(l.at - local) <= .501 &&
+            source.right.some(r => r.at < l.at && r.at + Math.max(...r.gates) > l.at + .125))).toBe(true)
+          expect(made.events.some(e => e.hand === 'right' && e.startBeat < at && e.startBeat + e.durationBeats > at + .125)).toBe(true)
+        } else {
+          expect(made.events.some(e => e.hand === 'right' && Math.abs(e.startBeat - at) < .001)).toBe(true)
+          expect(source.right.some(r => r.tones.length >= 3 && Math.abs(r.at - local) <= .501 &&
+            source.left.some(l => Math.abs(l.at - r.at) < .001))).toBe(true)
+        }
       }
       rhythms.add(JSON.stringify(made.events.filter(e => e.hand === 'right').map(e => e.startBeat)))
     }
@@ -153,6 +161,58 @@ describe('shared, source-audited CP ballad composer', () => {
     expect(held).toContainEqual({ hand: 'right', notes: [64, 67], startBeat: 0, durationBeats: 4, velocity: 78 })
   })
 
+  it('transfers CEC technique timing into minor without borrowing its major melody or harmony', () => {
+    for (let take = 0; take < 8; take++) {
+      const made = buildPhraseSection({ ...base, take })!
+      const borrowed = made.compositionSources!.filter(t => t.rhythm.startsWith('Co Em Cho'))
+      expect(borrowed.length).toBeGreaterThan(0)
+      for (const trace of borrowed) {
+        expect(cpBalladGestures.find(g => g.id === trace.melody)!.source.mode).toBe('minor')
+        if (!trace.harmony.startsWith('cadence:'))
+          expect(cpBalladGestures.find(g => g.id === trace.harmony)!.source.mode).toBe('minor')
+      }
+    }
+  })
+
+  it('renders source-attested neighbour clusters briefly, with a stronger melody and nearby resolution in both modes', () => {
+    for (const scale of ['major', 'minor'] as const) {
+      let clusters = 0, answers = 0
+      for (let take = 0; take < 12; take++) {
+        const made = buildPhraseSection({ ...base, take, key: { tonic: 4, scale } })!
+        const right = made.events.filter(e => e.hand === 'right')
+        const chordAt = (at: number) => {
+          let cursor = 0
+          const index = made.beatsEach.findIndex(b => { cursor += b; return at < cursor - .00001 })
+          return parseChordInput(made.chords[index]).chords[0]
+        }
+        for (const t of made.compositionTechniques ?? []) {
+          if (t.kind === 'left-answer') { answers++; continue }
+          if (t.kind !== 'neighbor-cluster') continue
+          clusters++
+          const source = cpBalladGestures.find(g => g.id === t.source)!
+          expect(source.right.some(e => Math.abs(e.at - t.startBeat % 8) <= .501 &&
+            e.tones.includes(Math.max(...e.tones) - 1))).toBe(true)
+          const sounding = right.filter(e => Math.abs(e.startBeat - t.startBeat) < .001)
+          const top = Math.max(...sounding.flatMap(e => e.notes))
+          const lead = sounding.find(e => e.notes.includes(top))!
+          const neighbor = sounding.find(e => e.notes.includes(top - 1))!
+          expect(neighbor).toBeDefined()
+          expect(neighbor.durationBeats).toBeLessThanOrEqual(.125)
+          expect(neighbor.velocity).toBeLessThan(lead.velocity)
+          const c = chordAt(t.startBeat)
+          expect(c.quality.intervals.some(n => (c.root + n) % 12 === top % 12)).toBe(true)
+          const nextAt = Math.min(...right.filter(e => e.startBeat > t.startBeat + .001).map(e => e.startBeat))
+          const next = Math.max(...right.filter(e => e.startBeat === nextAt).flatMap(e => e.notes))
+          expect(Math.abs(next - top)).toBeLessThanOrEqual(3)
+          const nc = chordAt(nextAt)
+          expect(nc.quality.intervals.some(n => (nc.root + n) % 12 === next % 12)).toBe(true)
+        }
+      }
+      expect(clusters).toBeGreaterThan(0)
+      expect(answers).toBeGreaterThan(0)
+    }
+  })
+
   it('resolves to the real next chord and closes outros on the correct mode tonic', () => {
     for (const scale of ['minor', 'major'] as const) for (const symbol of ['Em', 'Am', 'C', 'G']) {
       const opening = parseChordInput(symbol).chords[0]
@@ -187,8 +247,11 @@ describe('shared, source-audited CP ballad composer', () => {
         const made = buildPhraseSection({ ...base, style, bpm, key: { tonic: 4, scale }, take: bpm % 17 })!
         expect(made.unavailableReason, `${style.id}/${bpm}/${scale}`).toBeUndefined()
         const right = made.events.filter(e => e.hand === 'right' && !e.grace)
-        octave += right.filter(e => e.notes.some(n => e.notes.includes(n + 12))).length
-        punch += right.filter(e => e.notes.length >= 3).length
+        for (const at of new Set(right.map(e => e.startBeat))) {
+          const notes = right.filter(e => e.startBeat === at).flatMap(e => e.notes)
+          octave += Number(notes.some(n => notes.includes(n + 12)))
+          punch += Number(notes.length >= 3)
+        }
         leftSupport += made.events.filter(e => e.hand === 'left' && e.notes.length > 1).length
         for (let beat = 8; beat < made.lengthBeats; beat += 8) {
           const before = Math.max(...made.events.filter(e => e.startBeat < beat).map(e => e.startBeat + e.durationBeats))

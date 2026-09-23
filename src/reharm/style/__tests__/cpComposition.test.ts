@@ -119,9 +119,15 @@ it('new solos preserve genre form, vary notes and colors, and fit all keys and k
           if(!caPhaoFull) expect(e.notes.every(n=>n>=62&&n<=79)).toBe(true)
           const chord=chordAt(made,e.startBeat)
           const allowed=new Set([...scaleTones(tonic,scale),...chord.quality.intervals.map(n=>(chord.root+n)%12)])
-          for(const n of e.notes) if(!allowed.has(n%12))
-            expect(made.events.some(next=>next.hand==='right'&&next.startBeat>e.startBeat&&next.startBeat<=e.startBeat+.5&&
-              next.notes.some(p=>p===n+1&&allowed.has(p%12)))).toBe(true)
+          for(const n of e.notes) if(!allowed.has(n%12)) {
+            const cluster=made.compositionTechniques?.some(t=>t.kind==='neighbor-cluster'&&Math.abs(t.startBeat-e.startBeat)<.001)
+            const resolves=made.events.some(next=>next.hand==='right'&&next.startBeat>e.startBeat&&next.startBeat<=e.startBeat+.5&&
+              next.notes.some(p=>p===n+1&&allowed.has(p%12)))
+            const voicedNeighbor=cluster&&e.durationBeats<=.125&&made.events.some(lead=>lead.hand==='right'&&
+              lead.startBeat===e.startBeat&&lead.velocity>e.velocity&&lead.durationBeats>=e.durationBeats&&
+              lead.notes.includes(n+1)&&chord.quality.intervals.some(p=>(chord.root+p)%12===(n+1)%12))
+            expect(resolves||voicedNeighbor).toBe(true)
+          }
         }
         // Compare in tonic-relative coordinates so transposition alone cannot pass diversity tests.
         const parsed=parseChordInput(made.chords.join(' ')).chords

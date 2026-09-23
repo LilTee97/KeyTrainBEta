@@ -145,7 +145,8 @@ function activeGesture(g: Gesture) {
 }
 
 type Slot = { at: number; gate: number; gates: number[]; voices: number; octave: boolean; motion: number; sourceTone: number;
-  sourceChord: Harmony; height: number; intervals: number[]; stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
+  sourceChord: Harmony; height: number; intervals: number[]; source: string; cluster: boolean;
+  stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
 
 export function holdCpBalladVoices(events: TimelineEvent[]): TimelineEvent[] {
   // Retrigger only the repeated voice, not an entire chord containing it.
@@ -226,7 +227,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const chordIndex = (at: number) => Math.max(0, harmony.findLastIndex(h => h.at <= at + .00001))
   const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: options.dropRoot }), style, { beatsEach })
   const slots: Slot[] = [], traces: NonNullable<PhraseSection['compositionSources']> = []
-  const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean }> = []
+  const techniques: NonNullable<PhraseSection['compositionTechniques']> = []
+  const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean; source: string; answer: boolean }> = []
   const soloPunches: number[] = []
   const used = new Set<string>()
   let statement: Gesture | undefined
@@ -250,9 +252,18 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     statement ??= g
     used.add(g.id)
     let rhythm = g
+    // The song's two-hand technique can cross mode, its melody/harmony cannot.
+    // Try one local cell per phrase; the rest retains the minor donors' phrasing.
+    if (ownSong && !native.some(t => t.source.song === ownSong) && start === 8) {
+      const ownTiming = cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t)).flatMap(t => {
+        const adapted = fitGesture(t, backing, start, bpm)
+        return adapted ? [{ t, adapted }] : []
+      }).sort((a, b) => a.adapted.cost - b.adapted.cost)
+      if (ownTiming.length) { const t = pick(ownTiming.slice(0, 4)); rhythm = t.t; fit = t.adapted }
+    }
     // Unknown-mode scores can teach coordinated timing only. Their pitches and
     // harmony never enter the line; resample the known-mode contour by phase.
-    if (random() < .25) {
+    if (rhythm === g && random() < .25) {
       const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
         return adapted && Math.abs(t.right.length - g.right.length) <= 3 ? [{ t, adapted }] : []
@@ -268,12 +279,17 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const sourceIndex = Math.max(0, g.right.findLastIndex(n => n.at / 8 <= phase + .001))
       const src = g.right[sourceIndex], before = g.right[Math.max(0, sourceIndex - 1)]
       const after = g.right[sourceIndex + 1]
+      const rhythmNext = rhythm.right[i + 1]
       const h = g.source.harmony.findLast(h => h.at <= g.from + src.at)!
       slots.push({ at: start + e.at, gate: e.gates.at(-1)!, gates: e.gates, voices: Math.min(4, e.tones.length),
         octave: e.tones.some(n => e.tones.includes(n + 12)),
         motion: Math.max(-12, Math.min(12, (Math.max(...src.tones) - Math.max(...before.tones)) * contourScale)),
         height: (Math.max(...src.tones) - midpoint) * contourScale,
         intervals: e.tones.map(n => n - Math.max(...e.tones)),
+        source: rhythm.id,
+        cluster: !!rhythmNext && rhythmNext.at - rhythm.right[i].at <= .751 &&
+          Math.abs(Math.max(...rhythmNext.tones) - Math.max(...e.tones)) <= 4 &&
+          e.tones.includes(Math.max(...e.tones) - 1),
         stepwise: !!after && after.at - src.at <= .501 && src.at - before.at <= .501 &&
           [Math.max(...src.tones) - Math.max(...before.tones), Math.max(...after.tones) - Math.max(...src.tones)]
             .every(d => Math.abs(d) > 0 && Math.abs(d) <= 2),
@@ -283,7 +299,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     })
     leftGestures.push(...rhythm.left.map(e => ({ at: start + fit.warp(e.at), voices: Math.min(3, e.tones.length),
       gate: fit.warp(Math.min(8, e.at + Math.max(...e.gates))) - fit.warp(e.at),
-      octave: e.tones.some(n => e.tones.includes(n + 12)) })))
+      octave: e.tones.some(n => e.tones.includes(n + 12)), source: rhythm.id,
+      answer: e.tones.length >= 2 && rhythm.right.some(r => r.at < e.at && r.at + Math.max(...r.gates) > e.at + .125) })))
     for (let half = 0; half < 2; half++) traces.push({ bar: start / 4 + half + 1, start: start + half * 4, end: start + half * 4 + 4,
       harmony: harmony[chordIndex(start + half * 4)].source, melody: g.id,
       rhythm: `${rhythm.id} -> ${style.id}@${start % (style.cell?.lengthBeats ?? 4)}`,
@@ -293,7 +310,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const lastAt = lengthBeats - (kind === 'outro' ? 4 : .5)
   const finalSlot = { ...slots.at(-1)!, at: lastAt, gate: lengthBeats - lastAt, voices: kind === 'outro' ? 3 : 1,
     gates: Array(3).fill(lengthBeats - lastAt) as number[],
-    motion: -2, octave: false, staccato: false, roll: false, grace: false }
+    motion: -2, octave: false, cluster: false, staccato: false, roll: false, grace: false }
   const lineSlots = [...slots.filter(s => s.at < lastAt), finalSlot]
   const pitches = Array.from({ length: range.high - range.low + 1 }, (_, i) => i + range.low)
   const scale = new Set(degreesOf(key.scale).map(d => pc(key.tonic + d.semitones)))
@@ -355,7 +372,9 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const right: TimelineEvent[] = []
   lineSlots.forEach((s, i) => {
     const top = melody[i], ci = chordIndex(s.at), notes = [top]
-    if (s.octave && top - 12 >= range.low && stable[ci].has(pc(top))) notes.unshift(top - 12)
+    if (s.octave && top - 12 >= range.low) {
+      notes.unshift(top - 12)
+    }
     while (notes.length < s.voices) {
       const interval = s.intervals[Math.max(0, s.intervals.length - notes.length - 1)] ?? -4 * notes.length
       const choices = pitches.filter(n => n < top && n >= top - 12 &&
@@ -366,6 +385,23 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       notes.sort((a, b) => a - b)
     }
     const next = lineSlots[i + 1]?.at ?? lengthBeats
+    const nextTop = melody[i + 1]
+    // Written simultaneous semitone clusters are NOT grace notes in the score.
+    // Recompose a brief lower neighbour only beside a stable landing voice,
+    // followed by a nearby chord tone. Never sustain an invented altered chord.
+    const neighbor = top - 1
+    const cluster = s.cluster && nextTop !== undefined && next - s.at <= .751 &&
+      stable[ci].has(pc(top)) && stable[chordIndex(next)].has(pc(nextTop)) &&
+      Math.abs(nextTop - top) <= 3 && neighbor >= range.low &&
+      !notes.includes(neighbor) && !stable[ci].has(pc(neighbor))
+    if (cluster) {
+      // The cluster replaces an inner voice rather than making every punch denser.
+      if (notes.length >= s.voices && notes.length > 1) notes.shift()
+      notes.push(neighbor)
+      notes.sort((a, b) => a - b)
+      techniques.push({ source: s.source, startBeat: s.at, kind: 'neighbor-cluster' })
+    }
+    if (s.octave && notes.includes(top - 12)) techniques.push({ source: s.source, startBeat: s.at, kind: 'octave-line' })
     // Keep unequal inner/top holds. A changing chord clips only incompatible
     // voices, not the whole sonority; repeated punches are revoiced chord tones.
     const voiced = notes.map((n, j) => {
@@ -373,19 +409,22 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       let gate = Math.min(s.gates[sourceIndex] ?? s.gate, lengthBeats - s.at)
       if (!s.staccato && next - s.at <= 1 && gate >= (next - s.at) * .7) gate = Math.max(gate, next - s.at)
       if (s.staccato) gate *= .55
+      if (cluster && n === neighbor) gate = Math.min(gate, .125, next - s.at)
       for (let k = ci + 1; k < harmony.length && harmony[k].at < s.at + gate; k++)
         if (!stable[k].has(pc(n))) { gate = harmony[k].at - s.at; break }
-      return { n, gate }
+      const phraseLift = Math.round(4 * Math.sin(s.at / lengthBeats * Math.PI))
+      const lead = 76 + phraseLift + (s.at % 1 === 0 ? 3 : 0) + (notes.length >= 3 ? 3 : 0)
+      const velocity = cluster && n === neighbor ? lead - 21 : n === top ? lead : lead - 12
+      return { n, gate, velocity }
     })
     const roll = s.roll && notes.length > 1 ? Math.min(.06, Math.min(...voiced.map(v => v.gate)) / (notes.length * 3)) : 0
     const groups = new Map<string, TimelineEvent>()
-    voiced.forEach(({ n, gate }, j) => {
+    voiced.forEach(({ n, gate, velocity }, j) => {
       const startBeat = s.at + j * roll, durationBeats = gate - j * roll
-      const id = `${startBeat}:${durationBeats}`
+      const id = `${startBeat}:${durationBeats}:${velocity}`
       const event = groups.get(id)
       if (event) event.notes.push(n)
-      else groups.set(id, { hand: 'right', notes: [n], startBeat, durationBeats,
-        velocity: notes.length >= 3 ? 82 : s.at % 1 === 0 ? 76 : 68 })
+      else groups.set(id, { hand: 'right', notes: [n], startBeat, durationBeats, velocity })
     })
     right.push(...groups.values())
     if (s.grace && i > 0 && top > range.low && Math.abs(melody[i - 1] - top) <= 4 && s.at - lineSlots[i - 1].at >= .25 &&
@@ -402,6 +441,14 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const c = chords[chordIndex(at)]
     bassEvents.push({ hand: 'left', startBeat: at, durationBeats: .5,
       notes: [36 + (c.bass ?? c.root)], velocity: 74 })
+  }
+  for (const g of leftGestures.filter(g => g.answer)) {
+    if (bassEvents.some(e => near(e.startBeat, g.at)) ||
+      !right.some(e => e.startBeat < g.at && e.startBeat + e.durationBeats > g.at + .125)) continue
+    const c = chords[chordIndex(g.at)]
+    bassEvents.push({ hand: 'left', startBeat: g.at, durationBeats: g.gate,
+      notes: [48 + (c.bass ?? c.root)], velocity: 62 })
+    techniques.push({ source: g.source, startBeat: g.at, kind: 'left-answer' })
   }
   const left = bassEvents.sort((a, b) => a.startBeat - b.startBeat).map(e => {
     const ci = chordIndex(e.startBeat), chord = chords[ci]
@@ -426,7 +473,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   })
   if (left.some(e => e.notes.some(n => !Number.isFinite(n)))) return empty('Không đủ tầm bass cho câu solo này.')
   return { events: holdCpBalladVoices([...left, ...right]), lengthBeats,
-    chords: chords.map(c => c.symbol), beatsEach, compositionSources: traces,
+    chords: chords.map(c => c.symbol), beatsEach, compositionSources: traces, compositionTechniques: techniques,
     sourcePhrase: { id: 'cp-original', fromBar: 1, barCount: bars, method: 'cp-composition' },
     adaptationNote: `Nguồn câu: ${[...new Set(traces.map(t => cpBalladGestures.find(g => g.id === t.melody)!.source.song))].join(', ')}.` }
 }

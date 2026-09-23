@@ -3,6 +3,51 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Bổ Sung Kỹ Thuật Sau Mốc 02dfd38
+
+Người dùng nghe thấy câu đã tạm được nhưng kỹ thuật còn kém sinh động so với
+Có Em Chờ gốc; yêu cầu train tiếp, đồng thời hỏi hỗ trợ giọng trưởng.
+Bộ soạn có cả major/minor, chọn dữ liệu cao độ và hòa âm theo mode, không biến
+vòng trưởng thành thứ bằng đổi Tone. Cả 12 chủ âm mỗi mode đều được kiểm lại.
+
+Đọc trực tiếp `Co Em Cho-Ca Phao.mxl` bằng `scripts/audit_ca_phao.py`:
+
+- Ô 2: cụm Eb–E–F trong nhóm chùm ba rồi Eb–D.
+- Ô 6: F–Gb rồi Eb, C–Db rồi chuỗi quãng tám C–Bb–Ab.
+- Ô 7: Gb–G rồi Eb. Ô 54: F–Gb chồng quãng tám rồi Eb chồng quãng tám.
+- Ô 68: E–F–Gb rồi Gb. Đây là cụm ký âm đồng thời, không phải dấu grace.
+- Dạo/giang/kết có lần lượt 4/5/1 cụm chứa nửa cung, 3/8/4 cụm chứa quãng tám.
+  Không có dấu arpeggiate hoặc grace trong ba cửa solo Có Em Chờ này; không tự
+  gọi tất cả cụm thành vuốt/luyến, cũng không suy pedal hay rubato từ đó.
+
+Tái hiện trước sửa: điệu Có Em Chờ, giang full, tonic 4, take 0–11, cả hai mode,
+`opening: null`, `dropRoot: true`, tầm mặc định. Không có cụm nửa cung nào trong
+24 lượt; RH chỉ có ba mức velocity 68/76/82. Nhánh thứ không dùng tiết tấu Có Em
+Chờ lần nào, vì bộ chọn cao độ đúng mode đồng thời loại luôn kỹ thuật của bài.
+
+Lượt này giữ khung câu và sửa chuyển thể:
+
+1. Cụm nửa cung có chứng cứ nguồn được chuyển thành nốt kề dưới ngắn cạnh tiếng
+   hợp âm, với tiếng kế tiếp cũng là nốt hợp âm trong quãng ba bán cung trở xuống.
+   Nốt kề nhẹ hơn, dài tối đa .125 phách. Đây là phép chuyển thể bảo thủ, không
+   tuyên bố chép nguyên trường độ/cao độ cụm gốc; không thêm cụm ở chỗ không có nguồn.
+2. Giữ bè quãng tám của nốt lướt đã qua kiểm tra giải quyết, thay vì bỏ bè thấp
+   chỉ vì tiếng trên tạm không thuộc hợp âm. Tầm đàn vẫn giới hạn cả hai tay.
+3. Cho phép cụm tay trái từ nguồn đáp dưới RH đang ngân, giữ mọi điểm bass của
+   điệu. Chỉ thêm khi nguồn và đầu ra đều có RH ngân tại đó; không áp vào đệm hát.
+4. Giai điệu mạnh hơn bè trong; nốt kề nhẹ hơn nữa. Độ nâng lực theo câu là lựa
+   chọn phối của app, không phải velocity đo được từ bản biểu diễn của CP.
+5. Khi điệu cùng bài không có nguồn cùng mode, thử một cell kỹ thuật của bài
+   tại ô 3–4. Với Có Em Chờ giọng thứ, chỉ mượn thời điểm/số bè/kiểu quãng;
+   nguồn giai điệu và vòng hòa âm vẫn phải là thứ. Mẫu không khớp bị bỏ.
+
+`compositionTechniques` ghi nguồn và thời điểm kỹ thuật thực sự phát để đối chiếu,
+không chỉ đánh dấu có kỹ thuật trong kho. Kiểm thử mới kiểm tiếng kề ngắn/nhẹ,
+nốt chính và nốt giải quyết đúng hợp âm, bass đáp có tiếng ngân, và không rò
+giai điệu trưởng sang nhánh thứ. **72/72 kiểm thử liên quan đạt**, build và lint
+các file chỉnh sửa đạt; cảnh báo bundle lớn vẫn có. Không chạy lại toàn suite.
+Đây là bản chờ nghe duyệt, không kết luận đã mô phỏng đủ kỹ thuật biểu diễn CP.
+
 ## Lượt Sửa Sau Phản Hồi Nghe
 
 Người dùng báo solo Có Em Chờ sơ sài, ngắt quãng và thiếu kỹ thuật. Đối chiếu đầu ra
