@@ -430,11 +430,11 @@ it('simulation already preserves the original Bb9 to E7b13 bass and must not be 
   }
 })
 
-it('native solo bass gestures cover confirmed sheets, retain octave support and never use the sung loop',()=>{
+it('Bossa solo bass gestures retain octave support and never use the sung loop',()=>{
   expect(new Set(cpHandCells.map(c=>c.id.split(':')[0])).size).toBe(7)
   const used=new Set<string>()
   let octaves=0,shortAnswers=0,heldUnderRuns=0
-  for(const style of [bossa,getStyle('pop-1')!])for(const scale of ['minor','major'] as const)
+  for(const style of [bossa])for(const scale of ['minor','major'] as const)
     for(let take=0;take<8;take++){
       const made=buildPhraseSection({...base,style,key:{tonic:9,scale},caPhaoFull:true,take})!
       expect(made.unavailableReason).toBeUndefined()

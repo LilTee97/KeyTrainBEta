@@ -43,6 +43,8 @@ export interface PhraseSectionOptions {
   key: { tonic: PitchClass; scale: ScaleType } | null
   style: StylePattern
   beatsPerChord: number
+  /** Actual playback tempo, used to reject unplayably compressed source runs. */
+  bpm?: number
   dropRoot: boolean
   /** Hợp âm mở bài — hợp âm báo cuối dạo đầu hút về chính nó. */
   opening: ParsedChord | null

@@ -6,7 +6,7 @@ import type { PitchClass } from '../../shared/musicTheory/types'
 import { degreesOf } from '../../shared/musicTheory/scales'
 import type { PhraseSection, PhraseSectionOptions } from './phraseSection'
 import type { TimelineEvent } from './types'
-import { composeCoEmChoSolo } from './coEmChoComposition'
+import { composeCpBallad } from './cpBalladComposition'
 
 const pc = (n: number) => ((n % 12 + 12) % 12) as PitchClass
 type Harmony = typeof sources.sections[number]['harmony'][number]
@@ -517,7 +517,7 @@ function composeBossaLine(options:PhraseSectionOptions, chords:ReturnType<typeof
  * Other genres retain their own planner; cross-genre learning never imports timing.
  */
 export function composeCpSolo(options: PhraseSectionOptions): PhraseSection {
-  if (options.style.family === 'ca-phao-ballad-co-em-cho') return composeCoEmChoSolo(options)
+  if (cpGenre(options.style) === 'ballad' || options.style.cpBalladChordLeads) return composeCpBallad(options)
   const empty = (why: string): PhraseSection => ({events:[],chords:[],beatsEach:[],lengthBeats:0,unavailableReason:why})
   const key=options.key, genre=cpGenre(options.style)
   if(!key || !['major','minor'].includes(key.scale)) return empty('CP cần xác định giọng trưởng hoặc thứ.')
