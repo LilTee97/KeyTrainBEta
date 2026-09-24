@@ -10,28 +10,53 @@ import type { TimelineEvent } from '../types'
 const [verse, chorus] = LINH_NHI_SLOW_ROCK
 const render = (chords: string, style = verse, options = {}) =>
   renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), style, options)
-const left = (events: TimelineEvent[]) => events.filter(e => e.hand === 'left')
+const hand = (events: TimelineEvent[], which: 'left' | 'right') =>
+  events.filter(e => e.hand === which).map(e => [e.startBeat, e.notes])
 
-describe('Slow Rock Lá thư (Linh Nhi)', () => {
-  it('plays sheet cell c15 on Bb — Bb2 D3 F3 Bb3 F3 D3, one triplet eighth each — and leaves RH to the melody', () => {
-    const events = render('Bb C')
-    expect(left(events).slice(0, 6).map(e => [e.startBeat, e.notes]))
-      .toEqual([[0, [46]], [.5, [50]], [1, [53]], [1.5, [58]], [2, [53]], [2.5, [50]]])
-    expect(events.filter(e => e.hand === 'right')).toEqual([])
+describe('Slow Rock Lá thư (Linh Nhi) — hai tay', () => {
+  it('verse replays sheet cell c22 on A7 note for note: LH bass octaves, RH 1-3-5-8 then 3-5-8', () => {
+    const events = render('A7')
+    expect(hand(events, 'left')).toEqual([
+      [0, [45, 57]], [.5, [45]], [1, [45, 57]], [1.5, [45]], [2, [52]], [2.5, [45, 57]],
+    ])
+    expect(hand(events, 'right')).toEqual([
+      [.5, [57, 61, 64, 69]], [.75, [57, 61, 64, 69]], [1, [61, 64, 69]], [1.5, [61, 64, 69]],
+    ])
+  })
+
+  it('never has both hands strike the same key at the same moment, in all 12 roots', () => {
+    for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']) {
+      for (const style of [verse, chorus]) {
+        const events = render(`${root} ${root}m`, style)
+        for (const r of events.filter(e => e.hand === 'right')) {
+          const clash = events.filter(l => l.hand === 'left' && Math.abs(l.startBeat - r.startBeat) < 1e-6)
+            .flatMap(l => l.notes).filter(n => r.notes.includes(n))
+          expect(clash, `${style.id} ${root} @${r.startBeat}`).toEqual([])
+        }
+      }
+    }
+  })
+
+  it('chorus keeps the thumb inner voice of c41–c42 (A4 · D4 · D4 · D4) without the melody above it', () => {
+    const events = render('D7 Gm', chorus)
+    expect(hand(events, 'right')).toEqual([[0, [69]], [2.25, [62]], [3, [62]], [3.75, [62]]])
   })
 
   it('scales the section cell supplied by cellAt with gridUnit, like the main cell', () => {
     const events = render('D7 Gm', verse, { cellAt: () => chorus.cell! })
-    expect(left(events).map(e => e.startBeat)).toEqual(chorus.cell!.left.map(hit => hit.beat / 2))
+    expect(events.filter(e => e.hand === 'left').map(e => e.startBeat))
+      .toEqual(chorus.cell!.left.map(hit => hit.beat / 2))
   })
 
   it('keeps the b7 of D7 in the chorus pulse and never doubles a pitch in one attack', () => {
-    for (const chords of ['D7 Gm', 'D Gm', 'B7 E', 'Bb F', 'C Am']) {
-      for (const event of left(render(chords, chorus))) {
-        expect(new Set(event.notes).size, chords).toBe(event.notes.length)
+    for (const chords of ['D7 Gm', 'D Gm', 'B7 E', 'Bb F', 'C Am', 'E A']) {
+      for (const style of [verse, chorus]) {
+        for (const event of render(chords, style)) {
+          expect(new Set(event.notes).size, `${style.id} ${chords}`).toBe(event.notes.length)
+        }
       }
     }
-    const d7 = left(render('D7 Gm', chorus)).find(e => e.startBeat === 1.5)!
+    const d7 = render('D7 Gm', chorus).find(e => e.hand === 'left' && e.startBeat === 1.5)!
     expect(d7.notes).toEqual([50, 54, 60])
   })
 

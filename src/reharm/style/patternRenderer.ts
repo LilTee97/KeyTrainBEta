@@ -620,7 +620,7 @@ function renderWithCell(
     ...missingChordHits(events, voicings, starts, releaseRatio).filter(
       (event) => !inMuteWindow(event.startBeat, muteWindows)
         // ACDD deliberately omits melody-only RH bars; keep those rests.
-        // Lá thư: RH in the sheet is the melody on 64% of attacks — no filler chords.
+        // Lá thư: RH gaps between its comping hits are the melody's space in the sheet.
         && !(KEEP_RH_RESTS.has(pattern.family) && event.hand === 'right'),
     ),
   ]

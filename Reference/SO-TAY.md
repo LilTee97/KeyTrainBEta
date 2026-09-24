@@ -3249,3 +3249,37 @@ trong sheet ÷ 80; c15 lấy trung bình với c87.
 
 Test chung `styleLibrary.test.ts` đòi mọi điệu có tay phải: miễn đích danh họ này, kèm lý do;
 `laThuSlowRock.test.ts` khoá điều ngược lại. Toàn suite: **2.755 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+### Slow Rock Lá thư đổi sang hai tay: bỏ nốt giai điệu, không bỏ cả tay phải
+
+Người dùng bác bản `ca7ae4c`: *"học cách đệm phối hợp 2 tay đi chứ sao có mỗi tay trái vậy"*.
+Cái sai của bản ấy: thấy 64% cú gõ tay phải là nốt đơn giai điệu nên để trống **cả** tay phải.
+"Tránh nốt giai điệu" nghĩa là bỏ đúng nốt giai điệu, rồi giữ phần tay phải còn lại.
+
+**Luật tách** (đo lại trên ô 6 móc đơn): cú gõ ≥3 nốt, đỉnh ≤ Bb4 = hợp âm đệm; cú gõ 2 nốt =
+giai điệu + bè (giữ bè nếu cách ≥3 nửa cung, ≤ A4, không nhân quãng tám — loại nốt láy nửa cung
+như Ab4 dưới A4); nốt đơn = giai điệu, trừ khi gõ lại đúng nốt bè vừa giữ. Sau khi bỏ giai
+điệu, tay phải còn đệm ở **39/94 ô phiên** (44 hợp âm · 35 bè · 10 ngón cái) và **19/30 ô điệp**
+(25 bè · 6 hợp âm · 6 ngón cái). Tiếng tay phải đệm trùng mốc tay trái 56 lần, chen khe 33 lần.
+
+**Phiên — c22** (A7, ô sheet 17 phách 2), tay phải lặp y hệt ở c93. Lõi nhịp tay phải
+{2, 2½, 3, 4} có ở c7, c22, c23, c39, c70, c93, c105 — cử chỉ hai tay lặp nhiều nhất bài.
+Tay trái A2/A3 · A2 · A2/A3 · A2 · E2/E3 · A2/A3; tay phải A3/C#4/E4/A4 ở 2 · 2½, rồi
+C#4/E4/A4 ở 3 · 4 — **bỏ nốt gốc đúng lúc tay trái gõ quãng tám**, hai tay không trùng phím.
+Tay phải khai bậc (không dùng thế bấm app) chính vì chỗ này: thế bấm app trên A7 là
+A3/C#4/E4/G4, trùng phím A3 với tay trái ở tiếng 3; `holdUntilStruckAgain` chỉ xét trùng
+phím trong một tay.
+
+**Điệp — c41–c42** giữ tay trái cũ, thêm bè ngón cái: A4 ngân từ tiếng 1 · D4 vào ở 5½ ·
+D4 tiếng 1 ô sau · D4 gõ lại ở 2½. Bỏ giai điệu D5 · C5 · Bb4 · A4 · G4 phía trên. c45–c46
+cùng mốc.
+
+Biên soạn, ghi để lùi: tiếng 5 phiên khai E3 đơn thay E2/E3 (bậc 5 dưới gốc rơi dưới sàn 36
+ở giọng Đô–Mi, gập thành nốt trùng); `rightHandRegister` gốc từ 55 — gốc Đô–Fa thăng thì hợp
+âm tay phải lên 72–78, cao hơn vùng A3–A4 của sheet (sheet chỉ có A và G ở cử chỉ này).
+
+**Giá trị cũ** (`ca7ae4c`): phiên = c15–c16, tay trái rải 1–3–5–8–5–3 sáu móc đơn đều (Bb2 D3
+F3 Bb3 F3 D3), tay phải trống; điệp tay phải trống. **Triệu chứng để lùi:** nghe phiên dồn dập
+quá / mất tiếng rải → c15–c16 là tay trái lúc chị vừa đàn vừa HÁT giai điệu bằng tay phải.
+`KEEP_RH_RESTS` giữ họ này: khe giữa các tiếng tay phải là chỗ của giai điệu. Test chung
+`styleLibrary.test.ts` không còn miễn trừ. Toàn suite **2.757 qua / 7 đỏ** — đúng 7 đỏ cũ.

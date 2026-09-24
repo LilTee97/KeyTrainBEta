@@ -1,29 +1,23 @@
 import type { RhythmHit, StylePattern } from '../types'
 
 /*
-  SLOW ROCK LÁ THƯ — đệm của Linh Nhi trong bản ký âm "Lá Thư Trần Thế" (Rê thứ).
+  SLOW ROCK LÁ THƯ — đệm HAI TAY của Linh Nhi trong bản ký âm "Lá Thư Trần Thế" (Rê thứ).
   Nguồn: PianoBrain/video/Linh_Nhi/La Thư Tran The-Linh Nhi.mxl, SHA-256 b45d3f75…
 
   SHEET GHI 4/4 ♩=86 NHƯNG NHẠC LÀ 12/8 (số đo 24/9/2026):
-  - Nốt trầm nhất mỗi ô 4/4 rơi đều bốn phách (24 · 25 · 21 · 20, n=92 ô hát) —
-    vạch nhịp 4/4 không bám chỗ đổi hợp âm.
-  - Tay trái đi từng cụm 6 móc đơn cho một hợp âm: bass rơi cùng pha chu kỳ 6
-    móc đơn ở 75/98 lần, khoảng cách hai bass hay gặp nhất là 6 móc đơn (36 lần).
-  → Móc đơn ký âm = móc đơn chùm ba thật. Điệu khai 6/8, một ô = một hợp âm = 6
-    móc đơn, `gridUnit` 0,5 và BPM 86 để giữ đúng tempo sheet (♩. ≈ 57).
-  Ô "c15" dưới đây là ô 6 móc đơn thứ 15 tính theo pha ấy, không phải số ô sheet.
+  - Nốt trầm nhất mỗi ô 4/4 rơi đều bốn phách (24 · 25 · 21 · 20, n=92 ô hát).
+  - Bass rơi cùng pha chu kỳ 6 móc đơn ở 75/98 lần; hai bass cách nhau hay gặp nhất
+    6 móc đơn (36 lần). → Một ô ở đây = một hợp âm = 6 móc đơn chùm ba; `gridUnit`
+    0,5 và BPM 86 giữ đúng tempo sheet (♩. ≈ 57).
+  "c22" = ô 6 móc đơn thứ 22 tính theo pha ấy, không phải số ô sheet.
 
-  HAI TAY (đếm trên ô hát đã cắt lại):
-  - Phiên khúc 94 ô: tay phải 64% là nốt đơn — giai điệu lời, ngân dài; tay trái
-    rải ở 62/91 ô. Tay phải chỉ bấm hợp âm ở 12/94 ô, toàn ở cuối câu.
-  - Điệp khúc 30 ô: tay trái tự dập hợp âm ở 5/30 ô (phiên 5/91); tay phải vẫn
-    là giai điệu, chồng thêm nốt bè chạy theo đúng nhịp giai điệu.
-  → Nền đệm lặp lại là TAY TRÁI MỘT MÌNH. Tay phải để trống: mọi nốt tay phải
-    trong các ô chọn dưới đây là giai điệu hoặc bè đi theo giai điệu.
-  Cử chỉ hai tay cuối câu (tay phải dập hợp âm, tay trái quãng tám bass rồi đi
-  xuống — c7, c22, c39) CHƯA đưa vào: nó phụ thuộc vị trí câu, không phải nền.
+  TÁCH GIAI ĐIỆU KHỎI TAY PHẢI (luật đếm): cú gõ ≥3 nốt, đỉnh ≤ Bb4 = hợp âm đệm;
+  cú gõ 2 nốt = giai điệu trên + bè dưới (giữ bè nếu cách ≥3 nửa cung, ≤ A4, không
+  phải nhân quãng tám); nốt đơn = giai điệu, trừ khi gõ lại đúng nốt bè vừa giữ.
+  Sau khi bỏ giai điệu, tay phải còn đệm ở 39/94 ô phiên và 19/30 ô điệp; tiếng tay
+  phải đệm trùng mốc tay trái 56 lần, chen khe tay trái 33 lần (phiên).
 
-  Lực: `velocityScale` = thuộc tính `dynamics` của nốt trong sheet ÷ 80 (số đo).
+  Lực: `velocityScale` = thuộc tính `dynamics` của cú gõ trong sheet ÷ 80 (số đo).
 */
 const common = {
   family: 'slow-rock-la-thu',
@@ -38,30 +32,51 @@ const common = {
   releaseRatio: 1,
   // Cụm dập điệp khúc lên tới bậc 5 + quãng tám: gốc Si ra Fa thăng 4 (66).
   leftHandTop: 67,
+  // Tay phải đặt gốc từ Son 3 (55) lên, các bậc ngay trên gốc: A ra A3/C#4/E4/A4,
+  // D7 ra nốt bè A4 · D4, Gm ra D4 — đúng từng nốt sheet. Gốc Đô–Fa thăng thì
+  // hợp âm lên tới 72–78, cao hơn vùng A3–A4 của sheet: sheet chỉ có A và G ở
+  // cử chỉ này nên chưa biết chị bấm các gốc kia thế nào. Biên soạn.
+  rightHandRegister: { rootFloor: 55, low: 55, high: 79 },
 }
 
 const tone = (toneIndex: number, semitones = 0) => ({ toneIndex, semitones, fromRoot: true })
 const hit = (beat: number, durationBeats: number, velocityScale: number,
   tones: RhythmHit['tones']): RhythmHit => ({ beat, durationBeats, velocityScale, tones })
+const octave = [tone(0), tone(0, 12)]
+// Bậc 3 · 5 · 8 trên gốc — thế tay phải c22 khi bỏ nốt gốc.
+const triadUp = [tone(1), tone(2), tone(0, 12)]
 
+/*
+  PHIÊN — c22 (A7, ô sheet 17 phách 2), lặp y hệt tay phải ở c93 (phiên 3).
+  Cử chỉ hai tay lặp nhiều nhất bài: lõi tay phải {2, 2½, 3, 4} có ở c7, c22, c23,
+  c39, c70, c93, c105. Tay trái bass, tay phải trả lời ngay sau:
+    tay trái  A2/A3 · A2 · A2/A3 · A2 · E2/E3 · A2/A3
+    tay phải   —    · A3/C#4/E4/A4 ×2 (móc kép) · C#4/E4/A4 · C#4/E4/A4 ngân
+  Bỏ E4 tay phải ở tiếng 1: nốt cuối của câu hát.
+  Tiếng 3 · 4 tay phải BỎ nốt gốc (C#4/E4/A4) đúng như sheet: tay trái đang gõ
+  quãng tám A2/A3 ở tiếng 3, hai tay không gõ trùng một phím.
+  Tiếng 5 khai E3 đơn thay cho E2/E3: bậc 5 DƯỚI gốc rơi dưới sàn tay trái (36) ở
+  các giọng Đô–Mi và bị gập thành nốt trùng. Biên soạn.
+  Tay trái rải 1–3–5–8–5–3 (c15–c16) của bản trước là lúc tay phải đang HÁT —
+  không phải cách chị đệm hai tay, nên không dùng ở đây.
+*/
 const laThu: StylePattern = {
   ...common,
   id: 'slow-rock-la-thu',
   name: 'Slow Rock Lá thư · Phiên khúc',
   variant: 1,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c15–c16 = ô ký âm 12 phách 3 → 14 phách 1 (Bb, C); c15 lặp y hệt ở c87'],
-  note: 'Phiên: tay trái rải 1–3–5–8–5–3, sáu móc đơn chùm ba mỗi hợp âm; tay phải để trống cho giai điệu. Chờ nghe duyệt.',
+  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c22 = ô ký âm 17 phách 2 → 18 phách 1 (A7); lặp ở c93'],
+  note: 'Phiên: tay trái bass quãng tám từng móc đơn chùm ba, tay phải dập 1–3–5–8 ở tiếng 2 · 2½, 3–5–8 ở tiếng 3 rồi ngân từ tiếng 4. Chờ nghe duyệt.',
   cell: {
-    lengthBeats: 12,
+    lengthBeats: 6,
     left: [
-      // c15 Bb: Bb2 D3 F3 Bb3 F3 D3. Lực = trung bình c15 và c87 (cùng nốt, cùng nhịp).
-      hit(0, 1, .84, [tone(0)]), hit(1, 1, .51, [tone(1)]), hit(2, 1, .69, [tone(2)]),
-      hit(3, 1, .75, [tone(0, 12)]), hit(4, 1, .7, [tone(2)]), hit(5, 1, .67, [tone(1)]),
-      // c16 C: C3 E3 G3 C3/C4 G3 E3 — tiếng 4 bấm gốc kèm quãng tám.
-      hit(6, 1, .66, [tone(0)]), hit(7, 1, .88, [tone(1)]), hit(8, 1, .85, [tone(2)]),
-      hit(9, 1, .68, [tone(0), tone(0, 12)]), hit(10, 1, .64, [tone(2)]), hit(11, 1, .86, [tone(1)]),
+      hit(0, 1, .96, octave), hit(1, 1, .79, [tone(0)]), hit(2, 1, .86, octave),
+      hit(3, 1, .96, [tone(0)]), hit(4, .5, 1.05, [tone(2)]), hit(5, .5, 1.14, octave),
     ],
-    right: [],
+    right: [
+      hit(1, .5, .84, [tone(0), ...triadUp]), hit(1.5, .5, .8, [tone(0), ...triadUp]),
+      hit(2, .5, .89, triadUp), hit(3, 2, 1.13, triadUp),
+    ],
   },
 }
 
@@ -72,13 +87,22 @@ const pulse = [tone(0, 12), tone(1, 12), tone(3, 12)]
 // Cụm dập trên hợp âm ba nốt ở c42 Gm: D3 G3 Bb3 D4.
 const triad = [tone(2), tone(0, 12), tone(1, 12), tone(2, 12)]
 
+/*
+  ĐIỆP — c41–c42 (D7 → Gm, ô sheet 32 phách 1 → 33 phách 3); c45–c46 cùng lối cả
+  hai tay, cao trào c106/c109 lặp phần tay trái.
+  Tay trái: bass, dập cụm hợp âm theo từng móc đơn, bass lại ở tiếng 6.
+  Tay phải: GIỮ nốt bè ngón cái, BỎ giai điệu D5 · C5 · Bb4 · A4 · G4 phía trên nó:
+    c41  A4 ngân từ tiếng 1 (dưới D5) · D4 vào ở 5½ (dưới C5)
+    c42  D4 tiếng 1 (dưới Bb4) · D4 gõ lại một mình ở 2½
+  c45 cùng mốc (bè tiếng 1, gõ lại 2 · 2½, bè 5½); c46 bè tiếng 1, gõ lại 2½.
+*/
 const laThuChorus: StylePattern = {
   ...common,
   id: 'slow-rock-la-thu-chorus',
   name: 'Slow Rock Lá thư · Điệp khúc',
   variant: 2,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c41–c42 = ô ký âm 32 phách 1 → 33 phách 3 (D7, Gm); cùng cử chỉ c45–c46, cao trào c106'],
-  note: 'Điệp: bass rồi tay trái dập hợp âm theo móc đơn chùm ba, bass lại ở tiếng 6. Tay phải để trống cho giai điệu. Chờ nghe duyệt.',
+  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c41–c42 = ô ký âm 32 phách 1 → 33 phách 3 (D7, Gm); cùng lối c45–c46, cao trào c106'],
+  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải giữ nốt bè dưới giai điệu, gõ lại xen nhịp dập. Chờ nghe duyệt.',
   cell: {
     lengthBeats: 12,
     left: [
@@ -90,15 +114,18 @@ const laThuChorus: StylePattern = {
       hit(3, 1, .96, pulse), hit(4, 1, .86, pulse),
       hit(5, .75, 1.11, [tone(0)]),
       // c42 Gm. Bỏ D2 ở tiếng đầu: đó là gốc của D7 ngân nối sang, không phải bậc của Gm.
-      hit(6, 1, 1, [tone(0), tone(0, 12)]),
+      hit(6, 1, 1, octave),
       hit(7, .5, .86, [tone(2), tone(1, 12), tone(2, 12)]),
       hit(7.5, .5, .9, [tone(0), tone(2), tone(1, 12)]),
       hit(8, 1, .9, triad),
       hit(9, 1, .95, [tone(0), ...triad]),
       hit(10, 1, .79, triad),
-      hit(11, 1, .91, [tone(0), tone(0, 12)]),
+      hit(11, 1, .91, octave),
     ],
-    right: [],
+    right: [
+      hit(0, 4, 1.11, [tone(2)]), hit(4.5, 1.5, 1.15, [tone(0)]),
+      hit(6, 1.5, 1.13, [tone(2)]), hit(7.5, .5, .9, [tone(2)]),
+    ],
   },
 }
 
