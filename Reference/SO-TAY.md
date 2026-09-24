@@ -3411,3 +3411,42 @@ thì lấy cả tay trái của chị. **Giữ hai đường tai đã duyệt:**
 giang/kết thứ Bolero Tuấn. Ghép ngược đúng từng nốt hai tay: slow rock trên 6/8, bolero trên 4/4.
 
 Toàn suite **2.769 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+### Câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu — slow rock soạn mới từ 49 ô của chị
+
+**Người dùng bác khi nghe** (24/9/2026) bản đổi nhịp của mục trên: *"đừng lấy những phần từ câu solo
+của điệu khác rồi dồn ép vào, nghe quá tệ"*; được lấy phần của sheet khác rồi chỉnh **nếu cùng điệu**;
+quy luật soạn nốt học từ mọi sheet; câu *"ko bị phô, bị trùng lặp hoặc ngắt quãng"*.
+
+**Nay** (`style/linhNhiSolo.ts`): họ Slow Rock → `style/soanSlowRockLinhNhi.ts`; họ Bolero → chép
+nguyên một đoạn bolero thật (như cũ, không còn nhận nguồn slow rock); họ khác → `unavailableReason`.
+`ReharmHome`: `lnDao` chỉ họ Slow Rock, `lnSau` họ Slow Rock + Bolero (trừ thứ Bolero Tuấn) — pop,
+ballad… đi lại đường trước khi có nút màu Linh Nhi.
+
+**Bộ soạn slow rock:** vật liệu nốt chỉ 49 ô solo slow rock (Lá Thư, Một Cõi). Mỗi ô **chuyển bậc theo
+gam** lên hợp âm đích, nốt bậc 3 · 5 · 7 lệch nửa cung do gam về nốt hợp âm; dời cả ô ± quãng tám.
+Vòng hợp âm = vòng solo thật cùng giọng (slow rock trước; **trưởng mượn vòng bolero trưởng**, chỉ hoà
+âm). Ô kết = cử chỉ kết thật giữ hợp âm của nó. Ô giữa chọn bằng điểm phạt theo quy luật đo ở
+`tools/quy_luat_not_linh_nhi.py` (md Linh Nhi **13e**); hệ số phạt là biên soạn. Điệu 6/8 không
+`gridUnit` (slow-rock-2/3/4, Hải) có ô 6 phách → co giãn theo `oDieu`.
+
+**Số đo** trên 432 câu soạn (3 đoạn × 2 giọng × 12 giọng × 6 lượt) so với 6 đoạn sheet slow rock:
+nốt hợp âm phách mạnh 90–100% (sheet 67/81 = 83%) · phách nhẹ 83–89% (sheet 165/194 = 85%) · ô thưa
+≤ 2 cú gõ 0–7% (sheet 4/49) · ô trống giữa đoạn 0 · ô lặp hình ô trước 0 (sheet 0/49) · 6 lượt ra 6 câu
+khác nhau ở giọng Rê (test khoá ≥ 4). Test khoá các ngưỡng ấy theo số sheet.
+
+**Bẫy đã sập khi dựng:** (1) ô kết Picardy Lá Thư c142–c143 **không gõ tay phải mới** và c142 trải 37
+nửa cung (F#4–G7) — lọc "ô phải có nốt" và tầm 55–98 làm hỏng 15/72 câu kết; nay ô kết được rỗng, tầm
+48–103. (2) Hợp âm sus: nốt bậc ba không nắn được (cách bậc 4 hai nửa cung) → phạt thay vì nắn.
+(3) Bài không có vốn hợp âm thì mọi vòng hoà điểm → vòng bolero chen vào giọng thứ dù có vòng slow rock;
+nay xếp hạng slow rock trước.
+
+**Giá trị cũ** (71de0c5): 6/8 chép một đoạn nguyên khối, bolero đổi sang 12/8 bằng `chumBa`; 4/4 nhận
+cả slow rock đổi sang 4/4; `lnDao` mọi họ trừ Bolero, `lnSau` mọi họ. **Triệu chứng để lùi:** câu slow
+rock nghe vụn, như ghép mảnh — kiểm hệ số phạt nối ô (`phatNoi`) và tầm (`0.15`) trước khi bỏ bộ soạn.
+
+**Chưa đo:** chưa có sheet slow rock trưởng — giọng trưởng là ô thứ chuyển gam, chưa đối chiếu được;
+hệ số phạt chưa đo; lực đánh vẫn 76 / 62.
+
+Toàn suite **2.769 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

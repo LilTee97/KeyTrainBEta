@@ -3155,12 +3155,16 @@ export function ReharmHome() {
    */
   /*
     CÂU SOLO LINH NHI THEO MÀU HỢP ÂM — người dùng yêu cầu 24/9/2026: chọn màu Linh Nhi thì
-    dạo · giang · kết soạn bằng `linhNhiSolo` cho điệu đang chơi (một đoạn solo thật của chị,
-    đổi sang nhịp điệu). GIỮ hai đường tai đã duyệt: dạo họ Bolero (bộ ghép ô Linh Nhi, các câu
-    "Đã ổn" ở md mục 16) và giang/kết giọng thứ Bolero Tuấn (theo Codex).
+    dạo · giang · kết soạn bằng `linhNhiSolo` cho điệu đang chơi — vật liệu CHỈ từ sheet cùng điệu
+    (người dùng cùng ngày: *"đừng lấy những phần từ câu solo của điệu khác rồi dồn ép vào"*). Chị
+    chỉ có sheet slow rock và bolero, nên họ khác đi đường cũ như trước khi có nút này. GIỮ hai
+    đường tai đã duyệt: dạo họ Bolero (bộ ghép ô Linh Nhi, các câu "Đã ổn" ở md mục 16) và
+    giang/kết giọng thứ Bolero Tuấn (theo Codex).
+    Cũ (71de0c5): `lnDao` mọi họ trừ Bolero, `lnSau` mọi họ — pop/ballad nghe câu bolero đổi nhịp.
   */
-  const lnDao = intensity === 'linhNhi' && hoCuaDieu(style.id) !== 'bolero'
-  const lnSau = intensity === 'linhNhi' && !(laBoleroTuan(style) && reharm.key?.scale === 'minor')
+  const hoLn = intensity === 'linhNhi' ? hoCuaDieu(style.id) : null
+  const lnDao = hoLn === 'slow-rock'
+  const lnSau = hoLn === 'slow-rock' || (hoLn === 'bolero' && !(laBoleroTuan(style) && reharm.key?.scale === 'minor'))
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
