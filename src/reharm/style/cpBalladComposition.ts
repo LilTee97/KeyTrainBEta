@@ -268,6 +268,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   let previousRhythm: Gesture | undefined
   let previousMelody: Gesture | undefined
   for (let start = 0; start < lengthBeats; start += 8) {
+    // A breathing cell is useful; chaining several stalls an active interlude
+    // (#1348). Prefer a moving reply, without filling the source's written rests.
+    const breathingCost = (g: Gesture) => kind === 'interlude' && previousRhythm &&
+      previousRhythm.right.length <= 10 && g.right.length <= 10 ? 1.2 : 0
     const ranked = native.flatMap(g => {
       const fit = fitGesture(g, backing, start, bpm)
       if (!fit) return []
@@ -285,7 +289,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const continuation = previousMelody?.source.id === g.source.id && near(previousMelody.from + 8, g.from)
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
         mismatch * .65 + (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
-        slowdown * 1.2 - (continuation ? .4 : 0) +
+        slowdown * 1.2 + breathingCost(g) - (continuation ? .4 : 0) +
         (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
@@ -303,7 +307,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (ownSong && !native.some(t => t.source.song === ownSong) && start === 8) {
       const ownTiming = cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
-        return adapted && (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
+        return adapted && breathingCost(t) <= breathingCost(g) && (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
           2 * t.right.filter(e => e.at < 4).length) ? [{ t, adapted }] : []
       }).sort((a, b) => (a.adapted.cost - .22 * gestureTechniques(a.t).filter(t => !usedTechniques.has(t)).length) -
         (b.adapted.cost - .22 * gestureTechniques(b.t).filter(t => !usedTechniques.has(t)).length))
@@ -314,7 +318,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (rhythm === g && random() < .25 && gestureTechniques(g).every(t => usedTechniques.has(t))) {
       const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
-        return adapted && Math.abs(t.right.length - g.right.length) <= 3 &&
+        return adapted && breathingCost(t) <= breathingCost(g) && Math.abs(t.right.length - g.right.length) <= 3 &&
           (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
             2 * t.right.filter(e => e.at < 4).length) ? [{ t, adapted }] : []
       })

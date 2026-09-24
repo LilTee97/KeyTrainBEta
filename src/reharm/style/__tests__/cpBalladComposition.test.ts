@@ -211,6 +211,36 @@ describe('shared, source-audited CP ballad composer', () => {
       }
   })
 
+  it('answers a sparse interlude cell with movement without banning written breaths (#1348)', () => {
+    let breathingCells = 0, actualRests = 0
+    for (let take = 0; take < 64; take++) {
+      const made = buildPhraseSection({ ...base, take, key: { tonic: 7, scale: 'major' } })!
+      expect(made.unavailableReason).toBeUndefined()
+      const cells = made.compositionSources!.filter(t => t.start % 8 === 0)
+        .map(t => cpBalladGestures.find(g => t.rhythm.startsWith(g.id + ' ->'))!)
+      for (const [i, g] of cells.entries()) {
+        if (g.right.length <= 10) {
+          breathingCells++
+          if (i) expect(cells[i - 1].right.length, `G major take ${take}, cell ${i}`).toBeGreaterThan(10)
+        }
+      }
+      const right = made.events.filter(e => e.hand === 'right' && !e.grace)
+      let until = 0
+      for (const e of right) {
+        if (e.startBeat - until > .25) actualRests++
+        until = Math.max(until, e.startBeat + e.durationBeats)
+      }
+      if (take === 2) {
+        // Before this correction the actual RH counts were 19,16,9,6,19,17.
+        const counts = Array.from({ length: 6 }, (_, i) => new Set(right.filter(e =>
+          e.startBeat >= i * 8 && e.startBeat < (i + 1) * 8).map(e => e.startBeat)).size)
+        expect(counts.slice(2, 4).some(n => n > 10)).toBe(true)
+      }
+    }
+    expect(breathingCells).toBeGreaterThan(0)
+    expect(actualRests).toBeGreaterThan(0)
+  })
+
   it('recovers written subdivisions, melodic development and two-hand gestures in CEC solos', () => {
     let triplets = 0, joint = 0, octaves = 0
     for (let take = 0; take < 8; take++) {

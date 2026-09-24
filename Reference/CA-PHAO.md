@@ -5,6 +5,27 @@ Nó không biến mọi quyết định nghe hay trong app thành thủ pháp đ
 là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 [CA-PHAO-BOSSA-AUDIT.md](CA-PHAO-BOSSA-AUDIT.md).
 
+## Train Ballad Theo Ý Kiến Mới - 24/09/2026
+
+Đã đọc bình luận mới trong `Nguon.json`, chỉ lấy Có Em Chờ G trưởng:
+
+- **#1348, giang tấu, chưa ổn:** "Từ chỗ Gadd2 đầu tiên trờ về cuối câu thì
+  tiết tấu bị khựng lại và ngắt quãng quá nhiều, hãy train lại".
+- **#1350, #1353 (dạo), #1354 (giang): đã ổn.** Giữ nguyên câu lưu để nghe lại,
+  dùng làm đối chiếu cách đặt khoảng thở, không tái soạn đè.
+
+#1348 có mật độ RH mỗi 8 phách là 19/21/10/7/9/21; ba cụm giữa cùng thưa,
+có nốt đỉnh ngân 3.5 phách và RH nghỉ .75 phách ở 38.25-39. Nhưng #1354 đã
+duyệt cũng nghỉ .75 phách ở 22.25-23, sau đó có mẫu chuyển động tiếp. Vì vậy
+không học luật "cấm mọi nghỉ"; sửa **bố trí mẫu giang tấu**, giảm ưu tiên ghép
+hai mẫu <=10 điểm gõ RH/8 phách liên tiếp. Đây là quy tắc biên soạn theo phản
+hồi, không phải luật CP được chép từ sheet. Không đổi khung đệm/phách dẫn,
+dạo/kết, mô phỏng nguyên sheet hay Bossa đã duyệt.
+
+Giới hạn: bản ghi chưa lưu seed/thời lượng từng hợp âm; chưa tái tạo nguyên
+cấu hình sinh #1348. Đã đo trực tiếp nốt câu lưu và tái hiện lỗi cùng loại ở
+take 2 G trưởng. Chi tiết và kiểm thử ở [bộ soạn ballad](CP-BALLAD-COMPOSER-2026-09-23.md#phản-hồi-1348-và-các-câu-đã-ổn).
+
 ## Train Ballad: Kiểm Lại Dữ Liệu Solo - 24/09/2026
 
 Theo yêu cầu sau khi sửa mô phỏng Có Em Chờ: kiểm lại cả dữ liệu học và cách

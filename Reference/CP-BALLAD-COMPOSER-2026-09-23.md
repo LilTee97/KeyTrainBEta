@@ -3,6 +3,58 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Phản Hồi #1348 Và Các Câu Đã Ổn
+
+Lượt tiếp theo ngày 24/09/2026, sau `219b805`, **train ballad**, không Bossa.
+Đọc trực tiếp sổ `Nguon.json` lúc có đến #1355. Chỉ 1 bình luận chưa xử lý
+thuộc ballad: #1348, Có Em Chờ G trưởng, giang 12 ô. Người dùng chê từ Gadd2
+đầu tiên trở đi tiết tấu khựng và ngắt quá nhiều. #1350/#1353 dạo và #1354
+giang được chấm đã ổn, không có bình luận thêm. Không sửa bất cứ dòng sổ nào.
+
+### Đo Câu Lưu
+
+- #1348, RH note-on đồng thời tính một điểm: 19/21/10/7/9/21 theo từng 8 phách.
+  Đoạn 24-32 chỉ có 7 điểm; nốt tại 26.75 ngân 3.5 phách đến 30.25. Đoạn
+  32-40 tiếp tục thưa, RH im thật 38.25-39. Một nốt còn ngân không đồng nghĩa
+  mạch giai điệu vẫn chuyển động; không chữa bằng thêm bass cho kín tiếng.
+- #1354 đã ổn: 22/14/9/20/21/17 điểm, có một mẫu thưa ở 16-24 rồi đáp bằng
+  mẫu dày. Cũng có RH nghỉ .75 ở 22.25-23. #1350 đã ổn có RH nghỉ 1.5 phách;
+  vì vậy không đặt giới hạn mọi khoảng nghỉ theo riêng câu bị chê.
+- Đối chiếu hình onset cho #1348: đầu câu khớp CEC giang ô 52-53, tiếp HK1
+  giang 57-58. Các cụm 16/24/32 có ứng viên tương ứng HK1 giang 59-60, dạo
+  7-8, giang 63-64 khi cho phép chỉnh onset <=.5. Đây là ứng viên khớp hình
+  nhịp, không phải truy vết seed chính xác; sổ chưa lưu seed/source/beat hợp âm.
+
+### Sửa Có Giới Hạn
+
+Trong giang tấu, khi mẫu trước có <=10 điểm RH/8 phách, tăng chi phí chọn
+mẫu tiếp cũng <=10 thêm 1.2. Cả nhánh mượn nhịp từ bài cùng điệu và nhánh chỉ
+mượn thời gian từ nguồn chưa rõ giọng đều không được làm chi phí này xấu đi.
+Đây là ưu tiên mềm của KT, không loại mẫu khỏi kho, không cấm các câu thưa
+khi không có lựa chọn tốt hơn, không thêm nốt vô căn cứ để lấp nghỉ.
+
+Không thay gate/onset/cao độ của mẫu vì riêng nhận xét này. Các quy tắc cũ
+về khớp nhịp, trưởng/thứ, tầm đàn, dặm hai tay, khoảng nghỉ và dẫn hợp âm vẫn
+áp dụng. Nhánh dạo/kết không nhận chi phí mới; mô phỏng và Bossa không đổi.
+
+Kiểm hồi quy: take 2 G trưởng tái hiện lỗi cùng loại trước sửa (19/16/9/6/19/17
+điểm RH); sau sửa không còn cặp 9/6 ở giữa. 64 take G trưởng có mẫu thưa và
+khoảng nghỉ thật nhưng không chọn hai mẫu thưa liền nhau. Test không đọc sổ
+cá nhân hoặc phụ thuộc việc người dùng tiếp tục ghi bình luận. Chưa nghe duyệt.
+
+Lượt này 121/121 test trong 10 file liên quan đạt; build và lint hai file TS
+đã sửa đạt. Build còn cảnh báo bundle lớn. Chưa chạy toàn suite và chưa kiểm
+nghe trên giao diện. Kiểm hash sau sửa xác nhận bốn câu bên dưới không đổi.
+
+SHA-256 JSON mảng nốt giữ nguyên để đối chiếu:
+
+| Câu | Trạng thái | SHA-256 |
+|---|---|---|
+| 1348 | Chưa ổn, giữ chứng cứ | `255753903036661314265311fe628039d23885a5cf9f39b7b55b4f80eb2b6674` |
+| 1350 | Đã ổn | `6ef369cb75e48150554b1d766009620ab12692f892d77c24c233c5c5baacc94c` |
+| 1353 | Đã ổn | `d7f69bac7ca53488f426bd77418576b9e7e9ee09488c6bd52b41f70cb1036b0e` |
+| 1354 | Đã ổn | `551700239a93e22e304178e49c1feaa2c08fc5dc86151c2efaca0dbdc528b655` |
+
 ## Kiểm Lại Toàn Kho 24/09/2026
 
 Phạm vi: **train cho điệu ballad CP**, theo yêu cầu kiểm lại dữ liệu sau lỗi
