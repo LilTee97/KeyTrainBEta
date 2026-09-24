@@ -194,6 +194,10 @@ export function reharmonize(
     ? colorAnalyzedSequence(analyzed, activeKey.scale, {
         ...colorOptions,
         tonic: activeKey.tonic,
+        ...(sectionRanges && sectionRanges.length > 0
+          ? { diepAt: (index: number) => sectionRanges.some(
+              (range) => range.kind === 'chorus' && index >= range.from && index <= range.to) }
+          : {}),
       })
     : colorSequence(original, colorOptions)
   const held =

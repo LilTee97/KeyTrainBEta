@@ -3383,3 +3383,31 @@ nguồn thứ. Toàn suite **2.765 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
 **Chưa đo:** chưa có sheet slow rock trưởng; bảng hợp âm đọc tay chưa ai duyệt; lực đánh chưa đưa
 vào (tay phải 76, tay trái 62 — biên soạn); ô tick chưa lưu vào bài.
+
+### Màu hợp âm Linh Nhi đo từ sheet, và chọn màu ấy thì soạn luôn câu solo cho điệu đang chơi
+
+**Màu** (`reharmEngine/linhNhiHarmony.ts`, số đo `tools/hop_am_linh_nhi.py`, md Linh Nhi mục
+**13d**). Đo phần hát 8 bài; màu lấy từ **nốt đệm thật** (tay trái + nốt dưới nốt đỉnh tay phải),
+không từ ký hiệu. Chị để **trơn** phần lớn: trưởng I 30/61 · V 25/42 (V7 chỉ 7/42) · vi 25/34 ·
+IV 18/24. Màu đứng vững: **trưởng II7** (♭7 10/10, 3 bài); **thứ V7** (17/24, 4 bài) ·
+**ii° m7b5** (10/16, 4 bài) · **I7 kéo về iv** (6/6, 4 bài); **điệp khúc thứ ♭VI maj7** (13/21, 3
+bài; phiên 8/25) · **iv add9** (7/10, 3 bài). Chỉ tô hợp âm ba trơn, giữ màu/bass người dùng ghi,
+**không tự chèn hợp âm** — hợp âm chen lặp ở ≥ 2 bài chỉ ≤ 5 lần. Pipeline truyền `diepAt` từ
+`sectionRanges` để biết hợp âm nào trong điệp khúc. v7 thứ (12/16) chỉ có ở 1 bài → không thành luật.
+
+**Bẫy đo đã sập:** lấy bậc ba chỉ từ tay trái — rải 1–5–8 không có bậc ba nên hoà điểm và ra "I
+trưởng" 54 lần trong bài thứ. Đo bậc ba từng đoạn thì không đoạn nào của 5 bài thứ chuyển trưởng
+(cao nhất 30%). Sửa: gốc từ tay trái, bậc ba từ mọi nốt đang vang.
+
+**Giá trị cũ** (bảng tĩnh, không số đo): trưởng I/IV maj7 · ii/iii/vi m7 · V7 · vii m7b5; thứ i m7
+· III/VI maj7 · iv m7 · V7 · VII7, và ép v thứ thành V7. **Triệu chứng để lùi:** nghe hợp âm
+"nhạt" — đó là chỗ chị để trơn; màu của chị nằm ở nốt rải tay trái (bậc 9 trên i, iv).
+
+**Solo theo màu** (`style/linhNhiSolo.ts`, thay `slowRockLinhNhiSolo.ts` và bỏ ô tick slow rock):
+chọn màu Linh Nhi thì dạo · giang · kết lấy nguyên một đoạn solo thật của chị cho **điệu đang
+chơi**: điệu 6/8 · 12/8 ưu tiên slow rock gốc (bolero đổi dài–ngắn chùm ba); điệu 4/4 ưu tiên
+bolero gốc (slow rock đổi ô 12/8 → 4/4 giữ chùm ba); 3/4 · 2/4 báo chưa có nguồn. Nguồn cùng nhịp
+thì lấy cả tay trái của chị. **Giữ hai đường tai đã duyệt:** dạo họ Bolero (bộ ghép ô Linh Nhi) và
+giang/kết thứ Bolero Tuấn. Ghép ngược đúng từng nốt hai tay: slow rock trên 6/8, bolero trên 4/4.
+
+Toàn suite **2.769 qua / 7 đỏ** — đúng 7 đỏ cũ.

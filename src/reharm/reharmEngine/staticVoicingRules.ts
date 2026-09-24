@@ -12,6 +12,7 @@ import type { ParsedChord } from '../types'
 import type { AnalyzedChord } from './degreeAnalysis'
 import { scaleTones } from './keyDetection'
 import { colorCaPhao } from './caPhaoHarmony'
+import { mauLinhNhi } from './linhNhiHarmony'
 
 /**
  * Kỹ thuật 1 của phong cách: làm dày hợp âm và tư duy hợp âm chồng trên bass.
@@ -98,26 +99,10 @@ export const laMauThay = (
 ): intensity is (typeof MAU_THAY)[number] =>
   intensity === 'linhNhi' || intensity === 'caPhao' || intensity === 'tonHung'
 
-/** Sheet Linh Nhi: I/IV Δ, ii/iii/vi m7, V7. Không add9 / 9sus4 / 7b9. */
-const LINH_NHI_MAJOR: Record<number, string> = {
-  1: 'maj7',
-  2: 'm7',
-  3: 'm7',
-  4: 'maj7',
-  5: '7',
-  6: 'm7',
-  7: 'm7b5',
-}
-const LINH_NHI_MINOR: Record<number, string> = {
-  1: 'm7',
-  2: 'm7b5',
-  3: 'maj7',
-  4: 'm7',
-  5: '7',
-  6: 'maj7',
-  7: '7',
-}
-
+/*
+  Linh Nhi không còn bảng tĩnh theo bậc — xem `linhNhiHarmony.ts` (số đo 8 sheet, 24/9/2026).
+  Bảng cũ (I/IV Δ, ii/iii/vi m7, V7; thứ i m7 · III/VI Δ · iv m7 · VII7) đặt khi chưa đo.
+*/
 /** Tôn Hùng hát n=2, chỉ giọng thứ: i trơn, v m7 (không V7). Trưởng 0 sheet — Δ/m7/V7. */
 const TON_HUNG_MAJOR: Record<number, string> = {
   1: 'maj7',
@@ -139,15 +124,13 @@ const TON_HUNG_MINOR: Record<number, string> = {
 }
 
 const BANG_THAY: Record<
-  Exclude<(typeof MAU_THAY)[number], 'caPhao'>,
+  Exclude<(typeof MAU_THAY)[number], 'caPhao' | 'linhNhi'>,
   { major: Record<number, string>; minor: Record<number, string> }
 > = {
-  linhNhi: { major: LINH_NHI_MAJOR, minor: LINH_NHI_MINOR },
   tonHung: { major: TON_HUNG_MAJOR, minor: TON_HUNG_MINOR },
 }
 
-const THAY_KHONG_BAC: Record<Exclude<(typeof MAU_THAY)[number], 'caPhao'>, { maj: string; min: string }> = {
-  linhNhi: { maj: 'maj7', min: 'm7' },
+const THAY_KHONG_BAC: Record<Exclude<(typeof MAU_THAY)[number], 'caPhao' | 'linhNhi'>, { maj: string; min: string }> = {
   tonHung: { maj: 'maj7', min: 'min' },
 }
 
@@ -527,6 +510,10 @@ export const MAJOR_COLOR_OPTIONS: readonly MajorColorOption[] = [
 export interface ColorOptions {
   teacherGenre?: 'ballad' | 'bossa'
   intensity?: ColorIntensity
+  /** Hợp âm này nằm trong điệp khúc — màu Linh Nhi đổi theo đoạn (♭VI maj7, iv add9). */
+  diep?: boolean
+  /** Hợp âm thứ `index` có nằm trong điệp khúc không — cho `colorAnalyzedSequence`. */
+  diepAt?: (index: number) => boolean
   /**
    * Đổi hợp âm bảy át thành hợp âm treo bậc bốn.
    *
@@ -620,6 +607,8 @@ export function colorChord(
   if (intensity === 'off') return chord
   if (intensity === 'caPhao') return colorCaPhao({ chord, degree: null, function: null,
     roman: chord.symbol, actsAsDominant: false }, false, options.teacherGenre)
+  // Linh Nhi khi chưa biết giọng: giữ nguyên — phần lớn hợp âm chị để trơn (md: 77%).
+  if (intensity === 'linhNhi') return chord
   if (laMauThay(intensity)) {
     const id = chord.quality.id
     const map = THAY_KHONG_BAC[intensity]
@@ -737,6 +726,10 @@ export function colorAnalyzedChord(
   } = options
   if (intensity === 'off') return analyzed.chord
   if (intensity === 'caPhao') return colorCaPhao(analyzed, scale === 'minor', options.teacherGenre)
+  if (intensity === 'linhNhi') {
+    const target = mauLinhNhi(analyzed, scale === 'minor', options.diep === true)
+    return target ? withQuality(analyzed.chord, target) : analyzed.chord
+  }
   if (laMauThay(intensity)) {
     const { chord, degree } = analyzed
     if (degree === null && analyzed.actsAsDominant) return withQuality(chord, '7')
@@ -877,7 +870,8 @@ export function colorAnalyzedSequence(
   scale: ScaleType,
   options: ColorOptions = {},
 ): ParsedChord[] {
-  return analyzed.map((entry) => colorAnalyzedChord(entry, scale, options))
+  return analyzed.map((entry, index) =>
+    colorAnalyzedChord(entry, scale, options.diepAt ? { ...options, diep: options.diepAt(index) } : options))
 }
 
 function colorFamily(

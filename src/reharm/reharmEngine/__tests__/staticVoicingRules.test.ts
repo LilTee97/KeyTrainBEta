@@ -21,9 +21,9 @@ function colored(input: string, intensity: 'light' | 'full' = 'full'): string {
 }
 
 describe('colorChord — Linh Nhi', () => {
-  it('triad thành Δ / m7, át giữ 7', () => {
-    expect(colorChord(chord('C'), { intensity: 'linhNhi' }).symbol).toBe('Cmaj7')
-    expect(colorChord(chord('Am'), { intensity: 'linhNhi' }).symbol).toBe('Am7')
+  it('chưa biết giọng thì giữ trơn — phần lớn hợp âm chị để trơn (số đo 8 sheet)', () => {
+    expect(colorChord(chord('C'), { intensity: 'linhNhi' }).symbol).toBe('C')
+    expect(colorChord(chord('Am'), { intensity: 'linhNhi' }).symbol).toBe('Am')
     expect(colorChord(chord('G7'), { intensity: 'linhNhi' }).symbol).toBe('G7')
     expect(colorChord(chord('C'), { intensity: 'caPhao' }).symbol).toBe('C')
     expect(colorChord(chord('Am'), { intensity: 'caPhao' }).symbol).toBe('Am7')

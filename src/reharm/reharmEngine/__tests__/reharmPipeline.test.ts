@@ -281,16 +281,28 @@ describe('tô màu theo bậc — sửa lỗi mù chức năng', () => {
     ])
   })
 
-  it('Linh Nhi: I/IV Δ, vi m7, V7 — không add9 / 9sus4', () => {
+  it('Linh Nhi trưởng: bậc trong giọng để trơn, chỉ II (át của V) thành II7 — số đo 3 sheet', () => {
     expect(
       final('C Am F G', { intensity: 'linhNhi', key: { tonic: 0, scale: 'major' } }),
-    ).toEqual(['Cmaj7', 'Am7', 'Fmaj7', 'G7'])
+    ).toEqual(['C', 'Am', 'F', 'G'])
+    expect(
+      final('C D G C', { intensity: 'linhNhi', key: { tonic: 0, scale: 'major' } }),
+    ).toEqual(['C', 'D7', 'G', 'C'])
   })
 
-  it('Linh Nhi giọng thứ: i m7, V7, không 7b9', () => {
-    expect(
-      final('Am Dm E Am', { intensity: 'linhNhi', key: { tonic: 9, scale: 'minor' } }),
-    ).toEqual(['Am7', 'Dm7', 'E7', 'Am7'])
+  it('Linh Nhi thứ: V7, ii° m7b5, I7 về iv; giữ v thứ và màu người dùng ghi', () => {
+    const key = { tonic: 9, scale: 'minor' } as const
+    expect(final('Am Dm E Am', { intensity: 'linhNhi', key })).toEqual(['Am', 'Dm', 'E7', 'Am'])
+    expect(final('Am Bdim E Am', { intensity: 'linhNhi', key })).toEqual(['Am', 'Bm7b5', 'E7', 'Am'])
+    expect(final('Am A Dm Em', { intensity: 'linhNhi', key })).toEqual(['Am', 'A7', 'Dm', 'Em'])
+    expect(final('Am7 Dm9 E7b9 Am', { intensity: 'linhNhi', key })).toEqual(['Am7', 'Dm9', 'E7b9', 'Am'])
+  })
+
+  it('Linh Nhi thứ, điệp khúc: ♭VI maj7 và iv add9; phiên khúc để trơn', () => {
+    const key = { tonic: 9, scale: 'minor' } as const
+    const sectionRanges = [{ kind: 'verse', from: 0, to: 3 }, { kind: 'chorus', from: 4, to: 7 }]
+    expect(final('Am F Dm E Am F Dm E', { intensity: 'linhNhi', key, sectionRanges }))
+      .toEqual(['Am', 'F', 'Dm', 'E7', 'Am', 'Fmaj7', 'Dm(add9)', 'E7'])
   })
 
   it('Cà Pháo ballad: trưởng maj7, thứ m7, át 7 khi chưa biết nốt hát', () => {

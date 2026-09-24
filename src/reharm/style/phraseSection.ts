@@ -6,7 +6,7 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
-import { slowRockLinhNhiSolo } from './slowRockLinhNhiSolo'
+import { linhNhiSolo } from './linhNhiSolo'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
@@ -102,11 +102,11 @@ export interface PhraseSectionOptions {
   /** Ô tick: câu chạy tự soạn 4/6. Tắt = chép sheet thứ. */
   chayNgan?: boolean
   /**
-   * BỘ SOẠN SLOW ROCK LINH NHI — ô tick nghe thử, chỉ bật ở điệu Slow Rock Lá thư.
-   * Bật thì đoạn này lấy nguyên một đoạn solo thật của Linh Nhi cùng giọng trưởng/thứ.
-   * Xem `slowRockLinhNhiSolo.ts`. Nghe ổn thì cho thay hẳn rồi xoá ô tick.
+   * BỘ SOẠN CÂU SOLO LINH NHI — bật khi chọn màu hợp âm Linh Nhi. Đoạn này lấy nguyên một
+   * đoạn solo thật của chị cùng giọng trưởng/thứ, đổi sang nhịp điệu đang chơi.
+   * Xem `linhNhiSolo.ts`.
    */
-  slowRockLinhNhi?: boolean
+  linhNhiSolo?: boolean
 }
 
 export interface PhraseSection {
@@ -621,8 +621,8 @@ function oXenPap(soO: number, take: number, nhieuPap = false): Set<number> {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
-  if (options.slowRockLinhNhi && options.key) {
-    return slowRockLinhNhiSolo({
+  if (options.linhNhiSolo && options.key) {
+    return linhNhiSolo({
       kind: options.kind, key: options.key, style: options.style,
       songChords: [...(options.vongPhienKhuc ?? []), ...(options.songChords ?? [])],
       ...(options.take !== undefined ? { take: options.take } : {}),
