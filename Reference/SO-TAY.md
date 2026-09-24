@@ -3196,3 +3196,56 @@ chưa ai ghi sổ**: `leftArpeggioAboveRoot > ca-phao-ballad-late-arp` — câu 
 nốt gốc (36 < 48) ở điệu thêm tại `b73428c`, trong khi luật này do `3ed4f33` đặt. Chưa quyết là
 lỗi của điệu mới hay luật cần nới cho điệu ấy; **hỏi người dùng trước khi sửa**, không nới
 ngưỡng cho xanh.
+
+### Slow Rock Lá thư: sheet ghi 4/4 nhưng nhạc là 12/8, và nền đệm là tay trái một mình
+
+Nút mới **Slow Rock Lá thư** (họ Slow Rock, hàng 6/8), rút từ bản ký âm Linh Nhi *Lá Thư
+Trần Thế* (`PianoBrain/video/Linh_Nhi/La Thư Tran The-Linh Nhi.mxl`, SHA-256 `b45d3f75…`).
+Mã và nguồn từng mốc: `styleLibrary/linhNhiSlowRock.ts`. **Chưa nghe duyệt.**
+
+**Cái bẫy: vạch nhịp của sheet không phải vạch nhịp của nhạc.** Sheet ghi 4/4 ♩=86, nhưng
+nốt trầm nhất mỗi ô rơi đều cả bốn phách (24 · 25 · 21 · 20, n=92 ô hát) — đệm có bass
+phách 1–3 thì phải dồn vào 0 và 2. Tay trái đi từng cụm **6 móc đơn cho một hợp âm**: bass
+(cực tiểu địa phương) rơi cùng một pha chu kỳ 6 móc đơn ở **75/98** lần, không trôi từ dạo
+tới kết; khoảng cách hai bass hay gặp nhất là 6 móc đơn (36 lần), rồi 3 (16), 12 (12). Tức
+móc đơn ký âm = móc đơn chùm ba thật, nhạc là **slow rock 12/8, ♩. ≈ 57**. Mọi số đo cũ của
+Lá Thư theo "ô nhịp" hay "phách trong ô" (kể cả trong `linh-nhi-piano.md`) đều đo trên lưới
+sai — **chưa đo lại**.
+
+**Hai tay**, đếm trên ô 6 móc đơn đã cắt lại theo pha ấy:
+
+| | ô | tay phải nốt đơn | tay trái rải | tay trái dập hợp âm | tay phải dập hợp âm |
+|---|---:|---:|---:|---:|---:|
+| phiên khúc | 94 | 253/396 lần gõ (64%) | 62/91 | 5/91 | 12/94 ô, toàn cuối câu |
+| điệp khúc | 30 | 70/115 (61%) | 15/30 | **5/30** | 3/30 |
+
+Tay phải phiên khúc là giai điệu lời (nốt đơn ngân 3–4 móc đơn) và fill ở quãng cao; điệp
+khúc chồng thêm nốt bè chạy theo đúng nhịp giai điệu. Nên **nền đệm lặp lại là tay trái một
+mình**, và nút để trống tay phải. Hai tay chỉ cùng đệm ở cử chỉ cuối câu (c7, c22–23, c39:
+tay phải dập hợp âm ở tiếng 2 · 2½ · 3 · 4, tay trái quãng tám bass rồi đi xuống) — **chưa
+đưa vào nút**, vì nó phụ thuộc vị trí câu.
+
+Ô đại diện (số "c" = ô 6 móc đơn theo pha trên, không phải số ô sheet):
+
+- **Phiên — c15–c16** (Bb → C, ô sheet 12 phách 3 → 14 phách 1): rải 1–3–5–8–5–3, sáu móc
+  đơn đều. Nhịp 6 móc đơn đều là nhịp tay trái nhiều nhất bài (25 ô); c15 lặp y hệt ở c87.
+- **Điệp — c41–c42** (D7 → Gm, ô sheet 32 phách 1 → 33 phách 3): bass, dập cụm hợp âm ở
+  tiếng 2 · 2½ · 3 · 4 · 5, bass lại tiếng 6. Cùng cử chỉ ở c45–c46; cao trào c106, c109 lặp lại.
+
+Lựa chọn biên soạn, ghi để lùi được: cụm dập trên D7 khai gốc+8 · bậc 3 · bậc 7 (sheet có cả
+A3 lẫn C4; bỏ A3 để hợp âm ba nốt tự lùi bậc 7 về bậc 5, không đẻ nốt trùng); bỏ D2 đầu c42
+(gốc D7 ngân sang); `releaseRatio` 1. Lực là **số đo**: `velocityScale` = `dynamics` của nốt
+trong sheet ÷ 80; c15 lấy trung bình với c87.
+
+**Hai sửa ở `patternRenderer.ts`, cần cho nút này:**
+
+1. Ô do `cellAt` trả (bản phiên/điệp khi bài gắn đoạn) trước không co theo `gridUnit` — điệu
+   `gridUnit` 0,5 có bản điệp khúc sẽ phát dài gấp đôi hễ bài có nhãn đoạn. Giờ co cùng hàm
+   với ô chính. Mọi cặp `CHORUS_PAIRS` cũ đều `gridUnit` 1 nên không đổi tiếng.
+2. `missingChordHits` chêm hợp âm khối tay phải vào mọi hợp âm khi ô để trống tay phải. Thêm
+   họ `slow-rock-la-thu` vào `KEEP_RH_RESTS` cạnh ACDD. **Triệu chứng để lùi:** nghe thấy tay
+   phải trống trơn khó chịu → bỏ họ khỏi `KEEP_RH_RESTS`. Ba điệu Bolero Linh Nhi (khai
+   "tay phải trống") vẫn bị chêm ở tầng `renderPattern` — đường tai đã nghe, không đụng.
+
+Test chung `styleLibrary.test.ts` đòi mọi điệu có tay phải: miễn đích danh họ này, kèm lý do;
+`laThuSlowRock.test.ts` khoá điều ngược lại. Toàn suite: **2.755 qua / 7 đỏ** — đúng 7 đỏ cũ.

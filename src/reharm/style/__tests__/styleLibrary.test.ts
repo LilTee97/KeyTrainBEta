@@ -214,7 +214,11 @@ describe('dựng phần đệm cho từng điệu', () => {
 
       expect(events.length).toBeGreaterThan(0)
       expect(events.some((event) => event.hand === 'left')).toBe(true)
-      expect(events.some((event) => event.hand === 'right')).toBe(true)
+      // Lá thư để trống tay phải CÓ CHỦ Ý: tay phải trong sheet là giai điệu lời.
+      // Xem `styleLibrary/linhNhiSlowRock.ts`; laThuSlowRock.test.ts khoá điều ngược lại.
+      if (style.family !== 'slow-rock-la-thu') {
+        expect(events.some((event) => event.hand === 'right')).toBe(true)
+      }
     },
   )
 

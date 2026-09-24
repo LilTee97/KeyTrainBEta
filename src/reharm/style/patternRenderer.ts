@@ -620,13 +620,17 @@ function renderWithCell(
     ...missingChordHits(events, voicings, starts, releaseRatio).filter(
       (event) => !inMuteWindow(event.startBeat, muteWindows)
         // ACDD deliberately omits melody-only RH bars; keep those rests.
-        && !(pattern.family === 'ca-phao-ballad-acdd' && event.hand === 'right'),
+        // Lá thư: RH in the sheet is the melody on 64% of attacks — no filler chords.
+        && !(KEEP_RH_RESTS.has(pattern.family) && event.hand === 'right'),
     ),
   ]
 }
 
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 0.001
+
+/** Họ điệu mà tay phải trống là CỐ Ý — `missingChordHits` không chêm hợp âm vào. */
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.
@@ -739,28 +743,21 @@ export function renderPattern(
     Quy ô nhịp của mẫu về **nốt đen** trước khi dựng. Mọi thứ hạ nguồn — mốc hợp
     âm, cắt độ ngân, xếp lịch — đều tính bằng nốt đen.
 
-    Co ở đây, không co ở `cellAt`: `cellAt` trả về ô nhịp của điệu khác khi đổi
-    đoạn, mà điệu ấy có `gridUnit` riêng. Chưa gặp trường hợp đó nên chưa đi trước.
+    Ô do `cellAt` trả về (bản phiên/điệp khi bài có nhãn đoạn) cũng phải co, và
+    co theo `gridUnit` của CHÍNH điệu đang chọn. Trước 24/9/2026 chỉ co ô chính:
+    điệu `gridUnit` 0,5 có bản điệp khúc thì hễ bài gắn đoạn là cả bài phát dài
+    gấp đôi (Slow Rock Lá thư là điệu đầu tiên gặp). Hai bản của một cặp
+    `CHORUS_PAIRS` luôn cùng `gridUnit`, nên co theo điệu chính là đủ.
   */
+  const scaleCell = (cell: RhythmCell): RhythmCell => ({
+    lengthBeats: cell.lengthBeats * grid,
+    left: cell.left.map((h) => ({ ...h, beat: h.beat * grid, durationBeats: h.durationBeats * grid })),
+    right: cell.right.map((h) => ({ ...h, beat: h.beat * grid, durationBeats: h.durationBeats * grid })),
+  })
   const scaled: StylePattern =
-    grid === 1 || !pattern.cell
-      ? pattern
-      : {
-          ...pattern,
-          cell: {
-            lengthBeats: pattern.cell.lengthBeats * grid,
-            left: pattern.cell.left.map((h) => ({
-              ...h,
-              beat: h.beat * grid,
-              durationBeats: h.durationBeats * grid,
-            })),
-            right: pattern.cell.right.map((h) => ({
-              ...h,
-              beat: h.beat * grid,
-              durationBeats: h.durationBeats * grid,
-            })),
-          },
-        }
+    grid === 1 || !pattern.cell ? pattern : { ...pattern, cell: scaleCell(pattern.cell) }
+  const scaledCellAt =
+    cellAt && grid !== 1 ? (beat: number) => scaleCell(cellAt(beat)) : cellAt
 
   // Thời lượng từng hợp âm, và phách bắt đầu tính dồn từ đó.
   const durations = voicings.map(
@@ -780,7 +777,7 @@ export function renderPattern(
         durations,
         starts,
         releaseRatio,
-        cellAt,
+        scaledCellAt,
         muteWindows,
         cellBreaks,
       )

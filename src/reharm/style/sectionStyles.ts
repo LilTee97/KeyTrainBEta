@@ -25,6 +25,8 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'hai-pop-ballad': 'hai-pop-ballad-chorus',
   'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
   'hai-slow-rock': 'hai-slow-rock-chorus',
+  // Lá Thư Trần Thế: phiên rải c15–c16, điệp dập hợp âm c41–c42. Xem linhNhiSlowRock.ts.
+  'slow-rock-la-thu': 'slow-rock-la-thu-chorus',
   'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
   /*
     Điệp khúc DÀY THEO CHIỀU DỌC — hai bài trên năm bài bolero Linh Nhi làm vậy.
