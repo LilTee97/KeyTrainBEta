@@ -3450,3 +3450,24 @@ hệ số phạt chưa đo; lực đánh vẫn 76 / 62.
 
 Toàn suite **2.769 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Slow Rock Lá thư: dạo · giang · kết luôn đi bộ soạn mới, kể cả khi chọn thầy Linh Nhi
+
+**Người dùng** (24/9/2026): *"mỗi lần tôi bấm nút Phát cả bài thì ko soạn câu mới, chỉ lặp lại đúng
+một câu trong sheet … ưu tiên phải soạn câu solo mới trên tiết tấu điệu Slow rock Lá Thư"*.
+
+**Bẫy:** dạo và kết truyền `styleSolo` chứ không phải điệu của bài. Chọn thầy Linh Nhi cho câu solo
+thì `styleSolo` = `LINH_NHI_RAI` = `bolero-linh-nhi-2` → `linhNhiSolo` đi nhánh bolero, chép nguyên
+một đoạn bolero. Đo (Mi thứ, lượt 100–103): dạo Đừng Xa 4/4 lượt, kết Nỗi Buồn 4/4 lượt — cùng một
+câu, lại là điệu khác. Giang tấu truyền `style` nên không dính. Không màu, không thầy: dạo đi luật cũ,
+kết bị ẩn. Bộ soạn thì không bê câu gốc: 20 lượt ra 20 câu, ô giữa trùng ô gốc cùng chỗ 16/150 (dạo)
+· 18/150 (giang) · 5/130 (kết).
+
+**Sửa:** `slowRockSoanLinhNhi` (`style/linhNhiSolo.ts`) — họ Slow Rock soạn bằng bộ soạn Linh Nhi khi
+chọn màu Linh Nhi, chọn thầy Linh Nhi, hoặc điệu Slow Rock Lá thư khi chưa chọn thầy nào; thầy khác
+thì nhường. Khi ấy dạo · kết truyền `style` của bài. Họ Bolero giữ nguyên (chỉ theo màu Linh Nhi).
+
+**Giá trị cũ:** `lnDao`/`lnSau` chỉ bật theo màu Linh Nhi; dạo · kết luôn `styleSolo` trừ Bolero Tuấn.
+**Triệu chứng để lùi:** chọn Tôn Hùng / Cà Pháo mà vẫn nghe câu Linh Nhi → kiểm `soloThay`.
+
+Toàn suite **2.771 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

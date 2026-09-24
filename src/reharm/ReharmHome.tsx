@@ -100,6 +100,7 @@ import {
 } from './reharmEngine/keyDetection'
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
 import { hoCuaDieu } from './style/hoDieu'
+import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -3161,10 +3162,21 @@ export function ReharmHome() {
     đường tai đã duyệt: dạo họ Bolero (bộ ghép ô Linh Nhi, các câu "Đã ổn" ở md mục 16) và
     giang/kết giọng thứ Bolero Tuấn (theo Codex).
     Cũ (71de0c5): `lnDao` mọi họ trừ Bolero, `lnSau` mọi họ — pop/ballad nghe câu bolero đổi nhịp.
+
+    HỌ SLOW ROCK soạn câu mới cả khi chọn THẦY Linh Nhi cho câu solo, và mặc định ở điệu Slow Rock
+    Lá thư (rút từ sheet của chị) khi chưa chọn thầy nào. Người dùng 24/9/2026: *"mỗi lần bấm Phát cả
+    bài thì ko soạn câu mới, chỉ lặp lại đúng một câu trong sheet … ưu tiên phải soạn câu solo mới
+    trên tiết tấu điệu Slow rock Lá Thư"*. Đo trước khi sửa (Mi thứ, 4 lượt): chọn thầy Linh Nhi thì
+    dạo/kết đi `styleSolo` = `bolero-linh-nhi-2` nên chép nguyên Đừng Xa (dạo) · Nỗi Buồn (kết) 4/4
+    lượt; không màu, không thầy thì dạo đi luật cũ, kết bị ẩn. Nay dạo · giang · kết họ Slow Rock
+    đều truyền `style` của bài vào bộ soạn. Họ Bolero giữ nguyên: chỉ theo màu Linh Nhi.
+    Triệu chứng để lùi: chọn thầy Tôn Hùng / Cà Pháo mà vẫn nghe câu Linh Nhi — kiểm `soloThay`.
   */
-  const hoLn = intensity === 'linhNhi' ? hoCuaDieu(style.id) : null
-  const lnDao = hoLn === 'slow-rock'
-  const lnSau = hoLn === 'slow-rock' || (hoLn === 'bolero' && !(laBoleroTuan(style) && reharm.key?.scale === 'minor'))
+  const hoLn = hoCuaDieu(style.id)
+  const lnSlowRock = slowRockSoanLinhNhi(style, intensity === 'linhNhi', soloThay)
+  const lnDao = lnSlowRock
+  const lnSau = lnSlowRock
+    || (intensity === 'linhNhi' && hoLn === 'bolero' && !(laBoleroTuan(style) && reharm.key?.scale === 'minor'))
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
@@ -3329,7 +3341,7 @@ export function ReharmHome() {
                 mà người dùng quen — lúc ấy trả về `kind === 'intro' && laBoleroTuan(style)`.
               */
               style:
-                laBoleroTuan(style) && (kind === 'intro' || kind === 'outro')
+                (laBoleroTuan(style) && (kind === 'intro' || kind === 'outro')) || lnSlowRock
                   ? style
                   : styleSolo,
               thay: thaySolo,
@@ -3471,6 +3483,7 @@ export function ReharmHome() {
       backingFor,
       lnDao,
       lnSau,
+      lnSlowRock,
       bossaRhythmOnly,
       bossaSoloOn,
       bpm,

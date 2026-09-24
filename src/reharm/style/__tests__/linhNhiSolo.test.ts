@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { PitchClass } from '../../../shared/musicTheory/types'
 import { parseChordInput } from '../../input/chordInputParser'
 import { NGUON_SOLO_SR, type NguonSR } from '../slowRockLinhNhiNguon'
-import { linhNhiSolo, nguonChoBai, nhipCuaDieu } from '../linhNhiSolo'
+import { linhNhiSolo, nguonChoBai, nhipCuaDieu, slowRockSoanLinhNhi } from '../linhNhiSolo'
 import { buildPhraseSection, type PhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
 import { LINH_NHI_SLOW_ROCK } from '../styleLibrary/linhNhiSlowRock'
@@ -156,6 +156,36 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     for (let take = 0; take < 4; take += 1) {
       expect(vongId(soan(slowRock, 'outro', 4, true, take, 'Em(add9) Am9 B7 C D G'))).toBe('mot-coi-di-ve-outro')
       expect(NGUON_SOLO_SR.find((s) => s.id === vongId(soan(slowRock, 'intro', 9, true, take)))!.dieu).toBe('slow rock')
+    }
+  })
+
+  it('Slow Rock Lá thư soạn câu mới cả khi chọn thầy Linh Nhi hoặc chưa chọn thầy nào', () => {
+    // Lỗi 24/9/2026: chọn thầy Linh Nhi thì dạo/kết đi kiểu bolero, chép nguyên một câu sheet.
+    expect(slowRockSoanLinhNhi(slowRock, false, 'linh-nhi')).toBe(true)
+    expect(slowRockSoanLinhNhi(slowRock, false, null)).toBe(true)
+    expect(slowRockSoanLinhNhi(slowRock, true, null)).toBe(true)
+    expect(slowRockSoanLinhNhi(slowRock, false, 'ton-hung')).toBe(false)
+    expect(slowRockSoanLinhNhi(slowRock6, false, null)).toBe(false)
+    expect(slowRockSoanLinhNhi(slowRock6, true, null)).toBe(true)
+    expect(slowRockSoanLinhNhi(bolero, true, 'linh-nhi')).toBe(false)
+  })
+
+  it('slow rock: mỗi lượt phát một câu mới, ít ô trùng ô gốc cùng chỗ', () => {
+    const song = 'Em Am B7 Em C D G Em Am B7 Em'
+    for (const kind of KINDS) {
+      let goc = 0, tong = 0
+      const cau = new Set<string>()
+      for (let take = 0; take < 20; take += 1) {
+        const made = soan(slowRock, kind, 4, true, take, song)
+        cau.add(made.compositionSources!.map((c) => c.melody).join('|'))
+        made.compositionSources!.forEach((c, i) => {
+          if (!c.harmony.startsWith('vòng')) return
+          tong += 1
+          goc += Number(c.melody.startsWith(`${vongId(made)} ô ${i + 1},`))
+        })
+      }
+      expect(cau.size, kind).toBe(20)
+      expect(goc / tong, kind).toBeLessThan(0.25)
     }
   })
 

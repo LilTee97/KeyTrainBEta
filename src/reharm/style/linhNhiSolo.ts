@@ -40,6 +40,16 @@ export function nhipCuaDieu(style: StylePattern): Nhip | null {
   return null
 }
 
+/**
+ * Điệu họ Slow Rock có soạn câu solo bằng bộ soạn Linh Nhi không: chọn màu Linh Nhi, chọn thầy
+ * Linh Nhi cho câu solo, hoặc điệu Slow Rock Lá thư (rút từ sheet của chị) khi chưa chọn thầy nào.
+ * Chọn thầy khác thì nhường thầy ấy.
+ */
+export function slowRockSoanLinhNhi(style: StylePattern, mauLinhNhi: boolean, thay: string | null): boolean {
+  return hoCuaDieu(style.id) === 'slow-rock'
+    && (mauLinhNhi || thay === 'linh-nhi' || (thay == null && style.family === 'slow-rock-la-thu'))
+}
+
 export function linhNhiSolo(options: {
   kind: Doan
   key: { tonic: PitchClass; scale: 'major' | 'minor' | string }
