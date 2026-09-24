@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildPhraseSection, type PhraseSectionOptions } from '../phraseSection'
-import { cpBalladApproaches, cpBalladEvidence, cpBalladGestures, holdCpBalladVoices } from '../cpBalladComposition'
+import { cpBalladApproaches, cpBalladEvidence, cpBalladGestures, cpBalladTouch, holdCpBalladVoices } from '../cpBalladComposition'
 import corpus from '../cpBalladSolos.json'
 import { getStyle } from '../styleLibrary'
 import { CP_BALLAD_SONG_STYLES } from '../styleLibrary/caPhaoBalladSongs'
@@ -17,6 +17,70 @@ const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 4, scale: 
   thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [] }
 
 describe('shared, source-audited CP ballad composer', () => {
+  it('retains bass carries and real pickups, quarantines incomplete ties, and learns source touch', () => {
+    const section = (song: string, kind: string) => corpus.sections.find(s => s.song === song && s.kind === kind)!
+    const cec = section('Co Em Cho', 'interlude')
+    expect(cec.events.filter(e => e.carry)).toMatchObject([{ at: .25, hand: 'left', tones: [36], gates: [.25] }])
+    expect(cec.events.some(e => e.hand === 'right' && e.at < .25)).toBe(false)
+    expect(section('Hồng Kông 1', 'intro').end).toBe(61.5)
+    expect(section('Để Em Rời Xa', 'intro').bars[0].length).toBe(3.25)
+    expect(section('Chưa Bao Giờ (Trung Quân)', 'intro').bars[0].length).toBe(1)
+    expect(corpus.sections.reduce((n, s) => n + s.events.filter(e => e.carry).length, 0)).toBe(5)
+    expect(corpus.sections.reduce((n, s) => n + s.events.filter(e => e.uncertainTie).length, 0)).toBe(2)
+    expect(cpBalladGestures.every(g => [...g.right, ...g.left].every(e => !e.uncertainTie))).toBe(true)
+    expect(cpBalladGestures.every(g => [...g.right, ...g.left].every(e => !e.carry))).toBe(true)
+    const run = cpBalladGestures.find(g => g.source.song === 'Co Em Cho' && g.source.kind === 'intro' && g.from === 16)!
+    const peak = run.right.find(e => e.at === 2.25)!, answer = run.right.find(e => e.at === 3)!
+    expect(peak.velocities).toEqual([94, 94])
+    expect(answer.velocities).toEqual([56, 56, 56])
+    expect(cpBalladTouch(run.right, peak)).toBeGreaterThan(cpBalladTouch(run.right, answer))
+    for (const g of cpBalladGestures) for (const e of [...g.right, ...g.left]) {
+      expect(Math.abs(cpBalladTouch(e.hand === 'right' ? g.right : g.left, e))).toBeLessThanOrEqual(14)
+      if (e.velocities.every(v => v === null)) expect(cpBalladTouch(g.right, e)).toBe(0)
+    }
+  })
+
+  it('realizes source touch and the written whole-tone grace, not a fabricated semitone', () => {
+    let touched = 0, graces = 0
+    for (let take = 0; take < 48; take++) {
+      const made = buildPhraseSection({ ...base, kind: take % 2 ? 'intro' : 'interlude', take,
+        key: { tonic: (take % 12) as PitchClass, scale: 'major' } })!
+      const right = made.events.filter(e => e.hand === 'right' && !e.grace)
+      for (const trace of made.compositionSources!.filter(t => t.start % 8 === 0)) {
+        const g = cpBalladGestures.find(g => trace.rhythm.startsWith(g.id + ' ->'))!
+        // Pair ordered attacks: fitting may warp onsets, but cannot reorder them.
+        if (trace.start + 8 >= made.lengthBeats || g.graces.length || g.right.some(e => e.arpeggiate)) continue
+        const onsets = [...new Set(right.filter(e => e.startBeat >= trace.start && e.startBeat < trace.start + 8)
+          .map(e => e.startBeat))].sort((a, b) => a - b)
+        expect(onsets).toHaveLength(g.right.length)
+        for (const [i, s] of g.right.entries()) {
+          const at = onsets[i]
+          const notes = right.filter(e => Math.abs(e.startBeat - at) < .001)
+          if (!notes.length) continue
+          const top = Math.max(...notes.flatMap(e => e.notes))
+          const lead = notes.find(e => e.notes.includes(top))!
+          const voices = notes.reduce((n, e) => n + e.notes.length, 0)
+          const touch = cpBalladTouch(g.right, s)
+          const expected = 76 + Math.round(4 * Math.sin(at / made.lengthBeats * Math.PI)) +
+            (at % 1 === 0 ? 3 : 0) + (voices >= 3 ? 3 : 0) + touch
+          expect(lead.velocity, `take ${take}, ${g.id}, source ${s.at} -> ${at}`).toBe(expected)
+          if (touch) touched++
+        }
+      }
+      for (const t of made.compositionTechniques!.filter(t => t.kind === 'written-grace')) {
+        const g = cpBalladGestures.find(g => g.id === t.source)!
+        expect(g.source.song).toBe('Hồng Kông 1')
+        const grace = made.events.find(e => e.grace && Math.abs(e.startBeat - t.startBeat) < .001)!
+        const principal = right.filter(e => Math.abs(e.startBeat - t.startBeat - grace.durationBeats) < .001)
+        expect(Math.max(...principal.flatMap(e => e.notes)) - grace.notes[0]).toBe(2)
+        expect(grace.durationBeats).toBeLessThanOrEqual(1 / 16)
+        graces++
+      }
+    }
+    expect(touched).toBeGreaterThan(100)
+    expect(graces).toBeGreaterThan(0)
+  })
+
   it('establishes major and connects episode registers for the saved G-major feedback', () => {
     for (let take = 0; take < 24; take++) for (const kind of ['intro', 'interlude'] as const) {
       const made = buildPhraseSection({ ...base, kind, take, key: { tonic: 7, scale: 'major' } })!

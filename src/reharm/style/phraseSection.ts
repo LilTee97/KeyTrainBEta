@@ -123,7 +123,7 @@ export interface PhraseSection {
   adaptationNote?: string
   compositionSources?: { bar: number; start: number; end: number; harmony: string; melody: string; rhythm: string;
     donorGenre: string; mode: string; sourceKind: string }[]
-  compositionTechniques?: { source: string; startBeat: number; kind: 'neighbor-cluster' | 'octave-line' | 'left-answer' | 'third-dyad' | 'sixth-dyad' | 'semitone-approach' }[]
+  compositionTechniques?: { source: string; startBeat: number; kind: 'neighbor-cluster' | 'octave-line' | 'left-answer' | 'third-dyad' | 'sixth-dyad' | 'semitone-approach' | 'written-grace' }[]
 }
 
 /**

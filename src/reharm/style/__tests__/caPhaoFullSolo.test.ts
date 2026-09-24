@@ -18,7 +18,7 @@ const ballad = ALL_STYLES.find(s => cpGenre(s) === 'ballad')!
 const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 2, scale: 'minor' },
   style: bossa, thay: 'ca-phao', beatsPerChord: 4, opening: null, dropRoot: true,
   solo: () => [], take: 0, caPhaoFull: true, caPhaoKeyboardRange: { low: 21, high: 108 } }
-const expectedNotes = (source: typeof sources.sections[number]) => source.events
+const expectedNotes = (source: FullSolo) => source.events
   .filter(e => source.vocalPickupAt === null || e.hand !== 'right' || e.at < source.vocalPickupAt)
   .reduce((n,e) => n+e.tones.length, source.graces.length + (source.vocalPickupAt === null ? 0 : 6))
 
@@ -98,6 +98,32 @@ it('retains the Co Em Cho run, triplet, tied peak, low bass and bar-56 closing g
   expect(outro.events.some(e => e.notes[0] === 28 && e.startBeat === 16)).toBe(true)
   expect(rh(outro.events, 21.25).map(e => [e.notes[0], e.durationBeats])).toEqual([[99, 3]])
   expect(rh(outro.events, 24)).toEqual([])
+})
+
+it('keeps audited ballad tails and pickup lengths in complete-sheet playback', () => {
+  const cases = [
+    ['Hồng Kông 1', 'intro', 61.5, 4],
+    ['Để Em Rời Xa', 'intro', 15.25, 3.25],
+    ['Để Em Rời Xa', 'interlude', 17, 4],
+    ['Chưa Bao Giờ (Trung Quân)', 'intro', 33, 1],
+  ] as const
+  for (const [song, kind, length, firstBar] of cases) {
+    const source = sources.sections.find(s => s.song === song && s.kind === kind)! as FullSolo
+    expect(source.barLengths[0]).toBe(firstBar)
+    expect(source.lengthBeats).toBe(length)
+    const made = buildPhraseSection({ ...base, style: { ...ballad, cpSoloSong: undefined }, kind,
+      caPhaoSimulate: true, caPhaoFullSource: song,
+      key: { tonic: source.tonic as PitchClass, scale: source.mode as 'major' | 'minor' } })!
+    expect(made.unavailableReason).toBeUndefined()
+    expect(made.lengthBeats).toBe(length)
+    expect(made.events.flatMap(e => e.notes)).toHaveLength(expectedNotes(source))
+    for (const e of source.events.filter(e => e.at >= length - 1 && !e.arpeggiate)) {
+      const actual = made.events.filter(n => n.hand === e.hand && n.startBeat === e.at)
+      expect(actual.map(n => n.notes[0])).toEqual(e.tones.map(n => n + source.tonic))
+      expect(actual.map(n => n.durationBeats)).toEqual(e.gates)
+      expect(actual.map(n => n.velocity)).toEqual(e.velocities)
+    }
+  }
 })
 
 it('assembles the complete Co Em Cho simulation without trimming either hand or changing gates/dynamics', () => {

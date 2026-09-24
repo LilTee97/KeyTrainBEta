@@ -17,7 +17,7 @@ OUT = cp.ROOT / 'src/reharm/style/cpBalladSolos.json'
 REPORT = cp.ROOT / 'Reference/CP-BALLAD-SOLO-INVENTORY.json'
 # Half-open, zero-based quarter beats. From corpus cua_loi, NOT guessed by pitch.
 WINDOWS = {
-    'hongkong': {'interlude': (47, 2, 65, 1.5), 'outro': (100, .5, 107, 2)},
+    'hongkong': {'intro': (1, 0, 16, 1.5), 'interlude': (47, 2, 65, 1.5), 'outro': (100, .5, 107, 2)},
     'Co Em': {'intro': (1, 0, 8, 3.5), 'interlude': (48, .25, 56, 2)},
     'Ngay mai': {'interlude': (51, .75, 54, 4), 'outro': (87, .75, 91, 4)},
     'De Em': {'interlude': (28, 0, 32, 1)},
@@ -37,7 +37,7 @@ def analyze():
     for song in songs:
         acdd = song['file'].startswith('Anh Cu')
         path = cp.BRAIN / 'video/Ca_Phao' / song['file'] if acdd else Path(cp.bac_not.tim_file(song))
-        data = audit.audit(path)
+        data = audit.audit(path, dynamics=True, actual_pickups=True)
         starts, cursor = {}, 0
         for b, info in data.items():
             starts[int(b)] = cursor
@@ -46,6 +46,14 @@ def analyze():
                     tie_start='start' in n['ties'], tie_stop='stop' in n['ties'])
                for b, info in data.items() for n in info['attacks']]
         groups = cp.groups_of(raw)
+        incomplete_ties = []
+        for n in raw:
+            if not n['tie_start']:
+                continue
+            following = sorted([t for t in raw if t['hand'] == n['hand'] and t['voice'] == n['voice'] and
+                t['midi'] == n['midi'] and t['beat'] > n['beat']], key=lambda t: t['beat'])
+            if not following or not following[0]['tie_stop']:
+                incomplete_ties.append(n)
         row = dict(song=song['name'], file=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest(), sections=[])
         inventory.append(row)
         for kind, bounds in song['sections'].items():
@@ -94,11 +102,20 @@ def analyze():
                         replace(bar, 4, [(0, 2, 'm9', None), (1.75, 7, '13', None)], 'F# bass before B; preserve ii-V order.')
             events = []
             for g in groups:
-                if g['at'] < learn_start - 1e-5 or g['at'] >= learn_end - 1e-5:
+                carry = g['at'] < learn_start - 1e-5
+                # A sustained bass is accompaniment, but an RH carry may still
+                # be the preceding lyric. Keep only LH carries, marked as holds.
+                if g['at'] >= learn_end - 1e-5 or carry and (g['hand'] != 2 or g['at'] + g['dur'] <= learn_start):
                     continue
+                at = max(g['at'], learn_start)
+                sounding = [(p, min(g['at'] + gate, learn_end) - at) for p, gate in zip(g['pitches'], g['gates'])
+                            if g['at'] + gate > at]
                 ornaments = [n for n in raw if n['hand'] == g['hand'] and abs(n['beat']-g['at']) < 1e-5 and not n['grace']]
-                events.append(dict(at=round(g['at'] - origin, 6), tones=[p-tonic for p in g['pitches']],
-                    gates=[round(min(gate, learn_end-g['at']), 6) for gate in g['gates']],
+                events.append(dict(at=round(at - origin, 6), tones=[p-tonic for p, _ in sounding],
+                    gates=[round(gate, 6) for _, gate in sounding], carry=carry,
+                    uncertainTie=any(n['hand'] == g['hand'] and abs(n['beat'] - g['at']) < 1e-5 for n in incomplete_ties),
+                    velocities=[next((n['velocity'] for n in ornaments if n['midi'] == p and 'velocity' in n), None)
+                                for p, _ in sounding],
                     hand='right' if g['hand'] == 1 else 'left',
                     clipped=any(g['at'] + gate > learn_end + 1e-5 for gate in g['gates']),
                     arpeggiate=any(n['arpeggiate'] for n in ornaments),
@@ -119,6 +136,7 @@ def analyze():
             tops = [max(e['tones']) for e in right]
             steps = [b-a for a, b in zip(tops, tops[1:])]
             left = [e for e in events if e['hand'] == 'left']
+            left_attacks = [e for e in left if not e['carry']]
             runs, run = [], []
             for e in right + [None]:
                 if e is None or len(e['tones']) > 2 or run and e['at']-run[-1]['at'] > .501:
@@ -133,19 +151,27 @@ def analyze():
             report = dict(kind=kind, window=list(window), learningWindow=[section['start'], section['end']],
                 mode=mode, tonic=tonic if key else None, confidence=section['confidence'],
                 nonFourQuarterBars=[b for b in bars if b['length'] != 4],
-                rightAttacks=len(right), leftAttacks=sum(e['hand']=='left' for e in events),
+                rightAttacks=len(right), leftAttacks=len(left_attacks),
                 chords=sum(len(e['tones'])>=3 for e in right), octaves=sum(any(n+12 in e['tones'] for n in e['tones']) for e in right),
                 offbeats=sum(abs(e['at']-round(e['at']))>.001 for e in right),
                 offSixteenthGrid=sum(abs(e['at']*4-round(e['at']*4))>.001 for e in right),
                 semitoneSteps=sum(abs(n)==1 for n in steps), registerLeaps=sum(abs(n)>=12 for n in steps),
                 rests=sum(b['at']>a['at']+max(a['gates'])+.08 for a,b in zip(right,right[1:])),
                 graces=len(graces), harmony=section['harmony'], corrections=corrections,
-                simultaneousHands=sum(any(abs(r['at']-l['at']) < .001 for l in left) for r in right),
-                rightOverHeldBass=sum(any(l['at'] < r['at']-.001 and l['at']+max(l['gates']) > r['at']+.001 for l in left) for r in right),
+                simultaneousHands=sum(any(abs(r['at']-l['at']) < .001 for l in left_attacks) for r in right),
+                rightOverHeldBass=sum(any((l['carry'] or l['at'] < r['at']-.001) and
+                    l['at']+max(l['gates']) > r['at']+.001 for l in left) for r in right),
+                carriedBassNotes=sum(len(e['tones']) for e in left if e['carry']),
+                incompleteTies=[dict(bar=n['bar'], at=n['at'], hand=n['hand'], pitch=n['pitch'])
+                                for n in incomplete_ties if learn_start <= n['beat'] < learn_end],
+                velocityNotes=sum(v is not None for e in events for v in e['velocities']),
+                velocityRange=[min(v for e in events for v in e['velocities'] if v is not None),
+                               max(v for e in events for v in e['velocities'] if v is not None)]
+                    if any(v is not None for e in events for v in e['velocities']) else None,
                 runs=runs,
                 chordGestures=[dict(at=e['at'], intervals=[n-min(e['tones']) for n in e['tones']],
                     gates=e['gates'], arpeggiate=e['arpeggiate']) for e in right if len(e['tones']) >= 3],
-                barRhythms=[dict(bar=b['bar'], left=[e['at']-b['at'] for e in left if b['at'] <= e['at'] < b['at']+b['length']],
+                barRhythms=[dict(bar=b['bar'], left=[e['at']-b['at'] for e in left_attacks if b['at'] <= e['at'] < b['at']+b['length']],
                     right=[e['at']-b['at'] for e in right if b['at'] <= e['at'] < b['at']+b['length']]) for b in bars])
             row['sections'].append(report)
     return dict(version=1, sections=sections), dict(songs=inventory,

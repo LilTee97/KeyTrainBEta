@@ -5,6 +5,28 @@ Nó không biến mọi quyết định nghe hay trong app thành thủ pháp đ
 là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 [CA-PHAO-BOSSA-AUDIT.md](CA-PHAO-BOSSA-AUDIT.md).
 
+## Train Ballad: Kiểm Lại Dữ Liệu Solo - 24/09/2026
+
+Theo yêu cầu sau khi sửa mô phỏng Có Em Chờ: kiểm lại cả dữ liệu học và cách
+bộ soạn hiện thực kỹ thuật, **chỉ cho ballad CP**, không train Bossa.
+
+- Đối chiếu 25 đoạn đã chia của 9 sheet: 3.540 nốt thường sau gộp tie và 1 nốt
+  láy, trong cửa học không chứa giai điệu lời hát. Chưa xác nhận giọng Kém duyên/
+  Yêu xa nên chỉ dùng thời gian, không dùng cao độ/vòng hòa âm của hai bài ấy.
+- Giữ 5 nốt bass ngân qua đầu cửa học; khôi phục đuôi dạo Hồng Kông 1 đến ô
+  16:1.5, đuôi giang Để Em Rời Xa đến ô 32:1 trong mô phỏng; sửa độ dài ô lấy đà.
+- Bộ soạn mới học tương quan mạnh/nhẹ có ghi trong 6 sheet. Nốt láy giữ đúng
+  hướng/quãng nguồn nếu hợp gam, hợp âm và tầm đàn; bỏ luật tự thêm nửa cung.
+- Có Em Chờ đã có đủ đuôi ô 56 trong kho học trước lượt này; không quy mọi lỗi
+  mô phỏng trước đây thành lỗi học. Bản mô phỏng Có Em Chờ và dữ liệu Bossa
+  không đổi so với `be8373e`; không ghi đè các câu nghe lại đã được duyệt.
+- Hai cụm có tie-start thiếu tie-stop trong file ACDD/Để Em Rời Xa bị loại khỏi
+  mẫu dùng để soạn, chưa tự đoán hay sửa sheet gốc.
+
+120 kiểm thử liên quan và build đạt; chưa có nghe duyệt. Chi tiết, giới hạn,
+nguồn và lệnh kiểm: [kiểm lại kho ballad](CP-BALLAD-COMPOSER-2026-09-23.md#kiểm-lại-toàn-kho-24092026).
+Đây là cập nhật kho mẫu/quy tắc soạn, không phải huấn luyện trọng số mô hình ML.
+
 ## Mô Phỏng Solo Ballad Có Em Chờ - 24/09/2026
 
 Phản hồi: mô phỏng không giống sheet, bỏ nhiều phần. Lượt này **sửa mô phỏng

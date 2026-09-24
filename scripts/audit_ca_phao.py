@@ -31,7 +31,7 @@ def pitch(el):
     return name, (octv + 1) * 12 + STEP[step] + alt
 
 
-def audit(path, *, dynamics=False):
+def audit(path, *, dynamics=False, actual_pickups=False):
     root = load(path)
     result = {}
     parts = root.findall('part')
@@ -40,7 +40,8 @@ def audit(path, *, dynamics=False):
         for measure in part.findall('measure'):
             bar = measure.get('number')
             info = result.setdefault(bar, dict(harmony=[], attacks=[], length=barlen))
-            cursor, previous = 0, 0
+            previous_part_length = info['length'] if part_index else 0
+            cursor, previous, extent = 0, 0, 0
             for el in measure:
                 if el.tag == 'attributes':
                     div = int(el.findtext('divisions') or div)
@@ -50,6 +51,7 @@ def audit(path, *, dynamics=False):
                     info['length'] = barlen
                 elif el.tag in ('backup', 'forward'):
                     cursor += (-1 if el.tag == 'backup' else 1) * float(el.findtext('duration') or 0) / div
+                    extent = max(extent, cursor)
                 elif el.tag == 'harmony':
                     r, b = el.find('root'), el.find('bass')
                     if r is None:
@@ -66,6 +68,7 @@ def audit(path, *, dynamics=False):
                     chord = el.find('chord') is not None
                     grace = el.find('grace') is not None
                     onset = previous if chord else cursor
+                    extent = max(extent, onset + duration)
                     p = el.find('pitch')
                     if p is not None:
                         name, midi = pitch(p)
@@ -82,6 +85,9 @@ def audit(path, *, dynamics=False):
                         previous=onset
                         if not grace:
                             cursor+=duration
+            if actual_pickups and measure.get('implicit') == 'yes' and extent > 0:
+                # An incomplete pickup is not a full bar plus invented silence.
+                info['length'] = max(previous_part_length, round(extent, 6))
     return result
 
 
@@ -117,6 +123,21 @@ def self_check():
     assert data['1']['harmony'][1]['at'] == 3.5
     assert data['2']['attacks'][0]['ties'] == ['stop']
     assert data['2']['attacks'][0]['dur'] == 1
+    pickup = ET.fromstring('''<score-partwise><part id="P1"><measure number="0" implicit="yes">
+      <attributes><divisions>4</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <note dynamics="80"><pitch><step>C</step><octave>4</octave></pitch><duration>13</duration></note>
+      <backup><duration>13</duration></backup><note><rest/><duration>8</duration><staff>2</staff></note>
+      </measure><measure number="1"><note><rest/><duration>16</duration></note></measure></part></score-partwise>''')
+    with patch(__name__ + '.load', return_value=pickup):
+        measured = audit('in-memory', dynamics=True, actual_pickups=True)
+        assert measured['0']['length'] == 3.25 and measured['1']['length'] == 4
+        assert measured['0']['attacks'][0]['velocity'] == 72
+        assert audit('in-memory')['0']['length'] == 4  # legacy/Bossa callers unchanged
+    pickup.append(ET.fromstring('''<part id="P2"><measure number="0" implicit="yes">
+      <attributes><divisions>4</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+      <note><rest/><duration>8</duration></note></measure></part>'''))
+    with patch(__name__ + '.load', return_value=pickup):
+        assert audit('in-memory', actual_pickups=True)['0']['length'] == 3.25
     print('MusicXML audit self-check OK')
 
 

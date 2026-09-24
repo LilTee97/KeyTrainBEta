@@ -50,7 +50,8 @@ def analyze():
         if song.get('teacher') != 'ca-phao': continue
         path = cp.bac_not.tim_file(song)
         co_em_cho = song['file'].startswith('Co Em')
-        data = audit.audit(path, dynamics=co_em_cho)
+        ballad = song['genre'] == 'ballad'
+        data = audit.audit(path, dynamics=ballad, actual_pickups=ballad)
         starts, cursor = {}, 0
         for bar, info in data.items():
             starts[int(bar)] = cursor
@@ -74,6 +75,10 @@ def analyze():
             # Keep the full printed opening/pickups in simulation, not training cuts.
             if co_em_cho and kind == 'interlude':
                 hi, end = 56, starts[56] + 2
+            elif song['file'].startswith('hongkong') and kind == 'intro':
+                hi, end = 16, starts[16] + 1.5
+            elif song['file'].startswith('De Em') and kind == 'interlude':
+                hi, end = 32, starts[32] + 1
             report = dict(kind=kind, bars=[lo, hi], declaredBars=[lo, declared_hi], beats=end-begin)
             row['sections'].append(report)
             if not key:
@@ -99,7 +104,7 @@ def analyze():
                     articulations=sorted({a for n in ornaments for a in n['articulations']}),
                     carry=g['at'] < begin,
                     parallelMajor=bossa_outro and g['bar'] >= 100))
-                if co_em_cho:
+                if ballad:
                     events[-1]['velocities'] = [next((n['velocity'] for n in ornaments
                         if n['midi'] == pitch + tonic and 'velocity' in n),
                         64 if g['hand'] == 2 else 72) for pitch in pitches]

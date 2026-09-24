@@ -10,22 +10,22 @@
           "window": [
             1,
             0,
-            15,
-            4.0
+            16,
+            1.5
           ],
           "learningWindow": [
             0,
-            60.0
+            61.5
           ],
           "mode": "major",
           "tonic": 0,
           "confidence": "confirmed-boundaries; score-analyzed-key",
           "nonFourQuarterBars": [],
-          "rightAttacks": 70,
+          "rightAttacks": 71,
           "leftAttacks": 57,
           "chords": 13,
           "octaves": 4,
-          "offbeats": 40,
+          "offbeats": 41,
           "offSixteenthGrid": 5,
           "semitoneSteps": 7,
           "registerLeaps": 3,
@@ -131,7 +131,11 @@
           ],
           "corrections": [],
           "simultaneousHands": 23,
-          "rightOverHeldBass": 46,
+          "rightOverHeldBass": 47,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 6.5,
@@ -487,10 +491,10 @@
                 9
               ],
               "gates": [
-                0.5,
-                0.5,
-                0.5,
-                0.5
+                1.0,
+                1.0,
+                1.0,
+                1.0
               ],
               "arpeggiate": false
             }
@@ -727,6 +731,13 @@
                 3.0,
                 3.5
               ]
+            },
+            {
+              "bar": 16,
+              "left": [],
+              "right": [
+                0.5
+              ]
             }
           ]
         },
@@ -887,6 +898,10 @@
           "corrections": [],
           "simultaneousHands": 39,
           "rightOverHeldBass": 107,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 4.5,
@@ -2090,6 +2105,10 @@
           "corrections": [],
           "simultaneousHands": 9,
           "rightOverHeldBass": 9,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 0.5,
@@ -2488,6 +2507,13 @@
           ],
           "simultaneousHands": 15,
           "rightOverHeldBass": 46,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 166,
+          "velocityRange": [
+            31,
+            102
+          ],
           "runs": [
             {
               "at": 2.75,
@@ -3148,7 +3174,14 @@
             }
           ],
           "simultaneousHands": 16,
-          "rightOverHeldBass": 59,
+          "rightOverHeldBass": 60,
+          "carriedBassNotes": 1,
+          "incompleteTies": [],
+          "velocityNotes": 192,
+          "velocityRange": [
+            40,
+            100
+          ],
           "runs": [
             {
               "at": 1.0,
@@ -3867,6 +3900,13 @@
           ],
           "simultaneousHands": 11,
           "rightOverHeldBass": 30,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 111,
+          "velocityRange": [
+            30,
+            85
+          ],
           "runs": [
             {
               "at": 8.75,
@@ -4404,6 +4444,13 @@
           "corrections": [],
           "simultaneousHands": 24,
           "rightOverHeldBass": 77,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 271,
+          "velocityRange": [
+            31,
+            102
+          ],
           "runs": [
             {
               "at": 2.75,
@@ -5261,7 +5308,14 @@
           ],
           "corrections": [],
           "simultaneousHands": 7,
-          "rightOverHeldBass": 17,
+          "rightOverHeldBass": 22,
+          "carriedBassNotes": 1,
+          "incompleteTies": [],
+          "velocityNotes": 72,
+          "velocityRange": [
+            31,
+            95
+          ],
           "runs": [
             {
               "at": 0.75,
@@ -5521,7 +5575,14 @@
           ],
           "corrections": [],
           "simultaneousHands": 6,
-          "rightOverHeldBass": 18,
+          "rightOverHeldBass": 19,
+          "carriedBassNotes": 1,
+          "incompleteTies": [],
+          "velocityNotes": 72,
+          "velocityRange": [
+            48,
+            103
+          ],
           "runs": [
             {
               "at": 6.75,
@@ -5771,6 +5832,10 @@
           "corrections": [],
           "simultaneousHands": 32,
           "rightOverHeldBass": 16,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 10.0,
@@ -6421,6 +6486,10 @@
           "corrections": [],
           "simultaneousHands": 14,
           "rightOverHeldBass": 13,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 14.0,
@@ -6707,6 +6776,10 @@
           "corrections": [],
           "simultaneousHands": 19,
           "rightOverHeldBass": 0,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 7.0,
@@ -7079,6 +7152,10 @@
           "corrections": [],
           "simultaneousHands": 19,
           "rightOverHeldBass": 0,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 4.5,
@@ -7473,6 +7550,10 @@
           "corrections": [],
           "simultaneousHands": 4,
           "rightOverHeldBass": 0,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 0,
+          "velocityRange": null,
           "runs": [
             {
               "at": 4.0,
@@ -7666,12 +7747,18 @@
           ],
           "learningWindow": [
             0,
-            16.0
+            15.25
           ],
           "mode": "minor",
           "tonic": 2,
           "confidence": "confirmed-boundaries; score-analyzed-key",
-          "nonFourQuarterBars": [],
+          "nonFourQuarterBars": [
+            {
+              "bar": 0,
+              "at": 0,
+              "length": 3.25
+            }
+          ],
           "rightAttacks": 31,
           "leftAttacks": 22,
           "chords": 0,
@@ -7696,25 +7783,25 @@
               "bass": null
             },
             {
-              "at": 4.0,
+              "at": 3.25,
               "root": 0,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 8.0,
+              "at": 7.25,
               "root": 10,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 11.0,
+              "at": 10.25,
               "root": 8,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 12.0,
+              "at": 11.25,
               "root": 0,
               "suffix": "m7",
               "bass": null
@@ -7723,10 +7810,52 @@
           "corrections": [],
           "simultaneousHands": 8,
           "rightOverHeldBass": 21,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 66,
+          "velocityRange": [
+            53,
+            108
+          ],
           "runs": [
             {
-              "at": 7.5,
-              "end": 10.0,
+              "at": 3.0,
+              "end": 5.0,
+              "onsets": [
+                0.0,
+                0.5,
+                1.0,
+                1.25
+              ],
+              "motion": [
+                2,
+                2,
+                1
+              ],
+              "harmony": [
+                {
+                  "at": 0,
+                  "root": 8,
+                  "suffix": "",
+                  "bass": null
+                },
+                {
+                  "at": 1.5,
+                  "root": 10,
+                  "suffix": "",
+                  "bass": null
+                },
+                {
+                  "at": 3.25,
+                  "root": 0,
+                  "suffix": "m7",
+                  "bass": null
+                }
+              ]
+            },
+            {
+              "at": 6.75,
+              "end": 9.25,
               "onsets": [
                 0.0,
                 0.25,
@@ -7752,13 +7881,13 @@
                   "bass": null
                 },
                 {
-                  "at": 4.0,
+                  "at": 3.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 8.0,
+                  "at": 7.25,
                   "root": 10,
                   "suffix": "",
                   "bass": null
@@ -7766,8 +7895,8 @@
               ]
             },
             {
-              "at": 10.25,
-              "end": 12.0,
+              "at": 9.5,
+              "end": 11.25,
               "onsets": [
                 0.0,
                 0.25,
@@ -7781,19 +7910,19 @@
               ],
               "harmony": [
                 {
-                  "at": 4.0,
+                  "at": 3.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 8.0,
+                  "at": 7.25,
                   "root": 10,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 11.0,
+                  "at": 10.25,
                   "root": 8,
                   "suffix": "",
                   "bass": null
@@ -7801,8 +7930,8 @@
               ]
             },
             {
-              "at": 14.0,
-              "end": 16.0,
+              "at": 13.25,
+              "end": 15.25,
               "onsets": [
                 0.0,
                 0.25,
@@ -7818,19 +7947,19 @@
               ],
               "harmony": [
                 {
-                  "at": 8.0,
+                  "at": 7.25,
                   "root": 10,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 11.0,
+                  "at": 10.25,
                   "root": 8,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 12.0,
+                  "at": 11.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
@@ -7996,6 +8125,13 @@
           "corrections": [],
           "simultaneousHands": 12,
           "rightOverHeldBass": 28,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 95,
+          "velocityRange": [
+            64,
+            101
+          ],
           "runs": [
             {
               "at": 1.75,
@@ -8430,6 +8566,32 @@
           "corrections": [],
           "simultaneousHands": 24,
           "rightOverHeldBass": 28,
+          "carriedBassNotes": 0,
+          "incompleteTies": [
+            {
+              "bar": 71,
+              "at": 1.75,
+              "hand": 2,
+              "pitch": "A#3"
+            },
+            {
+              "bar": 71,
+              "at": 1.75,
+              "hand": 2,
+              "pitch": "C#4"
+            },
+            {
+              "bar": 71,
+              "at": 1.75,
+              "hand": 2,
+              "pitch": "D#4"
+            }
+          ],
+          "velocityNotes": 209,
+          "velocityRange": [
+            65,
+            98
+          ],
           "runs": [
             {
               "at": 15.75,
@@ -8915,7 +9077,7 @@
           ],
           "learningWindow": [
             0,
-            35.0
+            33.0
           ],
           "mode": "minor",
           "tonic": 5,
@@ -8924,7 +9086,7 @@
             {
               "bar": 0,
               "at": 0,
-              "length": 3.0
+              "length": 1.0
             }
           ],
           "rightAttacks": 58,
@@ -8935,7 +9097,7 @@
           "offSixteenthGrid": 0,
           "semitoneSteps": 6,
           "registerLeaps": 2,
-          "rests": 4,
+          "rests": 3,
           "graces": 0,
           "harmony": [
             {
@@ -8945,61 +9107,61 @@
               "bass": 7
             },
             {
-              "at": 3.0,
+              "at": 1.0,
               "root": 8,
               "suffix": "maj7",
               "bass": null
             },
             {
-              "at": 7.0,
+              "at": 5.0,
               "root": 7,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 11.0,
+              "at": 9.0,
               "root": 5,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 15.0,
+              "at": 13.0,
               "root": 3,
               "suffix": "maj7",
               "bass": null
             },
             {
-              "at": 19.0,
+              "at": 17.0,
               "root": 8,
               "suffix": "maj7",
               "bass": null
             },
             {
-              "at": 23.0,
+              "at": 21.0,
               "root": 7,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 26.0,
+              "at": 24.0,
               "root": 0,
               "suffix": "7",
               "bass": null
             },
             {
-              "at": 27.0,
+              "at": 25.0,
               "root": 7,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 29.0,
+              "at": 27.0,
               "root": 5,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 31.0,
+              "at": 29.0,
               "root": 0,
               "suffix": "m7",
               "bass": null
@@ -9008,10 +9170,17 @@
           "corrections": [],
           "simultaneousHands": 18,
           "rightOverHeldBass": 32,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 133,
+          "velocityRange": [
+            42,
+            93
+          ],
           "runs": [
             {
-              "at": 4.75,
-              "end": 6.5,
+              "at": 2.75,
+              "end": 4.5,
               "onsets": [
                 0.0,
                 0.25,
@@ -9035,7 +9204,7 @@
                   "bass": 7
                 },
                 {
-                  "at": 3.0,
+                  "at": 1.0,
                   "root": 8,
                   "suffix": "maj7",
                   "bass": null
@@ -9043,8 +9212,8 @@
               ]
             },
             {
-              "at": 8.75,
-              "end": 12.0,
+              "at": 6.75,
+              "end": 10.0,
               "onsets": [
                 0.0,
                 0.25,
@@ -9070,13 +9239,13 @@
                   "bass": 7
                 },
                 {
-                  "at": 3.0,
+                  "at": 1.0,
                   "root": 8,
                   "suffix": "maj7",
                   "bass": null
                 },
                 {
-                  "at": 7.0,
+                  "at": 5.0,
                   "root": 7,
                   "suffix": "m7",
                   "bass": null
@@ -9084,8 +9253,8 @@
               ]
             },
             {
-              "at": 20.0,
-              "end": 22.5,
+              "at": 18.0,
+              "end": 20.5,
               "onsets": [
                 0.0,
                 0.25,
@@ -9109,19 +9278,19 @@
               ],
               "harmony": [
                 {
-                  "at": 11.0,
+                  "at": 9.0,
                   "root": 5,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 15.0,
+                  "at": 13.0,
                   "root": 3,
                   "suffix": "maj7",
                   "bass": null
                 },
                 {
-                  "at": 19.0,
+                  "at": 17.0,
                   "root": 8,
                   "suffix": "maj7",
                   "bass": null
@@ -9129,8 +9298,8 @@
               ]
             },
             {
-              "at": 23.75,
-              "end": 26.0,
+              "at": 21.75,
+              "end": 24.0,
               "onsets": [
                 0.0,
                 0.25,
@@ -9148,19 +9317,19 @@
               ],
               "harmony": [
                 {
-                  "at": 15.0,
+                  "at": 13.0,
                   "root": 3,
                   "suffix": "maj7",
                   "bass": null
                 },
                 {
-                  "at": 19.0,
+                  "at": 17.0,
                   "root": 8,
                   "suffix": "maj7",
                   "bass": null
                 },
                 {
-                  "at": 23.0,
+                  "at": 21.0,
                   "root": 7,
                   "suffix": "m7",
                   "bass": null
@@ -9170,7 +9339,7 @@
           ],
           "chordGestures": [
             {
-              "at": 6.5,
+              "at": 4.5,
               "intervals": [
                 0,
                 2,
@@ -9184,7 +9353,7 @@
               "arpeggiate": false
             },
             {
-              "at": 15.0,
+              "at": 13.0,
               "intervals": [
                 0,
                 4,
@@ -9198,7 +9367,7 @@
               "arpeggiate": false
             },
             {
-              "at": 22.5,
+              "at": 20.5,
               "intervals": [
                 0,
                 5,
@@ -9212,7 +9381,7 @@
               "arpeggiate": false
             },
             {
-              "at": 27.0,
+              "at": 25.0,
               "intervals": [
                 0,
                 5,
@@ -9485,6 +9654,13 @@
           "corrections": [],
           "simultaneousHands": 24,
           "rightOverHeldBass": 53,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 176,
+          "velocityRange": [
+            48,
+            106
+          ],
           "runs": [
             {
               "at": 0.25,
@@ -10084,6 +10260,13 @@
           "corrections": [],
           "simultaneousHands": 1,
           "rightOverHeldBass": 2,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 8,
+          "velocityRange": [
+            48,
+            70
+          ],
           "runs": [],
           "chordGestures": [
             {
@@ -10201,6 +10384,13 @@
           "corrections": [],
           "simultaneousHands": 13,
           "rightOverHeldBass": 27,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 123,
+          "velocityRange": [
+            57,
+            92
+          ],
           "runs": [
             {
               "at": 3.25,
@@ -10645,6 +10835,13 @@
           "corrections": [],
           "simultaneousHands": 35,
           "rightOverHeldBass": 77,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 283,
+          "velocityRange": [
+            46,
+            106
+          ],
           "runs": [
             {
               "at": 14.5,
@@ -11630,6 +11827,13 @@
           "corrections": [],
           "simultaneousHands": 26,
           "rightOverHeldBass": 41,
+          "carriedBassNotes": 0,
+          "incompleteTies": [],
+          "velocityNotes": 286,
+          "velocityRange": [
+            16,
+            84
+          ],
           "runs": [],
           "chordGestures": [
             {
@@ -12819,7 +13023,14 @@
           ],
           "corrections": [],
           "simultaneousHands": 8,
-          "rightOverHeldBass": 22,
+          "rightOverHeldBass": 24,
+          "carriedBassNotes": 1,
+          "incompleteTies": [],
+          "velocityNotes": 93,
+          "velocityRange": [
+            31,
+            101
+          ],
           "runs": [
             {
               "at": 1.5,
@@ -13186,7 +13397,21 @@
           ],
           "corrections": [],
           "simultaneousHands": 10,
-          "rightOverHeldBass": 27,
+          "rightOverHeldBass": 32,
+          "carriedBassNotes": 1,
+          "incompleteTies": [
+            {
+              "bar": 66,
+              "at": 2.75,
+              "hand": 2,
+              "pitch": "G3"
+            }
+          ],
+          "velocityNotes": 100,
+          "velocityRange": [
+            42,
+            103
+          ],
           "runs": [
             {
               "at": 0.75,

@@ -28,6 +28,7 @@ export const cpBalladGestures = corpus.sections.flatMap(source => source.bars.fl
   if (bar.length !== 4 || !source.bars.some(b => near(b.at, from + 4) && b.length === 4) ||
     from < source.start || end > source.end + .001) return []
   const right = source.events.filter(e => e.hand === 'right' && e.at >= from && e.at < end)
+  if (source.events.some(e => e.uncertainTie && e.at >= from && e.at < end)) return []
   if (right.length < 3 || right.some(e => e.clipped || e.gates.some(g => e.at + g > end + .001)) ||
     source.events.some(e => e.hand === 'right' && e.at < from && e.gates.some(g => e.at + g > from + .001))) return []
   const first = source.harmony.findLast(h => h.at <= from)
@@ -162,10 +163,18 @@ function gestureTechniques(g: Gesture) {
   ].filter((tag): tag is string => typeof tag === 'string')
 }
 
+/** Learn relative touch, not the source recording's loudness. Missing dynamics is neutral. */
+export function cpBalladTouch(events: readonly Attack[], event: Attack) {
+  const levels = events.flatMap(e => e.velocities.filter((v): v is number => v !== null)).sort((a, b) => a - b)
+  const top = event.velocities.at(-1)
+  return !levels.length || top == null ? 0 : Math.max(-14, Math.min(14,
+    Math.round((top - levels[Math.floor(levels.length / 2)]) * .6)))
+}
+
 type Slot = { at: number; gate: number; gates: number[]; voices: number; octave: boolean; motion: number; sourceTone: number;
   sourceChord: Harmony; height: number; intervals: number[]; source: string; cluster: boolean;
   approach?: typeof cpBalladApproaches[number]; dyad: 'third' | 'sixth' | undefined;
-  stepwise: boolean; staccato: boolean; roll: boolean; grace: boolean }
+  stepwise: boolean; staccato: boolean; roll: boolean; graceOffsets: number[]; touch: number }
 
 export function holdCpBalladVoices(events: TimelineEvent[]): TimelineEvent[] {
   // Retrigger only the repeated voice, not an entire chord containing it.
@@ -251,7 +260,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: options.dropRoot }), style, { beatsEach })
   const slots: Slot[] = [], traces: NonNullable<PhraseSection['compositionSources']> = []
   const techniques: NonNullable<PhraseSection['compositionTechniques']> = []
-  const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean; source: string; answer: boolean }> = []
+  const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean; source: string; answer: boolean; touch: number }> = []
   const soloPunches: number[] = []
   const used = new Set<string>()
   const usedTechniques = new Set<string>()
@@ -346,11 +355,14 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
         dyad: e.tones.length === 2 ? [3, 4].includes(e.tones[1] - e.tones[0]) ? 'third' :
           [8, 9].includes(e.tones[1] - e.tones[0]) ? 'sixth' : undefined : undefined,
         staccato: e.articulations.some(a => a === 'staccato'), roll: e.arpeggiate,
-        grace: rhythm.graces.some(n => n.hand === 'right' && near(n.at, rhythm.right[i].at)) })
+        touch: cpBalladTouch(rhythm.right, rhythm.right[i]),
+        graceOffsets: rhythm === g ? rhythm.graces.filter(n => n.hand === 'right' && near(n.at, rhythm.right[i].at))
+          .map(n => n.tone - Math.max(...src.tones)) : [] })
     })
     leftGestures.push(...rhythm.left.map(e => ({ at: start + fit.warp(e.at), voices: Math.min(3, e.tones.length),
       gate: fit.warp(Math.min(8, e.at + Math.max(...e.gates))) - fit.warp(e.at),
       octave: e.tones.some(n => e.tones.includes(n + 12)), source: rhythm.id,
+      touch: cpBalladTouch(rhythm.left, e),
       answer: e.tones.length >= 2 && rhythm.right.some(r => r.at < e.at && r.at + Math.max(...r.gates) > e.at + .125) })))
     for (let half = 0; half < 2; half++) traces.push({ bar: start / 4 + half + 1, start: start + half * 4, end: start + half * 4 + 4,
       harmony: harmony[chordIndex(start + half * 4)].source, melody: g.id,
@@ -362,7 +374,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const finalSlot = { ...slots.at(-1)!, at: lastAt, gate: lengthBeats - lastAt, voices: kind === 'outro' ? 3 : 1,
     gates: Array(3).fill(lengthBeats - lastAt) as number[],
     motion: -2, octave: false, cluster: false, approach: undefined, dyad: undefined,
-    staccato: false, roll: false, grace: false }
+    staccato: false, roll: false, graceOffsets: [], touch: 0 }
   const lineSlots = [...slots.filter(s => s.at < lastAt), finalSlot]
   const pitches = Array.from({ length: range.high - range.low + 1 }, (_, i) => i + range.low)
   const scale = new Set(degreesOf(key.scale).map(d => pc(key.tonic + d.semitones)))
@@ -488,25 +500,32 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       for (let k = ci + 1; k < harmony.length && harmony[k].at < s.at + gate; k++)
         if (!stable[k].has(pc(n))) { gate = harmony[k].at - s.at; break }
       const phraseLift = Math.round(4 * Math.sin(s.at / lengthBeats * Math.PI))
-      const lead = 76 + phraseLift + (s.at % 1 === 0 ? 3 : 0) + (notes.length >= 3 ? 3 : 0)
+      const lead = 76 + phraseLift + (s.at % 1 === 0 ? 3 : 0) + (notes.length >= 3 ? 3 : 0) + s.touch
       const velocity = cluster && n === neighbor ? lead - 21 : n === top ? lead : lead - 12
       return { n, gate, velocity }
     })
+    // Preserve the written grace interval/direction, not a fabricated semitone.
+    // Borrow from the principal gate so a grace at the cell start is not lost.
+    const graceNotes = s.graceOffsets.map(offset => top + offset)
+    const keepGraces = graceNotes.length > 0 && graceNotes.every(n => n >= range.low && n <= range.high &&
+      (scale.has(pc(n)) || stable[ci].has(pc(n))))
+    const graceStep = keepGraces ? Math.min(1 / 16, Math.min(...voiced.map(v => v.gate)) / (4 * graceNotes.length)) : 0
+    const graceLead = graceStep * graceNotes.length
+    if (keepGraces) {
+      graceNotes.forEach((n, j) => right.push({ hand: 'right', notes: [n], startBeat: s.at + j * graceStep,
+        durationBeats: graceStep, velocity: 54 + s.touch, grace: true }))
+      techniques.push({ source: s.source, startBeat: s.at, kind: 'written-grace' })
+    }
     const roll = s.roll && notes.length > 1 ? Math.min(.06, Math.min(...voiced.map(v => v.gate)) / (notes.length * 3)) : 0
     const groups = new Map<string, TimelineEvent>()
     voiced.forEach(({ n, gate, velocity }, j) => {
-      const startBeat = s.at + j * roll, durationBeats = gate - j * roll
+      const startBeat = s.at + graceLead + j * roll, durationBeats = gate - graceLead - j * roll
       const id = `${startBeat}:${durationBeats}:${velocity}`
       const event = groups.get(id)
       if (event) event.notes.push(n)
       else groups.set(id, { hand: 'right', notes: [n], startBeat, durationBeats, velocity })
     })
     right.push(...groups.values())
-    if (s.grace && i > 0 && top > range.low && Math.abs(melody[i - 1] - top) <= 4 && s.at - lineSlots[i - 1].at >= .25 &&
-      cpBalladApproaches.some(a => a.mode === key.scale && a.root === pc(chords[ci].root - key.tonic) &&
-        a.type === chordType(chords[ci]) && a.from === pc(melody[i - 1] - chords[ci].root) &&
-        a.tone === pc(top - 1 - chords[ci].root) && a.to === pc(top - chords[ci].root)))
-      right.push({ hand: 'right', notes: [top - 1], startBeat: s.at - .1, durationBeats: .1, velocity: 54, grace: true })
   })
   // Keep every destination bass attack and add only source-attested joint
   // solo punches. Never add these to the sung accompaniment renderer.
@@ -544,7 +563,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       if (!more.length) break
       notes.push(more[0])
     }
-    return { ...e, notes: notes.sort((a, b) => a - b), durationBeats: gate }
+    return { ...e, notes: notes.sort((a, b) => a - b), durationBeats: gate,
+      velocity: Math.max(1, Math.min(127, (e.velocity ?? 64) + (gesture?.touch ?? 0))) }
   })
   if (left.some(e => e.notes.some(n => !Number.isFinite(n)))) return empty('Không đủ tầm bass cho câu solo này.')
   return { events: holdCpBalladVoices([...left, ...right]), lengthBeats,

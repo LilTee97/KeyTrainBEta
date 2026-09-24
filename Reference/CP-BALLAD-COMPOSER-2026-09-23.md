@@ -3,6 +3,95 @@
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
+## Kiểm Lại Toàn Kho 24/09/2026
+
+Phạm vi: **train cho điệu ballad CP**, theo yêu cầu kiểm lại dữ liệu sau lỗi
+mô phỏng Có Em Chờ. Cập nhật kho mẫu và quy tắc soạn, không train trọng số ML.
+Không sửa file sheet gốc, Bossa hoặc các câu đã lưu được người dùng duyệt.
+
+### Kết Quả Đối Chiếu
+
+`tools/check_cp_ballad_corpus.py` dùng chung trình đọc MusicXML nhưng tự đi theo
+từng chuỗi tie, không dùng `groups_of` của bộ xuất. So độc lập bước gộp/clip:
+cao độ, tay, onset, gate từng nốt, dynamics, nốt ngân qua cửa và grace.
+Đây không phải một trình đọc MusicXML độc lập thứ hai hay đánh giá bằng tai.
+
+| Sheet | Đoạn | Nốt thường trong cửa học |
+|---|---:|---:|
+| Hồng Kông 1 | 3 | 535 |
+| Có Em Chờ | 3 | 469 |
+| Ngày mai em đi | 3 | 415 |
+| Kém duyên | 2 | 256 |
+| Yêu xa | 3 | 293 |
+| Để Em Rời Xa | 3 | 370 |
+| Chưa Bao Giờ | 3 | 317 |
+| Chúng Ta Không Thuộc Về Nhau | 3 | 692 |
+| Anh Cứ Đi Đi | 2 | 193 |
+
+Tổng 25 đoạn, 3.540 nốt thường sau gộp tie, cộng 1 grace. Số nốt học Có Em Chờ
+khác số mô phỏng nguyên câu vì cửa học bỏ pickup lời hát. Kho học **đã có** hai
+phách đầu ô 56 trước lượt sửa này; lỗi mô phỏng cắt ô 56 không xảy ra ở kho học.
+
+Các sửa có chứng cứ (offset tính theo nốt đen, bắt đầu từ 0 trong ô):
+
+- Dạo Hồng Kông 1 thiếu đuôi: giữ đến ô 16:1.5, trước C5 của lời hát. Đầu ô
+  16 là tie tiếp, không gõ lại; Bb3 tại .5 ngân 1 phách. Kho học và mô phỏng
+  nay cùng giữ đuôi này, tổng dạo 61.5 phách.
+- Giang Để Em Rời Xa: mô phỏng giữ thêm ô 32:0-1, tổng 17 phách; kho học đã có.
+- Ô implicit 0 của Để Em Rời Xa dài 3.25, Chưa Bao Giờ dài 1 phách, không phải
+  4/3 phách danh nghĩa. Sửa timeline học và mô phỏng, không đệm thêm im lặng.
+  Tùy chọn `actual_pickups` chỉ bật cho ballad; đường Bossa giữ nguyên.
+- Giữ LH đang ngân lúc vào cửa: Có Em Chờ giang 48:.25 (còn .25), Ngày mai em đi
+  giang 51:.75 (1.25) và kết 87:.75 (.25), ACDD giang 33:1.5 (.5) và kết
+  62:.75 (1.25). Gắn `carry`, không coi đó là cú gõ mới hoặc nhập RH lời hát.
+- Cả sáu sheet Có Em Chờ, Ngày mai em đi, Để Em Rời Xa, Chưa Bao Giờ, Chúng Ta
+  và ACDD có note dynamics: nay giữ từng nốt trong kho học/mô phỏng. Ba sheet
+  còn lại để thiếu dữ liệu, không coi velocity mặc định là lực đo từ nguồn.
+
+### Bộ Soạn Dùng Gì
+
+- Giữ các kiểm tra chùm ba/chùm ngoài lưới, gate từng bè, quãng tám, quãng ba/
+  sáu, cụm dặm và đáp LH dưới RH ngân. Khung bass thuộc điệu đang chơi vẫn giữ;
+  bộ soạn không thay bằng bass loop chung hoặc sửa đệm hát để giống một câu solo.
+- Học tương quan lực của từng tay trong mẫu: lực đỉnh trừ trung vị nguồn,
+  nhân .6, giới hạn +/-14 rồi cộng vào đường lực của câu soạn. Hệ số/giới hạn
+  là biên soạn KT, không phải thông số CP. Ví dụ CEC dạo ô 5:2.25 có 94/94,
+  cụm đáp 5:3 có 56/56/56; không còn san bằng tương phản ấy.
+- Grace duy nhất có ký hiệu trong cửa học là HK1 dạo ô 11:0: C6 lên D6,
+  quãng hai trưởng (một cung). Giữ hướng/quãng khi cùng mẫu nhịp-giai điệu và
+  nốt chuyển hợp gam/hợp âm/tầm; không tự thay bằng nửa cung. Mượn tối đa 1/16
+  phách từ đầu nốt chính, không đẩy vạch ô. Thời lượng grace là biên soạn KT.
+- Có 3 nhóm ghi arpeggiate: HK1 kết 2, Kém duyên kết 1. Đã giữ ký hiệu trong
+  kho; không suy ra mọi đoạn chạy rải đều là arpeggiate. Không có staccato/
+  accent viết tường minh trong các event cửa học này; không bịa ký hiệu để
+  tăng số kỹ thuật. Nghe giật/nảy có thể đến từ onset, nghỉ và phối hai tay.
+
+### Giới Hạn Và Kiểm Hồi Quy
+
+- ACDD kết ô 66:2.75 có G3 tie-start thiếu tie-stop kế tiếp; Để Em Rời Xa kết
+  ô 71:1.75 có A#3/C#4/D#4 tương tự. Đánh dấu `uncertainTie` ở 2 cụm, loại các
+  cửa hai ô chứa chúng khỏi bộ soạn. Không nối dài theo suy đoán, chưa sửa XML.
+- 20 đoạn đã rõ giọng, 5 đoạn Kém duyên/Yêu xa chỉ dạy thời gian. Cùng nhịp
+  danh nghĩa 4/4 không bảo đảm mọi ô đều đủ 4 phách hoặc mọi mẫu ghép được.
+- Kho đã giữ nốt không có nghĩa mọi nốt sẽ xuất hiện trong câu mới: mẫu thân
+  câu vẫn dùng hai ô đủ 4/4, không cắt tie RH, không quá thưa, không ép chùm sai.
+  Nốt carry ở đầu cửa lẻ được lưu để đối chiếu; không tự phát lại ở đầu mẫu.
+- So cấu trúc JSON với `be8373e`: cả 3 đoạn mô phỏng CEC và cả 3 đoạn Bossa
+  không đổi. Bản soạn mới ballad có thể khác cùng take do dữ liệu học đã sửa.
+- 120/120 test trong 10 file liên quan đạt, gồm trưởng/thứ mọi chủ âm, kỹ thuật,
+  source touch sau đổi timing, grace đúng quãng, đuôi nguyên câu, phách dẫn
+  Có Em Chờ/ACDD và Bossa. Build đạt, còn cảnh báo bundle lớn; chưa nghe duyệt,
+  chưa chạy lại toàn suite trong lượt này. Không dùng test xanh để chấm nhạc hay.
+
+Lệnh đối chiếu bổ sung:
+
+```powershell
+python -X utf8 -B scripts/audit_ca_phao.py --self-check
+python -X utf8 -B tools/check_cp_ballad_corpus.py
+python -X utf8 -B tools/cp_ballad_solos.py --check
+python -X utf8 -B tools/cp_full_solos.py --check
+```
+
 ## Train Ballad Sau Đánh Giá 7/10
 
 ### Lượt Theo Bình Luận Trong Nguon.json
