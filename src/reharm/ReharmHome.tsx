@@ -661,6 +661,12 @@ export function ReharmHome() {
   const [tranMo, setTranMo] = useState(false)
   /* Vòng dạo giống 3 sheet trưởng. Mặc định tắt. Cũ: xoay vốn bài → I-ii-iii-IV. */
   const [daoTruong, setDaoTruong] = useState(false)
+  /*
+    BỘ SOẠN SLOW ROCK LINH NHI — ô tick nghe thử, chỉ hiện ở điệu Slow Rock Lá thư.
+    Dạo · giang · kết lấy nguyên một đoạn solo thật của Linh Nhi cùng giọng trưởng/thứ
+    (`style/slowRockLinhNhiSolo.ts`). Nghe ổn thì cho thay hẳn rồi xoá ô tick.
+  */
+  const [srLinhNhi, setSrLinhNhi] = useState(false)
   const [daoThu, setDaoThu] = useState(false)
   const [cauOnDs, setCauOnDs] = useState<CauOn[]>([])
   const [ngheLaiStt, setNgheLaiStt] = useState(0)
@@ -952,6 +958,7 @@ export function ReharmHome() {
             : style.id,
     ) ?? style
   const thaySolo: SoloTeacher = soloThay ?? soloTeacherOf(styleSolo.id)
+  const srLinhNhiOn = srLinhNhi && style.family === 'slow-rock-la-thu'
 
   /**
    * Số phách mỗi hợp âm chiếm.
@@ -3188,7 +3195,30 @@ export function ReharmHome() {
           steps,
           turnaround: undefined,
           // Mở riêng giang tấu THỨ Tuấn đã có bộ phát triển mô-típ mới.
-          interludeRange: (laBoleroTuan(style) || (laBossaCP(style) && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor'
+          interludeRange: srLinhNhiOn && reharm.key
+            ? (over, _next, take) => {
+                // Bộ soạn Slow Rock Linh Nhi: hai tay lấy nguyên từ một đoạn giang thật.
+                const built = buildPhraseSection({
+                  kind: 'interlude', key: reharm.key, style, slowRockLinhNhi: true,
+                  beatsPerChord: chordBeats, dropRoot, opening: null, solo: () => [],
+                  songChords: vongPhienKhuc, vongPhienKhuc,
+                  take: phraseSpin + playSpin.current + interludeTake + take, range: tamSolo,
+                })
+                if (!built || built.lengthBeats === 0) {
+                  if (built?.unavailableReason) phraseWarnings.push(built.unavailableReason)
+                  return { startBeat: over.startBeat, lengthBeats: 0 }
+                }
+                return {
+                  startBeat: over.startBeat,
+                  lengthBeats: built.lengthBeats,
+                  events: built.events.filter((e) => e.hand === 'left'),
+                  solo: () => built.events.filter((e) => e.hand === 'right'),
+                  kyHieu: built.chords,
+                  kyHieuBeats: built.beatsEach,
+                  composed: true,
+                }
+              }
+            : (laBoleroTuan(style) || (laBossaCP(style) && thaySolo === 'ca-phao')) && reharm.key?.scale === 'minor'
             ? (over, next, take, lastLoop) => {
                 const made = interludeWindow(over, next, interludeTake + take, lastLoop)
                 if (made && 'unavailableReason' in made && made.unavailableReason) {
@@ -3236,7 +3266,13 @@ export function ReharmHome() {
 
               MỞ LẠI: thêm loại đoạn ấy vào `coChiDan` bên dưới.
             */
+            /*
+              Bộ soạn Slow Rock Linh Nhi đi theo phương pháp Codex (một nguồn, chỉ chuyển
+              giọng) và do người dùng yêu cầu trực tiếp 24/9/2026 — mở cổng CHỈ cho nó, khi
+              ô tick bật. Các đường khác vẫn ẩn như cũ.
+            */
             if (
+              !srLinhNhiOn &&
               !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor',
                 laBossaCP(style) && thaySolo === 'ca-phao')
             ) {
@@ -3257,6 +3293,7 @@ export function ReharmHome() {
             const built = buildPhraseSection({
               kind,
               key: reharm.key,
+              ...(srLinhNhiOn ? { slowRockLinhNhi: true } : {}),
               /*
                 ĐOẠN KẾT CŨNG NHẬN ĐIỆU BOLERO TUẤN — sửa 10/9/2026.
 
@@ -3426,6 +3463,7 @@ export function ReharmHome() {
     [
       accompaniment,
       backingFor,
+      srLinhNhiOn,
       bossaRhythmOnly,
       bossaSoloOn,
       bpm,
@@ -4525,6 +4563,16 @@ export function ReharmHome() {
             />
             Vòng dạo giống sheet thứ (nghe thử)
           </label>
+          {style.family === 'slow-rock-la-thu' && (
+            <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input
+                type="checkbox"
+                checked={srLinhNhi}
+                onChange={() => setSrLinhNhi((on) => !on)}
+              />
+              Câu solo Slow Rock Linh Nhi — dạo · giang · kết (nghe thử)
+            </label>
+          )}
           <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
             <input
               type="checkbox"

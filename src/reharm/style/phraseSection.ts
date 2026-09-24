@@ -6,6 +6,7 @@ import type { ParsedChord } from '../types'
 import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
+import { slowRockLinhNhiSolo } from './slowRockLinhNhiSolo'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
@@ -100,6 +101,12 @@ export interface PhraseSectionOptions {
   interludeCadence?: 'dominant' | 'ii-v'
   /** Ô tick: câu chạy tự soạn 4/6. Tắt = chép sheet thứ. */
   chayNgan?: boolean
+  /**
+   * BỘ SOẠN SLOW ROCK LINH NHI — ô tick nghe thử, chỉ bật ở điệu Slow Rock Lá thư.
+   * Bật thì đoạn này lấy nguyên một đoạn solo thật của Linh Nhi cùng giọng trưởng/thứ.
+   * Xem `slowRockLinhNhiSolo.ts`. Nghe ổn thì cho thay hẳn rồi xoá ô tick.
+   */
+  slowRockLinhNhi?: boolean
 }
 
 export interface PhraseSection {
@@ -614,6 +621,19 @@ function oXenPap(soO: number, take: number, nhieuPap = false): Set<number> {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
+  if (options.slowRockLinhNhi && options.key) {
+    return slowRockLinhNhiSolo({
+      kind: options.kind, key: options.key, style: options.style,
+      songChords: [...(options.vongPhienKhuc ?? []), ...(options.songChords ?? [])],
+      ...(options.take !== undefined ? { take: options.take } : {}),
+      /*
+        Chép nguyên câu sheet thì giữ quãng của thầy, như chế độ mô phỏng Cà Pháo ("không bẻ
+        quãng theo tầm đàn"). Tầm câu solo của app (62–79) sẽ loại gần hết: dạo Lá Thư A4–E6,
+        dạo Một Cõi lên tới D7. Nên chỉ chặn ở mép 88 phím.
+      */
+      range: { low: 21 as MidiNote, high: 108 as MidiNote },
+    })
+  }
   if (options.thay === 'ca-phao' && options.caPhaoSimulate) return caPhaoFullSolo({...options,take:0})
   if (options.caPhaoCompose && options.thay === 'ca-phao') return composeCpSolo(options)
   if (options.caPhaoFull && options.thay === 'ca-phao') return caPhaoFullSolo(options)

@@ -3347,3 +3347,39 @@ giọng hát theo sheet, hỏi người dùng trước khi thêm.
 thẳng `ReharmHome.tsx` và dò chuỗi có `
 ` nên đỏ. Trả các file đã đụng về LF.
 Toàn suite **2.759 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+### Bộ soạn câu solo Slow Rock Linh Nhi — một nguồn thật, tách trưởng / thứ
+
+Ô tick mới *"Câu solo Slow Rock Linh Nhi — dạo · giang · kết (nghe thử)"*, chỉ hiện ở điệu Slow
+Rock Lá thư. Mã: `style/slowRockLinhNhiSolo.ts`; bảng nguồn `style/slowRockLinhNhiNguon.ts`
+**sinh bằng** `tools/slow_rock_linh_nhi.py --sinh` (23 đoạn solo của 8 bài Linh Nhi). Số đo đầy
+đủ: `PianoBrain/knowledge/teachers/linh-nhi-piano.md` mục **13c**. **Chưa nghe duyệt.**
+
+**Đo trên lưới đúng từng bài.** Lá Thư cắt ô 6 móc đơn pha 2 (12/8 ghi thành 4/4); Một Cõi ghi
+đúng 6/8; bolero ô 4/4; Nỗi Buồn ô 8 phách tách hai. **Ký hiệu hợp âm hai bài slow rock không
+dùng được**: gốc khớp nốt 6/12 (Lá Thư), 4/13 (Một Cõi) — nên đọc hợp âm bằng tay theo tay trái
+(`HOP_AM_TAY`, mỗi ô kèm nốt bằng chứng). Bolero trưởng tin được (24/24 · 15/17 · 18/24).
+
+**Phương pháp (Codex):** mỗi đoạn lấy MỘT đoạn solo thật cùng giọng trưởng/thứ, cùng loại đoạn;
+chuyển giọng nguyên khối cả hai tay; chỉ dời cả tay phải một quãng tám để vào tầm, không thì
+`unavailableReason`. Chọn nguồn: slow rock gốc khớp ≥ nửa vốn hợp âm bài đứng trước; không có
+thì nguồn khớp vốn bài nhất (md: 16/20 đoạn solo của chị chỉ dùng bậc có sẵn trong bài). Giọng
+trưởng **không có sheet slow rock** → lấy bolero trưởng, đổi 4/4 → 12/8: phách giữ chỗ, móc đơn
+thẳng thành dài–ngắn chùm ba, tay trái theo mẫu rải của điệu — **biên soạn, không phải số đo**.
+Ô 6 phách (Đừng Xa kết ô 82) thành ba ô 6/8, không cắt nốt.
+
+**Ba chỗ mở/đổi trong app, chỉ khi ô tick bật và đúng điệu:**
+- `buildPhraseSection` có cờ `slowRockLinhNhi`: trả thẳng đoạn của bộ soạn.
+- `coChiDanCodex` (cổng ẩn dạo/giang/kết chưa có chỉ dẫn Codex) **mở riêng** cho bộ soạn này —
+  người dùng yêu cầu trực tiếp 24/9/2026; các đường khác vẫn ẩn.
+- Giang tấu bài có cấu trúc đi qua `interludeRange` riêng (`composed: true`); không soạn được thì
+  lượt ấy bỏ giang kèm cảnh báo, không lui về đường cũ.
+- Tầm: **88 phím** (21–108), như chế độ mô phỏng Cà Pháo "không bẻ quãng theo tầm đàn" — tầm
+  câu solo 62–79 sẽ loại gần hết (dạo Lá Thư A4–E6, dạo Một Cõi lên D7).
+
+**Tự kiểm:** ghép ngược về giọng gốc ra **đúng từng nốt cả hai tay** ở sáu đoạn slow rock; 23 nguồn
+× 12 giọng đều đọc được hợp âm, đủ độ dài, không rơi nốt; trưởng chỉ lấy nguồn trưởng, thứ chỉ lấy
+nguồn thứ. Toàn suite **2.765 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+**Chưa đo:** chưa có sheet slow rock trưởng; bảng hợp âm đọc tay chưa ai duyệt; lực đánh chưa đưa
+vào (tay phải 76, tay trái 62 — biên soạn); ô tick chưa lưu vào bài.
