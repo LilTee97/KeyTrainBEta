@@ -19,7 +19,7 @@ const coEmCho: StylePattern = {
   cpSoloSong: 'Co Em Cho',
   familyName: 'Ballad Có Em Chờ', variant: 1, bpm: 75,
   sourceVideos: ['Cà Pháo · Có Em Chờ · phiên ô XML 9–10; đối chiếu 17–18'],
-  note: 'Phiên: bass ngân xen móc kép cuối câu. Hai ô 9–10, bè trong rút gọn; chờ nghe duyệt.',
+  note: 'Phiên: bass ngân xen móc kép cuối câu. Hai ô 9–10, bè trong rút gọn; đã nghe duyệt 25/09/2026.',
   cell: {
     lengthBeats: 8,
     left: [
@@ -45,7 +45,7 @@ const coEmChoChorus: StylePattern = {
   cpSoloSong: coEmCho.cpSoloSong,
   familyName: coEmCho.familyName, variant: 2, bpm: 75,
   sourceVideos: ['Cà Pháo · Có Em Chờ · điệp ô XML 25–26; đối chiếu 41–42'],
-  note: 'Điệp: bass rải rộng, bè trong nhấn lệch móc kép. Ô 25–26, bỏ melody và pickup phụ thuộc hòa âm; chờ nghe duyệt.',
+  note: 'Điệp: bass rải rộng, bè trong nhấn lệch móc kép. Ô 25–26, bỏ melody và pickup phụ thuộc hòa âm; đã nghe duyệt 25/09/2026.',
   cell: {
     lengthBeats: 8,
     left: [

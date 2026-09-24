@@ -3649,3 +3649,31 @@ Chưa được duyệt riêng: Linh Run (`chayLinhNhi`), mốc chuyển đoạn 
 4. **Giải thích được**: mỗi ô đã ghi `compositionSources` (vòng từ đâu · giai điệu từ ô nào, dời mấy bậc · tiết tấu ô
    nào). Chưa ghi nhãn từng nốt và điểm phạt — cần thêm khi dựng chức năng giải thích.
 
+### Ballad Có Em Chờ đã nghe duyệt - 25/09/2026
+
+**Người dùng:** "điệu ballad Có em chờ đã ổn hãy commit và gửi vào md sổ tay và md Cà Pháo".
+Chốt mức hiện tại của **Ballad Có Em Chờ**, không tự train hoặc chỉnh âm nhạc thêm.
+Đây là duyệt bằng tai, không suy từ kiểm thử. Các ghi chú chờ nghe trước mốc này là lịch sử.
+
+Mốc mã trước commit tài liệu: `04cbaa5a5e02f3022f3040595723fee93fb655f7`, nhánh
+`thuoc-cham-cau-solo`. Chuỗi thay đổi CP liên quan: `be8373e` sửa mô phỏng nguyên câu;
+`219b805` kiểm kho 9 sheet/25 đoạn, giữ carry/dynamics/grace; `1074066` điều chỉnh mật độ
+giang theo #1348. Không thay các quy tắc này trong lượt chốt.
+
+Giữ family `ca-phao-ballad-co-em-cho` trong `src/reharm/style/styleLibrary/caPhaoBalladSongs.ts`:
+mẫu phiên/điệp, tự đổi theo đoạn, phách dẫn khi phối màu Cà Pháo + solo full. Giữ đường soạn
+`cpBalladComposition.ts`, nối `cpBalladConnections.ts`, mô phỏng `caPhaoSolo.ts` và dữ liệu
+`cpBalladSolos.json`/`caPhaoFullSolos.json`. Chỉ sửa ghi chú hai mẫu từ chờ duyệt sang đã duyệt;
+không đổi nốt, thời điểm, độ ngân, lực đánh, hòa âm, thuật toán hay câu lưu trong `Nguon.json`.
+
+**Phạm vi:** không tự coi ACDD, Ngày mai em đi, mọi take/giọng/chế độ solo hoặc mọi kỹ thuật
+trong kho đều được nghe duyệt. Không tác động Bossa/Linh Nhi. Khi có phản hồi mới, xác định
+đúng điệu, câu, đoạn và mặt chưa ổn (tiết tấu/hòa âm/giai điệu) rồi mới mở phạm vi sửa.
+
+**Bẫy tái tạo:** commit bảo toàn mã/dữ liệu nhưng không lưu một lượt ngẫu nhiên đã nghe.
+Nghe đúng câu cũ cần câu đã lưu hoặc cấu hình + take; không thay câu đã duyệt bằng câu mới
+cùng vòng hợp âm. Chi tiết và lịch sử train ở `CA-PHAO.md` và `CP-BALLAD-COMPOSER-2026-09-23.md`.
+
+Kiểm lượt chốt: 16/16 test của `caPhaoBalladSongs` và `cpBalladBacking` đạt; so với HEAD,
+file mẫu chỉ đổi hai chuỗi ghi chú, định nghĩa âm nhạc không đổi. Không chạy lại toàn suite/build.
+

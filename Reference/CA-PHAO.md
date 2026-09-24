@@ -5,6 +5,32 @@ Nó không biến mọi quyết định nghe hay trong app thành thủ pháp đ
 là của Cà Pháo. Bản đo chi tiết và dữ liệu gốc nằm ở
 [CA-PHAO-BOSSA-AUDIT.md](CA-PHAO-BOSSA-AUDIT.md).
 
+## Ballad Có Em Chờ Đã Duyệt - 25/09/2026
+
+Người dùng xác nhận: **"điệu ballad Có em chờ đã ổn hãy commit và gửi vào md
+sổ tay và md Cà Pháo"**. Đây là mốc nghe duyệt thật, thay trạng thái chờ duyệt
+trước đó đối với **Ballad Có Em Chờ**, không phải kết luận từ test xanh.
+
+**Giữ nguyên mức hiện tại, không tự train hoặc chỉnh nhạc thêm.** Mốc mã trước
+commit ghi nhận này là `04cbaa5a5e02f3022f3040595723fee93fb655f7`; lượt chỉnh
+bộ soạn ballad gần nhất là `1074066` (sau kiểm kho `219b805`, mô phỏng `be8373e`).
+
+- Giữ family `ca-phao-ballad-co-em-cho`, mẫu phiên/điệp và cách tự chuyển theo
+  đoạn; giữ phách dẫn giữa hợp âm khi dùng màu Cà Pháo và solo Cà Pháo full.
+- Không sửa tiết tấu hai tay, onset/gate, lực đánh, hòa âm/giai điệu hoặc các
+  quy tắc soạn đang phục vụ điệu này nếu chưa có phản hồi mới cụ thể.
+- Lượt chốt chỉ đổi ghi chú nghe duyệt và tài liệu, không đổi sự kiện âm nhạc.
+  Không ghi đè câu đã lưu trong `Nguon.json`, không thay seed/take để đóng băng.
+- Phạm vi xác nhận là điệu Có Em Chờ hiện tại. Không suy thành duyệt mọi take,
+  mọi giọng/chế độ solo, ACDD, Ngày mai em đi hay toàn bộ kho ballad CP. Những
+  giới hạn nguồn chưa rõ vẫn giữ. Bossa và Linh Nhi không thuộc lượt chốt này.
+
+Các mục train/chờ duyệt phía dưới là lịch sử trước mốc 25/09, không phải lý do
+tiếp tục chỉnh Có Em Chờ. Bản commit giữ mã và dữ liệu; muốn nghe lại đúng một
+câu ngẫu nhiên cần câu đã lưu hoặc đủ cấu hình + take, không chỉ hash commit.
+Nguồn, quy tắc và kiểm tra tái tạo: [bộ soạn ballad](CP-BALLAD-COMPOSER-2026-09-23.md),
+[mẫu đệm theo bài](CA-PHAO-BALLAD-SONGS.md). Mốc này cũng được ghi ở `SO-TAY.md`.
+
 ## Train Ballad Theo Ý Kiến Mới - 24/09/2026
 
 Đã đọc bình luận mới trong `Nguon.json`, chỉ lấy Có Em Chờ G trưởng:
