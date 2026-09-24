@@ -966,6 +966,34 @@ function overlaps(
  * Chỉ xét **tay trái**: chỗ chồng của tay phải đã có `giveCompingToLeft` lo, và
  * nó lo bằng cách chuyển tay chứ không bằng cách bỏ tiếng.
  */
+/**
+ * Hợp âm nào có câu fill bắt đầu trong nó thì lấy phần đệm từ `fillBacking` —
+ * bản dựng bằng `StylePattern.fillCell`. Các hợp âm khác giữ `backing`.
+ *
+ * Chạy TRƯỚC `giveCompingToLeft`/`yieldToFill`, để hai phép nhường ấy làm việc
+ * trên đúng ô đệm của chỗ fill.
+ */
+export function swapAtFills(
+  backing: readonly TimelineEvent[],
+  fillBacking: readonly TimelineEvent[],
+  fills: readonly TimelineEvent[],
+  beatsEach: readonly number[],
+): TimelineEvent[] {
+  const spans: [number, number][] = []
+  let at = 0
+  for (const beats of beatsEach) {
+    const from = at
+    at += beats
+    if (fills.some((f) => f.startBeat >= from - EPSILON && f.startBeat < at - EPSILON)) spans.push([from, at])
+  }
+  if (spans.length === 0) return [...backing]
+  const inFill = (beat: number) => spans.some(([a, b]) => beat >= a - EPSILON && beat < b - EPSILON)
+  return [
+    ...backing.filter((event) => !inFill(event.startBeat)),
+    ...fillBacking.filter((event) => inFill(event.startBeat)),
+  ].sort((a, b) => a.startBeat - b.startBeat)
+}
+
 export function yieldToFill(
   accompaniment: readonly TimelineEvent[],
   fill: readonly TimelineEvent[],

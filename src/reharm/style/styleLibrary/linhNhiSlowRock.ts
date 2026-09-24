@@ -1,4 +1,4 @@
-import type { RhythmHit, StylePattern } from '../types'
+import type { RhythmCell, RhythmHit, StylePattern } from '../types'
 
 /*
   SLOW ROCK LÁ THƯ — đệm HAI TAY của Linh Nhi trong bản ký âm "Lá Thư Trần Thế" (Rê thứ).
@@ -11,11 +11,13 @@ import type { RhythmHit, StylePattern } from '../types'
     0,5 và BPM 86 giữ đúng tempo sheet (♩. ≈ 57).
   "c15" = ô 6 móc đơn thứ 15 tính theo pha ấy, không phải số ô sheet.
 
-  TÁCH GIAI ĐIỆU KHỎI TAY PHẢI (luật đếm): cú gõ ≥3 nốt, đỉnh ≤ Bb4 = hợp âm đệm;
-  cú gõ 2 nốt = giai điệu trên + bè dưới (giữ bè nếu cách ≥3 nửa cung, ≤ A4, không
-  phải nhân quãng tám); nốt đơn = giai điệu, trừ khi gõ lại đúng nốt bè vừa giữ.
-  Sau khi bỏ giai điệu, tay phải còn đệm ở 39/94 ô phiên và 19/30 ô điệp; tiếng tay
-  phải đệm trùng mốc tay trái 56 lần, chen khe tay trái 33 lần (phiên).
+  HAI TAY — tay phải lúc HÁT là giai điệu lời: phiên 1 và phiên 3 cùng giai điệu khác
+  lời, và tay phải tách/gộp nốt đúng theo âm tiết (c11 E4 · E4, c83 E4 ngân liền). Nên
+  lúc hát phần đệm là TAY TRÁI; tay phải để trống cho giọng hát (ô `cell`).
+  Hai tay cùng đệm ở chỗ LỜI NGHỈ — đúng chỗ app đặt câu fill — bằng cử chỉ c22 (ô
+  `fillCell`). Người dùng nghe (24/9/2026): c22 lặp mọi hợp âm thì "không giống sheet",
+  nhưng ở ô có fill thì "chơi rất hay"; tay phải bấm hợp âm lúc hát (tiếng 1 ngân 3)
+  thì "trong sheet không đệm 2 tay như vậy".
 
   Lực: `velocityScale` = thuộc tính `dynamics` của cú gõ trong sheet ÷ 80 (số đo).
 */
@@ -32,9 +34,9 @@ const common = {
   releaseRatio: 1,
   // Cụm dập điệp khúc lên tới bậc 5 + quãng tám: gốc Si ra Fa thăng 4 (66).
   leftHandTop: 67,
-  // Nốt bè tay phải điệp khúc: gốc đặt từ Son 3 (55) lên, bậc ngay trên gốc —
-  // D7 ra A4 · D4, Gm ra D4, đúng từng nốt sheet. Hợp âm tay phải ở phiên là thế
-  // bấm dẫn giọng của app (57–69), khung này không làm dời nó.
+  // Tay phải ô fill: gốc từ Son 3 (55), các bậc ngay trên gốc — A ra A3/C#4/E4/A4 như
+  // sheet. Gốc Đô–Fa thăng lên tới 72–78, cao hơn vùng A3–A4 của sheet (sheet chỉ có A
+  // và G ở cử chỉ này). Biên soạn.
   rightHandRegister: { rootFloor: 55, low: 55, high: 79 },
 }
 
@@ -42,31 +44,47 @@ const tone = (toneIndex: number, semitones = 0) => ({ toneIndex, semitones, from
 const hit = (beat: number, durationBeats: number, velocityScale: number,
   tones: RhythmHit['tones']): RhythmHit => ({ beat, durationBeats, velocityScale, tones })
 const octave = [tone(0), tone(0, 12)]
+// Bậc 3 · 5 · 8 trên gốc — thế tay phải c22 khi bỏ nốt gốc.
+const triadUp = [tone(1), tone(2), tone(0, 12)]
 
 /*
-  PHIÊN — tay trái c15–c16 (Bb → C, ô sheet 12 phách 3 → 14 phách 1); c15 lặp y hệt ở c87.
-  Tay trái rải 1–3–5–8–5–3, sáu móc đơn đều — nhịp tay trái nhiều nhất bài (25 ô).
+  Ô CÓ FILL — c22 (A7, ô sheet 17 phách 2), tay phải lặp y hệt ở c93. Giữ nguyên số
+  của `594e7f7`, bản người dùng khen fill: lúc bè trầm chạy câu fill (từ tiếng 4),
+  tay phải giữ hợp âm ngân phía trên.
+    tay trái  A2/A3 · A2 · A2/A3 · A2 · E3 · A2/A3
+    tay phải   —    · A3/C#4/E4/A4 ×2 (móc kép) · C#4/E4/A4 · C#4/E4/A4 ngân
+  Tiếng 3 · 4 tay phải bỏ nốt gốc đúng như sheet: tay trái đang gõ quãng tám A2/A3.
+  Tiếng 5 khai E3 đơn thay E2/E3: bậc 5 dưới gốc rơi dưới sàn tay trái (36) ở giọng
+  Đô–Mi, gập thành nốt trùng. Biên soạn.
+*/
+const C22: RhythmCell = {
+  lengthBeats: 6,
+  left: [
+    hit(0, 1, .96, octave), hit(1, 1, .79, [tone(0)]), hit(2, 1, .86, octave),
+    hit(3, 1, .96, [tone(0)]), hit(4, .5, 1.05, [tone(2)]), hit(5, .5, 1.14, octave),
+  ],
+  right: [
+    hit(1, .5, .84, [tone(0), ...triadUp]), hit(1.5, .5, .8, [tone(0), ...triadUp]),
+    hit(2, .5, .89, triadUp), hit(3, 2, 1.13, triadUp),
+  ],
+}
 
-  Hai tay phối hợp THẾ NÀO ở phiên (46 ô tay trái rải, bỏ các ô dập cuối câu):
-  tay phải có tiếng ở tiếng 1 trong 42/46 ô, 32/42 lần ngân ≥2 móc đơn, trung vị
-  ngân 3 móc đơn. Tức tay trái đi từng móc đơn, tay phải đặt một tiếng đầu ô rồi ngân.
-  Nên tay phải ở đây: MỘT hợp âm ở tiếng 1, ngân 3 móc đơn, nhả đúng lúc tay trái
-  lên quãng tám ở tiếng 4 (hai tay không đè một phím). Cao độ là thế bấm dẫn giọng
-  của app — vùng A3–A4 như sheet (Dm A3/D4/F4 = c40, C C4/E4/G4 = c63) — KHÔNG
-  mang nốt giai điệu F4/E4 mà sheet ngân ở chỗ này. Lực = lực tiếng 1 tay phải c15
-  (trung bình với c87) và c16.
+/*
+  PHIÊN (lúc hát) — tay trái c15–c16 (Bb → C, ô sheet 12 phách 3 → 14 phách 1); c15 lặp
+  y hệt ở c87. Rải 1–3–5–8–5–3, sáu móc đơn đều — nhịp tay trái nhiều nhất bài (25 ô).
+  Tay phải trống.
 
-  Giá trị trước (`594e7f7`): phiên = c22, tay trái bass quãng tám từng móc đơn, tay
-  phải dập ở 2 · 2½ · 3 · 4. Người dùng nghe: "tiết tấu đệm không còn giống sheet" —
-  c22 là cử chỉ CUỐI CÂU (lõi có ở 7 ô), đem lặp mọi hợp âm là sai chỗ.
+  Giá trị trước: `594e7f7` phiên = c22 lặp mọi hợp âm; `5cfcb1e` thêm hợp âm tay phải
+  ở tiếng 1 ngân 3 móc đơn. Người dùng bác cả hai (xem đầu file).
 */
 const laThu: StylePattern = {
   ...common,
   id: 'slow-rock-la-thu',
   name: 'Slow Rock Lá thư · Phiên khúc',
   variant: 1,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c15–c16 = ô ký âm 12 phách 3 → 14 phách 1 (Bb, C); c15 lặp y hệt ở c87'],
-  note: 'Phiên: tay trái rải 1–3–5–8–5–3 sáu móc đơn chùm ba; tay phải đặt hợp âm ở tiếng 1 rồi ngân. Chờ nghe duyệt.',
+  fillCell: C22,
+  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · hát: c15–c16 (ô ký âm 12 phách 3 → 14 phách 1); chỗ fill: c22 (ô 17), lặp ở c93'],
+  note: 'Lúc hát: tay trái rải 1–3–5–8–5–3, tay phải để cho giọng. Chỗ có fill: hai tay như sheet chỗ lời nghỉ. Chờ nghe duyệt.',
   cell: {
     lengthBeats: 12,
     left: [
@@ -77,10 +95,7 @@ const laThu: StylePattern = {
       hit(6, 1, .66, [tone(0)]), hit(7, 1, .88, [tone(1)]), hit(8, 1, .85, [tone(2)]),
       hit(9, 1, .68, octave), hit(10, 1, .64, [tone(2)]), hit(11, 1, .86, [tone(1)]),
     ],
-    right: [
-      { beat: 0, durationBeats: 3, velocityScale: .9 },
-      { beat: 6, durationBeats: 3, velocityScale: .86 },
-    ],
+    right: [],
   },
 }
 
@@ -95,18 +110,18 @@ const triad = [tone(2), tone(0, 12), tone(1, 12), tone(2, 12)]
   ĐIỆP — c41–c42 (D7 → Gm, ô sheet 32 phách 1 → 33 phách 3); c45–c46 cùng lối cả
   hai tay, cao trào c106/c109 lặp phần tay trái.
   Tay trái: bass, dập cụm hợp âm theo từng móc đơn, bass lại ở tiếng 6.
-  Tay phải: GIỮ nốt bè ngón cái, BỎ giai điệu D5 · C5 · Bb4 · A4 · G4 phía trên nó:
-    c41  A4 ngân từ tiếng 1 (dưới D5) · D4 vào ở 5½ (dưới C5)
-    c42  D4 tiếng 1 (dưới Bb4) · D4 gõ lại một mình ở 2½
-  c45 cùng mốc (bè tiếng 1, gõ lại 2 · 2½, bè 5½); c46 bè tiếng 1, gõ lại 2½.
+  Tay phải trống. Sheet có nốt bè ngón cái dưới giai điệu (c41 A4, c42 D4 gõ lại ở 2½)
+  nhưng nó đi theo nhịp giai điệu — cùng lý do như phiên. Giá trị trước (`594e7f7`,
+  `5cfcb1e`): tay phải A4 ngân 4 · D4 ở 5½ · D4 · D4 ở 2½.
 */
 const laThuChorus: StylePattern = {
   ...common,
   id: 'slow-rock-la-thu-chorus',
   name: 'Slow Rock Lá thư · Điệp khúc',
   variant: 2,
+  fillCell: C22,
   sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c41–c42 = ô ký âm 32 phách 1 → 33 phách 3 (D7, Gm); cùng lối c45–c46, cao trào c106'],
-  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải giữ nốt bè dưới giai điệu, gõ lại xen nhịp dập. Chờ nghe duyệt.',
+  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải để cho giọng. Chỗ có fill: hai tay như sheet. Chờ nghe duyệt.',
   cell: {
     lengthBeats: 12,
     left: [
@@ -126,10 +141,7 @@ const laThuChorus: StylePattern = {
       hit(10, 1, .79, triad),
       hit(11, 1, .91, octave),
     ],
-    right: [
-      hit(0, 4, 1.11, [tone(2)]), hit(4.5, 1.5, 1.15, [tone(0)]),
-      hit(6, 1.5, 1.13, [tone(2)]), hit(7.5, .5, .9, [tone(2)]),
-    ],
+    right: [],
   },
 }
 

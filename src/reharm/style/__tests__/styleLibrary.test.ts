@@ -214,7 +214,8 @@ describe('dựng phần đệm cho từng điệu', () => {
 
       expect(events.length).toBeGreaterThan(0)
       expect(events.some((event) => event.hand === 'left')).toBe(true)
-      expect(events.some((event) => event.hand === 'right')).toBe(true)
+      // Điệu có `fillCell` được để trống tay phải lúc hát; tay phải nằm ở ô fill.
+      expect(events.some((event) => event.hand === 'right') || (style.fillCell?.right.length ?? 0) > 0).toBe(true)
     },
   )
 

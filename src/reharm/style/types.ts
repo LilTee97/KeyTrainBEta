@@ -209,6 +209,13 @@ export interface StylePattern {
    * theo nhịp đổi hợp âm của từng bài.
    */
   cell: RhythmCell | null
+  /**
+   * Ô đệm cho hợp âm CÓ CÂU FILL — chỗ lời nghỉ. Bỏ trống thì mọi hợp âm dùng `cell`.
+   *
+   * Có vì người soạn đệm khác nhau ở hai chỗ: lúc hát tay phải để cho giọng, lúc
+   * lời nghỉ hai tay cùng đệm dưới câu fill. Xem `swapAtFills`.
+   */
+  fillCell?: RhythmCell
   /** Giải thích ngắn cho người dùng. */
   note: string
 }

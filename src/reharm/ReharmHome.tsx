@@ -193,6 +193,7 @@ import {
   giveCompingToLeft,
   yieldToFill,
   renderPattern,
+  swapAtFills,
 } from './style/patternRenderer'
 import {
   SONG_FORMS,
@@ -1777,6 +1778,25 @@ export function ReharmHome() {
   }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions])
   const accompaniment = accompanimentPlan.backing
 
+  /*
+    Hợp âm có câu fill dùng ô đệm riêng của điệu (`StylePattern.fillCell`) — chỗ
+    lời nghỉ hai tay cùng đệm dưới câu fill. Điệu không khai thì y như cũ.
+  */
+  const fillBacking = useMemo(
+    () => style.fillCell
+      ? renderPattern(twoHands, { ...style, cell: style.fillCell }, {
+        beatsPerChord: chordBeats, beatsEach: chordDurations(withPassing, chordBeats), muteWindows,
+      })
+      : null,
+    [twoHands, style, chordBeats, withPassing, muteWindows],
+  )
+  const backingFor = useCallback(
+    (line: Parameters<typeof giveCompingToLeft>[1]) => fillBacking
+      ? swapAtFills(accompaniment, fillBacking, line, chordDurations(withPassing, chordBeats))
+      : accompaniment,
+    [accompaniment, fillBacking, withPassing, chordBeats],
+  )
+
   /**
    * Vòng ngắn: bốn hợp âm cuối Điệp khúc; cặp chia đôi chỉ lấy hợp âm đầu.
    */
@@ -3159,7 +3179,7 @@ export function ReharmHome() {
         const phraseWarnings: string[] = []
         const arranged = buildArrangedSong({
           accompaniment: cpPass ? cpPass.backing : yieldToFill(
-            giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
+            giveCompingToLeft(backingFor(fills(pass)), fills(pass), style.beatsPerMeasure),
             fills(pass),
           ),
           fills: (take) => cpPass ? cpPass.events : fills(take + pass * 11),
@@ -3351,7 +3371,7 @@ export function ReharmHome() {
 
       const body = buildSongTimeline({
         accompaniment: cpPass ? cpPass.backing : yieldToFill(
-          giveCompingToLeft(accompaniment, fills(pass), style.beatsPerMeasure),
+          giveCompingToLeft(backingFor(fills(pass)), fills(pass), style.beatsPerMeasure),
           fills(pass),
         ),
         fills: cpPass ? cpPass.events : fills,
@@ -3405,6 +3425,7 @@ export function ReharmHome() {
     },
     [
       accompaniment,
+      backingFor,
       bossaRhythmOnly,
       bossaSoloOn,
       bpm,

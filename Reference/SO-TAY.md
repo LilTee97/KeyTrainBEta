@@ -3306,3 +3306,44 @@ c63), không mang nốt giai điệu. Tay phải nhả đúng lúc tay trái lê
 phải 1–3–5–8 ở 2 · 2½ rồi 3–5–8 ở 3 · 4. **Triệu chứng để lùi:** thấy tay phải phiên mỏng quá
 → c22 vẫn là cử chỉ thật của chị, nhưng thuộc về cuối câu; đưa nó vào cuối câu, đừng đưa lại
 vào vòng lặp. Toàn suite **2.757 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+### Slow Rock Lá thư: lúc hát tay trái một mình, hai tay ở ô có fill (`fillCell`)
+
+Người dùng nghe `5cfcb1e`: *"trong sheet lá thư trần thế ko đệm 2 tay như vậy và câu fill hãy
+trả lại như bản đầu tiên bạn soạn chứ bản hiện tại quá tệ"*.
+
+**Tay phải lúc hát là giai điệu lời.** Phiên 1 và phiên 3 cùng giai điệu khác lời; tay phải
+tách/gộp nốt đúng theo âm tiết (c11 E4 · E4 gõ lại, c83 E4 ngân liền; c10 D4 dưới F#4, c82 chỉ
+D4). Nên đem nhịp tay phải lúc hát làm nhịp đệm (bản `5cfcb1e`) là chép nhịp giai điệu.
+
+**Fill hay hay dở là do phần đệm quanh nó, không do nốt fill.** Dựng lại trên
+`Em(add9) Em(add9) Am9 Em(add9)`, cùng take: nốt fill ba bản giống hệt (nhịp /8 → 80% fill ở
+bè trầm, móc kép từ tiếng 4). Khác ở tay phải lúc fill chạy:
+
+| bản | tay phải lúc bè trầm chạy fill |
+|---|---|
+| `ca7ae4c` | im |
+| `594e7f7` (fill "chơi rất hay") | giữ G3/B3/E4 từ tiếng 4, ngân 2 móc đơn |
+| `5cfcb1e` (fill "quá tệ") | hợp âm nhả đúng lúc fill bắt đầu |
+
+Nên "bản đầu tiên" mà người dùng khen fill là `594e7f7`: `ca7ae4c` cho fill chạy trơ trọi y như
+`5cfcb1e`. Cử chỉ c22 của `594e7f7` chính là cử chỉ sheet ở chỗ lời nghỉ — đúng chỗ app chêm fill.
+
+**Sửa:**
+
+- `StylePattern.fillCell` (mới, tùy chọn): ô đệm cho hợp âm có câu fill. `ReharmHome` dựng thêm
+  bản đệm bằng ô ấy; `swapAtFills` (patternRenderer) lấy nó cho hợp âm nào có fill bắt đầu,
+  TRƯỚC `giveCompingToLeft`/`yieldToFill`, ở cả hai chỗ ghép fill. Điệu không khai → y như cũ.
+- Lá thư: `cell` phiên = tay trái c15–c16 (y `ca7ae4c`), tay phải trống; `cell` điệp = tay trái
+  c41–c42, tay phải trống; `fillCell` = c22 đúng số của `594e7f7`.
+- Test chung `styleLibrary.test.ts`: điệu có `fillCell` có tay phải được để trống tay phải ở `cell`.
+
+**Giá trị cũ:** `5cfcb1e` phiên có hợp âm tay phải ở tiếng 1 ngân 3 móc đơn; `594e7f7`/`5cfcb1e`
+điệp có bè ngón cái A4 · D4 · D4 · D4. **Triệu chứng để lùi:** fill lại nghe trơ → kiểm
+`swapAtFills` có chạy không (bài phải có ô có fill); tay phải lúc hát trống quá → đó là chỗ của
+giọng hát theo sheet, hỏi người dùng trước khi thêm.
+
+**Bẫy tự gây, đã sửa:** sửa file bằng Python trên Windows ghi CRLF; `caPhaoFullSolo.test.ts` đọc
+thẳng `ReharmHome.tsx` và dò chuỗi có `
+` nên đỏ. Trả các file đã đụng về LF.
+Toàn suite **2.759 qua / 7 đỏ** — đúng 7 đỏ cũ.
