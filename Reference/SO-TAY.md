@@ -3572,3 +3572,33 @@ nguyên. Cũ: mọi fill đều đổi.
 
 Toàn suite **2.778 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Mốc chuyển đoạn đáp đúng vạch; Linh Run slow rock là câu dẫn vào hợp âm sau; kiểu thử đệm hai tay 1·4 / 2·3·5·6
+
+**1. Mốc chuyển đoạn** — người dùng (Slow Rock Lá thư, đặt 2 quãng tám · đệm 2 phách · im 0): *"vẫn ko hề đánh
+đệm mà chạy nốt luôn và chạy xong vẫn nghỉ phách"*. Dựng lại cả chuỗi đệm (ô chuyển đoạn 6 phách): phách 0–2 là
+ô fill **c22** (câu chạy có nốt tay trái nên `swapAtFills` đổi đệm), câu chạy 2–4, phách 4–6 **lặng** (tắt đệm từ
+`delay` tới hết ô, câu chạy dừng sớm vì `arpeggioRun` bắt đầu đúng `fromBeat`). Ô 3 phách: câu 2 quãng tám dồn vào
+1 nốt đen, móc tam. Sửa: `transitionRunNotes` (soloGenerator) — có `delay` thì câu chạy KẾT ĐÚNG vạch (`datCuoi`),
+dùng chung cho câu chạy và `transitionMuteWindows` (đệm tới đúng lúc câu chạy vào); câu chạy mốc chuyển đoạn không
+đổi sang c22; `transitionsDieu` nhân `gridUnit` (Lá thư đếm phách = móc đơn — người dùng: *"phách mạnh là phách 1
+và 4"*). Không đặt `delay` thì giữ lối cũ ở mọi điệu. Cũ: bắt đầu ở `delay`, phách = nốt đen.
+**Triệu chứng để lùi**: câu chạy vào quá muộn ở ô ngắn → bỏ `datCuoi`.
+
+**2. Linh Run slow rock làm lại** — người dùng: *"phân tích thật kỹ cách Linh Nhi tạo câu run … Linh Run hiện tại
+quá dở"*. `tools/chay_ngon_slow_rock.py` (cả bài, hai tay, bỏ 41 hình rải đệm): 67 câu chạy; lúc hát câu chạy ở
+**tay trái** 42/48 — dẫn bè trầm từ tiếng 4, nốt thứ tư rơi đúng vạch vào gốc hợp âm sau; tay phải chạy ở solo
+14/20; đáp nốt hợp âm của hợp âm sau 56/64. Bẫy của bản trước: câu rải kết ở cuối hợp âm, không dẫn vào đâu.
+Nay: 27 khuôn "dẫn vào hợp âm sau" (`slowRockChayNgon.ts`, sinh bằng `--sinh`), tính ngược từ vạch; liền bậc thì
+giữ khoảng bậc tới nốt đáp (= cùng bậc trên hợp âm sau), rải thì chuyển bậc lên hợp âm đang vang; V trong giọng
+thứ đi gam hoà âm. `linhRun` nhận thêm `next` và tay của từng nốt. Đo La thứ 162 câu: đáp nốt hợp âm sau 85%
+(sheet 88%), nốt dẫn lạ 0/612.
+
+**3. Kiểu thử đệm hai tay** — người dùng: *"phách mạnh là phách 1 và 4, còn lại là phách nhẹ. Hãy chia đều ra để
+đánh đệm phối hợp 2 tay"*. Family riêng `slow-rock-la-thu-hai-tay` (nút riêng, cạnh nút cũ — luật nghe thử;
+test của Codex khoá nhãn nút Lá thư không có số kiểu): tay trái tiếng 1 gốc · tiếng 4 gốc+8; tay phải bậc 3·5·8
+(thế c22) ở tiếng 2 · 3 · 5 · 6; điệp: tay trái quãng tám, tay phải thêm gốc. Nghe ổn thì thay hẳn rồi xoá kiểu thử.
+
+Codex đã thêm nút **Slow Rock LT** riêng (38ae124) — không đụng tới.
+
+Toàn suite **2.798 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

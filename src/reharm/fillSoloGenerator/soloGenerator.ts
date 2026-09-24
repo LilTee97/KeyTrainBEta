@@ -522,6 +522,37 @@ function guideToneInto(
  * vào **bài hát** chứ không suy ra được: câu hát của mỗi bài cất giọng sớm
  * muộn khác nhau, và người đệm mỗi người thích câu chạy dài ngắn khác nhau.
  */
+/**
+ * Câu chạy ở MỐC CHUYỂN ĐOẠN — một chỗ tính cho cả câu chạy (`generateFillLine`) lẫn cửa sổ tắt đệm
+ * (`transitionMuteWindows`), để đệm chơi liền tới đúng lúc câu chạy vào.
+ *
+ * Có đặt "đệm rồi mới chạy" (`delayBeats` > 0) thì câu chạy KẾT ĐÚNG chỗ `restBeats` chừa ra (vạch nhịp
+ * khi im 0), bắt đầu muộn nhất có thể nhưng không sớm hơn `delay`. Người dùng 25/9/2026 (Slow Rock Lá thư,
+ * đặt 2 quãng tám · đệm 2 phách · im 0): *"vẫn ko hề đánh đệm mà chạy nốt luôn và chạy xong vẫn nghỉ phách"*
+ * — bản cũ bắt đầu đúng ở `delay`, dừng sớm, phần còn lại bị tắt đệm thành lặng. Không đặt `delay` thì
+ * giữ lối cũ (chạy từ đầu ô).
+ */
+export function transitionRunNotes(
+  chord: ParsedChord,
+  transition: TransitionRun,
+  chordStart: number,
+  total: number,
+): ReturnType<typeof arpeggioRun> {
+  const delay = Math.min(transition.delayBeats ?? 0, Math.max(0, total - 1))
+  const rest = Math.min(
+    transition.restBeats,
+    Math.max(0, total - delay - Math.min(2, total)),
+  )
+  return arpeggioRun({
+    chord,
+    octaves: transition.octaves,
+    endBeat: chordStart + total - rest,
+    maxBeats: total - rest - delay,
+    fromBeat: chordStart + delay,
+    ...(delay > 0 ? { datCuoi: true } : {}),
+  })
+}
+
 export interface TransitionRun {
   /** Hợp âm rải chạy mấy quãng tám. */
   octaves: number
@@ -610,10 +641,12 @@ export function generateFillLine(
      */
     linhRun?: (request: {
       chord: ParsedChord
+      /** Hợp âm sau — câu chạy dẫn vào nó và đáp đúng vạch. */
+      next: ParsedChord
       endBeat: number
       beats: number
       take: number
-    }) => readonly { note: number; startBeat: number; durationBeats: number }[] | null
+    }) => readonly { note: number; startBeat: number; durationBeats: number; hand?: 'left' | 'right' }[] | null
     lickyMode?: LickyMode
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
@@ -747,22 +780,7 @@ export function generateFillLine(
         if (!chords[next].passing) break
         total += beatsOf(chords[next], beatsPerChord)
       }
-      const delay = Math.min(transition.delayBeats ?? 0, Math.max(0, total - 1))
-      const rest = Math.min(
-        transition.restBeats,
-        Math.max(0, total - delay - Math.min(2, total)),
-      )
-      const runEnd = fillStarts[index] + total - rest
-      const runBeats = total - rest - delay
-      const fromBeat = fillStarts[index] + delay
-
-      for (const note of arpeggioRun({
-        chord: chords[index],
-        octaves: transition.octaves,
-        endBeat: runEnd,
-        maxBeats: runBeats,
-        fromBeat,
-      })) {
+      for (const note of transitionRunNotes(chords[index], transition, fillStarts[index], total)) {
         result.push({ ...note, isGrace: false })
       }
 
@@ -798,10 +816,10 @@ export function generateFillLine(
     if (splitChord && fillBassChance > 0) continue
 
     if (extraRuns?.has(mainIndex)) {
-      const rieng = linhRun?.({ chord: chords[index], endBeat: lickEnd, beats: playBeats, take: mainIndex + take })
+      const rieng = linhRun?.({ chord: chords[index], next, endBeat: lickEnd, beats: playBeats, take: mainIndex + take })
       if (rieng && rieng.length > 0) {
         for (const x of rieng) {
-          result.push({ note: x.note as MidiNote, startBeat: x.startBeat, durationBeats: x.durationBeats, isGrace: false, hand: 'right' })
+          result.push({ note: x.note as MidiNote, startBeat: x.startBeat, durationBeats: x.durationBeats, isGrace: false, hand: x.hand ?? 'right' })
         }
         continue
       }

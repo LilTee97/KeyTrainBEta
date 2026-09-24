@@ -148,4 +148,48 @@ const laThuChorus: StylePattern = {
   },
 }
 
-export const LINH_NHI_SLOW_ROCK: readonly StylePattern[] = [laThu, laThuChorus]
+/*
+  HAI TAY THEO PHÁCH MẠNH / NHẸ — kiểu THỬ, đặt cạnh kiểu trên để nghe so (luật người dùng: đổi lối chơi
+  thì dựng bản mới bên cạnh, nghe ổn thì cho thay hẳn rồi xoá kiểu thử).
+
+  Người dùng 25/9/2026: *"Tiết tấu điệu Slow rock Lá Thư có phách mạnh là phách 1 và 4, còn lại là phách
+  nhẹ. Hãy chia đều ra để đánh đệm phối hợp 2 tay"*. Cách hiểu (của tôi): tay trái giữ hai phách mạnh
+  (1 · 4), tay phải bấm bốn phách nhẹ (2 · 3 · 5 · 6).
+    · Tay trái: tiếng 1 gốc (c15 Bb2), tiếng 4 gốc + quãng tám (c16 C3/C4).
+    · Tay phải: bậc 3 · 5 · 8 bỏ gốc — đúng thế tay phải c22, cú hai tay ở chỗ lời nghỉ (A: C#4 E4 A4).
+    · Lực: tay trái theo tiếng 1 · 4 của c15 (0,84 · 0,75); tay phải nhẹ hơn tay trái — BIÊN SOẠN.
+  Điệp khúc dày lên như sheet: tay trái quãng tám cả hai tiếng mạnh, tay phải thêm gốc (c22 tiếng 2).
+*/
+const laThuHaiTay: StylePattern = {
+  ...common,
+  // Family riêng = nút riêng trong khung chọn điệu, đứng cạnh nút cũ để nghe so.
+  family: 'slow-rock-la-thu-hai-tay',
+  familyName: 'Slow Rock Lá thư hai tay (thử)',
+  id: 'slow-rock-la-thu-hai-tay',
+  name: 'Slow Rock Lá thư · hai tay (thử)',
+  variant: 3,
+  fillCell: C22,
+  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · tay trái c15–c16 tiếng 1 · 4; tay phải thế c22 (ô 17)'],
+  note: 'Thử: tay trái phách mạnh 1 · 4, tay phải hợp âm ở phách nhẹ 2 · 3 · 5 · 6. Chờ nghe duyệt.',
+  cell: {
+    lengthBeats: 6,
+    left: [hit(0, 3, .84, [tone(0)]), hit(3, 3, .75, octave)],
+    right: [hit(1, 1, .6, triadUp), hit(2, 1, .55, triadUp), hit(4, 1, .62, triadUp), hit(5, 1, .56, triadUp)],
+  },
+}
+
+const laThuHaiTayChorus: StylePattern = {
+  ...laThuHaiTay,
+  id: 'slow-rock-la-thu-hai-tay-chorus',
+  name: 'Slow Rock Lá thư · hai tay (thử) · Điệp khúc',
+  variant: 4,
+  note: 'Thử · điệp: tay trái quãng tám ở 1 · 4, tay phải hợp âm bốn nốt ở 2 · 3 · 5 · 6. Chờ nghe duyệt.',
+  cell: {
+    lengthBeats: 6,
+    left: [hit(0, 3, 1, octave), hit(3, 3, .9, octave)],
+    right: [2, 3, 5, 6].map((tieng, k) =>
+      hit(tieng - 1, 1, [.72, .66, .74, .68][k]!, [tone(0), ...triadUp])),
+  },
+}
+
+export const LINH_NHI_SLOW_ROCK: readonly StylePattern[] = [laThu, laThuChorus, laThuHaiTay, laThuHaiTayChorus]

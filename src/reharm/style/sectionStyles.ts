@@ -1,7 +1,8 @@
 import { laBossaCP } from './styleLibrary/caPhaoBossa'
 import { ALL_STYLES, getStyle } from './styleLibrary'
 import type { SectionKind } from './songStructure'
-import type { TransitionRun } from '../fillSoloGenerator/soloGenerator'
+import { transitionRunNotes, type TransitionRun } from '../fillSoloGenerator/soloGenerator'
+import type { ParsedChord } from '../types'
 
 /**
  * Điệu nào có **bản riêng cho đoạn điệp khúc**.
@@ -27,6 +28,7 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'hai-slow-rock': 'hai-slow-rock-chorus',
   // Lá Thư Trần Thế: phiên rải c15–c16, điệp dập hợp âm c41–c42. Xem linhNhiSlowRock.ts.
   'slow-rock-la-thu': 'slow-rock-la-thu-chorus',
+  'slow-rock-la-thu-hai-tay': 'slow-rock-la-thu-hai-tay-chorus',
   'slow-rock-lt': 'slow-rock-lt-chorus',
   'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
   /*
@@ -137,7 +139,7 @@ export function hasChorusVariant(styleId: string): boolean {
 /** ACDD keeps its sung backing at transitions; an absent run must not silence the chord. */
 export function transitionMuteWindows(
   styleId: string,
-  spans: readonly { start: number; beats: number }[],
+  spans: readonly { start: number; beats: number; chord?: ParsedChord }[],
   transitions: ReadonlyMap<number, TransitionRun>,
 ): { from: number; to: number }[] {
   if (resolveStyleForSection(styleId, 'verse') === 'ca-phao-ballad-acdd') return []
@@ -145,7 +147,9 @@ export function transitionMuteWindows(
   for (const [main, run] of transitions) {
     const span = spans[main]
     if (!span || run.octaves <= 0) continue
-    const from = span.start + (run.delayBeats ?? 0)
+    // Đệm tới đúng lúc câu chạy vào (xem `transitionRunNotes`), không tới `delay` rồi bỏ lặng.
+    const dau = span.chord ? transitionRunNotes(span.chord, run, span.start, span.beats)[0]?.startBeat : undefined
+    const from = dau ?? span.start + (run.delayBeats ?? 0)
     const to = span.start + span.beats
     if (from < to) windows.push({ from, to })
   }

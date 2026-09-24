@@ -1013,6 +1013,20 @@ export function ReharmHome() {
   /** Chỉ các số thứ tự, cho những chỗ chỉ cần biết có mốc hay không. */
   const transitionAt = useMemo(() => new Set(transitions.keys()), [transitions])
 
+  /*
+    "PHÁCH" CỦA MỐC CHUYỂN ĐOẠN theo điệu: điệu khai `gridUnit` (Slow Rock Lá thư 6/8, gridUnit 0,5) đếm
+    phách bằng MÓC ĐƠN — người dùng 25/9/2026: *"phách mạnh là phách 1 và 4"* (6 phách một ô). Bảng chọn
+    "đệm 2 phách" · "im 1 phách" nên nhân `gridUnit` trước khi vào máy (máy đếm nốt đen). Cũ: không nhân —
+    "đệm 2 phách" thành 4 móc đơn, câu chạy 2 quãng tám dồn vào 1 nốt đen cuối, móc tam.
+  */
+  const transitionsDieu = useMemo(() => {
+    const g = style.gridUnit ?? 1
+    if (g === 1) return transitions
+    return new Map([...transitions].map(([index, run]) => [index, {
+      ...run, restBeats: run.restBeats * g, ...(run.delayBeats !== undefined ? { delayBeats: run.delayBeats * g } : {}),
+    }]))
+  }, [transitions, style.gridUnit])
+
   /**
    * Bảng thời lượng đưa vào đường ống.
    *
@@ -1292,7 +1306,7 @@ export function ReharmHome() {
    */
   const muteWindows = useMemo(() => {
     const spans = mainChordSpans(withPassing, chordBeats)
-    const windows = transitionMuteWindows(style.id, spans, transitions)
+    const windows = transitionMuteWindows(style.id, spans, transitionsDieu)
     for (const [key, rest] of Object.entries(fillRests)) {
       if (rest <= 0) continue
       const main = Number(key)
@@ -1305,7 +1319,7 @@ export function ReharmHome() {
       }
     }
     return windows
-  }, [transitions, withPassing, chordBeats, fillRests, style.id])
+  }, [transitions, transitionsDieu, withPassing, chordBeats, fillRests, style.id])
 
   /** Thế bấm hai tay đã dẫn bè. */
   const twoHands = useMemo(
@@ -1799,10 +1813,12 @@ export function ReharmHome() {
         trầm chạy fill" mà người dùng khen (594e7f7). Câu tay phải (Linh Run, câu lót giai điệu) mà đổi sang
         c22 thì ba nốt dặm tay phải của c22 đè lên câu chạy. Cũ: mọi câu fill đều đổi.
       */
-      ? swapAtFills(accompaniment, fillBacking, line.filter((e) => e.hand === 'left'),
+      // Câu chạy mốc chuyển đoạn cũng không đổi sang c22: trước câu chạy là đệm thường của điệu.
+      ? swapAtFills(accompaniment, fillBacking, line.filter((e) => e.hand === 'left'
+          && !muteWindows.some((w) => e.startBeat >= w.from - 1e-6 && e.startBeat < w.to - 1e-6)),
         chordDurations(withPassing, chordBeats), style.raiHopAmChiaDoi ? chordBeats : 0)
       : accompaniment,
-    [accompaniment, fillBacking, withPassing, chordBeats, style.raiHopAmChiaDoi],
+    [accompaniment, fillBacking, withPassing, chordBeats, style.raiHopAmChiaDoi, muteWindows],
   )
 
   /**
@@ -2557,7 +2573,7 @@ export function ReharmHome() {
       const line = soloToTimeline(
         generateFillLine(withPassing, {
           breaths,
-          sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitions,
+          sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitionsDieu,
           beatsPerChord: chordBeats,
           // Điệu nào khai chỗ đứng của câu lót thì theo nó; không khai thì để
           // `generateFillLine` tự chọn như cũ.
@@ -2596,7 +2612,7 @@ export function ReharmHome() {
           // Linh Run cho họ Slow Rock: câu chạy slow rock của chị (+ cao độ câu chạy bolero trên tiết tấu
           // slow rock), không dùng sổ bolero 4/4 — xem `chayLinhNhi`.
           ...(cauLinhNhi && reharm.key && hoCuaDieu(style.id) === 'slow-rock'
-            ? { linhRun: (yeuCau: { chord: ParsedChord; endBeat: number; beats: number; take: number }) =>
+            ? { linhRun: (yeuCau: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
                 chayLinhNhi({ ...yeuCau, key: reharm.key! }) }
             : {}),
           lickyMode,
@@ -2640,6 +2656,7 @@ export function ReharmHome() {
       phraseSpin,
       breaths,
       transitions,
+      transitionsDieu,
     ],
   )
 

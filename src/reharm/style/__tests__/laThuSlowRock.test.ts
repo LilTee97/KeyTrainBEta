@@ -7,6 +7,8 @@ import { giveCompingToLeft, renderPattern, swapAtFills, yieldToFill } from '../p
 import { resolveStyleForSection } from '../sectionStyles'
 import { hoCuaDieu, kieuTrongHo } from '../hoDieu'
 import type { StylePattern, TimelineEvent } from '../types'
+import { transitionMuteWindows } from '../sectionStyles'
+import { mainChordSpans } from '../../chordTiming'
 
 const [verse, chorus] = LINH_NHI_SLOW_ROCK
 const atFill = (style: StylePattern): StylePattern => ({ ...style, cell: style.fillCell! })
@@ -87,6 +89,35 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
     const backing = render('Em Am B7 Em')
     const fillBacking = render('Em Am B7 Em', atFill(verse))
     expect(swapAtFills(backing, fillBacking, rai, [3, 1.5, 1.5, 3], 3)).toEqual(backing)
+  })
+
+  it('two-hand trial: LH on strong eighths 1 · 4, RH chords on weak eighths 2 · 3 · 5 · 6', () => {
+    // Người dùng 25/9/2026: "phách mạnh là phách 1 và 4, còn lại là phách nhẹ. Hãy chia đều ra để đánh
+    // đệm phối hợp 2 tay".
+    const haiTay = LINH_NHI_SLOW_ROCK.find(st => st.id === 'slow-rock-la-thu-hai-tay')!
+    const diep = LINH_NHI_SLOW_ROCK.find(st => st.id === 'slow-rock-la-thu-hai-tay-chorus')!
+    for (const st of [haiTay, diep]) {
+      const events = render('Am Dm', st)
+      expect([...new Set(events.filter(e => e.hand === 'left').map(e => e.startBeat % 3))]).toEqual([0, 1.5])
+      expect([...new Set(events.filter(e => e.hand === 'right').map(e => e.startBeat % 3))]).toEqual([.5, 1, 2, 2.5])
+    }
+    expect(resolveStyleForSection('slow-rock-la-thu-hai-tay', 'chorus')).toBe('slow-rock-la-thu-hai-tay-chorus')
+    expect(hoCuaDieu('slow-rock-la-thu-hai-tay')).toBe('slow-rock')
+  })
+
+  it('transition with "comp 2 beats · rest 0": comps first, the run lands on the barline, no silence after', () => {
+    // Người dùng 25/9/2026: "vẫn ko hề đánh đệm mà chạy nốt luôn và chạy xong vẫn nghỉ phách".
+    const chords = parseChordInput('Am Dm E7 Am F').chords.map(c => ({ ...c, beats: 6 }))
+    const tr = new Map([[3, { octaves: 2, delayBeats: 1, restBeats: 0 }]])
+    const spans = mainChordSpans(chords, 6)
+    const mute = transitionMuteWindows(verse.id, spans, tr)
+    const fills = soloToTimeline(generateFillLine(chords, { beatsPerChord: 6, fillBassChance: .8, take: 0, sectionEnds: tr }))
+    const run = fills.filter(e => e.startBeat >= 18 - 1e-6 && e.startBeat <= 24 + 1e-6)
+    expect(Math.max(...run.map(e => e.startBeat))).toBeCloseTo(24, 6)
+    expect(mute).toEqual([{ from: Math.min(...run.map(e => e.startBeat)), to: 24 }])
+    const dem = render('Am Dm E7 Am F', verse, { beatsPerChord: 6, beatsEach: [6, 6, 6, 6, 6], muteWindows: mute })
+      .filter(e => e.startBeat >= 18 - 1e-6 && e.startBeat < mute[0]!.from - 1e-6)
+    expect(dem.length).toBeGreaterThanOrEqual(6)
   })
 
   it('never has both hands strike the same key at the same moment, in all 12 roots', () => {

@@ -141,6 +141,12 @@ export function arpeggioRun(options: {
    */
   rightHandOnly?: boolean
   key?: SongKey | null
+  /**
+   * Có `fromBeat` mà vẫn cho câu chạy KẾT ĐÚNG `endBeat` (bắt đầu muộn hơn `fromBeat` nếu dư chỗ).
+   * Mốc chuyển đoạn có "đệm rồi mới chạy": đệm tới lúc câu chạy vào, câu chạy đáp đúng vạch — không để
+   * lặng sau câu chạy. Bỏ trống = bắt đầu đúng `fromBeat` như cũ.
+   */
+  datCuoi?: boolean
 }): RunNote[] {
   const {
     chord,
@@ -198,7 +204,7 @@ export function arpeggioRun(options: {
     noteChoices[noteChoices.length - 1]
 
   const packed = endBeat - gaps * noteBeats
-  const start = fromBeat !== undefined ? fromBeat : packed
+  const start = fromBeat === undefined ? packed : options.datCuoi ? Math.max(fromBeat, packed) : fromBeat
   const step = noteBeats
 
   return line.map((note, index) => ({

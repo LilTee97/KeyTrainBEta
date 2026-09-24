@@ -265,41 +265,69 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     Run cho điệu đang được chơi". Hai lỗi: ô đang hát bị bỏ qua dù người dùng tự chọn; sổ cũ chỉ có câu
     bolero 4/4 dịch nửa cung (trên E7 đánh G thường).
   */
-  it('Linh Run slow rock: câu chạy của chị chuyển bậc lên hợp âm, kết đúng cuối hợp âm, đổi theo lượt', () => {
-    const gamThu = [0, 2, 3, 5, 7, 8, 10, 11]
-    for (let tonic = 0; tonic < 12; tonic += 1) {
-      const key = { tonic: tonic as PitchClass, scale: 'minor' }
-      const ten = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']
-      for (const [bac, hau] of [[0, 'm'], [5, 'm'], [7, '7'], [8, ''], [3, ''], [2, 'm7b5']] as const) {
-        const chord = parseChordInput(`${ten[(tonic + bac) % 12]}${hau}`).chords[0]!
-        const cau = new Set<string>()
-        for (let take = 0; take < 30; take += 1) {
-          const r = chayLinhNhi({ chord, key, endBeat: 3, beats: 3, take })!
-          const tag = `@${tonic} ${bac}${hau} #${take}`
-          expect(r.length, tag).toBeGreaterThanOrEqual(4)
-          expect(Math.max(...r.map((x) => x.startBeat + x.durationBeats)), tag).toBeCloseTo(3, 6)
-          for (const x of r) {
-            expect(x.note, tag).toBeGreaterThanOrEqual(55)
-            expect(x.note, tag).toBeLessThanOrEqual(96)
-            expect(Math.abs(x.startBeat * 4 - Math.round(x.startBeat * 4)), tag).toBeLessThan(1e-6)
-            const trongHop = chord.quality.intervals.some((q) => (chord.root + q) % 12 === x.note % 12)
-            expect(trongHop || gamThu.includes(((x.note - tonic) % 12 + 12) % 12), `${tag} ${x.note}`).toBe(true)
+  /*
+    Làm lại 25/9/2026 ("Linh Run hiện tại quá dở"): khuôn là câu chạy DẪN VÀO HỢP ÂM SAU của chị (md 13g) —
+    nốt dẫn trước vạch, nốt đáp ở vạch (hoặc ngay sau nửa phách). Sheet: đáp nốt hợp âm của hợp âm sau 56/64
+    (88%); ngưỡng 80% là biên của tôi (đo 85%).
+  */
+  it('Linh Run slow rock: dẫn vào hợp âm sau, đáp ở vạch, tay trái ở tầm bè trầm, đổi theo lượt', () => {
+    const ten = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']
+    let dapHop = 0, dapTong = 0
+    for (const minor of [true, false]) {
+      const gam = minor ? [0, 2, 3, 5, 7, 8, 10, 11] : [0, 2, 4, 5, 7, 9, 11]
+      const cap = minor
+        ? [[0, 'm', 5, 'm'], [5, 'm', 7, '7'], [7, '7', 0, 'm'], [8, '', 10, ''], [3, '', 8, ''], [2, 'm7b5', 7, '7']] as const
+        : [[0, '', 5, ''], [5, '', 7, '7'], [7, '7', 0, ''], [9, 'm', 2, 'm'], [2, 'm', 7, '7'], [4, 'm', 9, 'm']] as const
+      for (let tonic = 0; tonic < 12; tonic += 1) {
+        const key = { tonic: tonic as PitchClass, scale: minor ? 'minor' : 'major' }
+        for (const [b1, h1, b2, h2] of cap) {
+          const chord = parseChordInput(`${ten[(tonic + b1) % 12]}${h1}`).chords[0]!
+          const next = parseChordInput(`${ten[(tonic + b2) % 12]}${h2}`).chords[0]!
+          const cau = new Set<string>()
+          for (let take = 0; take < 27; take += 1) {
+            const r = chayLinhNhi({ chord, next, key, endBeat: 3, beats: 3, take })!
+            const tag = `${minor ? 'thứ' : 'trưởng'} @${tonic} ${b1}${h1}→${b2}${h2} #${take}`
+            const dap = r[r.length - 1]!
+            const dan = r.slice(0, -1)
+            expect(dan.length, tag).toBeGreaterThanOrEqual(3)
+            expect([3, 3.5], tag).toContain(dap.startBeat)
+            for (const x of dan) {
+              expect(x.startBeat, tag).toBeLessThan(3)
+              expect(x.startBeat, tag).toBeGreaterThanOrEqual(0)
+              expect(Math.abs(x.startBeat * 4 - Math.round(x.startBeat * 4)), tag).toBeLessThan(1e-6)
+              const trongHop = chord.quality.intervals.some((q) => (chord.root + q) % 12 === x.note % 12)
+              expect(trongHop || gam.includes(((x.note - tonic) % 12 + 12) % 12), `${tag} ${x.note}`).toBe(true)
+            }
+            if (dap.hand === 'left') {
+              expect(dap.note, tag).toBeGreaterThanOrEqual(36)
+              expect(dap.note, tag).toBeLessThan(48)
+              // Câu dẫn tay trái dài nhất của chị trải 22 nửa cung trên nốt đáp (Một Cõi ô 51).
+              expect(Math.max(...r.map((x) => x.note)) - dap.note, tag).toBeLessThanOrEqual(24)
+            } else for (const x of r) {
+              expect(x.note, tag).toBeGreaterThanOrEqual(55)
+              expect(x.note, tag).toBeLessThanOrEqual(96)
+            }
+            dapTong += 1
+            dapHop += Number(next.quality.intervals.some((q) => (next.root + q) % 12 === dap.note % 12))
+            cau.add(r.map((x) => `${x.startBeat}:${x.note}`).join(','))
           }
-          cau.add(r.map((x) => x.note).join(','))
+          expect(cau.size, `${minor} @${tonic} ${b1}${h1}`).toBeGreaterThanOrEqual(15)
         }
-        expect(cau.size, `@${tonic} ${bac}${hau}`).toBeGreaterThanOrEqual(15)
       }
     }
+    expect(dapHop / dapTong).toBeGreaterThanOrEqual(0.8)
   })
 
   it('ô người dùng tự chọn Run vẫn chơi khi đang hát; câu lót tự động thì không', () => {
     const key = { tonic: 9 as PitchClass, scale: 'minor' }
     const chords = parseChordInput('Am Dm E7 Am F G C E7').chords
-    const linhRun = (q: { chord: typeof chords[number]; endBeat: number; beats: number; take: number }) => chayLinhNhi({ ...q, key })
+    const linhRun = (q: { chord: typeof chords[number]; next: typeof chords[number]; endBeat: number; beats: number; take: number }) =>
+      chayLinhNhi({ ...q, key })
     for (const vocal of ['full', new Set([0, 1, 2, 3, 4, 5, 6, 7])] as const) {
       const out = generateFillLine(chords, { beatsPerChord: 3, fillBassChance: 0.8, take: 0, extraRuns: new Set([2]), vocal, linhRun })
-      expect(out.filter((x) => x.startBeat >= 6 && x.startBeat < 9).length).toBeGreaterThanOrEqual(4)
-      expect(out.filter((x) => x.startBeat < 6 || x.startBeat >= 9)).toHaveLength(0)
+      expect(out.filter((x) => x.startBeat >= 6 && x.startBeat < 9).length).toBeGreaterThanOrEqual(3)
+      // Câu dẫn vào Am: nốt đáp ở vạch 9 (hoặc nửa phách sau), không gì khác ngoài câu ấy.
+      expect(out.filter((x) => x.startBeat < 6 || x.startBeat > 9.5)).toHaveLength(0)
     }
     expect(generateFillLine(chords, { beatsPerChord: 3, fillBassChance: 0.8, take: 0, vocal: 'full' })).toHaveLength(0)
   })

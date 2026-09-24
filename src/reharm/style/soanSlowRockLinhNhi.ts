@@ -5,6 +5,7 @@ import type { ParsedChord } from '../types'
 import type { PhraseSection } from './phraseSection'
 import type { TimelineEvent } from './types'
 import { NGUON_SOLO_SR, type NguonSR, type OSR } from './slowRockLinhNhiNguon'
+import { KHUON_CHAY_SR, type KhuonChay } from './slowRockChayNgon'
 
 /*
   BỘ SOẠN CÂU SOLO SLOW ROCK LINH NHI — soạn câu MỚI trên tiết tấu slow rock của chị.
@@ -424,79 +425,41 @@ function coChay(ns: readonly Not[]): boolean {
 // ── Linh Run cho điệu slow rock ────────────────────────────────────────────────────────────────
 
 /*
-  LINH RUN SLOW ROCK — người dùng 24/9/2026: *"Sao chọn Linh Run thì ko hề có gì cả. Dựa vào các sheet
-  Linh Nhi hãy soạn Linh Run cho điệu đang được chơi"*. Sổ Linh Run cũ (`licky/linhNhiPhrases.ts`) chỉ có
-  2 câu bolero 4/4 (Đừng Xa ô 27, láy Đường Xưa ô 63), dịch theo nửa cung nên trên E7 còn đánh G thường.
+  LINH RUN SLOW ROCK — làm lại 25/9/2026. Người dùng: *"Hãy phân tích thật kỹ cách Linh Nhi tạo câu run
+  trong các sheet Slow rock để tạo lại Linh Run … Linh Run hiện tại quá dở"*. Bản trước lấy hình rải bốn nốt
+  của đoạn solo đặt KẾT ở cuối hợp âm — chạy xong là hết, không dẫn vào đâu.
 
-  Câu chạy = ≥ 4 nốt tay phải liền (cách ≤ một móc đơn), cùng chiều, bước ≤ 5 nửa cung (cùng định nghĩa
-  với `tools/quy_luat_not_linh_nhi.py`), lấy từ chỗ bắt đầu chạy tới hết ô.
-    · câu chạy slow rock của chị (ô đã nắn nhịp): 10 câu, 8 khác nhau — đi lên ở nửa sau ô;
-    · câu LAI: đường cao độ một câu chạy bolero cùng giọng đặt lên tiết tấu một câu chạy slow rock cùng số
-      nốt (tiết tấu luôn của slow rock).
-  Đặt lên hợp âm bằng chuyển bậc theo gam như bộ soạn solo; kết đúng cuối hợp âm để dẫn sang hợp âm sau;
-  quãng tám chọn cho tâm câu gần 76 (tâm solo slow rock của chị 74,7–77,7, md 13e). Lượt xoay theo `take`.
+  Số đo (`tools/chay_ngon_slow_rock.py`, md 13g; hai sheet, cả bài, hai tay; đã bỏ 41 hình rải đệm tay trái):
+    · 67 câu chạy; LÚC HÁT câu chạy ở TAY TRÁI 42/48 — câu dẫn bè trầm nửa sau ô: vào ở tiếng 4 (13 câu),
+      móc đơn, nốt thứ tư rơi đúng vạch (tiếng 7, 15 câu) vào hợp âm sau: D E F → G · E C G → D · Bb G D → C;
+    · tay phải chạy chủ yếu ở đoạn solo (14/20), đi lên (54/67 cả hai tay), đáp nốt hợp âm của hợp âm sau
+      56/64 (bậc 5: 21 · bậc 1: 19);
+    · lúc bè trầm chạy, tay phải giữ hợp âm phía trên — cử chỉ c22 người dùng đã khen (594e7f7).
+  Khuôn: 27 câu chạy DẪN VÀO HỢP ÂM SAU (các nốt trước vạch + nốt đáp ở vạch hoặc ngay sau) —
+  `slowRockChayNgon.ts`, sinh bằng script. Nhịp Một Cõi hỏng thì dàn đều lại (móc kép nếu khoảng cách trung
+  bình ≤ 3/8 phách, không thì móc đơn), vẫn tính ngược từ vạch.
+  Đặt nốt:
+    · khuôn ĐI LIỀN BẬC (dẫn bè trầm): giữ khoảng bậc tới nốt đáp; nốt đáp = cùng bậc trên HỢP ÂM SAU;
+    · khuôn RẢI: các nốt trước vạch chuyển bậc theo gam lên HỢP ÂM ĐANG VANG (như bộ soạn solo), nốt đáp =
+      cùng bậc trên hợp âm sau, quãng tám gần nốt cuối nhất theo đúng chiều của khuôn.
+  Tay giữ như khuôn: tay trái đặt nốt đáp trong 36–47 (bè trầm), tay phải tâm gần 76. Lượt xoay theo `take`.
 */
 
-type Chay = { src: NguonSR; h: H; go: Go[]; ten: string }
+type KhuonSach = { k: KhuonChay; not: [number, number][]; dap: [number, number]; lienBac: boolean }
 
-/** Các đoạn chạy (chỉ số mốc đầu–cuối) trong một dãy nốt đỉnh theo thời gian. */
-function doanChay(t: readonly (readonly [number, number])[]): [number, number][] {
-  const ra: [number, number][] = []
-  let a = 0
-  for (let b = 1; b <= t.length; b += 1) {
-    const tiep = b < t.length && t[b]![0] - t[b - 1]![0] <= 0.5 + EPS && t[b]![1] !== t[b - 1]![1]
-      && Math.abs(t[b]![1] - t[b - 1]![1]) <= 5
-      && (b - a < 2 || Math.sign(t[b]![1] - t[b - 1]![1]) === Math.sign(t[a + 1]![1] - t[a]![1]))
-    if (!tiep) { if (b - a >= 4) ra.push([a, b - 1]); a = b }
+const KHUON: readonly KhuonSach[] = KHUON_CHAY_SR.map((k): KhuonSach => {
+  const ms = k.not.map((x) => x[0])
+  const buocNhip = (ms[ms.length - 1]! - ms[0]!) / Math.max(1, ms.length - 1)
+  const not: [number, number][] = ms.every((m) => tren(m, 0.25))
+    ? k.not.map((x) => [x[0], x[1]])
+    : k.not.map((x, i) => [-(k.not.length - i) * (buocNhip <= 0.375 + EPS ? 0.25 : 0.5), x[1]])
+  const buoc = k.not.slice(1).map((x, i) => x[1] - k.not[i]![1])
+  return {
+    k, not,
+    dap: [tren(k.dap[0], 0.25) ? k.dap[0] : Math.round(k.dap[0] * 2) / 2, k.dap[1]],
+    lienBac: buoc.filter((b) => Math.abs(b) <= 2).length * 2 >= buoc.length,
   }
-  return ra
-}
-
-const CHAY_SR: readonly Chay[] = (() => {
-  const ra = new Map<string, Chay>()
-  for (const src of SLOW) {
-    src.o.forEach((o, i) => {
-      if (o.h.length !== 1) return
-      const gs = [...o.r].sort((x, y) => x[0] - y[0])
-      for (const [a] of doanChay(gs.map((g) => [g[0], Math.max(...g[2])] as const))) {
-        const dau = gs[a]![0]
-        const go = gs.slice(a).map((g): Go => [g[0] - dau, g[1], g[2]])
-        const khoa = `${o.h[0]![1]}${o.h[0]![2]}|${go.map((g) => `${g[0]}:${g[2].join('.')}`).join(' ')}`
-        if (!ra.has(khoa)) ra.set(khoa, { src, h: o.h[0]!, go, ten: `${tenO(src, i)} từ phách ${dau + 1}` })
-      }
-    })
-  }
-  return [...ra.values()]
-})()
-
-const CHAY_LAI = new Map<boolean, readonly Chay[]>()
-/** Câu chạy bolero cùng giọng, cao độ đặt lên tiết tấu câu chạy slow rock cùng số nốt. */
-function chayLai(thu: boolean): readonly Chay[] {
-  const nho = CHAY_LAI.get(thu)
-  if (nho) return nho
-  const ra: Chay[] = []
-  for (const src of NGUON_SOLO_SR.filter((x) => x.dieu === 'bolero' && x.thu === thu)) {
-    src.o.forEach((o, i) => {
-      if (o.h.length !== 1) return
-      const gs = [...o.r].sort((x, y) => x[0] - y[0])
-      const t = gs.map((g) => [g[0], Math.max(...g[2])] as const)
-      for (const [a, b] of doanChay(t)) {
-        const cao = t.slice(a, b + 1).map((x) => x[1])
-        const mau = CHAY_SR.filter((c) => c.go.length <= cao.length && c.go.length >= cao.length - 3)
-          .sort((x, y) => (cao.length - x.go.length) - (cao.length - y.go.length) || x.ten.localeCompare(y.ten))[0]
-        if (!mau) continue
-        const k = mau.go.length
-        const chon = Array.from({ length: k }, (_, j) => cao[k === 1 ? 0 : Math.round((j * (cao.length - 1)) / (k - 1))]!)
-        ra.push({
-          src, h: o.h[0]!, ten: `giai điệu ${tenO(src, i)} trên tiết tấu ${mau.ten}`,
-          go: mau.go.map((g, j): Go => [g[0], g[1], [chon[j]!]]),
-        })
-      }
-    })
-  }
-  CHAY_LAI.set(thu, ra)
-  return ra
-}
+})
 
 /** Hậu tố hợp âm theo quãng — cùng thang `hopAm` đọc. */
 function hauCuaQuang(quang: readonly number[]): string {
@@ -507,36 +470,81 @@ function hauCuaQuang(quang: readonly number[]): string {
   return 'sus4'
 }
 
+/** Nốt ở bậc `d` (tính từ gốc, theo bậc gam) của hợp âm `h`, về đúng nốt hợp âm nếu lệch nửa cung. */
+function notTrenHop(h: H, d: number, gam: readonly number[]): number {
+  const goc = bacGoc(h[1], gam)
+  let cao = caoCua(goc + d, 0, gam)
+  const muon = hopAm(h).bac[((d % 7) + 7) % 7]
+  if (muon !== undefined) {
+    const lech = ((((h[1] + muon - cao) % 12) + 18) % 12) - 6
+    if (Math.abs(lech) === 1) cao += lech
+  }
+  return cao
+}
+
 /**
- * Một câu Linh Run slow rock trên hợp âm `chord`, kết đúng ở `endBeat`, dài không quá `beats`.
- * `null` = không câu nào vừa chỗ.
+ * Một câu Linh Run slow rock trên hợp âm `chord`, dẫn vào `next`: các nốt trước `endBeat` (vạch nhịp) và
+ * nốt đáp ở vạch. `null` = không khuôn nào vừa chỗ (hợp âm quá ngắn).
  */
 export function chayLinhNhi(options: {
   chord: ParsedChord
+  next: ParsedChord
   key: { tonic: PitchClass; scale: string }
   endBeat: number
   beats: number
   take: number
-}): { note: number; startBeat: number; durationBeats: number }[] | null {
-  const { chord, key } = options
+}): { note: number; startBeat: number; durationBeats: number; hand: 'left' | 'right' }[] | null {
+  const { key } = options
   const thu = key.scale === 'minor'
-  const dich: H[] = [[0, (((chord.root - key.tonic) % 12) + 12) % 12, hauCuaQuang(chord.quality.intervals), null]]
-  const dai = (c: Chay) => Math.max(...c.go.map((g) => g[0] + g[1]))
-  const ung = [...CHAY_SR, ...chayLai(thu)].filter((c) => dai(c) <= options.beats + EPS)
+  const gamD = gamCua(thu)
+  const hDich = (c: ParsedChord): H => [0, (((c.root - key.tonic) % 12) + 12) % 12, hauCuaQuang(c.quality.intervals), null]
+  const cur = hDich(options.chord)
+  const nxt = hDich(options.next)
+  const ung = KHUON.filter((x) => -x.not[0]![0] <= options.beats + EPS)
   if (ung.length === 0) return null
-  const c = ung[((options.take * 7) % ung.length + ung.length) % ung.length]!
-  const ng: Nguon = {
-    src: { ...c.src, o: [{ d: O, h: [[0, c.h[1], c.h[2], c.h[3]]], r: c.go, l: [] }] },
-    i: 0, mo: false, giaiDieu: c.ten, nhip: c.ten, lai: c.src.dieu === 'bolero', khoa: c.ten,
+  const x = ung[((options.take * 7) % ung.length + ung.length) % ung.length]!
+  const gamN = gamCua(x.k.thu)
+  const hopN: H = [0, x.k.hop[0], x.k.hop[1], null]
+  const sauN: H = [0, x.k.hopSau[0], x.k.hopSau[1], null]
+  // Bậc nốt đáp trên hợp âm sau (nguồn), đếm theo gam.
+  const bDap = bacCua(x.dap[1], gamN).bac
+  const dDap = bDap - bacGoc(sauN[1], gamN)
+  let dap = notTrenHop(nxt, dDap, gamD)
+  let truoc: number[]
+  if (x.lienBac) {
+    const goc = bacGoc(nxt[1], gamD) + dDap
+    // Hợp âm đang vang có nốt cảm (V trưởng trong giọng thứ) thì nốt dẫn đi gam thứ hoà âm: A G E trên E7
+    // thành A G# E — G thường chỏi G# của hợp âm.
+    const gamDan = thu && hopAm(cur).tap.has(11) ? [0, 2, 3, 5, 7, 8, 11] : gamD
+    truoc = x.not.map(([, m]) => caoCua(goc + bacCua(m, gamN).bac - bDap, 0, gamDan))
+  } else {
+    const ng: Nguon = {
+      src: { id: x.k.nguon, bai: x.k.nguon, doan: 'interlude', thu: x.k.thu, dieu: 'slow rock', chuGoc: 0, oPhach: O,
+        o: [{ d: O, h: [hopN], r: x.not.map(([, m]): Go => [0, 0.5, [m]]), l: [] }] },
+      i: 0, mo: false, giaiDieu: x.k.nguon, nhip: x.k.nguon, lai: false, khoa: x.k.nguon,
+    }
+    truoc = datO(ng, [cur], thu, 0, 0).phai.map((e) => e.notes[0]!)
+    // Nốt đáp: quãng tám gần nốt cuối nhất, cùng chiều bước cuối của khuôn.
+    const buocCuoi = x.dap[1] - x.not[x.not.length - 1]![1]
+    const muon = truoc[truoc.length - 1]! + buocCuoi
+    dap += 12 * Math.round((muon - dap) / 12)
   }
-  const moc = 60 + c.src.chuGoc + (((((key.tonic - c.src.chuGoc) % 12) + 18) % 12) - 6)
-  const phuong = [-12, 0, 12].map((tam) => datO(ng, dich, thu, moc, tam).phai)
-    .filter((ns) => ns.every((e) => e.notes.every((x) => x >= 55 && x <= 96)))
-    .sort((x, y) => Math.abs(dinh(x).reduce((a, b) => a + b, 0) / x.length - 76)
-      - Math.abs(dinh(y).reduce((a, b) => a + b, 0) / y.length - 76))[0]
-  if (!phuong) return null
-  const dau = options.endBeat - dai(c)
-  return phuong.flatMap((e) => e.notes.map((note) => ({ note, startBeat: dau + e.at, durationBeats: e.dur })))
+  const tat = [...truoc, dap]
+  let doi = 0
+  if (x.k.tay === 'trai') {
+    while (60 + key.tonic + dap + doi >= 48) doi -= 12
+    while (60 + key.tonic + dap + doi < 36) doi += 12
+  } else {
+    const tb = tat.reduce((a, b) => a + b, 0) / tat.length
+    doi = 12 * Math.round((76 - (60 + key.tonic + tb)) / 12)
+  }
+  const tay = x.k.tay === 'trai' ? 'left' as const : 'right' as const
+  const ra = x.not.map(([at], i) => {
+    const sau = i + 1 < x.not.length ? x.not[i + 1]![0] : x.dap[0]
+    return { note: 60 + key.tonic + truoc[i]! + doi, startBeat: options.endBeat + at, durationBeats: sau - at, hand: tay }
+  })
+  ra.push({ note: 60 + key.tonic + dap + doi, startBeat: options.endBeat + x.dap[0], durationBeats: 0.5, hand: tay })
+  return ra
 }
 
 export function soanSlowRockLinhNhi(options: {
