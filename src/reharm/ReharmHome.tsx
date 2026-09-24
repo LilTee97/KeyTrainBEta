@@ -4020,7 +4020,9 @@ export function ReharmHome() {
               barBeats,
               bai: songTitle ?? '',
               giong,
-              dieu: laBoleroTuan(style) ? style.id : styleSolo.id,
+              // Câu slow rock soạn trên điệu của bài — ghi đúng điệu ấy, đừng ghi kiểu bolero của
+              // `styleSolo` (sổ từng ghi `bolero-linh-nhi-2` cho câu Slow Rock Lá thư, 24/9/2026).
+              dieu: laBoleroTuan(style) || lnSlowRock ? style.id : styleSolo.id,
               hopAm: span.chords.length > 0 ? span.chords : hopAm,
               doan: kind,
             }).then((luu) => {
@@ -4061,6 +4063,7 @@ export function ReharmHome() {
       songTitle,
       reharm.key,
       styleSolo.id,
+      lnSlowRock,
       introSymbols,
       interludeSymbols,
       outroSymbols,

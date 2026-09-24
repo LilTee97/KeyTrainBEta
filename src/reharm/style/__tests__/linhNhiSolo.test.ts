@@ -3,7 +3,8 @@ import type { PitchClass } from '../../../shared/musicTheory/types'
 import { parseChordInput } from '../../input/chordInputParser'
 import { NGUON_SOLO_SR, type NguonSR } from '../slowRockLinhNhiNguon'
 import { linhNhiSolo, nguonChoBai, nhipCuaDieu, slowRockSoanLinhNhi } from '../linhNhiSolo'
-import { buildPhraseSection, type PhraseSection } from '../phraseSection'
+import { nanNhip, nhomHau, vongMoi } from '../soanSlowRockLinhNhi'
+import { buildPhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
 import { LINH_NHI_SLOW_ROCK } from '../styleLibrary/linhNhiSlowRock'
 import type { StylePattern } from '../types'
@@ -25,7 +26,11 @@ const takeOf = (src: NguonSR, tonic = src.chuGoc) =>
   nguonChoBai(src.doan, src.thu, tonic as PitchClass, []).filter((u) => u.src.dieu === 'bolero')
     .findIndex((u) => u.src.id === src.id)
 const dauO = (src: NguonSR) => src.o.map((_, i) => src.o.slice(0, i).reduce((n, o) => n + o.d, 0))
-const vongId = (made: PhraseSection) => made.sourcePhrase!.id.replace(/^soan:/, '')
+const SR_ID = /^(la-thu-tran-the|mot-coi-di-ve)-/
+/** Nguồn giai điệu của một ô: `<id đoạn> ô <n>` → đoạn ấy. */
+const nguonGiaiDieu = (melody: string) => NGUON_SOLO_SR.find((s) => melody.startsWith(`${s.id} ô `))!
+const khoaHop = (h: readonly [number, number, string, number | null]) => `${h[1]}${nhomHau(h[2])}`
+const gon = (xs: readonly string[]) => xs.filter((x, k) => k === 0 || x !== xs[k - 1]).join(' ')
 
 /** Mọi câu slow rock soạn ra: 3 loại đoạn × trưởng/thứ × 12 giọng × 6 lượt, trên điệu Lá Thư. */
 const TAT_CA_SR = KINDS.flatMap((kind) => [true, false].flatMap((minor) =>
@@ -69,28 +74,29 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     }
   })
 
-  it('slow rock: mọi ô đến từ sheet slow rock của chị, soạn được ở mọi giọng', () => {
+  it('slow rock: tiết tấu mọi ô từ ô slow rock của chị, giai điệu từ slow rock hoặc bolero cùng giọng', () => {
     for (const { kind, minor, tonic, take, made } of TAT_CA_SR) {
       const tag = `${kind} ${minor ? 'thứ' : 'trưởng'} @${tonic} #${take}`
       expect(made.unavailableReason, tag).toBeUndefined()
       expect(made.lengthBeats % 3, tag).toBe(0)
       expect(made.compositionSources, tag).toHaveLength(made.lengthBeats / 3)
       for (const c of made.compositionSources!) {
-        expect(c.donorGenre, tag).toBe('slow rock')
-        expect(c.melody, tag).toMatch(/^(la-thu-tran-the|mot-coi-di-ve)-/)
+        expect(c.rhythm, tag).toMatch(SR_ID)
+        const src = nguonGiaiDieu(c.melody)
+        if (src.dieu === 'bolero') {
+          expect(src.thu, tag).toBe(minor)
+          expect(c.donorGenre, tag).toBe('bolero (giai điệu) · slow rock (tiết tấu)')
+        } else expect(c.donorGenre, tag).toBe('slow rock')
       }
       expect(made.beatsEach.reduce((a, b) => a + b, 0)).toBeCloseTo(made.lengthBeats, 6)
       expect(parseChordInput(made.chords.join(' ')).chords, tag).toHaveLength(made.chords.length)
       expect(made.events.every((e) => e.startBeat < made.lengthBeats - 1e-6), tag).toBe(true)
-      const src = NGUON_SOLO_SR.find((s) => s.id === vongId(made))!
-      expect(src.thu, tag).toBe(minor)
-      expect(src.doan, tag).toBe(kind)
     }
   })
 
-  it('slow rock: không trùng lặp — không dùng một ô hai lần, không lặp hình ô trước, lượt khác ra câu khác', () => {
+  it('slow rock: không trùng lặp — không dùng một giai điệu hai lần, lượt khác ra câu khác', () => {
     for (const { kind, minor, tonic, take, made } of TAT_CA_SR) {
-      const giua = made.compositionSources!.filter((c) => c.harmony.startsWith('vòng')).map((c) => c.rhythm)
+      const giua = made.compositionSources!.filter((c) => c.harmony.startsWith('vòng')).map((c) => c.melody.split(',')[0])
       expect(new Set(giua).size, `${kind} ${minor} @${tonic} #${take}`).toBe(giua.length)
     }
     for (const kind of KINDS) for (const minor of [true, false]) {
@@ -150,13 +156,45 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     }
   })
 
-  it('slow rock: vòng hợp âm ưu tiên đoạn slow rock khớp vốn bài', () => {
-    expect(vongId(soan(slowRock, 'intro', 7, true, 0, 'Gm Cm Eb D7 Am7b5'))).toBe('mot-coi-di-ve-intro')
-    expect(vongId(soan(slowRock, 'intro', 2, true, 0, 'Dm C F Gm Bb Edim A7'))).toBe('la-thu-tran-the-intro')
-    for (let take = 0; take < 4; take += 1) {
-      expect(vongId(soan(slowRock, 'outro', 4, true, take, 'Em(add9) Am9 B7 C D G'))).toBe('mot-coi-di-ve-outro')
-      expect(NGUON_SOLO_SR.find((s) => s.id === vongId(soan(slowRock, 'intro', 9, true, take)))!.dieu).toBe('slow rock')
+  /*
+    Người dùng 24/9/2026: *"Vòng hợp âm phải được đổi mới chứ ko phải giữ nguyên một vòng rồi đổi giai
+    điệu"*. Giới hạn đo trên 23 vòng solo thật: dạo/giang 5–10 hợp âm khác nhau, dài 7–12 ô.
+  */
+  it('slow rock: vòng ghép mới — không trùng vòng có sẵn, mở như chị mở, đủ hợp âm, đổi theo lượt', () => {
+    for (const minor of [true, false]) {
+      const nguon = NGUON_SOLO_SR.filter((s) => s.thu === minor)
+      const goc = new Set(nguon.map((s) => gon(s.o.flatMap((o) => o.h.map(khoaHop)))))
+      for (const kind of KINDS) {
+        const mo = new Set(nguon.filter((s) => s.doan === kind).map((s) => khoaHop(s.o.find((o) => o.h.length)!.h[0]!)))
+        const ds = vongMoi(kind, minor, new Set(), [[0, 7, '7', null]])
+        expect(ds.length, `${kind} ${minor}`).toBeGreaterThan(0)
+        for (const v of ds) {
+          const k = v.hs.map(khoaHop)
+          expect(goc.has(gon(k)), v.tu).toBe(false)
+          expect(mo.has(k[0]!), v.tu).toBe(true)
+          expect(new Set(k).size, v.tu).toBeGreaterThanOrEqual(kind === 'outro' ? 3 : 5)
+        }
+      }
     }
+    for (const kind of ['intro', 'interlude'] as const) {
+      const vong = new Set(Array.from({ length: 40 }, (_, take) => soan(slowRock, kind, 4, true, take).chords.join(' ')))
+      expect(vong.size, kind).toBeGreaterThanOrEqual(25)
+    }
+  })
+
+  it('slow rock: nắn nhịp — mọi mốc tay phải nằm trên móc đơn hoặc móc kép', () => {
+    for (const { kind, minor, tonic, take, made } of TAT_CA_SR) {
+      const lech = made.events.filter((e) => Math.abs(e.startBeat * 4 - Math.round(e.startBeat * 4)) > 1e-6)
+      expect(lech, `${kind} ${minor} @${tonic} #${take}`).toHaveLength(0)
+    }
+    // Một Cõi dạo ô 1 (ba nốt nhét vào chỗ hai móc đơn — #1374 · #1376 · #1378 chê "bóp nhanh").
+    const moc = NGUON_SOLO_SR.find((s) => s.id === 'mot-coi-di-ve-intro')!
+    expect(nanNhip(moc.o[0]!.r, true).map((g) => g[0])).toEqual([0, 0.5, 1, 1.5, 2, 2.5])
+    // Câu chạy móc kép ô 4 giữ nguyên, chỉ bỏ nốt hoa mỹ và nốt lệch cuối câu.
+    expect(nanNhip(moc.o[3]!.r, true).map((g) => g[0])).toEqual([0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5])
+    // Lá Thư sạch nhịp: không đổi.
+    const la = NGUON_SOLO_SR.find((s) => s.id === 'la-thu-tran-the-intro')!
+    for (const o of la.o) expect(nanNhip(o.r, true)).toEqual([...o.r])
   })
 
   it('Slow Rock Lá thư soạn câu mới cả khi chọn thầy Linh Nhi hoặc chưa chọn thầy nào', () => {
@@ -170,22 +208,18 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     expect(slowRockSoanLinhNhi(bolero, true, 'linh-nhi')).toBe(false)
   })
 
-  it('slow rock: mỗi lượt phát một câu mới, ít ô trùng ô gốc cùng chỗ', () => {
+  it('slow rock: mỗi lượt phát một câu mới trên một vòng mới', () => {
     const song = 'Em Am B7 Em C D G Em Am B7 Em'
     for (const kind of KINDS) {
-      let goc = 0, tong = 0
       const cau = new Set<string>()
+      const vong = new Set<string>()
       for (let take = 0; take < 20; take += 1) {
         const made = soan(slowRock, kind, 4, true, take, song)
         cau.add(made.compositionSources!.map((c) => c.melody).join('|'))
-        made.compositionSources!.forEach((c, i) => {
-          if (!c.harmony.startsWith('vòng')) return
-          tong += 1
-          goc += Number(c.melody.startsWith(`${vongId(made)} ô ${i + 1},`))
-        })
+        vong.add(made.chords.join(' '))
       }
       expect(cau.size, kind).toBe(20)
-      expect(goc / tong, kind).toBeLessThan(0.25)
+      expect(vong.size, kind).toBeGreaterThanOrEqual(10)
     }
   })
 
@@ -194,8 +228,7 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
       kind: 'outro', key: { tonic: 9 as PitchClass, scale: 'minor' }, style: slowRock, linhNhiSolo: true,
       beatsPerChord: 3, dropRoot: false, opening: null, solo: () => [], take: 0, range: RONG,
     })!
-    expect(vongId(built)).toMatch(/-outro$/)
-    expect(NGUON_SOLO_SR.find((s) => s.id === vongId(built))!.thu).toBe(true)
-    expect(built.compositionSources!.every((c) => c.donorGenre === 'slow rock')).toBe(true)
+    expect(built.sourcePhrase!.id).toMatch(/^soan:/)
+    expect(built.compositionSources!.every((c) => SR_ID.test(c.rhythm))).toBe(true)
   })
 })

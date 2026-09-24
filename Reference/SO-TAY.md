@@ -3471,3 +3471,34 @@ thì nhường. Khi ấy dạo · kết truyền `style` của bài. Họ Bolero
 
 Toàn suite **2.771 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Bộ soạn slow rock: nắn nhịp Một Cõi, vòng hợp âm ghép mới mỗi lượt, giai điệu bolero trên tiết tấu slow rock
+
+**Người dùng** (24/9/2026, sau khi nghe): 4/4 câu Chưa ổn chê *"bóp nhanh … lệch tiết tấu"* ở đầu câu
+(#1374 · #1376 · #1377 · #1378, md Linh Nhi **16S** — mục riêng cho Slow Rock); *"Vòng hợp âm phải được
+đổi mới … hãy tận dụng"* hợp âm và giai điệu bolero; được quyền nắn giai điệu cho khớp tiết tấu.
+
+**Bẫy:** cả bốn câu mở bằng ô 1 Một Cõi — bản ký âm Một Cõi hỏng nhịp: 31 mốc tay phải lệch lưới 6/8
+trong 14/29 ô (ba nốt nhét vào chỗ hai móc đơn; cả ô trượt 0,375 phách); Lá Thư 0/20 ô. Bảng quy luật
+13e đã đếm cả mốc hỏng ấy.
+
+**Sửa** (`style/soanSlowRockLinhNhi.ts`):
+- `nanNhip`: ô hỏng dời mốc về móc đơn, móc kép chỉ trong câu chạy liền, bỏ nốt dư (hoa mỹ trước).
+  Nắn 14/49 ô, bỏ 17/275 mốc. Ô sạch chỉ bỏ nốt hoa mỹ lệch lưới.
+- `vongMoi`: đầu vòng thật + đuôi vòng thật cùng loại đoạn, nối ở hợp âm chung; slow rock + bolero cùng
+  giọng. Loại vòng trùng/cắt ngắn vòng có sẵn (so sau khi gộp hợp âm liền); mở bằng hợp âm chị từng mở;
+  dạo/giang ≥ 5 hợp âm khác, 7–12 ô (đo 23 vòng thật). Nối vào ô kết theo bước gốc đã có.
+- Ô lai: cao độ ô bolero cùng giọng trên tiết tấu ô slow rock gần số mốc nhất.
+- `SO_O_KET` Lá Thư kết **2 → 4** (trọn Isus4 Isus4 → I I). Triệu chứng để lùi: kết Lá Thư dài lê thê.
+- Ba ô liền một hợp âm chỉ xét phần vòng + ô kết đầu — trước đó cử chỉ i i i của Một Cõi tự loại mọi vòng.
+- Sổ `Nguon.json`: câu slow rock ghi đúng điệu của bài (trước ghi `bolero-linh-nhi-2`).
+
+**Số đo** (432 câu): mốc lệch lưới 0/20.248; nốt hợp âm phách mạnh 93–100%, nhẹ 81–85% (sheet 83/85%);
+nối ô ≤ 4 nửa cung hoặc quãng 8: 100%; ô thưa ≤ 5,6% (sheet 4/49); ô lai 47–71%. Vòng khác nhau / 40
+lượt ở Mi: thứ 35 · 33 · 31, trưởng 38 · 28 · **2** (chị có 3 đoạn kết trưởng).
+
+**Giá trị cũ:** một vòng thật giữ nguyên (xoay giữa 2 vòng slow rock); ô Một Cõi dùng nguyên nhịp hỏng;
+chỉ ô slow rock làm giai điệu. **Triệu chứng để lùi:** câu nghe vụn/lạ hơn sheet → tắt ô lai (chỉ kho
+`O_SLOW`) trước khi bỏ vòng ghép.
+
+Toàn suite **2.772 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
