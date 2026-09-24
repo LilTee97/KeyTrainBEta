@@ -19,6 +19,13 @@ KeyTrain — app luyện tập piano offline, lấy cảm hứng từ mikebwilli
 3. Tự sinh câu fill và đoạn solo dựa trên kiến thức từ phongcachdemhatkhabu.md
 4. Chế độ chờ đánh đúng nốt mới cho qua nốt tiếp theo; luyện tay trái/tay phải riêng biệt
 
+## Đọc đầu phiên
+
+- **reference/BAN-GIAO-PHIEN-MOI-2026-09-24.md** — trạng thái dự án tới 24/9/2026: ba luật
+  của người dùng, hai bộ soạn Cà Pháo (Bossa đã duyệt/đóng băng · Ballad đang train), vòng
+  phản hồi `Nguon.json`, số test thật, việc đang dở và **các lỗ chưa đo**. Đọc file này
+  trước khi đọc sổ tay.
+
 ## File tham khảo
 
 - reference/KE-HOACH.md — kế hoạch xây dựng: kiến trúc, thiết kế gamification, mô hình dữ liệu, và lộ trình 30 bước nhỏ. Đọc file này trước khi làm tính năng mới.

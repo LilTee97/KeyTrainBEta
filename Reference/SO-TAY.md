@@ -3183,3 +3183,16 @@ cung sang Db, hạ lại C. Chưa lưu đè bài trong thư viện thay người
 CP composition); production build qua, còn cảnh báo bundle >500 kB.
 Không tuyên bố toàn suite dự án đã qua. Các file solo đối chiếu với `bcddfd0`
 không khác. Lượt ghi sổ này chỉ thay hai tài liệu, không đổi nhạc hoặc mã.
+
+### Bàn giao cho phiên mới (24/9/2026)
+
+`Reference/BAN-GIAO-PHIEN-MOI-2026-09-24.md` gom trạng thái dự án tới hôm nay: ba luật người
+dùng, ranh giới giữa **Bossa CP đã duyệt/đóng băng** và **Ballad CP đang train**, vòng phản hồi
+`Nguon.json` (1.355 câu · 65 bình luận · #1348 vừa xử ở `1074066`), số test thật, việc đang dở
+và mục **chưa đo**. `CLAUDE.md` trỏ vào nó ngay đầu mục đọc.
+
+Số đo tại lượt ghi: `npx vitest run` → **2.745 qua / 7 đỏ**. Sáu đỏ cũ đã biết; **một đỏ mới
+chưa ai ghi sổ**: `leftArpeggioAboveRoot > ca-phao-ballad-late-arp` — câu rải tay trái tụt dưới
+nốt gốc (36 < 48) ở điệu thêm tại `b73428c`, trong khi luật này do `3ed4f33` đặt. Chưa quyết là
+lỗi của điệu mới hay luật cần nới cho điệu ấy; **hỏi người dùng trước khi sửa**, không nới
+ngưỡng cho xanh.
