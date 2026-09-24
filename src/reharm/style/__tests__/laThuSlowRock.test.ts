@@ -14,14 +14,13 @@ const hand = (events: TimelineEvent[], which: 'left' | 'right') =>
   events.filter(e => e.hand === which).map(e => [e.startBeat, e.notes])
 
 describe('Slow Rock Lá thư (Linh Nhi) — hai tay', () => {
-  it('verse replays sheet cell c22 on A7 note for note: LH bass octaves, RH 1-3-5-8 then 3-5-8', () => {
-    const events = render('A7')
-    expect(hand(events, 'left')).toEqual([
-      [0, [45, 57]], [.5, [45]], [1, [45, 57]], [1.5, [45]], [2, [52]], [2.5, [45, 57]],
-    ])
-    expect(hand(events, 'right')).toEqual([
-      [.5, [57, 61, 64, 69]], [.75, [57, 61, 64, 69]], [1, [61, 64, 69]], [1.5, [61, 64, 69]],
-    ])
+  it('verse: LH rolls sheet cells c15–c16, RH sets one voice-led chord on beat 1 and lets it ring 3 eighths', () => {
+    const events = render('Bb C')
+    expect(hand(events, 'left').slice(0, 6))
+      .toEqual([[0, [46]], [.5, [50]], [1, [53]], [1.5, [58]], [2, [53]], [2.5, [50]]])
+    const [bb, c] = voiceLeadTwoHands(parseChordInput('Bb C').chords)
+    expect(hand(events, 'right')).toEqual([[0, bb.right], [3, c.right]])
+    for (const rh of events.filter(e => e.hand === 'right')) expect(rh.durationBeats).toBe(1.5)
   })
 
   it('never has both hands strike the same key at the same moment, in all 12 roots', () => {

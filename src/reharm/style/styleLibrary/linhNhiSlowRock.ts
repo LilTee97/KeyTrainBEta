@@ -9,7 +9,7 @@ import type { RhythmHit, StylePattern } from '../types'
   - Bass rơi cùng pha chu kỳ 6 móc đơn ở 75/98 lần; hai bass cách nhau hay gặp nhất
     6 móc đơn (36 lần). → Một ô ở đây = một hợp âm = 6 móc đơn chùm ba; `gridUnit`
     0,5 và BPM 86 giữ đúng tempo sheet (♩. ≈ 57).
-  "c22" = ô 6 móc đơn thứ 22 tính theo pha ấy, không phải số ô sheet.
+  "c15" = ô 6 móc đơn thứ 15 tính theo pha ấy, không phải số ô sheet.
 
   TÁCH GIAI ĐIỆU KHỎI TAY PHẢI (luật đếm): cú gõ ≥3 nốt, đỉnh ≤ Bb4 = hợp âm đệm;
   cú gõ 2 nốt = giai điệu trên + bè dưới (giữ bè nếu cách ≥3 nửa cung, ≤ A4, không
@@ -32,10 +32,9 @@ const common = {
   releaseRatio: 1,
   // Cụm dập điệp khúc lên tới bậc 5 + quãng tám: gốc Si ra Fa thăng 4 (66).
   leftHandTop: 67,
-  // Tay phải đặt gốc từ Son 3 (55) lên, các bậc ngay trên gốc: A ra A3/C#4/E4/A4,
-  // D7 ra nốt bè A4 · D4, Gm ra D4 — đúng từng nốt sheet. Gốc Đô–Fa thăng thì
-  // hợp âm lên tới 72–78, cao hơn vùng A3–A4 của sheet: sheet chỉ có A và G ở
-  // cử chỉ này nên chưa biết chị bấm các gốc kia thế nào. Biên soạn.
+  // Nốt bè tay phải điệp khúc: gốc đặt từ Son 3 (55) lên, bậc ngay trên gốc —
+  // D7 ra A4 · D4, Gm ra D4, đúng từng nốt sheet. Hợp âm tay phải ở phiên là thế
+  // bấm dẫn giọng của app (57–69), khung này không làm dời nó.
   rightHandRegister: { rootFloor: 55, low: 55, high: 79 },
 }
 
@@ -43,39 +42,44 @@ const tone = (toneIndex: number, semitones = 0) => ({ toneIndex, semitones, from
 const hit = (beat: number, durationBeats: number, velocityScale: number,
   tones: RhythmHit['tones']): RhythmHit => ({ beat, durationBeats, velocityScale, tones })
 const octave = [tone(0), tone(0, 12)]
-// Bậc 3 · 5 · 8 trên gốc — thế tay phải c22 khi bỏ nốt gốc.
-const triadUp = [tone(1), tone(2), tone(0, 12)]
 
 /*
-  PHIÊN — c22 (A7, ô sheet 17 phách 2), lặp y hệt tay phải ở c93 (phiên 3).
-  Cử chỉ hai tay lặp nhiều nhất bài: lõi tay phải {2, 2½, 3, 4} có ở c7, c22, c23,
-  c39, c70, c93, c105. Tay trái bass, tay phải trả lời ngay sau:
-    tay trái  A2/A3 · A2 · A2/A3 · A2 · E2/E3 · A2/A3
-    tay phải   —    · A3/C#4/E4/A4 ×2 (móc kép) · C#4/E4/A4 · C#4/E4/A4 ngân
-  Bỏ E4 tay phải ở tiếng 1: nốt cuối của câu hát.
-  Tiếng 3 · 4 tay phải BỎ nốt gốc (C#4/E4/A4) đúng như sheet: tay trái đang gõ
-  quãng tám A2/A3 ở tiếng 3, hai tay không gõ trùng một phím.
-  Tiếng 5 khai E3 đơn thay cho E2/E3: bậc 5 DƯỚI gốc rơi dưới sàn tay trái (36) ở
-  các giọng Đô–Mi và bị gập thành nốt trùng. Biên soạn.
-  Tay trái rải 1–3–5–8–5–3 (c15–c16) của bản trước là lúc tay phải đang HÁT —
-  không phải cách chị đệm hai tay, nên không dùng ở đây.
+  PHIÊN — tay trái c15–c16 (Bb → C, ô sheet 12 phách 3 → 14 phách 1); c15 lặp y hệt ở c87.
+  Tay trái rải 1–3–5–8–5–3, sáu móc đơn đều — nhịp tay trái nhiều nhất bài (25 ô).
+
+  Hai tay phối hợp THẾ NÀO ở phiên (46 ô tay trái rải, bỏ các ô dập cuối câu):
+  tay phải có tiếng ở tiếng 1 trong 42/46 ô, 32/42 lần ngân ≥2 móc đơn, trung vị
+  ngân 3 móc đơn. Tức tay trái đi từng móc đơn, tay phải đặt một tiếng đầu ô rồi ngân.
+  Nên tay phải ở đây: MỘT hợp âm ở tiếng 1, ngân 3 móc đơn, nhả đúng lúc tay trái
+  lên quãng tám ở tiếng 4 (hai tay không đè một phím). Cao độ là thế bấm dẫn giọng
+  của app — vùng A3–A4 như sheet (Dm A3/D4/F4 = c40, C C4/E4/G4 = c63) — KHÔNG
+  mang nốt giai điệu F4/E4 mà sheet ngân ở chỗ này. Lực = lực tiếng 1 tay phải c15
+  (trung bình với c87) và c16.
+
+  Giá trị trước (`594e7f7`): phiên = c22, tay trái bass quãng tám từng móc đơn, tay
+  phải dập ở 2 · 2½ · 3 · 4. Người dùng nghe: "tiết tấu đệm không còn giống sheet" —
+  c22 là cử chỉ CUỐI CÂU (lõi có ở 7 ô), đem lặp mọi hợp âm là sai chỗ.
 */
 const laThu: StylePattern = {
   ...common,
   id: 'slow-rock-la-thu',
   name: 'Slow Rock Lá thư · Phiên khúc',
   variant: 1,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c22 = ô ký âm 17 phách 2 → 18 phách 1 (A7); lặp ở c93'],
-  note: 'Phiên: tay trái bass quãng tám từng móc đơn chùm ba, tay phải dập 1–3–5–8 ở tiếng 2 · 2½, 3–5–8 ở tiếng 3 rồi ngân từ tiếng 4. Chờ nghe duyệt.',
+  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c15–c16 = ô ký âm 12 phách 3 → 14 phách 1 (Bb, C); c15 lặp y hệt ở c87'],
+  note: 'Phiên: tay trái rải 1–3–5–8–5–3 sáu móc đơn chùm ba; tay phải đặt hợp âm ở tiếng 1 rồi ngân. Chờ nghe duyệt.',
   cell: {
-    lengthBeats: 6,
+    lengthBeats: 12,
     left: [
-      hit(0, 1, .96, octave), hit(1, 1, .79, [tone(0)]), hit(2, 1, .86, octave),
-      hit(3, 1, .96, [tone(0)]), hit(4, .5, 1.05, [tone(2)]), hit(5, .5, 1.14, octave),
+      // c15 Bb: Bb2 D3 F3 Bb3 F3 D3. Lực = trung bình c15 và c87 (cùng nốt, cùng nhịp).
+      hit(0, 1, .84, [tone(0)]), hit(1, 1, .51, [tone(1)]), hit(2, 1, .69, [tone(2)]),
+      hit(3, 1, .75, [tone(0, 12)]), hit(4, 1, .7, [tone(2)]), hit(5, 1, .67, [tone(1)]),
+      // c16 C: C3 E3 G3 C3/C4 G3 E3 — tiếng 4 bấm gốc kèm quãng tám.
+      hit(6, 1, .66, [tone(0)]), hit(7, 1, .88, [tone(1)]), hit(8, 1, .85, [tone(2)]),
+      hit(9, 1, .68, octave), hit(10, 1, .64, [tone(2)]), hit(11, 1, .86, [tone(1)]),
     ],
     right: [
-      hit(1, .5, .84, [tone(0), ...triadUp]), hit(1.5, .5, .8, [tone(0), ...triadUp]),
-      hit(2, .5, .89, triadUp), hit(3, 2, 1.13, triadUp),
+      { beat: 0, durationBeats: 3, velocityScale: .9 },
+      { beat: 6, durationBeats: 3, velocityScale: .86 },
     ],
   },
 }

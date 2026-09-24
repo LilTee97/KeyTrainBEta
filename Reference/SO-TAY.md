@@ -3283,3 +3283,26 @@ F3 Bb3 F3 D3), tay phải trống; điệp tay phải trống. **Triệu chứng
 quá / mất tiếng rải → c15–c16 là tay trái lúc chị vừa đàn vừa HÁT giai điệu bằng tay phải.
 `KEEP_RH_RESTS` giữ họ này: khe giữa các tiếng tay phải là chỗ của giai điệu. Test chung
 `styleLibrary.test.ts` không còn miễn trừ. Toàn suite **2.757 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+### Slow Rock Lá thư: nền phiên khúc là tay trái rải, tay phải ngân từ tiếng 1
+
+Người dùng nghe bản `594e7f7` trên bài *Đêm nguyện cầu*: fill (ô gạch chân) *"chơi rất hay"*,
+nhưng *"tiết tấu đệm ko còn nghe giống như trong sheet"*. Cái sai: lấy c22 — cử chỉ hai tay
+**cuối câu**, chỗ lời nghỉ — làm mẫu lặp ở mọi hợp âm.
+
+Đo lại trên **46 ô phiên tay trái rải** (bỏ các ô dập cuối câu): tay phải có tiếng ở tiếng 1
+trong **42/46** ô, **32/42** lần ngân ≥2 móc đơn, **trung vị ngân 3 móc đơn** (phân bố: 4 móc
+đơn 13 lần, 2 móc đơn 10, 3 và 1½ mỗi thứ 7). Tay trái đi từng móc đơn, tay phải đặt một tiếng
+đầu ô rồi ngân — đó là cách hai tay phối hợp suốt phiên khúc. Cú dập 2 · 2½ · 3 chỉ có ở c22,
+c23, c94.
+
+Phiên bây giờ: tay trái c15–c16 (y như `ca7ae4c`), tay phải **một hợp âm ở tiếng 1, ngân 3
+móc đơn** — thế bấm dẫn giọng của app, vùng A3–A4 như sheet (Dm A3/D4/F4 = c40, C C4/E4/G4 =
+c63), không mang nốt giai điệu. Tay phải nhả đúng lúc tay trái lên quãng tám ở tiếng 4, không
+đè phím. Lực = lực tiếng 1 tay phải của c15 (trung bình với c87) và c16: 0,9 · 0,86.
+Điệp giữ nguyên `594e7f7`.
+
+**Giá trị cũ** (`594e7f7`): phiên = c22 — tay trái A2/A3 · A2 · A2/A3 · A2 · E3 · A2/A3, tay
+phải 1–3–5–8 ở 2 · 2½ rồi 3–5–8 ở 3 · 4. **Triệu chứng để lùi:** thấy tay phải phiên mỏng quá
+→ c22 vẫn là cử chỉ thật của chị, nhưng thuộc về cuối câu; đưa nó vào cuối câu, đừng đưa lại
+vào vòng lặp. Toàn suite **2.757 qua / 7 đỏ** — đúng 7 đỏ cũ.
