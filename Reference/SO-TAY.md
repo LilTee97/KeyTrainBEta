@@ -3622,3 +3622,30 @@ dặm hợp âm) → nốt `raiNoi` lấy đúng nốt đã chọn. Chỉ nút t
 
 Nghe ổn thì thay hẳn nút Lá thư cũ rồi xoá nút thử. Toàn suite **2.798 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Slow Rock Lá thư ĐÃ ĐẠT — hai điệu đệm và câu solo; đường đã duyệt, đừng đổi nốt
+
+**Người dùng** (25/9/2026): *"điệu Slow Rock Lá Thư và Slow rock hai tay Lá Thư đều đã đạt, các câu solo cũng đã đạt"*.
+Giữ cả hai nút; nút hai tay bỏ nhãn "(thử)", ghi chú điệu đổi "Chờ nghe duyệt" → "Đã nghe duyệt 25/9/2026".
+
+| đã duyệt | file |
+|---|---|
+| Slow Rock Lá thư: phiên c15–c16 · điệp c41–c42 · fill c22 · hợp âm chia đôi thì rải (`raiHopAmChiaDoi`) | `style/styleLibrary/linhNhiSlowRock.ts` |
+| Slow Rock Lá thư hai tay: sóng rải vắt hai tay (`raiNoi`), family `slow-rock-la-thu-hai-tay` | cùng file |
+| Câu solo dạo · giang · kết slow rock Linh Nhi | `style/soanSlowRockLinhNhi.ts` (+ `slowRockLinhNhiNguon.ts`) |
+
+Chưa được duyệt riêng: Linh Run (`chayLinhNhi`), mốc chuyển đoạn đáp vạch (`transitionRunNotes`).
+
+**Bộ soạn solo làm gì — tóm tắt** (đầy đủ, kèm số đo và bảng điểm phạt: md Linh Nhi **13h**):
+1. **Học từ sheet** (số đo): nhịp thật (Lá Thư 12/8), ký hiệu hợp âm không tin được → đọc tay; quy luật nốt ở câu
+   solo (nốt hợp âm phách mạnh 83% · nhẹ 85%, nối ô ≤ 2 nửa cung 23/43, không lặp hình ô 0/49, ít nghỉ, ít ô thưa);
+   bản ký âm Một Cõi hỏng nhịp 14/29 ô; câu chạy dẫn vào hợp âm sau.
+2. **Hợp âm** (`vongMoi`): ghép khúc đầu một vòng solo thật cùng giọng với khúc đuôi một vòng thật cùng loại đoạn, nối
+   ở hợp âm chung; giới hạn độ dài / số hợp âm / hợp âm mở theo 23 vòng thật; bỏ vòng trùng hoặc cắt ngắn vòng có
+   sẵn; xếp theo độ khớp vốn hợp âm bài; một hợp âm mỗi ô 6/8; mấy ô cuối là cử chỉ kết thật.
+3. **Nốt**: mỗi ô là ô thật của chị (hoặc cao độ ô bolero cùng giọng trên tiết tấu ô slow rock). **Scale chỉ làm
+   thước bậc**: dời cả ô theo bậc gam (thứ tự nhiên / trưởng) từ hợp âm nguồn sang hợp âm đích; nốt bậc 3·5·7 lệch
+   nửa cung thì về nốt hợp âm (hợp âm thắng gam); nốt hoá của chị giữ khi không dời bậc. Chọn ô bằng điểm phạt theo
+   quy luật đo. Không ngũ cung, không thang tự sinh, không bốc ngẫu nhiên.
+4. **Giải thích được**: mỗi ô đã ghi `compositionSources` (vòng từ đâu · giai điệu từ ô nào, dời mấy bậc · tiết tấu ô
+   nào). Chưa ghi nhãn từng nốt và điểm phạt — cần thêm khi dựng chức năng giải thích.
+

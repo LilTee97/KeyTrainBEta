@@ -87,7 +87,7 @@ const laThu: StylePattern = {
   variant: 1,
   fillCell: C22,
   sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · hát: c15–c16 (ô ký âm 12 phách 3 → 14 phách 1); chỗ fill: c22 (ô 17), lặp ở c93'],
-  note: 'Lúc hát: tay trái rải 1–3–5–8–5–3, tay phải để cho giọng. Chỗ có fill: hai tay như sheet chỗ lời nghỉ. Chờ nghe duyệt.',
+  note: 'Lúc hát: tay trái rải 1–3–5–8–5–3, tay phải để cho giọng. Chỗ có fill: hai tay như sheet chỗ lời nghỉ. Đã nghe duyệt 25/9/2026.',
   cell: {
     lengthBeats: 12,
     left: [
@@ -124,7 +124,7 @@ const laThuChorus: StylePattern = {
   variant: 2,
   fillCell: C22,
   sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c41–c42 = ô ký âm 32 phách 1 → 33 phách 3 (D7, Gm); cùng lối c45–c46, cao trào c106'],
-  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải để cho giọng. Chỗ có fill: hai tay như sheet. Chờ nghe duyệt.',
+  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải để cho giọng. Chỗ có fill: hai tay như sheet. Đã nghe duyệt 25/9/2026.',
   cell: {
     lengthBeats: 12,
     left: [
@@ -149,8 +149,9 @@ const laThuChorus: StylePattern = {
 }
 
 /*
-  HAI TAY RẢI — kiểu THỬ, đặt cạnh kiểu trên để nghe so (luật người dùng: đổi lối chơi thì dựng bản mới bên
-  cạnh, nghe ổn thì cho thay hẳn rồi xoá kiểu thử).
+  HAI TAY RẢI — dựng làm kiểu THỬ cạnh kiểu trên; người dùng nghe duyệt CẢ HAI ngày 25/9/2026 (*"điệu Slow
+  Rock Lá Thư và Slow rock hai tay Lá Thư đều đã đạt"*) nên giữ cả hai nút, bỏ nhãn "(thử)". Đường đã duyệt:
+  đừng đổi nốt nào nếu người dùng chưa yêu cầu.
 
   Người dùng 25/9/2026: *"phách mạnh là phách 1 và 4"* · *"Chia 2 tay để đánh rải chứ ko phải để dặm hợp âm,
   và ko nhất thiết phải là chia đều. Trong vai một nhạc sĩ đệm piano chuyên nghiệp bạn hãy soạn lại cách đánh"*.
@@ -178,14 +179,14 @@ const laThuHaiTay: StylePattern = {
   ...common,
   // Family riêng = nút riêng trong khung chọn điệu, đứng cạnh nút cũ để nghe so.
   family: 'slow-rock-la-thu-hai-tay',
-  familyName: 'Slow Rock Lá thư hai tay (thử)',
+  familyName: 'Slow Rock Lá thư hai tay',
   id: 'slow-rock-la-thu-hai-tay',
   rightHandRegister: { rootFloor: 48, low: 48, high: 79 },
-  name: 'Slow Rock Lá thư · hai tay rải (thử)',
+  name: 'Slow Rock Lá thư · hai tay rải',
   variant: 3,
   fillCell: C22,
   sourceVideos: ['Biên soạn trên rải c15–c16 Lá Thư Trần Thế, vắt qua hai tay'],
-  note: 'Thử: sóng rải móc đơn vắt hai tay — trái gốc–5–8, phải 10–12–10 rồi 12–10–8. Nhấn tiếng 1 và 4. Chờ nghe duyệt.',
+  note: 'Sóng rải móc đơn vắt hai tay — trái gốc–5–8, phải 10–12–10 rồi 12–10–8. Nhấn tiếng 1 và 4. Đã nghe duyệt 25/9/2026.',
   cell: {
     lengthBeats: 12,
     left: [...traiRai(0, [tone(0)], .84), ...traiRai(6, [tone(0)], .8)],
@@ -199,9 +200,9 @@ const laThuHaiTay: StylePattern = {
 const laThuHaiTayChorus: StylePattern = {
   ...laThuHaiTay,
   id: 'slow-rock-la-thu-hai-tay-chorus',
-  name: 'Slow Rock Lá thư · hai tay rải (thử) · Điệp khúc',
+  name: 'Slow Rock Lá thư · hai tay rải · Điệp khúc',
   variant: 4,
-  note: 'Thử · điệp: như phiên, gốc tay trái kèm quãng tám, đỉnh sóng tiếng 4 kèm quãng tám trên. Chờ nghe duyệt.',
+  note: 'Điệp: như phiên, gốc tay trái kèm quãng tám, đỉnh sóng tiếng 4 kèm quãng tám trên. Đã nghe duyệt 25/9/2026.',
   cell: {
     lengthBeats: 12,
     // Gốc ngân suốt ô; nốt quãng tám trên nhả sau hai móc đơn, trước khi tay trái gõ lại nó ở tiếng 3.
