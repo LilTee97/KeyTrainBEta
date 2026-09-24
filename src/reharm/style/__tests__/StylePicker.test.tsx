@@ -13,6 +13,32 @@ const markup = (selectedId = base) => renderToStaticMarkup(
 afterEach(() => restoreHiddenStyles())
 
 describe('single picker choice with automatic section variants', () => {
+  it('shows Slow Rock LT once and keeps the saved chorus selection active', () => {
+    const html = markup('slow-rock-lt-chorus')
+    expect(html.match(/>Slow Rock LT</g)).toHaveLength(1)
+    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*text-pink-100[^>]*>Slow Rock LT<\/button>/)
+    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Slow Rock Lá thư<\/button>/)
+    const oldSelected = markup('slow-rock-la-thu')
+    expect(oldSelected).toMatch(/<button[^>]*aria-pressed="true"[^>]*text-amber-key[^>]*>Slow Rock Lá thư<\/button>/)
+    expect(oldSelected).toMatch(/<button[^>]*aria-pressed="false"[^>]*text-pink-300[^>]*>Slow Rock LT<\/button>/)
+  })
+
+  it('highlights sheet arrangements separately from imported styles', () => {
+    const html = markup('pop-1')
+    for (const label of ['Slow Rock LT', 'Ballad ACDD', 'Bossa CP cải tiến']) {
+      const button = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)!
+        .find(tag => tag.includes(`>${label}<`))
+      expect(button, label).toContain('text-pink-300')
+      expect(button, label).toContain('aria-pressed="false"')
+    }
+    for (const label of ['Pop', 'Slow Rock Lá thư', 'Bolero rai (ban ky am)']) {
+      const button = html.match(/<button\b[^>]*>[\s\S]*?<\/button>/g)!
+        .find(tag => tag.includes(`>${label}<`))
+      expect(button, label).toBeDefined()
+      expect(button, label).not.toContain('pink-')
+    }
+  })
+
   it('shows only the song button, including for a saved chorus ID', () => {
     for (const [verse, chorusId] of Object.entries(CHORUS_PAIRS)) {
       const html = markup(chorusId)

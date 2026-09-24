@@ -69,7 +69,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   'slow-rock': {
     ten: 'Slow Rock',
-    families: ['slow-rock', 'slow-rock-duc-thinh', 'hai-slow-rock', 'slow-rock-la-thu'],
+    families: ['slow-rock', 'slow-rock-duc-thinh', 'hai-slow-rock', 'slow-rock-la-thu', 'slow-rock-lt'],
   },
   ballad: {
     ten: 'Ballad',

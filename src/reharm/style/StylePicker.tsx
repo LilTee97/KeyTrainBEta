@@ -4,6 +4,7 @@ import {
   getVisibleStyles,
   hiddenBuiltIns,
   restoreHiddenStyles,
+  isCodexStyle,
 } from './styleLibrary'
 import { isBalladStyle } from './balladFamily'
 import { resolveStyleForSection } from './sectionStyles'
@@ -71,6 +72,7 @@ export function StylePicker({
               {families.map((entry) => {
                 const active = entry.styles.some((style) => style.id === selectedBaseId)
                 const ballad = entry.styles.some((style) => isBalladStyle(style.id))
+                const codex = entry.styles.some((style) => isCodexStyle(style.id))
                 return (
                   <button
                     key={`${meter}-${entry.family}`}
@@ -84,7 +86,11 @@ export function StylePicker({
                     title={entry.styles[0].note}
                     aria-pressed={active}
                     className={`cursor-context-menu rounded-lg border px-3 py-1.5 text-xs ${
-                      active
+                      codex
+                        ? active
+                          ? 'border-pink-300 bg-pink-500/30 text-pink-100 ring-1 ring-pink-300'
+                          : 'border-pink-400/70 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20'
+                        : active
                         ? ballad
                           ? 'border-teal-key bg-teal-key/20 text-teal-key'
                           : 'border-amber-key bg-amber-key/15 text-amber-key'
@@ -143,7 +149,11 @@ export function StylePicker({
               }}
               title={style.note}
               aria-pressed={style.id === selectedBaseId}
-              className={`cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] ${style.id === selectedBaseId
+              className={`cursor-context-menu rounded-md border px-2 py-1 font-mono text-[11px] ${isCodexStyle(style.id)
+                ? style.id === selectedBaseId
+                  ? 'border-pink-300 bg-pink-500/30 text-pink-100 ring-1 ring-pink-300'
+                  : 'border-pink-400/70 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20'
+                : style.id === selectedBaseId
                 ? isBalladStyle(style.id) ? 'border-teal-key bg-teal-key/20 text-teal-key' : 'border-amber-key bg-amber-key/15 text-amber-key'
                 : 'border-line bg-white/3 text-dim hover:bg-white/8'}`}
             >

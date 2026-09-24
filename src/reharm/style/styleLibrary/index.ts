@@ -6,6 +6,7 @@ import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from './caPhaoBossa'
 import { CA_PHAO_BALLAD } from './caPhaoBallad'
 import { CP_BALLAD_SONG_STYLES } from './caPhaoBalladSongs'
 import { LINH_NHI_SLOW_ROCK } from './linhNhiSlowRock'
+import { SLOW_ROCK_LT } from './slowRockLT'
 import testerStylesJson from './testerStyles.json'
 
 const DELETED_KEY = 'keytrain-deleted-styles'
@@ -528,12 +529,26 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   ...CP_BALLAD_SONG_STYLES,
   ...BOLERO_STYLES,
   ...LINH_NHI_SLOW_ROCK,
+  ...SLOW_ROCK_LT,
   ...TESTER_STYLES,
 ]
 
 export const UNVERIFIED_STYLES: readonly StylePattern[] = []
 
 export const ALL_STYLES: readonly StylePattern[] = VERIFIED_STYLES
+
+// Nhóm biên soạn từ sheet; màu nút không biểu thị đã được nghe duyệt.
+const CODEX_STYLE_IDS = new Set([
+  CA_PHAO_BOSSA.id,
+  CA_PHAO_BOSSA_IMPROVED.id,
+  ...CA_PHAO_BALLAD.map(style => style.id),
+  ...CP_BALLAD_SONG_STYLES.map(style => style.id),
+  ...SLOW_ROCK_LT.map(style => style.id),
+])
+
+export function isCodexStyle(id: string): boolean {
+  return CODEX_STYLE_IDS.has(id)
+}
 
 const ALIAS: Record<string, string> = {
   ballad: 'pop-1',

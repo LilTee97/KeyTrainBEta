@@ -630,7 +630,7 @@ function renderWithCell(
 const EPSILON = 0.001
 
 /** Họ điệu mà tay phải trống là CỐ Ý — `missingChordHits` không chêm hợp âm vào. */
-const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu'])
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.
