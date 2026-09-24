@@ -3529,3 +3529,22 @@ cảm nên không mượn nốt ô ấy. Kết Một Cõi không thêm. Ngân n�
 
 Toàn suite **2.775 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Giang tấu slow rock "không đổi câu": nốt có đổi, nhưng đầu câu và đuôi câu lặp — xoay ô mở, soạn ô trước ô kết
+
+**Người dùng** (24/9/2026, lần hai): *"Giang tấu vẫn ko đổi câu mới sau mỗi lần bấm phát"*.
+
+**Bẫy:** sổ `Nguon.json` ghi câu giang khác nhau mỗi lượt (#1413 · 1416 · 1419 · 1422 khác vòng, khác số
+nốt; trùng ô chỉ ở đuôi) và bộ phát phát đúng `luot` đã ghi — nên "không đổi" không phải lỗi dựng. Đo 20
+lượt liền (Am): **10/20 câu giang mở bằng cùng một ô** (giai điệu dạo Đừng Xa ô 1 trên tiết tấu slow rock),
+câu dạo 9/20 cũng mở bằng ô ấy; đuôi luôn là một trong hai cử chỉ kết của sheet (luân phiên 10/10), Một Cõi
+chiếm 2 ô. Đầu và đuôi cố định thì tai nghe ra một câu. Nguyên do: chọn trong nhóm cách tốt nhất ≤ 1 điểm,
+và ô mở hợp tầm nhất gần như luôn thắng.
+
+**Sửa** (`soanSlowRockLinhNhi.ts`): ô mở xoay theo lượt qua mọi ô mở cách tốt nhất ≤ 3 điểm, dạo/giang lệch
+nửa vòng; ô giữa xoay bước 7 (cũ 1); `SO_O_KET` Một Cõi dạo/giang **2 → 1** (chỉ giữ ô ngân V, ô chạy V7
+soạn mới). Đo lại 20 lượt: ô mở nhiều nhất 3–4/20 (6–7 ô khác nhau), lượt liền nhau mở trùng **0/19**, ô giang
+trùng lượt trước 7/203, dạo–giang cùng lượt mở trùng 3/20. Ngưỡng 3 điểm và bước 7 là biên soạn.
+**Triệu chứng để lùi:** ô mở nghe lạc hợp âm → hạ ngưỡng 3 về 2; kết Một Cõi thiếu lực → `SO_O_KET` về 2.
+
+Toàn suite **2.776 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

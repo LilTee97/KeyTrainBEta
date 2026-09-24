@@ -243,6 +243,22 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     expect(co).toBeGreaterThan(0)
   })
 
+  /*
+    Người dùng 24/9/2026, hai lần: "Giang tấu vẫn ko đổi câu mới sau mỗi lần bấm phát". Sổ ghi nốt đổi,
+    nhưng 20 lượt liền thì 10 câu giang mở bằng cùng một ô và đuôi luôn là hai ô kết cố định của sheet.
+  */
+  it('slow rock: lượt liền nhau không mở trùng ô, không ô mở nào chiếm quá 1/4 số lượt', () => {
+    const song = 'Am Dm E7 Am F G C E7 Am Dm E7 Am'
+    for (const kind of ['intro', 'interlude'] as const) {
+      const mo = Array.from({ length: 20 }, (_, n) =>
+        soan(slowRock, kind, 9, true, 5000 + n * 3, song).compositionSources![0]!.melody.split(',')[0]!)
+      mo.slice(1).forEach((x, n) => expect(x, `${kind} lượt ${n + 1}`).not.toBe(mo[n]))
+      const dem = new Map<string, number>()
+      for (const x of mo) dem.set(x, (dem.get(x) ?? 0) + 1)
+      expect(Math.max(...dem.values()), kind).toBeLessThanOrEqual(5)
+    }
+  })
+
   it('buildPhraseSection chuyển thẳng sang bộ soạn khi bật cờ', () => {
     const built = buildPhraseSection({
       kind: 'outro', key: { tonic: 9 as PitchClass, scale: 'minor' }, style: slowRock, linhNhiSolo: true,

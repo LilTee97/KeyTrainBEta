@@ -163,7 +163,10 @@ const SO_O_KET: Record<string, number> = {
   // Lá Thư kết = trọn cử chỉ Isus4 Isus4 → I I (c140–c143). Cũ: 2 (chỉ hai ô I) — không nối được vào
   // vòng giọng thứ nào vì i → I trưởng chưa từng có trong vòng của chị.
   'la-thu-tran-the-intro': 1, 'la-thu-tran-the-interlude': 1, 'la-thu-tran-the-outro': 4,
-  'mot-coi-di-ve-intro': 2, 'mot-coi-di-ve-interlude': 2, 'mot-coi-di-ve-outro': 3,
+  // Một Cõi dạo/giang: chỉ giữ ô ngân V cuối (o10); ô chạy V7 trước nó soạn mới từ kho. Cũ: 2 — câu nào
+  // cũng kết bằng đúng hai ô sheet, cộng ô dập Lá Thư là hai cái đuôi cố định luân phiên 10/10 lượt, người
+  // dùng nghe "giang tấu vẫn ko đổi câu mới" (24/9/2026).
+  'mot-coi-di-ve-intro': 1, 'mot-coi-di-ve-interlude': 1, 'mot-coi-di-ve-outro': 3,
 }
 
 // ── Gam, bậc, hợp âm ────────────────────────────────────────────────────────────────────────
@@ -518,8 +521,20 @@ export function soanSlowRockLinhNhi(options: {
     if (ung.length === 0) return rong(`Không có ô slow rock nào đặt được lên ô ${i + 1} (${dich.map((h) => h[2]).join('→')}) của đoạn ${kind}.`)
     ung.sort((a, b) => a.cost - b.cost
       || `${a.nguon.src.id}#${a.nguon.i}#${a.tam}`.localeCompare(`${b.nguon.src.id}#${b.nguon.i}#${b.tam}`))
+    /*
+      Ô MỞ xoay theo lượt qua mọi ô mở đặt được (cách điểm tốt nhất ≤ 3), mỗi ô một lần trong danh sách;
+      dạo và giang lệch nhau nửa vòng. Cũ: chọn trong nhóm cách tốt nhất ≤ 1 — 20 lượt liền thì 10 câu
+      giang (và 9 câu dạo) mở bằng CÙNG một ô, đầu câu nghe y như lượt trước và y như câu dạo.
+      Ô giữa: bước xoay 7 mỗi lượt (cũ 1) cho hai lượt liền nhau ít trùng ô. Ngưỡng 3 và bước 7: biên soạn.
+    */
+    const moUng = i === 0 && !laKet ? ung.filter((u) => u.nguon.mo) : []
+    const moDinh = moUng.length ? Math.min(...moUng.map((u) => u.cost)) : 0
+    const moDs = [...new Map(moUng.filter((u) => u.cost <= moDinh + 3).sort((a, b) => a.cost - b.cost)
+      .reverse().map((u) => [u.nguon.khoa, u] as const)).values()].sort((a, b) => a.nguon.khoa.localeCompare(b.nguon.khoa))
     const gan = ung.filter((u) => u.cost <= ung[0]!.cost + 1)
-    const chon = gan[(take + i * 3) % gan.length]!
+    const chon = moDs.length > 0
+      ? moDs[(take + (kind === 'interlude' ? Math.floor(moDs.length / 2) : 0)) % moDs.length]!
+      : gan[(take * 7 + i * 3) % gan.length]!
     ra.push(chon)
     daDung.add(chon.nguon.khoa)
     const top = dinh(chon.phai)
