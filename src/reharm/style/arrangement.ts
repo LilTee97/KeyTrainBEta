@@ -488,10 +488,25 @@ export function buildArrangedSong(
     const loopBeats = firstRange.lengthBeats
     if (loopBeats <= 0) continue
 
+    /*
+      Câu giang SOẠN SẴN (`composed`) mỗi vòng một câu mới, và câu mới dài ngắn khác nhau — bộ soạn
+      slow rock Linh Nhi ra 21–33 phách. Ép mọi vòng theo độ dài vòng đầu thì vòng sau hoặc cụt mất ô
+      kết, hoặc để một khoảng lặng (đo 24/9/2026, 4 lần bấm: 30 vào ô 33 · 24 vào ô 21 · 21 vào ô 33).
+      Nên câu soạn sẵn thì vòng nào dài theo câu của vòng ấy. Đường khác vẫn một độ dài cho mọi vòng.
+      Cũ: mọi vòng dài `loopBeats`.
+    */
+    const ranges = [firstRange]
+    for (let loop = 1; loop < loops; loop += 1) {
+      ranges.push(interludeRange?.(over, next, take + loop, loop === loops - 1) ?? firstRange)
+    }
+    const dai = ranges.map((range) =>
+      range.composed && range.lengthBeats > 0 ? range.lengthBeats : loopBeats)
+    const tong = dai.reduce((a, b) => a + b, 0)
+
     sections.push({
       kind: 'interlude',
       startBeat: cursor,
-      lengthBeats: loopBeats * loops,
+      lengthBeats: tong,
     })
 
     const restAfter =
@@ -500,11 +515,12 @@ export function buildArrangedSong(
     // Nghỉ trọn ô nhịp thì thôi quay đầu — xem `restAfterInterlude`.
     const severed = restAfter >= beatsPerMeasure
     const turn = next && turnaround && !severed ? turnaround(over, next) : null
-    const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
-
+    let at = cursor
     for (let loop = 0; loop < loops; loop += 1) {
-      const range = loop === 0 ? firstRange : interludeRange?.(over, next, take, loop === loops - 1) ?? firstRange
-      const at = cursor + loop * loopBeats
+      const range = ranges[loop]!
+      const loopBeats = dai[loop]!
+      const played = turn ? Math.max(0, loopBeats - turn.beats) : loopBeats
+      if (loop > 0) at += dai[loop - 1]!
       const last = loop === loops - 1
       const length = last && turn ? played : loopBeats
 
@@ -593,7 +609,7 @@ export function buildArrangedSong(
       }
     }
 
-    cursor += loopBeats * loops + restAfter
+    cursor += tong + restAfter
   }
 
   return {

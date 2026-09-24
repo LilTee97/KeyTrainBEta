@@ -66,6 +66,29 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
     }
   })
 
+  it('split chord (half a 6/8 bar): rolls three notes, no chord stabs, no swap to the fill cell', () => {
+    // Người dùng 24/9/2026: "khi chia đôi hợp âm đừng đánh kiểu dặm hợp âm mà hãy theo kiểu rải".
+    expect(verse.raiHopAmChiaDoi).toBe(true)
+    const [em, am, b7] = parseChordInput('Em Am B7').chords
+    const chords = [em!, { ...am!, beats: 1.5 }, { ...b7!, beats: 1.5 }, em!]
+    const opts = { beatsPerChord: 3, fillBassChance: .8, take: 0 }
+    const inSplit = (e: TimelineEvent) => e.hand === 'right' && e.startBeat >= 3 - 1e-6 && e.startBeat < 6 - 1e-6
+    const notMoiMoc = (evs: TimelineEvent[]) => [...new Set(evs.map(e => e.startBeat))]
+      .map(at => evs.filter(e => Math.abs(e.startBeat - at) < 1e-6).flatMap(e => e.notes).length)
+    const cu = soloToTimeline(generateFillLine(chords, opts)).filter(inSplit)
+    expect(notMoiMoc(cu)).toEqual([3, 3, 3, 3])
+    const rai = soloToTimeline(generateFillLine(chords, { ...opts, raiChiaDoi: true })).filter(inSplit)
+    expect(notMoiMoc(rai)).toEqual([1, 1, 1, 1, 1, 1])
+    for (const [from, to] of [[3, 4.5], [4.5, 6]]) {
+      const trong = rai.filter(e => e.startBeat >= from - 1e-6 && e.startBeat < to - 1e-6)
+      expect(trong.map(e => e.startBeat - from)).toEqual([0, .5, 1])
+      expect(trong.map(e => e.notes[0]!)).toEqual([...trong.map(e => e.notes[0]!)].sort((x, y) => x - y))
+    }
+    const backing = render('Em Am B7 Em')
+    const fillBacking = render('Em Am B7 Em', atFill(verse))
+    expect(swapAtFills(backing, fillBacking, rai, [3, 1.5, 1.5, 3], 3)).toEqual(backing)
+  })
+
   it('never has both hands strike the same key at the same moment, in all 12 roots', () => {
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']) {
       for (const style of [verse, chorus, atFill(verse)]) {

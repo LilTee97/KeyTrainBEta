@@ -1793,9 +1793,10 @@ export function ReharmHome() {
   )
   const backingFor = useCallback(
     (line: Parameters<typeof giveCompingToLeft>[1]) => fillBacking
-      ? swapAtFills(accompaniment, fillBacking, line, chordDurations(withPassing, chordBeats))
+      ? swapAtFills(accompaniment, fillBacking, line, chordDurations(withPassing, chordBeats),
+        style.raiHopAmChiaDoi ? chordBeats : 0)
       : accompaniment,
-    [accompaniment, fillBacking, withPassing, chordBeats],
+    [accompaniment, fillBacking, withPassing, chordBeats, style.raiHopAmChiaDoi],
   )
 
   /**
@@ -2565,6 +2566,7 @@ export function ReharmHome() {
           fillBassChance:
             style.fillBassChance ??
             (style.timeSignature.endsWith('/8') ? 0.8 : 0),
+          raiChiaDoi: style.raiHopAmChiaDoi === true,
           direction: soloDirection,
           density: fillDensity,
           key: reharm.key,

@@ -539,7 +539,31 @@ export function soanSlowRockLinhNhi(options: {
     chords.push(sym)
     tu.push((i * O + (j === 0 ? 0 : h[0])) * k)
   }))
-  const lengthBeats = n * O * k
+  /*
+    CÚ DẶM V7 SAU Ô DẬP LÁ THƯ — ý người dùng #70 (câu #1403, md 16S): *"ở E7 cuối thì nên thêm 1 cú dặm
+    hợp âm E7 nữa rồi mới vào phiên khúc … nếu sau này có soạn lại câu theo khung này thì nhớ làm tương
+    tự"*. Khung = dạo/giang kết bằng ô dập V7 của Lá Thư (c7 · c80). Thêm một ô: hai tay dặm V7 ở phách
+    đầu, ngân nửa ô rồi tắt — chừa nửa ô cho ca sĩ lấy hơi (luật cũ: hợp âm hút cuối câu dạo tắt trước
+    chỗ ca sĩ vào). Hợp âm, thế tay lấy từ cú dập đầu ô kết + bậc 7. Độ ngân nửa ô là BIÊN SOẠN.
+  */
+  const hKet = vong[n - 1]![vong[n - 1]!.length - 1]!
+  const damV7 = kind !== 'outro' && ketSrc.id.startsWith('la-thu-tran-the-') && hKet[1] === 7 && /7/.test(hKet[2])
+  const cuoi = ra[n - 1]!
+  const dam: { phai: number[]; trai: number[] } | null = damV7 && cuoi.phai.length > 0
+    ? (() => {
+        // Bốn nốt V7 xếp liền dưới nốt đỉnh cú dập đầu ô kết (ô c80 mở bằng 5–7–1, thiếu nốt cảm).
+        const dinhO = Math.max(...cuoi.phai[0]!.notes)
+        const phai = [0, 4, 7, 10].map((q) => {
+          let y = dinhO
+          while (((y - key.tonic - 7 - q) % 12 + 12) % 12 !== 0) y -= 1
+          return y
+        }).sort((a, b) => a - b)
+        let goc = 33
+        while (((goc - key.tonic - 7) % 12 + 12) % 12 !== 0) goc += 1
+        return { phai, trai: [goc, goc + 12] }
+      })()
+    : null
+  const lengthBeats = (n + (dam ? 1 : 0)) * O * k
   const beatsEach = tu.map((a, j) => (j + 1 < tu.length ? tu[j + 1]! : lengthBeats) - a)
   if (parseChordInput(chords.join(' ')).chords.length !== chords.length) {
     return rong(`Không đọc được vòng hợp âm ${chords.join(' ')}`)
@@ -557,6 +581,12 @@ export function soanSlowRockLinhNhi(options: {
       events.push({ notes: notes as MidiNote[], startBeat: (i * O + e.at) * k, durationBeats: e.dur * k, hand: 'left', velocity: VELO_TRAI })
     }
   })
+  if (dam) {
+    let trai = dam.trai
+    while (trai.length && Math.max(...trai) > 67) trai = trai.map((x) => x - 12)
+    events.push({ notes: dam.phai as MidiNote[], startBeat: n * O * k, durationBeats: (O / 2) * k, hand: 'right', velocity: VELO_PHAI })
+    if (trai.length) events.push({ notes: trai as MidiNote[], startBeat: n * O * k, durationBeats: (O / 2) * k, hand: 'left', velocity: VELO_TRAI })
+  }
   events.sort((a, b) => a.startBeat - b.startBeat)
 
   return {
@@ -572,7 +602,11 @@ export function soanSlowRockLinhNhi(options: {
       rhythm: c.nguon.nhip,
       donorGenre: c.nguon.lai ? 'bolero (giai điệu) · slow rock (tiết tấu)' : 'slow rock',
       mode: thu ? 'minor' : 'major', sourceKind: c.nguon.src.doan,
-    })),
+    })).concat(dam ? [{
+      bar: n + 1, start: n * O * k, end: (n + 1) * O * k, harmony: `kết ${ketSrc.id} + cú dặm V7`,
+      melody: 'cú dặm V7 thêm theo ý người dùng #70', rhythm: 'một cú dặm, ngân nửa ô',
+      donorGenre: 'slow rock', mode: thu ? 'minor' : 'major', sourceKind: kind,
+    }] : []),
     adaptationNote: `Vòng mới ${vongTu}; ô slow rock của Linh Nhi và giai điệu bolero đặt lên tiết tấu slow rock; kết bằng ${ketSrc.bai}.`,
   }
 }

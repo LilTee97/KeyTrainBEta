@@ -81,6 +81,7 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
       expect(made.lengthBeats % 3, tag).toBe(0)
       expect(made.compositionSources, tag).toHaveLength(made.lengthBeats / 3)
       for (const c of made.compositionSources!) {
+        if (c.harmony.endsWith('cú dặm V7')) continue
         expect(c.rhythm, tag).toMatch(SR_ID)
         const src = nguonGiaiDieu(c.melody)
         if (src.dieu === 'bolero') {
@@ -221,6 +222,25 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
       expect(cau.size, kind).toBe(20)
       expect(vong.size, kind).toBeGreaterThanOrEqual(10)
     }
+  })
+
+  it('dạo/giang kết bằng ô dập V7 Lá Thư thì thêm một cú dặm V7 hai tay, ngân nửa ô (ý người dùng #70)', () => {
+    let co = 0
+    for (const { kind, minor, tonic, take, made } of TAT_CA_SR) {
+      const cuoi = made.compositionSources!.at(-1)!
+      const coDam = cuoi.harmony.endsWith('cú dặm V7')
+      if (kind === 'outro') { expect(coDam).toBe(false); continue }
+      if (!coDam) continue
+      co += 1
+      const tag = `${kind} ${minor} @${tonic} #${take}`
+      const o = made.events.filter((e) => e.startBeat >= cuoi.start - 1e-6)
+      expect(o.map((e) => [e.startBeat, e.durationBeats]), tag).toEqual(o.map(() => [cuoi.start, 1.5]))
+      const phai = o.find((e) => e.hand === 'right')!.notes.map((x) => ((x - tonic) % 12 + 12) % 12)
+      expect([...phai].sort((x, y) => x - y), tag).toEqual([2, 5, 7, 11])
+      expect(o.some((e) => e.hand === 'left'), tag).toBe(true)
+      expect(made.chords.at(-1), tag).toMatch(/7$/)
+    }
+    expect(co).toBeGreaterThan(0)
   })
 
   it('buildPhraseSection chuyển thẳng sang bộ soạn khi bật cờ', () => {

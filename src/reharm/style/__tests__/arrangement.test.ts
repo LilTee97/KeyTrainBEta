@@ -199,6 +199,33 @@ describe('giang tấu chèn vào chỗ trống', () => {
   })
 })
 
+describe('giang tấu soạn sẵn — mỗi vòng dài theo câu của vòng ấy', () => {
+  /*
+    Lỗi 24/9/2026: bộ soạn slow rock Linh Nhi ra câu giang 21–33 phách, mỗi vòng một câu mới; ép vòng hai
+    theo độ dài vòng một thì cụt ô kết hoặc để lặng tới 12 phách.
+  */
+  it('vòng hai dài hơn không bị cắt, vòng hai ngắn hơn không để lặng', () => {
+    const dai = [6, 9]
+    const song = buildArrangedSong({
+      accompaniment: [],
+      fills: [],
+      solo: () => [],
+      sources: SOURCES,
+      steps: [{ type: 'interlude', over: 1, loops: 2, restAfter: 0 }, { type: 'section', source: 0 }],
+      interludeRange: (over, _next, take) => {
+        const n = dai[take]!
+        const notes = Array.from({ length: n }, (_, k) => ({ ...event('solo', k), notes: [60 + take] }))
+        return { startBeat: over.startBeat, lengthBeats: n, events: [], solo: () => notes, composed: true }
+      },
+    })
+    expect(song.sections[0]).toEqual({ kind: 'interlude', startBeat: 0, lengthBeats: 15 })
+    const giang = song.events.filter((e) => e.startBeat < 15)
+    expect(giang.filter((e) => e.notes[0] === 60).map((e) => e.startBeat)).toEqual([0, 1, 2, 3, 4, 5])
+    expect(giang.filter((e) => e.notes[0] === 61).map((e) => e.startBeat)).toEqual([6, 7, 8, 9, 10, 11, 12, 13, 14])
+    expect(sourceBeatAt(song.segments, 15)).toBe(0)
+  })
+})
+
 describe('những trường hợp lệch lạc', () => {
   it('không có bước nào thì không có gì để chơi', () => {
     const song = build([])

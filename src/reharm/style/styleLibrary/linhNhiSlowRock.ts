@@ -38,6 +38,9 @@ const common = {
   // sheet. Gốc Đô–Fa thăng lên tới 72–78, cao hơn vùng A3–A4 của sheet (sheet chỉ có A
   // và G ở cử chỉ này). Biên soạn.
   rightHandRegister: { rootFloor: 55, low: 55, high: 79 },
+  // Hợp âm chia đôi ô: rải, không dặm (ý người dùng 24/9/2026). Cũ: không khai — hai cú dặm ba nốt
+  // + đổi sang ô fill C22 (tay phải cũng dặm). Triệu chứng để lùi: chỗ đổi hợp âm giữa ô nghe mờ.
+  raiHopAmChiaDoi: true,
 }
 
 const tone = (toneIndex: number, semitones = 0) => ({ toneIndex, semitones, fromRoot: true })

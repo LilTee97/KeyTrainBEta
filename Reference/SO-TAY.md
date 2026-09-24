@@ -3502,3 +3502,30 @@ chỉ ô slow rock làm giai điệu. **Triệu chứng để lùi:** câu nghe 
 
 Toàn suite **2.772 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Slow Rock Lá thư: hợp âm chia đôi thì rải; giang tấu nhiều vòng mỗi vòng dài theo câu; cú dặm V7 sau ô dập
+
+**1. Hợp âm chia đôi ô thì RẢI** — người dùng: *"khi chia đôi hợp âm đừng đánh kiểu dặm hợp âm mà hãy theo
+kiểu rải"*. Bẫy: dặm tới từ HAI lớp — `generateFillLine` gõ hai cú hợp âm ba nốt ở hợp âm ngắn (nhịp /8
+tự có `fillBassChance` 0,8), rồi `swapAtFills` coi cú ấy là fill và đổi đệm của hợp âm ngắn sang ô fill
+c22 (tay phải c22 cũng dặm hợp âm). Sửa: điệu khai `raiHopAmChiaDoi` (mới, chỉ Lá thư) → ba nốt rải lên,
+mỗi nốt một phần ba hợp âm ngắn (ô 6/8 chia đôi: ba móc đơn), ngân tới hết hợp âm; `swapAtFills(…,
+minBeats = chordBeats)` bỏ qua hợp âm ngắn. Fill lời nghỉ (594e7f7) không đổi — chúng vốn không rơi vào
+hợp âm ngắn. Giá trị cũ: không khai → hai cú dặm + c22. Triệu chứng để lùi: chỗ đổi hợp âm giữa ô mờ.
+
+**2. Giang tấu lặp nhiều vòng** — người dùng: *"Câu giang tấu bị lỗi ko soạn mới sau mỗi lần bấm phát"*.
+Sổ `Nguon.json` ghi giang khác nhau mỗi lần bấm (lanPhat 1 ở mọi dòng), nhưng dựng lại đường chạy
+(`buildArrangedSong`, `loops: 2`, 4 lần bấm) thì vòng hai bị ép theo độ dài vòng một: câu 30 phách vào
+ô 33 (lặng 3), 24 vào 21 (cụt ô kết), 21 vào 33 (lặng 12). Sửa `arrangement.ts`: range `composed` thì
+mỗi vòng dài theo câu của nó; `sections`, `segments`, `soloSpans` theo đó. Đường khác giữ một độ dài.
+**Chưa chắc** đây là cái người dùng nghe ra — đã hỏi lại.
+
+**3. Cú dặm V7 sau ô dập Lá Thư** — ý kiến #70 (câu #1403): *"ở E7 cuối thì nên thêm 1 cú dặm hợp âm E7
+nữa rồi mới vào phiên khúc … nếu sau này có soạn lại câu theo khung này thì nhớ làm tương tự"*. Dạo/giang
+kết bằng ô dập V7 Lá Thư (c7 · c80) thì thêm một ô: V7 đủ bốn nốt dưới nốt đỉnh cú dập đầu ô kết, tay trái
+quãng tám gốc, ngân nửa ô rồi tắt (luật cũ: hút tắt trước chỗ ca sĩ vào). Ô c80 mở bằng 5–7–1 thiếu nốt
+cảm nên không mượn nốt ô ấy. Kết Một Cõi không thêm. Ngân nửa ô là biên soạn.
+
+Ý kiến ghi vào md Linh Nhi mục **16S** (lượt nghe 2: #1382 Đã ổn, #1403 Chưa ổn).
+
+Toàn suite **2.775 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

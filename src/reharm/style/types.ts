@@ -144,6 +144,12 @@ export interface StylePattern {
    */
   fillBassChance?: number
   /**
+   * Hợp âm CHIA ĐÔI ô (hợp âm ngắn hơn một ô hợp âm) thì RẢI ba nốt, không dặm hai cú hợp âm, và
+   * không đổi sang `fillCell`. Người dùng 24/9/2026 (Slow Rock Lá thư): *"khi chia đôi hợp âm đừng
+   * đánh kiểu dặm hợp âm mà hãy theo kiểu rải"*. Bỏ trống = dặm như cũ.
+   */
+  raiHopAmChiaDoi?: boolean
+  /**
    * Trần tay trái của riêng điệu này, tính bằng số MIDI. Bỏ trống là trần chung.
    *
    * Trần chung là Son quãng tám 3 (55): hai tay không dùng chung quãng, tay trái

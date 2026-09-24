@@ -978,12 +978,18 @@ export function swapAtFills(
   fillBacking: readonly TimelineEvent[],
   fills: readonly TimelineEvent[],
   beatsEach: readonly number[],
+  /**
+   * Hợp âm ngắn hơn chừng này phách (hợp âm chia đôi ô) thì giữ phần đệm thường: cử chỉ fill của cả ô
+   * đặt vào nửa ô chỉ còn cú dặm tay phải. Bỏ trống = 0, đổi mọi hợp âm có fill như cũ.
+   */
+  minBeats = 0,
 ): TimelineEvent[] {
   const spans: [number, number][] = []
   let at = 0
   for (const beats of beatsEach) {
     const from = at
     at += beats
+    if (beats < minBeats - EPSILON) continue
     if (fills.some((f) => f.startBeat >= from - EPSILON && f.startBeat < at - EPSILON)) spans.push([from, at])
   }
   if (spans.length === 0) return [...backing]

@@ -565,6 +565,8 @@ export function generateFillLine(
     fillMaxNotes?: number
     /** Tỉ lệ câu lót chạy bè trầm, 0 tới 1. Bỏ trống là 0. */
     fillBassChance?: number
+    /** Hợp âm chia đôi ô thì rải ba nốt thay cho hai cú dặm — xem `StylePattern.raiHopAmChiaDoi`. */
+    raiChiaDoi?: boolean
     /** Các chỗ người dùng đã tắt fill, tính theo vòng hợp âm chính. */
     skipFills?: ReadonlySet<number>
     /** Các hợp âm mà câu hát kết thúc ở đó; xem `fillPositions`. */
@@ -630,6 +632,7 @@ export function generateFillLine(
     fillBeats = Math.min(1.5, beatsPerChord / 2),
     fillMaxNotes,
     fillBassChance = 0,
+    raiChiaDoi = false,
     direction = 'mixed',
     density = 'medium',
     key = null,
@@ -1026,6 +1029,16 @@ export function generateFillLine(
       // Ba nốt đặc trưng, đặt quanh giữa tầm giai điệu cho hai tay khỏi đụng.
       const centre = ((MELODY_LOW + MELODY_HIGH) / 2) as MidiNote
       const tones = targetPitchClasses(chord, 3).map((pc) => nearestNote(pc, centre))
+      if (raiChiaDoi) {
+        // Rải đi lên suốt hợp âm ngắn, mỗi nốt một phần ba, ngân tới hết hợp âm (ô 6/8 chia đôi:
+        // ba móc đơn). Người dùng: "khi chia đôi hợp âm đừng đánh kiểu dặm hợp âm mà hãy theo kiểu rải".
+        const len = span / tones.length
+        ;[...tones].sort((a, b) => a - b).forEach((note, k) => {
+          const startBeat = chordEnd - span + k * len
+          result.push({ note, startBeat, durationBeats: chordEnd - startBeat, isGrace: false, hand: 'right' })
+        })
+        return
+      }
       for (const step of [0, 1]) {
         for (const note of tones) {
           result.push({
