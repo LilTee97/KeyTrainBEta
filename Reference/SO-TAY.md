@@ -3602,3 +3602,23 @@ Codex đã thêm nút **Slow Rock LT** riêng (38ae124) — không đụng tới
 
 Toàn suite **2.798 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Nút thử "Slow Rock Lá thư hai tay": sóng rải vắt hai tay, không dặm hợp âm
+
+**Người dùng** (25/9/2026) bác bản dặm tay phải 2 · 3 · 5 · 6: *"Chia 2 tay để đánh rải chứ ko phải để dặm hợp âm,
+và ko nhất thiết phải là chia đều. Trong vai một nhạc sĩ đệm piano chuyên nghiệp bạn hãy soạn lại cách đánh"*.
+
+**Nay** (biên soạn, không phải số đo): một làn sóng móc đơn liền — rải c15 của chị mở ra hai quãng tám. Tay trái
+tiếng 1 · 2 · 3: gốc (ngân suốt ô, nhấn mạnh nhất) – 5 – 8 (ngân một móc đơn); tay phải tiếng 4 · 5 · 6: 10 – 12 – 10
+(ô 1) rồi 12 – 10 – 8 (ô 2, trả sóng về bè trầm); tiếng 4 là đỉnh sóng, nhấn thứ hai. Vd C: C2 G2 C3 | E3 G3 E3;
+E7: E2 B2 E3 | G#3 B3 G#3; G (ô 2): G2 D3 G3 | D4 B3 G3. Điệp: gốc tay trái kèm quãng tám (quãng tám trên nhả sau
+hai móc đơn), đỉnh sóng kèm quãng tám trên (thủ pháp tay phải chính của chị, 45% cú hai nốt).
+
+**Ba bẫy khi dựng** (đo trên bản dựng): (1) sàn gốc tay phải chung G3 làm tay phải nhảy theo gốc hợp âm (Dm lên A4,
+cách D3 tay trái 19 nửa cung) → nút thử khai `rightHandRegister.rootFloor` 48: gốc tay phải luôn cao đúng một
+quãng tám trên gốc tay trái. (2) `settleHands` dãn tay phải theo THẾ BẤM tay trái (bóng, không phải tiếng đang
+kêu) → E3 của sóng trên C bị đẩy lên E4, sóng lộn (E4 G3 E4). Thêm `RhythmHit.raiNoi`: nốt rải tay phải nối tay
+trái thì không dãn — cùng lý do ngoại lệ câu rải tay trái. (3) nhánh không dãn trả NGUYÊN thế bấm tay phải (thành
+dặm hợp âm) → nốt `raiNoi` lấy đúng nốt đã chọn. Chỉ nút thử gắn `raiNoi`; c22 và mọi điệu khác không đổi nốt.
+
+Nghe ổn thì thay hẳn nút Lá thư cũ rồi xoá nút thử. Toàn suite **2.798 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

@@ -27,6 +27,12 @@ export type HitVoice = 'chord' | 'top' | 'bottom'
 
 /** Một tiếng đàn trong mẫu tiết tấu. */
 export interface RhythmHit {
+  /**
+   * Nốt RẢI tay phải NỐI TIẾP làn rải tay trái (sóng vắt hai tay): không dãn hai tay theo thế bấm tay
+   * trái. Thế bấm là cái bóng, không phải tiếng đang kêu; dãn theo nó thì nốt 10 của sóng C2 G2 C3 | E3 G3
+   * bị đẩy lên E4, sóng lộn thứ tự. Cùng lý do với ngoại lệ câu rải tay trái trong `renderWithCell`.
+   */
+  raiNoi?: boolean
   /** Vị trí trong mẫu, tính bằng phách từ 0. */
   beat: number
   durationBeats: number

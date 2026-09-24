@@ -571,7 +571,8 @@ function renderWithCell(
         const twoHanded =
           voicing.voicingStyle !== 'ca-phao' &&
           (pattern.cell?.right.length ?? 0) > 0 &&
-          !(hand === 'left' && (hit.tones?.length ?? 0) > 0)
+          !(hand === 'left' && (hit.tones?.length ?? 0) > 0) &&
+          !(hand === 'right' && hit.raiNoi)
         const split = twoHanded
           ? settleHands(
               hand === 'left' ? raw : voicing.left,
@@ -581,7 +582,7 @@ function renderWithCell(
         // Ballad CP giữ bè trong đã rút gọn cả khi dùng thế bấm màu CP.
         // Các điệu cũ giữ nguyên cách phát hợp âm đã được nghe duyệt.
         let notes = hand === 'left' ? split.left
-          : CP_BALLAD_IDS.includes(pattern.id) || CP_BALLAD_SONG_IDS.includes(pattern.id) ? raw : split.right
+          : CP_BALLAD_IDS.includes(pattern.id) || CP_BALLAD_SONG_IDS.includes(pattern.id) || hit.raiNoi ? raw : split.right
 
         if (hand === 'left') {
           const index = indexAt(startBeat)

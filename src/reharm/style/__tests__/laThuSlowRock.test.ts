@@ -91,15 +91,29 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
     expect(swapAtFills(backing, fillBacking, rai, [3, 1.5, 1.5, 3], 3)).toEqual(backing)
   })
 
-  it('two-hand trial: LH on strong eighths 1 · 4, RH chords on weak eighths 2 · 3 · 5 · 6', () => {
-    // Người dùng 25/9/2026: "phách mạnh là phách 1 và 4, còn lại là phách nhẹ. Hãy chia đều ra để đánh
-    // đệm phối hợp 2 tay".
+  it('two-hand trial: one arpeggio wave across the hands, never block chords', () => {
+    // Người dùng 25/9/2026: "Chia 2 tay để đánh rải chứ ko phải để dặm hợp âm, và ko nhất thiết phải là chia
+    // đều" — bản dặm 2 · 3 · 5 · 6 bị bác. Sóng: trái gốc–5–8 (tiếng 1–3), phải 10–12–10 rồi 12–10–8 (4–6).
     const haiTay = LINH_NHI_SLOW_ROCK.find(st => st.id === 'slow-rock-la-thu-hai-tay')!
     const diep = LINH_NHI_SLOW_ROCK.find(st => st.id === 'slow-rock-la-thu-hai-tay-chorus')!
-    for (const st of [haiTay, diep]) {
-      const events = render('Am Dm', st)
-      expect([...new Set(events.filter(e => e.hand === 'left').map(e => e.startBeat % 3))]).toEqual([0, 1.5])
-      expect([...new Set(events.filter(e => e.hand === 'right').map(e => e.startBeat % 3))]).toEqual([.5, 1, 2, 2.5])
+    const ten = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B']
+    for (let goc = 0; goc < 12; goc += 1) {
+      const prog = `${ten[goc]}m ${ten[(goc + 5) % 12]}7`
+      for (const st of [haiTay, diep]) {
+        const events = render(prog, st)
+        const trai = events.filter(e => e.hand === 'left')
+        const phai = events.filter(e => e.hand === 'right')
+        expect([...new Set(trai.map(e => e.startBeat % 3))], prog).toEqual([0, .5, 1])
+        expect([...new Set(phai.map(e => e.startBeat % 3))], prog).toEqual([1.5, 2, 2.5])
+        // Rải: tay phải mỗi tiếng một nốt, trừ đỉnh sóng tiếng 4 ở điệp (quãng sáu).
+        for (const e of phai) expect(e.notes.length, prog).toBe(st === diep && e.startBeat % 3 === 1.5 ? 2 : 1)
+        // Ô 1: sóng đi lên liền từ tay trái sang tay phải — gốc < 5 < 8 < 10 < 12.
+        // Làn sóng dưới (điệp: gốc tay trái và đỉnh tiếng 4 kèm quãng tám trên — lấy nốt dưới).
+        const len = [0, .5, 1, 1.5, 2].map(t => Math.min(
+          ...events.find(e => e.startBeat === t && e.hand === (t < 1.5 ? 'left' : 'right'))!.notes))
+        len.slice(1).forEach((n, k) => expect(n, `${prog} ${st.id}`).toBeGreaterThan(len[k]!))
+        expect(len[3]! - len[2]!, prog).toBeLessThanOrEqual(5)
+      }
     }
     expect(resolveStyleForSection('slow-rock-la-thu-hai-tay', 'chorus')).toBe('slow-rock-la-thu-hai-tay-chorus')
     expect(hoCuaDieu('slow-rock-la-thu-hai-tay')).toBe('slow-rock')
