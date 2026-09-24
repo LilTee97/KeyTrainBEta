@@ -3548,3 +3548,27 @@ trùng lượt trước 7/203, dạo–giang cùng lượt mở trùng 3/20. Ng�
 
 Toàn suite **2.776 qua / 7 đỏ** — đúng 7 đỏ cũ.
 
+### Giang tấu soạn sẵn hiện đúng vòng vừa soạn; Linh Run slow rock soạn từ câu chạy của chị, chơi cả khi đang hát
+
+**1. Dòng hợp âm giang tấu** — người dùng: *"tại sao giang tấu vẫn ko đổi hợp âm mỗi lần phát giống như intro
+hay outro"*. Bẫy: tiếng giang đã đổi vòng mỗi lượt (sổ #1413 · 1416 · 1419 · 1422 bốn vòng khác nhau), nhưng
+`interludeSymbols` — dòng chữ hiện dưới nhãn Giang tấu và ghi vào tab Luyện — lấy `interludeWindow(over)`
+(đuôi điệp khúc cố định); dạo/kết thì lấy `soloSpans` nên đổi. Sửa: `lnSau` cũng lấy từ `soloSpans` như
+nhánh CP / Tuấn thứ. Cũ: chỉ CP và Tuấn thứ.
+
+**2. Linh Run** — người dùng: *"Sao chọn Linh Run thì ko hề có gì cả. Dựa vào các sheet Linh Nhi hãy soạn
+Linh Run cho điệu đang được chơi"*. Hai bẫy: (a) `generateFillLine` bỏ qua ô đang hát **kể cả ô người dùng
+tự chọn** — bài có lời gần như mọi ô nên chọn đâu cũng rỗng (tái hiện: ô E7 có lời → rỗng); `vocal ===
+'full'` còn trả rỗng từ đầu hàm. (b) sổ Linh Run chỉ 2 câu bolero 4/4 dịch nửa cung — trên E7 láy G5–B5
+(G thường chỏi G#). Sửa: ô tự chọn Fill/Run chơi cả khi đang hát (câu lót tự động vẫn nhường ca sĩ);
+`chayLinhNhi` (`soanSlowRockLinhNhi.ts`) cho họ Slow Rock khi chọn thầy Linh Nhi: 8 câu chạy slow rock của
+chị (ô đã nắn) + cao độ câu chạy bolero cùng giọng trên tiết tấu câu chạy slow rock, chuyển bậc theo gam
+lên hợp âm, kết đúng cuối hợp âm, tâm gần 76. Đo 12 giọng thứ × 6 hợp âm × 30 lượt: ≥ 15 câu khác nhau mỗi
+hợp âm, 0 nốt ngoài gam và ngoài hợp âm; 12 giọng trưởng 600 lượt: 0 rỗng, 0/3060 nốt lạ.
+
+**3.** `swapAtFills` chỉ nhận fill **tay trái**: câu tay phải (Linh Run, câu lót giai điệu) không đổi đệm
+sang ô c22, để ba nốt dặm tay phải của c22 không đè câu chạy. Cú fill bè trầm được khen (594e7f7) giữ
+nguyên. Cũ: mọi fill đều đổi.
+
+Toàn suite **2.778 qua / 7 đỏ** — đúng 7 đỏ cũ.
+

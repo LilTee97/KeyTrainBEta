@@ -604,6 +604,16 @@ export function generateFillLine(
     /** Sổ fill/run Linh Nhi (phiếu bolero). Không thay Licky. */
     linhNhiFills?: boolean
     linhNhiRuns?: boolean
+    /**
+     * Câu chạy riêng của điệu cho ô người dùng chọn Run (vd Linh Run slow rock — `chayLinhNhi`). Trả
+     * `null` hoặc rỗng thì lui về sổ Licky/Linh Nhi như cũ.
+     */
+    linhRun?: (request: {
+      chord: ParsedChord
+      endBeat: number
+      beats: number
+      take: number
+    }) => readonly { note: number; startBeat: number; durationBeats: number }[] | null
     lickyMode?: LickyMode
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
@@ -649,6 +659,7 @@ export function generateFillLine(
     fillRests,
     brainFill,
     vocal,
+    linhRun,
   } = options
 
   if (chords.length < 2) return []
@@ -661,7 +672,13 @@ export function generateFillLine(
     thì chỗ chuyển đoạn (`sectionEnds`) vẫn lọt qua — mà chen vào giữa câu hát ở
     chỗ chuyển đoạn cũng là chen.
   */
-  if (vocal === 'full') return []
+  /*
+    Ô NGƯỜI DÙNG TỰ CHỌN (Fill · Run) thì chơi cả khi đang hát. Người dùng 24/9/2026: *"Sao chọn Linh Run thì
+    ko hề có gì cả"* — bài có lời gần như mọi ô, nên luật "đang hát thì bỏ qua" nuốt hết ô đã chọn. Luật ấy
+    viết cho câu lót TỰ ĐỘNG; ô đã bấm chọn là ý người dùng. Cũ: bỏ qua cả ô đã chọn.
+  */
+  const tuChon = (mainIndex: number) => !!extraFills?.has(mainIndex) || !!extraRuns?.has(mainIndex)
+  if (vocal === 'full' && !extraFills?.size && !extraRuns?.size) return []
 
   const tones = key ? scaleTones(key.tonic, key.scale) : new Set<PitchClass>()
   const fillStarts = chordStarts(chords, beatsPerChord)
@@ -670,7 +687,7 @@ export function generateFillLine(
 
   /** Ô này ca sĩ đang hát, nên đàn không được lót vào. */
   const singingAt = (mainIndex: number): boolean =>
-    vocal !== undefined && vocal.has(mainIndex)
+    vocal === 'full' || (vocal !== undefined && vocal.has(mainIndex))
 
   /** Ô đã có câu lót — lượt dặm hợp âm ở cuối hàm phải tránh những ô này. */
   const filled = new Set<number>()
@@ -687,8 +704,8 @@ export function generateFillLine(
       ...(extraRuns ?? []),
     ]),
   })) {
-    // Biết ca sĩ đang hát ở ô này thì bỏ qua, kể cả chỗ chuyển đoạn.
-    if (singingAt(mainIndex)) continue
+    // Biết ca sĩ đang hát ở ô này thì bỏ qua, kể cả chỗ chuyển đoạn — trừ ô người dùng tự chọn.
+    if (singingAt(mainIndex) && !tuChon(mainIndex)) continue
 
     filled.add(index)
 
@@ -781,6 +798,13 @@ export function generateFillLine(
     if (splitChord && fillBassChance > 0) continue
 
     if (extraRuns?.has(mainIndex)) {
+      const rieng = linhRun?.({ chord: chords[index], endBeat: lickEnd, beats: playBeats, take: mainIndex + take })
+      if (rieng && rieng.length > 0) {
+        for (const x of rieng) {
+          result.push({ note: x.note as MidiNote, startBeat: x.startBeat, durationBeats: x.durationBeats, isGrace: false, hand: 'right' })
+        }
+        continue
+      }
       const runBeats = Math.min(2, Math.max(0.25, playBeats))
       result.push(
         ...placeLick({

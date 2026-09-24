@@ -421,6 +421,124 @@ function coChay(ns: readonly Not[]): boolean {
   return false
 }
 
+// ── Linh Run cho điệu slow rock ────────────────────────────────────────────────────────────────
+
+/*
+  LINH RUN SLOW ROCK — người dùng 24/9/2026: *"Sao chọn Linh Run thì ko hề có gì cả. Dựa vào các sheet
+  Linh Nhi hãy soạn Linh Run cho điệu đang được chơi"*. Sổ Linh Run cũ (`licky/linhNhiPhrases.ts`) chỉ có
+  2 câu bolero 4/4 (Đừng Xa ô 27, láy Đường Xưa ô 63), dịch theo nửa cung nên trên E7 còn đánh G thường.
+
+  Câu chạy = ≥ 4 nốt tay phải liền (cách ≤ một móc đơn), cùng chiều, bước ≤ 5 nửa cung (cùng định nghĩa
+  với `tools/quy_luat_not_linh_nhi.py`), lấy từ chỗ bắt đầu chạy tới hết ô.
+    · câu chạy slow rock của chị (ô đã nắn nhịp): 10 câu, 8 khác nhau — đi lên ở nửa sau ô;
+    · câu LAI: đường cao độ một câu chạy bolero cùng giọng đặt lên tiết tấu một câu chạy slow rock cùng số
+      nốt (tiết tấu luôn của slow rock).
+  Đặt lên hợp âm bằng chuyển bậc theo gam như bộ soạn solo; kết đúng cuối hợp âm để dẫn sang hợp âm sau;
+  quãng tám chọn cho tâm câu gần 76 (tâm solo slow rock của chị 74,7–77,7, md 13e). Lượt xoay theo `take`.
+*/
+
+type Chay = { src: NguonSR; h: H; go: Go[]; ten: string }
+
+/** Các đoạn chạy (chỉ số mốc đầu–cuối) trong một dãy nốt đỉnh theo thời gian. */
+function doanChay(t: readonly (readonly [number, number])[]): [number, number][] {
+  const ra: [number, number][] = []
+  let a = 0
+  for (let b = 1; b <= t.length; b += 1) {
+    const tiep = b < t.length && t[b]![0] - t[b - 1]![0] <= 0.5 + EPS && t[b]![1] !== t[b - 1]![1]
+      && Math.abs(t[b]![1] - t[b - 1]![1]) <= 5
+      && (b - a < 2 || Math.sign(t[b]![1] - t[b - 1]![1]) === Math.sign(t[a + 1]![1] - t[a]![1]))
+    if (!tiep) { if (b - a >= 4) ra.push([a, b - 1]); a = b }
+  }
+  return ra
+}
+
+const CHAY_SR: readonly Chay[] = (() => {
+  const ra = new Map<string, Chay>()
+  for (const src of SLOW) {
+    src.o.forEach((o, i) => {
+      if (o.h.length !== 1) return
+      const gs = [...o.r].sort((x, y) => x[0] - y[0])
+      for (const [a] of doanChay(gs.map((g) => [g[0], Math.max(...g[2])] as const))) {
+        const dau = gs[a]![0]
+        const go = gs.slice(a).map((g): Go => [g[0] - dau, g[1], g[2]])
+        const khoa = `${o.h[0]![1]}${o.h[0]![2]}|${go.map((g) => `${g[0]}:${g[2].join('.')}`).join(' ')}`
+        if (!ra.has(khoa)) ra.set(khoa, { src, h: o.h[0]!, go, ten: `${tenO(src, i)} từ phách ${dau + 1}` })
+      }
+    })
+  }
+  return [...ra.values()]
+})()
+
+const CHAY_LAI = new Map<boolean, readonly Chay[]>()
+/** Câu chạy bolero cùng giọng, cao độ đặt lên tiết tấu câu chạy slow rock cùng số nốt. */
+function chayLai(thu: boolean): readonly Chay[] {
+  const nho = CHAY_LAI.get(thu)
+  if (nho) return nho
+  const ra: Chay[] = []
+  for (const src of NGUON_SOLO_SR.filter((x) => x.dieu === 'bolero' && x.thu === thu)) {
+    src.o.forEach((o, i) => {
+      if (o.h.length !== 1) return
+      const gs = [...o.r].sort((x, y) => x[0] - y[0])
+      const t = gs.map((g) => [g[0], Math.max(...g[2])] as const)
+      for (const [a, b] of doanChay(t)) {
+        const cao = t.slice(a, b + 1).map((x) => x[1])
+        const mau = CHAY_SR.filter((c) => c.go.length <= cao.length && c.go.length >= cao.length - 3)
+          .sort((x, y) => (cao.length - x.go.length) - (cao.length - y.go.length) || x.ten.localeCompare(y.ten))[0]
+        if (!mau) continue
+        const k = mau.go.length
+        const chon = Array.from({ length: k }, (_, j) => cao[k === 1 ? 0 : Math.round((j * (cao.length - 1)) / (k - 1))]!)
+        ra.push({
+          src, h: o.h[0]!, ten: `giai điệu ${tenO(src, i)} trên tiết tấu ${mau.ten}`,
+          go: mau.go.map((g, j): Go => [g[0], g[1], [chon[j]!]]),
+        })
+      }
+    })
+  }
+  CHAY_LAI.set(thu, ra)
+  return ra
+}
+
+/** Hậu tố hợp âm theo quãng — cùng thang `hopAm` đọc. */
+function hauCuaQuang(quang: readonly number[]): string {
+  const q = new Set(quang.map((x) => ((x % 12) + 12) % 12))
+  if (q.has(3) && q.has(6)) return q.has(10) ? 'm7b5' : 'dim'
+  if (q.has(3)) return q.has(10) ? 'm7' : 'm'
+  if (q.has(4)) return q.has(10) ? '7' : q.has(11) ? 'maj7' : ''
+  return 'sus4'
+}
+
+/**
+ * Một câu Linh Run slow rock trên hợp âm `chord`, kết đúng ở `endBeat`, dài không quá `beats`.
+ * `null` = không câu nào vừa chỗ.
+ */
+export function chayLinhNhi(options: {
+  chord: ParsedChord
+  key: { tonic: PitchClass; scale: string }
+  endBeat: number
+  beats: number
+  take: number
+}): { note: number; startBeat: number; durationBeats: number }[] | null {
+  const { chord, key } = options
+  const thu = key.scale === 'minor'
+  const dich: H[] = [[0, (((chord.root - key.tonic) % 12) + 12) % 12, hauCuaQuang(chord.quality.intervals), null]]
+  const dai = (c: Chay) => Math.max(...c.go.map((g) => g[0] + g[1]))
+  const ung = [...CHAY_SR, ...chayLai(thu)].filter((c) => dai(c) <= options.beats + EPS)
+  if (ung.length === 0) return null
+  const c = ung[((options.take * 7) % ung.length + ung.length) % ung.length]!
+  const ng: Nguon = {
+    src: { ...c.src, o: [{ d: O, h: [[0, c.h[1], c.h[2], c.h[3]]], r: c.go, l: [] }] },
+    i: 0, mo: false, giaiDieu: c.ten, nhip: c.ten, lai: c.src.dieu === 'bolero', khoa: c.ten,
+  }
+  const moc = 60 + c.src.chuGoc + (((((key.tonic - c.src.chuGoc) % 12) + 18) % 12) - 6)
+  const phuong = [-12, 0, 12].map((tam) => datO(ng, dich, thu, moc, tam).phai)
+    .filter((ns) => ns.every((e) => e.notes.every((x) => x >= 55 && x <= 96)))
+    .sort((x, y) => Math.abs(dinh(x).reduce((a, b) => a + b, 0) / x.length - 76)
+      - Math.abs(dinh(y).reduce((a, b) => a + b, 0) / y.length - 76))[0]
+  if (!phuong) return null
+  const dau = options.endBeat - dai(c)
+  return phuong.flatMap((e) => e.notes.map((note) => ({ note, startBeat: dau + e.at, durationBeats: e.dur })))
+}
+
 export function soanSlowRockLinhNhi(options: {
   kind: Doan
   key: { tonic: PitchClass; scale: string }

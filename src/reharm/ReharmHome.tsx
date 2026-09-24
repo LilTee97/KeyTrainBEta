@@ -101,6 +101,7 @@ import {
 import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch'
 import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
+import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -1793,8 +1794,13 @@ export function ReharmHome() {
   )
   const backingFor = useCallback(
     (line: Parameters<typeof giveCompingToLeft>[1]) => fillBacking
-      ? swapAtFills(accompaniment, fillBacking, line, chordDurations(withPassing, chordBeats),
-        style.raiHopAmChiaDoi ? chordBeats : 0)
+      /*
+        Chỉ câu fill BÈ TRẦM (tay trái) đổi đệm sang ô fill c22 — cử chỉ "tay phải giữ hợp âm trong lúc bè
+        trầm chạy fill" mà người dùng khen (594e7f7). Câu tay phải (Linh Run, câu lót giai điệu) mà đổi sang
+        c22 thì ba nốt dặm tay phải của c22 đè lên câu chạy. Cũ: mọi câu fill đều đổi.
+      */
+      ? swapAtFills(accompaniment, fillBacking, line.filter((e) => e.hand === 'left'),
+        chordDurations(withPassing, chordBeats), style.raiHopAmChiaDoi ? chordBeats : 0)
       : accompaniment,
     [accompaniment, fillBacking, withPassing, chordBeats, style.raiHopAmChiaDoi],
   )
@@ -2587,6 +2593,12 @@ export function ReharmHome() {
           lickyRuns,
           linhNhiFills: cauLinhNhi,
           linhNhiRuns: cauLinhNhi,
+          // Linh Run cho họ Slow Rock: câu chạy slow rock của chị (+ cao độ câu chạy bolero trên tiết tấu
+          // slow rock), không dùng sổ bolero 4/4 — xem `chayLinhNhi`.
+          ...(cauLinhNhi && reharm.key && hoCuaDieu(style.id) === 'slow-rock'
+            ? { linhRun: (yeuCau: { chord: ParsedChord; endBeat: number; beats: number; take: number }) =>
+                chayLinhNhi({ ...yeuCau, key: reharm.key! }) }
+            : {}),
           lickyMode,
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
@@ -3623,7 +3635,12 @@ export function ReharmHome() {
    * cũng ra cùng một khoảng khi bài có điệp khúc.
    */
   const interludeSymbols = useMemo(() => {
-    if (cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
+    /*
+      Giang tấu SOẠN SẴN (Linh Nhi `lnSau`, CP, Tuấn thứ): dòng hợp âm lấy từ câu vừa soạn, như dạo/kết.
+      Người dùng 24/9/2026: *"tại sao giang tấu vẫn ko đổi hợp âm mỗi lần phát giống như intro hay outro"* —
+      tiếng đã đổi vòng mỗi lượt, nhưng dòng chữ vẫn lấy `interludeWindow` (đuôi điệp khúc cố định).
+    */
+    if (lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
       const span = displayedSoloSpan(timelineHien.soloSpans, 'interlude', activeSolo?.span)
       return [...(span?.chords ?? [])]
     }
@@ -3633,7 +3650,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
