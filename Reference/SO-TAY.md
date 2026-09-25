@@ -3963,3 +3963,11 @@ Người dùng định nghĩa lại:
 Khung 8 tiếng / 7 mốc. Người dùng chọn thử "Chát-bùm cùng một cú" trước, nghe rồi mới chốt. Nay 3¼ → 4¾:
 C3+E4A4 · G3 · G4C5 · G3+C4 · E4G4 · C3+E3 · C#3 (→ D3). Bum vang một mình, không bị hợp âm đè.
 **Giá trị cũ:** bản 19. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 20".
+
+### Ballad Để em: câu chạy một bằng hợp âm — bùm = bass gốc + hợp âm, chát = hợp âm, bum = bass bậc 5
+
+Người dùng tạm giữ khung "Chát-bùm bum chát bùm chát bùm bum", nhưng *"đừng cho chạy nốt ngẫu nhiên nữa mà hãy tạo tiếng bùm chát
+bằng hợp âm"*. Nay ô 1 phách 3¼ → 4¾ chỉ dùng nốt của hợp âm (Đô):
+C3+E4G4C5 · G3 · E4G4C5 · C3+E4G4C5 · E4G4C5 · C3+E4G4C5 · G3.
+Câu chạy tay trái ô 2 giữ nguyên.
+**Giá trị cũ:** bản 20. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 21".

@@ -251,14 +251,15 @@ const deEm: StylePattern = {
       // vào câu chạy. Người dùng: bass dày ở C2–G2 "cũng ko hiện rõ được tiếng … hãy cho Bùm và Bum đánh giai điệu thấp
       // giống như trong câu chạy nốt". Cũ (bản 15): cặp bass G2+C3 · C2+G2 · D2+cụm · E2+A2 · F2+D3.
       hit(1.75, .5, [tone(0, 12)], THUONG), hit(1.75, .75, [tone(2, 12)], THUONG), // 3 bùm: C3 + G3 (như cũ)
-      // Câu chạy một theo khung người dùng (thử cách 1, 25/9/2026): "Chát-bùm bum chát bùm chát bùm bum" — bùm = giai
-      // điệu (có thể thấp) kèm bass; chát = hợp âm; cặp bùm–bum là dẫn. Mốc 3¼ → 4¾ của câu chạy đan hai tay cửa sổ 8.
-      // Hợp âm tay phải nhả đúng lúc bum vào để bum vang rõ (bài học tiếng 6 bị chìm). Cũ (bản 19): A4 G3 C5 C4+G3 E4 G3 C4.
+      // Câu chạy một theo khung người dùng (cách 1): "Chát-bùm bum chát bùm chát bùm bum", mốc 3¼ → 4¾ của câu chạy đan
+      // hai tay cửa sổ 8. Người dùng: "đừng cho chạy nốt ngẫu nhiên nữa mà hãy tạo tiếng bùm chát bằng hợp âm" — nên chỉ
+      // dùng nốt của hợp âm: bùm = bass gốc C3 + hợp âm ba nốt; bum (dẫn) = bass bậc 5 G3, vang một mình; chát = hợp âm.
+      // Cũ (bản 20): C3+E4A4 · G3 · G4C5 · G3+C4 · E4G4 · C3+E3 · C#3.
       hit(2.25, .25, [tone(0, 12)], NHAN),                   // Chát-bùm: bass C3
-      hit(2.5, .5, [tone(2, 12)], THUONG),                   // bum (dẫn): G3 (cửa sổ 8)
-      hit(3, .5, [tone(2, 12)], NHAN),                       // bùm: bass G3 (cửa sổ 8), giai điệu C4 tay phải
-      hit(3.5, .25, [tone(0, 12), ba3(12)], NHAN),           // bùm (dẫn): bass C3 + giai điệu thấp E3
-      { ...hit(3.75, .25, [tone(0, 11)], THUONG), som: true, requireNextChord: true }, // bum (dẫn): nửa cung dưới gốc hợp âm sau (C#3 → D3)
+      hit(2.5, .5, [tone(2, 12)], THUONG),                   // bum (dẫn): bass bậc 5 G3
+      hit(3, .25, [tone(0, 12)], NHAN),                      // bùm: bass C3
+      hit(3.5, .25, [tone(0, 12)], NHAN),                    // bùm (dẫn): bass C3
+      hit(3.75, .25, [tone(2, 12)], THUONG),                 // bum (dẫn): bass bậc 5 G3 → bùm đầu ô 2
       hit(4, .25, [tone(0, 12)], NHAN),                      // 8 bùm: gốc D3, giật
       hit(4.25, .5, [tone(0, 14)], THUONG),                  // 9 bum: dẫn — bậc 2 (E3)
       hit(4.75, 1.5, [ba3(12)], THUONG),                     // 11 bùm: bậc 3 (F3), ngân tới câu chạy
@@ -273,10 +274,11 @@ const deEm: StylePattern = {
       hit(0, 1.75, [ba3()], THUONG), hit(0, .5, [tone(2)], THUONG), // 1 Bùm: D4 · F4
       hit(1, .75, [tone(2), tone(0, 12)], THUONG),            // 2 chát: F4+Bb4
       hit(1.75, .5, [ba3(), tone(0, 12)], THUONG),            // 3 bùm: E4+C5 — rồi câu chạy 7 nốt đan hai tay
-      hit(2.25, .25, [ba3(), tone(2, 2)], NHAN),              // Chát-bùm: hợp âm E4+A4 (cửa sổ 8), giai điệu A4
-      hit(2.75, .25, [tone(2), tone(0, 12)], THUONG),         // chát: G4+C5 (cửa sổ 8)
-      hit(3, .25, [tone(0)], NHAN),                           // bùm: giai điệu C4 (cửa sổ 8)
-      hit(3.25, .25, [ba3(), tone(2)], THUONG),               // chát: E4+G4 (cửa sổ 8 có E4)
+      hit(2.25, .25, [ba3(), tone(2), tone(0, 12)], NHAN),    // Chát-bùm: hợp âm E4+G4+C5
+      hit(2.75, .25, [ba3(), tone(2), tone(0, 12)], THUONG),  // chát: hợp âm
+      hit(3, .25, [ba3(), tone(2), tone(0, 12)], NHAN),       // bùm: hợp âm cùng bass
+      hit(3.25, .25, [ba3(), tone(2), tone(0, 12)], THUONG),  // chát: hợp âm
+      hit(3.5, .25, [ba3(), tone(2), tone(0, 12)], NHAN),     // bùm (dẫn): hợp âm cùng bass
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5
       hit(4.75, .25, [ba3(), tone(2)], THUONG),               // 11 bùm: F4+A4, cùng bass F2

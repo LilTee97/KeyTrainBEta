@@ -470,6 +470,26 @@ Hợp âm tay phải nhả đúng lúc tiếng bum vào, nên hai tiếng bum va
 **Giá trị cũ:** bản 19 (A4 · G3 · C5 · C4+G3 · E4 · G3 · C4).
 **Triệu chứng để lùi:** cách 1 chưa ổn → thử cách 2 hoặc 3.
 
+## Bản 21: câu chạy một — tiếng bùm/chát bằng hợp âm, không nốt chạy lẻ
+
+Người dùng: *"tạm dùng cấu trúc câu chạy này đi nhưng đừng cho chạy nốt ngẫu nhiên nữa mà hãy tạo tiếng bùm chát bằng hợp âm"*.
+Giữ khung cách 1 "Chát-bùm bum chát bùm chát bùm bum" (mốc 3¼ → 4¾). Chỉ dùng nốt của hợp âm:
+- **chát** = hợp âm ba nốt tay phải (Đô: E4+G4+C5);
+- **bùm** = bass gốc C3 + hợp âm ấy;
+- **bum (dẫn)** = bass bậc 5 G3, vang một mình.
+
+Bùm gốc – bum bậc 5 là bass luân phiên.
+
+| mốc | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ |
+|---|---|---|---|---|---|---|---|
+| tiếng | Chát-bùm | bum | chát | bùm | chát | bùm | bum |
+| tay trái | C3 | G3 | — | C3 | — | C3 | G3 |
+| tay phải | E4 G4 C5 | — | E4 G4 C5 | E4 G4 C5 | E4 G4 C5 | E4 G4 C5 | — |
+
+Câu chạy tay trái ô 2 (cửa sổ 5) giữ nguyên: người dùng đã đòi trả lại, và nó là câu có thật trong sheet.
+**Giá trị cũ:** bản 20 (C3+E4A4 · G3 · G4C5 · G3+C4 · E4G4 · C3+E3 · C#3).
+**Triệu chứng để lùi:** nghe dặm đều quá, mất chất ballad → cho chát nhẹ hơn bùm, hoặc chát hai nốt.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
