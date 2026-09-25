@@ -232,6 +232,9 @@ const deEm: StylePattern = {
       hit(1.75, .75, [tone(0, 12), tone(2, 12)]),            // C3+G3
       hit(2.5, .5, [tone(2, 12)]), hit(3, 1, [tone(0, 24)]), // G3 · C4 (gập về dưới trần 59)
       hit(4, 2.25, [tone(0, 12), tone(2, 12), bay7(12)], .8), // D3+A3+C4, sheet d 2
+      // Lấp khoảng trống sau Bùm ô 2 (người dùng nghe thấy nghỉ): chát tay trái phách 1& — 3/6 ô Dm của phiên
+      // có tay trái gõ ở 1&; lấy C3+D3 của cửa sổ 9. Cụm đầu ô vẫn ngân (A3); C3 D3 đánh lại.
+      hit(4.5, 1.75, [bay7(), tone(0, 12)]),
       // A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX).
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),
@@ -241,6 +244,9 @@ const deEm: StylePattern = {
       // Nốt dưới (bè) ngân nối; nốt trên giữ độ ngân sheet — ngân cả hai thì dày hơn chính sheet
       // (3,72 nốt vang TB so với 3,00), vì giữa các cú sheet chỉ có MỘT nốt tay phải là giai điệu.
       hit(0, 1.75, [tone(1)]), hit(0, .5, [tone(2)]),        // D4 sheet d .5 · F4
+      // Lấp khoảng trống sau Bùm ô 1: chát phách 2 — 4/6 ô Bb→C của phiên có bè Bb3+F4 dưới giai điệu ở đây
+      // (cửa sổ 6, 8, 34, 36). Bb3 dưới sàn tay phải 60 nên ra F4+Bb4.
+      hit(1, .75, [tone(2), tone(0, 12)]),
       hit(1.75, .5, [tone(1), tone(0, 12)]),                 // E4+C5
       hit(2.25, .5, [tone(2), tone(0, 12)]),                 // G4+C5
       hit(2.75, 2.25, [tone(2)]), hit(2.75, .25, [tone(0, 12)]), // G4 sheet d .5 · C5 .25

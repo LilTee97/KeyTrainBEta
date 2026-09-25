@@ -20,11 +20,13 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
 describe('Ballad Để em — soạn lại trên mốc gõ DERX', () => {
-  it('giữ nguyên mốc gõ hai tay của DERX (phiên 4–5, điệp 24–25)', () => {
+  it('mốc gõ = DERX, cộng hai tiếng chát lấp khoảng trống phiên (phải phách 2, trái ô 2 phách 1&)', () => {
+    const added = { [`${VERSE} right`]: [1], [`${VERSE} left`]: [4.5] } as Record<string, number[]>
     for (const [mine, derx] of [[VERSE, BALLAD_DERX[0]], [CHORUS, BALLAD_DERX[1]]] as const)
       for (const hand of ['left', 'right'] as const) {
-        const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))]
-        expect(beats(getStyle(mine)!.cell![hand]), `${mine} ${hand}`).toEqual(beats(derx.cell![hand]))
+        const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
+        expect(beats(getStyle(mine)!.cell![hand]), `${mine} ${hand}`)
+          .toEqual([...beats(derx.cell![hand]), ...(added[`${mine} ${hand}`] ?? [])].sort((a, b) => a - b))
       }
   })
 
@@ -41,8 +43,9 @@ describe('Ballad Để em — soạn lại trên mốc gõ DERX', () => {
 
   it('cao độ phiên khớp sheet cửa sổ 4–5: quãng đôi tay phải, câu chạy tay trái', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1.75, [64, 72]], [2.25, [67, 72]], [2.75, [67, 72]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.75, [67, 72]],
       [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
+    expect(onsets(VERSE, 'left').find(([b]) => b === 4.5)).toEqual([4.5, [48, 50]])
     expect(onsets(VERSE, 'left').filter(([b]) => (b as number) >= 6.25).map(([, n]) => n))
       .toEqual([[45], [50], [52], [53], [52], [50], [48]])
   })

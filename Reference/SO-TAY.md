@@ -3758,3 +3758,17 @@ Nay trên Bb · Dm cụm ra Bb2+F3 · D3+A3; trên Bbmaj7 · Dm7 vẫn Bb2+F3+A3
 **Giá trị cũ:** bậc 7 luôn lùi về bậc 5. **Triệu chứng để lùi:** cụm đầu ô trên hợp âm ba nghe mỏng quá → bỏ `optional`.
 
 Test `caPhaoBalladDeEm.test.ts`: 12 giọng × 5 loại hợp âm × 2 ô, không cú nào gõ trùng phím.
+
+### Ballad Để em: lấp khoảng trống sau Bùm bằng hai tiếng chát có trong sheet
+
+Người dùng nghe bản 2 thấy sau tiếng Bùm đầu ô 1 và Bùm mạnh ô 2 của phiên là "khoảng nghỉ". Họ muốn thêm
+tiếng chát "khớp tiết tấu đang chơi". Khoảng trống thật: ô 1 phách 1→2¾ (1¾ phách không có cú mới),
+ô 2 phách 1→2.
+
+Chọn tiếng lấp theo những gì Cà Pháo đánh ở đúng chỗ ấy, ngoài giai điệu, trên 6 cửa sổ phiên mỗi kiểu:
+- ô Bb→C, phách 2: bè tay phải Bb3+F4 **4/6** → thêm chát tay phải phách 2 (ra F4+Bb4 vì sàn tay phải 60);
+- ô Dm, phách 1&: tay trái gõ **3/6** → thêm chát tay trái C3+D3 của cửa sổ 9, cụm đầu ô vẫn ngân.
+
+Chi tiết: `Reference/CA-PHAO-BALLAD-DE-EM.md` mục "Bản 3".
+**Giá trị cũ:** không có hai cú. **Triệu chứng để lùi:** phiên dồn, mất chỗ thở → bỏ cú phách 2 trước.
+Test khoá mốc gõ = DERX + hai cú, cùng cao độ F4+Bb4 và C3+D3 trên vòng sheet.

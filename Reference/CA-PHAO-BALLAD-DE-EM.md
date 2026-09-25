@@ -97,6 +97,24 @@ cùng cao độ bậc của DERX, `leftHandTop` 59, `rightHandRegister` {55, 60,
 - `leftHandTop` 60, `rightHandRegister` {55, 55, 74}, `cpBalladChordLeads` bật.
 - Điệp giống DERX, không ngân nối.
 
+## Bản 3: lấp hai khoảng trống sau Bùm của phiên khúc
+
+Người dùng nghe bản 2: *"sau tiếng Bùm đầu tiên là khoảng nghỉ và tiếng Bùm mạnh thứ 2 … cũng là khoảng
+nghỉ. Tôi muốn thêm các tiếng chát để lấp khoảng trống đó một cách hợp lý khớp tiết tấu đang chơi"*.
+Hai khoảng: ô 1 phách 1 → 2¾ (1¾ phách không có cú mới), ô 2 phách 1 → 2 (1 phách).
+
+Sheet ở chính các khoảng ấy, không tính giai điệu (đếm trên 6 cửa sổ phiên mỗi kiểu):
+
+| khoảng | có trong sheet | thêm vào nút |
+|---|---|---|
+| ô kiểu Bb→C, phách 2 (cửa sổ 4, 6, 8, 32, 34, 36) | bè tay phải Bb3+F4 dưới giai điệu **4/6** (6, 8, 34, 36); tay trái gõ ở phách 2: 0/6 | chát tay phải phách 2, gốc+5 (Bb3 dưới sàn 60 nên ra F4+Bb4), ngân ¾ |
+| ô kiểu Dm, phách 1& (cửa sổ 5, 7, 9, 33, 35, 37) | tay trái gõ **3/6** (7 D2+D3, 9 C3+D3, 35 A3); bè tay phải 1/6 | chát tay trái phách 1&, C3+D3 của cửa sổ 9, ngân tới câu chạy |
+
+Cụm tay trái đầu ô 2 vẫn ngân. C3 và D3 đánh lại ở 1&, A3 kêu tiếp.
+**Giá trị cũ:** bản 2 không có hai cú này.
+**Triệu chứng để lùi:** phiên nghe dồn, mất chỗ thở cho giọng → bỏ cú phách 2 trước, vì cú ô 2 có bằng chứng mỏng hơn.
+Mốc gõ nay = DERX + hai cú này.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
