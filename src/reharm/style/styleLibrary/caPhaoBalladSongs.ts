@@ -1,4 +1,5 @@
 import type { RhythmCell, RhythmHit, StylePattern } from '../types'
+import { BALLAD_DERX } from './balladDerx'
 
 // Phrase reductions, not a transcription of the melody or a universal CP groove.
 // Source bars and every editorial change: Reference/CA-PHAO-BALLAD-SONGS.md.
@@ -264,5 +265,5 @@ const deEmChorus: StylePattern = {
 export const CP_BALLAD_SONG_STYLES: readonly StylePattern[] = [coEmCho, coEmChoChorus, ngayMai, ngayMaiChorus, acdd, acddChorus]
 // Tách mảng riêng: nút do Claude soạn, không mang màu Codex và không đổi test sáu điệu của Codex.
 export const CP_BALLAD_DE_EM_STYLES: readonly StylePattern[] = [deEm, deEmChorus]
-export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES].map(style => style.id)
+export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES, ...BALLAD_DERX].map(style => style.id)
 export const CP_BALLAD_SONG_FAMILIES = [coEmCho.family, ngayMai.family, acdd.family]

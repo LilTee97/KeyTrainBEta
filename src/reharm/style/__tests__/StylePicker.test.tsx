@@ -13,6 +13,16 @@ const markup = (selectedId = base) => renderToStaticMarkup(
 afterEach(() => restoreHiddenStyles())
 
 describe('single picker choice with automatic section variants', () => {
+  it('keeps pink DERX separate from Claude Ballad Để em, including a saved chorus', () => {
+    const html = markup('ballad-derx-chorus')
+    expect(html.match(/>Ballad DERX</g)).toHaveLength(1)
+    expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*text-pink-100[^>]*>Ballad DERX<\/button>/)
+    expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Ballad Để em<\/button>/)
+    const oldSelected = markup('ca-phao-ballad-de-em-roi-xa')
+    expect(oldSelected).toMatch(/<button[^>]*aria-pressed="true"[^>]*text-teal-key[^>]*>Ballad Để em<\/button>/)
+    expect(oldSelected).toMatch(/<button[^>]*aria-pressed="false"[^>]*text-pink-300[^>]*>Ballad DERX<\/button>/)
+  })
+
   it('shows Slow Rock LT once and keeps the saved chorus selection active', () => {
     const html = markup('slow-rock-lt-chorus')
     expect(html.match(/>Slow Rock LT</g)).toHaveLength(1)
