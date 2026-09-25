@@ -4036,3 +4036,11 @@ Người dùng: tiếng 1–3 *"phải để nguyên ko chạm tới"*; cách 2 
 bùm đầu ô 2 (giữ bass gốc, bỏ tay phải F4+A4). Walking bass đi từ bùm 3.
 **Bẫy:** đầu dòng phải thử mọi nốt tay trái của tiếng trước, không chỉ `near`; hạ cánh quãng tám kề phạt +6; chói tay phải +10.
 **Giá trị cũ:** cách 2 (bản 28). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 29".
+
+### Ballad Để em: trở lại cách 1 — chát 4 lướt ⅛ phách trước bùm 5, bùm 5 là tiếng chính
+
+Người dùng nghe cách 3 *"thiếu phách"*, bảo dùng lại cách 1 nhưng chát 4 *"là tiếng phụ chơi lướt ngang"*, bùm 5 *"là chính và ko
+được lướt bỏ"*. Nay chát 4 là cú tay phải nhẹ (.5) dài ⅛ phách ngay trước 3¼; bùm 5 (bass gốc + giai điệu bậc 1, lực .9) đứng
+đúng 3¼. Walking bass và bùm đầu ô 2 trả như bản 27.
+**Bẫy:** tiếng lướt chồng ⅛ đuôi bùm 3 — trùng phím thì đuôi bị cắt sớm (Fadd2: 0.375 thay vì 0.5).
+**Giá trị cũ:** cách 3 (bản 29). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 30".

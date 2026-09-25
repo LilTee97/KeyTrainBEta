@@ -26,23 +26,27 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
     const verse = getStyle(VERSE)!.cell!
-    const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4], run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
-    // Câu chạy một, cách 3: "Chát bùm bum chát bùm chát bùm bum" từ 3¼, bum cuối gộp vào phách 1 ô 2. Tiếng 1–3 không đụng.
+    const run1 = [2.125, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
+    // Câu chạy một, cách 1 có tiếng lướt: chát 4 lướt ⅛ phách trước bùm 5 (3¼), rồi "bum chát bùm chát bùm bum".
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
     expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : '')))
       .toEqual(['P', 'TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
     expect(verse.right.find(h => h.beat === 1.75)!.durationBeats, 'bùm 3 ngân ½ như cũ').toBe(.5)
+    // Chát 4 là tiếng PHỤ lướt: nhẹ, ngắn; bùm 5 là tiếng CHÍNH: lực mạnh cả hai tay.
+    const luot = verse.right.find(h => h.beat === 2.125)!
+    expect([luot.durationBeats, luot.velocityScale]).toEqual([.125, .5])
+    for (const h of [...verse.left, ...verse.right].filter(h => h.beat === 2.25)) expect(h.velocityScale, 'bùm 5').toBe(.9)
     // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = MỘT nốt walking bass.
-    for (const b of [2.25, 3, 3.5]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
-    for (const b of [2.75, 4]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(1)
+    for (const b of [2.125, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
+    for (const b of [2.5, 3.75]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(1)
     // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
     expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
     // Bùm = bass + hợp âm tay phải; bum = chỉ bass (dẫn); chát = chỉ tay phải.
-    for (const b of [0, 1.75, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
-    for (const b of [4, 4.25]) expect([at(verse.left, b), at(verse.right, b)], `bum ${b}`).toEqual([true, false])
+    for (const b of [0, 1.75, 4, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
+    expect([at(verse.left, 4.25), at(verse.right, 4.25)], 'bum').toEqual([true, false])
     for (const b of [1, 4.5, 5, 5.25, 5.75]) expect([at(verse.left, b), at(verse.right, b)], `chát ${b}`).toEqual([false, true])
-    for (const h of verse.right) expect(h.velocityScale!, `phải ${h.beat}`).toBeGreaterThanOrEqual(.7)
+    for (const h of verse.right.filter(h => h.beat !== 2.125)) expect(h.velocityScale!, `phải ${h.beat}`).toBeGreaterThanOrEqual(.7)
     expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
@@ -52,8 +56,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       for (let s = 0; s < 32; s += 1) {
         const t = s / 4 + .01
         const sounding = events.filter(e => e.startBeat <= t && t < e.startBeat + e.durationBeats).flatMap(e => e.notes)
-        // Tiếng bum vang MỘT MÌNH: hợp âm đè lên thì bum chìm (bản 17). Bum 3¾ · bum gộp phách 1 ô 2 · bum 1¼ ô 2.
-        const alone = id === VERSE && [2.75, 4, 4.25].includes(s / 4)
+        // Hai tiếng bum (walking bass) của câu chạy một vang MỘT MÌNH: hợp âm đè lên thì bum chìm (bản 17).
+        const alone = id === VERSE && [2.5, 3.75].includes(s / 4)
         expect(sounding.length, `${id} phách ${s / 4}`).toBeGreaterThanOrEqual(alone ? 1 : 2)
       }
     }
@@ -61,42 +65,39 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
 
   it('cao độ phiên trên vòng sheet: câu chạy một Chát-bùm bum chát bùm chát bùm bum; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      // Câu chạy một (cách 3), tay phải: chát E4+G4 · G4+C5 · C4+E4 (đỉnh G4 → C5 → E4 như sheet A4 → C5 → E4); bùm
-      // C4 · E4 · G4. Phách 1 ô 2 không còn tay phải (bum gộp).
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67]], [2.5, [60]], [3, [67, 72]], [3.25, [64]],
-      [3.5, [60, 64]], [3.75, [67]],
-      [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
+      // Câu chạy một (cách 1 có tiếng lướt), tay phải: chát lướt E4+G4 → bùm C4 · chát G4+C5 · bùm C4 · chát C4+E4 · bùm G4.
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.125, [64, 67]], [2.25, [60]], [2.75, [67, 72]], [3, [60]],
+      [3.25, [60, 64]], [3.5, [67]],
+      [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
-    // Tay trái câu chạy một (walking bass từ G3 của bùm 3): F3 E3 D3 C3 → D3 phách 1 ô 2.
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [53]], [2.75, [52]], [3.25, [50]], [3.75, [48]],
+    // Tay trái câu chạy một (walking bass từ C3 của bùm 5): D3 E3 F3 E3 → D3 đầu ô 2.
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [50]], [3, [52]], [3.5, [53]], [3.75, [52]],
       [4, [50]], [4.25, [52]], [4.75, [53]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)
   })
 
-  it('bùm 3& → bum ô 2 là MỘT dòng walking bass tay trái: từng bước một cung / nửa cung, bum không tay phải, bùm không chói', () => {
+  it('3& → 4¾ là MỘT dòng walking bass tay trái từ bass bùm 5: từng bước một cung / nửa cung, bum không tay phải, bùm không chói', () => {
     const hand = (h: 'left' | 'right') => (chords: string, at: number) => [...new Set(renderPattern(
       voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
       .filter(e => e.hand === h && Math.abs(e.startBeat - at) < 1e-6).flatMap(e => e.notes))].sort((a, b) => a - b)
     const lh = hand('left'), rh = hand('right')
-    const line = (chords: string) => [2.5, 2.75, 3.25, 3.75, 4].map(b => lh(chords, b))
-    // Bài người dùng Fadd2 → G9: từ F3 của bùm 3 → G3 A3 G3 F3 → G3.
-    expect(line('Fadd2 G9')).toEqual([[55], [57], [55], [53], [55]])
-    // Gadd9 → D9sus4: từ G3 → A3 G3 F#3 E3 → D3. Bẫy: chỉ lấy nốt ghi sau cùng của bùm 3 (bậc 5 D3) làm đầu dòng thì
-    // dòng D3 … D3 vòng qua Bb2.
-    expect(line('Gadd9 D9sus4')).toEqual([[57], [55], [54], [52], [50]])
+    const line = (chords: string) => [2.25, 2.5, 3, 3.5, 3.75, 4].map(b => lh(chords, b))
+    // Bài người dùng Fadd2 → G9: F3 → G3 A3 Bb3 A3 → G3.
+    expect(line('Fadd2 G9')).toEqual([[53], [55], [57], [58], [57], [55]])
+    // Gadd9 → D9sus4 đi xuống G3 F#3 E3 D3 C3 → D3.
+    expect(line('Gadd9 D9sus4')).toEqual([[55], [54], [52], [50], [48], [50]])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
       for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`, `${root}add9 D9sus4`, `${root}m Bm`]) {
-        const l = line(chords), dau = lh(chords, 1.75), at = `${chords}: ${dau} | ${l.join(' → ')}`
+        const l = line(chords), at = `${chords}: ${l.join(' → ')}`
         for (const notes of l) expect(notes.length, at).toBe(1)
-        expect(dau.some(d => Math.abs(d - l[0]![0]!) >= 1 && Math.abs(d - l[0]![0]!) <= 2), at).toBe(true)
         for (let i = 1; i < l.length; i += 1) {
           const step = Math.abs(l[i]![0]! - l[i - 1]![0]!)
           expect(step >= 1 && step <= 2, at).toBe(true)
         }
-        expect([rh(chords, 2.75), rh(chords, 4)], at).toEqual([[], []])
-        for (const b of [2.5, 3.25, 3.75]) for (const r of rh(chords, b))
+        expect([rh(chords, 2.5), rh(chords, 3.75)], at).toEqual([[], []])
+        for (const b of [2.25, 3, 3.5]) for (const r of rh(chords, b))
           expect([1, 6, 11], `${at} · phách ${b} tay phải ${r}`).not.toContain(((r - lh(chords, b)[0]!) % 12 + 12) % 12)
       }
   })

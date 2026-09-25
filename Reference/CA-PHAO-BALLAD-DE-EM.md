@@ -710,6 +710,31 @@ lại"*. Được báo giữ tiếng 3 thì từ 3¼ chỉ còn 7 mốc cho 8 ti
 **Triệu chứng để lùi:** phách 1 ô 2 thiếu hợp âm, nghe hụt → trả tay phải F4+A4 về phách 1 ô 2 (thành bùm như cũ), hoặc thử lại
 cách 1 / cách 2.
 
+## Bản 30: trở lại cách 1 — chát 4 thành tiếng lướt, bùm 5 là tiếng chính
+
+Người dùng nghe cách 3: *"Nghe bị thiếu phách rồi. Dùng lại Phương án 1 và điều chỉnh lại phương án 1 sao cho tiếng chát 4 là
+tiếng phụ chơi lướt ngang còn tiếng Bùm 5 là chính và ko được lướt bỏ như lúc đầu nữa"*.
+
+Cách 1 cũ (bản 21–27) gõ chát và bùm CÙNG MỘT CÚ ở 3¼ — người dùng nghe *"như nuốt mất tiếng bùm"*. Nay tách ra:
+
+| mốc | 3¼ − ⅛ | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ | 1 (ô 2) |
+|---|---|---|---|---|---|---|---|---|---|
+| tiếng | chát 4 (lướt) | **bùm 5** | bum | chát | bùm | chát | bùm | bum | bùm |
+| ngân | ⅛ | ¼ | ½ | ¼ | ½ / ¼ | ¼ | ¼ | ¼ | |
+| lực | .5 | .9 | .9 | .8 | .9 | .8 | .9 | .9 | .9 |
+| tay trái (Fadd2 → G9) | — | F3 | G3 | — | A3 | — | Bb3 | A3 | G3 |
+| tay phải | A4+C5 | F4 | — | F4+C5 | F4 | F4+A4 | C5 | — | D4+B4 |
+
+- Chát 4 lướt: hợp âm cũ của Chát-bùm (bậc 3 + bậc 5), nhẹ .5, ⅛ phách, vào ngay trước 3¼.
+- Bùm 5: bass gốc + giai điệu bậc 1 tay phải, lực .9 cả hai tay, đúng 3¼. Bậc 1 là ý Claude — sheet 3¼ có A4 / E4+A4.
+- Walking bass 3& → 4¾ và bùm đầu ô 2 (hợp âm F4+A4 trên Dm7) trả như bản 27.
+- **Chạm tiếng 3 (đã báo người dùng trước khi làm):** tiếng lướt vào trước 3¼ nên chồng ⅛ phách cuối đuôi bùm 3. Trùng phím
+  thì `holdUntilStruckAgain` cắt đuôi bùm 3 sớm ⅛ (Fadd2: tay phải bùm 3 ngân 0.375 thay vì 0.5). Nhịp gõ của tiếng 3 giữ nguyên.
+
+**Giá trị cũ:** cách 3 (bản 29) — "thiếu phách"; cách 1 gốc (bản 27) — Chát-bùm một cú.
+**Triệu chứng để lùi:** tiếng 3 nghe hụt đuôi → rút tiếng lướt còn 1/16 phách; tiếng lướt nghe không ra → tăng lực .5 lên .6–.65
+hoặc lướt ⅛ → 3/16.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
