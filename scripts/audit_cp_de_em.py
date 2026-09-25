@@ -81,6 +81,12 @@ def main():
                 group, 'du hai tay' if mel else 'bo giai dieu', len(c), c.count(0), sum(c) / len(c), sum(x <= 1 for x in c)))
     c = cover(4, True) + cover(5, True)
     print('do phu cua so 4-5 du hai tay: im=%d TB=%.2f' % (c.count(0), sum(c) / len(c)))
+    # Cua so Bb->C cua phien: 7 moc moc kep lien 2.25..3.75 khi ghep hai tay (cau chay dan hai tay, cung moc cau chay o 2).
+    grid = [2.25 + i * .25 for i in range(7)]
+    for k in (4, 6, 8, 32, 34, 36):
+        r = real(k)
+        who = ['%s%s' % ('T' if any(abs(p - g) < 1e-6 for p, _ in r[2]) else '', 'P' if any(abs(p - g) < 1e-6 for p, _ in r[1]) else '') or '-' for g in grid]
+        print('cau chay o 1, cua so %d: %s %s' % (k, ' '.join(who), 'DU 7' if '-' not in who else ''))
     for k in (4, 5, 8, 9, 32, 33, 36, 37, 24, 25, 52, 53):
         r = real(k)
         print('o that %d  L %s' % (k, ' '.join('%g:%s(%g)' % (p, '/'.join(n['pitch'] for n in ns), ns[0]['dur']) for p, ns in r[2])))

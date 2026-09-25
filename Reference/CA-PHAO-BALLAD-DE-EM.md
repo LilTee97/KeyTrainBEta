@@ -427,6 +427,25 @@ Khung nay 12 tiếng: Bùm chát bùm chát–bùm bum dẫn chát | bùm–bum 
 **Giá trị cũ:** bản 17.
 **Triệu chứng để lùi:** nửa cung F#4 nghe lạ giọng → đổi tiếng mới thành nốt lặp lại tiếng 6.
 
+## Bản 19: sau tiếng 3 là câu chạy 7 nốt đan hai tay — đúng như sheet
+
+Người dùng: *"có vẻ như vấn đề là sau tiếng 3 thì phải là một câu chạy 7 nốt giống như sau tiếng 7. Ko phải là tiếng 4 dính liền với
+tiếng 3. Hãy đối chiếu lại với sheet để em rời xa và điều chỉnh"*.
+
+**Đối chiếu sheet** (`scripts/audit_cp_de_em.py`, dòng "cau chay o 1"):
+- Trong các cửa sổ Bb→C của phiên, ghép hai tay từ **3¼ → 4¾** có **7 mốc móc kép liền**, hai tay đan nhau
+  `P T P TP P T P`. Đủ 7 ở **4/6 cửa sổ** (6, 8, 34, 36); cửa sổ 4 và 32 có 5 mốc rồi giai điệu ngân.
+- Cùng mốc với câu chạy tay trái 7 nốt của ô 2 (cửa sổ 5).
+- Không có câu chạy một tay nào ở ô 1: quét cả phần hát, câu 7 nốt một tay chỉ có ở cửa sổ 5.
+
+**Bẫy của các bản trước:** tay phải C4 · E4 · C4 ở 4 · 4¼ · 4¾ bị coi là giai điệu lấy đà nên bỏ. Chỗ trống được lấp bằng chát 4 ·
+bùm 5 · bum 6 · dẫn · chát, dính sát tiếng 3, và dáng câu chạy mất.
+
+**Nay** (cửa sổ 8): Bùm 1 · chát 2 · bùm 3 → **A4 · G3 · C5 · C4+G3 · E4 · G3 · C4**. Tay phải lấy nốt đỉnh của cụm sheet
+(E4/A4 → A4, G4/C5 → C5), tay trái G3 ×3. Khung: Bùm chát bùm → câu chạy đan | bùm–bum chát bùm (chát ×3) → câu chạy tay trái.
+**Giá trị cũ:** bản 18.
+**Triệu chứng để lùi:** câu chạy ô 1 nghe lộ giai điệu → lấy nốt dưới của cụm (E4 thay A4, G4 thay C5).
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

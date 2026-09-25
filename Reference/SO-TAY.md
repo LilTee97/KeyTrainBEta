@@ -3943,3 +3943,12 @@ Người dùng muốn một tiếng nữa sau tiếng 6 để 5 → 7 nối li�
 một cung rồi nửa cung dưới nốt của chát kế (Đô: F4 → F#4 → G4). Khung nay 12 tiếng.
 **Giá trị cũ:** bản 17. **Triệu chứng để lùi:** nửa cung lạ giọng → tiếng mới lặp nốt tiếng 6.
 Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 18".
+
+### Câu chạy của sheet có thể là HAI TAY ĐAN nhau — quét từng tay sẽ không thấy
+
+Người dùng: sau tiếng 3 của Ballad Để em phải là câu chạy 7 nốt như câu chạy ô 2; đối chiếu lại sheet.
+Quét từng tay thì ô 1 không có câu chạy nào; câu 7 nốt một tay chỉ ở cửa sổ 5. **Ghép hai tay** thì 3¼ → 4¾ có 7 mốc móc kép liền,
+`P T P TP P T P`, ở 4/6 cửa sổ Bb→C (6, 8, 34, 36), cùng mốc với câu chạy ô 2. Các bản trước bỏ C4 · E4 · C4 tay phải vì coi
+là giai điệu lấy đà, rồi lấp chỗ ấy bằng chát/bùm dính sát tiếng 3.
+**Nay:** ô 1 = Bùm · chát · bùm → A4 · G3 · C5 · C4+G3 · E4 · G3 · C4 (cửa sổ 8).
+**Giá trị cũ:** bản 18. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 19".

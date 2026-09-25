@@ -21,32 +21,23 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
 describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
-  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát×3) → chạy', () => {
+  it('điệp giữ mốc gõ DERX; phiên: Bùm chát bùm → câu chạy 7 nốt đan hai tay | bùm–bum chát bùm (chát×3) → câu chạy 7 nốt', () => {
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
-    // Khung người dùng: 11 tiếng + (chát chát chát) + câu chạy 7 nốt.
     const verse = getStyle(VERSE)!.cell!
-    const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.25, 3.5, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run])
-    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 4, 4.25, 4.75, ...run])   // Bùm 1 · bùm 3 · 5 · bùm 8 · bum 9 · bùm 11
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.25, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75])
-    // Bùm = bass dày + hợp âm tay phải; bum = chỉ bass dày (dẫn); chát = chỉ tay phải.
-    // Người dùng: "Bùm ko phải là chỉ đánh bass" · "chỗ Bum đừng đánh hợp âm kèm theo nữa".
+    const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = run1.map(b => b + 4)
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
+    // Câu chạy ô 1 đan hai tay đúng như cửa sổ 8: phải · trái · phải · hai tay · phải · trái · phải.
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
-    for (const b of [0, 1.75, 2.5, 4, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
-    expect([at(verse.left, 4.25), at(verse.right, 4.25)], 'bum 9').toEqual([true, false])
-    // Bum 6 = nốt dẫn đơn từ 5 qua 7, cùng tầm bè giữa (người dùng: "tiếng Bum 6 bị đánh chìm xuống dưới").
-    const bum6 = verse.right.filter(h => h.beat === 3)
-    expect([bum6.length, bum6[0].tones!.length, bum6[0].velocityScale]).toEqual([1, 1, .9])
-    // Bùm 5 · bum 6 · bùm 8 · bum 9 · bùm 11 là giai điệu thấp nốt đơn cùng tầm câu chạy (xem test cao độ).
-    // Tiếng chính nào cũng rõ: lực tay phải ≥ .7 ở mọi cú chính.
+    expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : ''))).toEqual(['P', 'T', 'P', 'TP', 'P', 'T', 'P'])
+    // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
+    expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
+    // Bùm = bass + hợp âm tay phải; bum = chỉ bass (dẫn); chát = chỉ tay phải.
+    for (const b of [0, 1.75, 4, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
+    expect([at(verse.left, 4.25), at(verse.right, 4.25)], 'bum').toEqual([true, false])
+    for (const b of [1, 4.5, 5, 5.25, 5.75]) expect([at(verse.left, b), at(verse.right, b)], `chát ${b}`).toEqual([false, true])
     for (const h of verse.right) expect(h.velocityScale!, `phải ${h.beat}`).toBeGreaterThanOrEqual(.7)
-    for (const b of [1, 2.25, 3.5, 4.5, 5, 5.25, 5.75]) expect([at(verse.left, b), at(verse.right, b)], `chát ${b}`).toEqual([false, true])
-    // 4 chát → 5 bùm giật: chát rất ngắn và nhấn, bùm nhấn ¼ phách sau.
-    const chat4 = verse.right.find(h => h.beat === 2.25)!
-    expect(chat4.durationBeats).toBeLessThanOrEqual(.15)
-    expect(chat4.velocityScale!).toBeGreaterThanOrEqual(.9)
     expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
@@ -61,13 +52,13 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     }
   })
 
-  it('cao độ phiên trên vòng sheet: 5→6→7 bè giữa E4 F4 G4; giai điệu thấp ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
+  it('cao độ phiên trên vòng sheet: câu chạy ô 1 A4 G3 C5 C4+G3 E4 G3 C4; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      // 5 → 6 → 7 bè giữa đi liền bậc E4 (64) → F4 (65) → G4 (67).
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.5, [64, 72]], [3, [65]], [3.25, [66]], [3.5, [67, 72]],
+      // Câu chạy ô 1 tay phải: A4 · C5 · C4 · E4 · C4 (cửa sổ 8).
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [69]], [2.75, [72]], [3, [60]], [3.25, [64]], [3.75, [60]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]],
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]], [3, [55]], [3.5, [55]],
       [4, [50]], [4.25, [52]], [4.75, [53]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
@@ -110,19 +101,6 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       const notes = [...new Set(events.filter(e => e.hand === 'right' && e.startBeat === beat).flatMap(e => e.notes))]
       expect(notes.length, `phách ${beat}`).toBe(2)
       expect(notes.some(n => n % 12 === 7), `phách ${beat} có G (nốt treo)`).toBe(true)
-    }
-  })
-
-  it('tiếng 6 và tiếng mới dẫn liền bậc vào chát 7: một cung rồi nửa cung dưới một nốt của chát 7, ở mọi hợp âm', () => {
-    for (const chord of ['C', 'G', 'Em', 'Am', 'D', 'F', 'Bb', 'B', 'Gadd2', 'Em9', 'Cmaj7', 'Am7']) {
-      const rh = renderPattern(voiceLeadTwoHands(parseChordInput(`${chord} ${chord}`).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
-        .filter(e => e.hand === 'right')
-      const six = rh.filter(e => e.startBeat === 3).flatMap(e => e.notes)
-      const lead = rh.filter(e => e.startBeat === 3.25).flatMap(e => e.notes)
-      const seven = rh.filter(e => e.startBeat === 3.5).flatMap(e => e.notes)
-      expect([six.length, lead.length], chord).toEqual([1, 1])
-      expect(lead[0] - six[0], chord).toBe(1)
-      expect(seven, chord).toContain(lead[0] + 1)
     }
   })
 
