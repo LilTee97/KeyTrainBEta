@@ -3980,3 +3980,13 @@ và trên hợp âm thứ nó thành nốt ngoài giọng, nên đổi về G4; 
 Đô: E4G4 · (C3+G3) · G4C5 · C4+G3 · C4E4 · G4+G3 · (E3+G3).
 **Giá trị cũ:** bản 21, khối E4G4C5 dặm lặp và bum một nốt G3.
 **Triệu chứng để lùi:** chát mỏng quá → thêm nốt thứ ba. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 22".
+
+### Ballad Để em: bum là bass dẫn — cờ `danVao` bước liền bậc vào nốt bass của tiếng kế
+
+Người dùng: *"tiếng bum phải là dẫn bass qua tiếng kế tiếp"*. Cờ mới `RhythmHit.danVao`: `tones` là nốt đích, đặt theo hợp âm
+vang lúc tiếng hết; bộ vẽ lùi một cung nếu còn trong gam hợp âm đang vang, không thì nửa cung.
+**Bẫy:** phải gập nốt đích vào tầm tay trái TRƯỚC khi lùi. Nếu không, đích C4 (60) của bùm trên Fa lùi thành Bb3 (58), trong khi
+bùm thật đã bị kẹp cuối gập xuống C3 (48), cách nhau 10 nửa cung. Cặp quãng tám gập trùng phím thì đẩy sang quãng tám còn chỗ.
+Nốt dưới của cặp tụt dưới gốc hợp âm đang vang (Db: C2 < Db2, đỏ `leftArpeggioAboveRoot`) thì đánh chính nốt gốc làm nền.
+Số đo: sheet C4 → D (2/6 cửa sổ); gam là suy đoán. Vòng sheet: bum F2+F3 → G3, C2+C3 → D3.
+**Giá trị cũ:** bum C3+G3 · E3+G3 (bản 22). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 23".

@@ -515,6 +515,35 @@ gần nhất G4. Hai nốt còn lại giữ đúng sheet.
 - chát hai nốt nghe mỏng hơn tiếng bùm quanh nó → thêm nốt thứ ba dưới đỉnh;
 - bum hai nốt vẫn chìm → thêm một nốt giai điệu thấp tay phải (cách thứ hai người dùng nêu).
 
+## Bản 23: bum là bass dẫn liền bậc vào tiếng kế
+
+Người dùng: *"tiếng bum phải là dẫn bass qua tiếng kế tiếp"*.
+
+Bản 22 cho bum hai nốt đứng (C3+G3, E3+G3), không bước vào đâu. Nay mỗi bum là **một nốt bass dẫn, đánh cặp quãng tám** (giữ
+"2 nốt bass" của bản 22), cách nốt bass của tiếng kế một cung hoặc nửa cung, bên dưới:
+
+| mốc | tiếng | tay trái (vòng sheet C → Dm7) | đi vào |
+|---|---|---|---|
+| 3& | bum | **F2+F3** | G3 của bùm phách 4 |
+| 4¾ | bum | **C2+C3** | D3 của bùm đầu ô 2 |
+
+**Số đo:** sheet dẫn vào ô 2 bằng C4 → D (2/6 cửa sổ 6 · 8 · 34 · 36; còn lại 2/6 là F4 giai điệu, 2/6 để trống). Ở phách 3&
+sheet KHÔNG dẫn: tay trái G3 (4/6) hoặc C3 (2/6) sau C3, tức nhảy quãng 5. Bum 3& là ý người dùng, không phải sheet.
+
+**Cơ chế** (`RhythmHit.danVao`, `danVao` trong `patternRenderer.ts`): `tones` ghi nốt ĐÍCH theo hợp âm vang lúc bum hết, rồi lùi
+một cung nếu nốt ấy còn trong gam của hợp âm đang vang, không thì nửa cung.
+**Suy đoán của Claude (chưa có sheet):** gam = trưởng (bảy thứ nếu hợp âm có b7) cho hợp âm trưởng/treo, thứ tự nhiên cho hợp âm
+thứ. Ra: G → C dẫn B · C → F dẫn E · A → Dm dẫn C# · C → G dẫn F · C → Dm dẫn C (khớp sheet). Test kiểm liền bậc trên 12 gốc × 4
+loại vòng.
+
+**Bẫy đã sập:** nốt dưới của cặp quãng tám dẫn nằm dưới nốt gốc hợp âm đang vang (Db → Db: C2 dưới Db2), làm đỏ
+`leftArpeggioAboveRoot`. Nay nốt nào tụt dưới gốc thì đánh chính nốt gốc ấy làm nền: Db2+C3, A → Dm là A2+C#3. Nốt trên vẫn dẫn.
+
+**Giá trị cũ:** bản 22 (bum C3+G3 · E3+G3).
+**Triệu chứng để lùi:**
+- cặp quãng tám ở C2–F2 nghe đục → bỏ nốt dưới, giữ một nốt dẫn ở quãng tám 3;
+- dẫn nửa cung nghe lạ giọng ở một vòng nào → đổi luật gam cho loại hợp âm ấy.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

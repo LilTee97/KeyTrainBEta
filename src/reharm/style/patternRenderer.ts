@@ -309,6 +309,31 @@ function notesForVoice(
   }
 }
 
+/*
+  Bass DẪN (`RhythmHit.danVao`): `notes` là nốt của tiếng bass kế, lùi một cung nếu nốt dưới ấy còn trong gam của hợp
+  âm ĐANG vang, không thì nửa cung. Số đo: sheet Để em rời xa (Cà Pháo) C4 → D (C → Dm7, 2/6 cửa sổ 6 · 8 · 34 · 36).
+  Suy đoán của Claude, chưa có sheet: gam hợp âm trưởng = trưởng (bảy thứ nếu hợp âm có b7), thứ = thứ tự nhiên —
+  ra G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F. Gập vào tầm TRƯỚC khi lùi để đích khớp nốt sẽ vang
+  (bộ kẹp cuối cũng gập); cặp quãng tám gập trùng phím thì đẩy sang quãng tám còn chỗ.
+  Nốt dẫn không tụt dưới nốt gốc hợp âm đang vang (`leftArpeggioAboveRoot`): tụt thì đánh chính nốt gốc ấy làm nền —
+  vd Db → Db: C2+C3 thành Db2+C3.
+*/
+function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number): MidiNote[] {
+  const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
+  const root = Math.min(...here.left) % 12
+  const goc = low + (((root - low) % 12) + 12) % 12
+  const pcs = new Set((here.harmonicNotes ?? [...here.left, ...here.right]).map((n) => ((n - root) % 12 + 12) % 12))
+  const gam = pcs.has(3) && !pcs.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, pcs.has(10) ? 10 : 11]
+  const out: number[] = []
+  for (const n of notes) {
+    const t = fold(n)
+    let m = Math.max(goc, fold(t - (gam.includes(((t - 2 - root) % 12 + 12) % 12) ? 2 : 1)))
+    if (out.includes(m) && m + 12 <= high) m += 12
+    if (!out.includes(m)) out.push(m)
+  }
+  return out as MidiNote[]
+}
+
 /** Cú đẩy nằm cách vạch nhịp sau **nửa phách**, tức phách 4,5 của ô bốn bốn. */
 const PUSH_BEFORE_BAR = 0.5
 
@@ -503,7 +528,8 @@ function renderWithCell(
           chỗ bản dựng bossa trước hỏng. Không có hợp âm sau (cuối bài) thì lui
           về hợp âm hiện tại, thà mất cử chỉ còn hơn mất tiếng.
         */
-        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
+        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON)
+          : hit.danVao ? startBeat + hit.durationBeats : undefined
         if (hit.requireNextChord && (sauDo === undefined ||
           Math.abs(sauDo - startBeat - hit.durationBeats) > EPSILON)) continue
         const voicing = (sauDo !== undefined ? voicingAt(sauDo) : undefined) ?? voicingAt(startBeat)
@@ -518,7 +544,7 @@ function renderWithCell(
           voicing.left.length > 0
             ? ((Math.min(...voicing.left) % 12) + 12) % 12
             : undefined
-        const raw = notesForVoice(
+        const dat = notesForVoice(
           source,
           hit.voice,
           hit.toneIndex,
@@ -534,6 +560,9 @@ function renderWithCell(
               ? { low: pattern.rightHandRegister.rootFloor, high: pattern.rightHandRegister.high }
               : undefined,
         )
+        const raw = hit.danVao && hand === 'left'
+          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH)
+          : dat
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
 

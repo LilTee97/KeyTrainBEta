@@ -257,10 +257,13 @@ const deEm: StylePattern = {
       // (+E4) · 3¾ C5 (+G4 3/4) · 4¼ E4 — đỉnh lên rồi xuống. Giữ nốt hợp âm; A4 (bậc 6, ngoài hợp âm — trên Em thành C#
       // ngoài giọng) đổi về G4 gần nhất. Cũ (bản 21): mọi chát/bùm dặm cùng một hợp âm E4+G4+C5; bum một nốt G3.
       hit(2.25, .25, [tone(0, 12)], NHAN),                   // Chát-bùm: bass C3
-      hit(2.5, .5, [tone(0, 12), tone(2, 12)], NHAN),        // bum: hai nốt bass C3+G3 (sheet có cả C3 lẫn G3 ở mốc này)
+      // Bum = bass DẪN liền bậc vào bass của tiếng kế (người dùng: "tiếng bum phải là dẫn bass qua tiếng kế tiếp"), đánh
+      // cặp quãng tám cho rõ. `tones` là nốt ĐÍCH; `danVao` lùi một cung / nửa cung (xem `danVao` trong patternRenderer).
+      // Cũ (bản 22): bum C3+G3 và E3+G3 — hai nốt đứng, không bước vào tiếng kế.
+      { ...hit(2.5, .5, [tone(2, 12), tone(2)], NHAN), danVao: true },   // bum: F2+F3 → G3 của bùm kế
       hit(3, .5, [tone(2, 12)], NHAN),                       // bùm: bass G3 (cửa sổ 8)
       hit(3.5, .25, [tone(2, 12)], NHAN),                    // bùm: bass G3 (cửa sổ 6 · 8 · 34 · 36)
-      hit(3.75, .25, [ba3(12), tone(2, 12)], NHAN),          // bum (dẫn): hai nốt bass E3+G3, đi xuống gốc đầu ô 2
+      { ...hit(3.75, .25, [tone(0, 12), tone(0)], NHAN), danVao: true }, // bum: C2+C3 → gốc D3 đầu ô 2 (sheet C4 → D)
       hit(4, .25, [tone(0, 12)], NHAN),                      // 8 bùm: gốc D3, giật
       hit(4.25, .5, [tone(0, 14)], THUONG),                  // 9 bum: dẫn — bậc 2 (E3)
       hit(4.75, 1.5, [ba3(12)], THUONG),                     // 11 bùm: bậc 3 (F3), ngân tới câu chạy

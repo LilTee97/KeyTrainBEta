@@ -62,12 +62,29 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       [3.25, [60, 64]], [3.5, [67]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
-    // Tay trái câu chạy một: C3 · bum C3+G3 · G3 · G3 · bum E3+G3 → D3 đầu ô 2.
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [48, 55]], [3, [55]], [3.5, [55]], [3.75, [52, 55]],
+    // Tay trái câu chạy một: C3 · bum F2+F3 → G3 · G3 · bum C2+C3 → D3 đầu ô 2 (bass dẫn liền bậc, sheet C4 → D).
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [41, 53]], [3, [55]], [3.5, [55]], [3.75, [36, 48]],
       [4, [50]], [4.25, [52]], [4.75, [53]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)
+  })
+
+  it('bum dẫn liền bậc vào bass của tiếng kế trên mọi gốc; gam hợp âm đang vang chọn một cung hay nửa cung', () => {
+    const lh = (chords: string, at: number) => [...new Set(renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords),
+      getStyle(VERSE)!, { beatsPerChord: 4 }).filter(e => e.hand === 'left' && Math.abs(e.startBeat - at) < 1e-6)
+      .flatMap(e => e.notes))].sort((a, b) => a - b)
+    // Sheet C → Dm7: C (một cung). Còn lại là suy đoán theo gam: G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F.
+    for (const [chords, pc] of [['C Dm7', 0], ['G C', 11], ['C F', 4], ['A Dm', 1], ['C G', 5]] as const)
+      expect(Math.max(...lh(chords, 3.75)) % 12, chords).toBe(pc)
+    // Nốt dưới của cặp tụt dưới gốc hợp âm đang vang thì thành chính nốt gốc ấy: A → Dm là A2 + C#3.
+    expect(lh('A Dm', 3.75)).toEqual([45, 49])
+    for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
+      for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`])
+        for (const [bum, next] of [[2.5, 3], [3.75, 4]]) {
+          const target = Math.min(...lh(chords, next))
+          expect(lh(chords, bum).some(n => target - n >= 1 && target - n <= 2), `${chords} phách ${bum} → ${target}: ${lh(chords, bum)}`).toBe(true)
+        }
   })
 
   it('cao độ điệp khớp sheet cửa sổ 24–25 (bỏ nốt trên 74)', () => {
