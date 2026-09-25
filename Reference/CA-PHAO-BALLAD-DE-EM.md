@@ -239,6 +239,19 @@ Nguyên do nghe mất:
 **Giá trị cũ:** bản 7.
 **Triệu chứng để lùi:** bum 8/10 nghe nặng → hạ lực về .65.
 
+## Bản 9: trả 3 chát (về bản 7); tiếng 7–10 không nghe thấy — chưa rõ nguyên do
+
+Người dùng: *"tôi chỉ nghe thấy Bùm chát bùm chát bùm chát … ko nghe từ tiếng 7 trở đi … ko phải do 3 tiếng chát,
+hãy mang chúng trở lại"*. Ô phiên lấy lại nguyên bản 7 (`5e5504b`).
+
+Đã kiểm, chưa ra nguyên do:
+- Bộ dựng đệm (`renderPattern`, gọi một lần cho cả bài ở `ReharmHome`) **có đủ ô 2**; test khoá đủ từng cú.
+- Chỉ mở lại mẫu ở đầu đoạn và ở hợp âm chia đôi của điệu "biết chia đôi" (điệu này không thuộc loại ấy).
+- CP Lick/Run (`cpBacking`) xoá đệm trong cửa sổ câu. Có đánh dấu Run ở hợp âm ô 2 thì cửa sổ là phách 3 → 4¾
+  (ô 2 còn 6/14 cú); Fill là 3¾ → 4¾. Cả hai **không** chạm tiếng 7 · 8 · 9 (phách 1 → 2¾).
+- Khả năng về tai, chưa kiểm: bùm 7 là cụm C3+D3+A3 không có gốc trầm, nghe giống chát; bum 8 · 10 lực .65
+  nằm dưới cụm đang ngân. Cần người dùng cho biết cách đang nghe (màu hợp âm, ô Fill/Run, độ dài hợp âm, tab).
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

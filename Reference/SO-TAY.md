@@ -3849,3 +3849,13 @@ câu chạy ¼ phách sau; hai bum lực .65 nằm dưới cụm đang ngân.
 **Sửa:** bỏ 3 chát, còn chát 9 ở phách 2. Bum 10 dời về 2¾ (D2, cửa sổ 9 · 37). Bum 8 · 10 lực .8. Cụm bùm 7 nhả ở phách 2.
 **Giá trị cũ:** bản 7. **Triệu chứng để lùi:** bum nghe nặng → lực .65.
 Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 8".
+
+### Ballad Để em: tiếng 7–10 "không nghe thấy" dù bộ dựng đệm có đủ ô 2 — trả 3 chát, chưa rõ nguyên do
+
+Người dùng chỉ nghe 6 tiếng ô 1; bỏ 3 chát (bản 8) không cứu được, nên trả về bản 7. Đã loại trừ:
+- `renderPattern` có đủ ô 2 (test khoá);
+- mở mẫu lại chỉ ở đầu đoạn và ở hợp âm chia đôi của điệu `SPLIT_AWARE` (điệu này không có);
+- `cpBacking` của CP Lick/Run chỉ xoá từ phách 3 ô 2 (Run) hoặc 3¾ (Fill), không chạm tiếng 7–9.
+
+Nghi về tai, chưa kiểm: bùm 7 là cụm C3+D3+A3 không có gốc trầm; hai bum lực .65 dưới cụm đang ngân.
+Chờ người dùng cho biết cách nghe. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 9".
