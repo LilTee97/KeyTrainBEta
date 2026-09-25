@@ -1,6 +1,8 @@
 # Ballad Để em: Cà Pháo, *Để Em Rời Xa*
 
-Ngày 25/9/2026. Claude soạn theo yêu cầu người dùng. **Chờ nghe duyệt.**
+Bản 1 (`059b4f1`, 25/9/2026) bị người dùng chê *"còn dở quá"*. **Bản 2** soạn lại trên mốc gõ của
+**Ballad DERX** do Codex dựng ([BALLAD-DERX.md](BALLAD-DERX.md)). Người dùng nghe DERX: *"bám gần với
+tiết tấu đệm trong sheet gốc. Tuy nhiên nó vẫn có cảm giác bị thiếu tiếng và đứt quãng"*. **Chờ nghe duyệt.**
 Mã: `styleLibrary/caPhaoBalladSongs.ts` (`deEm`, `deEmChorus`). Số đo: `python -B scripts/audit_cp_de_em.py`.
 
 Nguồn: `D:/PianoBrain/video/Ca_Phao/De Em Roi Xa-Ca Phao.mxl`, SHA-256
@@ -48,37 +50,56 @@ Tay trái tự gánh cả bass lẫn nốt hợp âm (cụm ≥ 2 nốt 18/87 c�
 Bè tay phải **luôn gõ cùng lúc một nốt giai điệu**, không có nhịp riêng: đó là cách chơi bản độc
 tấu, không phải một lớp đệm tách được.
 
-## Ô được chọn
+## Bản 2: vì sao DERX "thiếu tiếng, đứt quãng", và sửa gì
 
-| | ô thật | đối chiếu | tay trái | tay phải giữ (đã bỏ nốt đỉnh giai điệu) |
-|---|---|---|---|---|
-| phiên | 8–9 | 36–37 | Bb2 · F3 · C3@1.75 · G3 G3 G3 / D2 · C3+D3 · A3 · D2@1.75 · D3 D3 A3 | Bb3/F4@1 · E4@1.75 · E4@2.25 · G4@2.75 / C4/F4@1 · C4/F4@3 |
-| điệp | 24–25 | 52–53 | (Bb2 F3 Bb3 theo ô 52) · C2 · C3/G3 · C3/G3 / A · A3 · D2@1.75 · D2 · D2 | F4 · F4 · F4/Bb4@1⅓ · E4/C5 · C4 · D4/G4 · E4 · C4 / A4/C#5 · A4 · A4 · E4 · C#5 · C4 |
+Đo số nốt đang vang ở từng móc kép. Phát trên đúng hợp âm và độ dài của sheet: phiên
+Bbmaj7/C/Dm7 = 1.75/2.25/4, điệp Bb/C/A/Dm7 = 2/2/1.75/2.25. Mỗi dòng đo hai vòng, 64 móc kép.
 
-Mốc tay trái lõi lặp ở lượt kia: phiên {0, 1.75, 2.5, 3, 3.5} có ở ô 6, 8, 36; {0, 1.75, 2.5, 3, 3.25}
-có ở ô 9, 37. Điệp {0, .5, 1, 2, 2.5, 3} có ở 5/6 ô Bb→C của hai lượt điệp. Ô 24 và ô 52 trùng hẳn
-mốc tay phải ở 2 (E4/C5) · 3 (D4/G4) · 3.25 (E4).
+| | nốt vang TB | ≤1 nốt vang | móc kép im hẳn |
+|---|---:|---:|---:|
+| sheet phiên, đủ hai tay (30 ô) | 3,00 | 8% | 2/480 |
+| sheet phiên, bỏ giai điệu | 2,09 | 34% | 17/480 |
+| sheet cửa sổ 4–5, đủ hai tay | 3,22 | – | 0/32 |
+| DERX phiên | 2,50 | 19% | 2/64, ở 1.5–1.75 |
+| bản 1 phiên (ô 8–9) | 1,59 | 59% | 2/64 |
+| **bản 2 phiên** | **3,44** | **0%** | **0** |
+| sheet điệp, đủ hai tay (23 ô) | 2,79 | 11% | 3/368 |
+| DERX điệp = bản 1 điệp | 2,19 | 28% | 2/64, ở móc kép cuối |
+| **bản 2 điệp** | **2,81** | **0%** | **0** |
 
-## Chỗ biên soạn (không phải số đo)
+Chỗ đứt của DERX nằm đúng chỗ giai điệu lời lấp trong sheet:
+- Phách 1.5–1.75 im hẳn: cụm tay trái hết ở 1.5, tay phải đã nghỉ từ 0.5.
+- Tay phải trống 0.5→1.75 và 3.25→5.
+- Móc kép cuối ô điệp: tay trái hết ở 7.75, tay phải hết ở 7.5.
 
-- **Bỏ:** nốt đỉnh giai điệu; F4/Bb4 ở 9:3.75 (lấy đà sang hợp âm sau); C4-E4-C4 cuối ô 8
-  (giai điệu lấy đà câu sau).
-- **Giữ như đệm:** C4 · D4/G4 · E4 · C4 ở 24:2.75–3.5. Chúng thấp hơn giai điệu E5 16 nửa cung,
-  nằm ở khe lời, và ô 52 lặp D4/G4 · E4.
-- **Điệp nửa đầu lấy tay trái ô 52** (gốc–5–8). Ô 24 là Bb1-Bb2-Bb3 (+24 nửa cung), vượt trần tay trái.
-- **C#3 ô 25 (A/C#) đổi thành gốc.** Không ép thể đảo lên mọi vòng, giống Ngày mai em đi ô 36.
-- **`leftHandTop` 60** (họ khác 67). Tay trái hai cặp ô cao nhất Bb3 (58). Để 67 thì trên Bb tay trái
-  lên Bb3/F4, trùng phím F4 tay phải. *Triệu chứng để lùi:* tay trái nghe đục, cụm hợp âm bị gập
-  xuống thấp.
-- **`rightHandRegister` {rootFloor 55, low 55, high 74}.** Bè tay phải hai cặp ô nằm Bb3–C#5 (58–73).
-  Không khai thì C4/F4 trên Rê thứ lên C5/F5, đè tầm giai điệu. *Triệu chứng để lùi:* bè tay phải
-  nghe trầm, dính tay trái.
-- Lực đánh dùng mặc định họ CP (bass .85, còn lại .65), **không** lấy `dynamics` của sheet. Sheet cho
-  bass ~95 và tay trái khác ~75, tỉ lệ .79, gần .76 của mặc định.
-- Hợp âm không có bậc 7 thì bậc 7 lùi về bậc 5 theo cơ chế sẵn có.
+Bỏ giai điệu mà không lấp gì thì thành lỗ. Sheet không ghi pedal (0 dấu), nên không có số đo độ ngân thật.
+
+**Bản 2 giữ nguyên mốc gõ hai tay của DERX** (phiên cửa sổ 4–5, điệp 24–25, bass đầu điệp theo 52),
+cùng cao độ bậc của DERX, `leftHandTop` 59, `rightHandRegister` {55, 60, 74}, không bật
+`cpBalladChordLeads`, và có trong `KEEP_RH_RESTS`. Chỉ đổi hai thứ, không thêm cú gõ nào:
+
+1. **Ngân nối.** Mỗi nốt ngân tới cú gõ kế của cùng tay. Renderer cắt ở chỗ đổi hợp âm.
+   Đây là biên soạn thay cho pedal; độ ngân sheet ghi cạnh từng cú trong mã (`sheet d`).
+   Ở tay phải phiên, **chỉ nốt dưới (bè) ngân nối**, nốt trên giữ độ ngân sheet. Ngân cả hai thì
+   dày 3,72 nốt, hơn chính sheet, vì giữa các cú sheet chỉ có một nốt tay phải là giai điệu.
+2. **Trả đủ quãng đôi tay phải** ở những cú mà sheet là cụm hai nốt: D4+F4 · E4+C5 · G4+C5 ·
+   G4+C5 · F4+C5 ×3 (phiên), F4+D5 ×2 (điệp). DERX rút các cụm này còn nốt dưới. Nốt trên là
+   cao độ giai điệu tại chỗ ấy, nhưng chỉ nằm ở cú có bè, nên không chép nhịp giai điệu. Nốt trên
+   74 vẫn bỏ (F5, E5, G5).
+
+*Triệu chứng để lùi:*
+- Nghe lẫn giai điệu hoặc chỏi giọng hát → bỏ nốt trên của quãng đôi, về đúng tay phải DERX.
+- Nghe ù, dính tiếng → trả độ ngân về `sheet d` từng cú.
+
+**Giá trị cũ, bản 1 (`059b4f1`):**
+- Phiên = ô thật 8–9: tay trái Bb2 · F3 · gốc@1.75 · G3 ×3 / D2 · C3+D3 · A3 …; tay phải chỉ bè
+  dưới giai điệu ở 1 · 1.75 · 2.25 · 2.75 / 1 · 3.
+- `leftHandTop` 60, `rightHandRegister` {55, 55, 74}, `cpBalladChordLeads` bật.
+- Điệp giống DERX, không ngân nối.
 
 ## Chưa đo
 
-- Chưa đo phần đoạn solo (dạo · giang · kết) trên ô thật. Kho solo của bài vẫn đang lệch pha.
-- Chưa đo điệp nâng tông (56–63) riêng. Ô chọn chỉ lấy từ điệp 1 và 2.
+- Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
+- Chưa đo phần đoạn solo (dạo · giang · kết) trên cửa sổ đã căn pha. Kho solo của bài vẫn lệch pha.
+- Chưa đo điệp nâng tông (56–63) riêng.
 - Ô lẻ 10–11 (5 phách giữa hai bass) chưa rõ là rubato ký âm hay ô lẻ thật của bản phối.

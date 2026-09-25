@@ -3707,3 +3707,38 @@ Hằng số mới, kèm triệu chứng để lùi:
 
 Test `caPhaoBalladDeEm.test.ts` khoá đầu ra vào đúng MIDI ô thật 9, 24, 25. Toàn suite **2.808 qua /
 7 đỏ**, đúng 7 đỏ cũ. tsc sạch.
+
+### Ballad Để em soạn lại trên mốc gõ DERX: chỗ "thiếu tiếng, đứt quãng" là lỗ giai điệu để lại
+
+Người dùng chê bản 1 (`059b4f1`) *"còn dở quá"*. Họ nghe Ballad DERX của Codex (cùng sheet): *"bám gần
+với tiết tấu đệm trong sheet gốc. Tuy nhiên nó vẫn có cảm giác bị thiếu tiếng và đứt quãng"*.
+Soạn lại nút Ballad Để em trên mốc gõ DERX. Bảng đo đầy đủ: `Reference/CA-PHAO-BALLAD-DE-EM.md`.
+**Chờ nghe duyệt.**
+
+**Cái bẫy:** bỏ giai điệu lời mà không lấp gì thì phần đệm thủng đúng chỗ giai điệu từng lấp. Đo số nốt
+đang vang từng móc kép (`scripts/audit_cp_de_em.py`; app phát trên đúng hợp âm và độ dài sheet):
+
+| | phiên: nốt vang TB · móc kép im | điệp: nốt vang TB · móc kép im |
+|---|---|---|
+| sheet đủ hai tay | 3,00 · 2/480 | 2,79 · 3/368 |
+| sheet bỏ giai điệu | 2,09 · 17/480 | 1,95 · 7/368 |
+| DERX | 2,50 · 2/64 (1.5–1.75) | 2,19 · 2/64 (móc kép cuối) |
+| bản 1 | 1,59 · 2/64 | = DERX |
+| **bản 2** | **3,44 · 0** | **2,81 · 0** |
+
+Bản 1 mỏng gần gấp đôi DERX, nên "dở". DERX im hẳn ở 1.5–1.75 và bỏ trống tay phải 0.5→1.75 và 3.25→5.
+
+**Bản 2** giữ nguyên mốc gõ hai tay và bậc của DERX: phiên cửa sổ 4–5 (tay phải ngân F4 trên câu chạy
+trái A2–D3–E3–F3–E3–D3–C3), điệp 24–25. Cũng giữ `leftHandTop` 59, `rightHandRegister` {55, 60, 74},
+không bật `cpBalladChordLeads`, và thêm vào `KEEP_RH_RESTS` như DERX. Hai sửa, không thêm cú gõ:
+(1) **ngân nối** — mỗi nốt ngân tới cú kế của cùng tay, renderer cắt ở chỗ đổi hợp âm; tay phải phiên
+chỉ nốt dưới ngân nối, vì ngân cả hai thì 3,72 nốt, dày hơn sheet;
+(2) **trả đủ quãng đôi tay phải** ở cú mà sheet là cụm hai nốt (D4+F4, E4+C5, G4+C5, F4+C5, F4+D5), bỏ nốt
+trên 74. Sheet không ghi pedal (0 dấu), nên độ ngân nối là biên soạn; `sheet d` ghi cạnh từng cú.
+
+**Giá trị cũ** (bản 1): phiên ô thật 8–9, tay phải chỉ bè dưới giai điệu, `leftHandTop` 60, tầm tay phải
+{55, 55, 74}, `cpBalladChordLeads` bật, không ngân nối.
+**Triệu chứng để lùi:** nghe lẫn giai điệu, chỏi giọng → bỏ nốt trên của quãng đôi; nghe ù → trả về `sheet d`.
+
+Test `caPhaoBalladDeEm.test.ts` khoá: mốc gõ trùng DERX; trên vòng sheet không móc kép nào dưới hai nốt vang
+(DERX không qua được điều này); cao độ khớp MIDI sheet.

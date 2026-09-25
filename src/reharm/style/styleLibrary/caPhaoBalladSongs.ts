@@ -199,36 +199,51 @@ const acddChorus: StylePattern = {
 }
 
 /*
-  Để Em Rời Xa (Claude soạn 25/9/2026, chờ nghe duyệt). Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md.
-  BẪY: sheet ghi 4/4 nhưng vạch nhịp lệch nhạc đúng MỘT phách — bass ở offset 1 của ô XML
-  trong ~67/70 ô. "Ô thật k" = [ô XML k phách 2, ô XML k+1 phách 2); beat dưới đây đếm trên ô thật.
-  Tay phải lúc hát là giai điệu lời (nốt đỉnh hai lượt phiên trùng nhau) → bỏ nốt đỉnh, giữ
-  bè hoà âm Cà Pháo chêm dưới nó: bè rơi đúng chỗ tay trái trống (phách 2, 1.75, 2.75).
-  Tầm tay phải: bè hai cặp ô nằm Bb3–C#5 (58–73), dưới giai điệu. Không khai thì thế bấm
-  app đẩy C4/F4 trên Rê thứ lên C5/F5 — đè đúng tầm giọng hát.
+  Để Em Rời Xa — soạn lại 25/9/2026 theo cách Codex dựng Ballad DERX (Reference/BALLAD-DERX.md),
+  chờ nghe duyệt. Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md, `scripts/audit_cp_de_em.py`.
+  Beat đếm trên "cửa sổ k" = [ô XML k phách 2, ô XML k+1 phách 2): vạch nhịp sheet lệch nhạc một phách.
+
+  Giữ NGUYÊN mốc gõ của DERX (phiên 4–5, điệp 24–25). Người dùng nghe DERX: "bám gần tiết tấu
+  sheet" nhưng "thiếu tiếng và đứt quãng". Đo trên vòng của sheet: DERX phiên 2,50 nốt vang TB,
+  im hẳn ở 1.5–1.75, tay phải trống 0.5–1.75 và 3.25–5; sheet đủ hai tay 3,00 nốt, im 0–1%.
+  Chỗ trống ấy trong sheet là giai điệu lời. Hai sửa, KHÔNG thêm cú gõ nào:
+  1. Ngân nối: mỗi nốt ngân tới cú gõ kế của cùng tay (renderer tự cắt ở chỗ đổi hợp âm).
+     Sheet không ghi pedal — độ ngân dài là biên soạn. Ghi `sheet d` cạnh từng cú để lùi.
+  2. Cú tay phải vốn là cụm hai nốt trong sheet thì trả đủ hai nốt (DERX rút còn nốt dưới).
+     Nốt trên là cao độ giai điệu ở chỗ ấy, nhưng chỉ ở cú có bè — không chép nhịp giai điệu.
 */
-const deEmCommon = { ...common, leftHandTop: 60, rightHandRegister: { rootFloor: 55, low: 55, high: 74 } }
+const deEmCommon = {
+  timeSignature: '4/4', beatsPerMeasure: 4, feel: 'straight-block-chord' as const,
+  verified: true, releaseRatio: 1, leftHandTop: 59,
+  rightHandRegister: { rootFloor: 55, low: 60, high: 74 },
+}
 const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
   familyName: 'Ballad Để em', variant: 1, bpm: 85,
-  sourceVideos: ['Cà Pháo · Để Em Rời Xa · phiên ô thật 8–9 (XML 8:2–10:2); đối chiếu 36–37'],
-  note: 'Phiên: tay trái bass–5 rồi gốc nghịch phách 1.75, móc đơn 3&–4–4&; tay phải bè dưới giai điệu ở phách 2 · 2a · 3a. Chờ nghe duyệt.',
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · cửa sổ 4–5 (XML 4:2–6:2) như DERX; đối chiếu 32–33'],
+  note: 'Phiên: mốc gõ DERX (trái giữ nền, phải chêm lệch; phải ngân F4 trên câu chạy trái), ngân nối tới cú sau, tay phải đủ quãng đôi của sheet. Chờ nghe duyệt.',
   cell: {
     lengthBeats: 8,
     left: [
-      // Ô thật 8: Bb2 · F3 · C3 · G3 G3 G3 (sheet đổi Bb→C ở 1.75; một hợp âm thì là gốc gõ lại).
-      bass(0, .5), hit(.5, 1, [tone(2)]), bass(1.75, .75),
-      hit(2.5, .5, [tone(2)]), hit(3, .5, [tone(2)]), hit(3.5, .5, [tone(2)]),
-      // Ô thật 9 (Dm): D2 · C3/D3 · A3 · D2 · D3 · D3 · A3.
-      bass(4, .5), hit(4.5, .75, [tone(3), tone(0, 12)]), hit(5.25, .5, [tone(2, 12)]),
-      bass(5.75, .75), hit(6.5, .5, [tone(0, 12)]), hit(7, .25, [tone(0, 12)]), hit(7.25, .75, [tone(2, 12)]),
+      hit(0, 1.75, [tone(0), tone(2), tone(3)], .85),        // Bb2+F3+A3, sheet d 1.5
+      hit(1.75, .75, [tone(0, 12), tone(2, 12)]),            // C3+G3
+      hit(2.5, .5, [tone(2, 12)]), hit(3, 1, [tone(0, 24)]), // G3 · C4 (gập về dưới trần 59)
+      hit(4, 2.25, [tone(0, 12), tone(2, 12), tone(3, 12)], .8), // D3+A3+C4, sheet d 2
+      // A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX).
+      hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
+      hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),
+      hit(7.25, .25, [tone(0, 14)]), hit(7.5, .25, [tone(0, 12)]), hit(7.75, .25, [tone(3)]),
     ],
     right: [
-      // Bb3/F4 dưới C5 · E4 dưới G4 · E4 dưới A4 · G4 dưới C5. Bỏ D4-A4-C5… và C4-E4-C4: giai điệu.
-      hit(1, .5, [tone(0), tone(2)]), hit(1.75, .5, [tone(1)]), hit(2.25, .5, [tone(1)]), hit(2.75, .25, [tone(2)]),
-      // C4/F4 dưới C5 hai lần. Bỏ F4/Bb4 ở 9:3.75 — lấy đà sang hợp âm sau, không phải đệm.
-      hit(5, .5, [tone(3, -12), tone(1)]), hit(7, .5, [tone(3, -12), tone(1)]),
+      // Nốt dưới (bè) ngân nối; nốt trên giữ độ ngân sheet — ngân cả hai thì dày hơn chính sheet
+      // (3,72 nốt vang TB so với 3,00), vì giữa các cú sheet chỉ có MỘT nốt tay phải là giai điệu.
+      hit(0, 1.75, [tone(1)]), hit(0, .5, [tone(2)]),        // D4 sheet d .5 · F4
+      hit(1.75, .5, [tone(1), tone(0, 12)]),                 // E4+C5
+      hit(2.25, .5, [tone(2), tone(0, 12)]),                 // G4+C5
+      hit(2.75, 2.25, [tone(2)]), hit(2.75, .25, [tone(0, 12)]), // G4 sheet d .5 · C5 .25
+      hit(5, .25, [tone(1), tone(3)]), hit(5.25, .5, [tone(1), tone(3)]), // F4+C5 · F4+C5
+      hit(5.75, 2.25, [tone(1)]), hit(5.75, 1.25, [tone(3)]), // F4 sheet d 2 · C5 1.25
     ],
   },
 }
@@ -237,27 +252,27 @@ const deEmChorus: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa-chorus',
   name: 'Để Em Rời Xa · Điệp khúc', family: deEm.family,
   familyName: deEm.familyName, variant: 2, bpm: 85,
-  sourceVideos: ['Cà Pháo · Để Em Rời Xa · điệp ô thật 24–25 (XML 24:2–26:2); đối chiếu 52–53'],
-  note: 'Điệp: hợp âm đổi mỗi hai phách, tay trái gốc–5–8 móc đơn; tay phải bè dưới giai điệu, ngón cái chêm ở phách 2, đệm lấp khe lời 3a–4&. Chờ nghe duyệt.',
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · cửa sổ 24–25 (XML 24:2–26:2) như DERX, đầu bass theo 52; đối chiếu 52–53'],
+  note: 'Điệp: mốc gõ DERX (bass móc đơn, bè chêm lệch, chùm ba), ngân nối tới cú sau, F4+D5 đủ quãng đôi. Chờ nghe duyệt.',
   cell: {
     lengthBeats: 8,
     left: [
-      // Nửa đầu theo ô 52 (Bb2 F3 Bb3): ô 24 cùng mốc nhưng Bb1-Bb2-Bb3 (+24) vượt trần tay trái 67.
+      // Bb2 F3 Bb3 theo cửa sổ 52 (24 là Bb1-Bb2-Bb3, vượt trần) · C2 · C3+G3 · C3+G3.
       bass(0, .5), hit(.5, .5, [tone(2)]), hit(1, 1, [tone(0, 12)]),
-      // Ô 24 nửa sau: C2 · C3/G3 · C3/G3.
       bass(2, .5), hit(2.5, .5, [tone(0, 12), tone(2, 12)]), hit(3, 1, [tone(0, 12), tone(2, 12)]),
-      // Ô thật 25: C#3 (bass A/C#; không ép thể đảo) · A3 · D2 nghịch phách 1.75 · D2 · D2.
-      bass(4, .5), hit(4.5, 1, [tone(0, 12)]), bass(5.75, .25), bass(6, 1), bass(7, .75),
+      // Cửa sổ 25: C#3 (A/C#, không ép thể đảo) · A3 sheet d 1 · D2 · D2 · D2 sheet d .75.
+      bass(4, .5), hit(4.5, 1.25, [tone(0, 12)]), bass(5.75, .25), bass(6, 1), bass(7, 1),
     ],
     right: [
-      // Ô 24: F4 dưới D5 · F4 dưới D5 · F4/Bb4 dưới F5 (chùm ba) · E4/C5 dưới E5.
-      hit(0, .5, [tone(2)]), hit(.75, .5, [tone(2)]), hit(4 / 3, 2 / 3, [tone(2), tone(0, 12)]),
-      hit(2, .75, [tone(1), tone(0, 12)]),
-      // Khe lời 2.75–4: C4 · D4/G4 · E4 · C4, thấp hơn giai điệu E5 16 nửa cung. Ô 52 có D4/G4 · E4 y hệt.
+      hit(0, .75, [tone(2), tone(1, 12)]), hit(.75, 7 / 12, [tone(2), tone(1, 12)]), // F4+D5 ×2, sheet d .5
+      hit(4 / 3, 2 / 3, [tone(2), tone(0, 12)]),              // F4+Bb4 chùm ba (bỏ F5: vượt trần 74)
+      hit(2, .75, [tone(1), tone(0, 12)]),                    // E4+C5 (bỏ E5)
+      // Khe lời: C4 · D4+G4 · E4 · C4 (52 có D4/G4 · E4 y hệt).
       hit(2.75, .25, [tone(0)]), hit(3, .25, [tone(0, 2), tone(2)]), hit(3.25, .25, [tone(1)]), hit(3.5, .5, [tone(0)]),
-      // Ô 25: A4/C#5 · A4 · A4 dưới E5 · E4 ngón cái · C#5 dưới G5 · F4/A4 dưới F5 · C4 ngón cái.
       hit(4, .5, [tone(0, 12), tone(1, 12)]), hit(4.5, .25, [tone(0, 12)]), hit(4.75, .25, [tone(0, 12)]),
-      hit(5, .25, [tone(2)]), hit(5.25, .5, [tone(1, 12)]), hit(5.75, .5, [tone(1), tone(2)]), hit(7.25, .25, [tone(3, -12)]),
+      hit(5, .25, [tone(2)]), hit(5.25, .5, [tone(1, 12)]),
+      hit(5.75, 1.5, [tone(1), tone(2)]),                     // F4+A4, sheet d .5
+      hit(7.25, .75, [tone(3, -12)]),                         // C4, sheet d .25
     ],
   },
 }

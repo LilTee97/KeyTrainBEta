@@ -46,6 +46,15 @@ def dem(rh):
         yield p, ns, under or dip
 
 
+def cover(k, keep_melody):
+    """So not dang vang o tung moc kep cua o that k; bo giai dieu = bo not dinh cu tay phai khong phai 'dem'."""
+    r, spans = real(k), []
+    spans += [(p, p + n['dur']) for p, ns in r[2] for n in ns]
+    for p, ns, d in dem(r[1]):
+        spans += [(p, p + n['dur']) for j, n in enumerate(ns) if keep_melody or d or j < len(ns) - 1]
+    return [sum(a <= s / 4 + .01 < b for a, b in spans) for s in range(int(L[k] * 4))]
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     print('sha256', hashlib.sha256(open(SOURCE, 'rb').read()).hexdigest())
@@ -64,7 +73,15 @@ def main():
             for p, ns in r[1]: rh[round(p * 4)] += 1; be[round(p * 4)] += len(ns) >= 2
         print('%s (%d o 4 phach) vi tri: LH go | RH co be/RH go' % (group, len(bars)))
         print('  ' + '  '.join('%g:%d|%d/%d' % (i / 4, lh[i], be[i], rh[i]) for i in range(16)))
-    for k in (8, 9, 36, 37, 24, 25, 52, 53):
+    for group, keys in (('phien', ['phien1', 'phien2']), ('diep', ['diep1', 'diep2', 'diepNang'])):
+        bars = [k for key in keys for k in SING[key] if L[k] == 4]
+        for mel in (True, False):
+            c = [x for k in bars for x in cover(k, mel)]
+            print('do phu %s %s: moc kep=%d im=%d not vang TB=%.2f <=1 not=%d' % (
+                group, 'du hai tay' if mel else 'bo giai dieu', len(c), c.count(0), sum(c) / len(c), sum(x <= 1 for x in c)))
+    c = cover(4, True) + cover(5, True)
+    print('do phu cua so 4-5 du hai tay: im=%d TB=%.2f' % (c.count(0), sum(c) / len(c)))
+    for k in (4, 5, 8, 9, 32, 33, 36, 37, 24, 25, 52, 53):
         r = real(k)
         print('o that %d  L %s' % (k, ' '.join('%g:%s(%g)' % (p, '/'.join(n['pitch'] for n in ns), ns[0]['dur']) for p, ns in r[2])))
         print('         R %s' % ' '.join('%g:%s%s' % (p, '/'.join(n['pitch'] for n in ns), '*' if d else '') for p, ns, d in dem(r[1])))
