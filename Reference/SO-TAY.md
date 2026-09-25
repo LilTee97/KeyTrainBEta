@@ -3920,3 +3920,11 @@ bùm/bum nay là hai–ba nốt (bậc 5 + 8, dẫn + quãng 5, bậc 2 + 5, b�
 vượt trần 59 rồi gập xuống trùng. Chọn cặp luôn nằm trong 36–59.
 **Giá trị cũ:** bản 14. **Triệu chứng để lùi:** bass đục → bỏ nốt trên của cặp ở bum 9.
 Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 15".
+
+### Bass dày ở C2–G2 không rõ; giai điệu thấp nốt đơn ở tầm câu chạy (A2–F3) mới rõ
+
+Người dùng: bum đánh bass dày vẫn không rõ, trong khi nốt thấp của câu chạy nghe rõ, nên bảo cho bùm/bum đánh giai điệu thấp.
+Ballad Để em: bùm 5 · bum 6 · bùm 8 · bum 9 · bùm 11 nay là nốt đơn G3 → C3 → D3 → E3 → F3 (vòng sheet), nối liền bậc vào câu
+chạy. Suy đoán, chưa đo: vùng C2–G2 của piano đục nên dày thêm không rõ hơn.
+Giới hạn: gốc từ G# trở lên thì gập xuống (Bm7: B3 → C#3), giống câu chạy DERX.
+**Giá trị cũ:** bản 15. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 16".

@@ -373,6 +373,26 @@ Bb1 gập lên Bb2 trùng Bb2; bậc 5 hay bậc 3 quãng tám ở gốc cao cũ
 **Giá trị cũ:** bản 14 (bum có hợp âm tay phải nhẹ; bass bùm 5 · bum 6 · bum 9 · bùm 11 một nốt).
 **Triệu chứng để lùi:** bass đục/nặng → bỏ nốt trên của cặp ở bum 9 trước.
 
+## Bản 16: bùm/bum 5–11 thành giai điệu thấp nốt đơn cùng tầm câu chạy
+
+Người dùng: *"tiếng Bum đánh bass dày cũng ko hiện rõ được tiếng, tôi nghe ở câu chạy nốt có những nốt thấp vậy bạn thử cho Bùm
+và Bum đánh giai điệu thấp giống như trong câu chạy nốt đi"*.
+
+Suy đoán (chưa đo): câu chạy nghe rõ vì nằm ở A2–F3 (≈ 45–53), nốt đơn đi liền bậc. Cặp bass dày bản 15 nằm ở C2–G2
+(36–43), vùng đục của piano, nên dày thêm cũng không rõ hơn.
+
+**Nay** tay trái của bùm 5 · bum 6 · bùm 8 · bum 9 · bùm 11 là một nốt, đi liền bậc vào câu chạy:
+- vòng sheet: **G3 → C3 (dẫn) → D3 → E3 → F3** → câu chạy A2 D3 E3 F3 E3 D3 C3;
+- bài người dùng G → D9sus4: D3 → C3 → D3 → E3 → G3 → câu chạy.
+
+Bùm vẫn có hợp âm tay phải; hợp âm của bùm 5 · 8 ngân qua bum 6 · 9, để lúc bum vang không chỉ một nốt.
+Bùm 1 · 3 trả về như cũ (Bb2+F3+A3, C3+G3).
+
+**Giới hạn đã biết:** gốc từ G# trở lên, nốt vượt trần tay trái 59 bị gập xuống một quãng tám. Ví dụ Bm7: B3 → **C#3** → D3.
+Câu chạy DERX cũng gập như vậy. Sửa phải nới tầm tay trái riêng cho điệu, và việc đó đổi cả Bùm 1.
+**Giá trị cũ:** bản 15 (cặp bass G2+C3 · C2+G2 · D2+cụm · E2+A2 · F2+D3).
+**Triệu chứng để lùi:** giai điệu thấp nghe lẫn với câu chạy → trả bùm 8 về cụm cửa sổ 5.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
