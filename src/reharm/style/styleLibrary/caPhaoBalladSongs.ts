@@ -244,9 +244,13 @@ const deEm: StylePattern = {
       // (như giữ pedal bass), để lúc bùm–bum luôn còn hai nốt trầm vang.
       hit(1.75, 2.25, [tone(0, 12)]), hit(1.75, .75, [tone(2, 12)]), // 3 bùm: C3 (tới vạch) + G3 (tới bùm 5)
       hit(2.5, 1.5, [tone(2, 12)], .85),                     // 5 bùm: G3, giật vào sau chát 4, ngân tới vạch
-      hit(4, 2, [tone(0, 12), tone(2, 12), bay7(12)], .85),  // 7 bùm: D3+A3+C3 (cửa sổ 5)
-      hit(4.5, 1.5, [tone(0)]),                              // 8 bum: D2, nhẹ (cửa sổ 7 có D2 ở 1&)
-      hit(6, .25, [tone(0, 12)]),                            // 10 bum: D3, nhẹ, câu chạy vào liền
+      // Người dùng không nghe ra "bùm bum … bum" ở ô 2: cụm không có gốc trầm nghe như chát, hai bum nhẹ bị che.
+      // Thêm D2 (cửa sổ 9 có D2 đầu ô) và nâng lực hai bum .65 → .8. Lùi: bum nghe nặng → .65.
+      // Tách D2 thành cú riêng: bum 8 đánh lại D2 thì renderer cắt cả cú chứa nó — chung một cú thì cụm tắt theo.
+      hit(4, .5, [tone(0)], .85),                            // 7 bùm: D2 gốc trầm (cửa sổ 9 đầu ô)
+      hit(4, 2, [tone(0, 12), tone(2, 12), bay7(12)], .85),  // 7 bùm: cụm D3+A3+C3 (cửa sổ 5)
+      hit(4.5, 1.5, [tone(0)], .8),                          // 8 bum: D2 (cửa sổ 7 có D2 ở 1&)
+      hit(6, .25, [tone(0, 12)], .8),                        // 10 bum: D3, câu chạy vào liền
       // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5).
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),

@@ -35,6 +35,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     const chat4 = verse.right.find(h => h.beat === 2.25)!
     expect(chat4.durationBeats).toBeLessThanOrEqual(.25)
     expect(chat4.velocityScale!).toBeGreaterThan(.65)
+    // Bum 8 · 10 đủ lực để nghe ra dưới cụm bùm 7 đang ngân.
+    for (const beat of [4.5, 6]) expect(verse.left.find(h => h.beat === beat)!.velocityScale!).toBeGreaterThanOrEqual(.8)
     expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
@@ -54,7 +56,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3, [67, 72]],
       [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]],
-      [4, [48, 50, 57]], [4.5, [38]], [6, [50]],
+      [4, [38, 48, 50, 57]], [4.5, [38]], [6, [50]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)
@@ -78,10 +80,11 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   })
 
   it('hợp âm ba không gõ trùng phím; hợp âm bảy vẫn giữ bậc 7 của sheet', () => {
-    const left = (chords: string) => renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
-      .filter(e => e.hand === 'left' && (e.startBeat === 0 || e.startBeat === 4)).map(e => [...e.notes].sort((a, b) => a - b))
-    expect(left('Bb Dm')).toEqual([[46, 53], [50, 57]])
-    expect(left('Bbmaj7 Dm7')).toEqual([[46, 53, 57], [48, 50, 57]])
+    const left = (chords: string) => [0, 4].map(at => renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords),
+      getStyle(VERSE)!, { beatsPerChord: 4 }).filter(e => e.hand === 'left' && e.startBeat === at)
+      .flatMap(e => e.notes).sort((a, b) => a - b))
+    expect(left('Bb Dm')).toEqual([[46, 53], [38, 50, 57]])
+    expect(left('Bbmaj7 Dm7')).toEqual([[46, 53, 57], [38, 48, 50, 57]])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
       for (const quality of ['', 'm', '7', 'maj7', 'm7'])
         for (const id of [VERSE, CHORUS])

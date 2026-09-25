@@ -3859,3 +3859,10 @@ Người dùng chỉ nghe 6 tiếng ô 1; bỏ 3 chát (bản 8) không cứu đ
 
 Nghi về tai, chưa kiểm: bùm 7 là cụm C3+D3+A3 không có gốc trầm; hai bum lực .65 dưới cụm đang ngân.
 Chờ người dùng cho biết cách nghe. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 9".
+
+### Ballad Để em: bùm 7 thêm gốc trầm D2, hai bum lực .8 để nghe ra khung ô 2
+
+Theo nghi vấn về tai ở bản 9, người dùng bảo làm. Bùm 7 = D2 + cụm C3+D3+A3 (cửa sổ 9 có D2 đầu ô).
+Bum 8 (D2, 1&) · bum 10 (D3, phách 3) lực .8, cũ .65. 3 chát giữ nguyên. **Bẫy:** `holdUntilStruckAgain` cắt **cả cú** khi một phím
+trong cú bị đánh lại. Để D2 chung cú với cụm thì bum 8 (D2) tắt luôn cụm C3+D3+A3 — nên D2 là cú riêng cùng mốc.
+**Giá trị cũ:** không D2, bum .65. **Triệu chứng để lùi:** ô 2 đục/nặng → bỏ D2 hoặc lực về .65.

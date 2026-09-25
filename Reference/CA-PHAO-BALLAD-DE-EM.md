@@ -252,6 +252,17 @@ hãy mang chúng trở lại"*. Ô phiên lấy lại nguyên bản 7 (`5e5504b`
 - Khả năng về tai, chưa kiểm: bùm 7 là cụm C3+D3+A3 không có gốc trầm, nghe giống chát; bum 8 · 10 lực .65
   nằm dưới cụm đang ngân. Cần người dùng cho biết cách đang nghe (màu hợp âm, ô Fill/Run, độ dài hợp âm, tab).
 
+## Bản 10: bùm 7 có gốc trầm D2, hai bum lực .8
+
+Người dùng đồng ý thử hướng "về tai" của bản 9: *"làm đi"*.
+- Bùm 7 = D2 + C3+D3+A3. Cửa sổ 9 có D2 ở đầu ô. Bum 8 đánh lại D2 ở 1&.
+- D2 phải là **cú riêng**: renderer cắt cả cú khi một phím trong đó bị đánh lại, nên để chung một cú thì cụm
+  tắt ngay ở bum 8 (bẫy đã sập khi dựng — test độ phủ bắt được).
+- Bum 8 · 10 lực **.8** (cũ .65).
+- 3 chát giữ nguyên.
+
+**Triệu chứng để lùi:** ô 2 nghe nặng/đục → bỏ D2 ở bùm 7, hoặc lực bum về .65.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
