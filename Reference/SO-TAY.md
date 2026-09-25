@@ -3840,3 +3840,12 @@ Người dùng đổi tiếng 6 thành chát và đặt lại khung từ tiếng
 
 Khung 10 tiếng = 12 cú vì tiếng 9 có 3 cú.
 **Giá trị cũ:** bản 6. **Triệu chứng để lùi:** phách 4 nghe lạc → trả bum tay trái ở phách 4.
+
+### Ballad Để em: 3 chát liền làm mất tiếng bum — bỏ, còn một chát; bum 10 tách khỏi câu chạy
+
+Người dùng không nghe được tiếng 8 trở đi. Ba cú F4+C5 dồn ở 2 · 2¼ · 2¾ đè hai tiếng bum; bum 10 ở phách 3 dính
+câu chạy ¼ phách sau; hai bum lực .65 nằm dưới cụm đang ngân.
+
+**Sửa:** bỏ 3 chát, còn chát 9 ở phách 2. Bum 10 dời về 2¾ (D2, cửa sổ 9 · 37). Bum 8 · 10 lực .8. Cụm bùm 7 nhả ở phách 2.
+**Giá trị cũ:** bản 7. **Triệu chứng để lùi:** bum nghe nặng → lực .65.
+Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 8".

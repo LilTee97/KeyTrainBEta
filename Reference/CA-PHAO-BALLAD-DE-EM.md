@@ -220,6 +220,25 @@ Bỏ: bum C3 ở phách 4 và chát ở 4& của bản 6. C3 của bùm 3 nay ng
 **Giá trị cũ:** bản 6.
 **Triệu chứng để lùi:** phách 4 nghe lạc tay phải → trả bum tay trái ở phách 4.
 
+## Bản 8: bỏ 3 chát liền để nghe đủ khung
+
+Người dùng: *"do 3 tiếng chát cuối đã làm mất khung (ko nghe từ tiếng 8 trở đi) vậy thì hãy bỏ 3 tiếng chát cuối để
+chơi đủ tiếng của khung"*.
+
+Nguyên do nghe mất:
+- ba cú F4+C5 ở 2 · 2¼ · 2¾ đè đúng quãng của bum 8 và bum 10;
+- bum 10 (phách 3) dính liền câu chạy ¼ phách sau, nên nghe thành nốt đầu câu chạy;
+- hai bum đánh nhẹ (.65) dưới cụm bùm 7 đang ngân.
+
+**Sửa (ô 2):**
+- còn một chát 9 ở phách 2 (F4+C5 cửa sổ 5; F4 ngân trên câu chạy như sheet);
+- bum 10 dời phách 3 → **2¾**, D2 (cửa sổ 9, 37 có D2 ở đây), cách câu chạy ½ phách;
+- bum 8 D2 ở 1&; hai bum lực .8;
+- cụm bùm 7 nhả ở phách 2 (cũ ngân 2).
+
+**Giá trị cũ:** bản 7.
+**Triệu chứng để lùi:** bum 8/10 nghe nặng → hạ lực về .65.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
