@@ -21,16 +21,16 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
 describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
-  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1 Bùm … 2 chát … 3 bùm … 4 chát–5 bùm 6 chát … 7 bùm 8 chát 9 bùm → chạy', () => {
+  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1Bùm 2chát 3bùm 4chát 5bùm 6chát 7bùm 8bum 9chát(×3) 10bum → chạy', () => {
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
-    // Mỗi tiếng = một thời điểm có cú đánh; hai tay cùng lúc là một tiếng. 12 tiếng + câu chạy 7 nốt.
+    // Khung người dùng 10 tiếng, tiếng 9 là 3 cú chát liền → 12 cú + câu chạy 7 nốt.
     const verse = getStyle(VERSE)!.cell!
     const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 5, 5.25, 5.75, 6, ...run])
-    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 3, 4, 6, ...run])  // bùm 1 · 3 · 5 · 6 · 8 · 12 · câu chạy
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3.5, 5, 5.25, 5.75]) // chát 2 · 4 · 7 · 9 · 10 · 11
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 4, 4.5, 5, 5.25, 5.75, 6, ...run])
+    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 4, 4.5, 6, ...run])  // Bùm 1 · bùm 3 · 5 · 7 · bum 8 · 10 · câu chạy
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3, 5, 5.25, 5.75]) // chát 2 · 4 · 6 · 9 (3 cú)
     // 4 chát giật nảy: ngắn và nhấn hơn các chát khác, rồi bùm 5 vào ngay sau ¼ phách.
     const chat4 = verse.right.find(h => h.beat === 2.25)!
     expect(chat4.durationBeats).toBeLessThanOrEqual(.25)
@@ -49,12 +49,12 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     }
   })
 
-  it('cao độ phiên trên vòng sheet: tay trái ô 1 = cửa sổ 4, ô 2 = cửa sổ 5 kèm câu chạy', () => {
+  it('cao độ phiên trên vòng sheet: tay trái ô 1 = cửa sổ 4, ô 2 = cửa sổ 5 + bum D2, kèm câu chạy', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3.5, [67, 72]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3, [67, 72]],
       [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]], [3, [48]],
-      [4, [48, 50, 57]], [6, [50]],
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]],
+      [4, [48, 50, 57]], [4.5, [38]], [6, [50]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)

@@ -3827,3 +3827,16 @@ người dùng tự chọn. Người dùng từng bực đúng chuyện này ở
 
 **Giá trị cũ:** bản 5; mọi điệu có câu lót tự động.
 **Triệu chứng để lùi:** muốn lại câu lót tự động → bỏ `autoFills: false`.
+
+### Ballad Để em: khung phiên 1Bùm 2chát 3bùm 4chát 5bùm 6chát 7bùm 8bum 9chát 10bum
+
+Người dùng đổi tiếng 6 thành chát và đặt lại khung từ tiếng 6, giữ 3 chát liền và câu chạy ở ô 2. Vị trí do Claude
+đặt, chi tiết ở `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 7":
+- 6 chát ở ô 1 phách 4 — tay trái sheet gõ đây 6/6, nên giữ phách ấy có tiếng;
+- 7 bùm ô 2 phách 1;
+- 8 bum D2 ở 1& (tay trái 3/6 cửa sổ Dm);
+- 9 chát là 3 cú F4+C5 ở 2 · 2¼ · 2¾;
+- 10 bum D3 ở phách 3, rồi câu chạy.
+
+Khung 10 tiếng = 12 cú vì tiếng 9 có 3 cú.
+**Giá trị cũ:** bản 6. **Triệu chứng để lùi:** phách 4 nghe lạc → trả bum tay trái ở phách 4.

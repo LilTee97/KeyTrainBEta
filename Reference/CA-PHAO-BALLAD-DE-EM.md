@@ -203,6 +203,23 @@ bùm 3 tới bum 6, G3 của bùm 5 tới vạch), nên lúc bùm–bum còn hai
 - 7 chát nghe lạc (sheet không có) → bỏ.
 - Muốn có lại câu lót tự động → bỏ `autoFills: false`.
 
+## Bản 7: khung 1Bùm 2chát 3bùm 4chát 5bùm 6chát 7bùm 8bum 9chát 10bum
+
+Người dùng: *"đáng ra ở tiếng 6 phải là chát và từ tiếng 6 trở đi thì thay đổi theo khung này … vẫn giữ 3 tiếng chát
+và chạy nốt"*. Tiếng 1–5 giữ nguyên bản 6.
+
+| tiếng | vị trí | sheet | nốt trên vòng sheet |
+|---|---|---|---|
+| 6 chát | ô 1 phách 4 | tay trái gõ phách 4 ở 6/6 cửa sổ Bb→C, tay phải 0/6 | G4+C5 (biên soạn) |
+| 7 bùm | ô 2 phách 1 | cửa sổ 5 | C3+D3+A3 |
+| 8 bum (nhẹ) | ô 2 phách 1& | tay trái gõ 1& ở 3/6 cửa sổ Dm | D2 (cửa sổ 7) |
+| 9 chát = 3 cú liền | ô 2 phách 2 · 2¼ · 2¾ | cửa sổ 5 đúng mốc | F4+C5, cú ba F4 ngân trên câu chạy |
+| 10 bum (nhẹ) | ô 2 phách 3 | | D3, câu chạy vào liền |
+
+Bỏ: bum C3 ở phách 4 và chát ở 4& của bản 6. C3 của bùm 3 nay ngân tới vạch vì không còn bị đánh lại.
+**Giá trị cũ:** bản 6.
+**Triệu chứng để lùi:** phách 4 nghe lạc tay phải → trả bum tay trái ở phách 4.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
