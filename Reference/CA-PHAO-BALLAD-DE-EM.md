@@ -790,6 +790,26 @@ hơn mọi tiếng tay trái khác của câu chạy.
 **Triệu chứng để lùi:** bum 6 nghe to hơn bùm / lộ → 1.05. Nếu lực không đủ mà vẫn không nghe ra bum 6: nguyên do là chỗ đứng
 (¼ phách sau cú hai tay) hoặc tầm A3 lẫn vào tay phải, không phải lực — hỏi người dùng trước khi đổi nốt hay chỗ.
 
+## Bản 34: bum 6 chơi như bùm 5 — hai tay
+
+Người dùng nghe bản 33: *"vẫn chưa nghe được tiếng bum 6, nó đứng liền sau tiếng bùm 5 nên hãy chơi tiếng đó như bùm 5 đi"*.
+
+Tăng lực (1.2, lực 82) không đủ, nên nguyên do là thế đứng: một nốt tay trái ¼ phách sau cú bùm hai tay thì chìm.
+**Nay:** bum 6 = bass walking + một nốt giai điệu tay phải (bậc 3, ý Claude), lực .9 như bùm 5. Bỏ hằng số `BUM`.
+Walking bass coi bum 6 như bùm, nên ưu tiên nốt hợp âm ở đó và tránh chói với tay phải. Trên vài vòng, tay phải trùng nốt bass ở
+quãng tám trên (Fadd2: A3 + A4), tức bum 6 là một nốt thấp đánh dày hai quãng tám.
+
+| vòng | bùm 3 → bùm 5 → **bum 6** → bùm 8 → bùm 10 → ô 2 (tay trái) | bum 6 tay phải |
+|---|---|---|
+| Fadd2 → G9 | F3+C3 → G3 → **A3** → G3 → F3 → G3 | A4 |
+| Am(add9) → Fadd2 | A3+E3 → D3 → **C3** → D3 → E3 → F3 | C4 |
+| G9 → Am(add9) | G3+D3 → A3 → **B3** → A3 → G3 → A3 | B4 |
+
+Bản 32 lấy Am(add9) → Fadd2 là B3 Bb3 A3 G3 → F3; nay D3 C3 D3 E3 → F3 (bum 6 cần nốt hợp âm).
+
+**Giá trị cũ:** bum 6 một nốt tay trái — lực .9 (bản 32), 1.2 (bản 33).
+**Triệu chứng để lùi:** bum 6 nghe thành bùm, mất cảm giác dẫn → giữ hai tay nhưng hạ tay phải còn THUONG .8.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

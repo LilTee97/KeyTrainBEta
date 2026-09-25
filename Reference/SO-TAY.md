@@ -4064,3 +4064,9 @@ Người dùng: tiếng sau bùm 3 *"nghe giống hệt tiếng 3 … đánh r�
 Người dùng không nghe ra bum 6 (A3, lực 61, ¼ phách sau bùm 5 G3 61 + F4 72). Nay `BUM = 1.2` → lực 82. Định nghĩa người dùng
 chốt 26/9: bùm = tiếng thấp, chát = tiếng cao, bum đứng sát bùm = tiếng dẫn vào / nối tiếp bùm.
 **Giá trị cũ:** NHAN .9. **Lùi:** bum lộ → 1.05. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 33".
+
+### Ballad Để em: bum 6 chơi như bùm 5 — một nốt tay trái sát sau cú hai tay thì tăng lực cũng không nổi
+
+Người dùng vẫn không nghe ra bum 6 dù lực 82 (bản 33), bảo *"hãy chơi tiếng đó như bùm 5"*. Nay bum 6 = bass walking + giai điệu
+bậc 3 tay phải, lực .9. **Bài học:** tiếng chìm vì thế đứng thì tăng lực không cứu được — phải thêm tay.
+**Giá trị cũ:** một nốt tay trái. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 34".
