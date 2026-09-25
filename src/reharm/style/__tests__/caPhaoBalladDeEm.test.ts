@@ -31,8 +31,9 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     // Câu chạy một theo khung "Chát-bùm bum chát bùm chát bùm bum" (cách 1: Chát-bùm cùng một cú, hai tay).
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
     expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : ''))).toEqual(['TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
-    // Tiếng bùm/chát của câu chạy một bằng HỢP ÂM (người dùng: "đừng cho chạy nốt ngẫu nhiên nữa"): tay phải 3 nốt.
-    for (const b of [2.25, 2.75, 3, 3.25, 3.5]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `hợp âm ${b}`).toBe(3)
+    // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = HAI nốt bass.
+    for (const b of [2.25, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
+    for (const b of [2.5, 3.75]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(2)
     // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
     expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
     // Bùm = bass + hợp âm tay phải; bum = chỉ bass (dẫn); chát = chỉ tay phải.
@@ -49,22 +50,20 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       for (let s = 0; s < 32; s += 1) {
         const t = s / 4 + .01
         const sounding = events.filter(e => e.startBeat <= t && t < e.startBeat + e.durationBeats).flatMap(e => e.notes)
-        // Hai tiếng bum của câu chạy một vang MỘT MÌNH cho rõ (người dùng: tiếng bum bị hợp âm đè thì chìm); còn lại ≥ 2.
-        const alone = id === VERSE && [2.5, 3.75].includes(s / 4)
-        expect(sounding.length, `${id} phách ${s / 4}`).toBeGreaterThanOrEqual(alone ? 1 : 2)
+        expect(sounding.length, `${id} phách ${s / 4}`).toBeGreaterThanOrEqual(2)
       }
     }
   })
 
   it('cao độ phiên trên vòng sheet: câu chạy một Chát-bùm bum chát bùm chát bùm bum; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      // Câu chạy một, tay phải: hợp âm E4+G4+C5 ở mọi tiếng bùm/chát.
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67, 72]], [2.75, [64, 67, 72]], [3, [64, 67, 72]],
-      [3.25, [64, 67, 72]], [3.5, [64, 67, 72]],
+      // Câu chạy một, tay phải: chát E4+G4 · G4+C5 · C4+E4 (đỉnh G4 → C5 → E4 như sheet A4 → C5 → E4); bùm C4 · G4.
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67]], [2.75, [67, 72]], [3, [60]],
+      [3.25, [60, 64]], [3.5, [67]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
-    // Tay trái câu chạy một: bùm C3 · bum G3 · bùm C3 · bùm C3 · bum G3 — chỉ nốt của hợp âm.
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [55]], [3, [48]], [3.5, [48]], [3.75, [55]],
+    // Tay trái câu chạy một: C3 · bum C3+G3 · G3 · G3 · bum E3+G3 → D3 đầu ô 2.
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [48, 55]], [3, [55]], [3.5, [55]], [3.75, [52, 55]],
       [4, [50]], [4.25, [52]], [4.75, [53]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!

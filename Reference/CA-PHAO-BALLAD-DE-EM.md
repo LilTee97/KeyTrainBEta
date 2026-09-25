@@ -490,6 +490,31 @@ Câu chạy tay trái ô 2 (cửa sổ 5) giữ nguyên: người dùng đã đ�
 **Giá trị cũ:** bản 20 (C3+E4A4 · G3 · G4C5 · G3+C4 · E4G4 · C3+E3 · C#3).
 **Triệu chứng để lùi:** nghe dặm đều quá, mất chất ballad → cho chát nhẹ hơn bùm, hoặc chát hai nốt.
 
+## Bản 22: chát chọn nốt giai điệu theo đỉnh của sheet, bum hai nốt bass
+
+Người dùng: *"tiếng chát hãy linh hoạt chọn nốt giai điệu trong hợp âm để đánh chứ đừng chỉ dặm hợp âm, nhớ học từ sheet để chọn
+nốt ko bị chói tai; tiếng Bum thì hãy đánh 2 nốt bass hoặc đánh thêm giai điệu nghe cho rõ ràng so với các tiếng xung quanh nó"*.
+
+**Số đo (tay phải sheet ở mốc chát, 4 cửa sổ 6 · 8 · 34 · 36, `scripts/audit_cp_de_em.py`):** 3¼ A4 (có khi kèm E4) · 3¾ C5
+(kèm G4 ở 3/4 cửa sổ) · 4¼ E4. Đỉnh đi lên rồi xuống. Chỉ A4 nằm ngoài hợp âm Đô (bậc 6).
+**Suy đoán của Claude:** trên hợp âm thứ (Em, Am) nốt ở vị trí ấy thành nốt ngoài giọng (C# trên Em), nên đổi về nốt hợp âm
+gần nhất G4. Hai nốt còn lại giữ đúng sheet.
+
+| mốc | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ |
+|---|---|---|---|---|---|---|---|
+| tiếng | Chát-bùm | bum | chát | bùm | chát | bùm | bum |
+| tay trái | C3 | **C3+G3** | — | G3 | — | G3 | **E3+G3** |
+| tay phải | **E4+G4** | — | **G4+C5** | **C4** | **C4+E4** | **G4** | — |
+
+- chát: hai nốt, đỉnh G4 → C5 → E4 (sheet A4 → C5 → E4).
+- bùm: một nốt giai điệu tay phải (C4, G4 — sheet có C4 ở phách 4) cùng bass G3 (sheet có G3 ở 4 và 4&).
+- bum: hai nốt bass, không có tay phải. Bum cuối E3+G3 đi xuống gốc D3 đầu ô 2.
+
+**Giá trị cũ:** bản 21 (mọi chát/bùm dặm cùng một khối E4G4C5; bum một nốt G3; bass bùm C3 · C3 · C3).
+**Triệu chứng để lùi:**
+- chát hai nốt nghe mỏng hơn tiếng bùm quanh nó → thêm nốt thứ ba dưới đỉnh;
+- bum hai nốt vẫn chìm → thêm một nốt giai điệu thấp tay phải (cách thứ hai người dùng nêu).
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

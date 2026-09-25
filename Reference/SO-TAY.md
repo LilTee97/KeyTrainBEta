@@ -3971,3 +3971,12 @@ bằng hợp âm"*. Nay ô 1 phách 3¼ → 4¾ chỉ dùng nốt của hợp â
 C3+E4G4C5 · G3 · E4G4C5 · C3+E4G4C5 · E4G4C5 · C3+E4G4C5 · G3.
 Câu chạy tay trái ô 2 giữ nguyên.
 **Giá trị cũ:** bản 20. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 21".
+
+### Ballad Để em: chát đi theo đỉnh giai điệu của sheet, bum là hai nốt bass
+
+Người dùng muốn chát *"linh hoạt chọn nốt giai điệu trong hợp âm … học từ sheet để chọn nốt ko bị chói tai"* và bum
+*"đánh 2 nốt bass"*. Đỉnh tay phải của sheet ở ba mốc chát (4 cửa sổ 6 · 8 · 34 · 36) là A4 → C5 → E4. A4 nằm ngoài hợp âm,
+và trên hợp âm thứ nó thành nốt ngoài giọng, nên đổi về G4; hai nốt kia giữ đúng sheet.
+Đô: E4G4 · (C3+G3) · G4C5 · C4+G3 · C4E4 · G4+G3 · (E3+G3).
+**Giá trị cũ:** bản 21, khối E4G4C5 dặm lặp và bum một nốt G3.
+**Triệu chứng để lùi:** chát mỏng quá → thêm nốt thứ ba. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 22".
