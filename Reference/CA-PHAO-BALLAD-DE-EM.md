@@ -774,6 +774,22 @@ cú trước, cách ½ phách → nghe như tiếng 3 bị đánh lại.
 **Triệu chứng để lùi:** bùm 5 giật nghe gấp → dời bùm 5 về cùng chỗ chát 4 nhưng đổi thế bấm chát 4 cho khác tiếng 3; bùm 5 không
 còn là nốt gốc (vd G3 trên Fadd2) nghe lỏng → cho bùm 5 ra khỏi dòng walking, chịu dòng chromatic hơn.
 
+## Bản 33: bum 6 đánh mạnh lên — nó chìm trong đuôi bùm 5
+
+Người dùng nghe bản 32: *"các tiếng chính được đánh rõ là 1Bùm 2chát 3bùm 4chát 5bùm … chát bùm bùm chát bum … sau tiếng 5 thì
+tiếng kế tiếp là chát chứ ko phải bùm hoặc bum. Bùm là các tiếng xuống thấp còn chát là tiếng cao. Bum nếu đứng liền trước hoặc
+sau tiếng bùm thì nó là tiếng dẫn vào hoặc nối tiếp của bùm. Tôi cảm giác thấy khung tiếng đang ko đánh tiếng Bum 6"*.
+
+**Đo trên bộ vẽ (Fadd2):** bum 6 CÓ phát — A3 tay trái ở 3¾, ngân ½, lực 61 (.9 × .85 × 80). Nó vào ¼ phách sau cú bùm 5 hai tay
+(G3 61 + F4 72). **Suy đoán của Claude, chưa đo tiếng:** một nốt đơn nhẹ hơn cú hai tay ngay trước thì chìm trong đuôi cú ấy.
+
+**Nay:** hằng số `BUM = 1.2` cho bum 6 → lực 82, nốt tay trái mạnh nhất câu chạy. Nốt và chỗ gõ giữ nguyên. Test kiểm bum 6 mạnh
+hơn mọi tiếng tay trái khác của câu chạy.
+
+**Giá trị cũ:** NHAN .9 (lực 61).
+**Triệu chứng để lùi:** bum 6 nghe to hơn bùm / lộ → 1.05. Nếu lực không đủ mà vẫn không nghe ra bum 6: nguyên do là chỗ đứng
+(¼ phách sau cú hai tay) hoặc tầm A3 lẫn vào tay phải, không phải lực — hỏi người dùng trước khi đổi nốt hay chỗ.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

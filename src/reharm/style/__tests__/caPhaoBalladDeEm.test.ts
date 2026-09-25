@@ -39,6 +39,10 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = MỘT nốt walking bass.
     for (const b of [2.25, 3, 3.5]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
     expect(verse.left.find(h => h.beat === 2.75)!.tones!.length, 'bum 3¾').toBe(1)
+    // Bum 6 là nốt tay trái MẠNH NHẤT câu chạy: một nốt ¼ phách sau cú bùm hai tay thì chìm (người dùng không nghe ra).
+    const bum6 = verse.left.find(h => h.beat === 2.75)!.velocityScale!
+    for (const h of verse.left.filter(h => h.beat >= 2.25 && h.beat < 4 && h.beat !== 2.75))
+      expect(bum6, `bum 6 > tay trái ${h.beat}`).toBeGreaterThan(h.velocityScale!)
     // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
     expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
     // Bùm = bass + hợp âm tay phải; bum = chỉ bass (dẫn); chát = chỉ tay phải.

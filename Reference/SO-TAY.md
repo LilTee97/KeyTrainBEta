@@ -4058,3 +4058,9 @@ Người dùng: tiếng sau bùm 3 *"nghe giống hệt tiếng 3 … đánh r�
 5"*. Cú chát 4 + bùm 5 ở 3¼ (Fadd2: F3 + F4 A4 C5) chứa gần hết tiếng 3 (F3 C3 + A4 F4). Nay chát 4 chỉ tay phải ở 3¼, bùm 5 ở 3&
 (giật ¼), các tiếng sau lùi ¼, bum cuối nhập bùm đầu ô 2 (giữ hợp âm). Walking bass gồm cả bùm 5, đi từ bùm 3.
 **Giá trị cũ:** bản 31. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 32".
+
+### Ballad Để em: bum 6 lực 1.2 — một nốt tay trái ¼ phách sau cú bùm hai tay thì chìm
+
+Người dùng không nghe ra bum 6 (A3, lực 61, ¼ phách sau bùm 5 G3 61 + F4 72). Nay `BUM = 1.2` → lực 82. Định nghĩa người dùng
+chốt 26/9: bùm = tiếng thấp, chát = tiếng cao, bum đứng sát bùm = tiếng dẫn vào / nối tiếp bùm.
+**Giá trị cũ:** NHAN .9. **Lùi:** bum lộ → 1.05. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 33".

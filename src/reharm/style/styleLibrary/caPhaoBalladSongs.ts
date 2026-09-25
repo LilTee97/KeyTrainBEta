@@ -223,6 +223,10 @@ const deEmCommon = {
 const ba3 = (semitones = 0) => ({ ...tone(1, semitones), fallbackInterval: 5 })
 const bay7 = (semitones = 0) => ({ ...tone(3, semitones), optional: true })
 const NHAN = .9, THUONG = .8 // lực tiếng chính: nhấn · thường
+// Bum đứng sát sau bùm = tiếng nối tiếp bùm (người dùng 26/9: "Bum nếu đứng liền trước hoặc sau tiếng bùm thì nó là tiếng dẫn
+// vào hoặc nối tiếp của bùm"; "tôi cảm giác thấy khung tiếng đang ko đánh tiếng Bum 6"). Một nốt tay trái (×.85) ¼ phách sau
+// cú bùm hai tay thì chìm trong đuôi bùm. Cũ: NHAN .9 (→ lực 61). Lùi: bum nghe to hơn bùm / lộ → 1.05.
+const BUM = 1.2
 const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
@@ -266,7 +270,7 @@ const deEm: StylePattern = {
       // Bbadd9 → D9sus4 bị ép Bb3 Ab3 F#3 E3 → D3, E3 đụng F4 tay phải. Bum vang một mình (bản 17: bị hợp âm đè thì chìm).
       // `tones` chỉ là đường lui.
       { ...hit(2.5, .25, [tone(0, 12)], NHAN), danVao: true },           // bùm 5 (giật)
-      { ...hit(2.75, .5, [tone(2, 12)], NHAN), danVao: true },           // bum 3¾ — ngân dưới chát 4
+      { ...hit(2.75, .5, [tone(2, 12)], BUM), danVao: true },            // bum 6 (3¾) — nối tiếp bùm 5, ngân dưới chát 7
       { ...hit(3.25, .5, [tone(2, 12)], NHAN), danVao: true },           // bùm 4¼ (tay phải giai điệu E4) — ngân dưới chát 4&
       { ...hit(3.75, .25, [tone(0, 12)], NHAN), danVao: true },          // bùm 4¾ (tay phải giai điệu G4) → gốc đầu ô 2
       hit(4, .25, [tone(0, 12)], NHAN),                      // 8 bùm: gốc D3, giật
