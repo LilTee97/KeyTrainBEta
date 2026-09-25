@@ -23,6 +23,7 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'ca-phao-ballad-acdd': 'ca-phao-ballad-acdd-chorus',
   'ca-phao-ballad-co-em-cho': 'ca-phao-ballad-co-em-cho-chorus',
   'ca-phao-ballad-ngay-mai-em-di': 'ca-phao-ballad-ngay-mai-em-di-chorus',
+  'ca-phao-ballad-de-em-roi-xa': 'ca-phao-ballad-de-em-roi-xa-chorus',
   'hai-pop-ballad': 'hai-pop-ballad-chorus',
   'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
   'hai-slow-rock': 'hai-slow-rock-chorus',

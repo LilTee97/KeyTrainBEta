@@ -73,7 +73,7 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   ballad: {
     ten: 'Ballad',
-    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad', ...CP_BALLAD_IDS, ...CP_BALLAD_SONG_FAMILIES],
+    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad', ...CP_BALLAD_IDS, ...CP_BALLAD_SONG_FAMILIES, 'ca-phao-ballad-de-em-roi-xa'],
   },
   bossa: {
     ten: 'Bossa Nova',

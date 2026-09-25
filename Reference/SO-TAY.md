@@ -3677,3 +3677,33 @@ cùng vòng hợp âm. Chi tiết và lịch sử train ở `CA-PHAO.md` và `CP
 Kiểm lượt chốt: 16/16 test của `caPhaoBalladSongs` và `cpBalladBacking` đạt; so với HEAD,
 file mẫu chỉ đổi hai chuỗi ghi chú, định nghĩa âm nhạc không đổi. Không chạy lại toàn suite/build.
 
+### Ballad Để em: vạch nhịp sheet lệch một phách; tay phải lúc hát là giai điệu, bè hoà âm lấp chỗ tay trái trống
+
+Nút mới **Ballad Để em** (`ca-phao-ballad-de-em-roi-xa` + `-chorus`, ♩=85), rút từ *Để Em Rời Xa* của
+Cà Pháo. Số đo và lựa chọn biên soạn: `Reference/CA-PHAO-BALLAD-DE-EM.md`; tái tạo bằng
+`python -B scripts/audit_cp_de_em.py`. **Chờ nghe duyệt.**
+
+**Bẫy: vạch nhịp ký âm lệch nhạc đúng một phách.** Bass ở offset 1 của ô XML trong **68/70 ô**, giữ pha
+cả sau các ô lẻ 2/4, 3/4, 6/4. Ký hiệu hợp âm lệch theo. Nên đo trên *ô thật* = [ô XML k phách 2, ô k+1
+phách 2). Hai chỗ cũ đo lệch pha, **chưa sửa**: số "51/53 ô có LH ở phách 1" của bài này trong
+`CA-PHAO-BALLAD.md`, và kho solo `caPhaoFullSolos.json` của bài (giang tấu: bass pha 1 phổ biến nhất,
+4/14). Nút mới vì thế không gắn `cpSoloSong`.
+
+**Hai tay:** tay phải lúc hát là giai điệu lời (nốt đỉnh hai lượt phiên trùng từng nốt, 4 cặp ô).
+Cú tay phải không mang giai điệu chỉ 19/454. Cà Pháo phối hai tay bằng bè hoà âm chêm dưới giai điệu,
+đúng chỗ tay trái trống. Trên 30 ô phiên, tay trái gõ phách 1 (30) · 3& (19) · 4 (29), còn bè tay phải
+dày nhất ở phách 2 (18/21) · 1.75 (15/17) · 2.75 (14/21). Nút giữ bè ấy, bỏ nốt đỉnh.
+
+Ô chọn: phiên = ô thật 8–9 (đối chiếu 36–37); điệp = 24–25 (đối chiếu 52–53, nửa đầu tay trái lấy ô 52
+vì ô 24 vượt trần). Nối: mảng riêng `CP_BALLAD_DE_EM_STYLES`, không nhập vào `CP_BALLAD_SONG_STYLES`.
+Lý do: test sáu điệu của Codex khoá cứng số lượng, và nút do Claude soạn không mang màu Codex.
+`CP_BALLAD_SONG_IDS` gồm cả hai (họ Ballad, renderer giữ bè đã chọn). `CHORUS_PAIRS` và `hoDieu` thêm một dòng.
+
+Hằng số mới, kèm triệu chứng để lùi:
+- `leftHandTop` **60** (họ CP khác 67). Tay trái hai cặp ô cao nhất Bb3. Ở 67 thì trên Bb tay trái lên
+  Bb3/F4, trùng phím F4 tay phải. *Lùi khi* tay trái nghe đục, cụm bị gập thấp.
+- `rightHandRegister` **{55, 55, 74}**. Bè sheet nằm 58–73. Không khai thì C4/F4 trên Rê thứ lên C5/F5,
+  đè tầm hát. *Lùi khi* bè tay phải nghe trầm, dính tay trái.
+
+Test `caPhaoBalladDeEm.test.ts` khoá đầu ra vào đúng MIDI ô thật 9, 24, 25. Toàn suite **2.808 qua /
+7 đỏ**, đúng 7 đỏ cũ. tsc sạch.

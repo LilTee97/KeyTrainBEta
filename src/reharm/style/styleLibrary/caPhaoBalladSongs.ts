@@ -197,6 +197,72 @@ const acddChorus: StylePattern = {
   },
 }
 
+/*
+  Để Em Rời Xa (Claude soạn 25/9/2026, chờ nghe duyệt). Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md.
+  BẪY: sheet ghi 4/4 nhưng vạch nhịp lệch nhạc đúng MỘT phách — bass ở offset 1 của ô XML
+  trong ~67/70 ô. "Ô thật k" = [ô XML k phách 2, ô XML k+1 phách 2); beat dưới đây đếm trên ô thật.
+  Tay phải lúc hát là giai điệu lời (nốt đỉnh hai lượt phiên trùng nhau) → bỏ nốt đỉnh, giữ
+  bè hoà âm Cà Pháo chêm dưới nó: bè rơi đúng chỗ tay trái trống (phách 2, 1.75, 2.75).
+  Tầm tay phải: bè hai cặp ô nằm Bb3–C#5 (58–73), dưới giai điệu. Không khai thì thế bấm
+  app đẩy C4/F4 trên Rê thứ lên C5/F5 — đè đúng tầm giọng hát.
+*/
+const deEmCommon = { ...common, leftHandTop: 60, rightHandRegister: { rootFloor: 55, low: 55, high: 74 } }
+const deEm: StylePattern = {
+  ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
+  name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
+  familyName: 'Ballad Để em', variant: 1, bpm: 85,
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · phiên ô thật 8–9 (XML 8:2–10:2); đối chiếu 36–37'],
+  note: 'Phiên: tay trái bass–5 rồi gốc nghịch phách 1.75, móc đơn 3&–4–4&; tay phải bè dưới giai điệu ở phách 2 · 2a · 3a. Chờ nghe duyệt.',
+  cell: {
+    lengthBeats: 8,
+    left: [
+      // Ô thật 8: Bb2 · F3 · C3 · G3 G3 G3 (sheet đổi Bb→C ở 1.75; một hợp âm thì là gốc gõ lại).
+      bass(0, .5), hit(.5, 1, [tone(2)]), bass(1.75, .75),
+      hit(2.5, .5, [tone(2)]), hit(3, .5, [tone(2)]), hit(3.5, .5, [tone(2)]),
+      // Ô thật 9 (Dm): D2 · C3/D3 · A3 · D2 · D3 · D3 · A3.
+      bass(4, .5), hit(4.5, .75, [tone(3), tone(0, 12)]), hit(5.25, .5, [tone(2, 12)]),
+      bass(5.75, .75), hit(6.5, .5, [tone(0, 12)]), hit(7, .25, [tone(0, 12)]), hit(7.25, .75, [tone(2, 12)]),
+    ],
+    right: [
+      // Bb3/F4 dưới C5 · E4 dưới G4 · E4 dưới A4 · G4 dưới C5. Bỏ D4-A4-C5… và C4-E4-C4: giai điệu.
+      hit(1, .5, [tone(0), tone(2)]), hit(1.75, .5, [tone(1)]), hit(2.25, .5, [tone(1)]), hit(2.75, .25, [tone(2)]),
+      // C4/F4 dưới C5 hai lần. Bỏ F4/Bb4 ở 9:3.75 — lấy đà sang hợp âm sau, không phải đệm.
+      hit(5, .5, [tone(3, -12), tone(1)]), hit(7, .5, [tone(3, -12), tone(1)]),
+    ],
+  },
+}
+
+const deEmChorus: StylePattern = {
+  ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa-chorus',
+  name: 'Để Em Rời Xa · Điệp khúc', family: deEm.family,
+  familyName: deEm.familyName, variant: 2, bpm: 85,
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · điệp ô thật 24–25 (XML 24:2–26:2); đối chiếu 52–53'],
+  note: 'Điệp: hợp âm đổi mỗi hai phách, tay trái gốc–5–8 móc đơn; tay phải bè dưới giai điệu, ngón cái chêm ở phách 2, đệm lấp khe lời 3a–4&. Chờ nghe duyệt.',
+  cell: {
+    lengthBeats: 8,
+    left: [
+      // Nửa đầu theo ô 52 (Bb2 F3 Bb3): ô 24 cùng mốc nhưng Bb1-Bb2-Bb3 (+24) vượt trần tay trái 67.
+      bass(0, .5), hit(.5, .5, [tone(2)]), hit(1, 1, [tone(0, 12)]),
+      // Ô 24 nửa sau: C2 · C3/G3 · C3/G3.
+      bass(2, .5), hit(2.5, .5, [tone(0, 12), tone(2, 12)]), hit(3, 1, [tone(0, 12), tone(2, 12)]),
+      // Ô thật 25: C#3 (bass A/C#; không ép thể đảo) · A3 · D2 nghịch phách 1.75 · D2 · D2.
+      bass(4, .5), hit(4.5, 1, [tone(0, 12)]), bass(5.75, .25), bass(6, 1), bass(7, .75),
+    ],
+    right: [
+      // Ô 24: F4 dưới D5 · F4 dưới D5 · F4/Bb4 dưới F5 (chùm ba) · E4/C5 dưới E5.
+      hit(0, .5, [tone(2)]), hit(.75, .5, [tone(2)]), hit(4 / 3, 2 / 3, [tone(2), tone(0, 12)]),
+      hit(2, .75, [tone(1), tone(0, 12)]),
+      // Khe lời 2.75–4: C4 · D4/G4 · E4 · C4, thấp hơn giai điệu E5 16 nửa cung. Ô 52 có D4/G4 · E4 y hệt.
+      hit(2.75, .25, [tone(0)]), hit(3, .25, [tone(0, 2), tone(2)]), hit(3.25, .25, [tone(1)]), hit(3.5, .5, [tone(0)]),
+      // Ô 25: A4/C#5 · A4 · A4 dưới E5 · E4 ngón cái · C#5 dưới G5 · F4/A4 dưới F5 · C4 ngón cái.
+      hit(4, .5, [tone(0, 12), tone(1, 12)]), hit(4.5, .25, [tone(0, 12)]), hit(4.75, .25, [tone(0, 12)]),
+      hit(5, .25, [tone(2)]), hit(5.25, .5, [tone(1, 12)]), hit(5.75, .5, [tone(1), tone(2)]), hit(7.25, .25, [tone(3, -12)]),
+    ],
+  },
+}
+
 export const CP_BALLAD_SONG_STYLES: readonly StylePattern[] = [coEmCho, coEmChoChorus, ngayMai, ngayMaiChorus, acdd, acddChorus]
-export const CP_BALLAD_SONG_IDS = CP_BALLAD_SONG_STYLES.map(style => style.id)
+// Tách mảng riêng: nút do Claude soạn, không mang màu Codex và không đổi test sáu điệu của Codex.
+export const CP_BALLAD_DE_EM_STYLES: readonly StylePattern[] = [deEm, deEmChorus]
+export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES].map(style => style.id)
 export const CP_BALLAD_SONG_FAMILIES = [coEmCho.family, ngayMai.family, acdd.family]
