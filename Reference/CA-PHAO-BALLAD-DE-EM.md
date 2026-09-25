@@ -285,6 +285,35 @@ Test chống trùng phím nay quét cả `sus4`, `9sus4` (trước chỉ '', m, 
 **Giá trị cũ:** `tone(1)` lùi về bậc 7 rồi bậc 5.
 **Bài học:** thử trên vòng đã tái hòa âm với màu của người dùng, không chỉ trên hợp âm trơn.
 
+## Bản 12: khung 11 tiếng + (chát chát chát) → chạy; bùm nối bum thì dẫn bass
+
+Người dùng: *"3 tiếng chát nên để ra cuối khung … 1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát chát chát) …
+tiếng 4 qua 5 thì hơi giật hơn chút chỗ tiếng 8 qua 9 cũng đánh giật; chỗ Bùm mà nối tiếp bum thì nên chơi dẫn bass"*.
+
+| tiếng | vị trí | nốt trên vòng sheet |
+|---|---|---|
+| 1–3 | ô 1 phách 1 · 2 · 2¾ | như cũ |
+| 4 chát | ô 1 phách 3¼ | G4+C5, **dài .15 (cũ ¼), lực .9 (cũ .8)** |
+| 5 bùm | ô 1 phách 3& | G3, lực .9 |
+| 6 bum — dẫn bass | ô 1 phách 4 | gốc hợp âm sau hạ một cung (`som` + `requireNextChord`): C2 → D2 |
+| 7 chát | ô 1 phách 4& | G4+C5 |
+| 8 bùm | ô 2 phách 1 | D2 ngắn ¼ + cụm C3+D3+A3 |
+| 9 bum — dẫn bass | ô 2 phách 1¼ | E2 (bậc 2) |
+| 10 chát | ô 2 phách 1& | F4+C5 |
+| 11 bùm | ô 2 phách 1¾ | F2 (bậc 3; hợp âm treo lấy nốt treo) |
+| chát chát chát | ô 2 phách 2 · 2¼ · 2¾ | F4+C5, cú ba F4 ngân trên câu chạy (cửa sổ 5) |
+| câu chạy | ô 2 phách 3¼ → 4¾ | A2 D3 E3 F3 E3 D3 C3 |
+
+Vị trí do Claude đặt:
+- Câu chạy 7 nốt phải vào ở 3¼ để kết đúng vạch, nên 3 chát giữ mốc cửa sổ 5 và 8–11 dồn trong phách 1 ô 2.
+- Đường bass ô 2 đi 1 · 2 · 3 rồi câu chạy mở bằng bậc 5.
+- Bum 6 cùng lối "bậc dưới bass sau" của phách dẫn Có Em Chờ. Hạ đúng một cung (không theo gam), vì mẫu không biết giọng.
+  Hợp âm không đổi ở vạch thì bỏ cú.
+
+Trên bài người dùng: G→D9sus4 ra bum 6 C2; Em9→Bm7 ra A2.
+**Giá trị cũ:** bản 11.
+**Triệu chứng để lùi:** phách 1 ô 2 nghe dồn → bỏ chát 10.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

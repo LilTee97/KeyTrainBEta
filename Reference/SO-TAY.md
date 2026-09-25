@@ -3877,3 +3877,14 @@ C5+C5 (một nốt gõ trùng phím), câu chạy F3 thành C3. Mọi test trư�
 `DEGREE_CHAIN` chung, vì Có Em Chờ đã duyệt cũng dùng `tone(1)`.
 **Giá trị cũ:** lùi về bậc 7. Test chống trùng phím thêm `sus4`, `9sus4`, cộng test riêng cho D9sus4.
 **Bài học:** thử trên vòng đã tái hòa âm với cài đặt màu của người dùng, không chỉ trên hợp âm trơn.
+
+### Ballad Để em: khung phiên 11 tiếng + (chát chát chát) → câu chạy; dẫn bass ở bùm nối bum
+
+Khung người dùng: 1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát chát chát) → chạy. Vị trí do Claude đặt
+(chi tiết `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 12"):
+- 4→5 giật hơn: chát 4 dài .15, lực .9 (cũ ¼, .8).
+- **bum 6 dẫn bass**: `som` + `requireNextChord` + `tone(0, -2)` — gốc hợp âm sau hạ một cung; hợp âm không đổi ở vạch thì
+  bỏ cú, không dẫn sai chỗ.
+- ô 2: 8 bùm D2 (¼) · 9 bum E2 (1¼) · 10 chát 1& · 11 bùm F2 (1¾) — bass 1-2-3. 3 chát ở 2 · 2¼ · 2¾, câu chạy 3¼ mở bằng bậc 5.
+
+**Giá trị cũ:** bản 11. **Triệu chứng để lùi:** phách 1 ô 2 dồn → bỏ chát 10.

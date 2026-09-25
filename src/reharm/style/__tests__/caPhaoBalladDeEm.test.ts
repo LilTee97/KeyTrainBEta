@@ -21,22 +21,23 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
 describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
-  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1Bùm 2chát 3bùm 4chát 5bùm 6chát 7bùm 8bum 9chát(×3) 10bum → chạy', () => {
+  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát×3) → chạy', () => {
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
-    // Khung người dùng 10 tiếng, tiếng 9 là 3 cú chát liền → 12 cú + câu chạy 7 nốt.
+    // Khung người dùng: 11 tiếng + (chát chát chát) + câu chạy 7 nốt.
     const verse = getStyle(VERSE)!.cell!
     const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 4, 4.5, 5, 5.25, 5.75, 6, ...run])
-    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 4, 4.5, 6, ...run])  // Bùm 1 · bùm 3 · 5 · 7 · bum 8 · 10 · câu chạy
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3, 5, 5.25, 5.75]) // chát 2 · 4 · 6 · 9 (3 cú)
-    // 4 chát giật nảy: ngắn và nhấn hơn các chát khác, rồi bùm 5 vào ngay sau ¼ phách.
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run])
+    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 3, 4, 4.25, 4.75, ...run])   // Bùm 1 · bùm 3 · 5 · bum 6 · bùm 8 · bum 9 · bùm 11
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3.5, 4.5, 5, 5.25, 5.75]) // chát 2 · 4 · 7 · 10 · chát chát chát
+    // 4 chát → 5 bùm giật: chát rất ngắn và nhấn, bùm nhấn ¼ phách sau.
     const chat4 = verse.right.find(h => h.beat === 2.25)!
-    expect(chat4.durationBeats).toBeLessThanOrEqual(.25)
-    expect(chat4.velocityScale!).toBeGreaterThan(.65)
-    // Bum 8 · 10 đủ lực để nghe ra dưới cụm bùm 7 đang ngân.
-    for (const beat of [4.5, 6]) expect(verse.left.find(h => h.beat === beat)!.velocityScale!).toBeGreaterThanOrEqual(.8)
+    expect(chat4.durationBeats).toBeLessThanOrEqual(.15)
+    expect(chat4.velocityScale!).toBeGreaterThanOrEqual(.9)
+    // Bum 6 dẫn bass vào hợp âm ô 2 (lấy hợp âm sau, chỉ khi đổi hợp âm ở vạch).
+    const bum6 = verse.left.find(h => h.beat === 3)!
+    expect([bum6.som, bum6.requireNextChord]).toEqual([true, true])
     expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
@@ -51,12 +52,12 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     }
   })
 
-  it('cao độ phiên trên vòng sheet: tay trái ô 1 = cửa sổ 4, ô 2 = cửa sổ 5 + bum D2, kèm câu chạy', () => {
+  it('cao độ phiên trên vòng sheet: bum 6 dẫn C2 → D2; bass ô 2 đi D2 E2 F2 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3, [67, 72]],
-      [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]],
-      [4, [38, 48, 50, 57]], [4.5, [38]], [6, [50]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3.5, [67, 72]],
+      [4.5, [65, 72]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]], [3, [36]],
+      [4, [38, 48, 50, 57]], [4.25, [40]], [4.75, [41]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)

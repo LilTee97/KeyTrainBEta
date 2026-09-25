@@ -226,47 +226,43 @@ const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
   familyName: 'Ballad Để em', variant: 1, bpm: 85,
-  sourceVideos: ['Cà Pháo · Để Em Rời Xa · tiếng 1–3 từ cửa sổ 4 (như DERX); tiếng 4–9 theo khung người dùng 25/9/2026'],
-  note: 'Phiên: 1 Bùm 2 chát 3 bùm 4 chát–5 bùm 6 chát | 7 bùm 8 bum 9 chát (3 cú liền) 10 bum → câu chạy tay trái. Chờ nghe duyệt.',
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · tiếng 1–3 từ cửa sổ 4 (như DERX); khung người dùng 25/9/2026; 3 chát + câu chạy cửa sổ 5'],
+  note: 'Phiên: 1 Bùm 2 chát 3 bùm 4 chát–5 bùm 6 bum 7 chát | 8 bùm–9 bum 10 chát 11 bùm (chát chát chát) → câu chạy. Chờ nghe duyệt.',
   // Điệu tự lấp chỗ trống: câu lót tự động của app không chen vào (người dùng: "thay câu chạy ngón ngẫu nhiên").
   autoFills: false,
   /*
-    Khung tiếng do NGƯỜI DÙNG đặt (25/9/2026): "1Bùm 2chát 3bùm 4chát 5bùm 6chát 7bùm 8bum 9chát 10bum",
-    giữ 3 tiếng chát và câu chạy ở ô 2. Vị trí do Claude đặt; số đo ô 1 trên 6 cửa sổ Bb→C (4, 6, 8, 32, 34, 36),
-    ô 2 trên 6 cửa sổ Dm (5, 7, 9, 33, 35, 37):
-    4 chát 3¼ (bè tay phải 3/6; G4+C5 cửa sổ 4) ngắn + nhấn → 5 bùm 3& (tay trái 6/6; G3) → 6 chát phách 4
-    (tay trái sheet gõ phách 4 ở 6/6 — giữ phách ấy có tiếng; tay phải 0/6, nốt G4+C5 là biên soạn)
-    | 7 bùm phách 1 (cụm cửa sổ 5) · 8 bum 1& (tay trái 3/6; D2 cửa sổ 7) · 9 chát = 3 cú F4+C5 ở 2 · 2¼ · 2¾
-    (cửa sổ 5, cú thứ ba F4 ngân trên câu chạy) · 10 bum 3 (D3) · câu chạy 3¼ → 4¾.
+    Khung do NGƯỜI DÙNG đặt (25/9/2026): "1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát chát chát)"
+    rồi mới chạy nốt; 1–3 như cũ; 4→5 và 8→9 đánh giật; bùm nối bum thì DẪN BASS.
+    Vị trí do Claude đặt: câu chạy 7 nốt phải vào ở ô 2 phách 3¼ mới kết đúng vạch, nên 3 chát ở 2 · 2¼ · 2¾ (đúng
+    mốc cửa sổ 5) và 8–11 dồn trong phách 1 ô 2.
+    Dẫn bass: bum 6 = gốc hợp âm ô 2 hạ một cung (`som` — cùng lối "bậc dưới bass sau" của phách dẫn Có Em Chờ;
+    hợp âm không đổi ở vạch thì bỏ cú); 8 · 9 · 11 = bass đi lên 1 · 2 · 3 rồi câu chạy mở bằng bậc 5.
   */
   cell: {
     lengthBeats: 8,
     left: [
       hit(0, 1.75, [tone(0), tone(2), bay7()], .85),         // 1 Bùm: Bb2+F3+A3 (cửa sổ 4)
-      // Tay phải buông hẳn sau chát giật 4 (cho "nảy"); tay trái ngân từng phím tới khi phím ấy đánh lại
-      // (như giữ pedal bass), để lúc bùm–bum luôn còn hai nốt trầm vang.
-      hit(1.75, 2.25, [tone(0, 12)]), hit(1.75, .75, [tone(2, 12)]), // 3 bùm: C3 (tới vạch) + G3 (tới bùm 5)
-      hit(2.5, 1.5, [tone(2, 12)], .85),                     // 5 bùm: G3, giật vào sau chát 4, ngân tới vạch
-      // Người dùng không nghe ra "bùm bum … bum" ở ô 2: cụm không có gốc trầm nghe như chát, hai bum nhẹ bị che.
-      // Thêm D2 (cửa sổ 9 có D2 đầu ô) và nâng lực hai bum .65 → .8. Lùi: bum nghe nặng → .65.
-      // Tách D2 thành cú riêng: bum 8 đánh lại D2 thì renderer cắt cả cú chứa nó — chung một cú thì cụm tắt theo.
-      hit(4, .5, [tone(0)], .85),                            // 7 bùm: D2 gốc trầm (cửa sổ 9 đầu ô)
-      hit(4, 2, [tone(0, 12), tone(2, 12), bay7(12)], .85),  // 7 bùm: cụm D3+A3+C3 (cửa sổ 5)
-      hit(4.5, 1.5, [tone(0)], .8),                          // 8 bum: D2 (cửa sổ 7 có D2 ở 1&)
-      hit(6, .25, [tone(0, 12)], .8),                        // 10 bum: D3, câu chạy vào liền
+      hit(1.75, 1.25, [tone(0, 12)]), hit(1.75, .75, [tone(2, 12)]), // 3 bùm: C3 (tới bum 6) + G3 (tới bùm 5)
+      hit(2.5, 1.5, [tone(2, 12)], .9),                      // 5 bùm: G3, nhấn — giật vào sau chát 4
+      { ...hit(3, 1, [tone(0, -2)], .8), som: true, requireNextChord: true }, // 6 bum: dẫn bass — gốc hợp âm sau hạ một cung
+      hit(4, .25, [tone(0)], .9),                            // 8 bùm: gốc trầm D2, ngắn — giật
+      hit(4, 1, [tone(0, 12), tone(2, 12), bay7(12)], .85),  //         cụm D3+A3+C3 (cửa sổ 5), nhả khi vào 3 chát
+      hit(4.25, .5, [tone(0, 2)], .8),                       // 9 bum: dẫn bass — bậc 2 (E2)
+      hit(4.75, 1.5, [ba3()], .85),                          // 11 bùm: bậc 3 (F2), ngân tới câu chạy
       // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5).
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [ba3(12)]),
       hit(7.25, .25, [tone(0, 14)]), hit(7.5, .25, [tone(0, 12)]), hit(7.75, .25, [tone(3)]),
     ],
     right: [
-      hit(0, 1.75, [ba3()]), hit(0, .5, [tone(2)]),         // 1: D4 · F4
+      hit(0, 1.75, [ba3()]), hit(0, .5, [tone(2)]),           // 1: D4 · F4
       hit(1, .75, [tone(2), tone(0, 12)]),                    // 2 chát: F4+Bb4
-      hit(1.75, .5, [ba3(), tone(0, 12)]),                  // 3: E4+C5 cùng bùm
-      hit(2.25, .25, [tone(2), tone(0, 12)], .8),             // 4 chát: G4+C5, ngắn và nhấn — giật nảy
-      hit(3, 1, [tone(2), tone(0, 12)]),                      // 6 chát: G4+C5 phách 4, tới vạch
-      hit(5, .25, [ba3(), tone(3)]), hit(5.25, .5, [ba3(), tone(3)]), // 9 chát, cú 1 · 2: F4+C5
-      hit(5.75, 2.25, [ba3()]), hit(5.75, 1.25, [tone(3)]), // 9 chát, cú 3: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
+      hit(1.75, .5, [ba3(), tone(0, 12)]),                    // 3: E4+C5 cùng bùm
+      hit(2.25, .15, [tone(2), tone(0, 12)], .9),             // 4 chát: G4+C5, rất ngắn và nhấn — giật hơn (cũ ¼, lực .8)
+      hit(3.5, .5, [tone(2), tone(0, 12)]),                   // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
+      hit(4.5, .5, [ba3(), tone(3)]),                         // 10 chát: F4+C5
+      hit(5, .25, [ba3(), tone(3)]), hit(5.25, .5, [ba3(), tone(3)]), // chát chát: F4+C5 (cửa sổ 5)
+      hit(5.75, 2.25, [ba3()]), hit(5.75, 1.25, [tone(3)]),   // chát: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
     ],
   },
 }
