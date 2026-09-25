@@ -30,7 +30,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
     // Câu chạy một theo khung "Chát-bùm bum chát bùm chát bùm bum" (cách 1: Chát-bùm cùng một cú, hai tay).
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
-    expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : ''))).toEqual(['TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
+    expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : ''))).toEqual(['TP', 'TP', 'P', 'TP', 'P', 'TP', 'TP'])
     // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = HAI nốt bass.
     for (const b of [2.25, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
     for (const b of [2.5, 3.75]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(2)
@@ -58,8 +58,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   it('cao độ phiên trên vòng sheet: câu chạy một Chát-bùm bum chát bùm chát bùm bum; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
       // Câu chạy một, tay phải: chát E4+G4 · G4+C5 · C4+E4 (đỉnh G4 → C5 → E4 như sheet A4 → C5 → E4); bùm C4 · G4.
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67]], [2.75, [67, 72]], [3, [60]],
-      [3.25, [60, 64]], [3.5, [67]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67]], [2.5, [65]], [2.75, [67, 72]], [3, [60]],
+      [3.25, [60, 64]], [3.5, [67]], [3.75, [64]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
     // Tay trái câu chạy một: C3 · bum F2+F3 → G3 · G3 · bum C2+C3 → D3 đầu ô 2 (bass dẫn liền bậc, sheet C4 → D).
@@ -71,9 +71,12 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   })
 
   it('bum dẫn liền bậc vào bass của tiếng kế trên mọi gốc; gam hợp âm đang vang chọn một cung hay nửa cung', () => {
-    const lh = (chords: string, at: number) => [...new Set(renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords),
-      getStyle(VERSE)!, { beatsPerChord: 4 }).filter(e => e.hand === 'left' && Math.abs(e.startBeat - at) < 1e-6)
-      .flatMap(e => e.notes))].sort((a, b) => a - b)
+    const hand = (h: 'left' | 'right') => (chords: string, at: number) => [...new Set(renderPattern(
+      voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
+      .filter(e => e.hand === h && Math.abs(e.startBeat - at) < 1e-6).flatMap(e => e.notes))].sort((a, b) => a - b)
+    const lh = hand('left'), rh = hand('right')
+    // Vòng sheet C → Dm7: bum tay phải F4 → G4 (chát), E4 → F4 (bùm ô 2).
+    expect([rh('C Dm7', 2.5), rh('C Dm7', 3.75)]).toEqual([[65], [64]])
     // Sheet C → Dm7: C (một cung). Còn lại là suy đoán theo gam: G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F.
     for (const [chords, pc] of [['C Dm7', 0], ['G C', 11], ['C F', 4], ['A Dm', 1], ['C G', 5]] as const)
       expect(Math.max(...lh(chords, 3.75)) % 12, chords).toBe(pc)
@@ -81,9 +84,12 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     expect(lh('A Dm', 3.75)).toEqual([45, 49])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
       for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`])
-        for (const [bum, next] of [[2.5, 3], [3.75, 4]]) {
+        for (const [bum, next, nextRh] of [[2.5, 3, 2.75], [3.75, 4, 4]]) {
           const target = Math.min(...lh(chords, next))
           expect(lh(chords, bum).some(n => target - n >= 1 && target - n <= 2), `${chords} phách ${bum} → ${target}: ${lh(chords, bum)}`).toBe(true)
+          // Giai điệu thấp tay phải của bum cũng bước liền bậc (một cung / nửa cung) vào một nốt tay phải của tiếng kế.
+          const [mel] = rh(chords, bum), next2 = rh(chords, nextRh)
+          expect(next2.some(n => Math.abs(n - mel!) >= 1 && Math.abs(n - mel!) <= 2), `${chords} tay phải ${bum}: ${mel} → ${next2}`).toBe(true)
         }
   })
 

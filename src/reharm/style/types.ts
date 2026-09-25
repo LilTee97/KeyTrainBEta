@@ -75,8 +75,8 @@ export interface RhythmHit {
     /** Với som: chỉ đánh nếu hợp âm kế tiếp bắt đầu đúng lúc tiếng này hết.
      * Bass dẫn không được nhắm một hợp âm còn xa hoặc tự dẫn ở cuối bài. */
     requireNextChord?: boolean
-    /** Bass DẪN: đặt `tones` theo hợp âm vang lúc tiếng này HẾT (nốt của tiếng bass kế), rồi hạ một cung nếu nốt dưới ấy
-     * còn trong gam của hợp âm đang vang, không thì nửa cung — bước liền bậc vào tiếng kế. */
+    /** Tiếng DẪN: đặt `tones` theo hợp âm vang lúc tiếng này HẾT (nốt của tiếng kế, cùng tay), rồi hạ một cung nếu nốt
+     * dưới ấy còn trong gam của hợp âm đang vang, không thì nửa cung — bước liền bậc vào tiếng kế. */
     danVao?: boolean
   }
 

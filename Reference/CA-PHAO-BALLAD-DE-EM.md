@@ -544,6 +544,29 @@ loại vòng.
 - cặp quãng tám ở C2–F2 nghe đục → bỏ nốt dưới, giữ một nốt dẫn ở quãng tám 3;
 - dẫn nửa cung nghe lạ giọng ở một vòng nào → đổi luật gam cho loại hợp âm ấy.
 
+## Bản 24: bum câu chạy một thêm giai điệu thấp tay phải — cũng là tiếng dẫn
+
+Người dùng: *"tiếng Bum trong câu chạy đầu tiên vẫn mờ nhạt vậy hãy thêm nốt giai điệu thấp ở tay phải, nhưng tất nhiên là
+giai điệu đó cũng tuân thủ chức năng làm tiếng dẫn"*.
+
+Mỗi bum của câu chạy một có thêm **một nốt tay phải** bước liền bậc vào một nốt tay phải của tiếng kế. Cùng cờ `danVao`, cùng
+luật gam như bass dẫn.
+
+| mốc | tiếng | tay trái | tay phải (mới) | tay phải đi vào |
+|---|---|---|---|---|
+| 3& | bum | F2+F3 → G3 | **F4** | G4 của chát 3¾ |
+| 4¾ | bum | C2+C3 → D3 | **E4** | F4 của bùm đầu ô 2 (Dm7) |
+
+**Số đo:** sheet KHÔNG có nốt tay phải ở 3& (6/6 cửa sổ 4 · 6 · 8 · 32 · 34 · 36). Ở 4¾ sheet có C4 (2/6) hoặc F4 (2/6), rồi
+nhảy lên C5/F5, không bước liền bậc. Cả hai nốt tay phải là ý người dùng, không phải sheet.
+**Bẫy tay phải:** nốt dẫn lùi xuống dưới sàn tay phải (60) thì bộ kẹp cuối đẩy lên một quãng tám, mất bước liền bậc. Khi ấy dẫn
+từ TRÊN xuống (một cung nếu còn trong gam, không thì nửa cung). Test kiểm tay phải liền bậc trên 12 gốc × 4 loại vòng.
+Ô 2 bum (phách 1¼) không đổi — người dùng chỉ nói câu chạy đầu tiên.
+
+**Giá trị cũ:** bản 23 (bum chỉ tay trái).
+**Triệu chứng để lùi:** bum 3& ba nốt Fa (F2 F3 F4) nghe như bass nặng chứ không ra giai điệu → nhắm nốt trên của chát (dẫn B4 →
+C5) thay vì nốt dưới.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

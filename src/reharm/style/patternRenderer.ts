@@ -315,19 +315,22 @@ function notesForVoice(
   Suy đoán của Claude, chưa có sheet: gam hợp âm trưởng = trưởng (bảy thứ nếu hợp âm có b7), thứ = thứ tự nhiên —
   ra G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F. Gập vào tầm TRƯỚC khi lùi để đích khớp nốt sẽ vang
   (bộ kẹp cuối cũng gập); cặp quãng tám gập trùng phím thì đẩy sang quãng tám còn chỗ.
-  Nốt dẫn không tụt dưới nốt gốc hợp âm đang vang (`leftArpeggioAboveRoot`): tụt thì đánh chính nốt gốc ấy làm nền —
-  vd Db → Db: C2+C3 thành Db2+C3.
+  Tay trái: nốt dẫn không tụt dưới nốt gốc hợp âm đang vang (`leftArpeggioAboveRoot`): tụt thì đánh chính nốt gốc ấy
+  làm nền — vd Db → Db: C2+C3 thành Db2+C3.
+  Tay phải: lùi xuống dưới sàn thì bộ kẹp cuối đẩy lên một quãng tám, mất bước liền bậc — nên dẫn từ TRÊN xuống.
 */
-function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number): MidiNote[] {
+function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, left: boolean): MidiNote[] {
   const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
   const root = Math.min(...here.left) % 12
-  const goc = low + (((root - low) % 12) + 12) % 12
+  const goc = left ? low + (((root - low) % 12) + 12) % 12 : low
   const pcs = new Set((here.harmonicNotes ?? [...here.left, ...here.right]).map((n) => ((n - root) % 12 + 12) % 12))
   const gam = pcs.has(3) && !pcs.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, pcs.has(10) ? 10 : 11]
+  const trongGam = (n: number) => gam.includes(((n - root) % 12 + 12) % 12)
   const out: number[] = []
   for (const n of notes) {
     const t = fold(n)
-    let m = Math.max(goc, fold(t - (gam.includes(((t - 2 - root) % 12 + 12) % 12) ? 2 : 1)))
+    const duoi = t - (trongGam(t - 2) ? 2 : 1)
+    let m = !left && duoi < low ? t + (trongGam(t + 2) ? 2 : 1) : Math.max(goc, fold(duoi))
     if (out.includes(m) && m + 12 <= high) m += 12
     if (!out.includes(m)) out.push(m)
   }
@@ -560,9 +563,10 @@ function renderWithCell(
               ? { low: pattern.rightHandRegister.rootFloor, high: pattern.rightHandRegister.high }
               : undefined,
         )
-        const raw = hit.danVao && hand === 'left'
-          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH)
-          : dat
+        const raw = !hit.danVao ? dat : hand === 'left'
+          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH, true)
+          : danVao(dat, voicingAt(startBeat) ?? voicing, pattern.rightHandRegister?.low ?? RIGHT_ARPEGGIO_LOW,
+            pattern.rightHandRegister?.high ?? RIGHT_ARPEGGIO_HIGH, false)
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
 

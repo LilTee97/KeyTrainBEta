@@ -3990,3 +3990,10 @@ bùm thật đã bị kẹp cuối gập xuống C3 (48), cách nhau 10 nửa cu
 Nốt dưới của cặp tụt dưới gốc hợp âm đang vang (Db: C2 < Db2, đỏ `leftArpeggioAboveRoot`) thì đánh chính nốt gốc làm nền.
 Số đo: sheet C4 → D (2/6 cửa sổ); gam là suy đoán. Vòng sheet: bum F2+F3 → G3, C2+C3 → D3.
 **Giá trị cũ:** bum C3+G3 · E3+G3 (bản 22). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 23".
+
+### Ballad Để em: bum câu chạy một có giai điệu thấp tay phải, dẫn liền bậc vào tay phải tiếng kế
+
+Người dùng muốn bum thêm *"nốt giai điệu thấp ở tay phải … cũng tuân thủ chức năng làm tiếng dẫn"*. `danVao` nay chạy cả tay
+phải. **Bẫy:** tay phải lùi xuống dưới sàn 60 thì bộ kẹp cuối đẩy lên một quãng tám, nên dẫn từ trên xuống.
+Vòng sheet: bum 3& F4 → G4 (chát), bum 4¾ E4 → F4 (bùm ô 2). Sheet không có tay phải ở 3& (6/6 cửa sổ) — đây là ý người dùng.
+**Giá trị cũ:** bum chỉ tay trái (bản 23). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 24".
