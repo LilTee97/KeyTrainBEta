@@ -115,6 +115,36 @@ Cụm tay trái đầu ô 2 vẫn ngân. C3 và D3 đánh lại ở 1&, A3 kêu 
 **Triệu chứng để lùi:** phiên nghe dồn, mất chỗ thở cho giọng → bỏ cú phách 2 trước, vì cú ô 2 có bằng chứng mỏng hơn.
 Mốc gõ nay = DERX + hai cú này.
 
+## Bản 4: phiên khúc theo khung tiếng người dùng
+
+Người dùng: *"bỏ tiếng chát 8 mà tôi vừa kêu thêm vào … khung tiếng chính ổn từ tiếng 1 đến tiếng 3, bắt
+đầu từ tiếng 4 thì thay … 1Bùm... 2chát...3bùm...4chát-5bùm 6chát... 7bùm 8chát 9bùm … Chỗ 4 chát- 5 bùm …
+đánh cho tiếng có cảm giác giật nảy từ chát rồi giật vào bùm … khớp với tiết tấu của điệu ballad đang chơi"*.
+
+| tiếng | vị trí | tay · nốt trên vòng sheet | ngân |
+|---|---|---|---|
+| 1 Bùm | ô 1 phách 1 | trái Bb2+F3+A3 · phải D4 (+F4 ½) | 1¾ |
+| 2 chát | ô 1 phách 2 | phải F4+Bb4 | ¾ |
+| 3 bùm | ô 1 phách 2¾ | trái C3+G3 · phải E4+C5 | tới tiếng sau |
+| 4 chát | ô 1 phách 4& | phải G4+C5, **ngắn ¼, nhấn** | ¼ |
+| 5 bùm | ô 2 phách 1 | trái C3+D3+A3, nhấn | 2 |
+| 6 chát | ô 2 phách 2 | phải F4+C5 | 1½ |
+| 7 bùm | ô 2 phách 3 | trái D2 | 1 |
+| 8 chát | ô 2 phách 3& | phải F4+C5 | 1½ |
+| 9 bùm | ô 2 phách 4 | trái D3 | 1 |
+
+Thứ tự và kiểu tiếng là **ý người dùng**. Vị trí 4–9 là **Claude đặt**, người dùng chưa chốt:
+- 4–5: chát ngắn và nhấn ½ phách trước vạch, giật vào bùm đầu ô 2.
+- 6: đối xứng với tiếng 2.
+- 7–8–9: đi đều phách 3 · 3& · 4. Bùm 9 lên quãng tám; tay trái sheet ở phách 4 ô Dm là D3 ở 3/6 cửa sổ.
+
+Nốt chát dùng lại bè sheet đã có: G4+C5 của cửa sổ 4, F4+C5 của cửa sổ 5.
+**Bỏ theo khung:** câu chạy tay trái 7 nốt cuối ô 2 (của DERX); chát ở 2¼ · 2¾ · 3¼; chát trái ô 2 phách 1&;
+tay trái G3 ở 3& ô 1.
+**Giá trị cũ:** bản 3.
+**Triệu chứng để lùi:** "giật" nghe cụt → dời chát 4 về phách 4¾ (sát bùm hơn) hoặc bỏ nhấn.
+Muốn lại câu chạy → phải dời 7–8–9.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

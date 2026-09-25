@@ -19,15 +19,20 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
   .map(e => [+e.startBeat.toFixed(3), [...new Set(render(id).filter(x => x.hand === hand && Math.abs(x.startBeat - e.startBeat) < 1e-6)
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
-describe('Ballad Để em — soạn lại trên mốc gõ DERX', () => {
-  it('mốc gõ = DERX, cộng hai tiếng chát lấp khoảng trống phiên (phải phách 2, trái ô 2 phách 1&)', () => {
-    const added = { [`${VERSE} right`]: [1], [`${VERSE} left`]: [4.5] } as Record<string, number[]>
-    for (const [mine, derx] of [[VERSE, BALLAD_DERX[0]], [CHORUS, BALLAD_DERX[1]]] as const)
-      for (const hand of ['left', 'right'] as const) {
-        const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
-        expect(beats(getStyle(mine)!.cell![hand]), `${mine} ${hand}`)
-          .toEqual([...beats(derx.cell![hand]), ...(added[`${mine} ${hand}`] ?? [])].sort((a, b) => a - b))
-      }
+describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
+  it('điệp giữ mốc gõ DERX; phiên theo khung người dùng: 1 Bùm … 2 chát … 3 bùm … 4 chát–5 bùm 6 chát … 7 bùm 8 chát 9 bùm', () => {
+    const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
+    for (const hand of ['left', 'right'] as const)
+      expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
+    // Mỗi tiếng = một thời điểm có cú đánh; hai tay cùng lúc là một tiếng.
+    const verse = getStyle(VERSE)!.cell!
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 3.5, 4, 5, 6, 6.5, 7])
+    expect(beats(verse.left)).toEqual([0, 1.75, 4, 6, 7])     // bùm 1 · 3 · 5 · 7 · 9
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 3.5, 5, 6.5]) // (1) · chát 2 · (3) · 4 · 6 · 8
+    // 4 chát giật nảy: ngắn và nhấn hơn các chát khác, rồi bùm 5 vào ngay đầu ô 2.
+    const chat4 = verse.right.find(h => h.beat === 3.5)!
+    expect(chat4.durationBeats).toBeLessThanOrEqual(.25)
+    expect(chat4.velocityScale!).toBeGreaterThan(.65)
   })
 
   it('không móc kép nào dưới hai nốt vang trên vòng của sheet — hết chỗ đứt của DERX', () => {
@@ -41,13 +46,10 @@ describe('Ballad Để em — soạn lại trên mốc gõ DERX', () => {
     }
   })
 
-  it('cao độ phiên khớp sheet cửa sổ 4–5: quãng đôi tay phải, câu chạy tay trái', () => {
+  it('cao độ phiên trên vòng sheet: tiếng 1–3 như cửa sổ 4, chát giữ bè sheet', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.75, [67, 72]],
-      [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
-    expect(onsets(VERSE, 'left').find(([b]) => b === 4.5)).toEqual([4.5, [48, 50]])
-    expect(onsets(VERSE, 'left').filter(([b]) => (b as number) >= 6.25).map(([, n]) => n))
-      .toEqual([[45], [50], [52], [53], [52], [50], [48]])
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [3.5, [67, 72]], [5, [65, 72]], [6.5, [65, 72]]])
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [4, [48, 50, 57]], [6, [38]], [7, [50]]])
   })
 
   it('cao độ điệp khớp sheet cửa sổ 24–25 (bỏ nốt trên 74)', () => {

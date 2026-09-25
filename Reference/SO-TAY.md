@@ -3772,3 +3772,21 @@ Chọn tiếng lấp theo những gì Cà Pháo đánh ở đúng chỗ ấy, ng
 Chi tiết: `Reference/CA-PHAO-BALLAD-DE-EM.md` mục "Bản 3".
 **Giá trị cũ:** không có hai cú. **Triệu chứng để lùi:** phiên dồn, mất chỗ thở → bỏ cú phách 2 trước.
 Test khoá mốc gõ = DERX + hai cú, cùng cao độ F4+Bb4 và C3+D3 trên vòng sheet.
+
+### Ballad Để em: phiên khúc theo khung tiếng người dùng — 1 Bùm … 2 chát … 3 bùm … 4 chát–5 bùm 6 chát … 7 bùm 8 chát 9 bùm
+
+Người dùng giữ tiếng 1–3, thay từ tiếng 4 bằng khung của họ, bỏ chát trái 1& vừa thêm ở bản 3. Chỗ
+"4 chát–5 bùm" họ muốn *"giật nảy từ chát rồi giật vào bùm"*.
+
+Vị trí do Claude đặt, chưa chốt:
+- 4 chát: ô 1 phách 4&, ngắn ¼, lực .8 (chát khác .65).
+- 5 bùm: ô 2 phách 1, lực .85.
+- 6 chát: phách 2.
+- 7 · 8 · 9: phách 3 · 3& · 4. Bùm 7 là D2, bùm 9 là D3.
+
+Nốt chát lấy bè sheet sẵn có (G4+C5, F4+C5). Mọi tiếng ngân tới cú kế cùng tay; test vẫn khoá ≥2 nốt vang
+trên vòng sheet. Chi tiết: `Reference/CA-PHAO-BALLAD-DE-EM.md` mục "Bản 4".
+
+**Mất theo khung:** câu chạy tay trái 7 nốt của DERX (tiếng 7–8–9 nằm đúng chỗ ấy).
+**Giá trị cũ:** bản 3.
+**Triệu chứng để lùi:** giật nghe cụt → chát 4 về phách 4¾ hoặc bỏ nhấn. Điệp khúc không đổi.

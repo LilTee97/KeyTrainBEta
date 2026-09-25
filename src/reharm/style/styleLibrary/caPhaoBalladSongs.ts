@@ -223,35 +223,31 @@ const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
   familyName: 'Ballad Để em', variant: 1, bpm: 85,
-  sourceVideos: ['Cà Pháo · Để Em Rời Xa · cửa sổ 4–5 (XML 4:2–6:2) như DERX; đối chiếu 32–33'],
-  note: 'Phiên: mốc gõ DERX (trái giữ nền, phải chêm lệch; phải ngân F4 trên câu chạy trái), ngân nối tới cú sau, tay phải đủ quãng đôi của sheet. Chờ nghe duyệt.',
+  sourceVideos: ['Cà Pháo · Để Em Rời Xa · tiếng 1–3 từ cửa sổ 4 (như DERX); tiếng 4–9 theo khung người dùng 25/9/2026'],
+  note: 'Phiên: khung người dùng 1 Bùm … 2 chát … 3 bùm … 4 chát–5 bùm 6 chát … 7 bùm 8 chát 9 bùm; chát 4 giật nảy vào bùm 5 đầu ô 2. Chờ nghe duyệt.',
+  /*
+    Khung tiếng chính do NGƯỜI DÙNG đặt (25/9/2026): "1Bùm... 2chát...3bùm...4chát-5bùm 6chát... 7bùm 8chát 9bùm".
+    Tiếng 1–3 giữ từ bản trước (người dùng: "ổn"). Vị trí 4–9 do Claude đặt cho khớp tiết tấu, người dùng
+    chưa chốt: 4 chát ô 1 phách 4& (ngắn, nhấn — "giật nảy") → 5 bùm ô 2 phách 1; 6 chát phách 2 (đối xứng
+    tiếng 2); 7 bùm · 8 chát · 9 bùm ở phách 3 · 3& · 4. Mọi tiếng ngân tới cú kế cùng tay (không lỗ im).
+    Bỏ theo khung: câu chạy tay trái 7 nốt cuối ô 2 (DERX), các chát 2¼/2¾/3¼ cũ, chát trái 1& ô 2.
+  */
   cell: {
     lengthBeats: 8,
     left: [
-      hit(0, 1.75, [tone(0), tone(2), bay7()], .85),        // Bb2+F3+A3, sheet d 1.5
-      hit(1.75, .75, [tone(0, 12), tone(2, 12)]),            // C3+G3
-      hit(2.5, .5, [tone(2, 12)]), hit(3, 1, [tone(0, 24)]), // G3 · C4 (gập về dưới trần 59)
-      hit(4, 2.25, [tone(0, 12), tone(2, 12), bay7(12)], .8), // D3+A3+C4, sheet d 2
-      // Lấp khoảng trống sau Bùm ô 2 (người dùng nghe thấy nghỉ): chát tay trái phách 1& — 3/6 ô Dm của phiên
-      // có tay trái gõ ở 1&; lấy C3+D3 của cửa sổ 9. Cụm đầu ô vẫn ngân (A3); C3 D3 đánh lại.
-      hit(4.5, 1.75, [bay7(), tone(0, 12)]),
-      // A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX).
-      hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
-      hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),
-      hit(7.25, .25, [tone(0, 14)]), hit(7.5, .25, [tone(0, 12)]), hit(7.75, .25, [tone(3)]),
+      hit(0, 1.75, [tone(0), tone(2), bay7()], .85),         // 1 Bùm: Bb2+F3+A3 (cửa sổ 4)
+      hit(1.75, 2.25, [tone(0, 12), tone(2, 12)]),           // 3 bùm: C3+G3, ngân tới bùm 5
+      hit(4, 2, [tone(0, 12), tone(2, 12), bay7(12)], .85),  // 5 bùm: D3+A3+C3 (cửa sổ 5), giật vào đầu ô 2
+      bass(6, 1),                                             // 7 bùm: gốc trầm D2
+      hit(7, 1, [tone(0, 12)], .85),                          // 9 bùm: gốc quãng tám D3 (3/6 ô Dm của sheet ở phách 4)
     ],
     right: [
-      // Nốt dưới (bè) ngân nối; nốt trên giữ độ ngân sheet — ngân cả hai thì dày hơn chính sheet
-      // (3,72 nốt vang TB so với 3,00), vì giữa các cú sheet chỉ có MỘT nốt tay phải là giai điệu.
-      hit(0, 1.75, [tone(1)]), hit(0, .5, [tone(2)]),        // D4 sheet d .5 · F4
-      // Lấp khoảng trống sau Bùm ô 1: chát phách 2 — 4/6 ô Bb→C của phiên có bè Bb3+F4 dưới giai điệu ở đây
-      // (cửa sổ 6, 8, 34, 36). Bb3 dưới sàn tay phải 60 nên ra F4+Bb4.
-      hit(1, .75, [tone(2), tone(0, 12)]),
-      hit(1.75, .5, [tone(1), tone(0, 12)]),                 // E4+C5
-      hit(2.25, .5, [tone(2), tone(0, 12)]),                 // G4+C5
-      hit(2.75, 2.25, [tone(2)]), hit(2.75, .25, [tone(0, 12)]), // G4 sheet d .5 · C5 .25
-      hit(5, .25, [tone(1), tone(3)]), hit(5.25, .5, [tone(1), tone(3)]), // F4+C5 · F4+C5
-      hit(5.75, 2.25, [tone(1)]), hit(5.75, 1.25, [tone(3)]), // F4 sheet d 2 · C5 1.25
+      hit(0, 1.75, [tone(1)]), hit(0, .5, [tone(2)]),         // 1: D4 · F4 (không đổi)
+      hit(1, .75, [tone(2), tone(0, 12)]),                    // 2 chát: F4+Bb4
+      hit(1.75, 1.75, [tone(1), tone(0, 12)]),                // 3: E4+C5 cùng bùm, ngân tới chát 4
+      hit(3.5, .25, [tone(2), tone(0, 12)], .8),              // 4 chát: G4+C5, ngắn và nhấn — giật nảy
+      hit(5, 1.5, [tone(1), tone(3)]),                        // 6 chát: F4+C5 (bè cửa sổ 5), ngân tới chát 8
+      hit(6.5, 1.5, [tone(1), tone(3)]),                      // 8 chát: F4+C5, ngân qua bùm 9
     ],
   },
 }
