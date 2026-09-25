@@ -352,6 +352,27 @@ dù có tiếng mạnh tiếng nhẹ nhưng khi đã là tiếng chính thì ph�
 **Triệu chứng để lùi:** nghe nặng tay → THƯỜNG về .7.
 Test khoá: bùm và bum đủ hai tay, chát chỉ tay phải, lực tay phải mọi cú chính ≥ .7.
 
+## Bản 15: bum không hợp âm; bass của mọi bùm/bum dày hai–ba nốt
+
+Người dùng: *"chỗ Bum đừng đánh hợp âm kèm theo nữa; các chỗ Bùm và bum nếu chỉ đánh 1 nốt bass thì nghe quá mờ nhạt, tiếng chính
+của khung thì cho dù là bass cũng phải đánh rõ và dày lên để tách biệt"*.
+
+| tiếng | bass mới | trên vòng sheet |
+|---|---|---|
+| 3 bùm | gốc + gốc quãng tám + bậc 5 | C2+C3+G3 |
+| 5 bùm | bậc 5 + gốc quãng tám | G2+C3 |
+| 6 bum (dẫn, bỏ tay phải) | gốc hợp âm sau hạ một cung + quãng 5 của nó | C2+G2 → D |
+| 8 bùm | D2 + cụm, cụm ngắn ¼ cho giật sang bum 9 | D2 + C3+D3+A3 |
+| 9 bum (dẫn, bỏ tay phải) | bậc 2 + bậc 5 | E2+A2 |
+| 11 bùm | bậc 3 + gốc quãng tám | F2+D3 |
+
+**Bẫy khi dựng:** kiểu "nốt + quãng tám của nó" chạm sàn (36) hoặc trần tay trái (59) thì bị gập về trùng phím. Dẫn vào Đô, nốt
+Bb1 gập lên Bb2 trùng Bb2; bậc 5 hay bậc 3 quãng tám ở gốc cao cũng vượt 59. Nên chọn cặp luôn nằm gọn trong 36–59. Test quét
+12 gốc × 7 loại hợp âm, không cú nào trùng phím.
+
+**Giá trị cũ:** bản 14 (bum có hợp âm tay phải nhẹ; bass bùm 5 · bum 6 · bum 9 · bùm 11 một nốt).
+**Triệu chứng để lùi:** bass đục/nặng → bỏ nốt trên của cặp ở bum 9 trước.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

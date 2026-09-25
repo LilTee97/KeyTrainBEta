@@ -3910,3 +3910,13 @@ Người dùng: bum là chỗ dẫn nhưng *"cũng phải là đánh bass cùng 
 
 **Giá trị cũ:** tay phải mặc định .65, bùm 3 tay trái .65. **Triệu chứng để lùi:** nặng tay → THƯỜNG .7.
 Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 14".
+
+### Bass tiếng chính phải dày — nhưng "nốt + quãng tám" chạm sàn/trần tay trái thì gập thành trùng phím
+
+Người dùng: bum không kèm hợp âm; bùm và bum *"nếu chỉ đánh 1 nốt bass thì nghe quá mờ nhạt"*, phải dày. Ballad Để em: bass mọi
+bùm/bum nay là hai–ba nốt (bậc 5 + 8, dẫn + quãng 5, bậc 2 + 5, bậc 3 + 8).
+
+**Cái bẫy:** `tone(0, -2)` + `tone(0, 10)` dẫn vào Đô ra Bb1 → gập lên Bb2 trùng nốt kia. Quãng tám của bậc 3/bậc 5 ở gốc cao
+vượt trần 59 rồi gập xuống trùng. Chọn cặp luôn nằm trong 36–59.
+**Giá trị cũ:** bản 14. **Triệu chứng để lùi:** bass đục → bỏ nốt trên của cặp ở bum 9.
+Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 15".
