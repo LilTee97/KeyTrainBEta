@@ -3900,3 +3900,13 @@ Nghĩa đúng:
 Ballad Để em bản 12 có bùm 5 · 8 · 11 chỉ tay trái; nay thêm tay phải (E4+C5 · F4+A4 · F4+A4). Test khoá vai
 từng tiếng. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 13".
 **Giá trị cũ:** bản 12. **Triệu chứng để lùi:** ô 2 dồn → bỏ tay phải ở bùm 11.
+
+### "Bum" cũng là bass cùng hợp âm; tiếng chính nào cũng phải rõ — lực ba mức
+
+Người dùng: bum là chỗ dẫn nhưng *"cũng phải là đánh bass cùng với hợp âm"*; tiếng chính *"dù có tiếng mạnh tiếng nhẹ
+... phải rõ rệt"*.
+- Ballad Để em: bum 6 · 9 thêm hợp âm tay phải nhẹ.
+- Lực tiếng chính: NHẤN .9 · THƯỜNG .8 · NHẸ .7 (hằng `NHAN/THUONG/NHE` cạnh ô phiên).
+
+**Giá trị cũ:** tay phải mặc định .65, bùm 3 tay trái .65. **Triệu chứng để lùi:** nặng tay → THƯỜNG .7.
+Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 14".

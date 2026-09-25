@@ -334,6 +334,24 @@ tay trái, chát chỉ tay phải.
 **Giá trị cũ:** bản 12.
 **Triệu chứng để lùi:** ô 2 dồn quá → bỏ tay phải ở bùm 11 trước.
 
+## Bản 14: bum cũng có hợp âm; lực tiếng chính ba mức
+
+Người dùng: *"Bum là chỗ dẫn nhưng cũng phải là đánh bass cùng với hợp âm. Các tiếng chính trong khung đều phải có tiếng rõ rệt,
+dù có tiếng mạnh tiếng nhẹ nhưng khi đã là tiếng chính thì phải rõ rệt"*.
+
+**Hợp âm cho bum:**
+- bum 6 (ô 1 phách 4): E4+G4 nhẹ, trên bass dẫn;
+- bum 9 (ô 2 phách 1¼): F4+A4 nhẹ, trên E2.
+
+**Lực tiếng chính** (biên soạn, không phải số đo):
+- NHẤN .9: Bùm 1, chát 4, bùm 5, bùm 8.
+- THƯỜNG .8: chát 2 · 7 · 10, 3 chát cuối, bùm 3 · 11.
+- NHẸ .7: tay phải của bum 6 · 9.
+
+**Giá trị cũ:** tay phải mặc định .65, bùm 3 tay trái .65 (sau hệ số tay trái còn khoảng .55); bum chỉ có bass.
+**Triệu chứng để lùi:** nghe nặng tay → THƯỜNG về .7.
+Test khoá: bùm và bum đủ hai tay, chát chỉ tay phải, lực tay phải mọi cú chính ≥ .7.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

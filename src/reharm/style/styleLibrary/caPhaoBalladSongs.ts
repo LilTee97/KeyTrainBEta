@@ -222,6 +222,7 @@ const deEmCommon = {
 // và "bậc 3 + bậc 7" thành hai nốt C trùng: trên bài người dùng 25/9 ba chát ô 2 chỉ còn một C5, mất khung.
 const ba3 = (semitones = 0) => ({ ...tone(1, semitones), fallbackInterval: 5 })
 const bay7 = (semitones = 0) => ({ ...tone(3, semitones), optional: true })
+const NHAN = .9, THUONG = .8, NHE = .7 // lực tiếng chính: nhấn · thường · nhẹ
 const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
@@ -243,31 +244,37 @@ const deEm: StylePattern = {
   cell: {
     lengthBeats: 8,
     left: [
-      hit(0, 1.75, [tone(0), tone(2), bay7()], .85),         // 1 Bùm: Bb2+F3+A3 (cửa sổ 4)
-      hit(1.75, 1.25, [tone(0, 12)]), hit(1.75, .75, [tone(2, 12)]), // 3 bùm: C3 (tới bum 6) + G3 (tới bùm 5)
-      hit(2.5, 1.5, [tone(2, 12)], .9),                      // 5 bùm: G3, nhấn — giật vào sau chát 4
+      // Lực ba mức — tiếng chính nào cũng phải rõ (người dùng: "dù có tiếng mạnh tiếng nhẹ ... phải rõ rệt").
+      // Cũ: tay phải và bùm 3 mặc định .65 (tay trái nhân thêm .85 còn ~.55). Lùi: nghe nặng tay → hạ THUONG về .7.
+      hit(0, 1.75, [tone(0), tone(2), bay7()], NHAN),        // 1 Bùm: Bb2+F3+A3 (cửa sổ 4)
+      hit(1.75, 1.25, [tone(0, 12)], THUONG), hit(1.75, .75, [tone(2, 12)], THUONG), // 3 bùm: C3 (tới bum 6) + G3
+      hit(2.5, 1.5, [tone(2, 12)], NHAN),                    // 5 bùm: G3, nhấn — giật vào sau chát 4
       { ...hit(3, 1, [tone(0, -2)], .8), som: true, requireNextChord: true }, // 6 bum: dẫn bass — gốc hợp âm sau hạ một cung
-      hit(4, .25, [tone(0)], .9),                            // 8 bùm: gốc trầm D2, ngắn — giật
+      hit(4, .25, [tone(0)], NHAN),                          // 8 bùm: gốc trầm D2, ngắn — giật
       hit(4, 1, [tone(0, 12), tone(2, 12), bay7(12)], .85),  //         cụm D3+A3+C3 (cửa sổ 5), nhả khi vào 3 chát
       hit(4.25, .5, [tone(0, 2)], .8),                       // 9 bum: dẫn bass — bậc 2 (E2)
       hit(4.75, 1.5, [ba3()], .85),                          // 11 bùm: bậc 3 (F2), ngân tới câu chạy
-      // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5).
+      // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5) — không phải tiếng chính.
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [ba3(12)]),
       hit(7.25, .25, [tone(0, 14)]), hit(7.5, .25, [tone(0, 12)]), hit(7.75, .25, [tone(3)]),
     ],
     right: [
-      hit(0, 1.75, [ba3()]), hit(0, .5, [tone(2)]),           // 1: D4 · F4
-      hit(1, .75, [tone(2), tone(0, 12)]),                    // 2 chát: F4+Bb4
-      hit(1.75, .5, [ba3(), tone(0, 12)]),                    // 3: E4+C5 cùng bùm
-      hit(2.25, .15, [tone(2), tone(0, 12)], .9),             // 4 chát: G4+C5, rất ngắn và nhấn — giật hơn (cũ ¼, lực .8)
-      hit(2.5, 1, [ba3(), tone(0, 12)]),                      // 5 bùm (tay phải): E4+C5 như bùm 3, cùng bass G3
-      hit(3.5, .5, [tone(2), tone(0, 12)]),                   // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
-      hit(4, .5, [ba3(), tone(2)]),                           // 8 bùm (tay phải): F4+A4, cùng bass D2 + cụm
-      hit(4.5, .25, [ba3(), tone(3)]),                        // 10 chát: F4+C5
-      hit(4.75, .25, [ba3(), tone(2)]),                       // 11 bùm (tay phải): F4+A4, cùng bass F2
-      hit(5, .25, [ba3(), tone(3)]), hit(5.25, .5, [ba3(), tone(3)]), // chát chát: F4+C5 (cửa sổ 5)
-      hit(5.75, 2.25, [ba3()]), hit(5.75, 1.25, [tone(3)]),   // chát: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
+      // Bùm = bass + hợp âm; bum = bass dẫn + hợp âm nhẹ; chát = hợp âm không bass. Bùm/bum bậc 3+5 hoặc 3+8,
+      // chát bậc 5+8 hoặc 3+7 — khác thế bấm để tai tách được bùm với chát.
+      hit(0, 1.75, [ba3()], THUONG), hit(0, .5, [tone(2)], THUONG), // 1 Bùm: D4 · F4
+      hit(1, .75, [tone(2), tone(0, 12)], THUONG),            // 2 chát: F4+Bb4
+      hit(1.75, .5, [ba3(), tone(0, 12)], THUONG),            // 3 bùm: E4+C5
+      hit(2.25, .15, [tone(2), tone(0, 12)], NHAN),           // 4 chát: G4+C5, rất ngắn và nhấn — giật
+      hit(2.5, .5, [ba3(), tone(0, 12)], NHAN),               // 5 bùm: E4+C5
+      hit(3, .5, [ba3(), tone(2)], NHE),                      // 6 bum: E4+G4 (nhẹ), cùng bass dẫn
+      hit(3.5, .5, [tone(2), tone(0, 12)], THUONG),           // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
+      hit(4, .25, [ba3(), tone(2)], NHAN),                    // 8 bùm: F4+A4, cùng bass D2 + cụm
+      hit(4.25, .25, [ba3(), tone(2)], NHE),                  // 9 bum: F4+A4 (nhẹ), cùng bass dẫn E2
+      hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5
+      hit(4.75, .25, [ba3(), tone(2)], THUONG),               // 11 bùm: F4+A4, cùng bass F2
+      hit(5, .25, [ba3(), tone(3)], THUONG), hit(5.25, .5, [ba3(), tone(3)], THUONG), // chát chát: F4+C5 (cửa sổ 5)
+      hit(5.75, 2.25, [ba3()], THUONG), hit(5.75, 1.25, [tone(3)], THUONG), // chát: F4 ngân trên câu chạy · C5 1.25
     ],
   },
 }
