@@ -77,19 +77,26 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     const lh = hand('left'), rh = hand('right')
     // Vòng sheet C → Dm7: bum tay phải F4 → G4 (chát), E4 → F4 (bùm ô 2).
     expect([rh('C Dm7', 2.5), rh('C Dm7', 3.75)]).toEqual([[65], [64]])
+    // Bài người dùng (Gadd9 → D9sus4): tay trái G2+C3; bản 24 tay phải F#4 (bảy trưởng với G2, tăng bốn với C3) — người
+    // dùng nghe chói. Nay G4 → A4. Am → D9sus4: A2+C3 dưới F4 (Fa trưởng thể đảo) → G4.
+    expect(rh('Gadd9 D9sus4', 3.75)).toEqual([67])
+    expect(rh('Am D9sus4', 3.75)).toEqual([65])
     // Sheet C → Dm7: C (một cung). Còn lại là suy đoán theo gam: G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F.
     for (const [chords, pc] of [['C Dm7', 0], ['G C', 11], ['C F', 4], ['A Dm', 1], ['C G', 5]] as const)
       expect(Math.max(...lh(chords, 3.75)) % 12, chords).toBe(pc)
     // Nốt dưới của cặp tụt dưới gốc hợp âm đang vang thì thành chính nốt gốc ấy: A → Dm là A2 + C#3.
     expect(lh('A Dm', 3.75)).toEqual([45, 49])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
-      for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`])
+      for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`, `${root}add9 D9sus4`, `${root}m Bm`])
         for (const [bum, next, nextRh] of [[2.5, 3, 2.75], [3.75, 4, 4]]) {
           const target = Math.min(...lh(chords, next))
           expect(lh(chords, bum).some(n => target - n >= 1 && target - n <= 2), `${chords} phách ${bum} → ${target}: ${lh(chords, bum)}`).toBe(true)
           // Giai điệu thấp tay phải của bum cũng bước liền bậc (một cung / nửa cung) vào một nốt tay phải của tiếng kế.
           const [mel] = rh(chords, bum), next2 = rh(chords, nextRh)
           expect(next2.some(n => Math.abs(n - mel!) >= 1 && Math.abs(n - mel!) <= 2), `${chords} tay phải ${bum}: ${mel} → ${next2}`).toBe(true)
+          // Không chói với tay trái cùng mốc: không quãng 2 thứ, 7 trưởng, tăng 4.
+          for (const b of lh(chords, bum)) expect([1, 6, 11], `${chords} ${bum}: ${mel} với ${b}`)
+            .not.toContain(((mel! - b) % 12 + 12) % 12)
         }
   })
 

@@ -319,13 +319,29 @@ function notesForVoice(
   làm nền — vd Db → Db: C2+C3 thành Db2+C3.
   Tay phải: lùi xuống dưới sàn thì bộ kẹp cuối đẩy lên một quãng tám, mất bước liền bậc — nên dẫn từ TRÊN xuống.
 */
-function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, left: boolean): MidiNote[] {
+function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, left: boolean,
+  ben: readonly MidiNote[] = []): MidiNote[] {
   const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
   const root = Math.min(...here.left) % 12
   const goc = left ? low + (((root - low) % 12) + 12) % 12 : low
   const pcs = new Set((here.harmonicNotes ?? [...here.left, ...here.right]).map((n) => ((n - root) % 12 + 12) % 12))
   const gam = pcs.has(3) && !pcs.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, pcs.has(10) ? 10 : 11]
   const trongGam = (n: number) => gam.includes(((n - root) % 12 + 12) % 12)
+  /*
+    Tay phải: MỘT nốt, dẫn liền bậc (từ dưới trước, từ trên sau) vào một trong các nốt `notes` của tiếng kế, trong gam, và
+    không chói với tay trái đang đánh cùng mốc (`ben`): không quãng 2 thứ / 7 trưởng / tăng 4. Quãng 9 (add9) và 7 thứ
+    (9sus4) là màu người dùng đang dùng, nên cho. Người dùng nghe chói trên Gadd9 → D9sus4: tay trái G2+C3, tay phải F#4 —
+    bảy trưởng với G2, tăng bốn với C3. Nay G4 → A4.
+  */
+  if (!left && notes.length > 0) {
+    const thuan = (m: number) => ben.every((b) => ![1, 6, 11].includes(((m - b) % 12 + 12) % 12))
+    // Bước dẫn của mỗi nốt đích theo luật gam như bè trầm; thử hết bước từ dưới rồi mới tới bước từ trên.
+    const buoc = (t: number, s: number) => t + s * (trongGam(t + 2 * s) ? 2 : 1)
+    const dich = notes.map(fold)
+    for (const m of [...dich.map((t) => buoc(t, -1)), ...dich.map((t) => buoc(t, 1))])
+      if (m >= low && m <= high && trongGam(m) && thuan(m)) return [m as MidiNote]
+    notes = notes.slice(0, 1)
+  }
   const out: number[] = []
   for (const n of notes) {
     const t = fold(n)
@@ -508,7 +524,8 @@ function renderWithCell(
 
     const until = Math.min(offset + cell.lengthBeats, nextBreak(offset))
 
-    for (const hand of ['right', 'left'] as const) {
+    // Tay phải có tiếng dẫn thì dựng tay trái trước: nốt dẫn tay phải phải thuận tai với tay trái cùng mốc (`danVao`).
+    for (const hand of cell.right.some((h) => h.danVao) ? ['left', 'right'] as const : ['right', 'left'] as const) {
       const hits = hand === 'right' ? cell.right : cell.left
       /*
         Nốt vừa chơi của bàn tay này, để nốt kế tiếp rơi cạnh nó thay vì nhảy về
@@ -566,7 +583,8 @@ function renderWithCell(
         const raw = !hit.danVao ? dat : hand === 'left'
           ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH, true)
           : danVao(dat, voicingAt(startBeat) ?? voicing, pattern.rightHandRegister?.low ?? RIGHT_ARPEGGIO_LOW,
-            pattern.rightHandRegister?.high ?? RIGHT_ARPEGGIO_HIGH, false)
+            pattern.rightHandRegister?.high ?? RIGHT_ARPEGGIO_HIGH, false, events
+              .filter((e) => e.hand === 'left' && Math.abs(e.startBeat - startBeat) < EPSILON).flatMap((e) => e.notes))
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
 

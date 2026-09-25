@@ -76,7 +76,8 @@ export interface RhythmHit {
      * Bass dẫn không được nhắm một hợp âm còn xa hoặc tự dẫn ở cuối bài. */
     requireNextChord?: boolean
     /** Tiếng DẪN: đặt `tones` theo hợp âm vang lúc tiếng này HẾT (nốt của tiếng kế, cùng tay), rồi hạ một cung nếu nốt
-     * dưới ấy còn trong gam của hợp âm đang vang, không thì nửa cung — bước liền bậc vào tiếng kế. */
+     * dưới ấy còn trong gam của hợp âm đang vang, không thì nửa cung — bước liền bậc vào tiếng kế. Tay phải: `tones` là các
+     * nốt của tiếng kế, bộ vẽ chọn MỘT nốt dẫn trong gam, thuận tai với tay trái cùng mốc (xem `danVao`). */
     danVao?: boolean
   }
 

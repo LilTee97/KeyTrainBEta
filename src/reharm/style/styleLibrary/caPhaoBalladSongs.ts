@@ -282,12 +282,14 @@ const deEm: StylePattern = {
       // Bum có thêm giai điệu thấp tay phải, cũng DẪN liền bậc vào một nốt tay phải của tiếng kế (người dùng: "tiếng Bum
       // trong câu chạy đầu tiên vẫn mờ nhạt vậy hãy thêm nốt giai điệu thấp ở tay phải … cũng tuân thủ chức năng làm tiếng
       // dẫn"). Sheet KHÔNG có nốt tay phải ở 3& (6/6 cửa sổ); ở 4¾ có C4 (2/6) hoặc F4 (2/6). Cũ (bản 23): bum chỉ tay trái.
-      { ...hit(2.5, .25, [tone(2)], NHAN), danVao: true },     // bum: F4 → G4 của chát kế
+      // Tay phải `tones` = các nốt của tiếng kế; bộ vẽ chọn MỘT nốt dẫn thuận tai với tay trái cùng mốc. Cũ (bản 24): nhắm
+      // riêng nốt dưới → trên Gadd9 ra F#4 đè G2+C3, người dùng nghe chói.
+      { ...hit(2.5, .25, [tone(2), tone(0, 12)], NHAN), danVao: true }, // bum: F4 → G4 của chát kế
       hit(2.75, .25, [tone(2), tone(0, 12)], THUONG),         // chát: G4+C5, đỉnh C5 (sheet)
       hit(3, .25, [tone(0)], NHAN),                           // bùm: giai điệu C4 (sheet)
       hit(3.25, .25, [tone(0), ba3()], THUONG),               // chát: C4+E4, đỉnh E4 (sheet)
       hit(3.5, .25, [tone(2)], NHAN),                         // bùm: giai điệu G4
-      { ...hit(3.75, .25, [ba3()], NHAN), danVao: true },      // bum: E4 → F4 của bùm đầu ô 2
+      { ...hit(3.75, .25, [ba3(), tone(2)], NHAN), danVao: true }, // bum: E4 → F4 của bùm đầu ô 2
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5
       hit(4.75, .25, [ba3(), tone(2)], THUONG),               // 11 bùm: F4+A4, cùng bass F2

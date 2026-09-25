@@ -567,6 +567,28 @@ từ TRÊN xuống (một cung nếu còn trong gam, không thì nửa cung). Te
 **Triệu chứng để lùi:** bum 3& ba nốt Fa (F2 F3 F4) nghe như bass nặng chứ không ra giai điệu → nhắm nốt trên của chát (dẫn B4 →
 C5) thay vì nốt dưới.
 
+## Bản 25: nốt dẫn tay phải không chói với tay trái cùng mốc
+
+Người dùng nghe bản 24: *"nghe chưa ổn"*, chọn lý do "nốt dẫn nghe lạ, chói".
+
+**Đo trên bài người dùng đang thử** (file xuất `Bài chưa đặt tên.keytrain.json`, 25/9 16:28): vòng G D Em Bm C G Am D,
+màu trưởng add9, át 9sus4. Dựng lại 8 tiếng bum mỗi vòng: **1/8 chói** — ô 1 phách 4¾ trên Gadd9 → D9sus4, tay trái G2+C3, tay
+phải F#4 (bảy trưởng với G2, tăng bốn với C3). 7 tiếng còn lại không có quãng 2 thứ / 7 trưởng / tăng 4.
+**Nguyên do:** tay phải chọn nốt dẫn một mình, không biết tay trái đang dẫn nốt gì (bộ vẽ dựng tay phải trước).
+
+**Nay:**
+- Ô nhịp có tiếng dẫn tay phải thì dựng tay trái trước; tay phải đọc nốt tay trái cùng mốc.
+- `tones` tay phải của bum ghi mọi nốt của tiếng kế. Bộ vẽ chọn MỘT nốt dẫn liền bậc vào một trong số đó, trong gam, không
+  quãng 2 thứ / 7 trưởng / tăng 4 với tay trái. Thử bước từ dưới của mọi nốt đích trước, rồi mới bước từ trên.
+- Quãng 9 (add9) và 7 thứ (9sus4) vẫn cho — là màu người dùng đang dùng. Luật chặt hơn (chỉ 1 · 3 · 6 · 5) làm Db → Db không
+  còn nốt nào đi được.
+
+Bài người dùng: ô 1 bum 4¾ F#4 → **G4 → A4**; 7 tiếng còn lại giữ nguyên. Vòng sheet giữ nguyên (F4 → G4, E4 → F4).
+Test: 12 gốc × 6 loại vòng (thêm add9 → D9sus4, m → Bm), tay phải không quãng chói với tay trái.
+
+**Giá trị cũ:** bản 24 (tay phải nhắm riêng nốt dưới của tiếng kế).
+**Triệu chứng để lùi:** vẫn nghe lạ ở tiếng khác → đem vòng hợp âm chỗ đó ra dựng lại, xem quãng giữa hai tay.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

@@ -3997,3 +3997,11 @@ Người dùng muốn bum thêm *"nốt giai điệu thấp ở tay phải … c
 phải. **Bẫy:** tay phải lùi xuống dưới sàn 60 thì bộ kẹp cuối đẩy lên một quãng tám, nên dẫn từ trên xuống.
 Vòng sheet: bum 3& F4 → G4 (chát), bum 4¾ E4 → F4 (bùm ô 2). Sheet không có tay phải ở 3& (6/6 cửa sổ) — đây là ý người dùng.
 **Giá trị cũ:** bum chỉ tay trái (bản 23). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 24".
+
+### Ballad Để em: nốt dẫn tay phải phải thuận tai với tay trái cùng mốc — dựng tay trái trước
+
+Người dùng nghe chói ở bum. Trên bài của họ (G D Em Bm C G Am D, add9/9sus4): 1/8 tiếng bum chói — Gadd9 → D9sus4, tay trái
+G2+C3 dưới tay phải F#4. **Bẫy:** bộ vẽ dựng tay phải TRƯỚC tay trái, nên nốt dẫn tay phải không biết tay trái đang dẫn gì. Nay
+ô có `danVao` tay phải thì dựng tay trái trước; tay phải chọn nốt dẫn trong gam, không quãng 2 thứ / 7 trưởng / tăng 4 với tay
+trái. Quãng 9 và 7 thứ cho qua (màu add9, 9sus4). Nay G4 → A4.
+**Giá trị cũ:** bản 24. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 25".
