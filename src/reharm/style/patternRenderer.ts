@@ -310,32 +310,66 @@ function notesForVoice(
 }
 
 /*
-  Bass DẪN kiểu WALKING BASS (`RhythmHit.danVao`): MỘT nốt, bước liền bậc vào `notes` (nốt bass của tiếng kế) — một cung
-  nếu còn trong gam của hợp âm ĐANG vang, không thì nửa cung — và đi TIẾP chiều của bè trầm: nốt trước (`truoc`) cao hơn
-  đích thì dẫn từ trên xuống, không thì từ dưới lên; trúng đúng nốt trước (bè đứng yên) thì đổi phía.
-  Người dùng 25/9: *"tôi muốn Bum là kiểu Walking Bass chứ ko phải giai điệu"*, bác nốt giai điệu tay phải và cặp quãng
-  tám (bản 22–25). Sheet Để em rời xa dẫn vào ô 2 bằng C4 → D (2/6 cửa sổ, từ dưới); walking bass đi tiếp chiều nên vòng
-  sheet ra G3 → E3 → D3 (từ trên) — khác sheet, theo ý người dùng.
-  Suy đoán của Claude, chưa có sheet: gam hợp âm trưởng = trưởng (bảy thứ nếu hợp âm có b7), thứ = thứ tự nhiên.
-  Gập đích vào tầm TRƯỚC khi bước để khớp nốt sẽ vang (bộ kẹp cuối cũng gập). Không tụt dưới nốt gốc hợp âm đang vang
-  (`leftArpeggioAboveRoot`).
+  WALKING BASS (`RhythmHit.danVao`): các tiếng tay trái mang cờ, liền nhau trong ô, được SOẠN CÙNG LÚC thành một dòng đi
+  liền bậc (mỗi bước một cung / nửa cung) từ nốt bass trước (`tu`) tới nốt bass của tiếng kế không mang cờ (`den`).
+  Người dùng 25/9: *"tôi muốn Bum là kiểu Walking Bass chứ ko phải giai điệu"*, rồi *"làm luôn đi"* khi được hỏi có đổi
+  bass hai tiếng bùm để cả dòng đi liền bậc không.
+
+  Thử mọi dòng (4 nốt: 4^4 = 256 dòng), chọn dòng ít điểm phạt nhất — luật, không xúc xắc. Suy đoán của Claude, chưa có
+  sheet:
+  - nốt ngoài gam của hợp âm đang vang +3 (nốt cuối cách đích nửa cung — dẫn chromatic — chỉ +1);
+  - tiếng bùm (tay phải cùng gõ) không trúng nốt hợp âm +2;
+  - đổi chiều +2; đi tới lui (nốt trùng nốt cách một bước) +1;
+  - chói với tay phải cùng mốc (quãng 2 thứ / 7 trưởng / tăng 4) +3.
+  Hoà điểm thì dòng tìm thấy trước thắng: bước đầu đi về phía đích, một cung trước nửa cung.
+  Gam hợp âm trưởng = trưởng (bảy thứ nếu có b7), thứ = thứ tự nhiên. Dòng nằm trong tầm tay trái và không tụt quá 10 nửa
+  cung dưới `tu` (≥ 48), nên không xuống dưới nốt gốc quãng tám 2 (`leftArpeggioAboveRoot`).
 */
-function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, truoc?: number): MidiNote[] {
-  const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
-  const root = Math.min(...here.left) % 12
-  const goc = low + (((root - low) % 12) + 12) % 12
-  const pcs = new Set((here.harmonicNotes ?? [...here.left, ...here.right]).map((n) => ((n - root) % 12 + 12) % 12))
-  const gam = pcs.has(3) && !pcs.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, pcs.has(10) ? 10 : 11]
-  const buoc = (t: number, s: number) => t + s * (gam.includes(((t + 2 * s - root) % 12 + 12) % 12) ? 2 : 1)
-  const truocDaGap = truoc === undefined ? undefined : fold(truoc)
-  return notes.map((n) => {
-    const t = fold(n), duoi = buoc(t, -1), tren = buoc(t, 1)
-    const tuTren = truocDaGap !== undefined && truocDaGap > t && tren <= high
-    let m = tuTren ? tren : duoi
-    // Trùng nốt trước (bè đứng yên): đổi phía; phía trên vượt trần thì lấy bước còn lại phía dưới (Dm → Bm: A3 Bb3 B3).
-    if (m === truocDaGap) m = m === tren ? duoi : tren <= high ? tren : t - (t - duoi === 2 ? 1 : 2)
-    return Math.max(goc, m) as MidiNote
-  })
+interface WalkSlot { gam: ReadonlySet<number>; hopAm: ReadonlySet<number>; bum: boolean; tayPhai: readonly number[] }
+
+function walkSlot(v: TwoHandVoicing, bum: boolean, tayPhai: readonly number[]): WalkSlot {
+  const root = Math.min(...v.left) % 12
+  const hopAm = new Set((v.harmonicNotes ?? [...v.left, ...v.right]).map((n) => n % 12))
+  const rel = new Set([...hopAm].map((pc) => (pc - root + 12) % 12))
+  const gam = rel.has(3) && !rel.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, rel.has(10) ? 10 : 11]
+  return { gam: new Set(gam.map((x) => (x + root) % 12)), hopAm, bum, tayPhai }
+}
+
+function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: number, high: number):
+  { path: number[]; score: number } | undefined {
+  const pc = (n: number) => ((n % 12) + 12) % 12
+  const order = den >= tu ? [2, 1, -1, -2] : [-2, -1, 1, 2]
+  const path: number[] = []
+  let best: number[] | undefined
+  let bestScore = Infinity
+  const go = (prev: number, dir: number, score: number) => {
+    if (score >= bestScore) return
+    const i = path.length
+    const truocNua = i === 0 ? undefined : i === 1 ? tu : path[i - 2]
+    if (i === slots.length) {
+      const last = den - prev
+      if (Math.abs(last) < 1 || Math.abs(last) > 2) return
+      const total = score + (dir && Math.sign(last) !== dir ? 2 : 0) + (truocNua === den ? 1 : 0)
+      if (total < bestScore) { bestScore = total; best = [...path] }
+      return
+    }
+    for (const step of order) {
+      const n = prev + step
+      if (n < low || n > high) continue
+      const slot = slots[i]
+      let s = score
+      if (!slot.gam.has(pc(n))) s += i === slots.length - 1 && Math.abs(den - n) === 1 ? 1 : 3
+      if (slot.bum && !slot.hopAm.has(pc(n))) s += 2
+      if (dir && Math.sign(step) !== dir) s += 2
+      if (truocNua === n) s += 1
+      if (slot.tayPhai.some((r) => [1, 6, 11].includes(pc(r - n)))) s += 3
+      path.push(n)
+      go(n, Math.sign(step), s)
+      path.pop()
+    }
+  }
+  go(tu, 0, 0)
+  return best && { path: best, score: bestScore }
 }
 
 /** Cú đẩy nằm cách vạch nhịp sau **nửa phách**, tức phách 4,5 của ô bốn bốn. */
@@ -516,6 +550,9 @@ function renderWithCell(
         đáy thế bấm. Đặt lại ở mỗi ô nhịp: mở ô mới là mở câu mới.
       */
       let near: MidiNote | undefined
+      // Dòng walking bass đang chơi dở (`danVao`), soạn một lần ở tiếng đầu dòng; `walkLand` là nốt tiếng kế phải đánh.
+      let walk: number[] | undefined
+      let walkLand: number | undefined
 
       for (const hit of hits) {
         const startBeat = offset + hit.beat
@@ -532,8 +569,7 @@ function renderWithCell(
           chỗ bản dựng bossa trước hỏng. Không có hợp âm sau (cuối bài) thì lui
           về hợp âm hiện tại, thà mất cử chỉ còn hơn mất tiếng.
         */
-        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON)
-          : hit.danVao ? startBeat + hit.durationBeats : undefined
+        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
         if (hit.requireNextChord && (sauDo === undefined ||
           Math.abs(sauDo - startBeat - hit.durationBeats) > EPSILON)) continue
         const voicing = (sauDo !== undefined ? voicingAt(sauDo) : undefined) ?? voicingAt(startBeat)
@@ -564,9 +600,40 @@ function renderWithCell(
               ? { low: pattern.rightHandRegister.rootFloor, high: pattern.rightHandRegister.high }
               : undefined,
         )
-        const raw = hit.danVao && hand === 'left'
-          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH, near)
-          : dat
+        let raw = dat
+        if (hand === 'left' && !hit.danVao) {
+          if (walk && walkLand !== undefined) raw = dat.map((n) => (n % 12 === walkLand! % 12 ? walkLand : n) as MidiNote)
+          walk = walkLand = undefined
+        }
+        if (hand === 'left' && hit.danVao) {
+          if (!walk) {
+            const low = LEFT_ARPEGGIO_LOW, high = pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH
+            const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
+            const i = hits.indexOf(hit)
+            let j = i
+            while (hits[j]?.danVao) j += 1
+            const dich = hits[j], denV = dich ? voicingAt(offset + dich.beat) : undefined
+            const den = dich && denV ? notesForVoice(denV.left, dich.voice, dich.toneIndex, dich.tones,
+              Math.min(...denV.left) % 12, undefined, denV.harmonicNotes ?? [...denV.left, ...denV.right], { low, high })[0]
+              : undefined
+            const slots = hits.slice(i, j).map((h) =>
+              walkSlot(voicingAt(offset + h.beat) ?? voicing, cell.right.some((r) => Math.abs(r.beat - h.beat) < EPSILON),
+                events.filter((e) => e.hand === 'right' && Math.abs(e.startBeat - offset - h.beat) < EPSILON)
+                  .flatMap((e) => e.notes)))
+            walk = []
+            // Hạ cánh ở nốt gốc cùng quãng tám hay quãng tám kề — dòng nào ít điểm phạt hơn (hoà thì giữ quãng tám cũ);
+            // tiếng kế đánh theo. Đích xa quá số bước (C3 → B3: 11 nửa cung, 5 bước chỉ tới 10) thì chỉ còn quãng tám kề;
+            // vừa đủ 10 thì bị ép thành dòng toàn cung (Dbm → Bm: Db Eb F G A, G3 chói với Ab4 tay phải).
+            let bestScore = Infinity
+            if (near !== undefined && den !== undefined)
+              for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
+                const found = walkingBass(fold(near), d, slots, low, high)
+                if (found && found.score < bestScore) { bestScore = found.score; walk = found.path; walkLand = d }
+              }
+          }
+          const n = walk.shift()
+          if (n !== undefined) raw = [n as MidiNote]
+        }
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
 

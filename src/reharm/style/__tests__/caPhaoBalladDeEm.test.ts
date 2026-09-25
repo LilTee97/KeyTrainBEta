@@ -64,36 +64,36 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       [3.25, [60, 64]], [3.5, [67]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
-    // Tay trái câu chạy một (walking bass): C3 · bum F3 → G3 · G3 · bum E3 → D3 đầu ô 2.
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [53]], [3, [55]], [3.5, [55]], [3.75, [52]],
+    // Tay trái câu chạy một (walking bass): C3 → D3 E3 F3 E3 → D3 đầu ô 2.
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.25, [48]], [2.5, [50]], [3, [52]], [3.5, [53]], [3.75, [52]],
       [4, [50]], [4.25, [52]], [4.75, [53]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)
   })
 
-  it('bum là walking bass: một nốt tay trái, bước liền bậc vào bass tiếng kế, đi tiếp chiều bè trầm, không tay phải', () => {
+  it('3& → 4¾ là MỘT dòng walking bass tay trái: từng bước một cung / nửa cung, bum không tay phải, bùm không chói', () => {
     const hand = (h: 'left' | 'right') => (chords: string, at: number) => [...new Set(renderPattern(
       voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
       .filter(e => e.hand === h && Math.abs(e.startBeat - at) < 1e-6).flatMap(e => e.notes))].sort((a, b) => a - b)
     const lh = hand('left'), rh = hand('right')
-    // Bài người dùng (Fadd2 → G9): F3 → D3 → C3 (đi xuống) · C3 → F3 → G3 (đi lên). Cũ (bản 25): Bb2+Bb3 + Bb4, F2+F3 + A4.
-    expect([lh('Fadd2 G9', 2.5), lh('Fadd2 G9', 3.75)]).toEqual([[50], [53]])
-    // Suy đoán theo gam + chiều bè: C → Dm dẫn E (từ trên), G → C dẫn B (D trùng nốt trước nên đổi phía), C → F dẫn E,
-    // A → Dm dẫn C#, C → G dẫn F.
-    for (const [chords, pc] of [['C Dm7', 4], ['G C', 11], ['C F', 4], ['A Dm', 1], ['C G', 5]] as const)
-      expect(lh(chords, 3.75).map(n => n % 12), chords).toEqual([pc])
+    const line = (chords: string) => [2.25, 2.5, 3, 3.5, 3.75, 4].map(b => lh(chords, b))
+    // Bài người dùng: Fadd2 → G9 F3 G3 A3 Bb3 A3 → G3. Cũ (bản 26): F3 D3 C3 C3 F3 → G3 — nhảy quãng 4 C3 → F3.
+    expect(line('Fadd2 G9')).toEqual([[53], [55], [57], [58], [57], [55]])
+    // Bài trước: Gadd9 → D9sus4 đi xuống G3 F#3 E3 D3 C3 → D3.
+    expect(line('Gadd9 D9sus4')).toEqual([[55], [54], [52], [50], [48], [50]])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
-      for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`, `${root}add9 D9sus4`, `${root}m Bm`])
-        for (const [bum, prev, next] of [[2.5, 2.25, 3], [3.75, 3.5, 4]]) {
-          const [n, ...more] = lh(chords, bum), target = Math.min(...lh(chords, next)), truoc = Math.max(...lh(chords, prev))
-          const at = `${chords} phách ${bum}: ${truoc} → ${n} → ${target}`
-          expect(more, at).toEqual([])
-          expect(rh(chords, bum), at).toEqual([])
-          expect(Math.abs(target - n!), at).toBeGreaterThanOrEqual(1)
-          expect(Math.abs(target - n!), at).toBeLessThanOrEqual(2)
-          expect(n, at).not.toBe(truoc)
+      for (const chords of [`${root} ${root}`, `${root}m F`, `${root}7 Am`, `${root}maj7 G`, `${root}add9 D9sus4`, `${root}m Bm`]) {
+        const l = line(chords), at = `${chords}: ${l.join(' → ')}`
+        for (const notes of l) expect(notes.length, at).toBe(1)
+        for (let i = 1; i < l.length; i += 1) {
+          const step = Math.abs(l[i]![0]! - l[i - 1]![0]!)
+          expect(step >= 1 && step <= 2, at).toBe(true)
         }
+        expect([rh(chords, 2.5), rh(chords, 3.75)], at).toEqual([[], []])
+        for (const b of [3, 3.5]) for (const r of rh(chords, b))
+          expect([1, 6, 11], `${at} · phách ${b} tay phải ${r}`).not.toContain(((r - lh(chords, b)[0]!) % 12 + 12) % 12)
+      }
   })
 
   it('cao độ điệp khớp sheet cửa sổ 24–25 (bỏ nốt trên 74)', () => {

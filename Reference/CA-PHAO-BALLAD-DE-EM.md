@@ -618,6 +618,42 @@ Fadd2). Bum chỉ có một chỗ nên không lấp được. Muốn cả dòng 
 **Giá trị cũ:** bản 25 (bum = cặp quãng tám + nốt giai điệu tay phải).
 **Triệu chứng để lùi:** một nốt bass lại nghe mờ → tăng lực bum; đừng thêm lại nốt tay phải (người dùng đã bác).
 
+## Bản 27: cả dòng 3& → 4¾ là walking bass soạn cùng lúc
+
+Người dùng, sau khi được báo bản 26 còn nhảy quãng 4 trước bum 4¾ vì hai bùm đứng bậc 5: *"làm luôn đi"*.
+
+**Nay:** bum 3& · bùm 4 · bùm 4& · bum 4¾ là MỘT dòng tay trái, soạn cùng lúc (`walkingBass` trong `patternRenderer.ts`), đi
+liền bậc từ bass Chát-bùm (3¼) tới gốc đầu ô 2. Mỗi bước một cung hoặc nửa cung. Bộ soạn thử mọi dòng (4⁴ = 256), chọn dòng ít
+điểm phạt nhất:
+- nốt ngoài gam hợp âm đang vang +3 (nốt cuối dẫn chromatic nửa cung vào đích chỉ +1);
+- tiếng bùm không trúng nốt hợp âm +2;
+- đổi chiều +2; đi tới lui +1;
+- chói với tay phải cùng mốc (quãng 2 thứ / 7 trưởng / tăng 4) +3.
+Hoà điểm thì dòng tìm thấy trước thắng (bước đầu về phía đích, một cung trước nửa cung). Không xúc xắc.
+Cả luật chấm điểm là **suy đoán của Claude**, không có sheet đứng sau: sheet Để em ở hai bùm này là G3 G3 (bậc 5, cửa sổ 6 · 8 ·
+34 · 36) — đã bỏ theo ý người dùng.
+
+| vòng | 3¼ → bum → bùm → bùm → bum → ô 2 |
+|---|---|
+| Fadd2 → G9 (bài người dùng) | F3 → G3 → A3 → Bb3 → A3 → G3 |
+| Am(add9) → Fadd2 | A3 → Bb3 → B3 → A3 → G3 → F3 |
+| G9 → Am(add9) | G3 → F3 → E3 → F3 → G3 → A3 |
+| Gadd9 → D9sus4 (bài trước) | G3 → F#3 → E3 → D3 → C3 → D3 |
+| Em → Bm | E3 → F#3 → G3 → A3 → Bb3 → B3 |
+| C → Dm7 (sheet) | C3 → D3 → E3 → F3 → E3 → D3 |
+| C → C | C3 → D3 → E3 → D3 → C#3 → C3 |
+
+**Hạ cánh:** thử cả gốc đích cùng quãng tám lẫn quãng tám kề, lấy dòng ít điểm hơn (hoà thì giữ quãng tám cũ); tiếng bùm đầu
+ô 2 đánh đúng nốt hạ cánh. Hai bẫy đã sập:
+- Cm → Bm: C3 → B3 là 11 nửa cung, 5 bước chỉ đi được 10 — không có dòng nào; trước khi sửa, bộ vẽ lùi về `tones` (G3 G3 G3).
+- Dbm → Bm: vừa đủ 10 nên bị ép thành dòng toàn cung Db Eb F G A, G3 chói với Ab4 tay phải.
+Test: 12 gốc × 6 loại vòng — một nốt mỗi tiếng, mỗi bước 1–2 nửa cung, bum không tay phải, bùm không chói với tay phải.
+
+**Giá trị cũ:** bản 26 (bum một nốt dẫn; hai bùm G3 G3 như sheet; Fadd2: F3 D3 C3 C3 F3 → G3).
+**Triệu chứng để lùi:**
+- dòng nghe lạ ở một vòng → đem vòng ấy ra dựng lại, xem nốt nào ngoài gam; chỉnh trọng số chứ đừng thêm xúc xắc;
+- người dùng muốn giữ chất sheet ở hai bùm → bỏ cờ `danVao` ở mốc 3 và 3.5 (trở lại G3 G3).
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

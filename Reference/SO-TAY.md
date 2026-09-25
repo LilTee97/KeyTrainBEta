@@ -4013,3 +4013,12 @@ và cặp quãng tám ở bum (bản 24–25; trên Fadd2 ra ba nốt Bb). `danV
 (`near`): nốt trước cao hơn đích thì dẫn từ trên, thấp hơn thì từ dưới; trùng nốt trước thì đổi phía. Bài người dùng
 Fadd2 → G9: F3 → D3 → C3 → C3 → F3 → G3. Đã gỡ đường tay phải của `danVao` và lượt dựng tay trái trước (không còn ai dùng).
 **Giá trị cũ:** bản 25. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 26".
+
+### Ballad Để em: 3& → 4¾ là một dòng walking bass soạn cùng lúc, chấm điểm chứ không xúc xắc
+
+Người dùng: *"làm luôn đi"* (đổi cả bass hai bùm cho dòng đi liền bậc). Cờ `danVao` nay đánh dấu một DÒNG: các tiếng tay trái
+mang cờ liền nhau được `walkingBass` soạn cùng lúc — thử mọi dòng bước 1–2 nửa cung, phạt nốt ngoài gam / bùm lệch hợp âm / đổi
+chiều / tới lui / chói tay phải, lấy dòng ít điểm nhất. Fadd2 → G9: F3 G3 A3 Bb3 A3 → G3.
+**Bẫy:** đích xa đúng 10–11 nửa cung (Cm → Bm, Dbm → Bm) thì không có dòng hoặc bị ép toàn cung — so thêm đích ở quãng tám kề,
+tiếng kế đánh theo. Trọng số là suy đoán, không có sheet.
+**Giá trị cũ:** bản 26 (hai bùm G3 G3 theo sheet). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 27".

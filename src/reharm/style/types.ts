@@ -75,8 +75,8 @@ export interface RhythmHit {
     /** Với som: chỉ đánh nếu hợp âm kế tiếp bắt đầu đúng lúc tiếng này hết.
      * Bass dẫn không được nhắm một hợp âm còn xa hoặc tự dẫn ở cuối bài. */
     requireNextChord?: boolean
-    /** Bass dẫn kiểu walking bass (chỉ tay trái): `tones` là nốt bass của tiếng kế, đặt theo hợp âm vang lúc tiếng này
-     * HẾT; bộ vẽ bước một cung / nửa cung vào nó, đi tiếp chiều của bè trầm (xem `danVao` trong patternRenderer). */
+    /** Walking bass (chỉ tay trái): các tiếng mang cờ liền nhau được soạn cùng lúc thành một dòng đi liền bậc từ nốt
+     * bass trước tới nốt bass của tiếng kế không mang cờ; `tones` chỉ dùng khi không soạn được (xem `walkingBass`). */
     danVao?: boolean
   }
 
