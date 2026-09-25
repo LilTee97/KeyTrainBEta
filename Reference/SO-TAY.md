@@ -3928,3 +3928,11 @@ Ballad Để em: bùm 5 · bum 6 · bùm 8 · bum 9 · bùm 11 nay là nốt đ�
 chạy. Suy đoán, chưa đo: vùng C2–G2 của piano đục nên dày thêm không rõ hơn.
 Giới hạn: gốc từ G# trở lên thì gập xuống (Bm7: B3 → C#3), giống câu chạy DERX.
 **Giá trị cũ:** bản 15. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 16".
+
+### Nốt dẫn bị chìm khi hợp âm tiếng trước ngân đè lên nó và nó tụt xuống tầm thấp
+
+Người dùng: tiếng 6 (bum) của Ballad Để em *"bị đánh chìm xuống dưới"*, trong khi 5 và 7 rõ; tiếng 6 là tiếng dẫn từ 5 qua 7.
+Bản 16 để hợp âm tay phải của 5 (lực .9) ngân qua 6, và 6 là C3 tay trái đứng dưới G3 của 5.
+**Nay:** 6 là nốt đơn tay phải lực .9, thấp hơn một nốt của chát 7 đúng một cung (Đô: E4 → F4 → G4); hợp âm của 5 nhả khi 6 vào.
+**Bẫy:** viết "bậc 4" thì trên Sol bị đảo quãng, vì sàn tay phải 60 đẩy bậc 3 lên Si4. Viết "bậc 5 hạ 2 nửa cung" mới luôn liền bậc.
+**Giá trị cũ:** bản 16 (6 = C3 tay trái dẫn vào ô 2). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 17".

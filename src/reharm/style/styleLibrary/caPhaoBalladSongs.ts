@@ -251,8 +251,7 @@ const deEm: StylePattern = {
       // vào câu chạy. Người dùng: bass dày ở C2–G2 "cũng ko hiện rõ được tiếng … hãy cho Bùm và Bum đánh giai điệu thấp
       // giống như trong câu chạy nốt". Cũ (bản 15): cặp bass G2+C3 · C2+G2 · D2+cụm · E2+A2 · F2+D3.
       hit(1.75, 1.25, [tone(0, 12)], THUONG), hit(1.75, .75, [tone(2, 12)], THUONG), // 3 bùm: C3 + G3 (như cũ)
-      hit(2.5, .5, [tone(2, 12)], NHAN),                     // 5 bùm: G3 (cửa sổ 4 có G3 ở 3&), nhấn — giật
-      { ...hit(3, 1, [tone(0, 10)], THUONG), som: true, requireNextChord: true }, // 6 bum: dẫn — gốc hợp âm sau hạ một cung, tầm 3 (C3 → D3)
+      hit(2.5, 1.5, [tone(2, 12)], NHAN),                    // 5 bùm: G3 (cửa sổ 4 có G3 ở 3&), nhấn — giật; ngân đỡ dưới tiếng 6
       hit(4, .25, [tone(0, 12)], NHAN),                      // 8 bùm: gốc D3, giật
       hit(4.25, .5, [tone(0, 14)], THUONG),                  // 9 bum: dẫn — bậc 2 (E3)
       hit(4.75, 1.5, [ba3(12)], THUONG),                     // 11 bùm: bậc 3 (F3), ngân tới câu chạy
@@ -268,7 +267,12 @@ const deEm: StylePattern = {
       hit(1, .75, [tone(2), tone(0, 12)], THUONG),            // 2 chát: F4+Bb4
       hit(1.75, .5, [ba3(), tone(0, 12)], THUONG),            // 3 bùm: E4+C5
       hit(2.25, .15, [tone(2), tone(0, 12)], NHAN),           // 4 chát: G4+C5, rất ngắn và nhấn — giật
-      hit(2.5, 1, [ba3(), tone(0, 12)], NHAN),                // 5 bùm: E4+C5, ngân qua bum 6
+      hit(2.5, .5, [ba3(), tone(0, 12)], NHAN),               // 5 bùm: E4+C5 — nhả đúng lúc tiếng 6 vào
+      // 6 bum = nốt DẪN từ 5 qua 7: thấp hơn nốt dưới của chát 7 đúng một cung rồi bước lên nó (trên Đô: E4 → F4 → G4).
+      // Viết theo bậc 5 hạ 2 nửa cung, không theo "bậc 4": sàn tay phải 60 đẩy bậc 3 của Sol lên Si4 nên bậc 4 sẽ nhảy xuống.
+      // Người dùng: "tiếng Bum 6 bị đánh chìm xuống dưới … phải đánh tiếng 6 nghe rõ như tiếng 5 và 7 và tiếng 6 là tiếng
+      // dẫn từ 5 qua 7". Cũ (bản 16): C3 tay trái (gốc hợp âm sau hạ một cung) dưới hợp âm tay phải của 5 đang ngân.
+      hit(3, .5, [tone(2, -2)], NHAN),                        // 6 bum: F4 — nốt đơn, không hợp âm
       hit(3.5, .5, [tone(2), tone(0, 12)], THUONG),           // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5

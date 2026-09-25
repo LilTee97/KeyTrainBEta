@@ -393,6 +393,26 @@ Câu chạy DERX cũng gập như vậy. Sửa phải nới tầm tay trái riê
 **Giá trị cũ:** bản 15 (cặp bass G2+C3 · C2+G2 · D2+cụm · E2+A2 · F2+D3).
 **Triệu chứng để lùi:** giai điệu thấp nghe lẫn với câu chạy → trả bùm 8 về cụm cửa sổ 5.
 
+## Bản 17: tiếng 6 là nốt dẫn rõ từ 5 qua 7
+
+Người dùng: *"vấn đề ở đây là tiếng Bum 6 bị đánh chìm xuống dưới; tiếng 5 nghe vẫn rõ và tiếng 7 nghe cũng rõ. Phải đánh tiếng 6
+nghe rõ như tiếng 5 và 7 và tiếng 6 là tiếng dẫn từ 5 qua 7"*.
+
+Hai nguyên do (suy từ mã, chưa đo tiếng):
+- Bản 16 cho hợp âm tay phải của tiếng 5 (lực .9) ngân đè lên tiếng 6.
+- Tiếng 6 là một nốt tay trái C3, tụt dưới G3 của tiếng 5, trong khi 5 và 7 nghe rõ nhờ phần tay phải E4–C5.
+
+**Nay:**
+- Tiếng 6 là **nốt đơn tay phải, lực .9**, thấp hơn một nốt của chát 7 đúng một cung rồi bước lên nó. Trên Đô: E4 → **F4** → G4;
+  trên Sol: C4 → D4.
+- Hợp âm tay phải của 5 nhả đúng lúc 6 vào. Bass G3 của 5 ngân đỡ tới vạch.
+
+Viết theo "bậc 5 hạ 2 nửa cung", không theo "bậc 4": sàn tay phải 60 đẩy bậc 3 của Sol lên Si4, nên "bậc 4" sẽ nhảy xuống.
+Test kiểm liền bậc trên 12 hợp âm.
+**Mất:** tiếng 6 không còn dẫn bass vào ô 2 (C3 → D3).
+**Giá trị cũ:** bản 16.
+**Triệu chứng để lùi:** 6 nghe lạc khỏi vai "bum" → trả về dẫn bass tay trái, nhưng không để hợp âm của 5 đè lên.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
