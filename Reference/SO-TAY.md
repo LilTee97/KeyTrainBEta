@@ -3742,3 +3742,19 @@ trên 74. Sheet không ghi pedal (0 dấu), nên độ ngân nối là biên so�
 
 Test `caPhaoBalladDeEm.test.ts` khoá: mốc gõ trùng DERX; trên vòng sheet không móc kép nào dưới hai nốt vang
 (DERX không qua được điều này); cao độ khớp MIDI sheet.
+
+### Bậc 7 trong cụm tay trái Ballad Để em: hợp âm ba thì BỎ, không lùi về bậc 5
+
+Kiểm khung tiếng thì thấy trên hợp âm ba (Bb, Dm không có 7) cụm tay trái đầu ô gõ **trùng một phím hai lần**.
+Đo trên Bb: Bb2 + F3 + F3. Nguyên do: `tone(3)` không tìm thấy bậc 7 nên lùi về bậc 5 (`DEGREE_CHAIN[3]`),
+đúng phím bậc 5 đã có trong cụm. Nút Ballad DERX cũng bị y như vậy; tôi **không sửa DERX** vì là nút của Codex.
+
+**Sửa:** thêm cờ `optional` cho từng bậc trong `RhythmHit.tones` (`types.ts`). Hợp âm không có bậc ấy thì
+`notesForVoice` bỏ luôn tiếng đó, không lùi bậc. Chỉ hai cụm tay trái của Ballad Để em khai cờ này (`bay7()`).
+Nay trên Bb · Dm cụm ra Bb2+F3 · D3+A3; trên Bbmaj7 · Dm7 vẫn Bb2+F3+A3 · C3+D3+A3 như sheet.
+
+**Không gộp nốt trùng cho cả engine**, vì như thế đổi tiếng các nút đã duyệt. Có Em Chờ có cụm
+`tone(1), tone(2), tone(3)`: trên hợp âm ba, bậc 5 của nó hiện đang gõ đôi.
+**Giá trị cũ:** bậc 7 luôn lùi về bậc 5. **Triệu chứng để lùi:** cụm đầu ô trên hợp âm ba nghe mỏng quá → bỏ `optional`.
+
+Test `caPhaoBalladDeEm.test.ts`: 12 giọng × 5 loại hợp âm × 2 ô, không cú nào gõ trùng phím.

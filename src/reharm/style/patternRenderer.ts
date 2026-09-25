@@ -264,6 +264,7 @@ function notesForVoice(
     semitones?: number
     fromRoot?: boolean
     fallbackInterval?: number
+    optional?: boolean
   }[],
   rootPc?: number,
   near?: MidiNote,
@@ -273,7 +274,10 @@ function notesForVoice(
   if (notes.length === 0) return []
   if (tones?.length) {
     let here = near
-    return tones.map((spec) => {
+    const sounding = new Set((soundingNotes ?? notes).map((note) => ((note % 12) + 12) % 12))
+    const present = (spec: { toneIndex: number }) => rootPc === undefined || spec.toneIndex === 0 ||
+      (DEGREE_CHAIN[spec.toneIndex]?.[0] ?? []).some((step) => sounding.has((rootPc + step) % 12))
+    return tones.filter((spec) => !spec.optional || present(spec)).map((spec) => {
       const note =
         spec.fromRoot && rootPc !== undefined
           ? degreeTone(

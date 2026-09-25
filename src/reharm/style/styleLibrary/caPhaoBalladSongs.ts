@@ -217,6 +217,8 @@ const deEmCommon = {
   verified: true, releaseRatio: 1, leftHandTop: 59,
   rightHandRegister: { rootFloor: 55, low: 60, high: 74 },
 }
+// Bậc 7 của cụm tay trái chỉ gõ khi hợp âm có 7 — hợp âm ba mà lùi về bậc 5 thì gõ trùng phím (F3+F3).
+const bay7 = (semitones = 0) => ({ ...tone(3, semitones), optional: true })
 const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
@@ -226,10 +228,10 @@ const deEm: StylePattern = {
   cell: {
     lengthBeats: 8,
     left: [
-      hit(0, 1.75, [tone(0), tone(2), tone(3)], .85),        // Bb2+F3+A3, sheet d 1.5
+      hit(0, 1.75, [tone(0), tone(2), bay7()], .85),        // Bb2+F3+A3, sheet d 1.5
       hit(1.75, .75, [tone(0, 12), tone(2, 12)]),            // C3+G3
       hit(2.5, .5, [tone(2, 12)]), hit(3, 1, [tone(0, 24)]), // G3 · C4 (gập về dưới trần 59)
-      hit(4, 2.25, [tone(0, 12), tone(2, 12), tone(3, 12)], .8), // D3+A3+C4, sheet d 2
+      hit(4, 2.25, [tone(0, 12), tone(2, 12), bay7(12)], .8), // D3+A3+C4, sheet d 2
       // A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX).
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),

@@ -64,6 +64,18 @@ describe('Ballad Để em — soạn lại trên mốc gõ DERX', () => {
     }
   })
 
+  it('hợp âm ba không gõ trùng phím; hợp âm bảy vẫn giữ bậc 7 của sheet', () => {
+    const left = (chords: string) => renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
+      .filter(e => e.hand === 'left' && (e.startBeat === 0 || e.startBeat === 4)).map(e => [...e.notes].sort((a, b) => a - b))
+    expect(left('Bb Dm')).toEqual([[46, 53], [50, 57]])
+    expect(left('Bbmaj7 Dm7')).toEqual([[46, 53, 57], [48, 50, 57]])
+    for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
+      for (const quality of ['', 'm', '7', 'maj7', 'm7'])
+        for (const id of [VERSE, CHORUS])
+          for (const e of renderPattern(voiceLeadTwoHands(parseChordInput(`${root}${quality} ${root}${quality}`).chords), getStyle(id)!))
+            expect(new Set(e.notes).size, `${id} ${root}${quality} ${e.hand} ${e.startBeat}`).toBe(e.notes.length)
+  })
+
   it('là một nút Ballad riêng, tự đổi sang điệp, không mang màu Codex', () => {
     expect(hoCuaDieu(VERSE)).toBe('ballad')
     expect(isBalladStyle(VERSE)).toBe(true)

@@ -63,6 +63,8 @@ export interface RhythmHit {
       fromRoot?: boolean
       /** Written color when this degree is absent from the input chord. */
       fallbackInterval?: number
+      /** Hợp âm không có bậc này thì BỎ tiếng, không lùi bậc — lùi thì gõ trùng phím bậc 5 cùng cụm. */
+      optional?: boolean
     }[]
     /**
      * Đánh hợp âm kế tiếp sớm, bỏ cắt ngân tại ranh giới hợp âm.
