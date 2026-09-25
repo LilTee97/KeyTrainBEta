@@ -748,6 +748,32 @@ Trên Fadd2 → G9, cú 3¼ là: tay trái F3; tay phải F4 (bùm, .9) + A4+C5 
 **Giá trị cũ:** bản 30 (chát 4 lướt ⅛ phách trước 3¼, lực .5).
 **Triệu chứng để lùi:** bùm 5 vẫn chìm → hạ lực chát 4 (.8 → .6) hoặc bỏ nốt trên của chát 4, giữ chỗ gõ.
 
+## Bản 32: chát 4 một mình ở 3¼, bùm 5 giật vào ở 3& — hết "tiếng 3 đánh lại"
+
+Người dùng nghe bản 31: *"sau tiếng bùm 3 sao lại có một tiếng nghe giống hệt tiếng 3 nữa và đánh rất gần với tiếng 3. Nếu đó là
+tiếng chát 4 thì hãy sửa lại tiếng chát vì bạn đang để nó nghe quá giống tiếng 3, và tất nhiên phải đánh xa ra. Tiếng 4 nên cách
+tiếng 3 ra một chút và giật về tiếng 5"*.
+
+**Nguyên do (đo trên Fadd2):** cú 3¼ của bản 31 = tay trái F3 + tay phải F4 A4 C5. Tiếng 3 = F3 C3 + A4 F4. Cú sau chứa gần hết
+cú trước, cách ½ phách → nghe như tiếng 3 bị đánh lại.
+
+| mốc | 2¾ | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ | 1 (ô 2) |
+|---|---|---|---|---|---|---|---|---|---|
+| tiếng | bùm 3 (giữ) | chát 4 | **bùm 5** (giật) | bum 6 | chát 7 | bùm 8 | chát 9 | bùm 10 | bùm (đủ hợp âm) |
+| tay trái (Fadd2 → G9) | F3+C3 | — | G3 | A3 | — | G3 | — | F3 | G3 |
+| tay phải | A4+F4 | A4+C5 | F4 | — | F4+C5 | A4 | F4+A4 | C5 | D4+B4 |
+
+- Chát 4 chỉ tay phải, không bass → khác tiếng 3. Bùm 5 giật vào ¼ phách sau (giật = ¼, như "bùm–bum" đầu ô 2).
+- Các tiếng sau lùi ¼. Bum cuối của khung nhập vào bùm đầu ô 2, bùm ấy **giữ đủ hợp âm tay phải** (cách 3 bỏ hợp âm ấy thì
+  "thiếu phách").
+- Walking bass nay gồm cả bùm 5: đi từ bùm 3 → bùm 5 · bum 6 · bùm 8 · bùm 10 → gốc ô 2. **Bẫy:** xuất phát cứng từ gốc quãng
+  tám 3 của bùm 5 thì Bbadd9 → D9sus4 chỉ còn 4 bước cho 8 nửa cung → ép toàn cung Bb3 Ab3 F#3 E3, E3 đụng F4 tay phải.
+- Giai điệu bùm: F4/C4 (bậc 1, ý Claude) · bậc 3 (sheet 4¼ E4, 6/6 cửa sổ) · bậc 5 (ý Claude).
+
+**Giá trị cũ:** bản 31 (chát 4 + bùm 5 một cú ở 3¼).
+**Triệu chứng để lùi:** bùm 5 giật nghe gấp → dời bùm 5 về cùng chỗ chát 4 nhưng đổi thế bấm chát 4 cho khác tiếng 3; bùm 5 không
+còn là nốt gốc (vd G3 trên Fadd2) nghe lỏng → cho bùm 5 ra khỏi dòng walking, chịu dòng chromatic hơn.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

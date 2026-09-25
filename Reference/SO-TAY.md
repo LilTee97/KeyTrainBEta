@@ -4051,3 +4051,10 @@ Người dùng: *"khôi phục tiếng chát 4 như bình thường chứ đánh
 cùng cú với bùm 5 (bass + giai điệu bậc 1, lực .9). **Bài học:** muốn một tiếng "phụ" thì hạ lực, đừng dời nó khỏi lưới móc kép
 — dời ⅛ phách là tai nghe lệch nhịp.
 **Giá trị cũ:** bản 30 (lướt ⅛ trước 3¼, lực .5). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 31".
+
+### Ballad Để em: chát 4 một mình ở 3¼, bùm 5 giật vào ở 3& — cú chung nghe như tiếng 3 đánh lại
+
+Người dùng: tiếng sau bùm 3 *"nghe giống hệt tiếng 3 … đánh rất gần"*; tiếng 4 *"nên cách tiếng 3 ra một chút và giật về tiếng
+5"*. Cú chát 4 + bùm 5 ở 3¼ (Fadd2: F3 + F4 A4 C5) chứa gần hết tiếng 3 (F3 C3 + A4 F4). Nay chát 4 chỉ tay phải ở 3¼, bùm 5 ở 3&
+(giật ¼), các tiếng sau lùi ¼, bum cuối nhập bùm đầu ô 2 (giữ hợp âm). Walking bass gồm cả bùm 5, đi từ bùm 3.
+**Giá trị cũ:** bản 31. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 32".
