@@ -26,19 +26,19 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
     const verse = getStyle(VERSE)!.cell!
-    const run1 = [2.125, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
+    const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
     expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
-    // Câu chạy một, cách 1 có tiếng lướt: chát 4 lướt ⅛ phách trước bùm 5 (3¼), rồi "bum chát bùm chát bùm bum".
+    // Câu chạy một, cách 1: "Chát-bùm bum chát bùm chát bùm bum" — chát 4 + bùm 5 cùng một cú hai tay ở 3¼.
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
     expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : '')))
-      .toEqual(['P', 'TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
+      .toEqual(['TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
     expect(verse.right.find(h => h.beat === 1.75)!.durationBeats, 'bùm 3 ngân ½ như cũ').toBe(.5)
-    // Chát 4 là tiếng PHỤ lướt: nhẹ, ngắn; bùm 5 là tiếng CHÍNH: lực mạnh cả hai tay.
-    const luot = verse.right.find(h => h.beat === 2.125)!
-    expect([luot.durationBeats, luot.velocityScale]).toEqual([.125, .5])
-    for (const h of [...verse.left, ...verse.right].filter(h => h.beat === 2.25)) expect(h.velocityScale, 'bùm 5').toBe(.9)
+    // Chát 4 bình thường (.8, ¼ phách, đúng 3¼ — bản 30 lướt ⅛ trước 3¼ "lệch tiết tấu"); bùm 5 là tiếng chính: bass +
+    // giai điệu tay phải lực .9.
+    const cu = [...verse.left, ...verse.right].filter(h => h.beat === 2.25)
+    expect(cu.map(h => [h.tones!.length, h.durationBeats, h.velocityScale]).sort()).toEqual([[1, .25, .9], [1, .25, .9], [2, .25, .8]])
     // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = MỘT nốt walking bass.
-    for (const b of [2.125, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
+    for (const b of [2.25, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
     for (const b of [2.5, 3.75]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(1)
     // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
     expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
@@ -46,7 +46,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     for (const b of [0, 1.75, 4, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
     expect([at(verse.left, 4.25), at(verse.right, 4.25)], 'bum').toEqual([true, false])
     for (const b of [1, 4.5, 5, 5.25, 5.75]) expect([at(verse.left, b), at(verse.right, b)], `chát ${b}`).toEqual([false, true])
-    for (const h of verse.right.filter(h => h.beat !== 2.125)) expect(h.velocityScale!, `phải ${h.beat}`).toBeGreaterThanOrEqual(.7)
+    for (const h of verse.right) expect(h.velocityScale!, `phải ${h.beat}`).toBeGreaterThanOrEqual(.7)
     expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
@@ -65,8 +65,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
 
   it('cao độ phiên trên vòng sheet: câu chạy một Chát-bùm bum chát bùm chát bùm bum; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      // Câu chạy một (cách 1 có tiếng lướt), tay phải: chát lướt E4+G4 → bùm C4 · chát G4+C5 · bùm C4 · chát C4+E4 · bùm G4.
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.125, [64, 67]], [2.25, [60]], [2.75, [67, 72]], [3, [60]],
+      // Câu chạy một (cách 1), tay phải: chát 4 E4+G4 cùng bùm 5 C4 · chát G4+C5 · bùm C4 · chát C4+E4 · bùm G4.
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [60, 64, 67]], [2.75, [67, 72]], [3, [60]],
       [3.25, [60, 64]], [3.5, [67]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.

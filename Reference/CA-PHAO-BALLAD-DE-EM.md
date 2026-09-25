@@ -735,6 +735,19 @@ Cách 1 cũ (bản 21–27) gõ chát và bùm CÙNG MỘT CÚ ở 3¼ — ngư�
 **Triệu chứng để lùi:** tiếng 3 nghe hụt đuôi → rút tiếng lướt còn 1/16 phách; tiếng lướt nghe không ra → tăng lực .5 lên .6–.65
 hoặc lướt ⅛ → 3/16.
 
+## Bản 31: chát 4 trả về bình thường — cùng cú với bùm 5 ở 3¼
+
+Người dùng nghe bản 30: *"khôi phục tiếng chát 4 như bình thường chứ đánh lướt nghe lệch tiết tấu"*.
+
+Chát 4 về lại 3¼, ngân ¼, lực .8 như các chát khác, cùng cú với bùm 5. Bùm 5 giữ phần bản 30 thêm: bass gốc + giai điệu bậc 1
+tay phải, lực .9. Tiếng 3 hết bị tiếng lướt cắt đuôi.
+Trên Fadd2 → G9, cú 3¼ là: tay trái F3; tay phải F4 (bùm, .9) + A4+C5 (chát, .8).
+
+**Khác bản 27 (cách 1 gốc, người dùng nghe "nuốt mất tiếng bùm"):** bùm 5 nay có thêm nốt giai điệu tay phải đánh mạnh hơn chát.
+Đã báo người dùng trước khi làm: cú 3¼ lại là một cú hai tay — nếu vẫn nghe nuốt bùm thì phải xử lý bằng lực, không bằng dời chỗ.
+**Giá trị cũ:** bản 30 (chát 4 lướt ⅛ phách trước 3¼, lực .5).
+**Triệu chứng để lùi:** bùm 5 vẫn chìm → hạ lực chát 4 (.8 → .6) hoặc bỏ nốt trên của chát 4, giữ chỗ gõ.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

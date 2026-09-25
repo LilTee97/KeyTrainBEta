@@ -4044,3 +4044,10 @@ Người dùng nghe cách 3 *"thiếu phách"*, bảo dùng lại cách 1 nhưng
 đúng 3¼. Walking bass và bùm đầu ô 2 trả như bản 27.
 **Bẫy:** tiếng lướt chồng ⅛ đuôi bùm 3 — trùng phím thì đuôi bị cắt sớm (Fadd2: 0.375 thay vì 0.5).
 **Giá trị cũ:** cách 3 (bản 29). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 30".
+
+### Ballad Để em: chát 4 trả về bình thường — tiếng lướt trước phách nghe lệch tiết tấu
+
+Người dùng: *"khôi phục tiếng chát 4 như bình thường chứ đánh lướt nghe lệch tiết tấu"*. Chát 4 lại đúng 3¼, ¼ phách, lực .8,
+cùng cú với bùm 5 (bass + giai điệu bậc 1, lực .9). **Bài học:** muốn một tiếng "phụ" thì hạ lực, đừng dời nó khỏi lưới móc kép
+— dời ⅛ phách là tai nghe lệch nhịp.
+**Giá trị cũ:** bản 30 (lướt ⅛ trước 3¼, lực .5). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 31".
