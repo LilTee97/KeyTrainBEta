@@ -4022,3 +4022,10 @@ chiều / tới lui / chói tay phải, lấy dòng ít điểm nhất. Fadd2 �
 **Bẫy:** đích xa đúng 10–11 nửa cung (Cm → Bm, Dbm → Bm) thì không có dòng hoặc bị ép toàn cung — so thêm đích ở quãng tám kề,
 tiếng kế đánh theo. Trọng số là suy đoán, không có sheet.
 **Giá trị cũ:** bản 26 (hai bùm G3 G3 theo sheet). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 27".
+
+### Ballad Để em: câu chạy một sang cách 2 — "Chát bùm bum chát bùm chát bùm bum" từ phách 3
+
+Người dùng nghe "Chát-bùm" (một cú hai tay ở 3¼) *"như nuốt mất tiếng bùm"*, chọn phương án 2: chát lên phách 3 một mình, bùm 3¼
+đứng riêng (bass gốc + giai điệu thấp bậc 1). Bùm 3 nhả tay phải sau ¼ (cũ ½). **Đính chính:** nhãn "bắt đầu từ phách 4" ghi
+trong câu hỏi và bản 20 là sai — sơ đồ bắt đầu từ phách 3.
+**Giá trị cũ:** cách 1. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 28".

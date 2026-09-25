@@ -453,7 +453,7 @@ bass mà là đánh các giai điệu (có thể là giai điệu thấp) và k�
 
 Khung 8 tiếng mà câu chạy có 7 mốc. Người dùng chọn **thử cách 1** (nghe rồi mới chốt): "Chát-bùm" là một cú hai tay. Hai cách còn
 lại để dành:
-- 8 cú bắt đầu từ phách 4;
+- 8 cú bắt đầu từ phách 3 (nhãn trong câu hỏi lúc ấy ghi nhầm "phách 4", xem bản 28);
 - 8 cú, bum cuối rơi vào đầu ô 2.
 
 | mốc | tiếng | tay trái | tay phải |
@@ -653,6 +653,33 @@ Test: 12 gốc × 6 loại vòng — một nốt mỗi tiếng, mỗi bước 1�
 **Triệu chứng để lùi:**
 - dòng nghe lạ ở một vòng → đem vòng ấy ra dựng lại, xem nốt nào ngoài gam; chỉnh trọng số chứ đừng thêm xúc xắc;
 - người dùng muốn giữ chất sheet ở hai bùm → bỏ cờ `danVao` ở mốc 3 và 3.5 (trở lại G3 G3).
+
+## Bản 28: câu chạy một sang cách 2 — 8 tiếng từ phách 3, chát tách khỏi bùm
+
+Người dùng: *"tiếng 1 Chát-bùm tôi nghe thấy ko ổn, nó như nuốt mất tiếng bùm rồi. Lúc nãy tôi có nói xài tạm khung này nếu ko
+ổn thì sẽ qua các đáp án khác mà bạn đề xuất, giờ hãy đưa tôi qua phương án 2 lúc nãy đi"*.
+
+**Đính chính:** mục "Bản 20" và câu hỏi lúc ấy ghi nhãn cách 2 là "bắt đầu từ phách 4". Sai: sơ đồ và mô tả của chính câu hỏi
+đặt tiếng đầu ở **phách 3** (sớm hơn cách 1 ¼ phách). Làm theo sơ đồ.
+
+| mốc | 3 | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ |
+|---|---|---|---|---|---|---|---|---|
+| tiếng | chát | bùm | bum | chát | bùm | chát | bùm | bum |
+| tay trái | — | gốc (đầu dòng walking) | walking | — | walking | — | walking | walking |
+| tay phải (Đô) | E4+G4 | C4 | — | G4+C5 | C4 | C4+E4 | G4 | — |
+
+- Chát phách 3 dùng lại hợp âm của Chát-bùm cũ (bậc 3 + bậc 5). Bùm 3¼ nay là giai điệu thấp C4 (bậc 1) cùng bass gốc C3.
+  Nốt này là **ý của Claude**: sheet ở 3¼ có E4/A4 hoặc A4 (đỉnh A4, 5/6 cửa sổ). Chọn bậc 1 để khác cả chát trước (E4+G4)
+  lẫn chát sau (G4+C5).
+- Sheet không có tay phải ở phách 3 (6/6 cửa sổ 4 · 6 · 8 · 32 · 34 · 36). Tay trái có C3 ở 2/6 (32, 34). Chát phách 3 là ý
+  người dùng.
+- Bùm 3 (phách 2¾) nhả tay phải sau ¼ (cũ ½), để chát phách 3 không bị bùm 3 đè.
+- Walking bass 3& → 4¾ giữ nguyên (bản 27).
+
+**Rủi ro đã báo người dùng trước khi làm:** chát phách 3 chỉ cách bùm 3 đúng ¼ phách. Bản 19 người dùng từng nói *"ko phải là
+tiếng 4 dính liền với tiếng 3"*.
+**Giá trị cũ:** cách 1 (bản 21–27) — Chát-bùm một cú hai tay ở 3¼, tay phải E4+G4; bùm 3 tay phải ngân ½.
+**Triệu chứng để lùi:** chát phách 3 dính vào bùm 3 → thử cách 3 (8 tiếng giữ 3¼, bum cuối vào đầu ô 2) hoặc trả về cách 1.
 
 ## Chưa đo
 

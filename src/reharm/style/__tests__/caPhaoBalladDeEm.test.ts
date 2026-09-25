@@ -26,13 +26,14 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
     const verse = getStyle(VERSE)!.cell!
-    const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = run1.map(b => b + 4)
+    const run1 = [2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
     expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, ...run1, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run2])
-    // Câu chạy một theo khung "Chát-bùm bum chát bùm chát bùm bum" (cách 1: Chát-bùm cùng một cú, hai tay).
+    // Câu chạy một theo khung "Chát bùm bum chát bùm chát bùm bum" (cách 2: 8 tiếng từ phách 3, chát tách khỏi bùm).
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
-    expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : ''))).toEqual(['TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
+    expect(run1.map(b => (at(verse.left, b) ? 'T' : '') + (at(verse.right, b) ? 'P' : '')))
+      .toEqual(['P', 'TP', 'T', 'P', 'TP', 'P', 'TP', 'T'])
     // Câu chạy một: chát = hai nốt hợp âm đổi đỉnh theo sheet; bùm = giai điệu + bass; bum = MỘT nốt walking bass.
-    for (const b of [2.25, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
+    for (const b of [2, 2.75, 3.25]) expect(verse.right.find(h => h.beat === b)!.tones!.length, `chát ${b}`).toBe(2)
     for (const b of [2.5, 3.75]) expect(verse.left.find(h => h.beat === b)!.tones!.length, `bum ${b}`).toBe(1)
     // Câu chạy ô 2 tay trái một mình (cửa sổ 5).
     expect(run2.every(b => at(verse.left, b) && !at(verse.right, b))).toBe(true)
@@ -60,7 +61,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   it('cao độ phiên trên vòng sheet: câu chạy một Chát-bùm bum chát bùm chát bùm bum; ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
       // Câu chạy một, tay phải: chát E4+G4 · G4+C5 · C4+E4 (đỉnh G4 → C5 → E4 như sheet A4 → C5 → E4); bùm C4 · G4.
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [64, 67]], [2.75, [67, 72]], [3, [60]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2, [64, 67]], [2.25, [60]], [2.75, [67, 72]], [3, [60]],
       [3.25, [60, 64]], [3.5, [67]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.

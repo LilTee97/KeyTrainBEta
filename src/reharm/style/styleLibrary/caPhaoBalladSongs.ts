@@ -256,7 +256,7 @@ const deEm: StylePattern = {
       // nốt bass hoặc đánh thêm giai điệu nghe cho rõ ràng". Tay phải sheet ở mốc chát (cửa sổ 6 · 8 · 34 · 36): 3¼ A4
       // (+E4) · 3¾ C5 (+G4 3/4) · 4¼ E4 — đỉnh lên rồi xuống. Giữ nốt hợp âm; A4 (bậc 6, ngoài hợp âm — trên Em thành C#
       // ngoài giọng) đổi về G4 gần nhất. Cũ (bản 21): mọi chát/bùm dặm cùng một hợp âm E4+G4+C5; bum một nốt G3.
-      hit(2.25, .25, [tone(0, 12)], NHAN),                   // Chát-bùm: bass C3
+      hit(2.25, .25, [tone(0, 12)], NHAN),                   // bùm 3¼: bass C3 (đầu dòng walking bass)
       // WALKING BASS 3& → 4¾: bum · bùm · bùm · bum là MỘT dòng tay trái đi liền bậc từ bass Chát-bùm tới gốc đầu ô 2,
       // soạn cùng lúc (`walkingBass` trong patternRenderer). Người dùng 25/9: "tôi muốn Bum là kiểu Walking Bass chứ ko phải
       // giai điệu như vậy" rồi "làm luôn đi" — đổi cả bass hai bùm.
@@ -279,8 +279,13 @@ const deEm: StylePattern = {
       // chát = hợp âm không bass. Bùm bậc 3+5 hoặc 3+8, chát bậc 5+8 hoặc 3+7 — khác thế bấm để tai tách bùm với chát.
       hit(0, 1.75, [ba3()], THUONG), hit(0, .5, [tone(2)], THUONG), // 1 Bùm: D4 · F4
       hit(1, .75, [tone(2), tone(0, 12)], THUONG),            // 2 chát: F4+Bb4
-      hit(1.75, .5, [ba3(), tone(0, 12)], THUONG),            // 3 bùm: E4+C5 — rồi câu chạy 7 nốt đan hai tay
-      hit(2.25, .25, [ba3(), tone(2)], THUONG),               // Chát-bùm: chát E4+G4 (sheet A4 → G4), đỉnh G4
+      // Câu chạy một, CÁCH 2 (người dùng 25/9: "tiếng 1 Chát-bùm tôi nghe thấy ko ổn, nó như nuốt mất tiếng bùm … hãy đưa
+      // tôi qua phương án 2"): 8 tiếng "Chát bùm bum chát bùm chát bùm bum" từ phách 3 tới 4¾ — chát tách khỏi bùm, lên
+      // sớm ¼ phách. Cũ (bản 21–27, cách 1): Chát-bùm một cú hai tay ở 3¼ (tay phải E4+G4 cùng bass C3).
+      // Bùm 3 nhả tay phải sau ¼ (cũ ½) để chát phách 3 tách khỏi nó.
+      hit(1.75, .25, [ba3(), tone(0, 12)], THUONG),           // 3 bùm: E4+C5
+      hit(2, .25, [ba3(), tone(2)], THUONG),                  // chát phách 3: E4+G4 (hợp âm của Chát-bùm cũ)
+      hit(2.25, .25, [tone(0)], NHAN),                        // bùm 3¼: giai điệu thấp C4 cùng bass C3
       hit(2.75, .25, [tone(2), tone(0, 12)], THUONG),         // chát: G4+C5, đỉnh C5 (sheet)
       hit(3, .25, [tone(0)], NHAN),                           // bùm: giai điệu C4 (sheet)
       hit(3.25, .25, [tone(0), ba3()], THUONG),               // chát: C4+E4, đỉnh E4 (sheet)
