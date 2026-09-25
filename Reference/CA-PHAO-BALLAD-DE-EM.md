@@ -145,6 +145,29 @@ tay trái G3 ở 3& ô 1.
 **Triệu chứng để lùi:** "giật" nghe cụt → dời chát 4 về phách 4¾ (sát bùm hơn) hoặc bỏ nhấn.
 Muốn lại câu chạy → phải dời 7–8–9.
 
+## Bản 5: trả câu chạy tay trái, dời bùm 7 – chát 8 – bùm 9 lên trước nó
+
+Người dùng: *"trả lại câu chạy tay trái 7 nốt cuối và dời 3 tiếng 7 8 9 cho khớp với tiết tấu điệu đang chơi"*.
+
+| tiếng | vị trí | tay · nốt trên vòng sheet | ngân |
+|---|---|---|---|
+| 5 bùm | ô 2 phách 1 | trái C3+D3+A3 | 1½ |
+| 6 chát | ô 2 phách 2 | phải F4+C5 | ¾ |
+| 7 bùm | ô 2 phách 2& | trái D2 | ½ |
+| 8 chát | ô 2 phách 2¾ | phải F4 (ngân trên câu chạy) + C5 | F4 2¼ · C5 1¼ |
+| 9 bùm | ô 2 phách 3 | trái D3 | ¼ |
+| câu chạy | ô 2 phách 3¼ → 4¾ | trái A2 D3 E3 F3 E3 D3 C3 | ¼ mỗi nốt |
+
+Vị trí 7–9 do Claude đặt:
+- Chát 8 ở phách 2¾ là chỗ bè tay phải dày nhất phiên khúc sheet (15/17 cú có bè). Đó cũng là chát F4+C5 của
+  cửa sổ 5, với F4 ngân 2 phách trên câu chạy.
+- Bùm 9 ở phách 3: trong sheet, cụm tay trái ngân tới phách 3 rồi câu chạy mới vào (cửa sổ 5).
+- Bùm 7 ở phách 2&: để còn khoảng "…" sau chát 6 như khung người dùng. Chỗ này sheet mỏng (tay trái ở 2&
+  của ô Dm 1/6), là lựa chọn biên soạn.
+
+**Giá trị cũ:** bản 4 (7–8–9 ở phách 3 · 3& · 4, không câu chạy).
+**Triệu chứng để lùi:** đoạn 7–8–9 nghe dồn → bỏ bùm 7 trước.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

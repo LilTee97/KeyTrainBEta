@@ -3790,3 +3790,14 @@ trên vòng sheet. Chi tiết: `Reference/CA-PHAO-BALLAD-DE-EM.md` mục "Bản 
 **Mất theo khung:** câu chạy tay trái 7 nốt của DERX (tiếng 7–8–9 nằm đúng chỗ ấy).
 **Giá trị cũ:** bản 3.
 **Triệu chứng để lùi:** giật nghe cụt → chát 4 về phách 4¾ hoặc bỏ nhấn. Điệp khúc không đổi.
+
+### Ballad Để em: trả câu chạy tay trái 7 nốt; bùm 7 – chát 8 – bùm 9 ở phách 2& · 2¾ · 3 ô 2
+
+Người dùng đòi trả câu chạy (bản 4 mất vì 7–8–9 chiếm chỗ) và dời 7–8–9 cho khớp tiết tấu. Nay 7–8–9 đứng
+trước câu chạy, giữ đúng thứ tự khung:
+- bùm 7 = D2 ở 2&;
+- chát 8 = F4+C5 ở 2¾, chỗ bè tay phải dày nhất phiên (15/17); F4 ngân trên câu chạy như sheet cửa sổ 5;
+- bùm 9 = D3 ở phách 3, câu chạy vào liền ở 3¼.
+
+Bùm 7 ở 2& là biên soạn (sheet 1/6). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 5".
+**Giá trị cũ:** bản 4. **Triệu chứng để lùi:** 7–8–9 nghe dồn → bỏ bùm 7 trước.
