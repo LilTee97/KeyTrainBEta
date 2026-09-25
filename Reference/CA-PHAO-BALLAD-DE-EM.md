@@ -263,6 +263,28 @@ Người dùng đồng ý thử hướng "về tai" của bản 9: *"làm đi"*.
 
 **Triệu chứng để lùi:** ô 2 nghe nặng/đục → bỏ D2 ở bùm 7, hoặc lực bum về .65.
 
+## Bản 11: nguyên do "không nghe tiếng 7 trở đi" — hợp âm treo D9sus4 làm chát ô 2 thành một nốt
+
+Người dùng xuất bài đang nghe (`Bài chưa đặt tên.keytrain.json`, 25/9 16:28). Cài đặt của bài:
+- lời 4 khổ, mỗi dòng một hợp âm, mỗi hợp âm 4 phách, một đoạn duy nhất;
+- không có Fill/Run, không đặt nghỉ, CP Lick tắt;
+- màu át **9sus4**.
+
+Dựng lại đúng đường chạy (đọc lời → tái hòa âm → dựng đệm): vòng là Gadd2 **D9sus4** Em9 Bm7 Cadd2 Gadd2 Am11 **D9sus4**.
+Ô 2 rơi vào D9sus4 ở **2/4 chu kỳ**. Trên hợp âm treo:
+- `tone(1)` không có bậc 3 nên lùi về bậc 7, trùng `tone(3)`. Chát "bậc 3 + bậc 7" thành **C5+C5**, tức một nốt gõ trùng
+  phím, ba lần.
+- Câu chạy F3 thành C3.
+
+Bùm, bum vẫn có, nhưng mất chát thì khung không nghe ra.
+
+**Sửa:** `ba3()` = bậc 3, hợp âm thiếu bậc 3 thì lấy **nốt treo** (bậc 4, `fallbackInterval` 5). Thay cho mọi `tone(1)` trong hai ô
+của nút (13 chỗ). Hợp âm có bậc 3 không đổi. Trên D9sus4 nay chát = G4+C5; câu chạy A2 D3 E3 **G3** E3 D3 C3.
+Test chống trùng phím nay quét cả `sus4`, `9sus4` (trước chỉ '', m, 7, maj7, m7, nên không bắt được).
+
+**Giá trị cũ:** `tone(1)` lùi về bậc 7 rồi bậc 5.
+**Bài học:** thử trên vòng đã tái hòa âm với màu của người dùng, không chỉ trên hợp âm trơn.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

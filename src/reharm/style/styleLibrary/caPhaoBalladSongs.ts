@@ -218,6 +218,9 @@ const deEmCommon = {
   rightHandRegister: { rootFloor: 55, low: 60, high: 74 },
 }
 // Bậc 7 của cụm tay trái chỉ gõ khi hợp âm có 7 — hợp âm ba mà lùi về bậc 5 thì gõ trùng phím (F3+F3).
+// Bậc 3 — hợp âm treo (D9sus4 khi màu át là 9sus4) thì lấy NỐT TREO (bậc 4). Không khai thì lùi về bậc 7,
+// và "bậc 3 + bậc 7" thành hai nốt C trùng: trên bài người dùng 25/9 ba chát ô 2 chỉ còn một C5, mất khung.
+const ba3 = (semitones = 0) => ({ ...tone(1, semitones), fallbackInterval: 5 })
 const bay7 = (semitones = 0) => ({ ...tone(3, semitones), optional: true })
 const deEm: StylePattern = {
   ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa',
@@ -253,17 +256,17 @@ const deEm: StylePattern = {
       hit(6, .25, [tone(0, 12)], .8),                        // 10 bum: D3, câu chạy vào liền
       // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5).
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
-      hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [tone(1, 12)]),
+      hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [ba3(12)]),
       hit(7.25, .25, [tone(0, 14)]), hit(7.5, .25, [tone(0, 12)]), hit(7.75, .25, [tone(3)]),
     ],
     right: [
-      hit(0, 1.75, [tone(1)]), hit(0, .5, [tone(2)]),         // 1: D4 · F4
+      hit(0, 1.75, [ba3()]), hit(0, .5, [tone(2)]),         // 1: D4 · F4
       hit(1, .75, [tone(2), tone(0, 12)]),                    // 2 chát: F4+Bb4
-      hit(1.75, .5, [tone(1), tone(0, 12)]),                  // 3: E4+C5 cùng bùm
+      hit(1.75, .5, [ba3(), tone(0, 12)]),                  // 3: E4+C5 cùng bùm
       hit(2.25, .25, [tone(2), tone(0, 12)], .8),             // 4 chát: G4+C5, ngắn và nhấn — giật nảy
       hit(3, 1, [tone(2), tone(0, 12)]),                      // 6 chát: G4+C5 phách 4, tới vạch
-      hit(5, .25, [tone(1), tone(3)]), hit(5.25, .5, [tone(1), tone(3)]), // 9 chát, cú 1 · 2: F4+C5
-      hit(5.75, 2.25, [tone(1)]), hit(5.75, 1.25, [tone(3)]), // 9 chát, cú 3: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
+      hit(5, .25, [ba3(), tone(3)]), hit(5.25, .5, [ba3(), tone(3)]), // 9 chát, cú 1 · 2: F4+C5
+      hit(5.75, 2.25, [ba3()]), hit(5.75, 1.25, [tone(3)]), // 9 chát, cú 3: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
     ],
   },
 }
@@ -284,14 +287,14 @@ const deEmChorus: StylePattern = {
       bass(4, .5), hit(4.5, 1.25, [tone(0, 12)]), bass(5.75, .25), bass(6, 1), bass(7, 1),
     ],
     right: [
-      hit(0, .75, [tone(2), tone(1, 12)]), hit(.75, 7 / 12, [tone(2), tone(1, 12)]), // F4+D5 ×2, sheet d .5
+      hit(0, .75, [tone(2), ba3(12)]), hit(.75, 7 / 12, [tone(2), ba3(12)]), // F4+D5 ×2, sheet d .5
       hit(4 / 3, 2 / 3, [tone(2), tone(0, 12)]),              // F4+Bb4 chùm ba (bỏ F5: vượt trần 74)
-      hit(2, .75, [tone(1), tone(0, 12)]),                    // E4+C5 (bỏ E5)
+      hit(2, .75, [ba3(), tone(0, 12)]),                    // E4+C5 (bỏ E5)
       // Khe lời: C4 · D4+G4 · E4 · C4 (52 có D4/G4 · E4 y hệt).
-      hit(2.75, .25, [tone(0)]), hit(3, .25, [tone(0, 2), tone(2)]), hit(3.25, .25, [tone(1)]), hit(3.5, .5, [tone(0)]),
-      hit(4, .5, [tone(0, 12), tone(1, 12)]), hit(4.5, .25, [tone(0, 12)]), hit(4.75, .25, [tone(0, 12)]),
-      hit(5, .25, [tone(2)]), hit(5.25, .5, [tone(1, 12)]),
-      hit(5.75, 1.5, [tone(1), tone(2)]),                     // F4+A4, sheet d .5
+      hit(2.75, .25, [tone(0)]), hit(3, .25, [tone(0, 2), tone(2)]), hit(3.25, .25, [ba3()]), hit(3.5, .5, [tone(0)]),
+      hit(4, .5, [tone(0, 12), ba3(12)]), hit(4.5, .25, [tone(0, 12)]), hit(4.75, .25, [tone(0, 12)]),
+      hit(5, .25, [tone(2)]), hit(5.25, .5, [ba3(12)]),
+      hit(5.75, 1.5, [ba3(), tone(2)]),                     // F4+A4, sheet d .5
       hit(7.25, .75, [tone(3, -12)]),                         // C4, sheet d .25
     ],
   },

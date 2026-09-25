@@ -86,10 +86,19 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     expect(left('Bb Dm')).toEqual([[46, 53], [38, 50, 57]])
     expect(left('Bbmaj7 Dm7')).toEqual([[46, 53, 57], [38, 48, 50, 57]])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
-      for (const quality of ['', 'm', '7', 'maj7', 'm7'])
+      for (const quality of ['', 'm', '7', 'maj7', 'm7', 'sus4', '9sus4'])
         for (const id of [VERSE, CHORUS])
           for (const e of renderPattern(voiceLeadTwoHands(parseChordInput(`${root}${quality} ${root}${quality}`).chords), getStyle(id)!))
             expect(new Set(e.notes).size, `${id} ${root}${quality} ${e.hand} ${e.startBeat}`).toBe(e.notes.length)
+  })
+
+  it('hợp âm treo (D9sus4 — màu át 9sus4 của người dùng): chát ô 2 đủ hai nốt, lấy nốt treo thay bậc 3', () => {
+    const events = renderPattern(voiceLeadTwoHands(parseChordInput('G D9sus4').chords), getStyle(VERSE)!, { beatsPerChord: 4 })
+    for (const beat of [5, 5.25, 5.75]) {
+      const notes = [...new Set(events.filter(e => e.hand === 'right' && e.startBeat === beat).flatMap(e => e.notes))]
+      expect(notes.length, `phách ${beat}`).toBe(2)
+      expect(notes.some(n => n % 12 === 7), `phách ${beat} có G (nốt treo)`).toBe(true)
+    }
   })
 
   it('câu lót tự động tắt, ô người dùng chọn và chỗ chuyển đoạn vẫn chêm, ô đã tắt vẫn tắt', () => {

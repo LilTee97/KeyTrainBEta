@@ -3866,3 +3866,14 @@ Theo nghi vấn về tai ở bản 9, người dùng bảo làm. Bùm 7 = D2 + c
 Bum 8 (D2, 1&) · bum 10 (D3, phách 3) lực .8, cũ .65. 3 chát giữ nguyên. **Bẫy:** `holdUntilStruckAgain` cắt **cả cú** khi một phím
 trong cú bị đánh lại. Để D2 chung cú với cụm thì bum 8 (D2) tắt luôn cụm C3+D3+A3 — nên D2 là cú riêng cùng mốc.
 **Giá trị cũ:** không D2, bum .65. **Triệu chứng để lùi:** ô 2 đục/nặng → bỏ D2 hoặc lực về .65.
+
+### Hợp âm treo làm "bậc 3 + bậc 7" thành hai nốt trùng — nguyên do Ballad Để em mất khung ô 2
+
+Người dùng xuất bài đang nghe. Màu át 9sus4 biến mọi D thành **D9sus4**, và ô 2 rơi vào D9sus4 ở 2/4 chu kỳ.
+**Cái bẫy:** `tone(1)` trên hợp âm không có bậc 3 lùi theo `DEGREE_CHAIN[1]` về bậc 7, trùng `tone(3)`. Chát ô 2 thành
+C5+C5 (một nốt gõ trùng phím), câu chạy F3 thành C3. Mọi test trước đều dựng trên hợp âm trơn hoặc hợp âm bảy, nên không bắt được.
+
+**Sửa:** `ba3()` = bậc 3 với `fallbackInterval: 5`: thiếu bậc 3 thì lấy nốt treo. Chỉ hai ô Ballad Để em (13 chỗ); không đổi
+`DEGREE_CHAIN` chung, vì Có Em Chờ đã duyệt cũng dùng `tone(1)`.
+**Giá trị cũ:** lùi về bậc 7. Test chống trùng phím thêm `sus4`, `9sus4`, cộng test riêng cho D9sus4.
+**Bài học:** thử trên vòng đã tái hòa âm với cài đặt màu của người dùng, không chỉ trên hợp âm trơn.
