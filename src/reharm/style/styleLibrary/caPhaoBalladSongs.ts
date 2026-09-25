@@ -228,7 +228,7 @@ const deEm: StylePattern = {
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
   familyName: 'Ballad Để em', variant: 1, bpm: 85,
   sourceVideos: ['Cà Pháo · Để Em Rời Xa · tiếng 1–3 từ cửa sổ 4 (như DERX); khung người dùng 25/9/2026; 3 chát + câu chạy cửa sổ 5'],
-  note: 'Phiên: 1 Bùm 2 chát 3 bùm 4 chát–5 bùm 6 bum 7 chát | 8 bùm–9 bum 10 chát 11 bùm (chát chát chát) → câu chạy. Chờ nghe duyệt.',
+  note: 'Phiên: Bùm chát bùm chát–bùm bum-dẫn-dẫn chát | bùm–bum chát bùm (chát chát chát) → câu chạy. Chờ nghe duyệt.',
   // Điệu tự lấp chỗ trống: câu lót tự động của app không chen vào (người dùng: "thay câu chạy ngón ngẫu nhiên").
   autoFills: false,
   /*
@@ -272,7 +272,10 @@ const deEm: StylePattern = {
       // Viết theo bậc 5 hạ 2 nửa cung, không theo "bậc 4": sàn tay phải 60 đẩy bậc 3 của Sol lên Si4 nên bậc 4 sẽ nhảy xuống.
       // Người dùng: "tiếng Bum 6 bị đánh chìm xuống dưới … phải đánh tiếng 6 nghe rõ như tiếng 5 và 7 và tiếng 6 là tiếng
       // dẫn từ 5 qua 7". Cũ (bản 16): C3 tay trái (gốc hợp âm sau hạ một cung) dưới hợp âm tay phải của 5 đang ngân.
-      hit(3, .5, [tone(2, -2)], NHAN),                        // 6 bum: F4 — nốt đơn, không hợp âm
+      hit(3, .25, [tone(2, -2)], NHAN),                       // 6 bum: F4 — nốt đơn, không hợp âm
+      // Thêm một tiếng ¼ phách sau 6 (người dùng: "cần thêm một tiếng sau tiếng 6 … nối liền bậc từ tiếng 5 vào 7",
+      // như "bùm 8 – bum 9" đầu ô 2): nốt dẫn nửa cung vào chát 7. Đô: E4 → F4 → F#4 → G4.
+      hit(3.25, .25, [tone(2, -1)], .85),                     // tiếng mới: F#4 — nốt dẫn nửa cung
       hit(3.5, .5, [tone(2), tone(0, 12)], THUONG),           // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5

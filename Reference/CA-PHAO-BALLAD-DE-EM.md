@@ -413,6 +413,20 @@ Test kiểm liền bậc trên 12 hợp âm.
 **Giá trị cũ:** bản 16.
 **Triệu chứng để lùi:** 6 nghe lạc khỏi vai "bum" → trả về dẫn bass tay trái, nhưng không để hợp âm của 5 đè lên.
 
+## Bản 18: thêm một tiếng sau tiếng 6 — dẫn nửa cung vào chát
+
+Người dùng: *"cần thêm một tiếng sau tiếng 6 nữa để nối liền bậc từ tiếng 5 vào 7. Có vẻ như giống với cấu trúc câu chạy từ sau tiếng
+7 vậy"*.
+
+Hiểu là lặp dáng "bùm 8 – bum 9 – chát 10" của đầu ô 2 (hai nốt cách ¼ phách rồi vào chát). Nên:
+- tiếng mới ở ô 1 phách **4¼**, tay phải, lực .85, cao hơn tiếng 6 nửa cung và thấp hơn một nốt của chát kế nửa cung;
+- tiếng 6 ngắn lại còn ¼.
+
+Trên Đô: **E4 → F4 → F#4 → G4**; Sol: C4 → C#4 → D4; Mi thứ: A4 → A#4 → B4. Test kiểm trên 12 hợp âm.
+Khung nay 12 tiếng: Bùm chát bùm chát–bùm bum dẫn chát | bùm–bum chát bùm (chát chát chát) → câu chạy.
+**Giá trị cũ:** bản 17.
+**Triệu chứng để lùi:** nửa cung F#4 nghe lạ giọng → đổi tiếng mới thành nốt lặp lại tiếng 6.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

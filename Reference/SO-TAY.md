@@ -3936,3 +3936,10 @@ Bản 16 để hợp âm tay phải của 5 (lực .9) ngân qua 6, và 6 là C3
 **Nay:** 6 là nốt đơn tay phải lực .9, thấp hơn một nốt của chát 7 đúng một cung (Đô: E4 → F4 → G4); hợp âm của 5 nhả khi 6 vào.
 **Bẫy:** viết "bậc 4" thì trên Sol bị đảo quãng, vì sàn tay phải 60 đẩy bậc 3 lên Si4. Viết "bậc 5 hạ 2 nửa cung" mới luôn liền bậc.
 **Giá trị cũ:** bản 16 (6 = C3 tay trái dẫn vào ô 2). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 17".
+
+### Ballad Để em: thêm tiếng dẫn nửa cung sau tiếng 6 (E4 → F4 → F#4 → G4)
+
+Người dùng muốn một tiếng nữa sau tiếng 6 để 5 → 7 nối liền bậc, giống dáng đầu ô 2. Tiếng mới ở ô 1 phách 4¼, tay phải, lực .85:
+một cung rồi nửa cung dưới nốt của chát kế (Đô: F4 → F#4 → G4). Khung nay 12 tiếng.
+**Giá trị cũ:** bản 17. **Triệu chứng để lùi:** nửa cung lạ giọng → tiếng mới lặp nốt tiếng 6.
+Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 18".

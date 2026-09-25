@@ -28,9 +28,9 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     // Khung người dùng: 11 tiếng + (chát chát chát) + câu chạy 7 nốt.
     const verse = getStyle(VERSE)!.cell!
     const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run])
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.25, 3.5, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run])
     expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 4, 4.25, 4.75, ...run])   // Bùm 1 · bùm 3 · 5 · bùm 8 · bum 9 · bùm 11
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75])
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.25, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75])
     // Bùm = bass dày + hợp âm tay phải; bum = chỉ bass dày (dẫn); chát = chỉ tay phải.
     // Người dùng: "Bùm ko phải là chỉ đánh bass" · "chỗ Bum đừng đánh hợp âm kèm theo nữa".
     const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
@@ -64,7 +64,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   it('cao độ phiên trên vòng sheet: 5→6→7 bè giữa E4 F4 G4; giai điệu thấp ô 2 D3 E3 F3 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
       // 5 → 6 → 7 bè giữa đi liền bậc E4 (64) → F4 (65) → G4 (67).
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.5, [64, 72]], [3, [65]], [3.5, [67, 72]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.5, [64, 72]], [3, [65]], [3.25, [66]], [3.5, [67, 72]],
       [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     // Giai điệu thấp G3 → C3 → D3 → E3 → F3 rồi câu chạy A2…: không nốt nào xuống vùng C2–G2 đục.
     expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]],
@@ -113,14 +113,16 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     }
   })
 
-  it('tiếng 6 luôn dẫn liền bậc vào chát 7: thấp hơn một nốt của chát 7 đúng một cung, ở mọi hợp âm', () => {
+  it('tiếng 6 và tiếng mới dẫn liền bậc vào chát 7: một cung rồi nửa cung dưới một nốt của chát 7, ở mọi hợp âm', () => {
     for (const chord of ['C', 'G', 'Em', 'Am', 'D', 'F', 'Bb', 'B', 'Gadd2', 'Em9', 'Cmaj7', 'Am7']) {
       const rh = renderPattern(voiceLeadTwoHands(parseChordInput(`${chord} ${chord}`).chords), getStyle(VERSE)!, { beatsPerChord: 4 })
         .filter(e => e.hand === 'right')
       const six = rh.filter(e => e.startBeat === 3).flatMap(e => e.notes)
+      const lead = rh.filter(e => e.startBeat === 3.25).flatMap(e => e.notes)
       const seven = rh.filter(e => e.startBeat === 3.5).flatMap(e => e.notes)
-      expect(six.length, chord).toBe(1)
-      expect(seven, chord).toContain(six[0] + 2)
+      expect([six.length, lead.length], chord).toEqual([1, 1])
+      expect(lead[0] - six[0], chord).toBe(1)
+      expect(seven, chord).toContain(lead[0] + 1)
     }
   })
 
