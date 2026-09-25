@@ -589,6 +589,35 @@ Test: 12 gốc × 6 loại vòng (thêm add9 → D9sus4, m → Bm), tay phải k
 **Giá trị cũ:** bản 24 (tay phải nhắm riêng nốt dưới của tiếng kế).
 **Triệu chứng để lùi:** vẫn nghe lạ ở tiếng khác → đem vòng hợp âm chỗ đó ra dựng lại, xem quãng giữa hai tay.
 
+## Bản 26: bum là walking bass — một nốt tay trái, đi tiếp chiều bè trầm
+
+Người dùng (bài Fadd2 G9 Am(add9)): *"chỗ Fadd2 tuy là tiếng Bum đã hết lạ tai nhưng tôi muốn Bum là kiểu Walking Bass chứ ko
+phải giai điệu như vậy, nghe nó ko hay. Sửa áp dụng cho các hợp âm khác chứ ko riêng Fadd2"*.
+
+Bản 25 trên Fadd2 → G9: bum 3& là Bb2+Bb3 + Bb4 (ba nốt Si giáng), bum 4¾ là F2+F3 + A4 — nghe ra giai điệu.
+
+**Nay:**
+- Bỏ nốt tay phải ở bum (bản 24–25) và bỏ cặp quãng tám. Bum là **một** nốt tay trái, vang một mình.
+- Nốt ấy bước một cung / nửa cung vào bass của tiếng kế (luật gam như bản 23) và **đi tiếp chiều** của bè trầm: nốt bass trước
+  cao hơn đích thì dẫn từ trên xuống, thấp hơn thì từ dưới lên. Trùng đúng nốt trước (bè đứng yên) thì đổi phía; phía trên
+  vượt trần 59 thì lấy bước còn lại phía dưới (Dm → Bm: A3 → Bb3 → B3).
+
+| vòng | tay trái 3¼ → bum 3& → bùm 4 → bùm 4& → bum 4¾ → ô 2 |
+|---|---|
+| Fadd2 → G9 (bài người dùng) | F3 → **D3** → C3 → C3 → **F3** → G3 |
+| Am(add9) → Fadd2 | A3 → **F3** → E3 → E3 → **G3** → F3 |
+| G9 → Am(add9) | G3 → **E3** → D3 → D3 → **G3** → A3 |
+| C → Dm7 (sheet) | C3 → **F3** → G3 → G3 → **E3** → D3 |
+
+Vòng sheet: bum 4¾ nay là E3 (dẫn từ trên), sheet dẫn C4 → D (từ dưới, 2/6 cửa sổ) — theo ý người dùng, không theo sheet.
+Luật gam và luật chiều là suy đoán của Claude. Test: 12 gốc × 6 loại vòng — một nốt, không tay phải, cách đích 1–2 nửa cung,
+không trùng nốt bass trước.
+
+**Giới hạn đã biết:** bùm 4 và bùm 4& cùng đứng ở bậc 5 (sheet G3 ×2), nên trước bum 4¾ bè trầm nhảy một quãng 4 (C3 → F3 trên
+Fadd2). Bum chỉ có một chỗ nên không lấp được. Muốn cả dòng đi liền bậc thì phải đổi bass của hai bùm ấy.
+**Giá trị cũ:** bản 25 (bum = cặp quãng tám + nốt giai điệu tay phải).
+**Triệu chứng để lùi:** một nốt bass lại nghe mờ → tăng lực bum; đừng thêm lại nốt tay phải (người dùng đã bác).
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

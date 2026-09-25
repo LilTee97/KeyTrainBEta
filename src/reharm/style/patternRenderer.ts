@@ -310,47 +310,32 @@ function notesForVoice(
 }
 
 /*
-  Bass DẪN (`RhythmHit.danVao`): `notes` là nốt của tiếng bass kế, lùi một cung nếu nốt dưới ấy còn trong gam của hợp
-  âm ĐANG vang, không thì nửa cung. Số đo: sheet Để em rời xa (Cà Pháo) C4 → D (C → Dm7, 2/6 cửa sổ 6 · 8 · 34 · 36).
-  Suy đoán của Claude, chưa có sheet: gam hợp âm trưởng = trưởng (bảy thứ nếu hợp âm có b7), thứ = thứ tự nhiên —
-  ra G → C dẫn B, C → F dẫn E, A → Dm dẫn C#, C → G dẫn F. Gập vào tầm TRƯỚC khi lùi để đích khớp nốt sẽ vang
-  (bộ kẹp cuối cũng gập); cặp quãng tám gập trùng phím thì đẩy sang quãng tám còn chỗ.
-  Tay trái: nốt dẫn không tụt dưới nốt gốc hợp âm đang vang (`leftArpeggioAboveRoot`): tụt thì đánh chính nốt gốc ấy
-  làm nền — vd Db → Db: C2+C3 thành Db2+C3.
-  Tay phải: lùi xuống dưới sàn thì bộ kẹp cuối đẩy lên một quãng tám, mất bước liền bậc — nên dẫn từ TRÊN xuống.
+  Bass DẪN kiểu WALKING BASS (`RhythmHit.danVao`): MỘT nốt, bước liền bậc vào `notes` (nốt bass của tiếng kế) — một cung
+  nếu còn trong gam của hợp âm ĐANG vang, không thì nửa cung — và đi TIẾP chiều của bè trầm: nốt trước (`truoc`) cao hơn
+  đích thì dẫn từ trên xuống, không thì từ dưới lên; trúng đúng nốt trước (bè đứng yên) thì đổi phía.
+  Người dùng 25/9: *"tôi muốn Bum là kiểu Walking Bass chứ ko phải giai điệu"*, bác nốt giai điệu tay phải và cặp quãng
+  tám (bản 22–25). Sheet Để em rời xa dẫn vào ô 2 bằng C4 → D (2/6 cửa sổ, từ dưới); walking bass đi tiếp chiều nên vòng
+  sheet ra G3 → E3 → D3 (từ trên) — khác sheet, theo ý người dùng.
+  Suy đoán của Claude, chưa có sheet: gam hợp âm trưởng = trưởng (bảy thứ nếu hợp âm có b7), thứ = thứ tự nhiên.
+  Gập đích vào tầm TRƯỚC khi bước để khớp nốt sẽ vang (bộ kẹp cuối cũng gập). Không tụt dưới nốt gốc hợp âm đang vang
+  (`leftArpeggioAboveRoot`).
 */
-function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, left: boolean,
-  ben: readonly MidiNote[] = []): MidiNote[] {
+function danVao(notes: readonly MidiNote[], here: TwoHandVoicing, low: number, high: number, truoc?: number): MidiNote[] {
   const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
   const root = Math.min(...here.left) % 12
-  const goc = left ? low + (((root - low) % 12) + 12) % 12 : low
+  const goc = low + (((root - low) % 12) + 12) % 12
   const pcs = new Set((here.harmonicNotes ?? [...here.left, ...here.right]).map((n) => ((n - root) % 12 + 12) % 12))
   const gam = pcs.has(3) && !pcs.has(4) ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, pcs.has(10) ? 10 : 11]
-  const trongGam = (n: number) => gam.includes(((n - root) % 12 + 12) % 12)
-  /*
-    Tay phải: MỘT nốt, dẫn liền bậc (từ dưới trước, từ trên sau) vào một trong các nốt `notes` của tiếng kế, trong gam, và
-    không chói với tay trái đang đánh cùng mốc (`ben`): không quãng 2 thứ / 7 trưởng / tăng 4. Quãng 9 (add9) và 7 thứ
-    (9sus4) là màu người dùng đang dùng, nên cho. Người dùng nghe chói trên Gadd9 → D9sus4: tay trái G2+C3, tay phải F#4 —
-    bảy trưởng với G2, tăng bốn với C3. Nay G4 → A4.
-  */
-  if (!left && notes.length > 0) {
-    const thuan = (m: number) => ben.every((b) => ![1, 6, 11].includes(((m - b) % 12 + 12) % 12))
-    // Bước dẫn của mỗi nốt đích theo luật gam như bè trầm; thử hết bước từ dưới rồi mới tới bước từ trên.
-    const buoc = (t: number, s: number) => t + s * (trongGam(t + 2 * s) ? 2 : 1)
-    const dich = notes.map(fold)
-    for (const m of [...dich.map((t) => buoc(t, -1)), ...dich.map((t) => buoc(t, 1))])
-      if (m >= low && m <= high && trongGam(m) && thuan(m)) return [m as MidiNote]
-    notes = notes.slice(0, 1)
-  }
-  const out: number[] = []
-  for (const n of notes) {
-    const t = fold(n)
-    const duoi = t - (trongGam(t - 2) ? 2 : 1)
-    let m = !left && duoi < low ? t + (trongGam(t + 2) ? 2 : 1) : Math.max(goc, fold(duoi))
-    if (out.includes(m) && m + 12 <= high) m += 12
-    if (!out.includes(m)) out.push(m)
-  }
-  return out as MidiNote[]
+  const buoc = (t: number, s: number) => t + s * (gam.includes(((t + 2 * s - root) % 12 + 12) % 12) ? 2 : 1)
+  const truocDaGap = truoc === undefined ? undefined : fold(truoc)
+  return notes.map((n) => {
+    const t = fold(n), duoi = buoc(t, -1), tren = buoc(t, 1)
+    const tuTren = truocDaGap !== undefined && truocDaGap > t && tren <= high
+    let m = tuTren ? tren : duoi
+    // Trùng nốt trước (bè đứng yên): đổi phía; phía trên vượt trần thì lấy bước còn lại phía dưới (Dm → Bm: A3 Bb3 B3).
+    if (m === truocDaGap) m = m === tren ? duoi : tren <= high ? tren : t - (t - duoi === 2 ? 1 : 2)
+    return Math.max(goc, m) as MidiNote
+  })
 }
 
 /** Cú đẩy nằm cách vạch nhịp sau **nửa phách**, tức phách 4,5 của ô bốn bốn. */
@@ -524,8 +509,7 @@ function renderWithCell(
 
     const until = Math.min(offset + cell.lengthBeats, nextBreak(offset))
 
-    // Tay phải có tiếng dẫn thì dựng tay trái trước: nốt dẫn tay phải phải thuận tai với tay trái cùng mốc (`danVao`).
-    for (const hand of cell.right.some((h) => h.danVao) ? ['left', 'right'] as const : ['right', 'left'] as const) {
+    for (const hand of ['right', 'left'] as const) {
       const hits = hand === 'right' ? cell.right : cell.left
       /*
         Nốt vừa chơi của bàn tay này, để nốt kế tiếp rơi cạnh nó thay vì nhảy về
@@ -580,11 +564,9 @@ function renderWithCell(
               ? { low: pattern.rightHandRegister.rootFloor, high: pattern.rightHandRegister.high }
               : undefined,
         )
-        const raw = !hit.danVao ? dat : hand === 'left'
-          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH, true)
-          : danVao(dat, voicingAt(startBeat) ?? voicing, pattern.rightHandRegister?.low ?? RIGHT_ARPEGGIO_LOW,
-            pattern.rightHandRegister?.high ?? RIGHT_ARPEGGIO_HIGH, false, events
-              .filter((e) => e.hand === 'left' && Math.abs(e.startBeat - startBeat) < EPSILON).flatMap((e) => e.notes))
+        const raw = hit.danVao && hand === 'left'
+          ? danVao(dat, voicingAt(startBeat) ?? voicing, LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH, near)
+          : dat
         /*
           Chỉ dãn hai tay khi CÓ hai tay.
 

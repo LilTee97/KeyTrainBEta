@@ -4005,3 +4005,11 @@ G2+C3 dưới tay phải F#4. **Bẫy:** bộ vẽ dựng tay phải TRƯỚC ta
 ô có `danVao` tay phải thì dựng tay trái trước; tay phải chọn nốt dẫn trong gam, không quãng 2 thứ / 7 trưởng / tăng 4 với tay
 trái. Quãng 9 và 7 thứ cho qua (màu add9, 9sus4). Nay G4 → A4.
 **Giá trị cũ:** bản 24. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 25".
+
+### Ballad Để em: bum là walking bass — một nốt tay trái đi tiếp chiều bè trầm, bỏ giai điệu tay phải
+
+Người dùng: *"tôi muốn Bum là kiểu Walking Bass chứ ko phải giai điệu như vậy, nghe nó ko hay"*, cho mọi hợp âm. Bỏ nốt tay phải
+và cặp quãng tám ở bum (bản 24–25; trên Fadd2 ra ba nốt Bb). `danVao` nay chỉ tay trái, một nốt, nhận nốt bass trước
+(`near`): nốt trước cao hơn đích thì dẫn từ trên, thấp hơn thì từ dưới; trùng nốt trước thì đổi phía. Bài người dùng
+Fadd2 → G9: F3 → D3 → C3 → C3 → F3 → G3. Đã gỡ đường tay phải của `danVao` và lượt dựng tay trái trước (không còn ai dùng).
+**Giá trị cũ:** bản 25. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 26".
