@@ -237,6 +237,8 @@ const deEm: StylePattern = {
     mốc cửa sổ 5) và 8–11 dồn trong phách 1 ô 2.
     Dẫn bass: bum 6 = gốc hợp âm ô 2 hạ một cung (`som` — cùng lối "bậc dưới bass sau" của phách dẫn Có Em Chờ;
     hợp âm không đổi ở vạch thì bỏ cú); 8 · 9 · 11 = bass đi lên 1 · 2 · 3 rồi câu chạy mở bằng bậc 5.
+    Người dùng: "Bùm ko phải là chỉ đánh bass — Bùm 1 còn có cả tay phải cùng đánh". Nên MỌI bùm = bass + hợp âm tay
+    phải cùng lúc (1 · 3 · 5 · 8 · 11); chát = hợp âm tay phải không bass; bum = bass nhẹ (dẫn).
   */
   cell: {
     lengthBeats: 8,
@@ -259,8 +261,11 @@ const deEm: StylePattern = {
       hit(1, .75, [tone(2), tone(0, 12)]),                    // 2 chát: F4+Bb4
       hit(1.75, .5, [ba3(), tone(0, 12)]),                    // 3: E4+C5 cùng bùm
       hit(2.25, .15, [tone(2), tone(0, 12)], .9),             // 4 chát: G4+C5, rất ngắn và nhấn — giật hơn (cũ ¼, lực .8)
+      hit(2.5, 1, [ba3(), tone(0, 12)]),                      // 5 bùm (tay phải): E4+C5 như bùm 3, cùng bass G3
       hit(3.5, .5, [tone(2), tone(0, 12)]),                   // 7 chát: G4+C5 tới vạch, dẫn vào bùm 8
-      hit(4.5, .5, [ba3(), tone(3)]),                         // 10 chát: F4+C5
+      hit(4, .5, [ba3(), tone(2)]),                           // 8 bùm (tay phải): F4+A4, cùng bass D2 + cụm
+      hit(4.5, .25, [ba3(), tone(3)]),                        // 10 chát: F4+C5
+      hit(4.75, .25, [ba3(), tone(2)]),                       // 11 bùm (tay phải): F4+A4, cùng bass F2
       hit(5, .25, [ba3(), tone(3)]), hit(5.25, .5, [ba3(), tone(3)]), // chát chát: F4+C5 (cửa sổ 5)
       hit(5.75, 2.25, [ba3()]), hit(5.75, 1.25, [tone(3)]),   // chát: F4 ngân trên câu chạy (sheet d 2) · C5 1.25
     ],

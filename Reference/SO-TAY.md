@@ -3888,3 +3888,15 @@ Khung người dùng: 1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10c
 - ô 2: 8 bùm D2 (¼) · 9 bum E2 (1¼) · 10 chát 1& · 11 bùm F2 (1¾) — bass 1-2-3. 3 chát ở 2 · 2¼ · 2¾, câu chạy 3¼ mở bằng bậc 5.
 
 **Giá trị cũ:** bản 11. **Triệu chứng để lùi:** phách 1 ô 2 dồn → bỏ chát 10.
+
+### "Bùm" là bass CÙNG hợp âm tay phải, không phải chỉ bass
+
+Người dùng sửa: *"Bùm ko phải là chỉ đánh bass. Tiếng Bùm 1 còn có cả tay phải cùng đánh"*.
+Nghĩa đúng:
+- bùm = hai tay cùng đánh;
+- chát = tay phải không bass;
+- bum = bass nhẹ (dẫn).
+
+Ballad Để em bản 12 có bùm 5 · 8 · 11 chỉ tay trái; nay thêm tay phải (E4+C5 · F4+A4 · F4+A4). Test khoá vai
+từng tiếng. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 13".
+**Giá trị cũ:** bản 12. **Triệu chứng để lùi:** ô 2 dồn → bỏ tay phải ở bùm 11.

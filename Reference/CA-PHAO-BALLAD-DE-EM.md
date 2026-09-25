@@ -314,6 +314,26 @@ Trên bài người dùng: G→D9sus4 ra bum 6 C2; Em9→Bm7 ra A2.
 **Giá trị cũ:** bản 11.
 **Triệu chứng để lùi:** phách 1 ô 2 nghe dồn → bỏ chát 10.
 
+## Bản 13: mọi "bùm" có cả tay phải
+
+Người dùng: *"Bùm ko phải là chỉ đánh bass. Tiếng Bùm 1 còn có cả tay phải cùng đánh. Các tiếng bùm chát là các tiếng chính của
+khung nên phải thể hiện rõ"*.
+
+Nghĩa đúng:
+- **bùm** = bass + hợp âm tay phải cùng lúc;
+- **chát** = hợp âm tay phải không bass;
+- **bum** = bass nhẹ (dẫn).
+
+Bản 12 có ba bùm chỉ tay trái. Nay thêm tay phải:
+- bùm 5 (ô 1 phách 3&): E4+C5, như bùm 3;
+- bùm 8 (ô 2 phách 1): F4+A4 (bậc 3+5);
+- bùm 11 (ô 2 phách 1¾): F4+A4.
+
+Chát giữ quãng đôi riêng (G4+C5 · F4+C5), nên tai phân biệt được bùm với chát. Test khoá vai từng tiếng: bùm hai tay, bum chỉ
+tay trái, chát chỉ tay phải.
+**Giá trị cũ:** bản 12.
+**Triệu chứng để lùi:** ô 2 dồn quá → bỏ tay phải ở bùm 11 trước.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

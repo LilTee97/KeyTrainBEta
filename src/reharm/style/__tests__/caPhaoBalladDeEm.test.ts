@@ -30,7 +30,12 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
     expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.75, ...run])
     expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 3, 4, 4.25, 4.75, ...run])   // Bùm 1 · bùm 3 · 5 · bum 6 · bùm 8 · bum 9 · bùm 11
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3.5, 4.5, 5, 5.25, 5.75]) // chát 2 · 4 · 7 · 10 · chát chát chát
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 2.5, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75])
+    // Bùm = bass + tay phải cùng lúc; bum = chỉ bass; chát = chỉ tay phải (người dùng: "Bùm ko phải là chỉ đánh bass").
+    const at = (hits: readonly { beat: number }[], b: number) => hits.some(h => h.beat === b)
+    for (const b of [0, 1.75, 2.5, 4, 4.75]) expect([at(verse.left, b), at(verse.right, b)], `bùm ${b}`).toEqual([true, true])
+    for (const b of [3, 4.25]) expect([at(verse.left, b), at(verse.right, b)], `bum ${b}`).toEqual([true, false])
+    for (const b of [1, 2.25, 3.5, 4.5, 5, 5.25, 5.75]) expect([at(verse.left, b), at(verse.right, b)], `chát ${b}`).toEqual([false, true])
     // 4 chát → 5 bùm giật: chát rất ngắn và nhấn, bùm nhấn ¼ phách sau.
     const chat4 = verse.right.find(h => h.beat === 2.25)!
     expect(chat4.durationBeats).toBeLessThanOrEqual(.15)
@@ -54,8 +59,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
 
   it('cao độ phiên trên vòng sheet: bum 6 dẫn C2 → D2; bass ô 2 đi D2 E2 F2 rồi câu chạy từ A2', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3.5, [67, 72]],
-      [4.5, [65, 72]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [2.5, [64, 72]], [3.5, [67, 72]],
+      [4, [65, 69]], [4.5, [65, 72]], [4.75, [65, 69]], [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
     expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]], [3, [36]],
       [4, [38, 48, 50, 57]], [4.25, [40]], [4.75, [41]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
