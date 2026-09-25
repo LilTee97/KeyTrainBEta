@@ -82,6 +82,7 @@ import type {
 import {
   NOTE_SOURCE_OPTIONS,
   soloRange,
+  autoFillSkip,
   fillPositions,
   generateFillLine,
   generateSolo,
@@ -2299,16 +2300,21 @@ export function ReharmHome() {
     [sheet],
   )
 
+  /** Điệu `autoFills: false` tự lấp chỗ trống bằng ô đệm: tắt câu lót tự động, giữ ô tự chọn và chỗ chuyển đoạn. */
+  const fillSkip = useMemo(() => style.autoFills === false
+    ? autoFillSkip(withPassing.length, mutedFills, new Set([...extraFills, ...extraRuns, ...transitions.keys()]))
+    : mutedFills, [style, withPassing, mutedFills, extraFills, extraRuns, transitions])
+
   const cpPlan = useCallback((take: number) => planCpLicks({
     chords: withPassing, style, key: reharm.key, backing: accompaniment,
     protectedWindows: accompanimentPlan.protectedWindows,
     beatsPerChord: chordBeats, breaths, vocal: singing,
-    sectionEnds: new Set(transitions.keys()), extraFills, extraRuns, skip: mutedFills,
+    sectionEnds: new Set(transitions.keys()), extraFills, extraRuns, skip: fillSkip,
     fullTransitions: intensity === 'caPhao', keyboard: caPhaoKeyboardRange,
     transitionDelays: new Map([...transitions].map(([i, run]) => [i, run.octaves <= 0 ? Infinity : run.delayBeats ?? 0])),
     take: take + phraseSpin + playSpin.current,
   }), [withPassing, style, reharm.key, accompaniment, accompanimentPlan.protectedWindows, chordBeats, breaths, singing,
-    transitions, extraFills, extraRuns, mutedFills, phraseSpin, intensity, caPhaoKeyboardRange])
+    transitions, extraFills, extraRuns, fillSkip, phraseSpin, intensity, caPhaoKeyboardRange])
   const cpPreview = useMemo(() => cpLick ? cpPlan(0) : null, [cpLick, cpPlan])
 
   /**
@@ -2325,9 +2331,10 @@ export function ReharmHome() {
           breaths,
           beatsPerChord: chordBeats,
           always: new Set([...transitionAt, ...extraFills, ...extraRuns]),
-        }).map((position) => position.mainIndex),
+        }).map((position) => position.mainIndex)
+          .filter((i) => style.autoFills !== false || transitionAt.has(i) || extraFills.has(i) || extraRuns.has(i)),
       ),
-    [withPassing, fillDensity, breaths, transitionAt, extraFills, extraRuns, chordBeats, cpPreview],
+    [withPassing, fillDensity, breaths, transitionAt, extraFills, extraRuns, chordBeats, cpPreview, style],
   )
 
   /**
@@ -2593,7 +2600,7 @@ export function ReharmHome() {
           density: fillDensity,
           key: reharm.key,
           skipFills: style.family === 'ca-phao-ballad-acdd' && !walkingOn
-            ? new Set([...mutedFills, ...transitions.keys()]) : mutedFills,
+            ? new Set([...mutedFills, ...transitions.keys()]) : fillSkip,
           extraFills: new Set(
             [...extraFills].filter((index) => !transitions.has(index)),
           ),
@@ -2646,6 +2653,7 @@ export function ReharmHome() {
       singing,
       reharm.key,
       mutedFills,
+      fillSkip,
       extraFills,
       extraRuns,
       fillRests,

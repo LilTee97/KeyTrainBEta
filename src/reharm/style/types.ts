@@ -230,6 +230,8 @@ export interface StylePattern {
    * lời nghỉ hai tay cùng đệm dưới câu fill. Xem `swapAtFills`.
    */
   fillCell?: RhythmCell
+  /** `false`: ô đệm tự lấp chỗ trống, tắt câu lót tự động (ô người dùng chọn, chỗ chuyển đoạn vẫn chêm). */
+  autoFills?: false
   /** Giải thích ngắn cho người dùng. */
   note: string
 }

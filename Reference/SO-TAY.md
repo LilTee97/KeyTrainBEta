@@ -3801,3 +3801,29 @@ trước câu chạy, giữ đúng thứ tự khung:
 
 Bùm 7 ở 2& là biên soạn (sheet 1/6). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 5".
 **Giá trị cũ:** bản 4. **Triệu chứng để lùi:** 7–8–9 nghe dồn → bỏ bùm 7 trước.
+
+### Câu chạy ngẫu nhiên người dùng nghe trong điệu KHÔNG nằm trong ô đệm — cờ `autoFills: false`
+
+Người dùng muốn thay "câu chạy ngón ngẫu nhiên" sau tiếng bùm 3 của Ballad Để em bằng 4 chát 5 bùm 6 bum 7 chát.
+**Cái bẫy:** ô đệm không có câu chạy nào ở đó. Câu ấy là câu lót tự động của app: `generateFillLine`, hoặc
+`planCpLicks` khi màu Cà Pháo. Nó chèn theo mật độ (`fillPositions`), không theo chỗ trống của ô, nên thêm tiếng
+vào ô không chặn được nó. Còn `yieldToFill` thì bắt phần đệm nhường chỗ cho câu lót.
+
+**Sửa:** thêm cờ điệu `StylePattern.autoFills` (`false` = ô tự lấp chỗ trống). `ReharmHome` dựng `fillSkip` bằng
+`autoFillSkip(count, muted, forced)`: tắt mọi ô trừ ô người dùng tự chọn Fill/Run và chỗ chuyển đoạn; ô đã tắt
+vẫn tắt. Dùng cho `planCpLicks.skip`, `generateFillLine.skipFills`, và lọc `fillEligible` (gạch chân ô fill).
+Cần làm thế vì hai nhánh xử lý khác nhau: `planCpLicks` cho `skip` thắng cả ô tự chọn, còn `fillPositions` cho
+ô tự chọn thắng `skip`.
+
+**Không dùng `bossaFillsInGaps`** (lối của các nút CP có `cpBalladChordLeads`): đệm ngân kín thì nó bỏ luôn ô
+người dùng tự chọn. Người dùng từng bực đúng chuyện này ở Linh Run.
+
+Ô phiên bản 6 (số đo trên 6 cửa sổ Bb→C, chi tiết `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 6"):
+- 4 chát 3¼ (bè tay phải 3/6);
+- 5 bùm G3 3& (tay trái 6/6);
+- 6 bum C3 4 (tay trái 6/6);
+- 7 chát 4& (sheet 0/6, biên soạn);
+- ô 2 trả 3 chát liền 2 · 2¼ · 2¾ + bùm 3 + câu chạy.
+
+**Giá trị cũ:** bản 5; mọi điệu có câu lót tự động.
+**Triệu chứng để lùi:** muốn lại câu lót tự động → bỏ `autoFills: false`.

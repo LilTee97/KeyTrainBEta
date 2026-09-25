@@ -168,6 +168,41 @@ Vị trí 7–9 do Claude đặt:
 **Giá trị cũ:** bản 4 (7–8–9 ở phách 3 · 3& · 4, không câu chạy).
 **Triệu chứng để lùi:** đoạn 7–8–9 nghe dồn → bỏ bùm 7 trước.
 
+## Bản 6: 4 chát 5 bùm 6 bum 7 chát thay câu chạy ngẫu nhiên; ô 2 trả 3 chát liền
+
+Người dùng: *"sau tiếng 3 bùm thì nên thay câu chạy ngón ngẫu nhiên bằng 4chát 5bùm 6bum 7chát … (đôn tiếng 7 8 9
+cũ lên) … ban đầu ở ô 2 bạn có đánh 3 tiếng chát rồi mới chạy ngón vậy hãy khôi phục chỗ đó, nếu cần thì hãy
+thay thế các tiếng ở chỗ cần thiết"*.
+
+**Câu chạy ngẫu nhiên không nằm trong ô đệm.** Đó là câu lót tự động của app (bộ fill thường, hoặc CP Lick/Run
+khi màu Cà Pháo), chèn theo mật độ và vị trí hợp âm, không theo chỗ trống của ô. Nên thêm cờ điệu
+`autoFills: false`: tắt câu lót tự động cho điệu này, còn ô người dùng tự chọn Fill/Run và chỗ chuyển đoạn vẫn chêm.
+Ô đã tắt vẫn tắt. Một danh sách dùng chung (`autoFillSkip`) cho cả hai nhánh câu lót và phần gạch chân ô fill.
+
+Vị trí, đếm trên 6 cửa sổ Bb→C (4, 6, 8, 32, 34, 36):
+
+| tiếng | vị trí | sheet | nốt trên vòng sheet |
+|---|---|---|---|
+| 4 chát (ngắn, nhấn) | ô 1 phách 3¼ | bè tay phải 3/6 | G4+C5 (cửa sổ 4) |
+| 5 bùm (nhấn) | ô 1 phách 3& | tay trái 6/6 | G3 (cửa sổ 4) |
+| 6 bum | ô 1 phách 4 | tay trái 6/6 | C4 → gập C3 (cửa sổ 4) |
+| 7 chát | ô 1 phách 4& | tay phải **0/6** — biên soạn | G4+C5 |
+| 8 bùm | ô 2 phách 1 | cửa sổ 5 | C3+D3+A3 |
+| 9 · 10 · 11 chát | ô 2 phách 2 · 2¼ · 2¾ | cửa sổ 5 đúng mốc | F4+C5 (F4 thứ ba ngân trên câu chạy) |
+| 12 bùm | ô 2 phách 3 | | D3 |
+| câu chạy | ô 2 phách 3¼ → 4¾ | cửa sổ 5 | A2 D3 E3 F3 E3 D3 C3 |
+
+Khung người dùng ghi 10 tiếng. Khôi phục đủ 3 chát liền ở ô 2 thì thay bùm 2& cũ bằng chát 2¼ và thêm chát
+phách 2, nên ra 12 cú.
+
+Sau cú chát giật, tay phải buông hẳn để "nảy"; tay trái ngân từng phím tới khi phím ấy được đánh lại (C3 của
+bùm 3 tới bum 6, G3 của bùm 5 tới vạch), nên lúc bùm–bum còn hai nốt trầm vang.
+
+**Giá trị cũ:** bản 5.
+**Triệu chứng để lùi:**
+- 7 chát nghe lạc (sheet không có) → bỏ.
+- Muốn có lại câu lót tự động → bỏ `autoFills: false`.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

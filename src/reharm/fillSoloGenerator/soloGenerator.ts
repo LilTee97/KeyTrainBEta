@@ -468,6 +468,15 @@ export function fillPositions(
 }
 
 /**
+ * Ô tắt câu lót cho điệu tự lấp chỗ trống bằng ô đệm (`StylePattern.autoFills === false`): tắt câu lót
+ * TỰ ĐỘNG, còn ô người dùng tự chọn Fill/Run và chỗ chuyển đoạn vẫn chêm; ô người dùng đã tắt vẫn tắt.
+ * Người dùng 25/9/2026 (Ballad Để em): câu chạy ngẫu nhiên chen sau tiếng bùm 3 — thay bằng tiếng đệm.
+ */
+export function autoFillSkip(count: number, muted: ReadonlySet<number>, forced: ReadonlySet<number>): Set<number> {
+  return new Set([...Array(count).keys()].filter(i => muted.has(i) || !forced.has(i)))
+}
+
+/**
  * Nốt căng của hợp âm hiện tại, giải quyết xuống quãng ba của hợp âm sau.
  *
  * Đây là thứ tạo sức hút thật sự ở chỗ chuyển đoạn, đo được trên bản ký âm

@@ -7,6 +7,7 @@ import { BALLAD_DERX } from '../styleLibrary/balladDerx'
 import { hoCuaDieu } from '../hoDieu'
 import { isBalladStyle } from '../balladFamily'
 import { resolveStyleForSection } from '../sectionStyles'
+import { autoFillSkip } from '../../fillSoloGenerator/soloGenerator'
 
 // MIDI đo từ `PianoBrain/video/Ca_Phao/De Em Roi Xa-Ca Phao.mxl` trên cửa sổ k = [ô XML k phách 2,
 // ô k+1 phách 2), xem Reference/CA-PHAO-BALLAD-DE-EM.md. Hợp âm và độ dài đúng như sheet.
@@ -24,16 +25,17 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
     for (const hand of ['left', 'right'] as const)
       expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
-    // Mỗi tiếng = một thời điểm có cú đánh; hai tay cùng lúc là một tiếng.
+    // Mỗi tiếng = một thời điểm có cú đánh; hai tay cùng lúc là một tiếng. 12 tiếng + câu chạy 7 nốt.
     const verse = getStyle(VERSE)!.cell!
     const run = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
-    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 3.5, 4, 5, 5.5, 5.75, 6, ...run])
-    expect(beats(verse.left)).toEqual([0, 1.75, 4, 5.5, 6, ...run]) // bùm 1 · 3 · 5 · 7 · 9 · câu chạy 7 nốt
-    expect(beats(verse.right)).toEqual([0, 1, 1.75, 3.5, 5, 5.75])  // (1) · chát 2 · (3) · 4 · 6 · 8
-    // 4 chát giật nảy: ngắn và nhấn hơn các chát khác, rồi bùm 5 vào ngay đầu ô 2.
-    const chat4 = verse.right.find(h => h.beat === 3.5)!
+    expect(beats([...verse.left, ...verse.right])).toEqual([0, 1, 1.75, 2.25, 2.5, 3, 3.5, 4, 5, 5.25, 5.75, 6, ...run])
+    expect(beats(verse.left)).toEqual([0, 1.75, 2.5, 3, 4, 6, ...run])  // bùm 1 · 3 · 5 · 6 · 8 · 12 · câu chạy
+    expect(beats(verse.right)).toEqual([0, 1, 1.75, 2.25, 3.5, 5, 5.25, 5.75]) // chát 2 · 4 · 7 · 9 · 10 · 11
+    // 4 chát giật nảy: ngắn và nhấn hơn các chát khác, rồi bùm 5 vào ngay sau ¼ phách.
+    const chat4 = verse.right.find(h => h.beat === 2.25)!
     expect(chat4.durationBeats).toBeLessThanOrEqual(.25)
     expect(chat4.velocityScale!).toBeGreaterThan(.65)
+    expect(getStyle(VERSE)!.autoFills).toBe(false)
   })
 
   it('không móc kép nào dưới hai nốt vang trên vòng của sheet — hết chỗ đứt của DERX', () => {
@@ -47,12 +49,13 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     }
   })
 
-  it('cao độ phiên trên vòng sheet: tiếng 1–3 như cửa sổ 4, chát giữ bè sheet', () => {
+  it('cao độ phiên trên vòng sheet: tay trái ô 1 = cửa sổ 4, ô 2 = cửa sổ 5 kèm câu chạy', () => {
     expect(onsets(VERSE, 'right')).toEqual([
-      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [3.5, [67, 72]], [5, [65, 72]], [5.75, [65, 72]]])
-    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [4, [48, 50, 57]], [5.5, [38]], [6, [50]],
+      [0, [62, 65]], [1, [65, 70]], [1.75, [64, 72]], [2.25, [67, 72]], [3.5, [67, 72]],
+      [5, [65, 72]], [5.25, [65, 72]], [5.75, [65, 72]]])
+    expect(onsets(VERSE, 'left')).toEqual([[0, [46, 53, 57]], [1.75, [48, 55]], [2.5, [55]], [3, [48]],
+      [4, [48, 50, 57]], [6, [50]],
       [6.25, [45]], [6.5, [50]], [6.75, [52]], [7, [53]], [7.25, [52]], [7.5, [50]], [7.75, [48]]])
-    // F4 của chát 8 ngân suốt câu chạy (sheet cửa sổ 5: F4 dài 2 phách trên câu chạy).
     const f4 = render(VERSE).find(e => e.hand === 'right' && e.startBeat === 5.75 && e.notes.includes(65))!
     expect(f4.startBeat + f4.durationBeats).toBe(8)
   })
@@ -84,6 +87,10 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
         for (const id of [VERSE, CHORUS])
           for (const e of renderPattern(voiceLeadTwoHands(parseChordInput(`${root}${quality} ${root}${quality}`).chords), getStyle(id)!))
             expect(new Set(e.notes).size, `${id} ${root}${quality} ${e.hand} ${e.startBeat}`).toBe(e.notes.length)
+  })
+
+  it('câu lót tự động tắt, ô người dùng chọn và chỗ chuyển đoạn vẫn chêm, ô đã tắt vẫn tắt', () => {
+    expect([...autoFillSkip(6, new Set([4]), new Set([1, 4]))]).toEqual([0, 2, 3, 4, 5])
   })
 
   it('là một nút Ballad riêng, tự đổi sang điệp, không mang màu Codex', () => {
