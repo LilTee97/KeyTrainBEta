@@ -681,6 +681,35 @@ tiếng 4 dính liền với tiếng 3"*.
 **Giá trị cũ:** cách 1 (bản 21–27) — Chát-bùm một cú hai tay ở 3¼, tay phải E4+G4; bùm 3 tay phải ngân ½.
 **Triệu chứng để lùi:** chát phách 3 dính vào bùm 3 → thử cách 3 (8 tiếng giữ 3¼, bum cuối vào đầu ô 2) hoặc trả về cách 1.
 
+## Bản 29: cách 3 — tiếng 1–3 để nguyên, 8 tiếng từ 3¼, bum cuối gộp vào phách 1 ô 2
+
+Người dùng: *"tiếng 1 2 3 là phải để nguyên ko chạm tới, bắt đầu câu chạy từ tiếng 4, phương án 2 đã phạm vào tiếng 3 hãy sửa
+lại"*. Được báo giữ tiếng 3 thì từ 3¼ chỉ còn 7 mốc cho 8 tiếng; chọn *"thử phương án 3 nếu ko ổn thì đổi tiếp"*.
+
+**Tiếng 3 trả nguyên:** bùm 2¾, tay phải E4+C5 ngân ½ (bản 28 đã rút còn ¼ — người dùng bác).
+
+| mốc | 3¼ | 3& | 3¾ | 4 | 4¼ | 4& | 4¾ | 1 (ô 2) |
+|---|---|---|---|---|---|---|---|---|
+| tiếng | Chát | bùm | bum | chát | bùm | chát | bùm | bum |
+| tay trái (C → Dm7 sheet) | — | F3 | E3 | — | D3 | — | C3 | D3 |
+| tay phải | E4+G4 | C4 | — | G4+C5 | E4 | C4+E4 | G4 | — |
+
+- **Gộp ở phách 1 ô 2:** bum cuối trùng bùm đầu ô 2. Giữ bass gốc D3 (dòng walking hạ cánh), bỏ hợp âm tay phải F4+A4 ở đó.
+  Khung ô 2 thành "bum–bum chát bùm (chát ×3)".
+- Ba chát giữ ba hợp âm cũ theo thứ tự (đỉnh G4 → C5 → E4). Giai điệu bùm: C4 (ý Claude — sheet không có tay phải ở 3&) · E4
+  (sheet 4¼, 6/6 cửa sổ) · G4 (ý Claude; sheet 4¾ có C4 hoặc F4, 2/6 mỗi thứ).
+- **Walking bass** bùm 3& · bum 3¾ · bùm 4¼ · bùm 4¾ → gốc ô 2. Bài người dùng Fadd2 → G9: F3 → G3 A3 G3 F3 → G3.
+
+**Ba bẫy đã sập khi dựng:**
+- Đầu dòng lấy `near` (nốt ghi sau cùng của bùm 3 = bậc 5) → Gadd9 → D9sus4 đi D3 … D3 qua Bb2. Đổi thứ tự ghi hai nốt thì vướng
+  luật ép bass hợp âm ngắn (vòng sheet thành C3+C3). Nay thử MỌI nốt tay trái của tiếng trước làm đầu dòng.
+- Hạ cánh quãng tám kề không bị phạt → G9 → Am hạ A2 rồi bum ô 2 nhảy B3 (14 nửa cung). Nay phạt +6.
+- Chói với tay phải chỉ +3 → Fm → Bm ra F#3 dưới F4. Nay +10.
+
+**Giá trị cũ:** bản 28 (cách 2, chát phách 3, bùm 3 tay phải ¼).
+**Triệu chứng để lùi:** phách 1 ô 2 thiếu hợp âm, nghe hụt → trả tay phải F4+A4 về phách 1 ô 2 (thành bùm như cũ), hoặc thử lại
+cách 1 / cách 2.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

@@ -4029,3 +4029,10 @@ Người dùng nghe "Chát-bùm" (một cú hai tay ở 3¼) *"như nuốt mất
 đứng riêng (bass gốc + giai điệu thấp bậc 1). Bùm 3 nhả tay phải sau ¼ (cũ ½). **Đính chính:** nhãn "bắt đầu từ phách 4" ghi
 trong câu hỏi và bản 20 là sai — sơ đồ bắt đầu từ phách 3.
 **Giá trị cũ:** cách 1. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 28".
+
+### Ballad Để em: câu chạy một cách 3 — tiếng 1–3 không đụng, bum cuối gộp vào phách 1 ô 2
+
+Người dùng: tiếng 1–3 *"phải để nguyên ko chạm tới"*; cách 2 đã rút tay phải bùm 3 (sai). Nay 8 tiếng từ 3¼, bum cuối gộp với
+bùm đầu ô 2 (giữ bass gốc, bỏ tay phải F4+A4). Walking bass đi từ bùm 3.
+**Bẫy:** đầu dòng phải thử mọi nốt tay trái của tiếng trước, không chỉ `near`; hạ cánh quãng tám kề phạt +6; chói tay phải +10.
+**Giá trị cũ:** cách 2 (bản 28). Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 29".

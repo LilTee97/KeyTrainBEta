@@ -320,7 +320,7 @@ function notesForVoice(
   - nốt ngoài gam của hợp âm đang vang +3 (nốt cuối cách đích nửa cung — dẫn chromatic — chỉ +1);
   - tiếng bùm (tay phải cùng gõ) không trúng nốt hợp âm +2;
   - đổi chiều +2; đi tới lui (nốt trùng nốt cách một bước) +1;
-  - chói với tay phải cùng mốc (quãng 2 thứ / 7 trưởng / tăng 4) +3.
+  - chói với tay phải cùng mốc (quãng 2 thứ / 7 trưởng / tăng 4) +10 — gần như cấm (cũ +3: Fm → Bm ra F#3 dưới F4).
   Hoà điểm thì dòng tìm thấy trước thắng: bước đầu đi về phía đích, một cung trước nửa cung.
   Gam hợp âm trưởng = trưởng (bảy thứ nếu có b7), thứ = thứ tự nhiên. Dòng nằm trong tầm tay trái và không tụt quá 10 nửa
   cung dưới `tu` (≥ 48), nên không xuống dưới nốt gốc quãng tám 2 (`leftArpeggioAboveRoot`).
@@ -362,7 +362,7 @@ function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: n
       if (slot.bum && !slot.hopAm.has(pc(n))) s += 2
       if (dir && Math.sign(step) !== dir) s += 2
       if (truocNua === n) s += 1
-      if (slot.tayPhai.some((r) => [1, 6, 11].includes(pc(r - n)))) s += 3
+      if (slot.tayPhai.some((r) => [1, 6, 11].includes(pc(r - n)))) s += 10
       path.push(n)
       go(n, Math.sign(step), s)
       path.pop()
@@ -621,15 +621,23 @@ function renderWithCell(
                 events.filter((e) => e.hand === 'right' && Math.abs(e.startBeat - offset - h.beat) < EPSILON)
                   .flatMap((e) => e.notes)))
             walk = []
-            // Hạ cánh ở nốt gốc cùng quãng tám hay quãng tám kề — dòng nào ít điểm phạt hơn (hoà thì giữ quãng tám cũ);
-            // tiếng kế đánh theo. Đích xa quá số bước (C3 → B3: 11 nửa cung, 5 bước chỉ tới 10) thì chỉ còn quãng tám kề;
-            // vừa đủ 10 thì bị ép thành dòng toàn cung (Dbm → Bm: Db Eb F G A, G3 chói với Ab4 tay phải).
+            // Hạ cánh ở nốt gốc cùng quãng tám hay quãng tám kề — dòng nào ít điểm phạt hơn; tiếng kế đánh theo. Đích xa
+            // quá số bước (C3 → B3: 11 nửa cung, 5 bước chỉ tới 10) thì chỉ còn quãng tám kề; vừa đủ 10 thì bị ép thành dòng
+            // toàn cung (Dbm → Bm: Db Eb F G A, G3 chói với Ab4 tay phải). Đổi quãng tám phạt +6: các tiếng SAU điểm hạ
+            // cánh vẫn ở quãng tám cũ (G9 → Am hạ A2 thì bum ô 2 nhảy lên B3, 14 nửa cung).
+            // Đầu dòng: MỌI nốt tay trái của tiếng ngay trước (bùm 3 gõ gốc + bậc 5 cùng lúc), lấy dòng tốt nhất. Chỉ lấy
+            // `near` (nốt ghi sau cùng) thì trên Gadd9 → D9sus4 đầu dòng là bậc 5 D3 → dòng D3 … D3 vòng qua Bb2.
+            const truoc = events.filter((e) => e.hand === 'left' && e.startBeat < startBeat - EPSILON)
+            const moc = Math.max(...truoc.map((e) => e.startBeat))
+            const dau = [...new Set(truoc.filter((e) => Math.abs(e.startBeat - moc) < EPSILON).flatMap((e) => e.notes).map(fold))]
             let bestScore = Infinity
-            if (near !== undefined && den !== undefined)
-              for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
-                const found = walkingBass(fold(near), d, slots, low, high)
-                if (found && found.score < bestScore) { bestScore = found.score; walk = found.path; walkLand = d }
-              }
+            if (den !== undefined)
+              for (const tu of dau)
+                for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
+                  const found = walkingBass(tu, d, slots, low, high)
+                  const score = found && found.score + (d === fold(den) ? 0 : 6)
+                  if (found && score! < bestScore) { bestScore = score!; walk = found.path; walkLand = d }
+                }
           }
           const n = walk.shift()
           if (n !== undefined) raw = [n as MidiNote]
