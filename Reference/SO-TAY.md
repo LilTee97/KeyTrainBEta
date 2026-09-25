@@ -4070,3 +4070,10 @@ chốt 26/9: bùm = tiếng thấp, chát = tiếng cao, bum đứng sát bùm =
 Người dùng vẫn không nghe ra bum 6 dù lực 82 (bản 33), bảo *"hãy chơi tiếng đó như bùm 5"*. Nay bum 6 = bass walking + giai điệu
 bậc 3 tay phải, lực .9. **Bài học:** tiếng chìm vì thế đứng thì tăng lực không cứu được — phải thêm tay.
 **Giá trị cũ:** một nốt tay trái. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 34".
+
+### Ballad Để em: bỏ ba chát cuối ô 2 — câu đệm dừng ở 11 bùm (khung gốc) rồi chạy nốt
+
+Người dùng: *"bỏ 3 tiếng chát ở cuối đi, điều chỉnh thành câu đệm 11 tiếng rồi chạy nốt"*. Bỏ chát chát chát ở ô 2 phách 2 · 2¼ ·
+2¾; bùm 11 (phách 1¾) ngân lấp tới câu chạy — tay phải bậc 3 giữ suốt câu chạy như chát cuối cũ.
+**Bẫy đếm:** "11 tiếng" là khung gốc người dùng; bảng của Claude đánh số 14 vì câu chạy một có 7 tiếng.
+**Giá trị cũ:** ba chát F4+C5. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 35".

@@ -297,9 +297,11 @@ const deEm: StylePattern = {
       hit(3.75, .25, [tone(2)], NHAN),                        // bùm 10: giai điệu G4
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5
-      hit(4.75, .25, [ba3(), tone(2)], THUONG),               // 11 bùm: F4+A4, cùng bass F2
-      hit(5, .25, [ba3(), tone(3)], THUONG), hit(5.25, .5, [ba3(), tone(3)], THUONG), // chát chát: F4+C5 (cửa sổ 5)
-      hit(5.75, 2.25, [ba3()], THUONG), hit(5.75, 1.25, [tone(3)], THUONG), // chát: F4 ngân trên câu chạy · C5 1.25
+      // Câu đệm dừng ở 11 bùm (khung gốc của người dùng) rồi vào câu chạy nốt — người dùng 26/9: "hãy bỏ 3 tiếng chát ở cuối
+      // đi, điều chỉnh thành câu đệm 11 tiếng rồi chạy nốt". Bùm 11 ngân lấp chỗ trống: F4 giữ suốt câu chạy như chát cuối cũ,
+      // bậc 5 ngân tới lúc câu chạy vào. Cũ: bùm 11 F4+A4 ¼ phách, rồi chát chát chát F4+C5 ở ô 2 phách 2 · 2¼ · 2¾ (cửa sổ 5;
+      // chát cuối F4 ngân 2¼ trên câu chạy · C5 1¼).
+      hit(4.75, 3.25, [ba3()], THUONG), hit(4.75, 1.5, [tone(2)], THUONG), // 11 bùm: F4 ngân qua câu chạy · A4 tới 3¼
     ],
   },
 }

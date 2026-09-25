@@ -810,6 +810,20 @@ Bản 32 lấy Am(add9) → Fadd2 là B3 Bb3 A3 G3 → F3; nay D3 C3 D3 E3 → F
 **Giá trị cũ:** bum 6 một nốt tay trái — lực .9 (bản 32), 1.2 (bản 33).
 **Triệu chứng để lùi:** bum 6 nghe thành bùm, mất cảm giác dẫn → giữ hai tay nhưng hạ tay phải còn THUONG .8.
 
+## Bản 35: bỏ ba chát cuối ô 2 — câu đệm 11 tiếng rồi chạy nốt
+
+Người dùng: *"hãy bỏ 3 tiếng chát ở cuối đi, điều chỉnh thành câu đệm 11 tiếng rồi chạy nốt"*.
+
+"11 tiếng" theo khung gốc của người dùng: "1Bùm 2chát 3bùm 4chát-5bùm 6bum 7chát 8bùm-9bum 10chát 11bùm (chát chát chát)" — tiếng
+11 là bùm ô 2 phách 1¾. Bỏ "(chát chát chát)" ở ô 2 phách 2 · 2¼ · 2¾ (cửa sổ 5 của sheet). Theo cách đánh số của Claude (câu chạy
+một có 7 tiếng) thì câu đệm dài 14 tiếng — đã báo người dùng chỗ lệch cách đếm này.
+
+**Lấp chỗ trống 2 → 3¼:** bùm 11 ngân — tay trái bậc 3 ngân tới câu chạy (như cũ), tay phải bậc 3 ngân suốt câu chạy (như chát
+cuối cũ), bậc 5 ngân tới 3¼.
+
+**Giá trị cũ:** bùm 11 tay phải ¼ phách; chát F4+C5 ở phách 2 (¼) · 2¼ (½) · 2¾ (F4 ngân 2¼ · C5 1¼).
+**Triệu chứng để lùi:** chỗ ngân 2 → 3¼ nghe hụt, đứt → thêm một tiếng dẫn vào câu chạy, hoặc cho câu chạy vào sớm hơn.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.
