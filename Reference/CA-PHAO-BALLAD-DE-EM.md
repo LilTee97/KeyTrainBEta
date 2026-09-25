@@ -446,6 +446,30 @@ bùm 5 · bum 6 · dẫn · chát, dính sát tiếng 3, và dáng câu chạy m
 **Giá trị cũ:** bản 18.
 **Triệu chứng để lùi:** câu chạy ô 1 nghe lộ giai điệu → lấy nốt dưới của cụm (E4 thay A4, G4 thay C5).
 
+## Bản 20: câu chạy một thành khung "Chát-bùm bum chát bùm chát bùm bum" (thử cách 1)
+
+Người dùng: *"hãy chỉnh cấu trúc câu chạy một thành khung bùm chát … Chát-bùm bum chát bùm chát bùm bum. Tiếng bùm ko phải là chỉ đánh
+bass mà là đánh các giai điệu (có thể là giai điệu thấp) và kèm với bass; bùm bum thì là đánh dẫn"*.
+
+Khung 8 tiếng mà câu chạy có 7 mốc. Người dùng chọn **thử cách 1** (nghe rồi mới chốt): "Chát-bùm" là một cú hai tay. Hai cách còn
+lại để dành:
+- 8 cú bắt đầu từ phách 4;
+- 8 cú, bum cuối rơi vào đầu ô 2.
+
+| mốc | tiếng | tay trái | tay phải |
+|---|---|---|---|
+| 3¼ | Chát-bùm | C3 | E4+A4 (cửa sổ 8) |
+| 3& | bum dẫn | G3 (cửa sổ 8) | — |
+| 3¾ | chát | — | G4+C5 (cửa sổ 8) |
+| 4 | bùm | G3 (cửa sổ 8) | C4 giai điệu (cửa sổ 8) |
+| 4¼ | chát | — | E4+G4 (sheet E4 + G4) |
+| 4& | bùm dẫn | C3 + E3 giai điệu thấp | — |
+| 4¾ | bum dẫn | C#3: nửa cung dưới gốc hợp âm sau (`som`) → D3 đầu ô 2 | — |
+
+Hợp âm tay phải nhả đúng lúc tiếng bum vào, nên hai tiếng bum vang một mình (test độ phủ cho phép riêng hai mốc ấy một nốt).
+**Giá trị cũ:** bản 19 (A4 · G3 · C5 · C4+G3 · E4 · G3 · C4).
+**Triệu chứng để lùi:** cách 1 chưa ổn → thử cách 2 hoặc 3.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

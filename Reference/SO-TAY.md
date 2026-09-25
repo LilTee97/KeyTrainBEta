@@ -3952,3 +3952,14 @@ Quét từng tay thì ô 1 không có câu chạy nào; câu 7 nốt một tay c
 là giai điệu lấy đà, rồi lấp chỗ ấy bằng chát/bùm dính sát tiếng 3.
 **Nay:** ô 1 = Bùm · chát · bùm → A4 · G3 · C5 · C4+G3 · E4 · G3 · C4 (cửa sổ 8).
 **Giá trị cũ:** bản 18. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 19".
+
+### Ballad Để em: câu chạy một thành khung bùm/chát — "Chát-bùm bum chát bùm chát bùm bum" (thử cách 1)
+
+Người dùng định nghĩa lại:
+- bùm = giai điệu (có thể thấp) kèm bass;
+- chát = hợp âm;
+- bùm–bum = đánh dẫn.
+
+Khung 8 tiếng / 7 mốc. Người dùng chọn thử "Chát-bùm cùng một cú" trước, nghe rồi mới chốt. Nay 3¼ → 4¾:
+C3+E4A4 · G3 · G4C5 · G3+C4 · E4G4 · C3+E3 · C#3 (→ D3). Bum vang một mình, không bị hợp âm đè.
+**Giá trị cũ:** bản 19. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 20".
