@@ -228,7 +228,7 @@ const deEm: StylePattern = {
   name: 'Để Em Rời Xa · Phiên khúc', family: 'ca-phao-ballad-de-em-roi-xa',
   familyName: 'Ballad Để em', variant: 1, bpm: 85,
   sourceVideos: ['Cà Pháo · Để Em Rời Xa · tiếng 1–3 từ cửa sổ 4 (như DERX); khung người dùng 25/9/2026; 3 chát + câu chạy cửa sổ 5'],
-  note: 'Phiên: Bùm chát bùm → Chát-bùm bum chát bùm chát bùm bum | bùm–bum chát bùm (chát chát chát) → câu chạy tay trái. Chờ nghe duyệt.',
+  note: 'Phiên: Bùm chát bùm → chát bum chát BÙM chát bum chát (hai tay đan nhau, cú hai tay ở phách 1 · 4) | bùm–bum chát bùm → đoạn đan tay → câu chạy tay trái; walking bass. Đã nghe duyệt 26/09/2026.',
   // Điệu tự lấp chỗ trống: câu lót tự động của app không chen vào (người dùng: "thay câu chạy ngón ngẫu nhiên").
   autoFills: false,
   /*
@@ -315,7 +315,7 @@ const deEmChorus: StylePattern = {
   name: 'Để Em Rời Xa · Điệp khúc', family: deEm.family,
   familyName: deEm.familyName, variant: 2, bpm: 85,
   sourceVideos: ['Cà Pháo · Để Em Rời Xa · cửa sổ 24–25 (XML 24:2–26:2) như DERX, đầu bass theo 52; đối chiếu 52–53'],
-  note: 'Điệp: mốc gõ DERX (bass móc đơn, bè chêm lệch, chùm ba), ngân nối tới cú sau, F4+D5 đủ quãng đôi. Chờ nghe duyệt.',
+  note: 'Điệp: mốc gõ DERX (bass móc đơn, bè chêm lệch, chùm ba), ngân nối tới cú sau, F4+D5 đủ quãng đôi. Đã nghe duyệt 26/09/2026 (cả điệu).',
   cell: {
     lengthBeats: 8,
     left: [

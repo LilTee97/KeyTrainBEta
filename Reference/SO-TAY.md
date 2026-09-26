@@ -4087,3 +4087,37 @@ chỗ khác đan nhau; tay phải đứng riêng thường một nốt giai đi�
 **Bẫy walking bass:** phải xét nốt tay phải đang vang suốt thời gian nốt bass ngân; cho nhảy quãng 3 khi liền bậc buộc phải chói;
 không đổi quãng tám hạ cánh khi còn dòng khác (hỏng dáng câu chạy A2 → D3).
 **Giá trị cũ:** bản 34–35. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 36".
+
+### Ballad Để em ĐÃ NGHE DUYỆT 26/9/2026 — bản chốt (bản 36)
+
+Người dùng: *"điệu ballad Để em đã ổn hãy lưu lại"*. Bản chốt `89a8a82`, cả hai nút (phiên + điệp). Phiên trên vòng sheet
+Bbmaj7 | C | Dm7:
+
+| tiếng | vị trí | tay trái | tay phải | nguồn |
+|---|---|---|---|---|
+| 1 Bùm | ô 1 phách 1 | Bb2 F3 A3 (1¾) | D4 (1¾) · F4 (½) | sheet cửa sổ 4 |
+| 2 chát | ô 1 phách 2 | — | F4+Bb4 (¾) | sheet cửa sổ 4 |
+| 3 bùm | ô 1 phách 2¾ | C3 (½) · G3 (¾) | E4+C5 (½) | sheet cửa sổ 4 |
+| 4 chát | ô 1 phách 3¼ | — | E4+G4 (½) | sheet E4/A4 (A4 ngoài hợp âm → G4) |
+| 5 bum | ô 1 phách 3& | A3 (walking) | — | đan tay: sheet; walking: ý người dùng |
+| 6 chát | ô 1 phách 3¾ | — | G4+C5 | sheet 6/6 cửa sổ |
+| 7 bùm | ô 1 phách 4 | G3 (walking) | C4 | sheet 5/6 (cú hai tay duy nhất nửa sau ô) |
+| 8 chát | ô 1 phách 4¼ | — | E4 (½) | sheet 6/6 |
+| 9 bum | ô 1 phách 4& | E3 (walking) | — | đan tay: sheet |
+| 10 chát | ô 1 phách 4¾ | — | C4 | sheet C4 hoặc F4 (2/6 mỗi thứ) |
+| 11 bùm | ô 2 phách 1 | D3 | F4+A4 (½) | khung người dùng ("8bùm-9bum") |
+| 12 bum | ô 2 phách 1¼ | E3 | — | khung người dùng |
+| 13 chát | ô 2 phách 1& | — | F4+C5 | khung người dùng |
+| 14 bùm | ô 2 phách 1¾ | F3 | F4+A4 | khung người dùng |
+| lấp | ô 2 phách 2 → 3 | D3 · Bb2 (walking) | A4+D5 · F4 · F4+C5 (ngân suốt câu chạy) | ý Claude, đan tay như sheet ô 9 · 37 |
+| câu chạy | ô 2 phách 3¼ → 4¾ | A2 D3 E3 F3 E3 D3 C3 | (F4+C5 còn ngân) | sheet cửa sổ 5 |
+
+Ba điều rút ra sau 36 bản, để lần sau khỏi đi vòng:
+- **Đo cách hai tay phối hợp trước khi đặt luật tiếng.** Cà Pháo đan hai tay: cú hai tay gần như chỉ ở phách 1 (23/30) và 4
+  (24/30); tay phải đứng riêng thường một nốt giai điệu. Luật "bùm phải có cả tay phải · chát luôn hai nốt" (bản 13–34) làm câu
+  đệm nặng; người dùng tự rút lại: *"định nghĩa về bùm chát của tôi đã quá cứng nhắc"*.
+- **Tiếng tay trái đứng riêng phải nằm giữa hai tiếng tay phải.** Đứng sát sau một cú có tay trái thì chìm — tăng lực (1.2) không
+  cứu được (bản 27 "Chát-bùm nuốt bùm", bản 32–33 bum 6).
+- **Tiếng "phụ" thì hạ lực, không dời khỏi lưới móc kép** — tiếng lướt ⅛ phách (bản 30) nghe *"lệch tiết tấu"*.
+Walking bass (`walkingBass` trong `patternRenderer.ts`): soạn cả dòng một lần, chấm điểm (ngoài gam, bùm lệch hợp âm, đổi chiều,
+nhảy quãng 3, chói với tay phải đang vang), không xúc xắc. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md`.

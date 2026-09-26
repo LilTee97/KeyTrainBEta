@@ -2,7 +2,8 @@
 
 Bản 1 (`059b4f1`, 25/9/2026) bị người dùng chê *"còn dở quá"*. **Bản 2** soạn lại trên mốc gõ của
 **Ballad DERX** do Codex dựng ([BALLAD-DERX.md](BALLAD-DERX.md)). Người dùng nghe DERX: *"bám gần với
-tiết tấu đệm trong sheet gốc. Tuy nhiên nó vẫn có cảm giác bị thiếu tiếng và đứt quãng"*. **Chờ nghe duyệt.**
+tiết tấu đệm trong sheet gốc. Tuy nhiên nó vẫn có cảm giác bị thiếu tiếng và đứt quãng"*.
+**Đã nghe duyệt 26/9/2026** — bản 36 (`89a8a82`): người dùng *"điệu ballad Để em đã ổn hãy lưu lại"*. Bản chốt ở mục "Bản 36".
 Mã: `styleLibrary/caPhaoBalladSongs.ts` (`deEm`, `deEmChorus`). Số đo: `python -B scripts/audit_cp_de_em.py`.
 
 Nguồn: `D:/PianoBrain/video/Ca_Phao/De Em Roi Xa-Ca Phao.mxl`, SHA-256
