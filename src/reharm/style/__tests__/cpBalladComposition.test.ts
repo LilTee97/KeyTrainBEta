@@ -23,7 +23,18 @@ describe('shared, source-audited CP ballad composer', () => {
     expect(cec.events.filter(e => e.carry)).toMatchObject([{ at: .25, hand: 'left', tones: [36], gates: [.25] }])
     expect(cec.events.some(e => e.hand === 'right' && e.at < .25)).toBe(false)
     expect(section('Hồng Kông 1', 'intro').end).toBe(61.5)
-    expect(section('Để Em Rời Xa', 'intro').bars[0].length).toBe(3.25)
+    // Để Em Rời Xa: vạch nhịp ký âm lệch nhạc một phách (bass ở offset 1 của ô XML, 68/70 ô). Ô thật bắt đầu ở phách 2
+    // của ô XML; ô lấy đà 3.25 → khúc lấy đà ¼ rồi ô thật đủ 4 phách. Cũ: bars[0] = ô XML 0 dài 3.25, cử chỉ lệch pha.
+    expect(section('Để Em Rời Xa', 'intro').bars.slice(0, 2)).toMatchObject([{ at: 0, length: .25 }, { at: .25, length: 4 }])
+    for (const kind of ['intro', 'interlude', 'outro']) {
+      const s = section('Để Em Rời Xa', kind)
+      for (const bar of s.bars.filter(b => b.length === 4)) {
+        const bass = s.events.filter(e => e.hand === 'left' && !e.carry && e.at >= bar.at - .001 && e.at < bar.at + bar.length - .001)
+        if (!bass.length) continue // ô cuối đoạn kết: chỉ câu rải tay phải
+        const lowest = bass.reduce((a, b) => Math.min(...b.tones) < Math.min(...a.tones) ? b : a)
+        expect(lowest.at, `${kind} ô ${bar.bar}: bass thấp nhất rơi đầu ô thật`).toBeCloseTo(bar.at)
+      }
+    }
     expect(section('Chưa Bao Giờ (Trung Quân)', 'intro').bars[0].length).toBe(1)
     expect(corpus.sections.reduce((n, s) => n + s.events.filter(e => e.carry).length, 0)).toBe(5)
     expect(corpus.sections.reduce((n, s) => n + s.events.filter(e => e.uncertainTie).length, 0)).toBe(2)

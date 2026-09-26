@@ -8,6 +8,8 @@ import { hoCuaDieu } from '../hoDieu'
 import { isBalladStyle } from '../balladFamily'
 import { resolveStyleForSection } from '../sectionStyles'
 import { autoFillSkip } from '../../fillSoloGenerator/soloGenerator'
+import { buildPhraseSection } from '../phraseSection'
+import { texture, type Hit } from './cpSoloTexture.probe'
 
 // MIDI đo từ `PianoBrain/video/Ca_Phao/De Em Roi Xa-Ca Phao.mxl` trên cửa sổ k = [ô XML k phách 2,
 // ô k+1 phách 2), xem Reference/CA-PHAO-BALLAD-DE-EM.md. Hợp âm và độ dài đúng như sheet.
@@ -99,6 +101,95 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
           for (const r of rh(chords, 3))
             expect([1, 6, 11], `${at} · bùm 4 tay phải ${r}`).not.toContain(((r - lh(chords, 3)[0]!) % 12 + 12) % 12)
         }
+  })
+
+  it('solo CP (màu Cà Pháo, Soạn câu mới): tay trái dưới câu solo theo soloCell — thưa, không gõ lặp; có dùng vật liệu Để Em Rời Xa', () => {
+    let deEm = 0
+    for (const [tonic, scale] of [[9, 'minor'], [2, 'minor'], [0, 'major']] as const)
+      for (const kind of ['intro', 'interlude', 'outro'] as const)
+        for (let take = 0; take < 6; take++) {
+          const m = buildPhraseSection({ kind, key: { tonic, scale }, style: getStyle(VERSE)!, caPhaoCompose: true, caPhaoFull: false,
+            thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [], take })!
+          expect(m.unavailableReason, `${tonic}${scale} ${kind} ${take}`).toBeUndefined()
+          if ((m.compositionSources ?? []).some(t => String(t.melody).includes('De Em'))) deEm += 1
+          // Cũ (dùng ô đệm hát làm nền): ô 2 có 12 tiếng tay trái, cao độ nắn về gốc → D3 D3 F3 D3 D3 A2 D3 …
+          for (let bar = 0; bar < m.lengthBeats; bar += 4) {
+            const left = new Set(m.events.filter(e => e.hand === 'left' && e.startBeat >= bar && e.startBeat < bar + 4).map(e => e.startBeat))
+            expect(left.size, `${tonic}${scale} ${kind} take ${take} ô ${bar / 4 + 1}`).toBeLessThanOrEqual(8)
+          }
+        }
+    expect(deEm, 'lượt có vật liệu Để Em Rời Xa (dữ liệu đã nắn vạch nhịp)').toBeGreaterThan(0)
+  })
+
+  it('solo CP: tiết tấu mọi khung từ solo Để Em Rời Xa; chất liệu quanh mức bài gốc — ít dặm, có câu chạy, nhiều phách giật', () => {
+    // Mức bài gốc (solo Để Em Rời Xa, vạch thật; `cpSoloTexture.probe.ts`): dặm dạo 3% · giang 10% · kết 28%; nốt chạy dạo 22% ·
+    // giang 34% · kết 0%; phách giật giang 82% · kết 63%. Cũ: bộ soạn bốc cử chỉ bài khác kèm tiết tấu bài ấy (dặm 38 · 21 · 53%,
+    // quãng tám 27 · 12 · 31%) — người dùng: "quá nhiều chỗ dặm", "rời rạc và ko khớp với tiết tấu điệu".
+    const own = { intro: { dam: .03, chay: .22 }, interlude: { dam: .10, chay: .34 }, outro: { dam: .28, chay: 0 } }
+    for (const kind of ['intro', 'interlude', 'outro'] as const) {
+      const hits: Hit[] = []; let beats = 0
+      for (let take = 0; take < 12; take++) {
+        const m = buildPhraseSection({ kind, key: { tonic: 9, scale: 'minor' }, style: getStyle(VERSE)!, caPhaoCompose: true,
+          caPhaoFull: take % 2 === 1, thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [], take })!
+        for (const t of m.compositionSources ?? []) {
+          expect(String(t.rhythm), `${kind} take ${take} ô ${t.bar}: tiết tấu bài gốc`).toMatch(/^De Em Roi Xa/)
+          if (kind !== 'outro') expect(String(t.melody), `${kind} take ${take}`).not.toMatch(/:outro:/)
+        }
+        const right = m.events.filter(e => e.hand === 'right')
+        for (const at of [...new Set(right.map(e => e.startBeat))].sort((a, b) => a - b)) {
+          const ev = right.filter(e => e.startBeat === at)
+          hits.push({ at: at + beats, tones: [...new Set(ev.flatMap(e => e.notes))], gate: Math.max(...ev.map(e => e.durationBeats)), left: false })
+        }
+        beats += m.lengthBeats
+      }
+      const t = texture(hits, beats)
+      expect(t.dam, `${kind} dặm`).toBeLessThanOrEqual(own[kind].dam + .1)
+      expect(t.octave, `${kind} quãng tám`).toBeLessThanOrEqual(.1)
+      expect(t.runNotes, `${kind} nốt chạy`).toBeGreaterThanOrEqual(own[kind].chay - .12)
+      expect(t.dyad36, `${kind} bè quãng 3/6 (bè quãng 4 của bài giữ nguyên, không đổi thành quãng 3)`).toBeLessThanOrEqual(.3)
+    }
+  })
+
+  it('ô tick thử lượt 4: dẫn vào hát / đóng kết bằng câu đóng của bài; nốt màu trong gam, không nốt tránh; tắt ô thì như cũ', () => {
+    const opening = parseChordInput('Fadd2').chords[0]
+    const A_MINOR = new Set([9, 11, 0, 2, 4, 5, 7])
+    let colors = 0
+    for (const kind of ['intro', 'interlude', 'outro'] as const) for (let take = 0; take < 6; take++) {
+      const base = { kind, key: { tonic: 9 as const, scale: 'minor' as const }, style: getStyle(VERSE)!, caPhaoCompose: true,
+        caPhaoFull: take % 2 === 1, thay: 'ca-phao' as const, beatsPerChord: 4, dropRoot: true, opening, solo: () => [], take }
+      const tail = (m: NonNullable<ReturnType<typeof buildPhraseSection>>) => {
+        let at = 0
+        return m.chords.filter((_, i) => { const from = at; at += m.beatsEach[i]; return from >= m.lengthBeats - 8 })
+      }
+      // Tắt ô: cú dẫn Codex (ii–V của hợp âm hát kế / V7–i) giữ nguyên.
+      expect(tail(buildPhraseSection(base)!)[0], `${kind} take ${take} mặc định`).toMatch(kind === 'outro' ? /^E7/ : /^Gm7$/)
+      const m = buildPhraseSection({ ...base, cpBalladThu: true })!
+      expect(tail(m), `${kind} take ${take}`).toEqual(['F', 'G', 'Am7'])
+      const starts = m.beatsEach.map((_, i) => m.beatsEach.slice(0, i).reduce((a, b) => a + b, 0))
+      for (const t of (m.compositionTechniques ?? []).filter(t => t.kind === 'color-tone')) {
+        colors++
+        const top = Math.max(...m.events.filter(e => e.hand === 'right' && !e.grace &&
+          e.startBeat >= t.startBeat - 1e-6 && e.startBeat < t.startBeat + .2).flatMap(e => e.notes))
+        const chord = parseChordInput(m.chords[starts.findLastIndex(at => at <= t.startBeat + 1e-6)]).chords[0]
+        const tones = chord.quality.intervals.map(n => (chord.root + n) % 12)
+        expect(A_MINOR.has(top % 12), `${kind} take ${take} @${t.startBeat}: trong gam`).toBe(true)
+        expect(tones.includes(top % 12) || tones.includes((top + 11) % 12), `${kind} take ${take} @${t.startBeat}: màu, không nốt tránh`).toBe(false)
+      }
+    }
+    expect(colors).toBeGreaterThan(30)
+  })
+
+  it('mô phỏng câu solo full khoá đúng Để Em Rời Xa, đúng vạch nhịp thật (không lấy Chưa Bao Giờ)', () => {
+    for (const id of [VERSE, CHORUS])
+      for (const [kind, length] of [['intro', 16], ['interlude', 16], ['outro', 38]] as const) {
+        const m = buildPhraseSection({ kind, key: { tonic: 9, scale: 'minor' }, style: getStyle(id)!, caPhaoCompose: true,
+          caPhaoSimulate: true, caPhaoFull: true, thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [] })!
+        expect(m.unavailableReason, `${id} ${kind}`).toBeUndefined()
+        expect(m.sourcePhrase?.song, `${id} ${kind}`).toBe('Để Em Rời Xa')
+        expect(m.lengthBeats, `${id} ${kind}`).toBe(length)
+        // Hợp âm dựng từ bass thật: bVI → bVII (phách 3 hoặc 2¾) → i — không phải bản in lệch/đảo.
+        if (kind !== 'outro') expect(m.chords.slice(0, 3), `${id} ${kind}`).toEqual(['F', 'G', 'Am7'])
+      }
   })
 
   it('cao độ điệp khớp sheet cửa sổ 24–25 (bỏ nốt trên 74)', () => {

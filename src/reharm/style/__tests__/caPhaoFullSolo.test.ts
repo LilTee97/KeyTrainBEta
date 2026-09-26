@@ -103,8 +103,10 @@ it('retains the Co Em Cho run, triplet, tied peak, low bass and bar-56 closing g
 it('keeps audited ballad tails and pickup lengths in complete-sheet playback', () => {
   const cases = [
     ['Hồng Kông 1', 'intro', 61.5, 4],
-    ['Để Em Rời Xa', 'intro', 15.25, 3.25],
-    ['Để Em Rời Xa', 'interlude', 17, 4],
+    // Để Em Rời Xa: vạch ký âm lệch nhạc một phách — mô phỏng theo vạch thật (cũ: dạo 15.25 · ô đầu 3.25, cắt mất cụm Dm9
+    // cuối; giang 17 với một phách đuôi điệp ở đầu).
+    ['Để Em Rời Xa', 'intro', 16, 4],
+    ['Để Em Rời Xa', 'interlude', 16, 4],
     ['Chưa Bao Giờ (Trung Quân)', 'intro', 33, 1],
   ] as const
   for (const [song, kind, length, firstBar] of cases) {

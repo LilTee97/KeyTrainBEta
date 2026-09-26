@@ -24,6 +24,22 @@ KINDS = {
     'augmented': 'aug',
 }
 
+# Để Em Rời Xa: vạch nhịp ký âm lệch nhạc ĐÚNG MỘT PHÁCH — bass rơi ở offset 1 của ô XML trong 68/70 ô
+# (Reference/CA-PHAO-BALLAD-DE-EM.md, scripts/audit_cp_de_em.py). Ô thật k = [ô XML k + 1, ô XML k+1 + 1); ô 0
+# lấy đà dài 3.25 nên ô thật 0 bắt đầu ở 0.25. Cũ: lưới ô XML → cử chỉ hai ô lệch pha, bộ soạn không chọn được.
+PHASE = {'De Em': 1}
+# Ký hiệu hợp âm in của bài này đặt sớm một phách ở đầu ô và đảo thứ tự ở một số ô (ô 30: in C rồi Bb, bass thật
+# Bb1 rồi C2), nên dựng lại từ nốt bass thật của từng ô: (ô thật, phách trong ô thật, bậc so với chủ âm, đuôi).
+# Đoạn kết ở Mi giáng thứ: bậc 8 = Cb, 10 = Db.
+BASS_HARMONY = {'De Em': {
+    'intro': [(0, 0, 8, ''), (0, 2, 10, ''), (1, 0, 0, 'm7'), (2, 0, 8, ''), (2, 1.75, 10, ''), (3, 0, 0, 'm7')],
+    'interlude': [(27, 3, 0, 'm7'), (28, 0, 8, ''), (28, 2, 10, ''), (29, 0, 0, 'm7'), (30, 0, 8, ''), (30, 1.75, 10, ''),
+                  (31, 0, 0, 'm7')],
+    'outro': [(63, 3, 0, 'm7'), (64, 0, 8, ''), (64, 2, 10, ''), (65, 0, 0, 'm7'), (66, 0, 8, ''), (66, 1.75, 10, ''),
+              (67, 0, 0, 'm7'), (68, 0, 8, ''), (68, 1.75, 10, ''), (69, 0, 0, 'm7'), (70, 0, 8, ''), (70, 1.75, 10, ''),
+              (71, 0, 0, 'm7')],
+}}
+
 
 def pc(name):
     return (audit.STEP[name[0]] + name.count('#') - name.count('b')) % 12
@@ -79,6 +95,16 @@ def analyze():
                 hi, end = 16, starts[16] + 1.5
             elif song['file'].startswith('De Em') and kind == 'interlude':
                 hi, end = 32, starts[32] + 1
+            phase = next((v for p, v in PHASE.items() if song['file'].startswith(p)), 0)
+
+            def real_start(b):
+                return starts[b] + phase if b >= 1 else starts[1] + phase - 4
+
+            if phase:
+                # Mô phỏng bắt đầu/kết thúc đúng VẠCH THẬT: phách lệch trước vạch là đuôi phần hát, không vào đoạn.
+                # Cũ: dạo 15.25 phách (ô đầu 3.25, cắt mất cụm Dm9 cuối), giang 17 (một phách đuôi điệp ở đầu).
+                begin = real_start(lo)
+                end = real_start(hi + 1) if kind == 'intro' else end
             report = dict(kind=kind, bars=[lo, hi], declaredBars=[lo, declared_hi], beats=end-begin)
             row['sections'].append(report)
             if not key:
@@ -122,6 +148,12 @@ def analyze():
             before = [h for h in changes if h['at'] <= begin]
             harmony_events = ([dict(before[-1], at=0)] if before else [dict(at=0, root=0, suffix='m' if mode=='minor' else '', bass=None)])
             harmony_events += [dict(h, at=round(h['at']-begin, 6)) for h in changes if begin < h['at'] < end]
+            if phase:
+                # Ký hiệu in đặt sớm một phách và đảo ở ô 30 · 66 · 68 → dựng từ bass thật (cả bản "in" dùng khi mô phỏng).
+                table = next(v for p, v in BASS_HARMONY.items() if song['file'].startswith(p))[kind]
+                built = [dict(at=round(real_start(b) + off - begin, 6), root=root, suffix=suffix, bass=None)
+                         for b, off, root, suffix in table if begin - 1e-9 <= real_start(b) + off < end]
+                harmony_events = ([] if built and built[0]['at'] == 0 else [dict(built[0], at=0)]) + built
             # XML's F#aug/Eb in bar 42 conflicts with sounding Db-F-A/Eb,
             # followed by A-C#-G over A. Describe the measured bII -> V instead.
             if song['file'].startswith('nguoihay'):
@@ -139,7 +171,9 @@ def analyze():
             sections.append(dict(id=f"{song['file'].rsplit('.',1)[0]}:{kind}", song=song['name'],
                 genre=song['genre'], mode=mode, tonic=tonic, kind=kind, fromBar=lo,
                 vocalPickupAt=30.5 if song['file'].startswith('nguoihay') and kind in ('intro', 'interlude') else None,
-                barLengths=[min(data[str(b)]['length'], end-starts[b]) for b in range(lo,hi+1)], lengthBeats=end-begin,
+                barLengths=[round(min(real_start(b + 1) if b + 1 in starts else end, end) - real_start(b), 6)
+                            for b in range(lo, hi + 1) if real_start(b) < end - 1e-9] if phase else
+                           [min(data[str(b)]['length'], end-starts[b]) for b in range(lo,hi+1)], lengthBeats=end-begin,
                 events=events, graces=graces, harmony=harmony_events,
                 writtenHarmony=written_harmony if bossa_outro else harmony_events,
                 techniques=report['techniques']))

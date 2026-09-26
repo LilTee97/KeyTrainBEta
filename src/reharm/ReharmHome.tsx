@@ -617,6 +617,12 @@ export function ReharmHome() {
   const [cpLickSelected, setCpLick] = useState(false)
   const [caPhaoFull, setCaPhaoFull] = useState(false)
   const [caPhaoSoloMode, setCaPhaoSoloMode] = useState<'compose' | 'simulate'>('compose')
+  /*
+    Ô tick solo Ballad Để em lượt 4 (`cpBalladThu`) — người dùng 26/9: "đã soạn ra các câu solo nghe rất hay, hãy giữ tick đó
+    lại". Bật sẵn, lưu theo bài. Đừng xoá hay gộp vào mặc định khi người dùng chưa bảo. Lượt sau làm ô tick riêng chồng lên
+    (lượt 5 đã thử và bị bác 26/9: "ko hay như lượt 4").
+  */
+  const [cpBalladThu, setCpBalladThu] = useState(true)
   const [caPhaoFullSource, setCaPhaoFullSource] = useState('')
   const [caPhaoKeyboardRange, setCaPhaoKeyboardRange] = useState({ low: 36, high: 96 })
   const [lickyRuns, setLickyRuns] = useState(false)
@@ -2826,6 +2832,7 @@ export function ReharmHome() {
       cpLick,
       caPhaoFull,
       caPhaoSoloMode,
+      cpBalladThu,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       acceptedPassing,
@@ -2881,6 +2888,7 @@ export function ReharmHome() {
       cpLick,
       caPhaoFull,
       caPhaoSoloMode,
+      cpBalladThu,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       styleId,
@@ -2937,6 +2945,7 @@ export function ReharmHome() {
     setCpLick(saved.intensity !== 'caPhao' && (saved.cpLick ?? false))
     setCaPhaoFull(saved.caPhaoFull ?? false)
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
+    setCpBalladThu(saved.cpBalladThu ?? true)
     setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
     setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
     setLickyRuns(saved.lickyRuns ?? false)
@@ -3231,6 +3240,7 @@ export function ReharmHome() {
             caPhaoFull: cpFullOn,
             caPhaoFullSource: cpFullSource,
             caPhaoKeyboardRange,
+            ...(cpBalladThu ? { cpBalladThu: true } : {}),
             beatsPerChord: chordBeats, dropRoot,
             opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
             take: cpComposeOn ? phraseSpin + playSpin.current + pass * 17 + take : cpFullOn ? phraseSpin : 4 + phraseSpin + playSpin.current + pass * 17 + take,
@@ -3531,6 +3541,7 @@ export function ReharmHome() {
       cpSimulationOn,
       cpFullSource,
       caPhaoKeyboardRange,
+      cpBalladThu,
       withPassing,
       chordBeats,
       dropRoot,
@@ -5137,6 +5148,10 @@ export function ReharmHome() {
               <option value="compose">Soạn câu mới</option>
               <option value="simulate">Mô phỏng nguyên câu sheet</option>
             </select>
+          </label>}
+          {cpComposeOn && !cpSimulationOn && style.cpSoloOwnRhythm && <label className="flex items-center gap-2 text-sm text-cream">
+            <input type="checkbox" checked={cpBalladThu} onChange={event => { stopPlay(); setCpBalladThu(event.target.checked) }} />
+            Solo lượt 4: nốt màu 9·11·13 theo sheet, dẫn vào hát bằng câu đóng của bài
           </label>}
           <label className="flex items-center gap-2 text-sm text-cream">
             <input type="checkbox" checked={caPhaoFull || cpSimulationOn} disabled={cpSimulationOn} onChange={event => {

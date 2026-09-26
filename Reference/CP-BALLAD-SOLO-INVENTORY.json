@@ -7742,31 +7742,31 @@
           "window": [
             0,
             0,
-            3,
-            4.0
+            4,
+            1
           ],
           "learningWindow": [
             0,
-            15.25
+            16.25
           ],
           "mode": "minor",
           "tonic": 2,
           "confidence": "confirmed-boundaries; score-analyzed-key",
           "nonFourQuarterBars": [
             {
-              "bar": 0,
+              "bar": -1,
               "at": 0,
-              "length": 3.25
+              "length": 0.25
             }
           ],
-          "rightAttacks": 31,
-          "leftAttacks": 22,
-          "chords": 0,
+          "rightAttacks": 32,
+          "leftAttacks": 23,
+          "chords": 1,
           "octaves": 0,
-          "offbeats": 21,
+          "offbeats": 22,
           "offSixteenthGrid": 0,
           "semitoneSteps": 11,
-          "registerLeaps": 0,
+          "registerLeaps": 1,
           "rests": 2,
           "graces": 0,
           "harmony": [
@@ -7777,42 +7777,53 @@
               "bass": null
             },
             {
-              "at": 1.5,
-              "root": 10,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 3.25,
-              "root": 0,
-              "suffix": "m7",
-              "bass": null
-            },
-            {
-              "at": 7.25,
-              "root": 10,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 10.25,
+              "at": 0.25,
               "root": 8,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 11.25,
+              "at": 2.25,
+              "root": 10,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 4.25,
+              "root": 0,
+              "suffix": "m7",
+              "bass": null
+            },
+            {
+              "at": 8.25,
+              "root": 8,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 10.0,
+              "root": 10,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 12.25,
               "root": 0,
               "suffix": "m7",
               "bass": null
             }
           ],
-          "corrections": [],
-          "simultaneousHands": 8,
+          "corrections": [
+            {
+              "bar": 0,
+              "reason": "Barlines one beat early; printed symbols early/swapped. Harmony rebuilt from sounding bass."
+            }
+          ],
+          "simultaneousHands": 9,
           "rightOverHeldBass": 21,
           "carriedBassNotes": 0,
           "incompleteTies": [],
-          "velocityNotes": 66,
+          "velocityNotes": 70,
           "velocityRange": [
             53,
             108
@@ -7834,19 +7845,19 @@
               ],
               "harmony": [
                 {
-                  "at": 0,
+                  "at": 0.25,
                   "root": 8,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 1.5,
+                  "at": 2.25,
                   "root": 10,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 3.25,
+                  "at": 4.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
@@ -7875,20 +7886,20 @@
               ],
               "harmony": [
                 {
-                  "at": 1.5,
+                  "at": 2.25,
                   "root": 10,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 3.25,
+                  "at": 4.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 7.25,
-                  "root": 10,
+                  "at": 8.25,
+                  "root": 8,
                   "suffix": "",
                   "bass": null
                 }
@@ -7910,20 +7921,20 @@
               ],
               "harmony": [
                 {
-                  "at": 3.25,
+                  "at": 4.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 7.25,
-                  "root": 10,
+                  "at": 8.25,
+                  "root": 8,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 10.25,
-                  "root": 8,
+                  "at": 10.0,
+                  "root": 10,
                   "suffix": "",
                   "bass": null
                 }
@@ -7947,19 +7958,19 @@
               ],
               "harmony": [
                 {
-                  "at": 7.25,
-                  "root": 10,
-                  "suffix": "",
-                  "bass": null
-                },
-                {
-                  "at": 10.25,
+                  "at": 8.25,
                   "root": 8,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 11.25,
+                  "at": 10.0,
+                  "root": 10,
+                  "suffix": "",
+                  "bass": null
+                },
+                {
+                  "at": 12.25,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
@@ -7967,39 +7978,65 @@
               ]
             }
           ],
-          "chordGestures": [],
+          "chordGestures": [
+            {
+              "at": 15.25,
+              "intervals": [
+                0,
+                2,
+                5
+              ],
+              "gates": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "arpeggiate": false
+            }
+          ],
           "barRhythms": [
+            {
+              "bar": -1,
+              "left": [],
+              "right": [
+                0
+              ]
+            },
             {
               "bar": 0,
               "left": [
-                0.25,
-                2.25,
-                2.75
+                0.0,
+                2.0,
+                2.5,
+                3.0
               ],
               "right": [
-                0,
-                0.25,
-                1.0,
-                1.75,
-                2.25,
-                3.0
+                0.0,
+                0.75,
+                1.5,
+                2.0,
+                2.75,
+                3.25,
+                3.75
               ]
             },
             {
               "bar": 1,
               "left": [
                 0.0,
-                1.0,
-                1.5,
-                3.25
+                0.5,
+                2.25,
+                3.0
               ],
               "right": [
-                0.25,
+                0.0,
                 0.75,
-                1.0,
+                1.25,
                 1.75,
-                2.25,
+                2.5,
                 2.75,
+                3.0,
+                3.25,
                 3.5,
                 3.75
               ]
@@ -8008,45 +8045,42 @@
               "bar": 2,
               "left": [
                 0.0,
+                0.5,
+                0.75,
                 1.0,
-                1.5,
                 1.75,
-                2.0,
+                2.5,
                 2.75,
-                3.5,
+                3.0,
+                3.25,
                 3.75
               ],
               "right": [
                 0.0,
-                0.25,
-                0.5,
-                0.75,
-                1.0,
+                1.25,
+                1.5,
+                1.75,
                 2.25,
-                2.5,
-                2.75,
-                3.25
+                3.0,
+                3.5
               ]
             },
             {
               "bar": 3,
               "left": [
                 0.0,
-                0.25,
+                0.5,
                 0.75,
-                1.0,
-                1.5,
-                1.75,
-                3.5
+                2.5,
+                3.0
               ],
               "right": [
                 0.0,
-                0.5,
                 1.0,
+                1.25,
+                1.5,
+                1.75,
                 2.0,
-                2.25,
-                2.5,
-                2.75,
                 3.0
               ]
             }
@@ -8067,7 +8101,13 @@
           "mode": "minor",
           "tonic": 2,
           "confidence": "confirmed-boundaries; score-analyzed-key",
-          "nonFourQuarterBars": [],
+          "nonFourQuarterBars": [
+            {
+              "bar": 27,
+              "at": 0,
+              "length": 1.0
+            }
+          ],
           "rightAttacks": 41,
           "leftAttacks": 26,
           "chords": 4,
@@ -8080,7 +8120,13 @@
           "graces": 0,
           "harmony": [
             {
-              "at": 0,
+              "at": 0.0,
+              "root": 0,
+              "suffix": "m7",
+              "bass": null
+            },
+            {
+              "at": 1.0,
               "root": 8,
               "suffix": "",
               "bass": null
@@ -8092,37 +8138,36 @@
               "bass": null
             },
             {
-              "at": 4.0,
+              "at": 5.0,
               "root": 0,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 8.0,
-              "root": 10,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 11.0,
+              "at": 9.0,
               "root": 8,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 12.0,
-              "root": 0,
-              "suffix": "m7",
-              "bass": null
-            },
-            {
-              "at": 16.0,
+              "at": 10.75,
               "root": 10,
               "suffix": "",
               "bass": null
+            },
+            {
+              "at": 13.0,
+              "root": 0,
+              "suffix": "m7",
+              "bass": null
             }
           ],
-          "corrections": [],
+          "corrections": [
+            {
+              "bar": 28,
+              "reason": "Barlines one beat early; printed symbols early/swapped. Harmony rebuilt from sounding bass."
+            }
+          ],
           "simultaneousHands": 12,
           "rightOverHeldBass": 28,
           "carriedBassNotes": 0,
@@ -8149,7 +8194,13 @@
               ],
               "harmony": [
                 {
-                  "at": 0,
+                  "at": 0.0,
+                  "root": 0,
+                  "suffix": "m7",
+                  "bass": null
+                },
+                {
+                  "at": 1.0,
                   "root": 8,
                   "suffix": "",
                   "bass": null
@@ -8180,7 +8231,7 @@
               ],
               "harmony": [
                 {
-                  "at": 0,
+                  "at": 1.0,
                   "root": 8,
                   "suffix": "",
                   "bass": null
@@ -8192,7 +8243,7 @@
                   "bass": null
                 },
                 {
-                  "at": 4.0,
+                  "at": 5.0,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
@@ -8235,14 +8286,14 @@
                   "bass": null
                 },
                 {
-                  "at": 4.0,
+                  "at": 5.0,
                   "root": 0,
                   "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 8.0,
-                  "root": 10,
+                  "at": 9.0,
+                  "root": 8,
                   "suffix": "",
                   "bass": null
                 }
@@ -8278,21 +8329,21 @@
               ],
               "harmony": [
                 {
-                  "at": 11.0,
+                  "at": 9.0,
                   "root": 8,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 12.0,
-                  "root": 0,
-                  "suffix": "m7",
+                  "at": 10.75,
+                  "root": 10,
+                  "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 16.0,
-                  "root": 10,
-                  "suffix": "",
+                  "at": 13.0,
+                  "root": 0,
+                  "suffix": "m7",
                   "bass": null
                 }
               ]
@@ -8360,24 +8411,36 @@
           ],
           "barRhythms": [
             {
-              "bar": 28,
+              "bar": 27,
               "left": [
                 0.0,
-                0.25,
-                1.0,
-                1.5,
-                2.0,
-                3.0,
-                3.5
+                0.25
               ],
               "right": [
                 0.0,
                 0.5,
+                0.75
+              ]
+            },
+            {
+              "bar": 28,
+              "left": [
+                0.0,
+                0.5,
+                1.0,
+                2.0,
+                2.5,
+                3.0,
+                3.5
+              ],
+              "right": [
                 0.75,
+                1.25,
                 1.75,
-                2.25,
+                2.0,
                 2.75,
                 3.0,
+                3.25,
                 3.75
               ]
             },
@@ -8386,19 +8449,19 @@
               "left": [
                 0.0,
                 0.5,
-                1.0,
-                1.5,
-                3.5
+                2.5,
+                3.0
               ],
               "right": [
                 0.0,
-                0.25,
                 0.75,
-                1.0,
+                1.25,
                 1.75,
                 2.25,
                 2.75,
+                3.0,
                 3.25,
+                3.5,
                 3.75
               ]
             },
@@ -8406,59 +8469,47 @@
               "bar": 30,
               "left": [
                 0.0,
-                1.0,
-                1.75,
-                2.0,
-                2.75,
-                3.5,
-                3.75
-              ],
-              "right": [
-                0.0,
-                0.25,
-                0.5,
                 0.75,
-                1.0,
-                1.5,
-                2.25,
-                2.75,
-                3.25
-              ]
-            },
-            {
-              "bar": 31,
-              "left": [
-                0.0,
-                0.25,
                 1.0,
                 1.75,
                 2.5,
+                2.75,
+                3.0,
                 3.25
               ],
               "right": [
                 0.0,
                 0.5,
-                0.75,
-                1.0,
-                1.5,
+                1.25,
                 1.75,
                 2.25,
-                2.5,
                 3.0,
                 3.5,
                 3.75
               ]
             },
             {
-              "bar": 32,
+              "bar": 31,
               "left": [
-                0.0
+                0.0,
+                0.75,
+                1.5,
+                2.25,
+                3.0
               ],
               "right": [
                 0.0,
-                0.25,
                 0.5,
-                0.75
+                0.75,
+                1.25,
+                1.5,
+                2.0,
+                2.5,
+                2.75,
+                3.0,
+                3.25,
+                3.5,
+                3.75
               ]
             }
           ]
@@ -8480,8 +8531,18 @@
           "confidence": "confirmed-boundaries; score-analyzed-key",
           "nonFourQuarterBars": [
             {
+              "bar": 63,
+              "at": 0,
+              "length": 1.0
+            },
+            {
               "bar": 71,
-              "at": 28.0,
+              "at": 29.0,
+              "length": 3.0
+            },
+            {
+              "bar": 73,
+              "at": 36.0,
               "length": 3.0
             }
           ],
@@ -8497,7 +8558,13 @@
           "graces": 0,
           "harmony": [
             {
-              "at": 0,
+              "at": 0.0,
+              "root": 0,
+              "suffix": "m7",
+              "bass": null
+            },
+            {
+              "at": 1.0,
               "root": 8,
               "suffix": "",
               "bass": null
@@ -8509,61 +8576,72 @@
               "bass": null
             },
             {
-              "at": 4.0,
+              "at": 5.0,
               "root": 0,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 8.0,
+              "at": 9.0,
+              "root": 8,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 10.75,
               "root": 10,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 11.0,
-              "root": 8,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 12.0,
-              "root": 0,
-              "suffix": "m",
-              "bass": null
-            },
-            {
-              "at": 16.0,
-              "root": 8,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 20.0,
+              "at": 13.0,
               "root": 0,
               "suffix": "m7",
               "bass": null
             },
             {
-              "at": 24.0,
-              "root": 10,
-              "suffix": "",
-              "bass": null
-            },
-            {
-              "at": 27.0,
+              "at": 17.0,
               "root": 8,
               "suffix": "",
               "bass": null
             },
             {
-              "at": 28.0,
+              "at": 18.75,
+              "root": 10,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 21.0,
+              "root": 0,
+              "suffix": "m7",
+              "bass": null
+            },
+            {
+              "at": 25.0,
+              "root": 8,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 26.75,
+              "root": 10,
+              "suffix": "",
+              "bass": null
+            },
+            {
+              "at": 29.0,
               "root": 0,
               "suffix": "m7",
               "bass": null
             }
           ],
-          "corrections": [],
+          "corrections": [
+            {
+              "bar": 64,
+              "reason": "Barlines one beat early; printed symbols early/swapped. Harmony rebuilt from sounding bass."
+            }
+          ],
           "simultaneousHands": 24,
           "rightOverHeldBass": 28,
           "carriedBassNotes": 0,
@@ -8613,19 +8691,19 @@
               ],
               "harmony": [
                 {
-                  "at": 11.0,
-                  "root": 8,
+                  "at": 10.75,
+                  "root": 10,
                   "suffix": "",
                   "bass": null
                 },
                 {
-                  "at": 12.0,
+                  "at": 13.0,
                   "root": 0,
-                  "suffix": "m",
+                  "suffix": "m7",
                   "bass": null
                 },
                 {
-                  "at": 16.0,
+                  "at": 17.0,
                   "root": 8,
                   "suffix": "",
                   "bass": null
@@ -8865,25 +8943,36 @@
           ],
           "barRhythms": [
             {
+              "bar": 63,
+              "left": [
+                0.0,
+                0.25
+              ],
+              "right": [
+                0.0,
+                0.5,
+                0.75
+              ]
+            },
+            {
               "bar": 64,
               "left": [
                 0.0,
-                0.25,
-                1.0,
-                1.75,
+                0.75,
+                1.5,
+                2.0,
                 2.5,
+                2.75,
                 3.0,
                 3.5,
                 3.75
               ],
               "right": [
                 0.0,
-                0.5,
                 0.75,
-                1.0,
-                1.75,
-                2.5,
-                3.0
+                1.5,
+                2.0,
+                3.25
               ]
             },
             {
@@ -8891,66 +8980,67 @@
               "left": [
                 0.0,
                 0.5,
-                0.75,
                 1.0,
-                1.5,
-                2.0,
+                1.25,
                 2.25,
-                3.25,
-                3.5,
-                3.75
-              ],
-              "right": [
-                0.25,
-                1.0,
-                1.75,
-                3.0
-              ]
-            },
-            {
-              "bar": 66,
-              "left": [
-                0.0,
-                0.25,
-                0.5,
-                1.0,
-                1.5,
-                1.75,
-                2.0,
+                2.5,
                 2.75,
-                3.25,
-                3.5,
-                3.75
-              ],
-              "right": [
-                0.0,
-                0.75,
-                1.0,
-                1.75,
-                2.25,
-                2.75
-              ]
-            },
-            {
-              "bar": 67,
-              "left": [
-                0.0,
-                0.25,
-                0.5,
-                1.0,
-                1.5,
-                2.0,
-                2.25,
-                2.75,
+                3.0,
                 3.25,
                 3.5
               ],
               "right": [
                 0.0,
                 0.75,
+                2.0,
+                3.0,
+                3.75
+              ]
+            },
+            {
+              "bar": 66,
+              "left": [
+                0.0,
+                0.5,
+                0.75,
                 1.0,
                 1.75,
+                2.25,
+                2.5,
                 2.75,
+                3.0,
+                3.25,
+                3.5
+              ],
+              "right": [
+                0.0,
+                0.75,
+                1.25,
+                1.75,
+                3.0,
+                3.75
+              ]
+            },
+            {
+              "bar": 67,
+              "left": [
+                0.0,
+                0.5,
+                1.0,
+                1.25,
+                1.75,
+                2.25,
+                2.5,
+                3.0,
+                3.25
+              ],
+              "right": [
+                0.0,
+                0.75,
+                1.75,
+                2.75,
+                3.0,
+                3.5,
                 3.75
               ]
             },
@@ -8958,68 +9048,66 @@
               "bar": 68,
               "left": [
                 0.0,
-                0.25,
                 1.0,
-                2.0,
-                2.75,
-                3.5
+                1.75,
+                2.5,
+                3.0,
+                3.25,
+                3.5,
+                3.75
               ],
               "right": [
                 0.0,
                 0.5,
                 0.75,
-                1.0,
-                1.5,
+                1.25,
                 1.75,
                 2.25,
                 2.75,
-                3.25,
-                3.75
+                3.0,
+                3.5
               ]
             },
             {
               "bar": 69,
               "left": [
                 0.0,
-                0.25,
                 0.5,
-                0.75,
-                1.0,
                 1.5,
-                2.5
+                3.0,
+                3.75
               ],
               "right": [
                 0.0,
-                0.5,
+                0.75,
                 1.0,
-                1.75,
-                2.0,
-                2.25,
+                1.25,
+                1.5,
                 2.5,
-                3.5,
-                3.75
+                2.75,
+                3.0,
+                3.25,
+                3.5
               ]
             },
             {
               "bar": 70,
               "left": [
                 0.0,
+                0.5,
                 0.75,
                 1.0,
-                1.5,
+                1.25,
                 1.75,
-                2.0,
                 2.25,
+                2.5,
                 2.75,
+                3.0,
                 3.25,
                 3.5,
                 3.75
               ],
-              "right": [
-                0.0,
-                0.25,
-                0.5
-              ]
+              "right": []
             },
             {
               "bar": 71,
@@ -9029,28 +9117,23 @@
                 0.5,
                 0.75,
                 1.0,
-                1.25,
-                1.5,
-                1.75,
                 2.0
               ],
               "right": [
+                0.0,
                 1.0,
+                1.5,
                 2.0,
-                2.5
+                2.25,
+                2.5,
+                2.75
               ]
             },
             {
               "bar": 72,
-              "left": [
-                0.0
-              ],
+              "left": [],
               "right": [
-                0.0,
-                0.25,
-                0.5,
-                0.75,
-                1.0
+                0.0
               ]
             },
             {

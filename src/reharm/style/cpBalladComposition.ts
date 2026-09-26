@@ -152,6 +152,45 @@ function activeGesture(g: Gesture) {
     g.right[0].at <= 1 && g.right.at(-1)!.at >= 6
 }
 
+/*
+  CHẤT LIỆU THEO SHEET (điệu khai `cpSoloSheetTexture`). Người dùng 26/9 nghe solo Ballad Để em: *"quá nhiều chỗ dặm hợp âm,
+  còn ít chỗ chạy nốt và ko có nhiều kỹ thuật hay những chỗ đánh giật đặc trưng của Cà Pháo"*.
+  Đích = số đo sheet cùng loại đoạn (20 đoạn · 7 sheet ballad CP, `scripts/audit_cp_ballad_solo_hoc.py`,
+  `__tests__/cpSoloTexture.probe.ts`): cụm ≥ 3 nốt · quãng tám · nốt trong câu chạy · phách giật · cú mỗi phách.
+  Phách giật = trong một phách có móc kép lệch mà không phải chuỗi bốn móc kép — `x..x` (chấm dôi) 13–19% phách, `.x..` ·
+  `.x.x` · `...x` · `xx.x` · `x.xx` · `..xx` · `.xx.`. Bộ soạn cũ trên Để em La thứ: dặm 38% · 21% · 53% (thân câu dạo lấy 34/72 ô
+  từ ĐOẠN KẾT; Chúng Ta kết 88% là cụm). Chấm ĐỘ LỆCH khỏi đích (thừa lẫn thiếu) — lượt đầu chỉ thưởng chạy/giật thì vọt quá
+  (dặm 2% · nốt chạy 55% · giật 60%). Trọng số là lựa chọn của Claude, không phải thông số của CP.
+*/
+const SHEET_TEXTURE: Record<string, { cluster: number; octave: number; run: number; giat: number; density: number }> = {
+  intro: { cluster: .14, octave: .05, run: .17, giat: .32, density: 1.51 },
+  interlude: { cluster: .10, octave: .06, run: .45, giat: .44, density: 2.10 },
+  outro: { cluster: .34, octave: .10, run: .23, giat: .49, density: 1.49 },
+}
+const GIAT = new Set(['x..x', '.x..', '...x', '.x.x', 'xx.x', 'x.xx', '..xx', '.xx.'])
+export function cpSheetTextureCost(g: { right: readonly Attack[] }, kind: string) {
+  const target = SHEET_TEXTURE[kind] ?? SHEET_TEXTURE.interlude
+  const r = g.right, n = Math.max(1, r.length)
+  const cluster = r.filter(e => e.tones.length >= 3).length / n
+  const octave = r.filter(e => e.tones.some(t => e.tones.includes(t + 12))).length / n
+  let run = 0, runNotes = 0
+  r.forEach((e, i) => {
+    const close = i > 0 && e.at - r[i - 1].at <= .501 && r[i - 1].tones.length === 1
+    run = e.tones.length === 1 ? (close ? run + 1 : 1) : 0
+    runNotes += run === 4 ? 4 : run > 4 ? 1 : 0
+  })
+  let beats = 0, giat = 0
+  for (let b = 0; b < 8; b++) {
+    const inBeat = r.filter(e => e.at >= b - .001 && e.at < b + .999).map(e => e.at - b)
+    if (!inBeat.length) continue
+    beats += 1
+    if (GIAT.has([0, .25, .5, .75].map(p => inBeat.some(a => near(a, p)) ? 'x' : '.').join(''))) giat += 1
+  }
+  return Math.abs(cluster - target.cluster) * 2.5 + Math.max(0, octave - target.octave - .05) * 2 +
+    Math.abs(runNotes / n - target.run) + Math.abs((beats ? giat / beats : 0) - target.giat) +
+    Math.abs(r.length / 8 - target.density) * .3
+}
+
 function gestureTechniques(g: Gesture) {
   return [
     g.right.some(e => e.tones.some(n => e.tones.includes(n + 12))) && 'octaves',
@@ -208,7 +247,15 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const bars = options.caPhaoFull ? kind === 'interlude' ? 12 : kind === 'intro' ? 8 : 6 : kind === 'interlude' ? 8 : 4
   const lengthBeats = bars * 4
   const ownSong = style.cpSoloSong ?? ''
-  const native = cpBalladGestures.filter(g => g.source.mode === key.scale && activeGesture(g))
+  const textured = !!style.cpSoloSheetTexture
+  // Ô tick lượt 4 (Ballad Để em; người dùng chấm lượt 3 7/10, "train thêm lần nữa để xem có thể hay hơn ko"). ĐÃ DUYỆT 26/9
+  // ("nghe rất hay, hãy giữ tick đó lại") — giữ ô tick, đừng gộp vào mặc định khi người dùng chưa bảo (`cpBalladThu`).
+  // Lượt 5 (giữ vai nốt nguồn theo bậc, thưởng giữ vai −2.4) đã bị bác: "ko hay như lượt 4" — xem CA-PHAO-BALLAD-DE-EM.md.
+  const thu = !!options.cpBalladThu && !!style.cpSoloOwnRhythm && !!ownSong
+  const allNative = cpBalladGestures.filter(g => g.source.mode === key.scale && activeGesture(g))
+  // Thân câu dạo/giang không lấy cử chỉ của đoạn kết (dặm dày, câu đóng) khi điệu đòi chất liệu theo sheet.
+  const bodyOnly = textured && kind !== 'outro' ? allNative.filter(g => g.source.kind !== 'outro') : []
+  const native = bodyOnly.length ? bodyOnly : allNative
   const routes = harmonicGestures.filter(g => g.source.mode === key.scale)
   if (!routes.length || !native.length) return empty('Chưa đủ câu ballad có giọng/hòa âm kiểm chứng.')
   const harmony: Array<Harmony & { source: string }> = []
@@ -244,7 +291,17 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const cadenceAt = lengthBeats - 8
   // Functional adaptations of CEC ii-V-I and ACDD V-i, not borrowed absolute
   // major pitches. The actual next sung chord owns an intro/interlude's cadence.
-  if (kind === 'outro') harmony.push(
+  /*
+    THỬ — dẫn vào hát / đóng kết bằng câu đóng của chính bài (Để Em Rời Xa: bVI → bVII | i ở cả dạo · giang · kết). Số đo
+    `caPhaoFullSolos.json`: 0/6 đoạn dạo/giang giọng thứ của CP dẫn bằng ii–V (Để Em 2/2 bVI–bVII | i · Chưa Bao Giờ v–iv | i và
+    bVI–i | i · Chúng Ta i | v); 0/3 đoạn kết thứ (Để Em · Chưa Bao Giờ · Chúng Ta) đóng bằng V7–i. Mặc định (Codex) vẫn là
+    ii–V của hợp âm hát kế / V7–i — học từ Có Em Chờ và ACDD.
+  */
+  const ownCadence = thu && key.scale === 'minor' ? cpBalladGestures.filter(t => t.source.song === ownSong &&
+    t.source.kind === kind && t.harmony.at(-1)?.root === 0 && reliableHarmony(t))
+    .reduce<Gesture | undefined>((a, b) => !a || b.from > a.from ? b : a, undefined) : undefined
+  if (ownCadence) harmony.push(...ownCadence.harmony.map(h => ({ ...h, at: cadenceAt + h.at, source: `cadence:${ownCadence.id}` })))
+  else if (kind === 'outro') harmony.push(
     { at: cadenceAt, root: 7, suffix: take % 2 ? '7sus4' : '7', bass: null, source: 'cadence:ACDD-V-i/CEC-V-I' },
     ...(take % 2 ? [{ at: cadenceAt + 2, root: 7, suffix: '7', bass: null, source: 'cadence:sus-resolution' }] : []),
     { at: cadenceAt + 4, root: 0, suffix: key.scale === 'minor' ? 'm9' : 'maj9', bass: null, source: 'cadence:tonic' },
@@ -257,13 +314,30 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const chords = harmony.map(h => ({ ...chordOf(h, key.tonic), voicingStyle: 'ca-phao' as const }))
   const beatsEach = harmony.map((h, i) => (harmony[i + 1]?.at ?? lengthBeats) - h.at)
   const chordIndex = (at: number) => Math.max(0, harmony.findLastIndex(h => h.at <= at + .00001))
-  const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: options.dropRoot }), style, { beatsEach })
+  // Điệu khai `soloCell`: tay trái dưới câu solo theo ô ấy, không theo ô đệm hát (Ballad Để em — đệm có walking bass và
+  // câu chạy; cũ: ô 2 thành 12 tiếng gõ lặp gốc D3 dưới câu solo).
+  const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: options.dropRoot }),
+    style.soloCell ? { ...style, cell: style.soloCell } : style, { beatsEach })
   const slots: Slot[] = [], traces: NonNullable<PhraseSection['compositionSources']> = []
   const techniques: NonNullable<PhraseSection['compositionTechniques']> = []
   const leftGestures: Array<{ at: number; gate: number; voices: number; octave: boolean; source: string; answer: boolean; touch: number }> = []
   const soloPunches: number[] = []
   const used = new Set<string>()
   const usedTechniques = new Set<string>()
+  /*
+    TIẾT TẤU BÀI GỐC (`cpSoloOwnRhythm`, Ballad Để em). Người dùng 26/9: *"Câu solo của Ballad để em hiện tại còn quá rời rạc
+    và ko khớp với tiết tấu điệu … train lại bộ soạn sao nó có thể dùng những kiến thức học được từ các câu solo trong sheet
+    ballad của Cà Pháo mà soạn ra câu có đầy đủ kỹ thuật và khớp tiết tấu Để em"*. Cũ: mỗi khung hai ô bốc nguyên cử chỉ một
+    bài khác, kèm tiết tấu bài ấy → câu chắp vá. Nay tiết tấu mọi khung từ solo bài gốc (dạo/giang ← dạo/giang, kết ← kết),
+    giai điệu/hợp âm/kỹ thuật vẫn từ mọi sheet (luật người dùng: tiết tấu từ sheet cùng điệu, cao độ mượn sheet khác của thầy).
+  */
+  const ownRhythm = !!style.cpSoloOwnRhythm && !!ownSong
+  const ownPool = ownRhythm ? cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t) &&
+    (kind === 'outro' ? t.source.kind === 'outro' : t.source.kind !== 'outro')) : []
+  // Câu đóng đặc trưng của bài ở cuối đoạn (Để Em Rời Xa dạo ô 2–3: chuỗi quãng 4 vút lên G6+C7 rồi cụm Dm9).
+  const closing = ownCadence && ownPool.includes(ownCadence) ? ownCadence :
+    ownPool.filter(t => t.source.kind === kind).reduce<Gesture | undefined>((a, b) => !a || b.from > a.from ? b : a, undefined)
+  const usedRhythms = new Set<string>()
   let statement: Gesture | undefined
   let previousRhythm: Gesture | undefined
   let previousMelody: Gesture | undefined
@@ -290,7 +364,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       return [{ g, fit, score: fit.cost + (used.has(g.id) ? .5 : 0) + (g.source.kind === kind ? 0 : .15) +
         mismatch * .65 + (g.id === route ? -.45 : 0) + (g.source.song === ownSong ? -.25 : 0) +
         slowdown * 1.2 + breathingCost(g) - (continuation ? .4 : 0) +
-        (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 }]
+        (density > 3 && !options.caPhaoFull ? .6 : 0) - newTechniques * .22 + random() * .75 +
+        (textured ? cpSheetTextureCost(g, kind) : 0) }]
     }).sort((a, b) => a.score - b.score)
     if (!ranked.length) return empty('Không có câu nguồn chuyển được sang tiết tấu/BPM hiện tại mà vẫn giữ ý câu.')
     let { g, fit } = ranked[0]
@@ -302,9 +377,17 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     statement ??= g
     used.add(g.id)
     let rhythm = g
+    if (ownRhythm) {
+      const choices = ownPool.flatMap(t => {
+        const adapted = fitGesture(t, backing, start, bpm)
+        return adapted ? [{ t, adapted, cost: adapted.cost + (usedRhythms.has(t.id) ? .35 : 0) +
+          (t.id === previousRhythm?.id ? .6 : 0) + Math.abs(t.right.length - g.right.length) * .03 +
+          (start === lengthBeats - 8 && t === closing ? -.8 : 0) + random() * .4 }] : []
+      }).sort((a, b) => a.cost - b.cost)
+      if (choices.length) { rhythm = choices[0].t; fit = choices[0].adapted; usedRhythms.add(rhythm.id) }
     // The song's two-hand technique can cross mode, its melody/harmony cannot.
     // Try one local cell per phrase; the rest retains the minor donors' phrasing.
-    if (ownSong && !native.some(t => t.source.song === ownSong) && start === 8) {
+    } else if (ownSong && !native.some(t => t.source.song === ownSong) && start === 8) {
       const ownTiming = cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
         return adapted && breathingCost(t) <= breathingCost(g) && (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
@@ -315,10 +398,11 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     }
     // Unknown-mode scores can teach coordinated timing only. Their pitches and
     // harmony never enter the line; resample the known-mode contour by phase.
-    if (rhythm === g && random() < .25 && gestureTechniques(g).every(t => usedTechniques.has(t))) {
+    if (!ownRhythm && rhythm === g && random() < .25 && gestureTechniques(g).every(t => usedTechniques.has(t))) {
       const timing = cpBalladGestures.filter(t => t.source.mode === 'unknown' && activeGesture(t)).flatMap(t => {
         const adapted = fitGesture(t, backing, start, bpm)
         return adapted && breathingCost(t) <= breathingCost(g) && Math.abs(t.right.length - g.right.length) <= 3 &&
+          (!textured || cpSheetTextureCost(t, kind) <= cpSheetTextureCost(g, kind) + .1) &&
           (!previousRhythm || previousRhythm.right.filter(e => e.at >= 4).length <=
             2 * t.right.filter(e => e.at < 4).length) ? [{ t, adapted }] : []
       })
@@ -342,11 +426,15 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const after = g.right[sourceIndex + 1]
       const rhythmNext = rhythm.right[i + 1]
       const h = g.source.harmony.findLast(h => h.at <= g.from + src.at)!
-      slots.push({ at: start + e.at, gate: e.gates.at(-1)!, gates: e.gates, voices: Math.min(4, e.tones.length),
-        octave: e.tones.some(n => e.tones.includes(n + 12)),
+      // Tiết tấu bài gốc đánh một nốt DÀI (≥ ½ phách), câu nguồn giai điệu có bè / quãng tám / cụm → nhận kỹ thuật ấy; nốt
+      // móc kép trong câu chạy giữ nốt đơn (nhận cả nốt ngắn thì bè quãng 3/6 lên 28–37% so với sheet 8–13%, nốt chạy tụt còn
+      // 11%). Bè riêng của bài gốc (quãng 4 C+F, pedal C4) giữ nguyên.
+      const v = ownRhythm && rhythm !== g && e.tones.length === 1 && e.gates.at(-1)! >= .5 && src.tones.length >= 2 ? src : e
+      slots.push({ at: start + e.at, gate: e.gates.at(-1)!, gates: e.gates, voices: Math.min(4, v.tones.length),
+        octave: v.tones.some(n => v.tones.includes(n + 12)),
         motion: Math.max(-12, Math.min(12, (tops[i] - tops[Math.max(0, i - 1)]) * contourScale)),
         height: (tops[i] - midpoint) * contourScale,
-        intervals: e.tones.map(n => n - Math.max(...e.tones)),
+        intervals: v.tones.map(n => n - Math.max(...v.tones)),
         source: rhythm.id,
         cluster: !!rhythmNext && rhythmNext.at - rhythm.right[i].at <= .751 &&
           Math.abs(Math.max(...rhythmNext.tones) - Math.max(...e.tones)) <= 4 &&
@@ -356,8 +444,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
             .every(d => Math.abs(d) > 0 && Math.abs(d) <= 2),
         sourceTone: pc(Math.max(...src.tones) - h.root), sourceChord: h,
         approach: rhythm === g ? cpBalladApproaches.find(a => a.source === g.source.id && near(a.at, g.from + src.at)) : undefined,
-        dyad: e.tones.length === 2 ? [3, 4].includes(e.tones[1] - e.tones[0]) ? 'third' :
-          [8, 9].includes(e.tones[1] - e.tones[0]) ? 'sixth' : undefined : undefined,
+        dyad: v.tones.length === 2 ? [3, 4].includes(v.tones[1] - v.tones[0]) ? 'third' :
+          [8, 9].includes(v.tones[1] - v.tones[0]) ? 'sixth' : undefined : undefined,
         staccato: e.articulations.some(a => a === 'staccato'), roll: e.arpeggiate,
         touch: cpBalladTouch(rhythm.right, rhythm.right[i]),
         graceOffsets: rhythm === g ? rhythm.graces.filter(n => n.hand === 'right' && near(n.at, rhythm.right[i].at))
@@ -383,6 +471,20 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const pitches = Array.from({ length: range.high - range.low + 1 }, (_, i) => i + range.low)
   const scale = new Set(degreesOf(key.scale).map(d => pc(key.tonic + d.semitones)))
   const stable = chords.map(c => new Set(c.quality.intervals.map(n => pc(c.root + n))))
+  /*
+    THỬ — nốt màu (9 · 11 · 13 …) ở bất kỳ tiếng nào, kể cả trọng âm và nốt dài, khi nốt nguồn cùng vị trí mang ĐÚNG vai ấy trên
+    cùng chất hợp âm: nốt đến từ ô nguồn, không bốc túi nốt. Số đo: nốt đỉnh đúng phách là nốt hợp âm 42–80% (18 đoạn · 6 sheet
+    rõ giọng trong `caPhaoFullSolos.json`), bộ soạn lượt 3 98–100%; bậc 9 16% · 11 10% · 13 5% (20 đoạn · 7 sheet, md Cà Pháo
+    "Solo ballad — phân tích 26/9"), lượt 3 bậc 9 0–2% · 11 2–3%, lượt 4 3–11% · 4–8%. Luật mặc định (Codex):
+    trọng âm/nốt dài bám nốt hợp âm, nốt ngoài chỉ ở tiếng lướt ngắn và phải giải liền bậc — nhưng CP rời nốt màu bằng bước
+    nhảy nhiều hơn (128 so với 158 liền bậc), nên nốt màu ở đây không bị ép giải. Bỏ nốt ngoài gam và nốt tránh (nửa cung trên
+    một nốt hợp âm).
+  */
+  const colorPc = lineSlots.map(s => {
+    const ci = chordIndex(s.at), c = chords[ci], n = pc(c.root + s.sourceTone)
+    return thu && !stable[ci].has(n) && scale.has(n) && chordType(c) === chordType(chordOf(s.sourceChord)) &&
+      ![...stable[ci]].some(t => pc(n - t) === 1) ? n : -1
+  })
   // Source-attested scalar runs may cross two passing tones before landing.
   // Forcing EVERY passing tone to land immediately turns scales into arpeggios.
   let paths = [{ notes: [] as number[], cost: 0, unresolved: 0 }]
@@ -394,12 +496,12 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       Math.min(s.gate, (lineSlots[i + 1]?.at ?? lengthBeats) - s.at) <= .5 && (s.voices === 1 || s.octave)
     const candidates = pitches.filter(n => final ? (kind === 'outro' ? pc(n) === key.tonic :
       stable[ci].has(pc(n)) && [pc(target.root - 1), pc(target.root + 2)].includes(pc(n))) :
-      stable[ci].has(pc(n)) || shortWeak && scale.has(pc(n)) &&
+      stable[ci].has(pc(n)) || colorPc[i] === pc(n) || shortWeak && scale.has(pc(n)) &&
       !(c.quality.intervals.includes(3) && pc(n - c.root) === 4) && !(c.quality.intervals.includes(4) && pc(n - c.root) === 3))
     const allowed = candidates.length ? candidates : pitches.filter(n => stable[ci].has(pc(n)))
     const nextPaths = paths.flatMap(path => allowed.flatMap(n => {
       const before = path.notes.at(-1), prevSlot = lineSlots[i - 1]
-      const passing = before !== undefined && !stable[chordIndex(prevSlot.at)].has(pc(before))
+      const passing = before !== undefined && !stable[chordIndex(prevSlot.at)].has(pc(before)) && colorPc[i - 1] !== pc(before)
       if (before !== undefined && (Math.abs(n - before) > 12 || passing &&
         (Math.abs(n - before) > 2 || n === before || !stable[ci].has(pc(n)) &&
           (!s.stepwise || path.unresolved >= 2 || Math.sign(n - before) !== Math.sign(before - path.notes.at(-2)!))))) return []
@@ -417,8 +519,8 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       const joinLeap = join ? Math.max(0, Math.abs(delta) - 4) * 3 : 0
       const cost = path.cost + Math.abs(delta - s.motion) * .55 + Math.abs(n - centers[i]) * .25 + leap * .3 +
         silence * 12 + joinLeap + (collapsed ? 2.5 : 0) + (reversed ? 1.5 : 0) +
-        (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -1.6 : 0) + (stable[ci].has(pc(n)) ? 0 : .6)
-      return [{ notes: [...path.notes, n], cost, unresolved: stable[ci].has(pc(n)) ? 0 : path.unresolved + 1 }]
+        (repeat ? 5 : 0) + (loop ? 3 : 0) + (role ? -1.6 : 0) + (stable[ci].has(pc(n)) || colorPc[i] === pc(n) ? 0 : .6)
+      return [{ notes: [...path.notes, n], cost, unresolved: stable[ci].has(pc(n)) || colorPc[i] === pc(n) ? 0 : path.unresolved + 1 }]
     })).sort((a, b) => a.cost - b.cost)
     if (!nextPaths.length) return empty('Không tìm được giai điệu nối đúng hòa âm trong tầm đàn; bỏ câu lỗi.')
     const endings = new Set<string>()
@@ -451,11 +553,20 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const right: TimelineEvent[] = []
   lineSlots.forEach((s, i) => {
     const top = melody[i], ci = chordIndex(s.at), notes = [top]
+    if (colorPc[i] === pc(top)) techniques.push({ source: s.source, startBeat: s.at, kind: 'color-tone' })
     if (s.octave && top - 12 >= range.low) {
       notes.unshift(top - 12)
     }
     while (notes.length < s.voices) {
       const interval = s.intervals[Math.max(0, s.intervals.length - notes.length - 1)] ?? -4 * notes.length
+      // Bè quãng 4 / quãng 5 của bài gốc (Để Em Rời Xa: C4+F4 trên Dm, G4+C5 trên C — màu treo, bè dưới là 7 hay 9 của hợp
+      // âm) giữ đúng quãng khi nốt dưới nằm trong gam. Cũ: bè dưới chỉ chọn trong nốt hợp âm → quãng 4 thành quãng 3.
+      const perfect = top + interval
+      if (ownRhythm && notes.length === 1 && [-5, -7].includes(interval) && scale.has(pc(perfect)) && perfect >= range.low) {
+        notes.unshift(perfect)
+        techniques.push({ source: s.source, startBeat: s.at, kind: 'fourth-dyad' })
+        continue
+      }
       const choices = pitches.filter(n => n < top && n >= top - 12 &&
         (!s.dyad || (s.dyad === 'third' ? [3, 4] : [8, 9]).includes(top - n)) &&
         notes.every(held => Math.abs(held - n) >= 2) && stable[ci].has(pc(n)))

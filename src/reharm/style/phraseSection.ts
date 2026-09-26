@@ -40,6 +40,11 @@ export interface PhraseSectionOptions {
   caPhaoFullSource?: string
   /** Actual available keys for full CP solos, independent of the short-solo range. */
   caPhaoKeyboardRange?: { low: MidiNote; high: MidiNote }
+  /**
+   * Ô tick nghe thử — solo Ballad Để em lượt 4: nốt màu theo vai nốt nguồn, dẫn vào hát / đóng kết bằng câu đóng của bài.
+   * Chỉ có tác dụng với điệu khai `cpSoloOwnRhythm`. Người dùng duyệt 26/9 và dặn giữ ô tick — đừng gộp vào mặc định khi chưa bảo.
+   */
+  cpBalladThu?: boolean
   kind: 'intro' | 'outro' | 'interlude'
   key: { tonic: PitchClass; scale: ScaleType } | null
   style: StylePattern
@@ -130,7 +135,7 @@ export interface PhraseSection {
   adaptationNote?: string
   compositionSources?: { bar: number; start: number; end: number; harmony: string; melody: string; rhythm: string;
     donorGenre: string; mode: string; sourceKind: string }[]
-  compositionTechniques?: { source: string; startBeat: number; kind: 'neighbor-cluster' | 'octave-line' | 'left-answer' | 'third-dyad' | 'sixth-dyad' | 'semitone-approach' | 'written-grace' }[]
+  compositionTechniques?: { source: string; startBeat: number; kind: 'neighbor-cluster' | 'octave-line' | 'left-answer' | 'third-dyad' | 'sixth-dyad' | 'fourth-dyad' | 'color-tone' | 'semitone-approach' | 'written-grace' }[]
 }
 
 /**

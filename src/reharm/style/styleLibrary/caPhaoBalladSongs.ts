@@ -199,8 +199,8 @@ const acddChorus: StylePattern = {
 }
 
 /*
-  Để Em Rời Xa — soạn lại 25/9/2026 theo cách Codex dựng Ballad DERX (Reference/BALLAD-DERX.md),
-  chờ nghe duyệt. Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md, `scripts/audit_cp_de_em.py`.
+  Để Em Rời Xa — soạn lại 25/9/2026 theo cách Codex dựng Ballad DERX (Reference/BALLAD-DERX.md). Đệm đã nghe duyệt 26/9/2026
+  (bản 36); solo dạo · giang · kết đã nghe duyệt 26/9/2026 (lượt 4, ô tick `cpBalladThu`). Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md, `scripts/audit_cp_de_em.py`.
   Beat đếm trên "cửa sổ k" = [ô XML k phách 2, ô XML k+1 phách 2): vạch nhịp sheet lệch nhạc một phách.
 
   Giữ NGUYÊN mốc gõ của DERX (phiên 4–5, điệp 24–25). Người dùng nghe DERX: "bám gần tiết tấu
@@ -212,10 +212,33 @@ const acddChorus: StylePattern = {
   2. Cú tay phải vốn là cụm hai nốt trong sheet thì trả đủ hai nốt (DERX rút còn nốt dưới).
      Nốt trên là cao độ giai điệu ở chỗ ấy, nhưng chỉ ở cú có bè — không chép nhịp giai điệu.
 */
+// Tay trái dưới câu solo (dạo · giang · kết), chép khuôn tay trái trong CHÍNH các đoạn solo của sheet (giang tấu ô thật
+// 28–29; `scripts/audit_cp_ballad_solo_hoc.py`, `tools/cp_ballad_solos.py` đã nắn vạch nhịp). n = 15 ô solo của bài:
+// - ô hai hợp âm (bVI → bVII), ô 28: phách 1 gốc thấp + 5 + 8, 5₃ ở 1&, 8 ở 2, gốc lại ở phách 3, 5₃ gõ tới cuối ô;
+// - ô một hợp âm (i), ô 29 (cùng khuôn ở dạo ô 1 · 3): gốc thấp, 8 NGÂN hai phách, 5₃ ở 3& và 4.
+// Tay trái thưa và ngân để tay phải chạy trên nền bass — khác hẳn đệm hát (walking, câu chạy).
+const DE_EM_SOLO_LEFT: RhythmCell = {
+  lengthBeats: 8,
+  right: [],
+  left: [
+    hit(0, .5, [tone(0), tone(2, 12), tone(0, 12)], .85), hit(.5, .5, [tone(2, 12)]), hit(1, 1, [tone(0, 12)]),
+    hit(2, .5, [tone(0), tone(0, 12)], .8), hit(2.5, .5, [tone(2, 12)]), hit(3, .5, [tone(2, 12)]), hit(3.5, .5, [tone(2, 12)]),
+    hit(4, .5, [tone(0)], .85), hit(4.5, 2, [tone(0, 12)]), hit(6.5, .5, [tone(2, 12)]), hit(7, 1, [tone(2, 12)]),
+  ],
+}
 const deEmCommon = {
   timeSignature: '4/4', beatsPerMeasure: 4, feel: 'straight-block-chord' as const,
   verified: true, releaseRatio: 1, leftHandTop: 59,
   rightHandRegister: { rootFloor: 55, low: 60, high: 74 },
+  soloCell: DE_EM_SOLO_LEFT,
+  // Solo chọn cử chỉ theo chất liệu sheet (người dùng 26/9: "quá nhiều chỗ dặm hợp âm, còn ít chỗ chạy nốt").
+  cpSoloSheetTexture: true,
+  // Mô phỏng câu solo full khoá đúng bài gốc (người dùng 26/9: nút Để em mô phỏng ra câu Chưa Bao Giờ — thiếu trường này thì
+  // mô phỏng lấy đoạn dài nhất cùng điệu/giọng). Soạn câu mới cũng ưu tiên nhẹ vật liệu bài này.
+  cpSoloSong: 'Để Em Rời Xa',
+  // Tiết tấu solo từ chính solo Để Em Rời Xa, giai điệu/kỹ thuật học từ mọi sheet ballad CP (người dùng 26/9: "còn quá rời
+  // rạc và ko khớp với tiết tấu điệu").
+  cpSoloOwnRhythm: true,
 }
 // Bậc 7 của cụm tay trái chỉ gõ khi hợp âm có 7 — hợp âm ba mà lùi về bậc 5 thì gõ trùng phím (F3+F3).
 // Bậc 3 — hợp âm treo (D9sus4 khi màu át là 9sus4) thì lấy NỐT TREO (bậc 4). Không khai thì lùi về bậc 7,

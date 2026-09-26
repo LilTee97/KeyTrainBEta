@@ -55,6 +55,8 @@ export interface SongSnapshot {
   /** Complete CP instrumental sections; absent in older songs means off. */
   caPhaoFull?: boolean
   caPhaoSoloMode?: 'compose' | 'simulate'
+  /** Ô tick solo lượt 4 (điệu khai `cpSoloOwnRhythm`). Bài cũ không có trường này → bật (người dùng đã duyệt 26/9/2026). */
+  cpBalladThu?: boolean
   caPhaoFullSource?: string
   caPhaoKeyboardRange?: { low: number; high: number }
   lickyRuns?: boolean

@@ -1,6 +1,46 @@
 # Bộ soạn solo Ballad Cà Pháo, 23/09/2026
 
 Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận chất lượng nghệ thuật.
+
+## Sửa 26/09/2026 (Claude) — Để Em Rời Xa lệch pha; tay trái dưới solo của nút Ballad Để em
+
+- **Dữ liệu:** vạch nhịp ký âm Để Em Rời Xa lệch nhạc một phách (bass ở offset 1 ô XML, 68/70 ô — `CA-PHAO-BALLAD-DE-EM.md`).
+  Kho cũ đặt `bars` theo vạch ký âm → 11 cử chỉ hai ô lệch pha; hợp âm in đặt sớm một phách và đảo ở ô 30 · 66 · 68. Bộ soạn chưa
+  chọn cử chỉ nào của bài (0/72 lượt thử). `tools/cp_ballad_solos.py`: `PHASE` (ô thật = ô XML + 1 phách; ô 0 lấy đà → ô thật 0 ở
+  0.25) và `BASS_HARMONY` (hợp âm dựng từ bass thật). Chỉ ba đoạn của bài này đổi; 22 đoạn khác so byte-byte giữ nguyên. Sau sửa:
+  23/72 lượt có vật liệu bài. Test `cpBalladComposition` đổi khẳng định `bars[0].length 3.25` → lưới thật + bass đầu ô.
+- **`StylePattern.soloCell`:** bộ soạn lấy mốc tay trái từ `soloCell` nếu điệu khai (một dòng ở `composeCpBallad`). Ballad Để em
+  khai — ô đệm hát của nó có walking bass và câu chạy, giữ các mốc ấy rồi nắn cao độ về nốt hợp âm thành 12 tiếng gõ lặp gốc mỗi ô.
+  Điệu khác không khai → không đổi. Chờ người dùng nghe duyệt.
+- **`StylePattern.cpSoloSheetTexture`** (chỉ Ballad Để em khai): người dùng chê *"quá nhiều chỗ dặm hợp âm, còn ít chỗ chạy nốt"*.
+  Đo: thân câu dạo lấy 34/72 ô từ đoạn kết (phạt khác loại đoạn chỉ .15 so với nhiễu .75); dặm 38 · 21 · 53% so với sheet 14 · 10
+  · 34%. Nay: bỏ cử chỉ đoạn kết khỏi thân câu dạo/giang; `cpSheetTextureCost` chấm độ lệch khỏi mức sheet cùng loại đoạn (dặm ·
+  quãng tám · nốt chạy · phách giật · mật độ). Sau: dặm 12 · 6 · 28%, nốt chạy 16 · 42 · 28%. Trọng số là lựa chọn Claude. Muốn áp
+  cho Có Em Chờ / ACDD thì khai cờ ở nút ấy — chưa làm vì chưa được yêu cầu.
+- **Kho mô phỏng cũng lệch pha; `cpSoloSong`.** Nút Để em mô phỏng "full" phát Chưa Bao Giờ: không khai `cpSoloSong` thì
+  `caPhaoFullSolo` lấy đoạn dài nhất cùng điệu · cùng giọng. `PHASE` · `BASS_HARMONY` chuyển về `tools/cp_full_solos.py` (nguồn
+  chung, `cp_ballad_solos.py` import): Để Em dạo 16 phách (cũ 15,25) · giang 16 (cũ 17) · kết 38 (cũ 39); bài khác không đổi.
+  **Lan sang Bossa:** `cpComposition.ts` học chuyển hợp âm/đường nét từ cả đoạn ballad cùng giọng của kho này → 49/240 lượt Bossa
+  (thứ) đổi hợp âm/nốt, 4/240 đổi thứ tự cử chỉ (dòng số bốc thăm dùng chung với bước chọn hợp âm). Snapshot "approved Bossa rhythm"
+  đỏ, chưa ghi lại — chờ người dùng quyết.
+- **`StylePattern.cpSoloOwnRhythm`** (chỉ Ballad Để em): khai `cpSoloSong` làm bật nhánh mượn tiết tấu một khung → nốt chạy dạo
+  4%; nên tách cờ. Người dùng: *"còn quá rời rạc và ko khớp với tiết tấu điệu"*. Mỗi khung hai ô: `g` (giai điệu/hợp âm, mọi sheet)
+  chọn như cũ; tiết tấu chọn riêng từ solo bài gốc cùng họ đoạn (kết ← kết; dạo/giang ← dạo/giang), phạt lặp .35 · liền kề .6,
+  khung cuối thưởng câu đóng của bài −.8. Nốt bài gốc đánh đơn ngân ≥ ½ phách nhận bè/quãng tám/cụm của câu nguồn giai điệu; bè
+  quãng 4/5 trong gam giữ nguyên (`'fourth-dyad'` thêm vào kiểu kỹ thuật ở `phraseSection.ts`). Sau (La thứ, 12 lượt/loại): tiết
+  tấu bài gốc 72/72 · 120/120 · 60/60 khung; dặm 6 · 7 · 15%; nốt chạy 22 · 25 · 0% (bài 23 · 37 · 0%). Chi tiết và phần còn lệch:
+  `CA-PHAO-BALLAD-DE-EM.md` mục Solo, Lượt 3. Trọng số là lựa chọn Claude.
+- **`PhraseSectionOptions.cpBalladThu`** — ô tick nghe thử lượt 4, chỉ tác dụng khi điệu khai `cpSoloOwnRhythm` (người dùng chấm
+  lượt 3 7/10, xin train thêm). Hai đổi, mặc định Codex không đụng (tắt ô → đúng số lượt 3): (1) giọng thứ: cú dẫn / đóng kết là
+  câu đóng của chính bài (gesture cuối cùng loại đoạn kết về i) thay ii–V của hợp âm hát kế / V7–i — 0/6 đoạn dạo/giang thứ và
+  0/3 đoạn kết thứ của CP dùng hai cách ấy; (2) **nới luật "trọng âm/nốt dài bám nốt hợp âm"**: nốt được mang màu khi nốt nguồn
+  cùng vị trí mang đúng vai ấy trên cùng chất hợp âm, trong gam, không nốt tránh; không ép giải liền bậc. Số đo: sheet đúng phách
+  bậc 9 16% · 11 10% (md Cà Pháo); lượt 3 1–2% · 2–3%; lượt 4 3–11% · 4–8%. Vết `color-tone`. Chi tiết:
+  `CA-PHAO-BALLAD-DE-EM.md` mục Solo, Lượt 4. **Người dùng duyệt lượt 4** (26/9, "nghe rất hay, hãy giữ tick đó lại"): ô tick
+  bật sẵn, lưu theo bài (`songSnapshot.cpBalladThu`, bài cũ → bật); engine mặc định (không cờ) vẫn là lượt 3 cho test/điệu khác.
+- **Lượt 5 BỊ BÁC, đã gỡ** (người dùng 26/9: "ko hay như lượt 4"). Từng là `PhraseSectionOptions.cpBalladThu5`, chồng lên lượt 4: vai nốt nguồn nhận theo bậc
+  (1·3·5·7·9·11·13) thay vì đúng số nửa cung + cùng chất hợp âm; thưởng giữ vai −2,4 thay −1,6 (`ROLE_THU5`, quét 1,6–4,8). Chỉ
+  đổi cao độ (test: khung tiết tấu · câu nguồn · hợp âm y lượt 4). Gốc đúng phách dạo 22 → 11%. Chi tiết: mục Solo, Lượt 5.
 Yêu cầu mới thay giới hạn chỉ biến thể Có Em Chờ của bản 22/09. Không thay Bossa CP đã duyệt.
 
 ## Phản Hồi #1348 Và Các Câu Đã Ổn

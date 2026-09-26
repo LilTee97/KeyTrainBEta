@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 
 import cp_lick_corpus as cp
-from cp_full_solos import harmony
+from cp_full_solos import harmony, PHASE, BASS_HARMONY
 import audit_ca_phao as audit
 
 OUT = cp.ROOT / 'src/reharm/style/cpBalladSolos.json'
@@ -26,6 +26,8 @@ WINDOWS = {
     'Chung Ta': {'intro': (1, 0, 8, 2.5), 'interlude': (33, 0, 48, 2.5)},
     'Anh Cu': {'interlude': (33, 1.5, 37, 2.5), 'outro': (62, .75, 68, 4)},
 }
+WINDOWS['De Em']['intro'] = (0, 0, 4, 1)  # đến vạch thật đầu ô 4 (xem PHASE); cũ: hết ô XML 3 (15.25)
+# PHASE · BASS_HARMONY (Để Em Rời Xa lệch vạch nhịp một phách) ở cp_full_solos.py — nguồn chung cho hai kho.
 
 
 def analyze():
@@ -100,6 +102,18 @@ def analyze():
                     replace(66, 4, [(0, 0, '', None), (1.75, 9, 'm7', None)], 'E bass before C# enters at 1.75.')
                     for bar in [67, 69]:
                         replace(bar, 4, [(0, 2, 'm9', None), (1.75, 7, '13', None)], 'F# bass before B; preserve ii-V order.')
+            phase = next((v for p, v in PHASE.items() if song['file'].startswith(p)), 0)
+
+            def real_start(b):
+                return starts[b] + phase if b >= 1 else starts[1] + phase - 4
+
+            if phase and key:
+                table = next(v for p, v in BASS_HARMONY.items() if song['file'].startswith(p))[kind]
+                corrected = [dict(at=round(real_start(b) + off - origin, 6), root=root, suffix=suffix, bass=None)
+                             for b, off, root, suffix in table if real_start(b) + off < learn_end]
+                if corrected[0]['at'] > 0:
+                    corrected.insert(0, dict(corrected[0], at=0))
+                corrections.append(dict(bar=first, reason='Barlines one beat early; printed symbols early/swapped. Harmony rebuilt from sounding bass.'))
             events = []
             for g in groups:
                 carry = g['at'] < learn_start - 1e-5
@@ -123,8 +137,16 @@ def analyze():
             graces = [dict(at=round(n['beat']-origin, 6), tone=n['midi']-tonic,
                            hand='right' if n['hand'] == 1 else 'left')
                       for n in raw if n['grace'] and learn_start <= n['beat'] < learn_end]
-            bars = [dict(bar=b, at=starts[b]-origin, length=data[str(b)]['length'])
-                    for b in range(first, last+1) if b in starts]
+            if phase:
+                # Khúc trước vạch thật đầu tiên là lấy đà (không đủ 4 phách → không thành cử chỉ).
+                bars = [dict(bar=first - 1, at=0, length=round(real_start(first) - begin, 6))] \
+                    if real_start(first) > begin + 1e-9 else []
+                bars += [dict(bar=b, at=round(real_start(b) - origin, 6),
+                              length=round(min(real_start(b + 1) if b + 1 in starts else end, end) - real_start(b), 6))
+                         for b in range(first, last + 1) if b in starts and real_start(b) < end - 1e-9]
+            else:
+                bars = [dict(bar=b, at=starts[b]-origin, length=data[str(b)]['length'])
+                        for b in range(first, last+1) if b in starts]
             section = dict(id=song['file'].rsplit('.', 1)[0]+':'+kind, song=song['name'], kind=kind,
                 tonic=tonic, mode=mode, fromBar=first, bars=bars,
                 start=round(learn_start-origin, 6), end=round(learn_end-origin, 6),

@@ -233,6 +233,23 @@ export interface StylePattern {
    * lời nghỉ hai tay cùng đệm dưới câu fill. Xem `swapAtFills`.
    */
   fillCell?: RhythmCell
+  /**
+   * Tay trái DƯỚI CÂU SOLO Cà Pháo (dạo · giang · kết) — bộ soạn solo ballad CP lấy mốc gõ tay trái từ đây thay vì từ
+   * `cell`. Khai khi ô đệm hát có bè trầm soạn sẵn (walking bass, câu chạy) không hợp làm nền cho câu solo: bộ soạn giữ
+   * mọi mốc gõ ấy và nắn cao độ về nốt hợp âm, nên nốt đi qua thành tiếng gõ lặp gốc. Chỉ cần `left`.
+   */
+  soloCell?: RhythmCell
+  /**
+   * Bộ soạn solo ballad CP chọn cử chỉ theo CHẤT LIỆU của sheet cùng loại đoạn: thân câu dạo/giang không lấy cử chỉ của
+   * đoạn kết; phạt dặm vượt mức sheet, thưởng câu chạy và phách giật. Xem `cpSheetTextureCost`. Bỏ trống = như cũ.
+   */
+  cpSoloSheetTexture?: boolean
+  /**
+   * Tiết tấu tay phải (và tay trái đáp) của MỌI khung hai ô solo lấy từ solo của chính bài gốc (`cpSoloSong`); giai điệu,
+   * hợp âm và kỹ thuật vẫn học từ mọi sheet ballad CP. Nơi bài gốc đánh một nốt mà câu nguồn giai điệu có bè / quãng tám /
+   * cụm thì nhận kỹ thuật ấy. Bỏ trống = như cũ (chỉ mượn tiết tấu bài gốc một khung khi khác giọng).
+   */
+  cpSoloOwnRhythm?: boolean
   /** `false`: ô đệm tự lấp chỗ trống, tắt câu lót tự động (ô người dùng chọn, chỗ chuyển đoạn vẫn chêm). */
   autoFills?: false
   /** Giải thích ngắn cho người dùng. */
