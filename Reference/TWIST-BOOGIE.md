@@ -166,3 +166,17 @@ chưa được gọi là đã nghe duyệt chỉ vì kiểm thử đạt.
 
 Quy tắc hai lần là yêu cầu phối đệm của người dùng; phân tích nguồn ở trên
 không có nghĩa mọi hợp âm trong toàn sheet đều đổi sau đúng hai ô.
+
+### Sửa đường tái hòa âm trên bài có lời (27/9)
+
+Phản hồi từ **60 Năm Cuộc Đời**: đã bỏ tick nhưng Cadd2/Gadd2 vẫn nghe đổi
+sau một mẫu. Cơ chế `varyHeldColors` tạo add2→maj7, rồi `explodeHeldBars`
+tách một hợp âm 8 phách thành hai hợp âm chính 4 phách. Trong khi neo lời
+vẫn đếm một hợp âm, `mainChordSpans` đếm hai: tô sáng và mốc phát lệch;
+26 hợp âm nguồn thành 37 mục, đoạn bài bị cắt còn 152 thay vì 208 phách.
+
+Riêng Twist, hai lượt gọi `reharmonize` dùng `skipHeldAt` cho mọi hợp âm
+nguồn. Giữ màu đã chọn đủ 8 phách (hoặc 4 khi tick); không tự xoay màu
+add2→maj7. Điệu khác tiếp tục dùng lựa chọn xoay màu hiện có. Kiểm thử đi
+từ lời ChordPro → tái hòa âm → neo lời/biên đoạn → timeline hai tay,
+bao gồm cùng gốc lặp lại và C/G/D như đoạn người dùng báo.

@@ -1085,6 +1085,11 @@ export function ReharmHome() {
   }, [importedBeats, isTwist, pairedChords, sequence.chords.length, chordBeats, nghiDonRa])
 
   const reharm = useMemo(() => {
+    // Twist phải giữ cùng hợp âm suốt một hoặc hai lần đệm. Xoay add2→maj7 sẽ tách 8 phách
+    // thành hai hợp âm chính 4 phách, vừa đổi sớm vừa làm lệch neo lời/cắt cuối bài.
+    const skipHeldAt = isTwist
+      ? new Set(sequence.chords.map((_, index) => index))
+      : mutedHeld
     const parsedKey = manualKey
       ? {
           tonic: Number(manualKey.split(':')[0]),
@@ -1106,7 +1111,7 @@ export function ReharmHome() {
       sectionRanges: rawSectionRanges,
       beatsPerMeasure: style.beatsPerMeasure,
       key: parsedKey,
-      skipHeldAt: mutedHeld,
+      skipHeldAt,
     })
 
     /*
@@ -1149,7 +1154,7 @@ export function ReharmHome() {
       acceptedPassing: chosen,
       beatsPerChord: chordBeats,
       chordBeats: halvedBeats,
-      skipHeldAt: mutedHeld,
+      skipHeldAt,
     })
 
     return {
@@ -1175,6 +1180,7 @@ export function ReharmHome() {
     chordBeats,
     halvedBeats,
     mutedHeld,
+    isTwist,
   ])
 
   const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'

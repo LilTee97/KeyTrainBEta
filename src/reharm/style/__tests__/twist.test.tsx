@@ -3,6 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { autoFillSkip } from '../../fillSoloGenerator/soloGenerator'
 import { soloTeacherOf } from '../../fillSoloGenerator/soloTeacher'
 import { parseChordInput } from '../../input/chordInputParser'
+import { parseSongText } from '../../input/songTextParser'
+import { buildSongSheet, sectionChordRanges } from '../../input/songSheet'
+import { chordDurations, mainChordSpans } from '../../chordTiming'
+import { reharmonize } from '../../reharmEngine/reharmPipeline'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { StylePicker } from '../StylePicker'
 import { isBalladStyle } from '../balladFamily'
@@ -92,6 +96,40 @@ describe('Twist extracted from the Boogie Woogie sheet', () => {
         Array.from({ length: repeats }, (_, bar) => [bar * 4, round(bar * 4 + 8 / 3)]).flat(),
       )
       expect(inChord.every(event => event.startBeat + event.durationBeats <= start + beatsPerChord + 1e-6)).toBe(true)
+    }
+  })
+
+  it.each([8, 4])('keeps lyric anchors aligned through reharmonization at %i beats per chord', (beatsPerChord) => {
+    // Lỗi thật: 60 Năm Cuộc Đời, Cadd2/Gadd2 bị tách add2→maj7 sau một lần đệm;
+    // số hợp âm chính tăng làm neo lời lệch và cuối bài bị cắt theo số neo cũ.
+    const parsed = parseSongText(
+      'Em ơi có [G]bao nhiêu?\nSáu mươi năm [G]cuộc đời\n' +
+      'Hai mươi năm [Csus2]đầu, sung sướng không bao [G]lâu\n' +
+      'Hai mươi năm [D9]sau, sầu vương cao vời [C9]vợi\nHai mươi năm cuối là [G]bao',
+    )
+    const result = reharmonize(parsed.chords, {
+      key: { tonic: 7, scale: 'major' }, intensity: 'full',
+      tonicColor: 'add9', majorColor: 'add9', susDominant: true,
+      beatsPerChord, beatsPerMeasure: 4,
+      skipHeldAt: new Set(parsed.chords.map((_, index) => index)),
+    })
+    const spans = mainChordSpans(result.final, beatsPerChord)
+    expect(spans).toHaveLength(parsed.chords.length)
+    expect(result.colored.every(chord => !chord.heldLabel && !chord.heldQualities && !chord.holdRun)).toBe(true)
+    expect(spans.map(span => span.chord.root)).toEqual(parsed.chords.map(chord => chord.root))
+    expect(spans.map(span => span.start)).toEqual(parsed.chords.map((_, index) => index * beatsPerChord))
+    const sheet = buildSongSheet(parsed, result.colored, result.final)
+    const [section] = sectionChordRanges(sheet)
+    const first = spans[section.from]
+    const last = spans[section.to]
+    expect(last.start + last.beats - first.start).toBe(parsed.chords.length * beatsPerChord)
+    const events = renderPattern(voiceLeadTwoHands(result.final), getStyle('twist')!, {
+      beatsPerChord, beatsEach: chordDurations(result.final, beatsPerChord),
+    })
+    for (const span of spans) {
+      const inChord = events.filter(event => event.startBeat >= span.start && event.startBeat < span.start + span.beats)
+      expect(inChord.filter(event => event.hand === 'left')).toHaveLength(beatsPerChord * 2)
+      expect(inChord.filter(event => event.hand === 'right')).toHaveLength(beatsPerChord / 2)
     }
   })
 
