@@ -87,6 +87,10 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
     ten: 'Swing',
     families: ['swing', 'hai-swing'],
   },
+  twist: {
+    ten: 'Twist',
+    families: ['twist'],
+  },
   waltz: {
     ten: 'Waltz',
     families: ['hai-waltz', 'jazz-waltz'],

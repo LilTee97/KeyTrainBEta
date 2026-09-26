@@ -4788,7 +4788,7 @@ export function ReharmHome() {
             <input
               type="range"
               min={40}
-              max={160}
+              max={240}
               value={bpm}
               onChange={(event) => setBpm(Number(event.target.value))}
               aria-label="Nhịp độ, số phách mỗi phút"

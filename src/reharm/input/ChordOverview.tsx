@@ -95,7 +95,7 @@ export function PlaybackToolbar({
         <input
           type="range"
           min={40}
-          max={160}
+          max={240}
           value={bpm}
           onChange={(event) => onBpm?.(Number(event.target.value))}
           className="w-24 accent-amber-key"
