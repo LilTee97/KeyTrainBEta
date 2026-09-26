@@ -21,8 +21,8 @@ Trạng thái: bản triển khai để nghe duyệt, chưa phải xác nhận c
   `caPhaoFullSolo` lấy đoạn dài nhất cùng điệu · cùng giọng. `PHASE` · `BASS_HARMONY` chuyển về `tools/cp_full_solos.py` (nguồn
   chung, `cp_ballad_solos.py` import): Để Em dạo 16 phách (cũ 15,25) · giang 16 (cũ 17) · kết 38 (cũ 39); bài khác không đổi.
   **Lan sang Bossa:** `cpComposition.ts` học chuyển hợp âm/đường nét từ cả đoạn ballad cùng giọng của kho này → 49/240 lượt Bossa
-  (thứ) đổi hợp âm/nốt, 4/240 đổi thứ tự cử chỉ (dòng số bốc thăm dùng chung với bước chọn hợp âm). Snapshot "approved Bossa rhythm"
-  đỏ, chưa ghi lại — chờ người dùng quyết.
+  (thứ) đổi hợp âm/nốt, 4/240 đổi thứ tự cử chỉ (dòng số bốc thăm dùng chung với bước chọn hợp âm). Snapshot "approved Bossa rhythm":
+  người dùng quyết 26/9: *"làm như bạn khuyên đi"* → **đã ghi lại snapshot**, chỉ một khoá đổi (`minor/true/intro/3`, hash cũ `e5962d2c…`); 23 khoá khác giữ nguyên.
 - **`StylePattern.cpSoloOwnRhythm`** (chỉ Ballad Để em): khai `cpSoloSong` làm bật nhánh mượn tiết tấu một khung → nốt chạy dạo
   4%; nên tách cờ. Người dùng: *"còn quá rời rạc và ko khớp với tiết tấu điệu"*. Mỗi khung hai ô: `g` (giai điệu/hợp âm, mọi sheet)
   chọn như cũ; tiết tấu chọn riêng từ solo bài gốc cùng họ đoạn (kết ← kết; dạo/giang ← dạo/giang), phạt lặp .35 · liền kề .6,

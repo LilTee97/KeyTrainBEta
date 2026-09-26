@@ -919,10 +919,10 @@ thì lại lấy câu của sheet Có bao giờ … Câu solo của Ballad để
   điệp) · kết 38 (cũ 39).
 - **Ảnh hưởng tới bộ soạn — có, đã sửa.** `cpSoloSong` cũng là khoá `ownSong` của bộ soạn: khai nó là bật nhánh "mượn tiết tấu bài
   một khung khi khác giọng" → nốt chạy dạo tụt còn 4%. Không dùng nhánh ấy; train lại bằng cờ riêng `cpSoloOwnRhythm` (dưới).
-- **Ảnh hưởng tới Bossa CP — có, CHƯA quyết.** Bộ soạn Bossa (`cpComposition.ts`) học chuyển hợp âm và đường nét từ cả các đoạn
+- **Ảnh hưởng tới Bossa CP — có; đã quyết ghi lại snapshot.** Bộ soạn Bossa (`cpComposition.ts`) học chuyển hợp âm và đường nét từ cả các đoạn
   ballad cùng giọng trong kho mô phỏng. Hợp âm Để Em đúng lại (bVI → bVII → i) → 49/240 lượt Bossa đổi hợp âm/nốt; 4/240 lượt đổi cả
   thứ tự cử chỉ (vẫn toàn cử chỉ Bossa gốc, do bộ bốc thăm dùng chung một dòng số với bước chọn hợp âm). Snapshot "approved Bossa
-  rhythm" đỏ; chưa ghi lại vì test ấy dặn không ghi lại sau khi đổi — chờ người dùng.
+  rhythm" đỏ vì test ấy dặn không ghi lại sau khi đổi; người dùng quyết 26/9: *"làm như bạn khuyên đi"* → **đã ghi lại snapshot**, chỉ một khoá đổi (`minor/true/intro/3`, hash cũ `e5962d2c…`); 23 khoá khác giữ nguyên.
 - **Train lại — `cpSoloOwnRhythm`** (chỉ nút Để em khai). Tiết tấu tay phải (và tay trái đáp) của MỌI khung hai ô lấy từ solo Để Em
   Rời Xa: dạo/giang ← dạo/giang của bài, kết ← kết. Khung cuối đoạn ưu tiên câu đóng của bài (dạo ô 2–3). Giai điệu · hợp âm · kỹ
   thuật vẫn học từ mọi sheet ballad CP: nốt bài gốc đánh đơn và ngân ≥ ½ phách mà câu nguồn giai điệu có bè / quãng tám / cụm thì

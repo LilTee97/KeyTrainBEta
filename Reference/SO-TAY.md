@@ -4132,8 +4132,9 @@ lượt thử; sau nắn 23/72); mô phỏng dạo 15,25 phách (cắt mất c�
 từng byte. Test đổi: `cpBalladComposition` bỏ khẳng định `bars[0].length 3.25` (lưới ký âm) → ô thật + bass đầu ô;
 `caPhaoFullSolo` Để Em dạo/giang 16 phách (cũ 15.25 / 17).
 **Lan sang Bossa CP**: `cpComposition.ts` học chuyển hợp âm/đường nét từ cả đoạn ballad cùng giọng → 49/240 lượt Bossa (thứ) đổi
-hợp âm/nốt, 4/240 đổi thứ tự cử chỉ (dòng số bốc thăm dùng chung với bước chọn hợp âm). Snapshot "approved Bossa rhythm" ĐỎ từ đây —
-test dặn không ghi lại sau khi đổi; **chờ người dùng quyết** (ghi lại snapshot, hay để Bossa học hợp âm Để Em sai vạch cũ).
+hợp âm/nốt, 4/240 đổi thứ tự cử chỉ (dòng số bốc thăm dùng chung với bước chọn hợp âm; vẫn toàn cử chỉ Bossa gốc). Snapshot
+"approved Bossa rhythm" đỏ vì test dặn không ghi lại sau khi đổi; người dùng quyết 26/9: *"làm như bạn khuyên đi"* → **đã ghi lại snapshot**, chỉ một khoá đổi (`minor/true/intro/3`, hash cũ `e5962d2c…`); 23 khoá khác giữ nguyên. Triệu chứng để lùi: nghe Bossa thứ
+full dạo lượt 3 khác hẳn bản đã duyệt → so với hash cũ.
 
 ### Mô phỏng câu solo phải khai bài gốc — thiếu `cpSoloSong` thì lấy đoạn dài nhất cùng điệu
 
