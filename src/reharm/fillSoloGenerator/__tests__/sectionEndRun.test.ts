@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import type { TransitionRun } from '../soloGenerator'
 import { fillPositions, generateFillLine } from '../soloGenerator'
+import { NGHI_MAC_DINH, nghiDonRaTheoMoc } from '../../style/sectionStyles'
+import { getStyle } from '../../style/styleLibrary'
 
 /**
  * Chỗ chuyển đoạn: hợp âm cuối đoạn được cấp **thêm một ô nhịp**, và ô thêm
@@ -147,11 +149,13 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(hands.has('right')).toBe(true)
   })
 
-  it('chạy ngón sau N phách thì câu bắt đầu muộn hơn', () => {
-    const delayed = fill(
-      new Map([[2, { octaves: 2, restBeats: 2, delayBeats: 2 }]]),
-    )
-    expect(delayed[0].startBeat).toBeGreaterThan(run[0].startBeat)
+  it('đệm N phách rồi mới chạy: câu chạy không vào trước phách N', () => {
+    // Ô nối 8 phách (8–16), im 4: chỗ chạy còn 4 phách — đệm 2 thì câu chạy vào từ phách 10 trở đi.
+    for (const delayBeats of [0, 1, 2]) {
+      const line = fill(new Map([[2, { octaves: 2, restBeats: 4, delayBeats }]]))
+      expect(line[0].startBeat, `đệm ${delayBeats}`).toBeGreaterThanOrEqual(8 + delayBeats - 1e-6)
+      expect(line.at(-1)!.startBeat, `đệm ${delayBeats}`).toBeCloseTo(12, 5)
+    }
   })
 
   it('im cả ô thì vẫn còn chỗ chạy ngón', () => {
@@ -180,11 +184,46 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(wider[1].startBeat - wider[0].startBeat).toBeCloseTo(0.25, 5)
   })
 
-  it('không đệm thì chạy ngón ngay từ đầu hợp âm, không chờ quạt hết ô', () => {
-    expect(run[0].startBeat).toBeCloseTo(8, 5)
-    for (const note of run) {
-      expect(note.startBeat).toBeLessThan(16)
+  it('câu chạy kết ĐÚNG chỗ nghỉ, kể cả đệm "Không" — nghỉ đúng số phách chọn', () => {
+    /*
+      Người dùng 26/9/2026 (đệm "Không" · im 3): "tôi chọn nghỉ phách sau khi chạy ngón mà ko thấy nghỉ", và chọn "nghỉ
+      đúng N phách" thay cho luật 17/8 "Không = im điệu chạy ngón ngay từ đầu ô" (cũ: câu chạy bắt đầu ở phách 8, lặng sau
+      nó = phần ô còn thừa, không theo số phách chọn). Đệm điệu chơi tới lúc câu chạy vào — `transitionMuteWindows`.
+    */
+    for (const restBeats of [0, 1, 2, 3]) {
+      const line = fill(new Map([[2, { octaves: 2, restBeats, delayBeats: 0 }]]))
+      const last = line.at(-1)!
+      expect(last.startBeat, `im ${restBeats}`).toBeCloseTo(16 - restBeats, 5)
+      expect(last.startBeat + last.durationBeats, `im ${restBeats}`).toBeLessThanOrEqual(16 - restBeats + .25)
     }
+  })
+
+  it('ô slow rock 6 móc đơn, im 3 phách ĐÔN RA: câu chạy giữ móc kép, kết ở vạch cũ, rồi lặng thêm 3 phách', () => {
+    // Người dùng 26/9/2026: "đừng dồn câu chạy lại chơi nhanh hơn. Nghỉ bao nhiêu phách thì đôn ra bấy nhiêu phách".
+    // App cộng số phách nghỉ vào hợp âm ở mốc (`ReharmHome` · `nghiDonRa`): ô 3 nốt đen + 1,5 = 4,5 (phách 3 → 7,5).
+    const one = parseChordInput('Am E7 Am').chords.map((c, i) => i === 1 ? { ...c, beats: 4.5 } : c)
+    const line = generateFillLine(one, { beatsPerChord: 3, lickyFills: false,
+      sectionEnds: new Map([[1, { octaves: 2, restBeats: 1.5, delayBeats: 0 }]]) })
+      .filter(n => n.startBeat >= 3 - 1e-6 && n.startBeat < 7.5 - 1e-6)
+    expect(line[1].startBeat - line[0].startBeat).toBeCloseTo(.25, 5)
+    expect(line.at(-1)!.startBeat).toBeCloseTo(6, 5)
+    expect(line.every(n => n.startBeat + n.durationBeats <= 6.25 + 1e-6)).toBe(true)
+  })
+
+  it('nghỉ đôn ra ở MỌI điệu: số nốt đen cộng vào hợp âm ở mốc — "Mặc định" theo sheet = im 0; trừ mốc không chạy ngón, ACDD', () => {
+    // Người dùng 26/9/2026: "nút nghỉ phách mặc định và cơ chế đôn phách mà vẫn giữ gìn tiết tấu hãy áp dụng cho mọi điệu".
+    const laThu = getStyle('slow-rock-la-thu-hai-tay')!, pop = getStyle('pop-1')!
+    const moc = (run: TransitionRun) => new Map([[1, run]])
+    // Lá thư: phách = móc đơn (gridUnit 0,5) → im 3 = 1,5 nốt đen.
+    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3 }), laThu, false)).toEqual({ 1: 1.5 })
+    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 2 }), pop, false)).toEqual({ 1: 2 })
+    // "Mặc định" = theo sheet: 18 sheet · 112 mốc, mọi thầy chơi tới sát vạch → im 0, không đôn — ở MỌI điệu.
+    expect(NGHI_MAC_DINH).toBe(0)
+    for (const style of [laThu, pop]) {
+      expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3, restTheoSheet: true }), style, false)).toEqual({})
+    }
+    expect(nghiDonRaTheoMoc(moc({ octaves: 0, restBeats: 3 }), laThu, false)).toEqual({})
+    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3 }), laThu, true)).toEqual({})
   })
 
   it('giữa đoạn vẫn là câu fill ngắn kết ở nốt dẫn', () => {

@@ -3,6 +3,7 @@ import { ALL_STYLES, getStyle } from './styleLibrary'
 import type { SectionKind } from './songStructure'
 import { transitionRunNotes, type TransitionRun } from '../fillSoloGenerator/soloGenerator'
 import type { ParsedChord } from '../types'
+import type { StylePattern } from './types'
 
 /**
  * Điệu nào có **bản riêng cho đoạn điệp khúc**.
@@ -156,6 +157,43 @@ export function transitionMuteWindows(
     if (from < to) windows.push({ from, to })
   }
   return windows
+}
+
+/*
+  NÚT "MẶC ĐỊNH" Ở MỐC CHUYỂN ĐOẠN — người dùng 26/9/2026: *"tuân theo cách mà trong sheet đã làm ở mốc chuyển đoạn"*, rồi
+  *"hãy áp dụng cho mọi điệu"*. Im bấy nhiêu phách của điệu.
+  Số đo 26/9/2026, 18 sheet có chia đoạn trong kho (Hồng Kông 1 không đọc được), lặng trước vạch đầu đoạn mới, nốt đen:
+  cả hai tay — Cà Pháo ballad 40/40 mốc lặng 0 · Cà Pháo bossa 6/6 · Tôn Hùng ballad 14/14 · Linh Nhi bolero 29/36 (4 mốc
+  ≤ 0,5 · 3 mốc 1–3¼) · Linh Nhi slow rock 11/16 (3 ≤ 0,5 · 2 mốc ¾–⅞); riêng tay trái (tiếng đệm) trung vị 0 ở mọi thầy
+  (slow rock 0,19 — nhả nốt). Thầy nào cũng chơi tới sát vạch rồi vào thẳng đoạn mới → "Mặc định" = im 0 ở MỌI điệu (điệu
+  không có sheet riêng lấy mức chung 112 mốc). Cũ: 2 phách, đo trên `reference/nguoi ay.mxl` (khoảng lặng của GIỌNG HÁT
+  trước đoạn mới, không phải của người đệm).
+*/
+export const NGHI_MAC_DINH = 0
+
+/** Số phách của điệu im trước vạch ở một mốc (nút "Mặc định" → theo sheet). */
+export const nghiCuaMoc = (run: TransitionRun) => run.restTheoSheet ? NGHI_MAC_DINH : run.restBeats
+
+/*
+  NGHỈ Ở MỐC CHUYỂN ĐOẠN ĐƯỢC ĐÔN RA — số nốt đen cộng thêm vào hợp âm ở mỗi mốc, MỌI điệu. Người dùng 26/9/2026: *"đừng dồn
+  câu chạy lại chơi nhanh hơn. Nghỉ bao nhiêu phách thì đôn ra bấy nhiêu phách"*, rồi *"nút nghỉ phách mặc định và cơ chế
+  đôn phách mà vẫn giữ gìn tiết tấu hãy áp dụng cho mọi điệu"*. Câu chạy giữ tốc độ, kết ở vạch cũ, rồi lặng N phách
+  (`transitionRunNotes`; màu Cà Pháo: `planCpLicks` · `transitionRests`). Ô đệm / ô fill mở lại sau hợp âm dài lẻ để giữ tiết
+  tấu (`ReharmHome`). Không đôn ra: mốc không chạy ngón (0 quãng tám — ô đệm thường); `laAcdd` (menu ACDD không có số phách
+  nghỉ; câu nối ACDD kết đúng vạch như sheet). Cũ: nghỉ nằm trong ô, cắt vào chỗ chạy; màu Cà Pháo bỏ qua số phách nghỉ.
+*/
+export function nghiDonRaTheoMoc(
+  transitions: ReadonlyMap<number, TransitionRun>,
+  style: Pick<StylePattern, 'gridUnit'>,
+  laAcdd: boolean,
+): Record<number, number> {
+  const out: Record<number, number> = {}
+  if (laAcdd) return out
+  for (const [index, run] of transitions) {
+    const rest = nghiCuaMoc(run) * (style.gridUnit ?? 1)
+    if (run.octaves > 0 && rest > 0) out[index] = rest
+  }
+  return out
 }
 
 /** Các đầu đoạn cần mở lại mẫu đệm; độc lập với việc chọn biến thể điệu. */

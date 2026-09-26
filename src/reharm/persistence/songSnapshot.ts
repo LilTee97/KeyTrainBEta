@@ -57,6 +57,8 @@ export interface SongSnapshot {
   caPhaoSoloMode?: 'compose' | 'simulate'
   /** Ô tick solo lượt 4 (điệu khai `cpSoloOwnRhythm`). Bài cũ không có trường này → bật (người dùng đã duyệt 26/9/2026). */
   cpBalladThu?: boolean
+  /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → tắt. */
+  slowRockMotO?: boolean
   caPhaoFullSource?: string
   caPhaoKeyboardRange?: { low: number; high: number }
   lickyRuns?: boolean

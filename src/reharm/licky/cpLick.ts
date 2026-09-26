@@ -167,6 +167,11 @@ export interface CpLickOptions {
   /** CP section-change composer (advanced reductions of the full source gestures). */
   fullTransitions?: boolean
   transitionDelays?: ReadonlyMap<number, number>
+  /**
+   * Nghỉ ĐÔN RA ở mốc chuyển đoạn (nốt đen, đã cộng vào hợp âm ở mốc): câu chạy CP kết trước vạch bấy nhiêu, đệm tắt suốt
+   * chỗ nghỉ. Người dùng 26/9/2026: nghỉ đôn ra và nút "Mặc định" *"hãy áp dụng cho mọi điệu"*. Cũ: màu Cà Pháo bỏ qua.
+   */
+  transitionRests?: ReadonlyMap<number, number>
   keyboard?: { low: number; high: number }
 }
 
@@ -195,6 +200,9 @@ export function planCpLicks(options: CpLickOptions) {
     // Without lyrics, four main chords are a KT proxy, not an observed vocal rest.
     if (!forced && !sectionEnds?.has(main) && !(breaths ? breaths.has(main) : (main + 1) % 4 === 0)) continue
     const end = starts[i] + beatsOf(chord, beatsPerChord)
+    // Câu chạy kết ở `exit`; [exit, end) là chỗ nghỉ đôn ra — nằm trong khung placement nên `cpBacking` tắt đệm ở đó.
+    const nghi = sectionEnds?.has(main) ? options.transitionRests?.get(main) ?? 0 : 0
+    const exit = end - nghi
     if (transition && !extraFills?.has(main)) {
       const windowStart = starts[i] + (options.transitionDelays?.get(main) ?? 0)
       // Prefer marked transition gestures; reduce BEFORE fitting the available rest.
@@ -207,8 +215,8 @@ export function planCpLicks(options: CpLickOptions) {
         const pool = candidates.filter(p => rank(p) === priority)
         const offset = Math.abs(Math.trunc(take)+main) % pool.length
         for (const source of [...pool.slice(offset), ...pool.slice(0,offset)]) {
-          for (const phrase of advancedCpRuns(source, take + main, end-windowStart)) {
-          const start = end-phrase.span // variable run length, fixed entry into the next section
+          for (const phrase of advancedCpRuns(source, take + main, exit-windowStart)) {
+          const start = exit-phrase.span // variable run length, fixed entry into the next section
           if (protectedAt(start, end)) continue
           if (Math.abs(start*4-Math.round(start*4)) > .001) continue
           const keyboard = options.keyboard ?? { low: 36, high: 96 }
@@ -255,10 +263,10 @@ export function planCpLicks(options: CpLickOptions) {
       const ordered = [...pool.slice(offset), ...pool.slice(0, offset)]
       for (const phrase of ordered) {
         if (!phrase.supportComplete || phrase.meter !== style.beatsPerMeasure) continue
-        if (phrase.span > Math.min(2, end - starts[i]) + 1e-6) continue
+        if (phrase.span > Math.min(2, exit - starts[i]) + 1e-6) continue
         // Preserve source subdivisions and rests. Move as a whole, never compress a long run.
-        for (let start = Math.floor((end - phrase.span + 1e-6) * 4) / 4;
-          start >= Math.max(starts[i] + (transition ? options.transitionDelays?.get(main) ?? 0 : 0), end - 2) - 1e-6; start -= .25) {
+        for (let start = Math.floor((exit - phrase.span + 1e-6) * 4) / 4;
+          start >= Math.max(starts[i] + (transition ? options.transitionDelays?.get(main) ?? 0 : 0), exit - 2) - 1e-6; start -= .25) {
           // Preserve the source's position inside the bar, not just its fast/slow durations.
           if (Math.abs(start % phrase.meter - phrase.offset % phrase.meter) > .001) continue
           if (protectedAt(start, start + phrase.span)) continue
@@ -270,7 +278,7 @@ export function planCpLicks(options: CpLickOptions) {
           const events = [...lead, ...support]
           // Different hands cannot strike/hold the same physical key over one another.
           if (lead.some(a => support.some(b => overlap(a, b) && a.notes.some(n => b.notes.includes(n))))) continue
-          const window = { start, end: start + phrase.span }
+          const window = { start, end: nghi > 0 ? end : start + phrase.span }
           // A held note crossing the exit needs a longer source cell; do not silence it outside the cell.
           if (backing.some(e => overlap(e, { ...lead[0], startBeat: start, durationBeats: phrase.span }) &&
             e.startBeat + e.durationBeats > window.end + 1e-6)) continue

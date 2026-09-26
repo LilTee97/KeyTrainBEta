@@ -91,6 +91,39 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
     expect(swapAtFills(backing, fillBacking, rai, [3, 1.5, 1.5, 3], 3)).toEqual(backing)
   })
 
+  it('ô tick "mỗi hợp âm 6 phách rồi chuyển": mỗi hợp âm trọn một ô rải trên gốc của nó, không bị coi là chia đôi', () => {
+    // Người dùng 26/9/2026: "có nhiều bài slow rock mà mỗi hợp âm chỉ đánh 6 phách là chuyển qua hợp âm khác … chứ ko phải
+    // 2 lần 6 phách". App: bật ô tick → chordBeats = beatsPerMeasure × gridUnit = 3 nốt đen (cũ "1 ô nhịp" = 6 = hai ô).
+    const motO = verse.beatsPerMeasure * verse.gridUnit!
+    expect(motO).toBe(3)
+    for (const style of LINH_NHI_SLOW_ROCK) {
+      const backing = render('Em G Bm Em', style, { beatsPerChord: motO })
+      for (const [i, goc] of [4, 7, 11, 4].entries()) {
+        const trai = backing.filter(e => e.hand === 'left' && e.startBeat >= i * 3 - 1e-6 && e.startBeat < i * 3 + 3 - 1e-6)
+        expect(Math.min(...trai[0]!.notes) % 12, `${style.id} ô ${i + 1}: tiếng 1 là gốc của chính hợp âm`).toBe(goc)
+        expect(trai.every(e => e.startBeat >= i * 3 - 1e-6), `${style.id} ô ${i + 1}`).toBe(true)
+      }
+    }
+    // Hợp âm dài đúng một ô không phải hợp âm chia đôi: không rải thêm tay phải.
+    const chords = parseChordInput('Em G Bm Em').chords
+    const fill = soloToTimeline(generateFillLine(chords, { beatsPerChord: motO, fillBassChance: .8, raiChiaDoi: true, take: 0 }))
+    expect(fill.filter(e => e.hand === 'right')).toEqual([])
+  })
+
+  it('ô fill c22 mở lại ở đầu mỗi hợp âm: hợp âm trước dài lẻ (nghỉ đôn ra) không làm c22 lệch pha', () => {
+    // Người dùng 26/9/2026: "sao từ lúc đôn phách ra thì các chỗ gạch dưới đều bị thay đổi tiết tấu". Mốc chuyển đoạn đôn ra
+    // 2 móc đơn → hợp âm 3 + 1 nốt đen; ô fill trải liên tục từ đầu bài thì c22 ở hợp âm sau vào giữa cử chỉ.
+    const beatsEach = [3, 4, 3, 3]
+    const starts = [0, 3, 7, 10]
+    const fill = (breaks?: number[]) => render('Am E7 Dm Am', atFill(verse), { beatsPerChord: 3, beatsEach,
+      ...(breaks ? { cellBreaks: breaks } : {}) }).filter(e => e.hand === 'left' && e.startBeat >= 7 - 1e-6 && e.startBeat < 10 - 1e-6)
+    // Cú gõ = mốc · số nốt (quãng tám hay nốt đơn) · độ ngân — c22 gõ đều nửa phách nên lệch pha chỉ lộ ra ở cú nào rơi vào đâu.
+    const cu = (evs: TimelineEvent[], dau: number) => evs.map(e => `${+(e.startBeat - dau).toFixed(3)}:${e.notes.length}:${+e.durationBeats.toFixed(3)}`)
+    const chuan = cu(render('Dm', atFill(verse), { beatsPerChord: 3 }).filter(e => e.hand === 'left'), 0)
+    expect(cu(fill(starts), 7)).toEqual(chuan)
+    expect(cu(fill(), 7), 'không mở lại: lệch pha').not.toEqual(chuan)
+  })
+
   it('two-hand trial: one arpeggio wave across the hands, never block chords', () => {
     // Người dùng 25/9/2026: "Chia 2 tay để đánh rải chứ ko phải để dặm hợp âm, và ko nhất thiết phải là chia
     // đều" — bản dặm 2 · 3 · 5 · 6 bị bác. Sóng: trái gốc–5–8 (tiếng 1–3), phải 10–12–10 rồi 12–10–8 (4–6).

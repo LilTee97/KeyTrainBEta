@@ -4172,3 +4172,71 @@ là lượt 3 cho test và điệu khác. **Giữ ô tick** — người dùng d
 phách dạo 22 → 11%, sát số đo hơn mà nghe kém hơn. Đừng dựng lại. Đính chính kèm: quãng tám kết 8–9% (bài 2%) không phải lệch —
 đó là cụm C3+F3+C4 của chính câu đóng kết, bài đánh một lần, bộ soạn dùng câu đóng mọi lượt.
 Giải thích cách chọn hợp âm và nốt (cho chức năng giải thích sau này): md Cà Pháo, mục "Bộ soạn solo Ballad Để em lượt 4 ĐÃ DUYỆT".
+
+
+### Slow rock: ô tick "mỗi hợp âm 6 phách rồi chuyển" — `chordBeats` = MỘT ô của điệu
+
+Người dùng: *"có nhiều bài slow rock mà mỗi hợp âm chỉ đánh 6 phách là chuyển qua hợp âm khác. Tôi muốn tạo ô tick để chơi
+6 phách để chuyển hợp âm chứ ko phải 2 lần 6 phách"*. Điệu `gridUnit` 0,5 (Lá thư, LT, Đức Thịnh): `chordBeats` =
+(beatsPerChord/4) × beatsPerMeasure = 6 nốt đen = HAI ô 6 móc đơn. Ô tick `slowRockMotO` (họ slow rock, lưu theo bài) →
+`chordBeats` = beatsPerMeasure × gridUnit (3 nốt đen); ô chọn "Mỗi hợp âm" bị khoá. Ô đệm trải theo thời gian nên mỗi hợp
+âm một ô vẫn nhận trọn một ô rải trên gốc của nó. Bộ soạn solo Slow Rock Linh Nhi không đọc `chordBeats` → câu solo đã
+duyệt không đổi. **Bẫy:** lượt đầu tôi dựng ngưỡng `splitBelow` "coi hợp âm ghép đôi là trọn một ô" — hiểu sai, đã gỡ hẳn.
+
+### Mốc chuyển đoạn: nghỉ ĐÚNG N phách, ĐÔN RA thêm vào ô nối; nút "4" → "Mặc định" theo sheet
+
+Người dùng (Slow Rock Lá thư hai tay, đệm "Không" · im 3): *"tôi chọn nghỉ phách sau khi chạy ngón mà ko thấy nghỉ"*. Bẫy:
+đệm 0 thì câu chạy bắt đầu ngay đầu ô ở tốc độ cố định → lặng = phần ô còn thừa, không theo số chọn (ô 4 phách: chọn
+2 · 3 · 4 đều lặng 1¾); trần giữ chỗ 2 nốt đen còn cắt chỗ nghỉ ở ô 6 móc đơn. Ba lượt sửa:
+1. `transitionRunNotes`: câu chạy luôn kết ĐÚNG chỗ nghỉ (`datCuoi` mọi mức đệm) — người dùng chọn "nghỉ đúng N phách" thay
+   luật 17/8 (`50c9596`) "Không = im điệu chạy ngón ngay từ đầu ô"; "Không" nay = không bắt buộc đệm trước. Test cũ "không
+   đệm thì chạy ngay từ đầu hợp âm" viết lại.
+2. *"đừng dồn câu chạy lại chơi nhanh hơn. Nghỉ bao nhiêu phách thì đôn ra bấy nhiêu phách"*: `nghiDonRaTheoMoc`
+   (sectionStyles) cộng số phách nghỉ (× gridUnit) vào hợp âm ở mốc (`halvedBeats`); câu chạy giữ móc kép, kết ở vạch cũ.
+   Không đôn: mốc 0 quãng tám; ACDD / màu Cà Pháo (câu chạy CP không đọc số nghỉ); "Mặc định" ở điệu chưa đo sheet. Bản thử
+   hạ trần giữ chỗ 2 → 1 nốt đen (móc kép đôi) bị bác — trần giữ 2.
+3. Nút "4" → **"Mặc định"** (`restTheoSheet`) = *"tuân theo cách mà trong sheet đã làm ở mốc chuyển đoạn"*; mốc mới mặc định
+   chọn nó. Số đo 14 mốc hai sheet slow rock Linh Nhi (lặng cả hai tay trước vạch, móc đơn): Lá Thư 0 ×4 · 0,5 ×3; Một Cõi
+   0 ×4 · 0,25 ×1 · 1,5–1,75 ×2 → `StylePattern.transitionRest: 0` ở Lá thư và LT. Điệu không khai → 2 phách trong ô (cũ).
+**Triệu chứng để lùi**: mốc chuyển đoạn nghe hụt đệm trước câu chạy ở ô dài → xem lại (1); bài dài ra khó chịu → (2).
+
+### Hợp âm dài lẻ làm ô fill và ô đệm lệch pha — mở lại ô ở đầu hợp âm
+
+Người dùng sau khi đôn ra: *"sao từ lúc đôn phách ra thì các chỗ gạch dưới đều bị thay đổi tiết tấu"* (gạch chấm = chỗ có
+fill). Bẫy: `renderPattern` trải ô liên tục từ đầu bài; hợp âm ở mốc dài thêm 2–3 móc đơn → mọi hợp âm sau lệch pha với ô.
+c22 gõ đều nửa phách nên MỐC GÕ không đổi — cái lệch là cú quãng tám / nốt đơn / độ ngân rơi sai tiếng (test phải so cả
+hình cú, không chỉ mốc). Sửa: `fillBacking` mở lại ô fill ở đầu mỗi hợp âm (`cellBreaks`); ô đệm mở lại ở hợp âm ngay sau
+mốc được đôn ra. "Nghỉ ở chỗ fill" (`fillRests`, có từ trước) vốn cũng kéo dài hợp âm → cùng lỗi, nay hết theo.
+
+### Slow Rock Lá thư hai tay ĐÃ NGHE DUYỆT LẠI 26/9/2026
+
+Người dùng: *"Điệu slow rock lá thư 2 tay đã ổn"*. Duyệt cùng các sửa trên (ô tick 6 phách, mốc chuyển đoạn nghỉ đúng N phách đôn ra + "Mặc
+định" theo sheet, ô fill mở lại). Sóng rải hai tay không đổi nốt (bản 25/9). Ghi vào md Linh Nhi **mục 13i** (mục slow
+rock) — người dùng dặn điệu nào ghi vào mục điệu ấy trong md thầy, áp cho mọi thầy. Toàn suite **2.835 qua / 7 đỏ** — đúng
+7 đỏ cũ.
+
+
+### Nút "Mặc định" = im 0 và nghỉ đôn ra — áp cho MỌI điệu (kể cả màu Cà Pháo)
+
+Người dùng: *"nút nghỉ phách mặc định và cơ chế đôn phách mà vẫn giữ gìn tiết tấu hãy áp dụng cho mọi điệu"*. Đo mốc chuyển
+đoạn cả kho (18 sheet có chia đoạn; Hồng Kông 1 không đọc được), lặng cả hai tay trước vạch đầu đoạn mới, nốt đen:
+
+| thầy · điệu | mốc | lặng 0 | ≤ ½ | dài hơn |
+|---|---|---|---|---|
+| Cà Pháo ballad (7 bài) | 40 | 40 | 0 | 0 |
+| Cà Pháo bossa (1) | 6 | 6 | 0 | 0 |
+| Tôn Hùng ballad (2) | 14 | 14 | 0 | 0 |
+| Linh Nhi bolero (6) | 36 | 29 | 4 | 3 |
+| Linh Nhi slow rock (2) | 16 | 11 | 3 | 2 |
+
+Riêng tay trái (tiếng đệm) trung vị 0 ở mọi thầy. Tái lập: `tools/moc_chuyen_doan.py` (`--trai`). → `NGHI_MAC_DINH = 0` (sectionStyles) cho mọi điệu, bỏ trường
+`StylePattern.transitionRest` (Lá thư · LT khai 0 — nay chung). Cũ: điệu không khai → 2 phách trong ô, đo trên
+`reference/nguoi ay.mxl` — đó là khoảng lặng của GIỌNG HÁT, không phải người đệm. `nghiDonRaTheoMoc` đôn ra ở mọi điệu, chỉ
+trừ mốc 0 quãng tám và ACDD (menu ACDD không có số phách nghỉ). Màu Cà Pháo: `planCpLicks` nhận `transitionRests` — câu chạy
+CP kết ở vạch cũ (`exit`), khung placement trùm chỗ nghỉ nên `cpBacking` tắt đệm ở đó. Cũ: màu Cà Pháo bỏ qua số phách
+nghỉ và không tắt đệm. Ô đệm / ô fill mở lại sau hợp âm dài lẻ đã chung mọi điệu từ mục trên. Số đo từng thầy ghi vào md
+thầy ấy, đúng mục điệu (Cà Pháo mục ballad · Tôn Hùng mục 4 · Linh Nhi 10c bolero, 13i slow rock).
+**Triệu chứng để lùi**: bài cũ ở điệu khác nghe mốc chuyển đoạn vào quá gấp (không còn 2 phách cất giọng) → người dùng chọn
+số ở menu, hoặc đổi `NGHI_MAC_DINH`. Toàn suite **2.836 qua / 7 đỏ** — đúng 7 đỏ cũ.
+**ĐÃ NGHE DUYỆT 26/9/2026** — người dùng: *"đã ổn"*. Duyệt cả chuỗi mốc chuyển đoạn trong ngày: nghỉ đúng N phách · đôn
+ra không dồn câu chạy · "Mặc định" = im 0 · ô đệm / ô fill mở lại sau hợp âm dài lẻ · áp mọi điệu kể cả màu Cà Pháo.

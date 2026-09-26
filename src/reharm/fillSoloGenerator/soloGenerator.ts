@@ -548,6 +548,16 @@ export function transitionRunNotes(
   total: number,
 ): ReturnType<typeof arpeggioRun> {
   const delay = Math.min(transition.delayBeats ?? 0, Math.max(0, total - 1))
+  /*
+    Người dùng 26/9/2026 (Slow Rock Lá thư hai tay, đệm "Không" · im 3): *"tôi chọn nghỉ phách sau khi chạy ngón mà ko thấy
+    nghỉ"*. Hai chỗ: (1) đệm 0 thì câu chạy vẫn bắt đầu ngay đầu ô ở tốc độ cố định → khoảng lặng = phần ô còn thừa, KHÔNG
+    theo số phách chọn (ô 4 phách: chọn 2 · 3 · 4 đều lặng 1¾); nay câu chạy luôn KẾT ĐÚNG chỗ im bắt đầu (`datCuoi`), đệm
+    chơi tới lúc câu chạy vào — "đệm rồi mới chạy" chỉ còn là mức đệm tối thiểu (người dùng chọn "nghỉ đúng N phách" thay
+    luật 17/8 "Không = chạy ngay từ đầu ô"). (2) Chỗ nghỉ được ĐÔN RA thêm vào ô nối (`ReharmHome` cộng số phách nghỉ vào
+    hợp âm ở mốc), không cắt vào chỗ chạy — người dùng: *"đừng dồn câu chạy lại chơi nhanh hơn. Nghỉ bao nhiêu phách thì
+    đôn ra bấy nhiêu phách"* (bản thử hạ trần giữ chỗ về 1 nốt đen → câu chạy móc kép đôi, bị bác). Trần giữ nguyên 2.
+    Cũ: `datCuoi` chỉ khi `delay` > 0.
+  */
   const rest = Math.min(
     transition.restBeats,
     Math.max(0, total - delay - Math.min(2, total)),
@@ -558,7 +568,7 @@ export function transitionRunNotes(
     endBeat: chordStart + total - rest,
     maxBeats: total - rest - delay,
     fromBeat: chordStart + delay,
-    ...(delay > 0 ? { datCuoi: true } : {}),
+    datCuoi: true,
   })
 }
 
@@ -576,7 +586,12 @@ export interface TransitionRun {
    * giọng, và đẩy cả đoạn hát lệch đi.
    */
   restBeats: number
-  /** Hợp âm chơi bấy nhiêu phách ở ô nối rồi mới chạy ngón. 0 = chạy ngay. */
+  /**
+   * Nút "Mặc định": im theo cách sheet làm ở mốc chuyển đoạn (`NGHI_MAC_DINH` ở `sectionStyles` — mọi thầy chơi tới sát
+   * vạch, im 0), không theo `restBeats`.
+   */
+  restTheoSheet?: boolean
+  /** Hợp âm chơi ít nhất bấy nhiêu phách ở ô nối rồi mới chạy ngón. 0 = không bắt buộc. */
   delayBeats?: number
 }
 

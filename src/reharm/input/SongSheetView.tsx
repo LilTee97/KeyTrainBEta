@@ -165,6 +165,8 @@ export interface TransitionOption {
   octaves: number
   /** Im hẳn mấy phách trước vạch nhịp, cho người hát cất giọng. */
   restBeats: number
+  /** Nút "Mặc định": im theo cách sheet của điệu làm ở mốc chuyển đoạn. */
+  restTheoSheet?: boolean
   delayBeats?: number
 }
 
@@ -853,18 +855,22 @@ export function ChordContextMenu({
                 Im mấy phách cuối ô nối
               </p>
               <div className="flex gap-1 px-2.5 py-1">
-                {[0, 1, 2, 3, 4].map((restBeats) => (
+                {/* Người dùng 26/9/2026: thay nút "4" bằng "Mặc định" = theo cách sheet làm ở mốc chuyển đoạn. */}
+                {([0, 1, 2, 3, 'sheet'] as const).map((restBeats) => (
                   <button
                     key={restBeats}
                     type="button"
-                    onClick={() => onSetTransition({ ...transition, restBeats })}
+                    title={restBeats === 'sheet' ? 'Im theo cách sheet của điệu làm ở mốc chuyển đoạn' : undefined}
+                    onClick={() => onSetTransition(restBeats === 'sheet'
+                      ? { ...transition, restTheoSheet: true }
+                      : { ...transition, restBeats, restTheoSheet: false })}
                     className={`flex-1 rounded border px-2 py-1 text-xs ${
-                      transition.restBeats === restBeats
+                      (restBeats === 'sheet' ? transition.restTheoSheet : !transition.restTheoSheet && transition.restBeats === restBeats)
                         ? 'border-amber-key bg-amber-key/15 text-amber-key'
                         : 'border-line bg-white/4 text-dim hover:bg-white/8'
                     }`}
                   >
-                    {restBeats}
+                    {restBeats === 'sheet' ? 'Mặc định' : restBeats}
                   </button>
                 ))}
               </div>

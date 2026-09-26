@@ -149,6 +149,8 @@ import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSolo
 import {
   hasChorusVariant,
   isSplitAwareStyle,
+  nghiCuaMoc,
+  nghiDonRaTheoMoc,
   hasTonicVariant,
   resolveStyleForChord,
   resolveStyleForSection,
@@ -254,7 +256,7 @@ const DEFAULT_INTERLUDE_CHORDS = 4
  * Hai phách đo từ bản ký âm `reference/nguoi ay.mxl` — chỗ người hát cất giọng
  * trước phách mạnh. Người dùng chỉnh lại được từng chỗ bằng chuột phải.
  */
-const DEFAULT_TRANSITION: TransitionRun = { octaves: 2, restBeats: 2 }
+const DEFAULT_TRANSITION: TransitionRun = { octaves: 2, restBeats: 2, restTheoSheet: true }
 
 function shiftRecord<T>(
   table: Record<number, T>,
@@ -968,10 +970,22 @@ export function ReharmHome() {
    * Điệu nhịp ba bốn thì một ô nhịp chỉ có ba phách, nên phải quy đổi lựa chọn
    * của người dùng theo nhịp của điệu chứ không giữ nguyên con số.
    */
+  /*
+    Ô TICK SLOW ROCK — "mỗi hợp âm 6 phách rồi chuyển". Người dùng 26/9/2026: *"có nhiều bài slow rock mà mỗi hợp âm chỉ
+    đánh 6 phách là chuyển qua hợp âm khác. Tôi muốn tạo ô tick để chơi 6 phách để chuyển hợp âm chứ ko phải 2 lần 6
+    phách"* — áp cho mọi tiết tấu slow rock. Điệu `gridUnit` 0,5 (Lá thư, LT, Đức Thịnh): "1 ô nhịp" của ô chọn dưới đây
+    = 6 nốt đen = HAI ô 6 móc đơn cho mỗi hợp âm. Bật ô tick thì mỗi hợp âm = MỘT ô của điệu (`beatsPerMeasure × gridUnit`,
+    6 móc đơn), bỏ qua ô chọn "Mỗi hợp âm". Ô đệm trải theo thời gian, nên hợp âm nào cũng nhận trọn một ô rải trên gốc của
+    chính nó. Tắt thì y như cũ. Lưu theo bài.
+    (Lượt đầu tôi hiểu sai thành "coi hợp âm ghép đôi là trọn một ô" — người dùng bác.)
+  */
+  const [slowRockMotO, setSlowRockMotO] = useState(false)
+  const laSlowRock = hoCuaDieu(style.id) === 'slow-rock'
   const chordBeats = useMemo(() => {
+    if (laSlowRock && slowRockMotO) return style.beatsPerMeasure * (style.gridUnit ?? 1)
     const measures = beatsPerChord / 4
     return Math.max(1, measures * style.beatsPerMeasure)
-  }, [beatsPerChord, style.beatsPerMeasure])
+  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, laSlowRock, slowRockMotO])
 
   /**
    * Hợp âm kết mỗi đoạn, trừ đoạn cuối bài.
@@ -1028,9 +1042,10 @@ export function ReharmHome() {
   */
   const transitionsDieu = useMemo(() => {
     const g = style.gridUnit ?? 1
-    if (g === 1) return transitions
+    // Nút "Mặc định" (26/9/2026): im theo sheet — `nghiCuaMoc`.
     return new Map([...transitions].map(([index, run]) => [index, {
-      ...run, restBeats: run.restBeats * g, ...(run.delayBeats !== undefined ? { delayBeats: run.delayBeats * g } : {}),
+      ...run, restBeats: nghiCuaMoc(run) * g,
+      ...(run.delayBeats !== undefined ? { delayBeats: run.delayBeats * g } : {}),
     }]))
   }, [transitions, style.gridUnit])
 
@@ -1046,14 +1061,23 @@ export function ReharmHome() {
    * hơi rộng, nhưng bản ký âm rộng rãi được là nhờ câu hát kết sớm trong ô,
    * còn ở đây không ép người hát ngừng sớm được.
    */
+  // Nghỉ ở mốc chuyển đoạn được đôn ra thêm vào hợp âm ở mốc — xem `nghiDonRaTheoMoc`.
+  const nghiDonRa = useMemo(
+    () => nghiDonRaTheoMoc(transitions, style, style.family === 'ca-phao-ballad-acdd' && !walkingOn),
+    [transitions, style, walkingOn],
+  )
+
   const halvedBeats = useMemo(() => {
-    const table = {
+    const table: Record<number, number> = {
       ...importedBeats,
       ...pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
     }
+    for (const [index, extra] of Object.entries(nghiDonRa)) {
+      table[Number(index)] = (table[Number(index)] ?? chordBeats) + extra
+    }
 
     return table
-  }, [importedBeats, pairedChords, sequence.chords.length, chordBeats])
+  }, [importedBeats, pairedChords, sequence.chords.length, chordBeats, nghiDonRa])
 
   const reharm = useMemo(() => {
     const parsedKey = manualKey
@@ -1765,10 +1789,23 @@ export function ReharmHome() {
     const splitStarts = isSplitAwareStyle(style.id)
       ? chordStarts.filter((_, index) => beatsEach[index] < chordBeats)
       : []
+    /*
+      Mốc chuyển đoạn ĐÔN RA N phách (`nghiDonRa`) làm ô nối dài lẻ (vd 6 + 2 móc đơn): mở lại ô đệm ngay hợp âm sau mốc.
+      Không thì ô đệm — trải liên tục theo thời gian — lệch pha suốt phần còn lại của bài. Người dùng 26/9/2026: *"sao từ lúc
+      đôn phách ra thì các chỗ gạch dưới đều bị thay đổi tiết tấu"*.
+    */
+    const sauNghi: number[] = []
+    let chinh = -1
+    withPassing.forEach((chord, index) => {
+      if (chord.passing) return
+      chinh += 1
+      if (nghiDonRa[chinh - 1] !== undefined) sauNghi.push(chordStarts[index])
+    })
 
     const breaks = [
       ...sectionCellBreaks(style.id, songSources),
       ...splitStarts,
+      ...sauNghi,
     ]
 
     const rendered = renderPattern(twoHands, style, {
@@ -1798,21 +1835,27 @@ export function ReharmHome() {
     if (!walk) return plan
 
     return { backing: [...played.filter((event) => event.hand !== 'left'), ...walk.events], protectedWindows: [] }
-  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions, nghiDonRa])
   const accompaniment = accompanimentPlan.backing
 
   /*
     Hợp âm có câu fill dùng ô đệm riêng của điệu (`StylePattern.fillCell`) — chỗ
     lời nghỉ hai tay cùng đệm dưới câu fill. Điệu không khai thì y như cũ.
   */
-  const fillBacking = useMemo(
-    () => style.fillCell
-      ? renderPattern(twoHands, { ...style, cell: style.fillCell }, {
-        beatsPerChord: chordBeats, beatsEach: chordDurations(withPassing, chordBeats), muteWindows,
-      })
-      : null,
-    [twoHands, style, chordBeats, withPassing, muteWindows],
-  )
+  const fillBacking = useMemo(() => {
+    if (!style.fillCell) return null
+    /*
+      Ô fill (c22 Lá thư) là cử chỉ của MỘT hợp âm: mở lại ở đầu mỗi hợp âm, để nó luôn vào đúng phách 1 của hợp âm có fill.
+      Cũ: trải liên tục từ đầu bài — hợp âm nào phía trước dài lẻ (nghỉ đôn ra ở mốc chuyển đoạn, fill có nghỉ) là c22 lệch
+      pha, vào giữa cử chỉ. Người dùng 26/9/2026: *"các chỗ gạch dưới đều bị thay đổi tiết tấu"*. Bài không có hợp âm dài lẻ
+      thì y như cũ (đầu hợp âm trùng đầu ô).
+    */
+    const beatsEach = chordDurations(withPassing, chordBeats)
+    const starts = beatsEach.map((_, i) => beatsEach.slice(0, i).reduce((a, b) => a + b, 0))
+    return renderPattern(twoHands, { ...style, cell: style.fillCell }, {
+      beatsPerChord: chordBeats, beatsEach, muteWindows, cellBreaks: starts,
+    })
+  }, [twoHands, style, chordBeats, withPassing, muteWindows])
   const backingFor = useCallback(
     (line: Parameters<typeof giveCompingToLeft>[1]) => fillBacking
       /*
@@ -2318,9 +2361,10 @@ export function ReharmHome() {
     sectionEnds: new Set(transitions.keys()), extraFills, extraRuns, skip: fillSkip,
     fullTransitions: intensity === 'caPhao', keyboard: caPhaoKeyboardRange,
     transitionDelays: new Map([...transitions].map(([i, run]) => [i, run.octaves <= 0 ? Infinity : run.delayBeats ?? 0])),
+    transitionRests: new Map(Object.entries(nghiDonRa).map(([i, rest]) => [Number(i), rest])),
     take: take + phraseSpin + playSpin.current,
   }), [withPassing, style, reharm.key, accompaniment, accompanimentPlan.protectedWindows, chordBeats, breaths, singing,
-    transitions, extraFills, extraRuns, fillSkip, phraseSpin, intensity, caPhaoKeyboardRange])
+    transitions, extraFills, extraRuns, fillSkip, phraseSpin, intensity, caPhaoKeyboardRange, nghiDonRa])
   const cpPreview = useMemo(() => cpLick ? cpPlan(0) : null, [cpLick, cpPlan])
 
   /**
@@ -2833,6 +2877,7 @@ export function ReharmHome() {
       caPhaoFull,
       caPhaoSoloMode,
       cpBalladThu,
+      slowRockMotO,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       acceptedPassing,
@@ -2889,6 +2934,7 @@ export function ReharmHome() {
       caPhaoFull,
       caPhaoSoloMode,
       cpBalladThu,
+      slowRockMotO,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       styleId,
@@ -2946,6 +2992,7 @@ export function ReharmHome() {
     setCaPhaoFull(saved.caPhaoFull ?? false)
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
     setCpBalladThu(saved.cpBalladThu ?? true)
+    setSlowRockMotO(saved.slowRockMotO ?? false)
     setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
     setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
     setLickyRuns(saved.lickyRuns ?? false)
@@ -4780,6 +4827,7 @@ export function ReharmHome() {
             Mỗi hợp âm
             <select
               value={beatsPerChord}
+              disabled={laSlowRock && slowRockMotO}
               onChange={(event) =>
                 setBeatsPerChord(Number(event.target.value))
               }
@@ -4791,6 +4839,12 @@ export function ReharmHome() {
               <option value={1}>1 phách</option>
             </select>
           </label>
+          {laSlowRock && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input type="checkbox" checked={slowRockMotO} onChange={() => setSlowRockMotO((on) => !on)} />
+              Slow rock: mỗi hợp âm 6 phách rồi chuyển (không phải 2 lần 6 phách)
+            </label>
+          )}
         </div>
       </div>
 

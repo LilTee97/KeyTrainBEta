@@ -70,6 +70,21 @@ describe('CP Lick — source, two-hand cells and backing outside fills', () => {
     expect(planCpLicks(sameOptions)).toEqual(planCpLicks(sameOptions))
   })
 
+  it('màu Cà Pháo: nghỉ ĐÔN RA ở mốc chuyển đoạn — câu chạy CP kết ở vạch cũ, đệm tắt suốt chỗ nghỉ', () => {
+    // Người dùng 26/9/2026: nghỉ đôn ra và nút "Mặc định" "hãy áp dụng cho mọi điệu". A13 ở mốc 4 phách + nghỉ 2 = 6 (4 → 10).
+    const [dm, a13] = parseChordInput('Dm A13 Dm').chords
+    const cs = [dm!, { ...a13!, beats: 6 }, dm!]
+    const backing = renderPattern(voiceLeadTwoHands(cs), bossa, { beatsEach: [4, 6, 4] })
+    for (let take = 0; take < 8; take++) {
+      const plan = planCpLicks({ chords: cs, style: bossa, key: { tonic: 2, scale: 'minor' }, backing, beatsPerChord: 4,
+        sectionEnds: new Set([1]), vocal: new Set([0, 1, 2]), fullTransitions: true, transitionRests: new Map([[1, 2]]), take })
+      expect(plan.placements, `take ${take}`).toHaveLength(1)
+      expect(plan.placements[0].end).toBe(10)
+      expect(Math.max(...plan.events.map(e => e.startBeat)), `take ${take}: câu chạy kết trước chỗ nghỉ`).toBeLessThan(8)
+      expect(plan.backing.some(e => e.startBeat >= 8 - 1e-6 && e.startBeat < 10 - 1e-6), `take ${take}: đệm tắt khi nghỉ`).toBe(false)
+    }
+  })
+
   it('reductions keep contiguous source gestures and leave the raw sheet repertoire unchanged', () => {
     const before = JSON.stringify(cpTransitions)
     for (const source of cpTransitions) for (const phrase of advancedCpRuns(source,5,4)) {
