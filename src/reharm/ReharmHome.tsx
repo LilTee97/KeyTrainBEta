@@ -980,12 +980,16 @@ export function ReharmHome() {
     (Lượt đầu tôi hiểu sai thành "coi hợp âm ghép đôi là trọn một ô" — người dùng bác.)
   */
   const [slowRockMotO, setSlowRockMotO] = useState(false)
+  // Twist: mỗi hợp âm lặp mẫu hai tay 2 lần (8 phách); tick thì 1 lần (4 phách).
+  const [twistSinglePass, setTwistSinglePass] = useState(false)
   const laSlowRock = hoCuaDieu(style.id) === 'slow-rock'
+  const isTwist = style.family === 'twist'
   const chordBeats = useMemo(() => {
+    if (isTwist) return style.beatsPerMeasure * (twistSinglePass ? 1 : 2)
     if (laSlowRock && slowRockMotO) return style.beatsPerMeasure * (style.gridUnit ?? 1)
     const measures = beatsPerChord / 4
     return Math.max(1, measures * style.beatsPerMeasure)
-  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, laSlowRock, slowRockMotO])
+  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, laSlowRock, slowRockMotO, isTwist, twistSinglePass])
 
   /**
    * Hợp âm kết mỗi đoạn, trừ đoạn cuối bài.
@@ -1069,7 +1073,8 @@ export function ReharmHome() {
 
   const halvedBeats = useMemo(() => {
     const table: Record<number, number> = {
-      ...importedBeats,
+      // Twist dùng số lần đệm đã chọn kể cả bài nhập; giữ bảng gốc để đổi lại điệu khác.
+      ...(isTwist ? {} : importedBeats),
       ...pairedChordBeats(pairedChords, sequence.chords.length, chordBeats),
     }
     for (const [index, extra] of Object.entries(nghiDonRa)) {
@@ -1077,7 +1082,7 @@ export function ReharmHome() {
     }
 
     return table
-  }, [importedBeats, pairedChords, sequence.chords.length, chordBeats, nghiDonRa])
+  }, [importedBeats, isTwist, pairedChords, sequence.chords.length, chordBeats, nghiDonRa])
 
   const reharm = useMemo(() => {
     const parsedKey = manualKey
@@ -2878,6 +2883,7 @@ export function ReharmHome() {
       caPhaoSoloMode,
       cpBalladThu,
       slowRockMotO,
+      twistSinglePass,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       acceptedPassing,
@@ -2935,6 +2941,7 @@ export function ReharmHome() {
       caPhaoSoloMode,
       cpBalladThu,
       slowRockMotO,
+      twistSinglePass,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       styleId,
@@ -2993,6 +3000,7 @@ export function ReharmHome() {
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
     setCpBalladThu(saved.cpBalladThu ?? true)
     setSlowRockMotO(saved.slowRockMotO ?? false)
+    setTwistSinglePass(saved.twistSinglePass === true)
     setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
     setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
     setLickyRuns(saved.lickyRuns ?? false)
@@ -3077,6 +3085,7 @@ export function ReharmHome() {
     setManualKey('')
     setPairedChords(new Set())
     setImportedBeats({})
+    setTwistSinglePass(false)
     setLockSongBpm(false)
     const styleBpm = getStyle(styleId)?.bpm
     if (styleBpm) setBpm(styleBpm)
@@ -4823,22 +4832,38 @@ export function ReharmHome() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-5">
-          <label className="flex items-center gap-2 text-xs text-dim">
-            Mỗi hợp âm
-            <select
-              value={beatsPerChord}
-              disabled={laSlowRock && slowRockMotO}
-              onChange={(event) =>
-                setBeatsPerChord(Number(event.target.value))
-              }
-              className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
-            >
-              <option value={8}>2 ô nhịp</option>
-              <option value={4}>1 ô nhịp</option>
-              <option value={2}>nửa ô nhịp</option>
-              <option value={1}>1 phách</option>
-            </select>
-          </label>
+          {isTwist ? (
+            <>
+              <span className="text-xs text-dim">
+                Mỗi hợp âm: {twistSinglePass ? '1 lần · 4 phách' : '2 lần · 8 phách'}
+              </span>
+              <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+                <input
+                  type="checkbox"
+                  checked={twistSinglePass}
+                  onChange={(event) => { stopPlay(); setTwistSinglePass(event.target.checked) }}
+                />
+                Twist: mỗi hợp âm đánh 1 lần rồi chuyển
+              </label>
+            </>
+          ) : (
+            <label className="flex items-center gap-2 text-xs text-dim">
+              Mỗi hợp âm
+              <select
+                value={beatsPerChord}
+                disabled={laSlowRock && slowRockMotO}
+                onChange={(event) =>
+                  setBeatsPerChord(Number(event.target.value))
+                }
+                className="rounded-md border border-line bg-white/6 px-2 py-1 text-cream"
+              >
+                <option value={8}>2 ô nhịp</option>
+                <option value={4}>1 ô nhịp</option>
+                <option value={2}>nửa ô nhịp</option>
+                <option value={1}>1 phách</option>
+              </select>
+            </label>
+          )}
           {laSlowRock && (
             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
               <input type="checkbox" checked={slowRockMotO} onChange={() => setSlowRockMotO((on) => !on)} />

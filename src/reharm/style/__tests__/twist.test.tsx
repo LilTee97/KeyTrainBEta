@@ -75,6 +75,26 @@ describe('Twist extracted from the Boogie Woogie sheet', () => {
     })
   })
 
+  it.each([8, 4])('repeats both hands for a %i-beat chord before changing to the next root', (beatsPerChord) => {
+    const events = renderPattern(
+      voiceLeadTwoHands(parseChordInput('C F').chords), getStyle('twist')!, { beatsPerChord },
+    )
+    const repeats = beatsPerChord / 4
+    for (const [index, root] of [36, 41].entries()) {
+      const start = index * beatsPerChord
+      const inChord = events.filter(event => event.startBeat >= start && event.startBeat < start + beatsPerChord)
+      const left = inChord.filter(event => event.hand === 'left')
+      const right = inChord.filter(event => event.hand === 'right')
+      expect(left.map(event => event.notes)).toEqual(
+        Array.from({ length: repeats }, () => majorBass.map(offset => [root + offset])).flat(),
+      )
+      expect(right.map(event => round(event.startBeat - start))).toEqual(
+        Array.from({ length: repeats }, (_, bar) => [bar * 4, round(bar * 4 + 8 / 3)]).flat(),
+      )
+      expect(inChord.every(event => event.startBeat + event.durationBeats <= start + beatsPerChord + 1e-6)).toBe(true)
+    }
+  })
+
   it('keeps the cell phase over split chords and does not invent an RH attack in a written rest', () => {
     const halfBars = render('C F', [2, 2])
     expect(halfBars.filter(event => event.hand === 'left').map(event => round(event.startBeat)))

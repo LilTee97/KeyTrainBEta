@@ -138,7 +138,7 @@ C6/F9/G7. Người dùng vẫn chọn màu hợp âm theo cơ chế hiện tại
 
 ## 5. Nghe thử và kiểm tra
 
-Chọn **Twist** trong nhóm 4/4; nghe C–F–G, mỗi hợp âm một ô, 180 BPM;
+Chọn **Twist** trong nhóm 4/4; nghe C–F–G, mặc định mỗi hợp âm hai ô, 180 BPM;
 tắt Walking bass khi muốn nghe chính tuyến bass được trích. Có thể giảm BPM
 để nghe cặp tiếp cận ♭3→3 và hai cú chặn tay phải.
 
@@ -150,3 +150,19 @@ Kiểm thử hồi quy ở `src/reharm/style/__tests__/twist.test.tsx`: timeline
 swing/gate và nghỉ RH; chuyển giọng trưởng/thứ; hợp âm chia nhỏ; nút Twist
 hiện và được chọn trong bảng điệu. Các thay đổi có nguồn để nghe đối chiếu,
 chưa được gọi là đã nghe duyệt chỉ vì kiểm thử đạt.
+
+## 6. Số lần đệm mỗi hợp âm — yêu cầu 27/9/2026
+
+- Mặc định **không tick**: mỗi hợp âm đánh trọn mẫu hai tay **2 lần = 8 phách**.
+- Tick **“Twist: mỗi hợp âm đánh 1 lần rồi chuyển”**: **1 lần = 4 phách**.
+- Một lần là cả cell hai tay 4 phách, không phải một cú chát. Nhịp vẫn là
+  4/4; các onset, nốt bass và khoảng nghỉ RH trong cell không đổi.
+- Lựa chọn lưu theo bài bằng `twistSinglePass`; bài cũ thiếu trường này và
+  bài mới nạp đều mặc định hai lần. Điệu khác vẫn dùng lựa chọn thời lượng cũ.
+- Áp dụng cả cho bài nhập có thời lượng sẵn; bảng thời lượng nguồn được
+  giữ nguyên trong dữ liệu để dùng lại khi đổi sang điệu khác. Cặp hợp âm
+  chia đôi và phần nghỉ thêm ở mốc chuyển đoạn vẫn theo lựa chọn riêng.
+- Đổi tick khi đang phát sẽ dừng; bấm phát lại để nghe từ lịch mới.
+
+Quy tắc hai lần là yêu cầu phối đệm của người dùng; phân tích nguồn ở trên
+không có nghĩa mọi hợp âm trong toàn sheet đều đổi sau đúng hai ô.

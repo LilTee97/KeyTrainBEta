@@ -59,6 +59,8 @@ export interface SongSnapshot {
   cpBalladThu?: boolean
   /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → tắt. */
   slowRockMotO?: boolean
+  /** Twist: bật = một mẫu 4 phách/hợp âm; tắt hoặc bài cũ = hai mẫu (8 phách). */
+  twistSinglePass?: boolean
   caPhaoFullSource?: string
   caPhaoKeyboardRange?: { low: number; high: number }
   lickyRuns?: boolean

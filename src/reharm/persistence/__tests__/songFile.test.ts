@@ -18,6 +18,7 @@ const snapshot = {
   version: 1 as const,
   sourceText: '[Phiên khúc]\nC G\nHôm qua anh thấy',
   transpose: 2,
+  twistSinglePass: true,
   sectionMarks: [],
 } as unknown as SongSnapshot
 
