@@ -256,25 +256,28 @@ const deEm: StylePattern = {
       // nốt bass hoặc đánh thêm giai điệu nghe cho rõ ràng". Tay phải sheet ở mốc chát (cửa sổ 6 · 8 · 34 · 36): 3¼ A4
       // (+E4) · 3¾ C5 (+G4 3/4) · 4¼ E4 — đỉnh lên rồi xuống. Giữ nốt hợp âm; A4 (bậc 6, ngoài hợp âm — trên Em thành C#
       // ngoài giọng) đổi về G4 gần nhất. Cũ (bản 21): mọi chát/bùm dặm cùng một hợp âm E4+G4+C5; bum một nốt G3.
-      // CHÁT 4 – BÙM 5 GIẬT (người dùng 26/9: "sau tiếng bùm 3 sao lại có một tiếng nghe giống hệt tiếng 3 nữa và đánh rất
-      // gần với tiếng 3 … Tiếng 4 nên cách tiếng 3 ra một chút và giật về tiếng 5"). Chát 4 một mình ở 3¼ (tay phải, không
-      // bass); bùm 5 giật vào ¼ phách sau ở 3&; các tiếng sau lùi ¼, bum cuối nhập vào bùm đầu ô 2 (bùm ấy GIỮ đủ hợp âm tay
-      // phải — cách 3 bỏ hợp âm ấy thì "thiếu phách"). Cũ (bản 31): chát 4 + bùm 5 một cú ở 3¼ = F3 + F4 A4 C5 trên Fadd2,
-      // trùng gần hết tiếng 3 (F3 C3 + A4 F4) nên nghe như tiếng 3 đánh lại.
-      // WALKING BASS bùm 5 · bum 3¾ · bùm 4¼ · bùm 4¾: MỘT dòng tay trái đi liền bậc từ bùm 3 tới gốc đầu ô 2, soạn cùng lúc
-      // (`walkingBass` trong patternRenderer). Bùm 5 cũng trong dòng: xuất phát cứng từ gốc quãng tám 3 của bùm 5 thì
-      // Bbadd9 → D9sus4 bị ép Bb3 Ab3 F#3 E3 → D3, E3 đụng F4 tay phải. Bum vang một mình (bản 17: bị hợp âm đè thì chìm).
-      // `tones` chỉ là đường lui.
-      { ...hit(2.5, .25, [tone(0, 12)], NHAN), danVao: true },           // bùm 5 (giật)
-      // Bum 6 đứng liền sau bùm 5 → chơi NHƯ bùm 5: bass walking + giai điệu tay phải (người dùng 26/9: "vẫn chưa nghe được
-      // tiếng bum 6, nó đứng liền sau tiếng bùm 5 nên hãy chơi tiếng đó như bùm 5 đi"). Cũ: bản 32 một nốt tay trái lực
-      // .9 (61); bản 33 lực 1.2 (82) — vẫn không nghe ra.
-      { ...hit(2.75, .5, [tone(2, 12)], NHAN), danVao: true },           // bum 6 (3¾) — ngân dưới chát 7
-      { ...hit(3.25, .5, [tone(2, 12)], NHAN), danVao: true },           // bùm 4¼ (tay phải giai điệu E4) — ngân dưới chát 4&
-      { ...hit(3.75, .25, [tone(0, 12)], NHAN), danVao: true },          // bùm 4¾ (tay phải giai điệu G4) → gốc đầu ô 2
+      // PHÂN TÍCH LẠI SHEET 26/9 (người dùng: "định nghĩa về bùm chát của tôi đã quá cứng nhắc làm cho câu đệm mất hay, hãy
+      // phân tích lại trong sheet để em rời xa"; `scripts/audit_cp_de_em_bum_chat.py`). Trên 30 ô phiên, hai tay gõ CÙNG LÚC
+      // chủ yếu ở phách 1 (23/30) và phách 4 (24/30); chỗ khác hai tay ĐAN nhau — tiếng thấp là một nốt tay trái đứng riêng,
+      // tiếng cao là tay phải đứng riêng. Cửa sổ 4 · 6 · 8 · 32 · 34 · 36, mốc 3¼ → 4¾: phải · TRÁI · phải · HAI TAY · phải ·
+      // TRÁI · phải. Nay: chát 4 · bum 5 · chát 6 · bùm 7 · chát 8 · bum 9 · chát 10.
+      // Cũ (bản 32–34): chát 4 · bùm 5 · bum 6 · chát 7 · bùm 8 · chát 9 · bùm 10 — bốn cú hai tay trong 1¾ phách (sheet: một),
+      // do luật "bùm/bum phải có cả tay phải". Người dùng từng nghe "Chát-bùm" (bản 27) nuốt bùm, bum 6 (bản 32–33) chìm: đều là
+      // tiếng tay trái đứng SÁT sau một cú có tay trái. Theo sheet, tiếng tay trái đứng riêng nằm giữa hai tiếng tay phải.
+      // WALKING BASS (người dùng 25/9) giữ: bum 5 · bùm 7 · bum 9 là một dòng đi liền bậc từ bùm 3 tới gốc đầu ô 2
+      // (`walkingBass`). Sheet ở ba mốc này đứng bậc 5 (G3 G3 G3, cửa sổ 8) — đổi theo ý người dùng. `tones` chỉ là đường lui.
+      { ...hit(2.5, .5, [tone(2, 12)], NHAN), danVao: true },            // bum 5 (3&): tay trái một mình
+      { ...hit(3, .5, [tone(2, 12)], NHAN), danVao: true },              // bùm 7 (phách 4): bass + C4 tay phải
+      { ...hit(3.5, .5, [tone(2, 12)], NHAN), danVao: true },            // bum 9 (4&): tay trái một mình → gốc đầu ô 2
       hit(4, .25, [tone(0, 12)], NHAN),                      // 8 bùm: gốc D3, giật
       hit(4.25, .5, [tone(0, 14)], THUONG),                  // 9 bum: dẫn — bậc 2 (E3)
-      hit(4.75, 1.5, [ba3(12)], THUONG),                     // 11 bùm: bậc 3 (F3), ngân tới câu chạy
+      hit(4.75, .5, [ba3(12)], THUONG),                      // 11 bùm: bậc 3 (F3)
+      // LẤP CHỖ BA CHÁT ĐÃ BỎ (người dùng 26/9: "trong vai nhạc sĩ chuyên nghiệp bạn hãy soạn ra cái gì đó để lấp vào 3 tiếng
+      // chát bị bỏ. Nhớ phải khớp với tiết tấu đang chơi"). Ô 2 phách 2 → 3¼ đan tay từng móc kép như sheet ô thật 9 · 37 ở
+      // phách 2 → 2¾ (phải · trái · phải · trái) và như nửa sau ô 1: bum 2¼ · bum 2¾ là walking bass đi XUỐNG từ bùm 11 tới nốt
+      // đầu câu chạy (`walkingBass`), tay phải đi LÊN — hai tay ngược chiều. Cũ (bản 35): bùm 11 ngân 1½ lấp chỗ trống.
+      { ...hit(5.25, .5, [ba3(12)], NHAN), danVao: true },            // bum 2¼
+      { ...hit(5.75, .5, [ba3(12)], NHAN), danVao: true },            // bum 2¾ → nốt đầu câu chạy
       // Câu chạy A2-D3-E3-F3-E3-D3-C3 dưới F4 đang ngân (DERX, cửa sổ 5) — không phải tiếng chính.
       hit(6.25, .25, [tone(2)]), hit(6.5, .25, [tone(0, 12)]),
       hit(6.75, .25, [tone(0, 14)]), hit(7, .25, [ba3(12)]),
@@ -286,22 +289,23 @@ const deEm: StylePattern = {
       hit(0, 1.75, [ba3()], THUONG), hit(0, .5, [tone(2)], THUONG), // 1 Bùm: D4 · F4
       hit(1, .75, [tone(2), tone(0, 12)], THUONG),            // 2 chát: F4+Bb4
       hit(1.75, .5, [ba3(), tone(0, 12)], THUONG),            // 3 bùm: E4+C5 — giữ nguyên, ngân tới 3¼
-      // Ba chát giữ hợp âm cũ theo thứ tự, đỉnh G4 → C5 → E4 như tay phải sheet ở mốc chát (A4 → C5 → E4, A4 ngoài hợp âm
-      // đổi G4). Giai điệu bùm: C4 (bậc 1, ý Claude — sheet 3& không có tay phải) · E4 (sheet 4¼, 6/6 cửa sổ) · G4 (ý Claude).
-      hit(2.25, .25, [ba3(), tone(2)], THUONG),               // chát 4: E4+G4, một mình, không bass
-      hit(2.5, .25, [tone(0)], NHAN),                         // bùm 5 (giật): giai điệu C4 cùng bass C3
-      hit(2.75, .25, [ba3()], NHAN),                          // bum 6 như bùm 5: giai điệu E4 (bậc 3, ý Claude)
-      hit(3, .25, [tone(2), tone(0, 12)], THUONG),            // chát 7: G4+C5
-      hit(3.25, .25, [ba3()], NHAN),                          // bùm 8: giai điệu E4
-      hit(3.5, .25, [tone(0), ba3()], THUONG),                // chát 9: C4+E4
-      hit(3.75, .25, [tone(2)], NHAN),                        // bùm 10: giai điệu G4
+      // Tay phải câu chạy một theo sheet (cửa sổ 4 · 6 · 8 · 32 · 34 · 36): chát 4 hai nốt (sheet E4/A4 hoặc A4; A4 ngoài hợp âm
+      // đổi G4) · chát 6 G4+C5 (6/6) · bùm 7 giai điệu C4 (5/6) · chát 8 MỘT nốt E4 (6/6) · chát 10 MỘT nốt (sheet C4 hoặc F4, 2/6
+      // mỗi thứ — lấy bậc 1). Chát không luôn hai nốt: ở 4¼ · 4¾ sheet chỉ gõ một nốt giai điệu.
+      hit(2.25, .5, [ba3(), tone(2)], THUONG),                // chát 4: E4+G4, ngân qua bum 5
+      hit(2.75, .25, [tone(2), tone(0, 12)], THUONG),         // chát 6: G4+C5
+      hit(3, .25, [tone(0)], NHAN),                           // bùm 7: giai điệu C4 cùng bass — cú hai tay duy nhất
+      hit(3.25, .5, [ba3()], THUONG),                         // chát 8: E4, ngân qua bum 9
+      hit(3.75, .25, [tone(0)], THUONG),                      // chát 10: C4
       hit(4, .5, [ba3(), tone(2)], NHAN),                     // 8 bùm: F4+A4, ngân qua bum 9
       hit(4.5, .25, [ba3(), tone(3)], THUONG),                // 10 chát: F4+C5
-      // Câu đệm dừng ở 11 bùm (khung gốc của người dùng) rồi vào câu chạy nốt — người dùng 26/9: "hãy bỏ 3 tiếng chát ở cuối
-      // đi, điều chỉnh thành câu đệm 11 tiếng rồi chạy nốt". Bùm 11 ngân lấp chỗ trống: F4 giữ suốt câu chạy như chát cuối cũ,
-      // bậc 5 ngân tới lúc câu chạy vào. Cũ: bùm 11 F4+A4 ¼ phách, rồi chát chát chát F4+C5 ở ô 2 phách 2 · 2¼ · 2¾ (cửa sổ 5;
-      // chát cuối F4 ngân 2¼ trên câu chạy · C5 1¼).
-      hit(4.75, 3.25, [ba3()], THUONG), hit(4.75, 1.5, [tone(2)], THUONG), // 11 bùm: F4 ngân qua câu chạy · A4 tới 3¼
+      // Người dùng bỏ ba chát F4+C5 ở phách 2 · 2¼ · 2¾ ("câu đệm 11 tiếng rồi chạy nốt"), rồi xin soạn lấp chỗ ấy. Tay phải
+      // của phần lấp (ý Claude, soạn theo lối đan tay của sheet): chát 5+8 → giai điệu bậc 3 → chát 3+7 ngân suốt câu chạy như
+      // chát cuối cũ. Cũ (bản 35): bùm 11 tay phải F4 ngân 3¼ · A4 1½ lấp chỗ trống.
+      hit(4.75, .25, [ba3(), tone(2)], THUONG),               // 11 bùm: F4+A4
+      hit(5, .5, [tone(2), tone(0, 12)], THUONG),             // chát 2: A4+D5 — ngân qua bum 2¼
+      hit(5.5, .5, [ba3()], THUONG),                          // giai điệu 2&: F4 — ngân qua bum 2¾
+      hit(6, 2, [ba3(), tone(3)], THUONG),                    // chát 3: F4+C5, ngân suốt câu chạy
     ],
   },
 }

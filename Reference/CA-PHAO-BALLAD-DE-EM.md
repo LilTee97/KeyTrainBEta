@@ -824,6 +824,50 @@ cuối cũ), bậc 5 ngân tới 3¼.
 **Giá trị cũ:** bùm 11 tay phải ¼ phách; chát F4+C5 ở phách 2 (¼) · 2¼ (½) · 2¾ (F4 ngân 2¼ · C5 1¼).
 **Triệu chứng để lùi:** chỗ ngân 2 → 3¼ nghe hụt, đứt → thêm một tiếng dẫn vào câu chạy, hoặc cho câu chạy vào sớm hơn.
 
+## Bản 36: phân tích lại sheet — hai tay ĐAN nhau; lấp chỗ ba chát bằng một đoạn đan tay
+
+Người dùng: *"định nghĩa về bùm chát của tôi đã quá cứng nhắc làm cho câu đệm mất hay, hãy phân tích lại trong sheet để em rời xa
+để điều chỉnh lại bùm chát của khung tiếng"*, rồi *"trong vai nhạc sĩ chuyên nghiệp bạn hãy soạn ra cái gì đó để lấp vào 3 tiếng
+chát bị bỏ. Nhớ phải khớp với tiết tấu đang chơi"*.
+
+**Số đo** (`scripts/audit_cp_de_em_bum_chat.py`, 30 ô thật phiên đủ 4 phách). Ở mỗi mốc móc kép: chỉ tay trái (tiếng thấp) · chỉ
+tay phải (tiếng cao) · hai tay:
+
+| mốc | 0 | ¼ | ½ | ¾ | 1 | 1¼ | 1½ | 1¾ | 2 | 2¼ | 2½ | 2¾ | 3 | 3¼ | 3½ | 3¾ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| chỉ trái | 7 | 2 | 9 | 4 | 7 | 9 | 3 | 4 | 6 | 8 | **14** | 6 | 5 | 8 | 8 | 2 |
+| chỉ phải | 0 | 8 | 13 | **19** | **19** | 15 | 9 | 9 | 4 | 11 | 5 | **19** | 1 | **16** | 11 | 13 |
+| hai tay | **23** | 0 | 6 | 2 | 2 | 1 | 5 | 8 | 5 | 4 | 5 | 2 | **24** | 0 | 4 | 2 |
+
+- Hai tay gõ CÙNG LÚC gần như chỉ ở phách 1 (23/30) và phách 4 (24/30). Chỗ khác hai tay **đan nhau**: tiếng thấp là một nốt tay
+  trái đứng riêng (tay trái một nốt ở 2½: 19/19), tiếng cao là tay phải đứng riêng.
+- Tay phải đứng riêng thường chỉ MỘT nốt giai điệu (¼: 8/8, ½: 12/19, 3¼: 13/16). Hai nốt ở 1¾ (11/17), 2¼ (7/15), 2¾ (11/21);
+  ba nốt ở phách 2 (7/21).
+- Cửa sổ 4 · 6 · 8 · 32 · 34 · 36, mốc 3¼ → 4¾: phải (2 nốt) · TRÁI · phải (G4 C5) · HAI TAY (bass + C4) · phải (E4) · TRÁI ·
+  phải (C4/F4).
+
+**Luật cũ làm câu đệm nặng:** "bùm phải có cả tay phải", "chát là hai nốt" → bản 32–34 có bốn cú hai tay trong 1¾ phách (sheet
+có một), và mọi chát đều hai nốt. Các lỗi người dùng từng nghe ("Chát-bùm" nuốt bùm — bản 27; bum 6 chìm — bản 32–33) đều là tiếng
+tay trái đứng SÁT sau một cú có tay trái; theo sheet, tiếng tay trái đứng riêng nằm GIỮA hai tiếng tay phải.
+
+**Nay — ô 1 từ tiếng 4** (tiếng 1–3 giữ nguyên): chát 4 (2 nốt) · bum 5 (trái) · chát 6 (G4+C5) · bùm 7 (trái + C4) · chát 8 (E4, một
+nốt) · bum 9 (trái) · chát 10 (C4, một nốt). Walking bass giữ (bum 5 · bùm 7 · bum 9), sheet ở đó đứng G3 G3 G3.
+
+**Nay — lấp ô 2 phách 2 → 3¼** (ý Claude, soạn theo lối đan tay của sheet ô thật 9 · 37 phách 2 → 2¾ và của nửa sau ô 1):
+chát 5+8 · bum · giai điệu bậc 3 · bum · chát 3+7 ngân suốt câu chạy. Hai bum là walking bass đi xuống từ bùm 11 tới nốt đầu câu
+chạy. Vòng sheet: tay trái F3 → D3 → Bb2 → A2 (câu chạy giữ dáng A2 → D3); tay phải A4+D5 → F4 → F4+C5.
+
+**Sửa bộ soạn walking bass (`walkingBass`):**
+- xét mọi nốt tay phải VANG trong lúc nốt bass ngân, không chỉ nốt gõ cùng lúc (Fadd2: Ab3 dưới A4 đang ngân; F#3 ngân chồng F4
+  vào sau);
+- cho nhảy quãng 3 (3–4 nửa cung, phạt +4) khi đi liền bậc buộc phải chói (Fadd2: F4 tay phải ở bùm 7 và chát 10 → mọi dòng liền
+  bậc qua E3/F#3); bước cuối vào đích vẫn liền bậc;
+- hạ cánh đúng nốt tiếng kế, chỉ đổi quãng tám khi không có dòng nào (Dm7 phần lấp từng hạ A3 thay A2, hỏng dáng câu chạy).
+
+**Giá trị cũ:** bản 34–35 (ô 1: chát 4 · bùm 5 · bum 6 · chát 7 · bùm 8 · chát 9 · bùm 10; ô 2 phách 2 → 3¼ bùm 11 ngân).
+**Triệu chứng để lùi:** mất sức nặng ở 3& (trước là bùm hai tay) → cho bum 5 thêm giai điệu tay phải; phần lấp nghe dày → bỏ chát
+phách 2, giữ giai điệu 2& và chát 3.
+
 ## Chưa đo
 
 - Chưa nghe bản 2. Độ ngân nối là biên soạn, không có số đo pedal.

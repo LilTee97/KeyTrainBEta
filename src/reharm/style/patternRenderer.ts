@@ -319,8 +319,8 @@ function notesForVoice(
   sheet:
   - nốt ngoài gam của hợp âm đang vang +3 (nốt cuối cách đích nửa cung — dẫn chromatic — chỉ +1);
   - tiếng bùm (tay phải cùng gõ) không trúng nốt hợp âm +2;
-  - đổi chiều +2; đi tới lui (nốt trùng nốt cách một bước) +1;
-  - chói với tay phải cùng mốc (quãng 2 thứ / 7 trưởng / tăng 4) +10 — gần như cấm (cũ +3: Fm → Bm ra F#3 dưới F4).
+  - đổi chiều +2; đi tới lui (nốt trùng nốt cách một bước) +1; nhảy quãng 3 thay vì liền bậc +4 (bước cuối vào đích luôn liền bậc);
+  - chói với tay phải vang trong lúc nốt bass ngân (quãng 2 thứ / 7 trưởng / tăng 4) +10 — gần như cấm (cũ +3: Fm → Bm ra F#3 dưới F4).
   Hoà điểm thì dòng tìm thấy trước thắng: bước đầu đi về phía đích, một cung trước nửa cung.
   Gam hợp âm trưởng = trưởng (bảy thứ nếu có b7), thứ = thứ tự nhiên. Dòng nằm trong tầm tay trái và không tụt quá 10 nửa
   cung dưới `tu` (≥ 48), nên không xuống dưới nốt gốc quãng tám 2 (`leftArpeggioAboveRoot`).
@@ -338,7 +338,9 @@ function walkSlot(v: TwoHandVoicing, bum: boolean, tayPhai: readonly number[]): 
 function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: number, high: number):
   { path: number[]; score: number } | undefined {
   const pc = (n: number) => ((n % 12) + 12) % 12
-  const order = den >= tu ? [2, 1, -1, -2] : [-2, -1, 1, 2]
+  // Bước liền bậc trước; nhảy quãng 3 (3–4 nửa cung) phạt +4, chỉ dùng khi đi liền bậc buộc phải chói — Fadd2 → G9 tay phải
+  // F4 ở bùm 7 và chát 10 thì mọi dòng liền bậc qua E3 / F#3 (quãng 9 thứ / 7 trưởng với F4). Cũ: chỉ bước 1–2 nửa cung.
+  const order = den >= tu ? [2, 1, -1, -2, 3, 4, -3, -4] : [-2, -1, 1, 2, -3, -4, 3, 4]
   const path: number[] = []
   let best: number[] | undefined
   let bestScore = Infinity
@@ -361,6 +363,7 @@ function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: n
       if (!slot.gam.has(pc(n))) s += i === slots.length - 1 && Math.abs(den - n) === 1 ? 1 : 3
       if (slot.bum && !slot.hopAm.has(pc(n))) s += 2
       if (dir && Math.sign(step) !== dir) s += 2
+      if (Math.abs(step) > 2) s += 4
       if (truocNua === n) s += 1
       if (slot.tayPhai.some((r) => [1, 6, 11].includes(pc(r - n)))) s += 10
       path.push(n)
@@ -618,26 +621,28 @@ function renderWithCell(
               : undefined
             const slots = hits.slice(i, j).map((h) =>
               walkSlot(voicingAt(offset + h.beat) ?? voicing, cell.right.some((r) => Math.abs(r.beat - h.beat) < EPSILON),
-                events.filter((e) => e.hand === 'right' && Math.abs(e.startBeat - offset - h.beat) < EPSILON)
-                  .flatMap((e) => e.notes)))
+                // Mọi nốt tay phải VANG TRONG LÚC nốt bass ngân, không chỉ nốt gõ cùng lúc. Cũ: chỉ xét nốt gõ cùng lúc → Fadd2
+                // bum 9 Ab3 dưới A4 của chát 8 còn ngân; F#3 ngân ½ chồng lên F4 của chát 10 vào sau (quãng 9 thứ / 7 trưởng).
+                events.filter((e) => e.hand === 'right' && e.startBeat < offset + h.beat + h.durationBeats - EPSILON
+                  && e.startBeat + e.durationBeats > offset + h.beat + EPSILON).flatMap((e) => e.notes)))
             walk = []
-            // Hạ cánh ở nốt gốc cùng quãng tám hay quãng tám kề — dòng nào ít điểm phạt hơn; tiếng kế đánh theo. Đích xa
-            // quá số bước (C3 → B3: 11 nửa cung, 5 bước chỉ tới 10) thì chỉ còn quãng tám kề; vừa đủ 10 thì bị ép thành dòng
-            // toàn cung (Dbm → Bm: Db Eb F G A, G3 chói với Ab4 tay phải). Đổi quãng tám phạt +6: các tiếng SAU điểm hạ
-            // cánh vẫn ở quãng tám cũ (G9 → Am hạ A2 thì bum ô 2 nhảy lên B3, 14 nửa cung).
             // Đầu dòng: MỌI nốt tay trái của tiếng ngay trước (bùm 3 gõ gốc + bậc 5 cùng lúc), lấy dòng tốt nhất. Chỉ lấy
             // `near` (nốt ghi sau cùng) thì trên Gadd9 → D9sus4 đầu dòng là bậc 5 D3 → dòng D3 … D3 vòng qua Bb2.
             const truoc = events.filter((e) => e.hand === 'left' && e.startBeat < startBeat - EPSILON)
             const moc = Math.max(...truoc.map((e) => e.startBeat))
             const dau = [...new Set(truoc.filter((e) => Math.abs(e.startBeat - moc) < EPSILON).flatMap((e) => e.notes).map(fold))]
-            let bestScore = Infinity
-            if (den !== undefined)
-              for (const tu of dau)
-                for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
-                  const found = walkingBass(tu, d, slots, low, high)
-                  const score = found && found.score + (d === fold(den) ? 0 : 6)
-                  if (found && score! < bestScore) { bestScore = score!; walk = found.path; walkLand = d }
+            // Hạ cánh ĐÚNG nốt của tiếng kế; chỉ khi không có dòng nào mới thử quãng tám kề (tiếng kế đánh theo). Cũ: so điểm
+            // hai quãng tám (+6 nếu đổi) — ô 2 phần lấp trên Dm7 hạ A3 thay A2, nốt đầu câu chạy vọt lên một quãng tám, câu chạy
+            // A2 → D3 thành A3 → D3. Đích xa quá số bước (C3 → B3: 11 nửa cung) thì mới cần quãng tám kề.
+            if (near !== undefined && den !== undefined)
+              for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
+                let found: { path: number[]; score: number } | undefined
+                for (const tu of dau) {
+                  const one = walkingBass(tu, d, slots, low, high)
+                  if (one && (!found || one.score < found.score)) found = one
                 }
+                if (found) { walk = found.path; walkLand = d; break }
+              }
           }
           const n = walk.shift()
           if (n !== undefined) raw = [n as MidiNote]

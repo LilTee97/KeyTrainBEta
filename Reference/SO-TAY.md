@@ -4077,3 +4077,13 @@ Người dùng: *"bỏ 3 tiếng chát ở cuối đi, điều chỉnh thành c�
 2¾; bùm 11 (phách 1¾) ngân lấp tới câu chạy — tay phải bậc 3 giữ suốt câu chạy như chát cuối cũ.
 **Bẫy đếm:** "11 tiếng" là khung gốc người dùng; bảng của Claude đánh số 14 vì câu chạy một có 7 tiếng.
 **Giá trị cũ:** ba chát F4+C5. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 35".
+
+### Ballad Để em: hai tay ĐAN nhau như sheet — cú hai tay chỉ ở phách 1 và 4; lấp chỗ ba chát bằng đoạn đan tay
+
+Người dùng: định nghĩa bùm/chát của họ *"quá cứng nhắc làm cho câu đệm mất hay"*, xin phân tích lại sheet, rồi xin soạn lấp chỗ ba
+chát đã bỏ. Số đo (`scripts/audit_cp_de_em_bum_chat.py`, 30 ô phiên): hai tay gõ cùng lúc ở phách 1 (23/30) và phách 4 (24/30),
+chỗ khác đan nhau; tay phải đứng riêng thường một nốt giai điệu. Ô 1 từ tiếng 4: phải · trái · phải · hai tay · phải · trái · phải.
+Ô 2 phách 2 → 3¼: phải · trái · phải · trái · phải (chát cuối ngân suốt câu chạy).
+**Bẫy walking bass:** phải xét nốt tay phải đang vang suốt thời gian nốt bass ngân; cho nhảy quãng 3 khi liền bậc buộc phải chói;
+không đổi quãng tám hạ cánh khi còn dòng khác (hỏng dáng câu chạy A2 → D3).
+**Giá trị cũ:** bản 34–35. Chi tiết: `CA-PHAO-BALLAD-DE-EM.md` mục "Bản 36".
