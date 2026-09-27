@@ -23,10 +23,12 @@ export function colorBluesCodexBacking(backing: readonly TimelineEvent[], chords
     const tones = intervals(chord)
     const third = tones.includes(4) ? 4 : tones.includes(3) ? 3 : null
     // Không tự thêm 9 tự nhiên lên b9/#9, đổi sus thành trưởng, hoặc sửa quãng 5 biến âm.
-    if (third === null || !tones.includes(7) || tones.includes(1) || (tones.includes(3) && tones.includes(4))) return event
+    if (third === null || !tones.includes(7) || [1, 6, 8].some(n => tones.includes(n)) || (tones.includes(3) && tones.includes(4))) return event
     const seventh = tones.includes(11) ? 11 : tones.includes(10) ? 10 : tones.includes(9) ? 9 : third === 3 ? 10 : 9
     const root = 60 + chord.root
-    return { ...event, notes: [root + third, root + 7, root + seventh],
+    const voicing = tones.includes(2) ? [third, seventh, 14] : [third, 7, seventh]
+    const octave = root + Math.max(...voicing) > 84 ? -12 : 0
+    return { ...event, notes: voicing.map(n => root + octave + n),
       durationBeats: Math.min(event.durationBeats, 0.55), velocity: Math.min(72, event.velocity) }
   })
 }

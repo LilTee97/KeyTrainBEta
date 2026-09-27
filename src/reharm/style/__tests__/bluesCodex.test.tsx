@@ -9,6 +9,10 @@ import { buildArrangedSong } from '../arrangement'
 import { ALL_STYLES, getStyle, isCodexStyle } from '../styleLibrary'
 import { StylePicker } from '../StylePicker'
 import { hoCuaDieu } from '../hoDieu'
+import { buildPhraseSection } from '../phraseSection'
+import { composeBluesCodexLine } from '../bluesCodexSolo'
+import { buildBossaSoloSong } from '../../playback/bossaRhythmOnly'
+import { reharmonize } from '../../reharmEngine/reharmPipeline'
 import type { TimelineEvent } from '../types'
 
 const style = getStyle('blues-codex-1')!
@@ -25,8 +29,109 @@ const backing = (input: string) => {
   return weaveBluesCodexBacking(renderPattern(voiceLeadTwoHands(chords), style, { beatsPerChord: 3 }), chords, 3)
 }
 
+describe('Blues Codex 1: hòa âm và dạo–giang–kết', () => {
+  it('đổi ký hiệu lẫn nốt I–IV–V; giữ chức năng khác, bass và độ dài', () => {
+    const source = parse('C F G Am Dm Cmaj7 Csus4 Cdim7 G7b9 C/E D7')
+    const key = { tonic: 0, scale: 'major' as const }
+    const options = { key, harmonyStyle: 'blues' as const, beatsPerChord: 6,
+      chordBeats: { 1: 3 }, varyOnRepeat: true, sectionRanges: [{ kind: 'verse', from: 0, to: 2 }, { kind: 'verse', from: 3, to: 5 }] }
+    const result = reharmonize(source, { ...options, intensity: 'caPhao' })
+    expect(result.colored.map(c => c.symbol)).toEqual(['C7', 'F9', 'G9', 'Am', 'Dm', 'Cmaj7', 'Csus4', 'Cdim7', 'G7b9', 'C7/E', 'D7'])
+    expect(result.final[1].beats).toBe(3)
+    expect(result.final.length).toBe(source.length)
+    expect(result.final[9].bass).toBe(4)
+    expect(result.conflicts.some(c => c.kind === 'tonic-not-resting' && c.index === 0)).toBe(false)
+    expect(result.conflicts.some(c => c.kind === 'out-of-key' && [0, 1].includes(c.index))).toBe(false)
+    expect(reharmonize(source, { ...options, intensity: 'off' }).colored).toEqual(result.colored)
+    expect(reharmonize(parse('C F G'), { key, intensity: 'off' }).colored.map(c => c.symbol)).toEqual(['C', 'F', 'G'])
+    expect(reharmonize(parse('Cm Fm G Ab'), { key: { tonic: 0, scale: 'minor' }, harmonyStyle: 'blues' }).colored.map(c => c.symbol))
+      .toEqual(['Cm7', 'Fm7', 'G7', parse('Ab')[0].symbol])
+  })
+  it('solo riêng trên mọi giọng, đúng nhịp 6/8, giới hạn tay và tách hai tay', () => {
+    let doubles = 0, graces = 0
+    for (let tonic = 0; tonic < 12; tonic++) for (const scale of ['major', 'minor'] as const) {
+      for (const kind of ['intro', 'interlude', 'outro'] as const) {
+        const variants = new Set<string>()
+        for (let take = 0; take < 4; take++) {
+          const section = buildPhraseSection({ kind, key: { tonic, scale }, style, take,
+            range: { low: 60, high: 84 }, beatsPerChord: 6, dropRoot: false, opening: null,
+            solo: () => { throw new Error('Blues must not fall back to generic solo') },
+          })!
+          expect(section.events.length).toBeGreaterThan(0)
+          expect(section.beatsEach.reduce((a, b) => a + b, 0)).toBe(section.lengthBeats)
+          expect(section.chords.every(symbol => parse(symbol).length === 1)).toBe(true)
+          const rh = section.events.filter(e => e.hand === 'right')
+          variants.add(JSON.stringify(rh))
+          for (const e of section.events) {
+            expect(e.durationBeats).toBeGreaterThan(0)
+            expect(e.startBeat).toBeGreaterThanOrEqual(0)
+            expect(end(e)).toBeLessThanOrEqual(section.lengthBeats + 1e-6)
+            expect(e.notes.every(Number.isFinite)).toBe(true)
+            if (e.hand === 'right') {
+              expect(e.notes.every(n => n >= 60 && n <= 84)).toBe(true)
+              expect(Math.max(...e.notes) - Math.min(...e.notes)).toBeLessThanOrEqual(12)
+              if (e.notes.length > 1) doubles++
+              if (e.grace) graces++
+            }
+          }
+          for (let i = 1; i < rh.length; i++) expect(overlap(rh[i - 1], rh[i])).toBe(false)
+          if (kind === 'outro') {
+            expect(rh.at(-1)!.durationBeats).toBe(3)
+            expect(end(rh.at(-1)!)).toBe(section.lengthBeats)
+          }
+          if (kind === 'interlude') expect(section.lengthBeats).toBe(36) // fallback 12 ô 6/8
+        }
+        expect(variants.size).toBeGreaterThan(1)
+      }
+    }
+    expect(graces).toBeGreaterThan(0)
+    expect(doubles).toBeGreaterThan(0)
+  })
+
+  it('câu chạy giữ bước 0,5, kết ở nốt hợp âm và không chạy nhanh khi hợp âm ngắn', () => {
+    const key = { tonic: 0, scale: 'major' as const }
+    const chords = parse('C7 F9 Dm7 G7b9 Csus4 C/E').map((c, i) => ({ ...c, beats: i % 2 ? 3 : 1.5 }))
+    for (let take = 0; take < 5; take++) {
+      const line = composeBluesCodexLine(chords, { key, beatsPerChord: 6, take, range: { low: 62, high: 79 } })
+      const notes = line.filter(e => !e.grace)
+      for (let i = 1; i < notes.length; i++) {
+        expect(notes[i].startBeat - notes[i - 1].startBeat).toBeGreaterThanOrEqual(0.45)
+        expect(overlap(notes[i - 1], notes[i])).toBe(false)
+      }
+      expect(notes.every(e => e.notes.every(n => n >= 62 && n <= 79))).toBe(true)
+      const tail = notes.at(-1)!
+      let beat = 0
+      const current = chords.find(c => { beat += c.beats; return beat > tail.startBeat })!
+      expect(tail.notes.every(n => current.quality.intervals.map(v => v % 12).includes((n - current.root + 12) % 12))).toBe(true)
+    }
+  })
+
+  it('ghép bài có đủ solo Blues, lời giữ vòng/timing; solo không bị bộ ráp sửa tay', () => {
+    const key = { tonic: 0, scale: 'major' as const }
+    const chords = reharmonize(parse('C Am F G'), { key, harmonyStyle: 'blues', beatsPerChord: 6 }).final
+    const base = weaveBluesCodexBacking(renderPattern(voiceLeadTwoHands(chords), style, { beatsPerChord: 6 }), chords, 6)
+    const sections = new Map<string, ReturnType<typeof buildPhraseSection>>()
+    const song = buildBossaSoloSong(base, 24, null, [], (kind, take) => {
+      const section = buildPhraseSection({ kind, key, style, beatsPerChord: 6, dropRoot: false,
+        opening: chords[0], songChords: chords, take, solo: () => [] })!
+      sections.set(kind, section)
+      return section
+    }, [], true)
+    expect([...sections.keys()].sort()).toEqual(['interlude', 'intro', 'outro'])
+    expect(song.phraseWarnings).toEqual([])
+    expect(song.segments.length).toBeGreaterThan(0)
+    for (const segment of song.segments.filter(s => !song.soloSpans.some(p => s.startBeat >= p.startBeat && s.startBeat < p.startBeat + p.lengthBeats))) {
+      const actual = song.events.filter(e => e.startBeat >= segment.startBeat && e.startBeat < segment.startBeat + 24)
+        .map(e => ({ ...e, startBeat: Math.round((e.startBeat - segment.startBeat) * 1e6) / 1e6 }))
+      expect(actual.length).toBe(base.length)
+    }
+    expect(sections.get('intro')!.chords.at(-1)).toBe('G7')
+    expect(sections.get('interlude')!.chords).toContain('Am')
+  })
+})
+
 describe('Blues Codex 1: đệm và câu đáp soạn chung cho hai tay', () => {
-  it('có nút hồng riêng; giữ bass và mốc nhắp của Claude, rút ngắn ngân tay phải', () => {
+  it('có nút hồng riêng; hai neo bass 1/4 cho Slow 6/8, giữ bản Đức Thịnh riêng', () => {
     expect(isCodexStyle(style.id)).toBe(true)
     expect(isCodexStyle(original.id)).toBe(false)
     expect(hoCuaDieu(style.id)).toBeNull()
@@ -36,8 +141,13 @@ describe('Blues Codex 1: đệm và câu đáp soạn chung cho hai tay', () => 
     const hands = voiceLeadTwoHands(parse('C7 F7'))
     const old = renderPattern(hands, original, { beatsPerChord: 3 })
     const now = renderPattern(hands, style, { beatsPerChord: 3 })
-    expect(now.filter(e => e.hand === 'left')).toEqual(old.filter(e => e.hand === 'left'))
-    expect(now.filter(e => e.hand === 'right').map(e => e.startBeat)).toEqual([1.45, 4.45])
+    expect(now.filter(e => e.hand === 'left').map(e => e.startBeat)).toEqual([0, 1, 1.5, 2.5, 3, 4, 4.5, 5.5])
+    expect(old.filter(e => e.hand === 'left').map(e => e.startBeat)).toEqual([0, 1, 2.5, 3, 4, 5.5])
+    const left = now.filter(e => e.hand === 'left')
+    expect(left[2].notes).toEqual(left[0].notes)
+    expect(left[0].velocity).toBeGreaterThan(left[1].velocity)
+    expect(left[2].velocity).toBeGreaterThan(left[3].velocity)
+    expect(now.filter(e => e.hand === 'right').map(e => e.startBeat)).toEqual([1.5, 4.5])
     for (const e of now.filter(e => e.hand === 'right')) expect(e.durationBeats).toBeCloseTo(0.6)
     expect(original.cell!.right[0].durationBeats).toBe(3.1)
   })
@@ -139,7 +249,7 @@ describe('Blues Codex 1: đệm và câu đáp soạn chung cho hai tay', () => 
     expect(firstRun.every(e => e.velocity >= 74)).toBe(true)
     const secondRun = right.filter(e => e.startBeat >= 6.5 && e.startBeat <= 9)
     expect(secondRun.map(e => e.notes)).toEqual([[74], [72], [74], [72], [69], [67]])
-    expect(right.filter(e => e.notes.length > 1).map(e => e.startBeat)).toEqual([1.45, 4.45, 10.45])
+    expect(right.filter(e => e.notes.length > 1).map(e => e.startBeat)).toEqual([1.5, 4.5, 10.5])
     expect(right.some((e, i) => i > 0 && e.startBeat - end(right[i - 1]) > 0.5)).toBe(true)
     for (let i = 1; i < right.length; i++) {
       expect(right[i].startBeat - right[i - 1].startBeat).toBeGreaterThanOrEqual(0.45)

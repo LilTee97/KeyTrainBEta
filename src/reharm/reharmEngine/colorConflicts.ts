@@ -85,6 +85,8 @@ function isAlteredDominant(chord: ParsedChord): boolean {
 }
 
 export interface ConflictOptions {
+  /** b3/b5/b7 là màu trong Blues; I7 có chức năng chủ. */
+  blues?: boolean
   tonic: PitchClass
   scale: ScaleType
   /** Linh Nhi: Am7 ở i là màu nghỉ, không phải át. Luật Khá thì cảnh báo. */
@@ -121,7 +123,7 @@ export function analyzeColorConflicts(
 
     // Chủ âm Khá: b7 = át. Linh Nhi: i m7 là màu đậu (sheet Am7).
     if (
-      !allowTonicMinorSeventh &&
+      !allowTonicMinorSeventh && !options.blues &&
       degree === 1 &&
       chord.quality.intervals.includes(MINOR_SEVENTH)
     ) {
@@ -135,7 +137,8 @@ export function analyzeColorConflicts(
       })
     }
 
-    const outside = outOfKeyTones(chord, tonic, scale)
+    const outside = outOfKeyTones(chord, tonic, scale).filter(pitch =>
+      !options.blues || ![3, 6, 10].includes(normalizePitchClass(pitch - tonic)))
     if (outside.length > 0 && degree !== null) {
       conflicts.push({
         index,
@@ -149,7 +152,7 @@ export function analyzeColorConflicts(
     }
 
     // Hợp âm át biến âm kéo về chủ âm trưởng.
-    if (degree === 5 && isAlteredDominant(chord) && scale === 'major') {
+    if (!options.blues && degree === 5 && isAlteredDominant(chord) && scale === 'major') {
       const next = colored[index + 1]
       const resolvesToMajor =
         next !== undefined &&

@@ -178,3 +178,33 @@ File nghe minh họa: `C:/Users/Tin PC/Downloads/Documents/Linh Nhi/Blues-Codex-
 - MuseScore 4.7.5 nhập, xuất MSCZ, xuất lại MusicXML và ảnh thành công. Vòng xuất khớp cả 1.117 sự kiện và dynamics. Đã xem ảnh trang đầu/giữa/cuối; sửa tiêu đề/nhãn tràn mép. Đây là kiểm tra CLI/render, chưa thử thao tác mở bằng chuột.
 - Bản câu chạy mới: 92 kiểm tra tập trung Blues/render/ráp bài/lịch phát đạt; build TypeScript/Vite đạt. Test mới bắt buộc có 4–6 nốt đơn liền, đi qua vạch ô và tồn tại trong timeline phát khi Fill tắt, thay cho kiểm số cú dặm cũ. Bộ fill/solo: 407/408 đạt; `phraseAcrossBar` còn 262/553 = 47,38% so với ngưỡng 50%, trùng lỗi cũ trong `Reference/SO-TAY.md`, mục `phraseAcrossBar rơi từ 58% xuống 47% ở b2dd25e`.
 - Cần người dùng nghe duyệt: kiểm tra đúng nhịp không thay thế đánh giá “vừa” trong bài hát cụ thể.
+
+## 6. Ngày 28/9 — hai điểm tựa 1 và 4, hòa âm và solo
+
+Mục 4 ghi bản lịch sử ngày 27/9. Khung đang áp dụng xem `BLUES-CODEX-1.md`: thêm bass tiếng 4, chuyển chát từ 1,45 về 1,5 nốt đen, đã có bộ solo dài riêng.
+
+### Sheet nói gì về Slow/6/8?
+
+Hai bản chủ yếu **ghi 4/4**, Robert có các ô 6/4 và 2/4. Không có bằng chứng chúng là bản đệm Slow Rock 6/8 nguyên dạng. Các chùm ba, lối long–short và hai tay cài nhau là chất liệu để chuyển dụng. Nếu coi **mỗi nửa ô 4/4 swing là một ô 6/8**, hai phách đen nguồn trở thành hai nhóm móc đơn: 1–2–3 | 4–5–6. Đây là cách chuyển nhịp, không phải khẳng định tên điệu/nhấn âm từ bản thu.
+
+| Nguồn | LH thực | RH thực | Điều áp dụng |
+| --- | --- | --- | --- |
+| Rockhouse 32 | G1 ở 0 ngân 1; G1/G2 ở 1 ngân 2/3; B1/B2 ở 1⅔ ngân 1/3; D2 ở 2; B1/B2 ở 3; D2 ở 3⅔ | Cụm G13 cùng bass ở 0; cụm D–E–G–Bb ở 1; cụm B–E–G ở 2 rồi chen ở 2⅔/3⅓ | LH dựng xương nhịp; RH có thể cùng hoặc xen, không phải mọi tiếng đều hai tay cùng dặm |
+| Rockhouse 35 | D2 giữ tại 2; B1/B2 tại 3; D2 tại 3¾ | D–D#–E–G từ 2⅓ đến 3¼ | Giữa câu chạy vẫn có bass neo, RH chuyển từ cụm sang nốt đơn |
+| Rockhouse 105 | G ở 0/1, B tại 1⅔, D ở 2, B ở 3 | D–E–F lặp ở các bước 1/3, đích D ngân 1/2 | Riff có thể xuyên nền; không chờ mốc Fill. Chùm ba đổi về móc đơn 6/8, không nén tùy cửa sổ |
+| Robert 56 | C3/G3 ở 0 ngân 2 | D5 vào 2, nhắc 3½ | Hai tay trao câu; một tiếng mới ở RH có thể tiếp tục mạch khi LH ngừng |
+| Robert 58 | F2/F3 ở 0, 1⅓; F2 tại 2 ngân 2 | C/F/A ở 0, C/A ở 1⅓, Eb ở 2 rồi A/Eb ở 3¼ | Cụm đầu và bass ngân tạo nền để RH đáp; bass không phải đánh ở mọi nốt chạy |
+| Robert 82 | F3 tại 0 ngân 2/3, tại 1 ngân 1/4; F2 tại 3½ | Cụm Bb/C/F → Eb/G → Eb → C → Eb → C | RH nối qua vùng LH nghỉ; không thể kết luận Robert luôn đệm LH liên tục |
+| Robert 129–130 | 129 nghỉ cả ô; 130 chỉ F3 rồi E3 cuối ô | Eb–E–F–Eb–C–G; F–E–A–G–F–C | Đuôi solo thưa nền, trao lượt giữa hai tay; không phải mẫu bass chạy suốt |
+
+**Chuyển dụng cụ thể:** nguồn 32 tại 0 → ô 6/8 tiếng 1; tại 1 → tiếng 4; tại 1⅔ → tiếng 6. Nửa sau tại 2/3/3⅔ → 1/4/6 ô tiếp. Nguồn có bass đảo/đi qua khác nhau; KT hiện dùng gốc ở 1/4 và bậc 5 ở 3/6 để tạo nền Slow ổn định. Việc thêm bậc 5 tiếng 3 và lặp gốc là quyết định phối, không ghi là chép nguyên Rockhouse.
+
+### Hòa âm và cách phát triển solo
+
+- Rockhouse 32: bass G + F–B–D–E–G là G13; bậc 3 và b7 định chức năng, 6/13 tạo độ đầy. Ô 35 D# là tiếp cận E, không phải b5 của G. Ô 52 cùng tên nốt chuyển chức năng trên D7.
+- Robert 63 bass Eb với Gb/C rồi E với G/C; 70–71 bass E→Eb; 77–78 F→Gb→G. Nhãn hợp âm có chỗ đặt lệch nốt thật. Giữ dim/slash/sus, không biến toàn bộ thành dominant.
+- Robert 78 đầu có F/A/C trên G (sus), cuối có F/G/B/Eb trên G (dominant b13). Dùng nốt đích theo hợp âm đang vang; Blues không đồng nghĩa chỉ dùng một gam sáu nốt cho mọi thời điểm.
+- Bộ mới soạn câu theo giọng bài, nhắc–đáp, 4–6 nốt rồi đích ngân; LH neo 1/4, RH nhả cụm khi chạy. Khi kết bài, giảm mật độ và giữ tiếng cuối. Kỹ thuật bè đôi/cụm, chạy chromatic, trao tay có dấu vết trong ký âm; láy nhanh, lực và trường độ 6/8 trong KT là biên soạn. Chưa suy ra ngón tay/pedal của người chơi.
+- Robert có tiêu đề nội tại ghi **Robert Van**; tên file `Robert-Ray` không đủ xác nhận Ray Charles là người chơi.
+
+Kiểm tra ngày 28/9: 199 test Blues/reharm/conflict/render/ráp bài/lịch phát đạt, TypeScript + Vite build đạt (cảnh báo kích thước bundle). Test phủ dạo/giang/kết 24 giọng, tầm RH, thời lượng, đổi lượt, hai neo 1/4 và vòng lời. Chưa có nghe duyệt của người dùng.

@@ -105,6 +105,7 @@ import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
 import { chayBlueDucThinh } from './style/blueDucThinhLicks'
 import { bluesCodexPass, weaveBluesCodexBacking, generateBluesCodexFills } from './style/bluesCodex'
+import { composeBluesCodexLine } from './style/bluesCodexSolo'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -954,7 +955,8 @@ export function ReharmHome() {
     dạo/giang/kết hai tay rải Linh Nhi.
     Tôn Hùng: dạo/giang/kết hai tay rải ballad Chiếc Lá.
    */
-  const styleSolo =
+  const isBluesCodex = style.family === 'blues-codex-1'
+  const styleSolo = isBluesCodex ? style :
     getStyle(
       soloThay === 'linh-nhi'
         ? LINH_NHI_RAI
@@ -1101,6 +1103,7 @@ export function ReharmHome() {
 
     // Chạy vòng đầu để lấy danh sách gợi ý, rồi lọc ra những cái đã chấp nhận.
     const firstPass = reharmonize(sequence.chords, {
+      harmonyStyle: isBluesCodex ? 'blues' : undefined,
       intensity,
       teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
@@ -1141,6 +1144,7 @@ export function ReharmHome() {
       })
 
     const result = reharmonize(sequence.chords, {
+      harmonyStyle: isBluesCodex ? 'blues' : undefined,
       intensity,
       teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
@@ -1183,6 +1187,7 @@ export function ReharmHome() {
     halvedBeats,
     mutedHeld,
     isTwist,
+    isBluesCodex,
   ])
 
   const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
@@ -1192,7 +1197,7 @@ export function ReharmHome() {
     : reharm.key, [lockedKey, effectiveTranspose, reharm.key])
   const cpComposeOn = style.family !== 'blues-codex-1' && intensity === 'caPhao'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
-  const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
+  const cpFullOn = !isBluesCodex && (cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn)))
   const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key, cpSimulationOn), [style, reharm.key, cpSimulationOn])
   const cpFullSource = cpFullSources.includes(caPhaoFullSource) ? caPhaoFullSource : ''
   const bossaRhythmOnly = laBossaCP(style) && !bossaSoloOn && !cpFullOn && !cpComposeOn
@@ -1479,6 +1484,8 @@ export function ReharmHome() {
    */
   const builtLine = useCallback(
     (list: readonly ParsedChord[], spin: number, giangTau = false) => {
+      if (isBluesCodex) return composeBluesCodexLine(list, { key: reharm.key,
+        beatsPerChord: chordBeats, take: spin + phraseSpin + playSpin.current, range: tamSolo })
       if (thaySolo || !lineSolo || !phraseScale) return null
       const anchors = accentBeats(style)
       if (anchors.length === 0) return null
@@ -1503,7 +1510,7 @@ export function ReharmHome() {
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
-    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin, tamSolo],
+    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin, tamSolo, isBluesCodex, reharm.key],
   )
 
 
@@ -2758,6 +2765,11 @@ export function ReharmHome() {
    */
   const soloTake = useMemo(() => {
     if (bossaRhythmOnly) return () => []
+    if (isBluesCodex) return (take: number) => composeBluesCodexLine(withPassing, {
+      key: reharm.key, beatsPerChord: chordBeats, range: tamSolo,
+      take: take + phraseSpin + playSpin.current,
+    }).flatMap(event => event.notes.map(note => ({ note, startBeat: event.startBeat,
+      durationBeats: event.durationBeats, isGrace: !!event.grace, hand: event.hand })))
     const args = {
       beatsPerChord: chordBeats,
       direction: soloDirection,
@@ -2794,6 +2806,7 @@ export function ReharmHome() {
     // Đổi điệu là đổi cách chia nhịp câu chạy — phải dựng lại.
     styleId,
     bossaRhythmOnly,
+    isBluesCodex,
   ])
 
   /**
@@ -3241,6 +3254,8 @@ export function ReharmHome() {
 
   const steps = useMemo(() => {
     let base = arrangementSteps
+    if (isBluesCodex && songSources) return bossaSoloSteps(base, songSources)
+      .map(step => step.type === 'interlude' ? { ...step, loops: 1 } : step)
     if (isTwist && songSources) return bossaSoloSteps(base, songSources)
     if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
     if ((bossaSoloOn || cpFullOn || cpComposeOn) && songSources) return bossaSoloSteps(base, songSources)
@@ -3277,7 +3292,7 @@ export function ReharmHome() {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn, isTwist])
+  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn, isTwist, isBluesCodex])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3315,17 +3330,18 @@ export function ReharmHome() {
       // Blues dùng đúng một bản câu đáp/cắt đệm cho cả lượt, không cắt theo take khác đang phát.
       const cpPass = cpLick ? cpPlan(pass) : style.family === 'blues-codex-1'
         ? bluesCodexPass(accompaniment, fills(pass)) : null
-      if (isTwist) {
+      if (isTwist || isBluesCodex) {
         const spans = mainChordSpans(withPassing, chordBeats)
         return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
           (kind, take, nextStart) => buildPhraseSection({
-            kind, key: twistSoloKey, style, bpm, dropRoot,
+            kind, key: isBluesCodex ? reharm.key : twistSoloKey, style, bpm, dropRoot,
             // Solo có ô Blues 4 phách riêng; tick một/hai lần chỉ đổi thời lượng đệm hát.
-            beatsPerChord: 4,
+            beatsPerChord: isBluesCodex ? chordBeats : 4,
+            ...(isBluesCodex ? { songChords: withPassing } : {}),
             opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
             // pass đã mã hóa playSpin; cộng cả hai sẽ thành bước 528, luôn trùng modulo 4.
             take: phraseSpin + playSpin.current + take,
-            range: { low: 60, high: 84 }, solo: () => [],
+            range: isBluesCodex ? tamSolo : { low: 60, high: 84 }, solo: () => [],
           }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? [], true)
       }
       if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
@@ -3630,6 +3646,7 @@ export function ReharmHome() {
       accompaniment,
       backingFor,
       isTwist,
+      isBluesCodex,
       twistSoloKey,
       lnDao,
       lnSau,
@@ -3685,9 +3702,9 @@ export function ReharmHome() {
   const soloNoteCount = useMemo(() => laBossaCP(style)
     ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : isTwist || cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
+    : isTwist || isBluesCodex || cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn, isTwist])
+    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn, isTwist, isBluesCodex])
   const fillNoteCount = useMemo(() => fills(0).length, [fills])
 
   /**
@@ -3747,6 +3764,7 @@ export function ReharmHome() {
   const timelineHien = looping && playingTimeline ? playingTimeline : song
 
   const soloScaleLabel = useMemo(() => {
+    if (isBluesCodex) return reharm.key ? `${pitchClassName(reharm.key.tonic)} Blues + nốt hợp âm` : null
     if (isTwist) return twistSoloKey ? `${pitchClassName(twistSoloKey.tonic)} Blues` : null
     // Nhánh giang thứ này soạn theo chức năng hợp âm, không dùng gam ngũ cung
     // do bộ gợi ý cho phần hát trả về; đừng hiển thị nhầm là gam đang phát.
@@ -3756,7 +3774,7 @@ export function ReharmHome() {
     const chord = recolored.filter((item) => !item.passing)[idx]
     if (!chord) return null
     return scaleLabelForChord(chord, reharm.key)
-  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style, isTwist, twistSoloKey])
+  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style, isTwist, twistSoloKey, isBluesCodex])
 
 
   const timeline = song.events
@@ -3778,7 +3796,7 @@ export function ReharmHome() {
       Người dùng 24/9/2026: *"tại sao giang tấu vẫn ko đổi hợp âm mỗi lần phát giống như intro hay outro"* —
       tiếng đã đổi vòng mỗi lượt, nhưng dòng chữ vẫn lấy `interludeWindow` (đuôi điệp khúc cố định).
     */
-    if (isTwist || lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
+    if (isTwist || isBluesCodex || lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
       const span = displayedSoloSpan(timelineHien.soloSpans, 'interlude', activeSolo?.span)
       return [...(span?.chords ?? [])]
     }
@@ -3788,7 +3806,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau, isTwist])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau, isTwist, isBluesCodex])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -4655,7 +4673,7 @@ export function ReharmHome() {
             onSelect={(id) => {
               setStyleId(id)
               const next = getStyle(id)
-              if (next?.family === 'twist') {
+              if (next?.family === 'twist' || next?.family === 'blues-codex-1') {
                 stopPlay()
                 setNgheLaiStt(0)
               }
@@ -4671,7 +4689,10 @@ export function ReharmHome() {
           />
         </div>
 
-        {!isTwist && <div className="mb-3">
+        {isBluesCodex && <p className="mb-3 text-xs text-pink-200">
+          Blues Codex 1 tự soạn hòa âm và dạo · giang · kết theo Blues. Câu chạy bám giọng bài, có nghỉ và ngân; hợp âm bạn sửa tay được giữ.
+        </p>}
+        {!isTwist && !isBluesCodex && <div className="mb-3">
           <p className="mb-1.5 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
             Hợp âm + giai điệu dạo / giang tấu / kết
           </p>

@@ -8,6 +8,7 @@ import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
 import { linhNhiSolo } from './linhNhiSolo'
 import { twistSolo } from './twistSolo'
+import { bluesCodexSolo } from './bluesCodexSolo'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
@@ -628,6 +629,7 @@ export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
   if (options.style.family === 'twist') return twistSolo(options)
+  if (options.style.family === 'blues-codex-1') return bluesCodexSolo(options)
   if (options.linhNhiSolo && options.key) {
     return linhNhiSolo({
       kind: options.kind, key: options.key, style: options.style,

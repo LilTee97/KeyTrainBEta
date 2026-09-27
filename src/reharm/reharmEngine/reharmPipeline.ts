@@ -3,6 +3,7 @@ import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { ColorConflict } from './colorConflicts'
 import { analyzeColorConflicts } from './colorConflicts'
+import { colorBluesHarmony } from './bluesHarmony'
 import type { AnalyzedChord } from './degreeAnalysis'
 import { analyzeInKey } from './degreeAnalysis'
 import type { KeyCandidate } from './keyDetection'
@@ -37,6 +38,8 @@ import {
  */
 
 export interface ReharmOptions extends ColorOptions {
+  /** Điệu Blues chọn hòa âm riêng trước voicing và solo, độc lập màu của thầy khác. */
+  harmonyStyle?: 'blues'
   /**
    * Giọng do người dùng chỉ định. Bỏ trống thì app tự dò.
    * Luôn cho phép chỉ định tay vì việc dò giọng không bao giờ chắc chắn tuyệt
@@ -137,6 +140,7 @@ export function reharmonize(
     varyOnRepeat = false,
     sectionRanges,
     beatsPerMeasure = 4,
+    harmonyStyle,
     ...colorOptions
   } = options
 
@@ -190,7 +194,7 @@ export function reharmonize(
       }))
 
   // Khâu 3 — thêm màu, theo bậc nếu biết giọng.
-  const painted = activeKey
+  const painted = harmonyStyle === 'blues' ? colorBluesHarmony(original, activeKey) : activeKey
     ? colorAnalyzedSequence(analyzed, activeKey.scale, {
         ...colorOptions,
         tonic: activeKey.tonic,
@@ -201,6 +205,7 @@ export function reharmonize(
       })
     : colorSequence(original, colorOptions)
   const held =
+    harmonyStyle === 'blues' ||
     colorOptions.intensity === 'off' ||
     colorOptions.intensity === 'linhNhi' ||
     colorOptions.intensity === 'caPhao' ||
@@ -212,6 +217,7 @@ export function reharmonize(
           skipHeldAt: options.skipHeldAt,
         })
   const colored =
+    harmonyStyle !== 'blues' &&
     varyOnRepeat &&
     colorOptions.intensity !== 'linhNhi' &&
     colorOptions.intensity !== 'caPhao' &&
@@ -274,6 +280,7 @@ export function reharmonize(
     // báo nói về lựa chọn màu của người dùng chứ không về hợp âm app tự chèn.
     conflicts: activeKey
       ? analyzeColorConflicts(colored, analyzed, {
+          blues: harmonyStyle === 'blues',
           tonic: activeKey.tonic,
           scale: activeKey.scale,
           allowTonicMinorSeventh:
