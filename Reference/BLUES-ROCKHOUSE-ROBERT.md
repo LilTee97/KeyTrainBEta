@@ -109,43 +109,72 @@ Khoảng **2,8–3,5 lần RH/ô 4/4**. Ô không có cú mới có thể còn n
 - **104–105:** RH D–E–E, rồi A–G–Eb và cụm Eb–A–Db; LH thưa, chủ yếu C–G. Hai tay có mật độ khác nhau.
 - **141–142:** LH F–A mở câu, RH C–D–E tiếp rồi chốt C/E. Ví dụ rõ về trao câu giữa hai tay.
 
-## 4. Áp dụng vào Blues Codex 1
+## 4. Phân tích lại sau phản hồi “chỉ nghe dặm”
 
-### Sửa nguyên nhân câu chạy quá nhanh
+### Sai ở bản trước
 
-Bản trước chọn cuối hợp âm bằng `fillPositions`, chia cửa sổ cho nhiều nốt. Run dài 1,5 nốt đen có bước **0,125 nốt đen**, tạo sáu tiếng rất nhanh rồi thêm đuôi. Tăng số fill không giải quyết cách tổ chức đó.
+Thống kê RH có tiếng ở mỗi ô chỉ chứng minh hoạt động tay phải; không chứng minh có câu chạy. Bản `2cdd2c5` chỉ thêm nốt tại 0, 0,5, 2,5 quanh cụm 1,45, ngân mỗi nốt 0,35. Trên C7, G–A rồi cụm E–G–Bb rồi G, bị ngắt bởi nhiều khe lớn. Nó thành riff chấm nhịp. Việc tắt run tự động càng làm thiếu câu chạy; các test cũ chỉ xác nhận đúng bố trí ấy, chưa kiểm tra dòng nốt liên tiếp.
 
-Bản mới đặt giai điệu **trong ô đệm**, có tiếng ngay cả khi không đánh dấu Fill/Run. Fill/Run tự chọn và chuyển đoạn là câu thay thế riêng, không tự chồng thêm run cuối hợp âm lên mô-típ.
+Đường `weaveBluesCodexBacking → bluesCodexPass → buildSongTimeline/buildArrangedSong → eventsForHand → startTimelineLoop` giữ nốt đơn. Chưa thấy bộ phát tự đổi nốt đơn thành hợp âm. `hand` mặc định là `both`; nếu người dùng chọn luyện tay trái thì RH bị lọc đúng theo lựa chọn đó. Chưa có cấu hình/bài/BPM cụ thể của lần nghe bị phản ánh; không khẳng định tái hiện chính xác buổi nghe đó.
 
-### Khung tiếng mới, ví dụ C7 trong một ô 6/8
+### Câu chạy cụ thể trong Rockhouse
 
-Ô dài 3 nốt đen; đếm từ 0. Giữ cú chát sớm 1,45 của khung Claude/Đức Thịnh.
+Mọi thời điểm dưới đây đếm từ 0, đơn vị nốt đen, gộp tie rồi mới đếm.
 
-| Tiếng | Tay | Vị trí | Ngân | Minh họa |
-| --- | --- | ---: | ---: | --- |
-| BÙM + mở mô-típ | Trái/phải | 0 | LH 1; RH 0,35 | Bass gốc / G4 |
-| Nốt nối | Phải | 0,5 | 0,35 | A4 |
-| bùm | Trái | 1 | 0,45 | Nốt thứ năm của khung |
-| chát, bè trên là giai điệu | Phải | 1,45 | 0,55 | E4–G4–Bb4 |
-| bùm + đáp | Trái/phải | 2,5 | LH 0,5; RH 0,35 | Nốt thứ năm / G4 |
+| Ô | Dòng RH cần học | Thời điểm bắt đầu | LH trong lúc đó | Cách tổ chức |
+| --- | --- | --- | --- | --- |
+| 35 | D4–D#4–E4–G4 | 2⅓, 2⅔, 3, 3¼ | D2 ngân từ 2; B1/B2 tại 3, D2 tại 3¾ | Cụm RH trước đó nhả ở 2¼ rồi chuyển sang nốt đơn; D# tiếp cận E |
+| 45 | A4–G4–A4–G4–E4 | 1⅔, 2, 2⅓, 2⅔, 3 | B1 tại 1⅔, D2 tại 2, B1/B2 tại 3 | Bắt đầu bè D4/A4 rồi rút còn một nốt; E4 cuối ngân 1 |
+| 47 | A4–G4–A4–G4–E4–D4 | 1⅔, 2, 2⅓, 2⅔, 3, 3⅓ | LH giữ mô hình G/B/D | Nhắc câu 45 rồi kéo đuôi xuống D4 ngân ⅔ |
+| 52 | D4–D#4–E4–G4–A4 | 2⅓, 2⅔, 3, 3⅓, 3⅔ | A2 giữ từ 2, F#2 tại 3, A2 tại 3⅔ | Năm nốt chùm ba liên tục sau cụm C–F#–A; trên D7, chức năng là 1–#1–2–4–5 |
+| 65 | E4–G4–E4 rồi D4/G4 | ¾, 1, 1¼, 1½ | Bass G2 rồi E2/G2 trong cùng ô | Câu ở nửa đầu ô, kết bằng bè đôi ngân 1½; không phải đợi cuối ô |
+| 105/107 | D–E–F lặp trên G / G–A–Bb lặp trên C | Các bước ⅓ từ ⅓ đến 3 | Bass vẫn hoạt động độc lập | Riff chạy liên tục 5–6–b7; khác ba nốt rời bị ngắt ở bản trước |
 
-RH nghỉ thật **0,35–0,5; 0,85–1,45; 2–2,5; 2,85–3**. Không ngân cụm đệm đè lên câu chạy mới.
+**Quan hệ cao độ phải theo hòa âm:** cùng D–D#–E–G xuất hiện trên G ở 35 và D7 ở 52; chức năng tương ứng khác nhau. Không được chỉ lưu bốn tên nốt rồi gọi chung một gam Blues. D# ở 35 tiếp cận bậc 6 (E), không phải b5 của G.
 
-Bốn ô: **hỏi → nhắc, đuôi bè đôi → đáp/đổi hướng → thở**. Ô thường có bốn lần RH. Ô thở chỉ RH ở 0 (ngân 0,85) và 1,45 (ngân 0,55), bỏ đuôi. Đây là quyết định biên soạn trên 6/8, không chép timing 4/4 của Rockhouse.
+**Trường độ tạo cảm giác chạy:** ở 45/47, các nốt giữa nối nhau cách ⅓ và ngân ⅓, cuối câu mới ngân dài. Ở 35 có trộn ⅓ và ¼. Đây là chuỗi liên kết có hướng đi, không phải đặt vài cú RH theo nhịp dặm. Chép nguyên chuỗi vào cửa sổ ngắn rồi co tất cả xuống 0,125 phách vẫn là sai.
 
-### Màu và tốc độ
+### Robert: phân biệt chạy có đệm và chạy khi bass nghỉ
 
-- Dominant: 3–5–b7; trưởng thường: 3–5–6; thứ: b3–5–b7; m6 giữ 6; maj7 giữ 7. Nốt theo hợp âm đang vang, cả khi đổi giữa ô.
-- Sus/dim/altered giữ cụm gốc và dùng nốt hợp âm; không thêm 9 vào b9 hoặc biến sus thành trưởng. Bass slash giữ tuyến có sẵn.
-- Fill: nhắc nốt, bè đôi, b5→5, láy nhẹ b3→3 trên trưởng hoặc 2→b3 trên thứ. Run bước ngắn, kết nốt thuộc hợp âm hiện tại, ưu tiên nốt chung với hợp âm sau.
-- Fill/Run bước **0,5 nốt đen**; thiếu chỗ thì bớt nốt, dưới 0,5 thì bỏ câu. Fill 1,5 phách tối đa 3 tiếng chính; Run 3 phách tối đa 6. Láy ngắn/nhẹ là cử chỉ phụ.
-- RH đệm nhường Fill/Run; chặn tiếng chính cách nhau dưới 0,45 ở chỗ nối. Giữ vùng nghỉ, reset ô tại ranh giới/đôn phách. LH giữ khung trừ khi bật Walking Bass riêng.
-- Tắt fill điều khiển câu bổ sung; giai điệu bên trong ô là đặc tính của nút. Không ép bài khác thành 12-bar. Bộ dạo/giang/kết dài hiện hành chưa được thay thành bộ mô phỏng Ray/Robert.
+| Ô | Dòng RH | Thời điểm | LH và kết luận |
+| --- | --- | --- | --- |
+| 31 (6/4) | Eb5–D5–Bb4–F4–E4, một số tiếng có bè dưới | 2⅔, 3¼, 4, 4½, 5 | LH C3 chỉ đánh ở 0 ngân 2, sau đó nghỉ. Câu đi từ cụm sang nốt đơn, E4 ngân 1; đây là RH tự tiếp câu khi bass nhả |
+| 51 → 52 | A4–G4–F4 → E4 | 2, 2⅔, 3¼ → ô sau 0 | LH G3 đầu 51 rồi nghỉ; tại 52 LH F3 vào cùng E4. Câu RH đi qua vạch ô; bass tái nhập ở điểm hạ cánh |
+| 82 | F4–G4–Eb4–C4–Eb4–C4; đầu có bè dưới | 0, ⅔, 1¼, 2, 2½, 3½ | LH F3 tại 0, 1; F2 tại 3½. Đường RH nối trên nền thưa, không biến mỗi nốt thành cụm dặm |
+| 129–130 | Eb5–E5–F5–Eb5–C5–G4, rồi F4–E4–A4–G4–F4–C4 | Móc đơn/nốt đen của coda | LH hoàn toàn nghỉ 129; 130 chỉ F3 ở 3, E3 ở 3½. Dùng để học hướng câu và láy, **không** làm bằng chứng đệm hai tay xuyên suốt |
+
+Như vậy, ở hai sheet này: **nền bass có thể tiếp tục, giữ nốt, hoặc nhường hẳn một lúc; RH luân phiên cụm, bè đôi, dòng nốt đơn và nốt kết ngân**. “Gần xuyên suốt” mô tả vai trò giai điệu xuyên bài, không có nghĩa hai tay không bao giờ nghỉ. Trung bình số lần đánh/ô bỏ mất sự khác nhau giữa một chuỗi chạy ngắn và các tiếng rải xa nhau.
+
+### Bản sửa mới trong Blues Codex 1
+
+- Giữ nền bass Đức Thịnh 6/8, một ô dài 3 nốt đen. RH soạn theo **câu hai ô**, có thể qua vạch, thay vì gắn vài nốt vào từng ô riêng lẻ.
+- Bốn hướng câu dựa trên Rockhouse 35, 45/47, Robert 82 và 31. Đổi nhịp câu về bước cố định **0,5 nốt đen**, không bê nguyên 4/4/6/4 của sheet và không nén theo cửa sổ.
+- Nốt giữa ngân **0,48** (khe khoảng 0,02), nốt kết ngân tối đa **0,85**. Lực câu 74–80, nhỉnh hơn cụm nhắp; đủ nổi thành dòng giai điệu.
+- Cụm RH nhả trong cửa sổ chạy; LH tiếp tục nền. Cụm có thể trở lại sau câu. Không bắt RH vừa ôm cụm vừa chạy một lớp khác.
+- Trên C7, câu đầu **G4–Ab4–A4–C5** tại 2; 2,5; 3; 3,5. Câu tiếp **D5–C5–D5–C5–A4–G4** từ 6,5 đến 9. Có tiếng nối qua đầu ô thứ hai trong mỗi cặp; vẫn có nghỉ trước/sau câu.
+- Câu thứ ba tham khảo Robert 82, câu thứ tư đường xuống của Robert 31. Biến thể hợp âm thứ là Codex biên soạn; không gọi là câu thứ đã đo từ sheet. Maj7 giữ 7; sus/dim/altered dùng nốt hợp âm. Đổi hòa âm giữa câu thì chọn nốt hợp âm gần đường đang đi, không nhảy lại từ gốc mới.
+- Vòng chỉ một ô cũng có câu 3–4 nốt. Không đủ chỗ cho ba tiếng ở bước 0,5 thì giữ phần đệm; không nén thành móc kép. Nghỉ người dùng và ranh giới đoạn được giữ.
+- Không cần bật Fill/Run để nghe câu chạy. Fill/Run tự chọn vẫn thay RH trong cửa sổ đó; không chồng hai câu cùng tay.
+
+Ví dụ hai ô đầu trên C7, đơn vị nốt đen:
+
+| Tay | Thời điểm | Nốt / tiếng | Ngân |
+| --- | --- | --- | --- |
+| LH | 0; 1; 2,5; 3; 4; 5,5 | BÙM/bùm theo khung gốc | 1; 0,45; 0,5; 1; 0,45; 0,5 |
+| RH | 1,45 | E4–G4–Bb4 (chát) | 0,55 |
+| RH | 2; 2,5; 3; 3,5 | G4–Ab4–A4–C5 (câu liền) | 0,48; 0,48; 0,48; 0,85 |
+| RH | 4,45 | E4–G4–Bb4 (chát trở lại) | 0,55 |
+
+RH nghỉ từ đầu tới 1,45; giữa các nốt chạy chỉ hở 0,02; sau C5 hở 0,1 trước cụm; từ 5 đến hết cặp ô là nghỉ thật. Ở câu tiếp, cụm 7,45 bị nhả để RH chạy qua vị trí đó. “Khớp nền” không đòi giữ nguyên mọi cụm RH khi cùng tay đã chuyển sang giai điệu.
+
+Không tự áp vòng 12-bar lên bài bất kỳ; không đổi bộ dạo/giang/kết dài. Chưa nhận được bài/BPM người dùng đang nghe để so chính xác cấu hình đó. Minh họa có thể thử C7/F7/G7, mỗi hợp âm 3 phách, 101 BPM, chọn **Hai tay**.
+
+File nghe minh họa: `C:/Users/Tin PC/Downloads/Documents/Linh Nhi/Blues-Codex-1-cau-chay-101bpm.mp3`. Xuất từ timeline vòng C7/C7/C7/C7/F7/F7/C7/C7/G7/F7/C7/G7 khi Fill tắt, chuyển MIDI qua tiếng piano MuseScore; âm sắc và khâu nhập MIDI có thể khác phát trực tiếp KT. Không dùng file này làm bằng chứng đã nghe đúng phiên phát của người dùng.
 
 ## 5. Bản Robert và kiểm tra
 
 - Gốc không bị ghi đè. Bản mới `Robert-Ray-chia-doan-C-Blues.mxl`, `.mscz`, `.md` cùng thư mục Linh Nhi.
 - Sửa ký hiệu tuplets tại 76 cụm phách, bỏ 16 đầu/đuôi tie không có cặp. Trước/sau, **1.117 sự kiện nốt phát thực** khớp cao độ, tay, thời điểm, trường độ, dynamics. Số ô và số chỉ nhịp giữ nguyên.
 - MuseScore 4.7.5 nhập, xuất MSCZ, xuất lại MusicXML và ảnh thành công. Vòng xuất khớp cả 1.117 sự kiện và dynamics. Đã xem ảnh trang đầu/giữa/cuối; sửa tiêu đề/nhãn tràn mép. Đây là kiểm tra CLI/render, chưa thử thao tác mở bằng chuột.
-- 89 kiểm tra tập trung Blues/render/ráp bài đạt; build TypeScript/Vite đạt. Bộ fill/solo: 407/408 đạt; `phraseAcrossBar` còn 262/553 = 47,38% so với ngưỡng 50%, trùng lỗi cũ trong `Reference/SO-TAY.md`, mục `phraseAcrossBar rơi từ 58% xuống 47% ở b2dd25e`.
+- Bản câu chạy mới: 92 kiểm tra tập trung Blues/render/ráp bài/lịch phát đạt; build TypeScript/Vite đạt. Test mới bắt buộc có 4–6 nốt đơn liền, đi qua vạch ô và tồn tại trong timeline phát khi Fill tắt, thay cho kiểm số cú dặm cũ. Bộ fill/solo: 407/408 đạt; `phraseAcrossBar` còn 262/553 = 47,38% so với ngưỡng 50%, trùng lỗi cũ trong `Reference/SO-TAY.md`, mục `phraseAcrossBar rơi từ 58% xuống 47% ở b2dd25e`.
 - Cần người dùng nghe duyệt: kiểm tra đúng nhịp không thay thế đánh giá “vừa” trong bài hát cụ thể.

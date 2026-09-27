@@ -351,6 +351,193 @@
             }
           ]
         },
+        "35": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "G",
+              "kind": "dominant",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "G1",
+                  "duration": 1.0
+                },
+                {
+                  "pitch": "G2",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "A#4",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "D5",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "E5",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 0.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "B4",
+                  "duration": 0.75
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "A#4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 1.666667,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "B2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "G3",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "D4",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "E4",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 1.0
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333334
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D#4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.75
+                },
+                {
+                  "pitch": "B2",
+                  "duration": 0.75
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 3.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 3.75,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.25
+                }
+              ],
+              "right": []
+            }
+          ]
+        },
         "44": {
           "length": 4.0,
           "harmony": [],
@@ -646,6 +833,807 @@
                 {
                   "pitch": "D2",
                   "duration": 0.333333
+                }
+              ],
+              "right": []
+            }
+          ]
+        },
+        "47": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "G1",
+                  "duration": 0.666667
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 0.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.833333
+                },
+                {
+                  "pitch": "E4",
+                  "duration": 0.833333
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.833333
+                },
+                {
+                  "pitch": "A#4",
+                  "duration": 0.833333
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 1.666667,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "B2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "A4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "A4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "B2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.666666
+                }
+              ]
+            },
+            {
+              "at": 3.666667,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            }
+          ]
+        },
+        "52": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "D",
+              "kind": "dominant",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "A4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 0.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "A4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 0.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 1.333333
+                },
+                {
+                  "pitch": "F#4",
+                  "duration": 1.333333
+                },
+                {
+                  "pitch": "A4",
+                  "duration": 1.333333
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "D3",
+                  "duration": 0.75
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 1.75,
+              "left": [
+                {
+                  "pitch": "F#2",
+                  "duration": 0.25
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "A2",
+                  "duration": 1.0
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D#4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "F#2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.666667,
+              "left": [
+                {
+                  "pitch": "A2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "A4",
+                  "duration": 0.333333
+                }
+              ]
+            }
+          ]
+        },
+        "55": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "D",
+              "kind": "dominant",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 0.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F#3",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "C4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "F4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 0.666667,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "A2",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "D3",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "F#3",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "F4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 1.666667,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "A2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "F#3",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "C4",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "F4",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333334
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D#4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "G#1",
+                  "duration": 0.25
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.666667,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            }
+          ]
+        },
+        "65": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "A4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 0.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "A4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 0.75,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "E2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.5,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 1.5
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 1.5
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "G1",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.5,
+              "left": [
+                {
+                  "pitch": "G3",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "Bb3",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "B3",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.666667
+                }
+              ]
+            },
+            {
+              "at": 3.333333,
+              "left": [
+                {
+                  "pitch": "G3",
+                  "duration": 0.666667
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "B3",
+                  "duration": 0.333333
+                }
+              ]
+            }
+          ]
+        },
+        "88": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "G",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            },
+            {
+              "at": 2.0,
+              "root": "C",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "C2",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 0.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 0.75,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "C3",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.25
+                }
+              ]
+            },
+            {
+              "at": 1.5,
+              "left": [
+                {
+                  "pitch": "E2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "A#3",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "G3",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.333333,
+              "left": [
+                {
+                  "pitch": "E3",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.666667,
+              "left": [
+                {
+                  "pitch": "D3",
+                  "duration": 0.333333
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "E2",
+                  "duration": 0.25
+                },
+                {
+                  "pitch": "G3",
+                  "duration": 0.25
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.25,
+              "left": [
+                {
+                  "pitch": "E3",
+                  "duration": 0.25
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.5,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.5
+                },
+                {
+                  "pitch": "G3",
+                  "duration": 0.5
                 }
               ],
               "right": []
@@ -951,6 +1939,154 @@
             }
           ]
         },
+        "105": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "G1",
+                  "duration": 1.0
+                },
+                {
+                  "pitch": "G2",
+                  "duration": 1.0
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 0.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "B3",
+                  "duration": 0.333333
+                },
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 0.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "G2",
+                  "duration": 0.666667
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 1.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 1.666667,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.333333
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.333333,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.333333
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "B1",
+                  "duration": 0.5
+                },
+                {
+                  "pitch": "B2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "D4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 3.5,
+              "left": [
+                {
+                  "pitch": "D2",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            }
+          ]
+        },
         "107": {
           "length": 4.0,
           "harmony": [
@@ -1200,6 +2336,286 @@
                 {
                   "pitch": "Eb5",
                   "duration": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        "31": {
+          "length": 6.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "C",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "C3",
+                  "duration": 2.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 1.5
+                },
+                {
+                  "pitch": "C5",
+                  "duration": 1.5
+                }
+              ]
+            },
+            {
+              "at": 1.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C5",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.666667
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C5",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "Eb5",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 3.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C5",
+                  "duration": 0.75
+                },
+                {
+                  "pitch": "D5",
+                  "duration": 0.75
+                }
+              ]
+            },
+            {
+              "at": 4.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.5
+                },
+                {
+                  "pitch": "Bb4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 4.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 5.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 1.0
+                }
+              ]
+            }
+          ]
+        },
+        "51": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "G",
+              "kind": "dominant",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "G3",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "C5",
+                  "duration": 1.0
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "A4",
+                  "duration": 0.666667
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 3.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.75
+                }
+              ]
+            }
+          ]
+        },
+        "52": {
+          "length": 6.0,
+          "harmony": [
+            {
+              "at": 0.0,
+              "root": "C",
+              "kind": "major",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "E3",
+                  "duration": 1.0
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.5,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "C2",
+                  "duration": 1.0
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 4.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 1.5
                 }
               ]
             }
@@ -1825,6 +3241,230 @@
             }
           ]
         },
+        "81": {
+          "length": 4.0,
+          "harmony": [
+            {
+              "at": 2.0,
+              "root": "F",
+              "kind": "dominant",
+              "text": null,
+              "bass": null,
+              "degrees": []
+            }
+          ],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.25
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.75
+                }
+              ]
+            },
+            {
+              "at": 0.75,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.75
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 2.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 0.666667
+                }
+              ]
+            },
+            {
+              "at": 2.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 3.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.75
+                }
+              ]
+            }
+          ]
+        },
+        "82": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.666667
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "Bb3",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "C4",
+                  "duration": 0.666667
+                },
+                {
+                  "pitch": "F4",
+                  "duration": 0.666667
+                }
+              ]
+            },
+            {
+              "at": 0.666667,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 0.583333
+                },
+                {
+                  "pitch": "G4",
+                  "duration": 0.583333
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.25
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 1.25,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 0.75
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 1.0
+                }
+              ]
+            },
+            {
+              "at": 3.5,
+              "left": [
+                {
+                  "pitch": "F2",
+                  "duration": 0.5
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        "83": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0.0,
+              "left": [
+                {
+                  "pitch": "F2",
+                  "duration": 1.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 1.0
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "E3",
+                  "duration": 1.0
+                }
+              ],
+              "right": [
+                {
+                  "pitch": "Eb4",
+                  "duration": 1.0
+                }
+              ]
+            }
+          ]
+        },
         "104": {
           "length": 4.0,
           "harmony": [
@@ -2027,6 +3667,162 @@
                 {
                   "pitch": "E3",
                   "duration": 1.0
+                }
+              ],
+              "right": []
+            }
+          ]
+        },
+        "129": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb5",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 0.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E5",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F5",
+                  "duration": 1.0
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "Eb5",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C5",
+                  "duration": 1.0
+                }
+              ]
+            },
+            {
+              "at": 3.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        "130": {
+          "length": 4.0,
+          "harmony": [],
+          "attacks": [
+            {
+              "at": 0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "F4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 0.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "A4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 1.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "G4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.0,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "E4",
+                  "duration": 0.5
+                },
+                {
+                  "pitch": "F4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 2.5,
+              "left": [],
+              "right": [
+                {
+                  "pitch": "C4",
+                  "duration": 0.5
+                }
+              ]
+            },
+            {
+              "at": 3.0,
+              "left": [
+                {
+                  "pitch": "F3",
+                  "duration": 0.5
+                }
+              ],
+              "right": []
+            },
+            {
+              "at": 3.5,
+              "left": [
+                {
+                  "pitch": "E3",
+                  "duration": 0.5
                 }
               ],
               "right": []

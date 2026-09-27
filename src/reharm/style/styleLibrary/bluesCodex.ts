@@ -13,5 +13,5 @@ export const BLUES_CODEX_1: StylePattern = {
     // Nhắp rồi nhả: chừa chỗ cho câu đáp, giữ đúng vị trí đánh của khung gốc.
     right: BLUES_DUC_THINH.cell!.right.map(hit => ({ ...hit, durationBeats: 1.2 })),
   },
-  note: 'Codex biên soạn trên khung Blues Đức Thịnh 6/8: bass giữ nhịp, giai điệu nốt đơn/bè đôi xen hợp âm trong từng ô, nhắc câu rồi nghỉ. Tham khảo cách phối hợp hai tay ở Rockhouse và Robert Van; không chép timing 4/4. Fill/Run tự chọn đi thưa, không nén câu chạy. Chờ nghe duyệt.',
+  note: 'Blues Codex 1: bass giữ nền Đức Thịnh 6/8; tay phải xen hợp âm với câu chạy liền 4–6 nốt, có câu qua vạch ô và nghỉ cuối câu. Soạn từ hướng câu ở Rockhouse 35/45/47 và Robert 31/82, không cần bật Fill. Thiếu chỗ thì bớt nốt, không tăng tốc. Chờ nghe duyệt.',
 }

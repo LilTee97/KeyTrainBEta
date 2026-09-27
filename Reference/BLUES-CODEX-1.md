@@ -8,19 +8,19 @@ Nút riêng `blues-codex-1`, màu hồng, nhóm 6/8. Giữ khung bass và mốc 
 
 Xem [phân tích hai tay và khung tiếng](BLUES-ROCKHOUSE-ROBERT.md) và [số đo tái lập](BLUES-SHEETS-EVIDENCE.json).
 
-## Cách chơi
+## Cách chơi — sửa sau phản hồi chỉ nghe dặm
 
-- Giai điệu trong từng ô, không đợi fill: nốt đơn → cụm có bè giai điệu → đáp/bè đôi. Bốn ô: hỏi, nhắc, đáp, thở.
-- Ô thường: RH ở 0; 0,5; 1,45; 2,5, ngân 0,35; 0,35; 0,55; 0,35 nốt đen. Ô thở: RH ở 0 ngân 0,85 và 1,45 ngân 0,55. Ngoài phần ngân là nghỉ thật.
-- LH ở 0 ngân 1; 1 ngân 0,45; 2,5 ngân 0,5. Walking Bass là lựa chọn riêng.
-- Cụm RH trưởng 3–5–6, dominant 3–5–b7, thứ b3–5–b7, maj7 giữ 7. Sus/dim/altered được bảo toàn. Nốt theo hợp âm thực ở từng thời điểm.
-- Không tự chồng run cuối hợp âm. Fill/Run tự chọn và chuyển đoạn vẫn dùng được, thay RH trong cửa sổ tương ứng, có láy nhẹ/bè đôi/nốt blue.
-- Fill/Run bước 0,5 nốt đen. Thiếu chỗ thì bớt nốt, dưới 0,5 thì bỏ. Fill tối đa 3 tiếng chính/1,5 phách; Run tối đa 6/3 phách. Giữ nghỉ, delay và mốc mở ô.
-- Tắt fill không tắt mô-típ trong ô. Mật độ fill không làm nền nhanh lên. Mô-típ nền cố định; Fill/Run có thể đổi theo lượt.
+- RH xen cụm đệm với **câu chạy liền 4–6 nốt trong hai ô**, có câu qua vạch ô. Nguồn hướng câu: Rockhouse 35/45/47, Robert 31/82; không dùng Boogie Woogie.
+- Bước câu cố định 0,5 nốt đen; nốt giữa ngân 0,48, nốt kết tối đa 0,85, lực 74–80. Có nghỉ trước/sau cả câu, không chặt vụn từng nốt thành tiếng dặm.
+- Cụm RH tại 1,45 mỗi ô nhả khi nằm trong câu chạy; sau câu có thể trở lại. LH giữ 0 ngân 1; 1 ngân 0,45; 2,5 ngân 0,5. Walking Bass vẫn là tùy chọn riêng.
+- C7: câu đầu G4–Ab4–A4–C5 ở 2; 2,5; 3; 3,5. Câu tiếp D5–C5–D5–C5–A4–G4 ở 6,5 đến 9. Mẫu phản hồi Robert dùng câu xuống, nhắc nốt rồi hạ cánh.
+- Không cần bật Fill/Run. Fill/Run tự chọn thay câu RH trong cửa sổ đó, không chồng thêm lớp. Giữ vùng nghỉ và ranh giới đoạn; thiếu chỗ thì bớt nốt, không tăng tốc.
+- Vòng một ô vẫn có câu chạy; dưới ba tiếng ở bước 0,5 thì giữ đệm. Thứ/maj7/sus/dim/altered theo màu thực; đổi hòa âm giữa câu chọn nốt gần để giữ đường đi.
+- Bản cũ 2cdd2c5 có 3 nốt ngắn rời quanh cụm hợp âm, chưa tạo cảm giác chạy; không dùng số lần RH/ô để kết luận đã có câu chạy.
 
 ## Nghe thử
 
-Chọn **6/8 → Blues Codex 1**, thử `C7 C7 C7 C7 F7 F7 C7 C7 G7 F7 C7 G7`, mỗi hợp âm 3 phách nốt đen. Không cần đánh dấu Fill/Run. Nghe ô thứ tư nhả đuôi và qua F/G đổi màu.
+Chọn **6/8 → Blues Codex 1**, thử `C7 C7 C7 C7 F7 F7 C7 C7 G7 F7 C7 G7`, mỗi hợp âm 3 phách nốt đen. Không cần đánh dấu Fill/Run. Chọn Hai tay; nghe câu đầu đi qua đầu ô thứ hai, rồi cụm đệm trở lại. Chuyển sang chỉ tay phải có thể giúp nghe riêng đường giai điệu.
 
 Đây là vòng nhập, không phải bộ tự nhận dạng/ép mọi bài thành 12-bar. Phân biệt nhịp 4/4 của sheet với nền 6/8 của nút. Chưa thay bộ dạo/giang/kết dài bằng bộ mô phỏng Ray/Robert.
 

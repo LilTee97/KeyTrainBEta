@@ -13,9 +13,9 @@ from audit_cp_acdd import joined_attacks
 
 DIRECTORY = Path('C:/Users/Tin PC/Downloads/Documents/Linh Nhi')
 SHEETS = {
-    'Rockhouse': ('Rockhouse-Ray-chia-doan-G-Blues.mxl', [32, 33, 44, 45, 103, 104, 107],
+    'Rockhouse': ('Rockhouse-Ray-chia-doan-G-Blues.mxl', [32, 33, 35, 44, 45, 47, 52, 55, 65, 88, 103, 104, 105, 107],
                  {'chordal': (32, 55), 'motivic': (103, 114)}),
-    'Robert': ('Robert-Ray-chia-doan-C-Blues.mxl', [0, 56, 57, 58, 64, 70, 71, 72, 76, 104, 105, 124, 127, 141, 142],
+    'Robert': ('Robert-Ray-chia-doan-C-Blues.mxl', [0, 31, 51, 52, 56, 57, 58, 64, 70, 71, 72, 76, 81, 82, 83, 104, 105, 124, 127, 129, 130, 141, 142],
                {'chorusC': (56, 79), 'chorusD': (80, 103), 'chorusE': (104, 127)}),
 }
 

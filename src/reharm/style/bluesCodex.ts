@@ -31,9 +31,9 @@ export function colorBluesCodexBacking(backing: readonly TimelineEvent[], chords
   })
 }
 
-/** Giai điệu là một phần ô đệm: hỏi, nhắc, đáp, thở; không đợi mốc fill.
- * Rockhouse 103–107 gợi ý motif 5–6–b7; Robert 56–79 gợi ý ngân/nghỉ.
- * Đây là biên soạn trên lưới Đức Thịnh 6/8, không chép timing 4/4 của sheet. */
+/** Câu chạy liên tục trong nền, không phải vài nốt dặm rời ở mỗi ô.
+ * Cao độ/hướng câu tham khảo Rockhouse 35,45,47 và Robert 31,82.
+ * Soạn lại ở bước 0,5 nốt đen trên nền 6/8; tuyệt đối không nén theo cửa sổ. */
 export function weaveBluesCodexBacking(
   backing: readonly TimelineEvent[], chords: readonly ParsedChord[], beatsPerChord: number,
   options: { cellBreaks?: readonly number[]; muteWindows?: readonly { from: number; to: number }[] } = {},
@@ -42,44 +42,59 @@ export function weaveBluesCodexBacking(
   const starts = chordStarts(chords, beatsPerChord)
   const total = starts.at(-1)! + beatsOf(chords.at(-1)!, beatsPerChord)
   const colored = colorBluesCodexBacking(backing, chords, beatsPerChord)
-  const right = colored.filter(e => e.hand === 'right')
+  const melodies: TimelineEvent[] = []
   const chordAt = (beat: number) => starts.findLastIndex(start => start <= beat + 1e-6)
+  // Mỗi câu chiếm HAI ô: được đi qua vạch ô, chừa chỗ trước/sau cho cụm đệm.
+  const phrases = [
+    { at: 2, major: [7, 8, 9, 12], minor: [0, 3, 5, 6, 7] }, // Rockhouse 35: D–D#–E–G trên G.
+    { at: 0.5, major: [14, 12, 14, 12, 9, 7], minor: [10, 7, 5, 6, 5, 3] }, // Rockhouse 45/47.
+    { at: 2, major: [12, 14, 10, 7, 10, 7], minor: [12, 15, 10, 7, 10, 7] }, // Robert 82: F–G–Eb–C–Eb–C trên F.
+    { at: 0.5, major: [15, 14, 10, 5, 4], minor: [15, 14, 10, 5, 3] }, // Robert 31: Eb–D–Bb–F–E trên C.
+  ]
   let phrase = 0
   for (let start = 0; start < total - 1e-6; phrase++) {
     const nextBreak = Math.min(...(options.cellBreaks ?? []).filter(b => b > start + 1e-6), total)
-    const until = Math.min(start + 3, nextBreak)
-    const variant = phrase % 4
-    for (const at of variant === 3 ? [0] : [0, 0.5, 2.5]) {
-      const beat = start + at
-      if (beat >= until - 1e-6) continue
-      const index = chordAt(beat), chord = chords[index], tones = intervals(chord)
-      const third = tones.includes(4) ? 4 : tones.includes(3) ? 3 : 0
-      const fifth = tones.includes(7) ? 7 : tones.includes(6) ? 6 : tones.includes(8) ? 8 : 0
-      const normal = third !== 0 && fifth === 7 && !tones.includes(1) && !(tones.includes(3) && tones.includes(4))
-      const color = tones.includes(11) ? 11 : tones.includes(10) ? 10 : tones.includes(9) ? 9 : third === 3 ? 10 : 9
-      // Trưởng: 5–6–b7/6; thứ giữ b3/b7 và dùng 5 thay 6 tự thêm.
-      const step = !normal ? (at === 0 ? fifth : third) : variant === 3 ? third :
-        at === 0 ? (variant === 2 ? color : fifth) : at === 0.5 ? (variant === 2 || third === 3 ? fifth : 9) : (variant === 2 ? third : fifth)
-      const root = 60 + chord.root
-      const notes = normal && variant === 1 && at === 2.5 ? [root + third, root + fifth] : [root + step]
-      const end = Math.min(beat + (variant === 3 ? 0.85 : 0.35), until, starts[index + 1] ?? total)
+    const until = Math.min(start + 6, nextBreak)
+    const shape = phrases[phrase % phrases.length]
+    const room = until - start
+    const begin = start + (room < 3 ? 0 : room < 5 ? 0.5 : shape.at)
+    const index = chordAt(begin), origin = chords[index]
+    if (!origin) break
+    const originTones = intervals(origin)
+    const steps = originTones.includes(3) && !originTones.includes(4) ? shape.minor : shape.major
+    const count = Math.min(steps.length, Math.floor((until - begin) / 0.5))
+    let root = 60 + origin.root
+    if (root + Math.max(...steps) > 84) root -= 12
+    for (let i = 0; count >= 3 && i < count; i++) {
+      const beat = begin + i * 0.5
+      const current = chordAt(beat), chord = chords[current], tones = intervals(chord)
+      const sameHarmony = chord.root === origin.root && tones.join(',') === originTones.join(',')
+      const normal = tones.includes(7) && (tones.includes(3) || tones.includes(4)) &&
+        !tones.includes(1) && !(tones.includes(3) && tones.includes(4))
+      let note = root + steps[i]
+      // Maj7 không ép b7; hợp âm đổi giữa câu thì giữ đường đi gần nốt dự kiến,
+      // KHÔNG dựng lại từ gốc mới khiến dòng đang chạy nhảy quãng bất ngờ.
+      if (sameHarmony && tones.includes(11) && pc(note - chord.root) === 10) note += 1
+      const last = i === count - 1
+      if (!sameHarmony || !normal || (last && !tones.includes(pc(note - chord.root)))) {
+        const candidates = Array.from({ length: 25 }, (_, n) => 60 + n)
+          .filter(n => tones.includes(pc(n - chord.root)))
+        note = candidates.sort((a, b) => Math.abs(a - note) - Math.abs(b - note))[0] ?? note
+      }
+      while (note < 60) note += 12
+      while (note > 84) note -= 12
+      const end = Math.min(beat + (last ? 0.85 : 0.48), until, starts[current + 1] ?? total)
       if (end - beat < 0.12) continue
-      right.push({ notes, startBeat: beat, durationBeats: end - beat, hand: 'right', velocity: at === 0 ? 68 : 62 })
+      melodies.push({ notes: [note], startBeat: beat, durationBeats: end - beat,
+        hand: 'right', velocity: i === 0 || last ? 80 : 74 })
     }
     start = until
     if (until === nextBreak) phrase = -1
   }
-  // Cắt cả nốt ngân vào vùng nghỉ; không tái sinh giai điệu trong chỗ người dùng đã cho nghỉ.
-  const muted = applyMuteWindows(right, options.muteWindows ?? []).sort((a, b) => a.startBeat - b.startBeat)
-  const spaced: TimelineEvent[] = []
-  for (const event of muted) {
-    const previous = spaced.at(-1)
-    // Ranh giới đoạn lẻ có thể đặt hai tiếng sát nhau: giữ câu trước, bỏ tiếng dư.
-    if (previous && event.startBeat - previous.startBeat < 0.45 - 1e-6) continue
-    if (previous) previous.durationBeats = Math.min(previous.durationBeats, event.startBeat - previous.startBeat - 0.04)
-    spaced.push({ ...event })
-  }
-  return [...backing.filter(e => e.hand === 'left'), ...spaced].sort((a, b) => a.startBeat - b.startBeat)
+  const line = applyMuteWindows(melodies, options.muteWindows ?? [])
+  // Cụm RH nhường trọn câu chạy. LH vẫn giữ tiết tấu, không chuyển cụm sang LH.
+  const plan = bluesCodexPass(colored, line)
+  return [...plan.backing, ...line].sort((a, b) => a.startBeat - b.startBeat)
 }
 
 /** Câu tự soạn theo motif, không gọi là câu đo từ Đức Thịnh. Đơn vị: nốt đen. */

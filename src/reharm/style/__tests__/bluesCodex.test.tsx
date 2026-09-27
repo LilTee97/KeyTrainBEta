@@ -125,22 +125,38 @@ describe('Blues Codex 1: đệm và câu đáp soạn chung cho hai tay', () => 
     }
   })
 
-  it('giai điệu ở từng ô dù không có mốc fill; giữ LH, nhắc motif rồi thở', () => {
+  it('có dòng chạy liền 4–6 nốt qua vạch ô dù không bật Fill; giữ LH và chỗ thở', () => {
     const chords = parse('C7 C7 C7 C7')
     const raw = renderPattern(voiceLeadTwoHands(chords), style, { beatsPerChord: 3 })
     const plan = weaveBluesCodexBacking(raw, chords, 3)
     expect(plan.filter(e => e.hand === 'left')).toEqual(raw.filter(e => e.hand === 'left'))
     const right = plan.filter(e => e.hand === 'right')
-    const cell = (i: number) => right.filter(e => e.startBeat >= i * 3 && e.startBeat < (i + 1) * 3)
-    expect([0, 1, 2, 3].map(i => cell(i).length)).toEqual([4, 4, 4, 2])
-    expect(cell(0).map(e => e.startBeat)).toEqual([0, 0.5, 1.45, 2.5])
-    expect(cell(0).slice(0, 3).map(e => e.notes)).toEqual(cell(1).slice(0, 3).map(e => e.notes))
-    expect(cell(0).map(e => Math.max(...e.notes) % 12)).toEqual([7, 9, 10, 7])
-    expect(cell(1).at(-1)!.notes.length).toBe(2)
-    expect(end(cell(3).at(-1)!)).toBeLessThanOrEqual(11)
+    // Regression: bản cũ chỉ G–A / cụm / G ngắn, không có dòng 4 nốt liền.
+    const firstRun = right.filter(e => e.startBeat >= 2 && e.startBeat < 4)
+    expect(firstRun.map(e => e.notes)).toEqual([[67], [68], [69], [72]])
+    expect(firstRun.map(e => e.startBeat)).toEqual([2, 2.5, 3, 3.5])
+    expect(firstRun.slice(0, -1).every(e => e.durationBeats >= 0.47)).toBe(true)
+    expect(firstRun.every(e => e.velocity >= 74)).toBe(true)
+    const secondRun = right.filter(e => e.startBeat >= 6.5 && e.startBeat <= 9)
+    expect(secondRun.map(e => e.notes)).toEqual([[74], [72], [74], [72], [69], [67]])
+    expect(right.filter(e => e.notes.length > 1).map(e => e.startBeat)).toEqual([1.45, 4.45, 10.45])
+    expect(right.some((e, i) => i > 0 && e.startBeat - end(right[i - 1]) > 0.5)).toBe(true)
     for (let i = 1; i < right.length; i++) {
       expect(right[i].startBeat - right[i - 1].startBeat).toBeGreaterThanOrEqual(0.45)
       expect(overlap(right[i - 1], right[i])).toBe(false)
+    }
+    const noFills = generateBluesCodexFills(chords, { beatsPerChord: 3, density: 'medium', vocal: 'full' })
+    expect(noFills).toEqual([])
+    const song = buildSongTimeline({ accompaniment: plan, fills: noFills, solo: () => [], loopLengthBeats: 12, form: SONG_FORMS[0] })
+    for (const note of firstRun) expect(song.events).toContainEqual(note)
+    // Vòng chỉ một ô vẫn phải có câu chạy, không chờ đủ hai ô mới sinh.
+    for (const beats of [1.5, 3]) {
+      const short = chords.slice(0, 1).map(c => ({ ...c, beats }))
+      const base = renderPattern(voiceLeadTwoHands(short), style, { beatsPerChord: beats })
+      const notes = weaveBluesCodexBacking(base, short, beats).filter(e => e.hand === 'right' && e.notes.length === 1)
+      expect(notes.length).toBeGreaterThanOrEqual(3)
+      expect(notes.every(e => end(e) <= beats)).toBe(true)
+      for (let i = 1; i < notes.length; i++) expect(notes[i].startBeat - notes[i - 1].startBeat).toBeCloseTo(0.5)
     }
   })
 
