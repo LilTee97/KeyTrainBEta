@@ -88,6 +88,8 @@ describe('slow rock lấy gam Blues', () => {
   it('nhận ra họ slow rock', () => {
     expect(prefersBlues(getStyle('slow-rock-duc-thinh-1')!)).toBe(true)
     expect(prefersBlues(getStyle('slow-rock-duc-thinh-3')!)).toBe(true)
+    // Đứng ngoài mọi hoDieu (xem bluesDucThinh.ts) nhưng vẫn phải bắt được gam Blues qua family.
+    expect(prefersBlues(getStyle('blues-duc-thinh')!)).toBe(true)
     expect(prefersBlues(getStyle('pop-1')!)).toBe(false)
   })
 })

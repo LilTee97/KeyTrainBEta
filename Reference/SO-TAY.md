@@ -4240,3 +4240,39 @@ thầy ấy, đúng mục điệu (Cà Pháo mục ballad · Tôn Hùng mục 4 
 số ở menu, hoặc đổi `NGHI_MAC_DINH`. Toàn suite **2.836 qua / 7 đỏ** — đúng 7 đỏ cũ.
 **ĐÃ NGHE DUYỆT 26/9/2026** — người dùng: *"đã ổn"*. Duyệt cả chuỗi mốc chuyển đoạn trong ngày: nghỉ đúng N phách · đôn
 ra không dồn câu chạy · "Mặc định" = im 0 · ô đệm / ô fill mở lại sau hợp âm dài lẻ · áp mọi điệu kể cả màu Cà Pháo.
+
+## Bước — Nút "Blues Đức Thịnh" (27/9/2026), tách khỏi "Blues ĐT" của Codex
+
+Người dùng: soạn được câu solo/lick/run Blues theo **hướng A** (biên soạn theo lý thuyết Blues phổ
+thông — xem hội thoại 25/9/2026 về khoá "The Ultimate Blues Piano Course": khoá chủ yếu là video/mp3
+tôi không xem/nghe được, không đủ để soạn kiểu "đo từ sheet" như Linh Nhi), lấy tiết tấu đệm từ video
+thầy Đức Thịnh, và đặt tên **tách hẳn** khỏi nút "Blues ĐT" Codex đang dựng song song (không chung id,
+family, hay alias — cùng lối "Slow Rock LT" (Codex) đứng cạnh "Slow Rock Lá thư" (Claude)).
+
+**Tiết tấu**: `style/styleLibrary/bluesDucThinh.ts` (family `blues-duc-thinh`, đứng NGOÀI `hoDieu.ts`
+để không dính cổng màu/solo Linh Nhi của họ `slow-rock`) — copy nguyên `cell` của `slow-rock-duc-thinh-3`
+(`testerStyles.json`, đã rà bằng tai, nguồn video kOwriZhpo6Y 06:45-10:43), **không đổi một cú gõ**.
+Lý do: thầy nói nguyên văn ở 10:07-10:28 (PianoBrain `duc-thinh-not-blues-la-bac-5-giang`, validated):
+*"Thực ra đó là điệu Blues nhưng mà nó không đánh nốt Blues thôi. Nốt Blues là nốt bậc 5 giáng."* — tức
+tiết tấu đã là Blues, chỉ thiếu một CAO ĐỘ ở bè giai điệu, không phải tiết tấu khác.
+
+**Câu dạo tự động đổi gam Blues — không cần thêm code**: `phraseScale.ts` `prefersBlues()` đã bắt mọi
+family có chữ "blues"; family mới trùng điều kiện đó nên `autoPhraseScale` tự chọn `bluesChoice(key)`
+(C: C Eb F Gb G Bb — `Reference/pianoimprovnotes.md` mục 1.2) cho đoạn dạo. Đã KIỂM (không chỉ suy):
+gọi thẳng `generateSolo` với `singleScale` như `phraseSolo` gọi thật — 28 nốt, 0 nốt ngoài gam.
+
+**Lick/run** (`style/blueDucThinhLicks.ts`, hook `linhRun` — cùng cơ chế Linh Nhi dùng): 6 câu **soạn
+tay** (không sinh xúc xắc), mỗi câu ghi rõ lấy từ quy tắc nào trong `pianoimprovnotes.md` — nốt xanh
+vào bậc 5 (đúng lời thầy) · turnaround b7-5-b3-gốc · groove rồi rải · vòng b3-4-b5-5-b3 · rải hợp âm
+bảy chen nốt xanh · approach nửa cung. Nốt hạ cánh cuối câu (2/6 câu) được ngân qua vạch nhịp sang hợp
+âm sau — đúng quy ước `chayLinhNhi`, không phải lỗi tràn ô. Cho phép bậc ba trưởng của hợp âm chen vào
+(chord-tone soloing, mục 3.1) nên KHÔNG phải mọi nốt đều nằm trong gam Blues thuần — đã kiểm rõ trong
+test, đừng siết lại thành "chỉ 6 nốt gam Blues".
+
+**Chưa có / chưa đo**: đoạn kết (outro) hiện trống — cổng `coChiDanCodex` (10/9/2026) chỉ mở outro cho
+Bolero Tuấn thứ và Bossa CP thứ, Blues Đức Thịnh cũng bị chặn như MỌI style mới khác, không phải lỗi
+riêng của nút này. Giang tấu chưa có vòng ngắn riêng, đi lối mượn nguyên đoạn mặc định. Giọng trưởng
+của Blues Đức Thịnh chưa có gì từ thầy — gam Blues áp cho giọng trưởng là suy rộng theo lý thuyết, chưa
+đối chiếu. Vòng hợp âm I7-IV7-V7 không tự sinh — người dùng gõ hợp âm bài như mọi điệu khác.
+
+Toàn suite **2.864 qua / 7 đỏ** — đúng 7 đỏ cũ.

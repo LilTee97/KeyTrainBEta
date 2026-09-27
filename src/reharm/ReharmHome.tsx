@@ -103,6 +103,7 @@ import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch
 import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
+import { chayBlueDucThinh } from './style/blueDucThinhLicks'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -2686,7 +2687,14 @@ export function ReharmHome() {
           ...(cauLinhNhi && reharm.key && hoCuaDieu(style.id) === 'slow-rock'
             ? { linhRun: (yeuCau: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
                 chayLinhNhi({ ...yeuCau, key: reharm.key! }) }
-            : {}),
+            /*
+              Lick/run Blues Đức Thịnh — riêng cho điệu này, không đi qua cổng Linh Nhi. Không cần
+              `reharm.key`: sổ lick tính hoàn toàn theo gốc hợp âm đang vang và hợp âm sau, giống
+              cách chơi Blues thật (đổi giọng thì hợp âm đổi, câu lick tự theo). Xem `chayBlueDucThinh`.
+            */
+            : style.family === 'blues-duc-thinh'
+              ? { linhRun: chayBlueDucThinh }
+              : {}),
           lickyMode,
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
