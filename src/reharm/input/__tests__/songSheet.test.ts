@@ -223,6 +223,40 @@ describe('tự chia đoạn bằng đánh dấu của người dùng', () => {
       expect(label.length).toBeGreaterThan(0)
     }
   })
+
+  /*
+    Người dùng 27/9/2026: có dạo đầu đã sinh hợp âm (dòng KHÔNG LỜI, gắn bởi
+    `attachPhraseToSheet`), thêm hợp âm cho lời gốc rồi quét chọn "Phiên khúc" —
+    dòng lời ĐẦU TIÊN của khoảng vừa quét bị rớt lại đoạn cũ.
+
+    Cỗ máy quét (`SongSheetView`) đánh số dòng trên bản có dạo đầu (`sheetHien`), còn
+    `resectionSheet` áp đánh dấu lên bản CHƯA có dạo đầu (`baseSheet` ở ReharmHome.tsx —
+    cố ý tách ra để tránh vòng lặp phụ thuộc với hợp âm dạo đầu). Dòng dạo đầu chiếm số 0
+    ở bản có, không tồn tại ở bản không có, nên mọi dòng lời sau nó lệch đúng 1 số.
+  */
+  it('dòng dạo đầu (không lời) không chiếm số — số dòng lời không lệch dù có hay không có dạo đầu', () => {
+    const withoutIntro = base
+    const withIntro = attachPhraseToSheet(base, ['Em', 'Am'], [])
+
+    const flatWithout = flattenLines(withoutIntro)
+    const flatWith = flattenLines(withIntro)
+
+    // Dòng dạo đầu (không lời) không được cấp số — mọi dòng lời giữ nguyên số cũ.
+    const introLine = flatWith.find((entry) => entry.line.solo === 'intro')!
+    expect(introLine.index).toBe(-1)
+    expect(flatWith.filter((entry) => entry.index >= 0).map((entry) => entry.index)).toEqual(
+      flatWithout.map((entry) => entry.index),
+    )
+
+    // Quét trên bản có dạo đầu rồi đánh dấu, áp lại đúng lên bản không có dạo đầu.
+    const markedFromDisplayedIndices = resectionSheet(withoutIntro, [
+      { from: 0, to: 1, kind: 'verse' },
+    ])
+    expect(markedFromDisplayedIndices.sections[0]!.name).toBe('Phiên khúc')
+    expect(markedFromDisplayedIndices.sections[0]!.lines).toHaveLength(2)
+    // Dòng lời đầu tiên ("Dòng một") phải nằm trong đoạn vừa quét, không rớt lại đoạn cũ.
+    expect(markedFromDisplayedIndices.sections[0]!.lines[0]!.lyric).toBe('Dòng một')
+  })
 })
 
 describe('mỗi đoạn chiếm những hợp âm nào', () => {

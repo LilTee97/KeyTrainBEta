@@ -4301,3 +4301,34 @@ nhịp kép. Đo sau khi sửa: **16/16 sự kiện tự động đều là tay 
 tay phải nào ngoài phần đệm.
 
 Toàn suite **2.867 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+## Bước — Sửa lỗi chia đoạn: dòng dạo đầu chiếm mất số của dòng lời đầu tiên (27/9/2026)
+
+Người dùng gửi ảnh chụp: quét chọn "Phiên khúc" cho một bài đã có dạo đầu (đã sinh hợp âm) và điệp
+khúc đánh dấu sẵn, nhưng dòng lời ĐẦU TIÊN của khoảng vừa quét bị rớt lại đoạn "Dạo đầu" cũ thay vì
+vào "Phiên khúc". Người dùng xác nhận: đánh dấu bằng quét chuột bôi đen rồi bấm chọn loại đoạn (không
+phải gõ ngoặc/`:` trong text).
+
+**Bẫy**: `SongSheetView` đánh số dòng (`data-line-index`, dùng cho `SectionMark.from/to`) trên
+`sheetHien` — bản nhạc ĐÃ gắn dòng dạo đầu/giang tấu/kết (`attachPhraseToSheet`/
+`attachInterludeToSheet`, mỗi dòng KHÔNG LỜI này chiếm một số như mọi dòng khác). Nhưng
+`resectionSheet` (áp đánh dấu) lại chạy trên `baseSheet` ở `ReharmHome.tsx` — bản CHƯA gắn các dòng
+đó, cố ý tách ra để tránh vòng lặp phụ thuộc với hợp âm dạo đầu (`introSymbols` cần biết biên đoạn,
+biên đoạn lại cần `baseSheet` dựng trước `attachPhraseToSheet`). Dòng dạo đầu chiếm số 0 ở bản có,
+không tồn tại ở bản không có → mọi dòng lời phía sau lệch đúng 1 số. Quét trên bản có (đánh số dòng
+lời đầu tiên là 1) rồi áp lên bản không có (dòng ấy giờ mang số 0) là chệch đúng ô đó.
+
+**Sửa**: `flattenLines` (`input/songSheet.ts`) không cấp số cho dòng có `line.solo` nữa — luôn trả về
+`-1`. Số của dòng lời chỉ đếm dòng lời, không đếm dòng KHÔNG LỜI xen giữa, nên giống nhau dù bản có
+hay không có dạo đầu/giang tấu. `resectionSheet` không đụng gì thêm: mốc quét luôn `>= 0`, dòng `-1`
+tự động không khớp mốc nào — dòng dạo đầu vì vậy cũng hết bị đổi tên nhầm nếu người dùng lỡ quét đè
+lên nó (hiệu ứng phụ đúng hướng, không nằm trong yêu cầu ban đầu).
+
+**Giá trị cũ**: `index: flat.length` (đếm mọi dòng kể cả dòng `solo`). **Triệu chứng để lùi**: quét
+chọn đoạn cho bài đã có dạo đầu/giang tấu thì dòng lời đầu của khoảng vừa quét rớt lại đoạn liền trước.
+
+Test mới: `input/__tests__/songSheet.test.ts` — "dòng dạo đầu (không lời) không chiếm số...", dựng cả
+hai bản (có/không dạo đầu) rồi so số dòng lời phải khớp nhau, và mô phỏng đúng luồng quét-trên-bản-có
+rồi áp-lên-bản-không-có.
+
+Toàn suite **2.875 qua / 7 file đỏ (8 test đỏ)** — đúng 7 file đỏ cũ (`tuyenSolo.test.ts` có 2 test đỏ).

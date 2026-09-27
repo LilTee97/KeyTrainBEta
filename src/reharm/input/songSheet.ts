@@ -303,18 +303,31 @@ export interface FlatLine {
   kind: SongSectionKind
 }
 
-/** Trải phẳng mọi dòng của bản nhạc, đánh số liên tục xuyên các đoạn. */
+/**
+ * Trải phẳng mọi dòng của bản nhạc, đánh số liên tục xuyên các đoạn.
+ *
+ * Dòng KHÔNG LỜI (`line.solo`, tự sinh bởi `attachPhraseToSheet`/`attachInterludeToSheet`)
+ * không được cấp số — giữ nguyên `-1`. Lý do: `sectionMarks` (quét chuột chia đoạn ở
+ * `SongSheetView`) được lưu trên bản nhạc ĐÃ gắn dạo đầu/giang tấu/kết, nhưng lại được ÁP
+ * LẠI trên bản nhạc CHƯA gắn (`resectionSheet` chạy trước `attachPhraseToSheet`, xem
+ * `baseSheet` ở `ReharmHome.tsx` — cố ý tránh vòng lặp phụ thuộc với `introSymbols`). Nếu
+ * dòng dạo đầu chiếm một số trong lượt đầu mà biến mất ở lượt sau, mọi dòng lời phía sau nó
+ * lệch số — dòng lời ĐẦU TIÊN của đoạn vừa quét bị rớt lại đoạn cũ. Bỏ dòng solo ra khỏi
+ * phép đếm thì số của dòng lời luôn như nhau dù có hay không có dạo đầu/giang tấu chen vào.
+ */
 export function flattenLines(sheet: SongSheet): FlatLine[] {
   const flat: FlatLine[] = []
+  let index = 0
 
   for (const section of sheet.sections) {
     for (const line of section.lines) {
       flat.push({
         line,
-        index: flat.length,
+        index: line.solo ? -1 : index,
         name: section.name,
         kind: section.kind,
       })
+      if (!line.solo) index += 1
     }
   }
 
