@@ -85,7 +85,7 @@ describe('CP sheet ballads retain connections under color, licks and full solos'
 
   it('wires the shared plan through playback and practice without gating it on CP Lick', () => {
     const app = readFileSync(new URL('../../ReharmHome.tsx', import.meta.url), 'utf8')
-    expect(app).toContain("const cpLick = intensity === 'caPhao' || cpLickSelected")
+    expect(app).toContain("const cpLick = styleId !== 'blues-codex-1' && (intensity === 'caPhao' || cpLickSelected)")
     expect(app).toContain('const plan = planCpBalladBacking(rendered, withPassing, {')
     expect(app).toContain('protectedWindows: accompanimentPlan.protectedWindows')
     expect(app).toContain('const accompaniment = accompanimentPlan.backing')

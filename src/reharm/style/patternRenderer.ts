@@ -748,7 +748,7 @@ function renderWithCell(
 const EPSILON = 0.001
 
 /** Họ điệu mà tay phải trống là CỐ Ý — `missingChordHits` không chêm hợp âm vào. */
-const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'twist'])
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'twist', 'blues-codex-1'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.

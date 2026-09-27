@@ -104,6 +104,7 @@ import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
 import { chayBlueDucThinh } from './style/blueDucThinhLicks'
+import { bluesCodexPass, colorBluesCodexBacking, generateBluesCodexFills } from './style/bluesCodex'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -685,8 +686,8 @@ export function ReharmHome() {
   const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
-  // Color owns the composer, including old snapshots with cpLick:false.
-  const cpLick = intensity === 'caPhao' || cpLickSelected
+  // Blues Codex có câu chêm riêng; các điệu khác vẫn theo bộ soạn của màu Cà Pháo.
+  const cpLick = styleId !== 'blues-codex-1' && (intensity === 'caPhao' || cpLickSelected)
   const [susDominant, setSusDominant] = useState(true)
   /** Màu của chủ âm — quyết định gu chung của cả vòng. */
   const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
@@ -1189,7 +1190,7 @@ export function ReharmHome() {
   const twistSoloKey = useMemo(() => lockedKey
     ? { tonic: normalizePitchClass(lockedKey.tonic + effectiveTranspose), scale: lockedKey.scale }
     : reharm.key, [lockedKey, effectiveTranspose, reharm.key])
-  const cpComposeOn = intensity === 'caPhao'
+  const cpComposeOn = style.family !== 'blues-codex-1' && intensity === 'caPhao'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
   const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
   const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key, cpSimulationOn), [style, reharm.key, cpSimulationOn])
@@ -1824,13 +1825,15 @@ export function ReharmHome() {
       ...sauNghi,
     ]
 
-    const rendered = renderPattern(twoHands, style, {
+    const rawBacking = renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach,
       muteWindows: laBossaCP(style) || cpLick ? [] : muteWindows,
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
+    const rendered = style.family === 'blues-codex-1'
+      ? colorBluesCodexBacking(rawBacking, withPassing, chordBeats) : rawBacking
     const plan = planCpBalladBacking(rendered, withPassing, {
       style, walkingOn, beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows,
     })
@@ -2643,8 +2646,9 @@ export function ReharmHome() {
     (take: number) => {
       if (cpLick) return cpPlan(take).events
       if (laBossaCP(style)) return []
-      const line = soloToTimeline(
-        generateFillLine(withPassing, {
+      const makeLine = style.family === 'blues-codex-1' ? generateBluesCodexFills
+        : (chords: readonly ParsedChord[], options: Parameters<typeof generateFillLine>[1]) => soloToTimeline(generateFillLine(chords, options))
+      const line = makeLine(withPassing, {
           breaths,
           sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitionsDieu,
           beatsPerChord: chordBeats,
@@ -2712,8 +2716,7 @@ export function ReharmHome() {
                   take: playSpin.current,
                 })
             : undefined,
-        }),
-      )
+        })
       // Preserve the CP backing and its bass links; optional fills use free space.
       return style.cpBalladChordLeads && !walkingOn
         ? bossaFillsInGaps(line, accompaniment) : line
@@ -3309,7 +3312,9 @@ export function ReharmHome() {
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
-      const cpPass = cpLick ? cpPlan(pass) : null
+      // Blues dùng đúng một bản câu đáp/cắt đệm cho cả lượt, không cắt theo take khác đang phát.
+      const cpPass = cpLick ? cpPlan(pass) : style.family === 'blues-codex-1'
+        ? bluesCodexPass(accompaniment, fills(pass)) : null
       if (isTwist) {
         const spans = mainChordSpans(withPassing, chordBeats)
         return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
@@ -5248,12 +5253,14 @@ export function ReharmHome() {
         </div>
 
         <label className="mb-2 flex items-center gap-2 text-sm text-cream">
-          <input type="checkbox" checked={cpLick} disabled={intensity === 'caPhao'} onChange={event => {
+          <input type="checkbox" checked={cpLick} disabled={intensity === 'caPhao' || style.family === 'blues-codex-1'} onChange={event => {
             stopPlay()
             setCpLick(event.target.checked)
           }} />
           CP Lick
-          <span className="text-xs text-dim">{intensity === 'caPhao'
+          <span className="text-xs text-dim">{style.family === 'blues-codex-1'
+            ? 'Blues Codex 1 dùng câu chêm Blues riêng'
+            : intensity === 'caPhao'
             ? 'Mặc định theo màu Cà Pháo · thay hoàn toàn Licky Fill/Run'
             : 'Phối hai tay theo sheet tại câu chêm · giữ khung ngoài câu'}</span>
         </label>
@@ -5263,6 +5270,10 @@ export function ReharmHome() {
         </p>}
 
         <div className="flex flex-col gap-3">
+          {style.family === 'blues-codex-1' && <p className="text-sm text-pink-300">
+            Blues Codex 1: tay trái giữ bass, tay phải nhắp hợp âm rồi chêm câu đáp, nốt láy và bè đôi.
+            {' '}Fill tự chêm theo mật độ/chỗ nghỉ; chọn Run tại hợp âm để chạy dài hơn.
+          </p>}
           {cpLick && intensity === 'caPhao' && <p className="text-xs text-dim">
             Màu Cà Pháo bật CP Lick và CP Run advanced: 8–12 nốt, khoảng 2–4 phách,
             soạn từ nét chạy trong sheet; độ dài thay đổi mỗi lượt, không đổi mốc vào đoạn sau;
