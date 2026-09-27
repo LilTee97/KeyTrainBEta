@@ -2693,7 +2693,13 @@ export function ReharmHome() {
               cách chơi Blues thật (đổi giọng thì hợp âm đổi, câu lick tự theo). Xem `chayBlueDucThinh`.
             */
             : style.family === 'blues-duc-thinh'
-              ? { linhRun: chayBlueDucThinh }
+              /*
+                `autoFillRun` — cùng hàm, nhưng còn được hỏi ở ô fill (tự động lẫn tự chêm), không chỉ
+                ô Run. Người dùng 27/9/2026: "ngoài khung tiếng ra thầy Đức Thịnh cũng chêm câu fill và
+                câu chạy nốt màu Blues" — chỉ nối `linhRun` (ô Run tự bấm) thì bài không lời nào tự chêm
+                gì cả, phải tự bấm Run từng ô mới nghe được câu Blues.
+              */
+              ? { linhRun: chayBlueDucThinh, autoFillRun: chayBlueDucThinh }
               : {}),
           lickyMode,
           take: take + phraseSpin + playSpin.current,

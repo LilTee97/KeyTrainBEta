@@ -671,6 +671,23 @@ export function generateFillLine(
       beats: number
       take: number
     }) => readonly { note: number; startBeat: number; durationBeats: number; hand?: 'left' | 'right' }[] | null
+    /**
+     * Cùng chữ ký với `linhRun`, nhưng cũng được hỏi ở CHỖ FILL — cả ô người dùng tự chêm (`extraFills`)
+     * lẫn ô máy tự chấm (không đánh dấu gì). `linhRun` chỉ được hỏi ở ô người dùng bấm Run.
+     *
+     * Tách riêng khỏi `linhNhiFills`/`linhNhiRuns` — không đụng tới đường Linh Nhi đã duyệt. Người
+     * dùng 27/9/2026 (Blues Đức Thịnh): *"khi đệm tiết tấu Blues thì ngoài khung tiếng ra thì thầy Đức
+     * Thịnh cũng có chêm vào các câu fill và các câu chạy nốt theo giai điệu màu Blues. Sao ko thấy bạn
+     * chơi như vậy"* — trước đó `chayBlueDucThinh` chỉ được gọi ở ô Run tự bấm; ô fill tự động rơi vào
+     * `drawsBass` (điệu 6/8 mặc định 80% chạy bè trầm) hoặc sổ Licky chung, không câu nào mang màu Blues.
+     */
+    autoFillRun?: (request: {
+      chord: ParsedChord
+      next: ParsedChord
+      endBeat: number
+      beats: number
+      take: number
+    }) => readonly { note: number; startBeat: number; durationBeats: number; hand?: 'left' | 'right' }[] | null
     lickyMode?: LickyMode
     /** Hợp âm người dùng tự chêm fill, mật độ không gạt. */
     extraFills?: ReadonlySet<number>
@@ -717,6 +734,7 @@ export function generateFillLine(
     brainFill,
     vocal,
     linhRun,
+    autoFillRun,
   } = options
 
   if (chords.length < 2) return []
@@ -864,6 +882,13 @@ export function generateFillLine(
     }
 
     if (extraFills?.has(mainIndex)) {
+      const rieng = autoFillRun?.({ chord: chords[index], next, endBeat: lickEnd, beats: fillLen, take: mainIndex + take })
+      if (rieng && rieng.length > 0) {
+        for (const x of rieng) {
+          result.push({ note: x.note as MidiNote, startBeat: x.startBeat, durationBeats: x.durationBeats, isGrace: false, hand: x.hand ?? 'right' })
+        }
+        continue
+      }
       result.push(
         ...placeLick({
           chord: chords[index],
@@ -883,6 +908,20 @@ export function generateFillLine(
         }),
       )
       continue
+    }
+
+    /*
+      Câu lót TỰ ĐỘNG (máy tự chấm ô, không đánh dấu gì) của điệu có `autoFillRun` — hỏi trước cả
+      `drawsBass`/sổ Licky. Xem chú thích ở khai báo `autoFillRun`.
+    */
+    if (autoFillRun) {
+      const rieng = autoFillRun({ chord: chords[index], next, endBeat: lickEnd, beats: fillLen, take: mainIndex + take })
+      if (rieng && rieng.length > 0) {
+        for (const x of rieng) {
+          result.push({ note: x.note as MidiNote, startBeat: x.startBeat, durationBeats: x.durationBeats, isGrace: false, hand: x.hand ?? 'right' })
+        }
+        continue
+      }
     }
 
     /*

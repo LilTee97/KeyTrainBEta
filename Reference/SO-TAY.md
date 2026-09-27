@@ -4276,3 +4276,28 @@ của Blues Đức Thịnh chưa có gì từ thầy — gam Blues áp cho giọ
 đối chiếu. Vòng hợp âm I7-IV7-V7 không tự sinh — người dùng gõ hợp âm bài như mọi điệu khác.
 
 Toàn suite **2.864 qua / 7 đỏ** — đúng 7 đỏ cũ.
+
+## Bước — Blues Đức Thịnh: ô fill/run TỰ ĐỘNG cũng phải mang màu Blues (27/9/2026)
+
+Người dùng nghe bản đầu: *"khi đệm tiết tấu Blues thì ngoài khung tiếng ra thì thầy Đức Thịnh cũng có
+chêm vào các câu fill và các câu chạy nốt theo giai điệu màu Blues. Sao ko thấy bạn chơi như vậy."*
+
+**Bẫy**: `chayBlueDucThinh` hôm trước chỉ được nối vào `linhRun` — hook CHỈ được hỏi ở ô người dùng tự
+bấm nút Run. Ô fill không đánh dấu gì (phần lớn cả bài) đi qua đường khác: mọi điệu `timeSignature`
+kết thúc bằng "/8" mặc định `fillBassChance` 0,8 (quy ước riêng cho lối rải bass slow rock của Linh
+Nhi) → 80% ô fill tự động thành chạy bè trầm TAY TRÁI, 20% còn lại rơi vào sổ Licky chung — không câu
+nào mang màu Blues nếu không tự bấm từng ô. Đo trước khi sửa (12 hợp âm, density mặc định): **36/36 sự
+kiện tự động đều là tay trái**, 0 sự kiện tay phải.
+
+**Sửa**: thêm tuỳ chọn `autoFillRun` (`fillSoloGenerator/soloGenerator.ts`) — cùng chữ ký `linhRun`
+nhưng được hỏi ở CẢ ô fill tự động lẫn ô fill tự chêm (`extraFills`), trước cả `drawsBass`/sổ Licky.
+Tách hẳn tên khỏi `linhRun`/`linhNhiFills` để **không đụng đường Linh Nhi đã duyệt** — chỉ nối cho
+`blues-duc-thinh` (`style.family === 'blues-duc-thinh' → { linhRun: chayBlueDucThinh, autoFillRun:
+chayBlueDucThinh }`). `bluesDucThinh.ts` thêm `fillBassChance: 0` để tắt hẳn mặc định 0,8 kế thừa từ
+nhịp kép. Đo sau khi sửa: **16/16 sự kiện tự động đều là tay phải**, lấy từ sổ 6 lick đã soạn.
+
+**Giá trị cũ**: chỉ `linhRun`, không `autoFillRun`; không khai `fillBassChance` (thừa hưởng 0,8 mặc
+định). **Triệu chứng để lùi**: bài không lời rơi vào bè trầm tay trái ở mọi chỗ nối ô, không nghe câu
+tay phải nào ngoài phần đệm.
+
+Toàn suite **2.867 qua / 7 đỏ** — đúng 7 đỏ cũ.

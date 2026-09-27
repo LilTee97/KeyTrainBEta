@@ -29,6 +29,14 @@ import type { RhythmHit, StylePattern } from '../types'
   `coChiDanCodex` trong ReharmHome.tsx, có từ 10/9/2026) — Blues Đức Thịnh cũng vậy, không phải lỗi
   mới. Giang tấu chạy theo lối mượn nguyên đoạn mặc định (không có vòng ngắn riêng). Giọng trưởng của
   Blues Đức Thịnh CHƯA có gì từ thầy — gam Blues áp cho giọng trưởng là suy rộng theo lý thuyết.
+
+  `fillBassChance: 0` — người dùng nghe bản đầu (27/9/2026): *"khi đệm tiết tấu Blues thì ngoài khung
+  tiếng ra thì thầy Đức Thịnh cũng có chêm vào các câu fill và các câu chạy nốt theo giai điệu màu
+  Blues. Sao ko thấy bạn chơi như vậy"*. Lý do: mọi điệu nhịp kép (`timeSignature` kết thúc bằng "/8")
+  mặc định `fillBassChance` 0,8 — quy ước riêng cho lối rải bass slow rock của Linh Nhi, KHÔNG hợp với
+  Boogie/Blues (không có sheet nào của Đức Thịnh nói bass chạy ở chỗ nối ô). 80% ô fill tự động vì vậy
+  từng biến thành chạy bè trầm, phần còn lại rơi vào sổ Licky chung — không câu nào mang màu Blues. Tắt
+  hẳn để `autoFillRun` (`blueDucThinhLicks.ts`) luôn được hỏi trước ở CẢ ô fill tự động lẫn ô Run.
 */
 const hit = (beat: number, durationBeats: number, velocityScale: number,
   voice: RhythmHit['voice'], tones?: RhythmHit['tones']): RhythmHit => ({ beat, durationBeats, velocityScale, voice, tones })
@@ -46,6 +54,7 @@ export const BLUES_DUC_THINH: StylePattern = {
   feel: 'swing',
   releaseRatio: 1,
   verified: true,
+  fillBassChance: 0,
   sourceVideos: [
     'kOwriZhpo6Y @ 06:45-10:43 (đệm) và 10:07-10:28 (câu nói về nốt Blues) — PIANO ĐỆM HÁT Bài 9, Đức Thịnh',
   ],

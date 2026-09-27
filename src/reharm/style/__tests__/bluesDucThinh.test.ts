@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
+import { generateFillLine, soloToTimeline } from '../../fillSoloGenerator/soloGenerator'
 import { chayBlueDucThinh, gamBlues } from '../blueDucThinhLicks'
 import { hoCuaDieu } from '../hoDieu'
 import { getStyle, isCodexStyle } from '../styleLibrary'
@@ -26,6 +27,38 @@ describe('Blues Đức Thịnh — nút riêng, tách khỏi Blues ĐT của Cod
 
   it('đứng ngoài mọi họ điệu (hoDieu) — không dính cổng màu/solo Linh Nhi của họ Slow Rock', () => {
     expect(hoCuaDieu(style.id)).toBeNull()
+  })
+
+  it('fillBassChance = 0 — không thừa hưởng mặc định 0,8 của mọi điệu nhịp kép', () => {
+    // Mặc định ấy là quy ước rải bass slow rock của Linh Nhi; Boogie/Blues không có gì đòi hỏi vậy.
+    expect(style.fillBassChance).toBe(0)
+  })
+})
+
+/*
+  Người dùng 27/9/2026, sau khi nghe bản đầu: "khi đệm tiết tấu Blues thì ngoài khung tiếng ra thì
+  thầy Đức Thịnh cũng có chêm vào các câu fill và các câu chạy nốt theo giai điệu màu Blues. Sao ko
+  thấy bạn chơi như vậy" — trước đó `chayBlueDucThinh` chỉ được hỏi ở ô Run tự bấm (`linhRun`); ô fill
+  KHÔNG đánh dấu gì rơi vào `drawsBass` (điệu 6/8 mặc định 80% chạy bè trầm, toàn tay TRÁI) hoặc sổ
+  Licky chung — không câu nào mang màu Blues nếu người dùng không tự bấm từng ô.
+*/
+describe('câu fill/chạy TỰ ĐỘNG (không đánh dấu ô nào) phải mang màu Blues, không rơi về bass-walk', () => {
+  const chords = parseChordInput('C7 F7 C7 C7 F7 F7 C7 C7 G7 F7 C7 C7').chords
+
+  it('có autoFillRun: mọi sự kiện tự động là tay phải, lấy từ sổ lick Blues', () => {
+    const out = soloToTimeline(generateFillLine(chords, {
+      beatsPerChord: 3, take: 0, density: 'medium', autoFillRun: chayBlueDucThinh,
+    }))
+    expect(out.length).toBeGreaterThan(0)
+    expect(out.every((e) => e.hand === 'right')).toBe(true)
+  })
+
+  it('không có autoFillRun (như trước khi sửa): fillBassChance mặc định biến hết fill thành bè trầm tay trái', () => {
+    const out = soloToTimeline(generateFillLine(chords, {
+      beatsPerChord: 3, take: 0, density: 'medium', fillBassChance: 0.8,
+    }))
+    expect(out.length).toBeGreaterThan(0)
+    expect(out.every((e) => e.hand === 'left')).toBe(true)
   })
 })
 
