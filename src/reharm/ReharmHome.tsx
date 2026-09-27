@@ -104,7 +104,7 @@ import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
 import { chayBlueDucThinh } from './style/blueDucThinhLicks'
-import { bluesCodexPass, colorBluesCodexBacking, generateBluesCodexFills } from './style/bluesCodex'
+import { bluesCodexPass, weaveBluesCodexBacking, generateBluesCodexFills } from './style/bluesCodex'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -1833,7 +1833,7 @@ export function ReharmHome() {
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
     const rendered = style.family === 'blues-codex-1'
-      ? colorBluesCodexBacking(rawBacking, withPassing, chordBeats) : rawBacking
+      ? weaveBluesCodexBacking(rawBacking, withPassing, chordBeats, { cellBreaks: breaks, muteWindows }) : rawBacking
     const plan = planCpBalladBacking(rendered, withPassing, {
       style, walkingOn, beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows,
     })

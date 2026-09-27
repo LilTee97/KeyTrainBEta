@@ -979,7 +979,7 @@ export function holdUntilStruckAgain(events: readonly TimelineEvent[]): Timeline
   })
 }
 
-function applyMuteWindows(
+export function applyMuteWindows(
   events: readonly TimelineEvent[],
   windows: readonly { from: number; to: number }[],
 ): TimelineEvent[] {

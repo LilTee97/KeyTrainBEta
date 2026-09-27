@@ -2,6 +2,7 @@ import { beatsOf, chordStarts } from '../chordTiming'
 import { fillPositions, type generateFillLine } from '../fillSoloGenerator/soloGenerator'
 import type { ParsedChord } from '../types'
 import type { TimelineEvent } from './types'
+import { applyMuteWindows } from './patternRenderer'
 
 type FillOptions = Parameters<typeof generateFillLine>[1]
 type PhraseRequest = {
@@ -11,7 +12,7 @@ type PhraseRequest = {
 const pc = (note: number) => ((note % 12) + 12) % 12
 const intervals = (chord: ParsedChord) => chord.quality.intervals.map(pc)
 
-/** Các thế nhắp 3 nốt, đủ một tay. Giữ sus/dim/altered theo hợp âm gốc. */
+/** Thế nhắp 3–5–6/b7/7: nốt cao nhất nối tiếp motif. Giữ sus/dim/altered. */
 export function colorBluesCodexBacking(backing: readonly TimelineEvent[], chords: readonly ParsedChord[], beatsPerChord: number): TimelineEvent[] {
   const starts = chordStarts(chords, beatsPerChord)
   return backing.map(event => {
@@ -24,90 +25,98 @@ export function colorBluesCodexBacking(backing: readonly TimelineEvent[], chords
     // Không tự thêm 9 tự nhiên lên b9/#9, đổi sus thành trưởng, hoặc sửa quãng 5 biến âm.
     if (third === null || !tones.includes(7) || tones.includes(1) || (tones.includes(3) && tones.includes(4))) return event
     const seventh = tones.includes(11) ? 11 : tones.includes(10) ? 10 : tones.includes(9) ? 9 : third === 3 ? 10 : 9
-    let root = 60 + chord.root
-    while (root + 14 > 77) root -= 12
-    return { ...event, notes: [root + third, root + seventh, root + 14], velocity: Math.min(78, event.velocity) }
+    const root = 60 + chord.root
+    return { ...event, notes: [root + third, root + 7, root + seventh],
+      durationBeats: Math.min(event.durationBeats, 0.55), velocity: Math.min(72, event.velocity) }
   })
+}
+
+/** Giai điệu là một phần ô đệm: hỏi, nhắc, đáp, thở; không đợi mốc fill.
+ * Rockhouse 103–107 gợi ý motif 5–6–b7; Robert 56–79 gợi ý ngân/nghỉ.
+ * Đây là biên soạn trên lưới Đức Thịnh 6/8, không chép timing 4/4 của sheet. */
+export function weaveBluesCodexBacking(
+  backing: readonly TimelineEvent[], chords: readonly ParsedChord[], beatsPerChord: number,
+  options: { cellBreaks?: readonly number[]; muteWindows?: readonly { from: number; to: number }[] } = {},
+): TimelineEvent[] {
+  if (!chords.length) return [...backing]
+  const starts = chordStarts(chords, beatsPerChord)
+  const total = starts.at(-1)! + beatsOf(chords.at(-1)!, beatsPerChord)
+  const colored = colorBluesCodexBacking(backing, chords, beatsPerChord)
+  const right = colored.filter(e => e.hand === 'right')
+  const chordAt = (beat: number) => starts.findLastIndex(start => start <= beat + 1e-6)
+  let phrase = 0
+  for (let start = 0; start < total - 1e-6; phrase++) {
+    const nextBreak = Math.min(...(options.cellBreaks ?? []).filter(b => b > start + 1e-6), total)
+    const until = Math.min(start + 3, nextBreak)
+    const variant = phrase % 4
+    for (const at of variant === 3 ? [0] : [0, 0.5, 2.5]) {
+      const beat = start + at
+      if (beat >= until - 1e-6) continue
+      const index = chordAt(beat), chord = chords[index], tones = intervals(chord)
+      const third = tones.includes(4) ? 4 : tones.includes(3) ? 3 : 0
+      const fifth = tones.includes(7) ? 7 : tones.includes(6) ? 6 : tones.includes(8) ? 8 : 0
+      const normal = third !== 0 && fifth === 7 && !tones.includes(1) && !(tones.includes(3) && tones.includes(4))
+      const color = tones.includes(11) ? 11 : tones.includes(10) ? 10 : tones.includes(9) ? 9 : third === 3 ? 10 : 9
+      // Trưởng: 5–6–b7/6; thứ giữ b3/b7 và dùng 5 thay 6 tự thêm.
+      const step = !normal ? (at === 0 ? fifth : third) : variant === 3 ? third :
+        at === 0 ? (variant === 2 ? color : fifth) : at === 0.5 ? (variant === 2 || third === 3 ? fifth : 9) : (variant === 2 ? third : fifth)
+      const root = 60 + chord.root
+      const notes = normal && variant === 1 && at === 2.5 ? [root + third, root + fifth] : [root + step]
+      const end = Math.min(beat + (variant === 3 ? 0.85 : 0.35), until, starts[index + 1] ?? total)
+      if (end - beat < 0.12) continue
+      right.push({ notes, startBeat: beat, durationBeats: end - beat, hand: 'right', velocity: at === 0 ? 68 : 62 })
+    }
+    start = until
+    if (until === nextBreak) phrase = -1
+  }
+  // Cắt cả nốt ngân vào vùng nghỉ; không tái sinh giai điệu trong chỗ người dùng đã cho nghỉ.
+  const muted = applyMuteWindows(right, options.muteWindows ?? []).sort((a, b) => a.startBeat - b.startBeat)
+  const spaced: TimelineEvent[] = []
+  for (const event of muted) {
+    const previous = spaced.at(-1)
+    // Ranh giới đoạn lẻ có thể đặt hai tiếng sát nhau: giữ câu trước, bỏ tiếng dư.
+    if (previous && event.startBeat - previous.startBeat < 0.45 - 1e-6) continue
+    if (previous) previous.durationBeats = Math.min(previous.durationBeats, event.startBeat - previous.startBeat - 0.04)
+    spaced.push({ ...event })
+  }
+  return [...backing.filter(e => e.hand === 'left'), ...spaced].sort((a, b) => a.startBeat - b.startBeat)
 }
 
 /** Câu tự soạn theo motif, không gọi là câu đo từ Đức Thịnh. Đơn vị: nốt đen. */
 export function composeBluesCodexPhrase(request: PhraseRequest, run = false): TimelineEvent[] {
-  if (request.beats < 0.25) return []
-  const { chord, next, key } = request
+  if (request.beats < 0.5) return []
+  const { chord, next } = request
   const steps = intervals(chord)
-  const third = steps.includes(4) ? 4 : steps.includes(3) ? 3 : null
+  const third = steps.includes(4) ? 4 : steps.includes(3) ? 3 : 0
   const fifth = steps.includes(7) ? 7 : steps.includes(6) ? 6 : steps.includes(8) ? 8 : 0
-  const normal = third !== null && fifth === 7 && !steps.includes(1) && !(steps.includes(3) && steps.includes(4))
+  const normal = third !== 0 && fifth === 7 && !steps.includes(1) && !(steps.includes(3) && steps.includes(4))
   const root = 60 + chord.root
   const variant = ((Math.floor(request.take) % 4) + 4) % 4
-  // Nốt chốt vẫn thuộc hợp âm HIỆN TẠI, ưu tiên gần hợp âm sau; không đánh hợp âm sau sớm.
   const nextPcs = new Set(intervals(next).map(step => pc(next.root + step)))
-  const targetStep = [third ?? 0, fifth, 0].find(step => nextPcs.has(pc(chord.root + step))) ?? third ?? 0
-  const target = root + targetStep
+  const target = [third, fifth, 0].find(step => nextPcs.has(pc(chord.root + step))) ?? third
   const span = Math.min(request.beats, run ? 3 : 1.5)
   const start = request.endBeat - span
+  const color = steps.includes(11) ? 11 : steps.includes(10) ? 10 : steps.includes(9) ? 9 : third === 3 ? 10 : 9
+  // Cố định một móc đơn / lần đánh. Thiếu chỗ thì bớt nốt, KHÔNG chia span cho số nốt.
+  const count = Math.floor(span / 0.5)
+  const call = variant % 2 === 0 ? [fifth, third === 3 ? color : 9, color, fifth, third, target]
+    : [color, fifth, third, fifth, third, target]
+  const motif = !normal ? [fifth, third, target] : run ? call :
+    variant === 0 ? [third, fifth - 1, fifth] : variant === 1 ? [fifth, fifth, target] :
+      variant === 2 ? [color, fifth, target] : [third, fifth, target]
   const events: TimelineEvent[] = []
-  const add = (at: number, length: number, notes: number[], velocity = 72, grace = false) => {
-    const durationBeats = Math.min(length, span - at - 0.035)
-    if (at < 0 || durationBeats <= 0) return
-    events.push({ notes, startBeat: start + at, durationBeats, hand: 'right', velocity, ...(grace ? { grace } : {}) })
-  }
-  if (span < 0.65) {
-    // Cửa sổ hẹp: một cú nhấn–nhả có đích, không nén cả câu thành nốt cực nhanh.
-    add(span * 0.2, span * 0.65, [target], 69)
-    return events
-  }
-  if (!normal) {
-    // Sus/dim/altered: giữ đúng màu đã ghi, dùng câu hỏi–đáp bằng nốt hợp âm.
-    add(0, span * 0.22, [root + fifth], 69)
-    add(span * 0.5, span * 0.4, [target], 77)
-    return events
-  }
-  const thirdNote = root + third!
-  const crush = thirdNote - 1 // b3→3 trưởng; 2→b3 thứ.
-  const fifthNote = root + fifth
-  const minor = third === 3
-  const color = root + (steps.includes(11) ? 11 : steps.includes(10) ? 10 : steps.includes(9) ? 9 : minor ? 10 : 9)
-  const unit = span / (run ? 12 : 6)
-  // Cử chỉ láy ngắn cố định, không áp swing lần hai lên lưới 6/8.
-  const graceLength = Math.min(0.065, unit * 0.4)
-  if (!run && variant === 0) {
-    add(0, graceLength, [crush], 48, true)
-    add(graceLength, unit * 1.2, [thirdNote, fifthNote], 79)
-    add(unit * 3, unit * 0.7, [fifthNote - 1], 58)
-    add(unit * 4, unit * 1.4, [fifthNote], 74)
-  } else if (!run && variant === 1) {
-    add(0, unit * 0.8, [fifthNote], 72)
-    add(unit * 2, unit * 0.8, [fifthNote], 65)
-    add(unit * 4, unit * 1.5, [target], 78)
-  } else if (!run && variant === 2) {
-    add(0, unit * 0.8, [color], 72)
-    add(unit, unit * 0.8, [fifthNote], 69)
-    add(unit * 2, graceLength, [crush], 47, true)
-    add(unit * 2 + graceLength, unit * 0.8, [thirdNote], 73)
-    add(unit * 4, unit * 1.5, [target], 76)
-  } else if (!run) {
-    add(0, unit * 1.2, [thirdNote, color], 75)
-    add(unit * 3, graceLength, [fifthNote - 1], 47, true)
-    add(unit * 3 + graceLength, unit * 0.8, [fifthNote], 70)
-    add(unit * 5, unit * 0.7, [target], 76)
-  } else {
-    // Câu lên/xuống theo bộ phận; không đổi toàn bộ gam Blues mỗi khi đổi hợp âm.
-    const tonic = key?.tonic ?? chord.root
-    const tonicMinor = key?.scale === 'minor' || (!key && minor)
-    const tonicSteps = tonicMinor || steps.includes(10) ? [0, 3, 5, 6, 7, 10] : [0, 2, 3, 4, 7, 9]
-    const palette = new Set([...steps, ...tonicSteps.map(step => pc(tonic + step - chord.root))])
-    // Trên hợp âm thứ/maj7, không giữ bậc 3 trưởng/b7 trái với màu đang vang.
-    if (minor) palette.delete(4)
-    if (steps.includes(11)) palette.delete(10)
-    if (steps.includes(10)) palette.delete(11)
-    const ladder = [...palette].sort((a, b) => a - b).map(step => root + step)
-    const notes = variant % 2 === 0 ? [...ladder].reverse() : ladder
-    // Sáu nốt trong một phách lớn chùm ba; sau đó nghỉ rồi đáp bằng chord tone.
-    notes.slice(0, 6).forEach((note, index) => add(index * unit, unit * 0.84, [note], index === 0 ? 78 : 64 + index * 2))
-    add(unit * 8, graceLength, [crush], 48, true)
-    add(unit * 8 + graceLength, unit * 0.8, [thirdNote, fifthNote], 76)
-    add(unit * 10, unit * 1.5, [target], 80)
+  for (let i = 0; i < count; i++) {
+    const at = i * 0.5
+    const step = i === count - 1 ? (normal && !run && variant === 0 && count === 3 ? fifth : target) : motif[i % motif.length]
+    const crush = normal && variant === 0 && i === 0 && count > 1 && step === third
+    if (crush) events.push({ notes: [root + third - 1], startBeat: start + at, durationBeats: 0.035,
+      hand: 'right', velocity: 46, grace: true })
+    const delay = crush ? 0.045 : 0
+    const notes = normal && i === 0 && !run && (variant === 0 || variant === 3)
+      ? [root + step, root + (variant === 0 ? fifth : color)] : [root + step]
+    events.push({ notes, startBeat: start + at + delay,
+      durationBeats: Math.min(i === count - 1 ? 0.4 : 0.32, span - at - delay - 0.035),
+      hand: 'right', velocity: i === count - 1 ? 74 : 66 })
   }
   return events
 }
@@ -123,15 +132,16 @@ export function generateBluesCodexFills(chords: readonly ParsedChord[], options:
     always: new Set([...(options.extraFills ?? []), ...(options.extraRuns ?? []), ...(options.sectionEnds?.keys() ?? [])]),
   })) {
     const manual = options.extraFills?.has(mainIndex) || options.extraRuns?.has(mainIndex)
+    if (!manual && !options.sectionEnds?.has(mainIndex)) continue
     if (!manual && (options.vocal === 'full' || options.vocal?.has(mainIndex))) continue
     const transition = options.sectionEnds?.get(mainIndex)
     if (transition && transition.octaves <= 0) continue
     const length = beatsOf(chords[index], options.beatsPerChord)
     const rest = Math.min(transition?.restBeats ?? options.fillRests?.get(mainIndex) ?? 0, Math.max(0, length - 0.25))
     const room = Math.max(0, length - rest - (transition?.delayBeats ?? 0))
-    // Một trong ba lượt motif là câu chạy ngắn; vị trí fill vẫn do mật độ/lời quyết định.
+    // Giai điệu thường xuyên nằm trong ô đệm; ở đây chỉ thêm Fill/Run tự chọn hoặc chuyển đoạn.
     const take = Math.floor(mainIndex / 2) + (options.take ?? 0)
-    const run = !!transition || !!options.extraRuns?.has(mainIndex) || (!options.extraFills?.has(mainIndex) && take % 3 === 2)
+    const run = !!transition || !!options.extraRuns?.has(mainIndex)
     const beats = Math.min(room, run && (transition || options.extraRuns?.has(mainIndex)) ? 3 : options.fillBeats ?? 1.5, length / (manual || transition ? 1 : 2))
     result.push(...composeBluesCodexPhrase({ chord: chords[index], next: chords[(index + 1) % chords.length],
       endBeat: starts[index] + length - rest, beats, take, key: options.key }, run))
@@ -156,6 +166,8 @@ export function bluesCodexPass(backing: readonly TimelineEvent[], fills: readonl
       if (window.from <= event.startBeat + 1e-6) return []
       end = Math.min(end, window.from - 0.02)
     }
+    // Không đặt tiếng đệm sát đầu/cuối câu Fill/Run dù hai trường độ không chồng nhau.
+    if (right.some(note => !note.grace && Math.abs(note.startBeat - event.startBeat) < 0.45 - 1e-6)) return []
     // Cú nhắp bị cắt còn vài mili giây sẽ thành tiếng cụt ngay trước nốt láy: bỏ nó.
     return end - event.startBeat >= 0.12 ? [{ ...event, durationBeats: end - event.startBeat }] : []
   })
