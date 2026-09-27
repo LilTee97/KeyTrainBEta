@@ -1184,6 +1184,10 @@ export function ReharmHome() {
   ])
 
   const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
+  // Giọng khóa là giọng bản gốc; Tone đổi cả câu Blues. Dò tự động đã chạy trên sequence chuyển tone.
+  const twistSoloKey = useMemo(() => lockedKey
+    ? { tonic: normalizePitchClass(lockedKey.tonic + effectiveTranspose), scale: lockedKey.scale }
+    : reharm.key, [lockedKey, effectiveTranspose, reharm.key])
   const cpComposeOn = intensity === 'caPhao'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
   const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
@@ -3220,6 +3224,7 @@ export function ReharmHome() {
 
   const steps = useMemo(() => {
     let base = arrangementSteps
+    if (isTwist && songSources) return bossaSoloSteps(base, songSources)
     if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
     if ((bossaSoloOn || cpFullOn || cpComposeOn) && songSources) return bossaSoloSteps(base, songSources)
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
@@ -3255,7 +3260,7 @@ export function ReharmHome() {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn])
+  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn, isTwist])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3291,6 +3296,19 @@ export function ReharmHome() {
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
       const cpPass = cpLick ? cpPlan(pass) : null
+      if (isTwist) {
+        const spans = mainChordSpans(withPassing, chordBeats)
+        return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
+          (kind, take, nextStart) => buildPhraseSection({
+            kind, key: twistSoloKey, style, bpm, dropRoot,
+            // Solo có ô Blues 4 phách riêng; tick một/hai lần chỉ đổi thời lượng đệm hát.
+            beatsPerChord: 4,
+            opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
+            // pass đã mã hóa playSpin; cộng cả hai sẽ thành bước 528, luôn trùng modulo 4.
+            take: phraseSpin + playSpin.current + take,
+            range: { low: 60, high: 84 }, solo: () => [],
+          }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? [], true)
+      }
       if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
       if (bossaSoloOn || cpFullOn || cpComposeOn) {
         const spans = mainChordSpans(withPassing, chordBeats)
@@ -3592,6 +3610,8 @@ export function ReharmHome() {
     [
       accompaniment,
       backingFor,
+      isTwist,
+      twistSoloKey,
       lnDao,
       lnSau,
       lnSlowRock,
@@ -3646,9 +3666,9 @@ export function ReharmHome() {
   const soloNoteCount = useMemo(() => laBossaCP(style)
     ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
+    : isTwist || cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn])
+    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn, isTwist])
   const fillNoteCount = useMemo(() => fills(0).length, [fills])
 
   /**
@@ -3708,6 +3728,7 @@ export function ReharmHome() {
   const timelineHien = looping && playingTimeline ? playingTimeline : song
 
   const soloScaleLabel = useMemo(() => {
+    if (isTwist) return twistSoloKey ? `${pitchClassName(twistSoloKey.tonic)} Blues` : null
     // Nhánh giang thứ này soạn theo chức năng hợp âm, không dùng gam ngũ cung
     // do bộ gợi ý cho phần hát trả về; đừng hiển thị nhầm là gam đang phát.
     if (laBoleroTuan(style) && reharm.key?.scale === 'minor') return null
@@ -3716,7 +3737,7 @@ export function ReharmHome() {
     const chord = recolored.filter((item) => !item.passing)[idx]
     if (!chord) return null
     return scaleLabelForChord(chord, reharm.key)
-  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style])
+  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style, isTwist, twistSoloKey])
 
 
   const timeline = song.events
@@ -3738,7 +3759,7 @@ export function ReharmHome() {
       Người dùng 24/9/2026: *"tại sao giang tấu vẫn ko đổi hợp âm mỗi lần phát giống như intro hay outro"* —
       tiếng đã đổi vòng mỗi lượt, nhưng dòng chữ vẫn lấy `interludeWindow` (đuôi điệp khúc cố định).
     */
-    if (lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
+    if (isTwist || lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
       const span = displayedSoloSpan(timelineHien.soloSpans, 'interlude', activeSolo?.span)
       return [...(span?.chords ?? [])]
     }
@@ -3748,7 +3769,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau, isTwist])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -3796,10 +3817,10 @@ export function ReharmHome() {
       perBeat: reharmPerBeat,
       meter: style.beatsPerMeasure === 3 ? 3 : 4,
       leadIn: steps.some((step) => step.type === 'intro')
-        ? { label: 'Dạo đầu', chords: introSymbols }
+        ? { label: 'Dạo đầu', chords: isTwist ? song.soloSpans.find(span => span.kind === 'intro')?.chords ?? [] : introSymbols }
         : undefined,
       leadOut: steps.some((step) => step.type === 'outro')
-        ? { label: 'Kết bài', chords: outroSymbols }
+        ? { label: 'Kết bài', chords: isTwist ? song.soloSpans.find(span => span.kind === 'outro')?.chords ?? [] : outroSymbols }
         : undefined,
       ...(interludeSymbols.length > 0
         ? { interlude: { label: 'Giang tấu', chords: interludeSymbols } }
@@ -3820,6 +3841,8 @@ export function ReharmHome() {
     introSymbols,
     outroSymbols,
     interludeSymbols,
+    isTwist,
+    song,
   ])
 
   useEffect(() => {
@@ -4008,10 +4031,10 @@ export function ReharmHome() {
   */
   const playsOnce = useMemo(
     () =>
-      steps.some(
+      isTwist || steps.some(
         (step) => step.type === 'outro' || (step.type === 'section' && !!step.ending),
       ),
-    [steps],
+    [steps, isTwist],
   )
 
   const napCauOn = useCallback(() => {
@@ -4111,10 +4134,11 @@ export function ReharmHome() {
         setPlayingTimeline(luot)
         // CP displays the realized soloSpans. Rebuilding its preview here would
         // run the composer again just as audio starts and can interrupt timing.
-        if (!cpComposeOn) setInterludeDisplayTake(interludePass(0))
+        if (!cpComposeOn && !isTwist) setInterludeDisplayTake(interludePass(0))
         try {
-          const giong = reharm.key
-            ? `${pitchClassName(reharm.key.tonic)} ${reharm.key.scale === 'minor' ? 'thứ' : 'trưởng'}`
+          const playedKey = isTwist ? twistSoloKey : reharm.key
+          const giong = playedKey
+            ? `${pitchClassName(playedKey.tonic)} ${playedKey.scale === 'minor' ? 'thứ' : 'trưởng'}`
             : ''
           const barBeats = style.beatsPerMeasure * (style.gridUnit ?? 1)
           const luuDoan = (
@@ -4139,7 +4163,7 @@ export function ReharmHome() {
               giong,
               // Câu slow rock soạn trên điệu của bài — ghi đúng điệu ấy, đừng ghi kiểu bolero của
               // `styleSolo` (sổ từng ghi `bolero-linh-nhi-2` cho câu Slow Rock Lá thư, 24/9/2026).
-              dieu: laBoleroTuan(style) || lnSlowRock ? style.id : styleSolo.id,
+              dieu: isTwist || laBoleroTuan(style) || lnSlowRock ? style.id : styleSolo.id,
               hopAm: span.chords.length > 0 ? span.chords : hopAm,
               doan: kind,
             }).then((luu) => {
@@ -4170,6 +4194,8 @@ export function ReharmHome() {
       buildPass,
       bossaRhythmOnly,
       cpComposeOn,
+      isTwist,
+      twistSoloKey,
       song,
       looping,
       hand,
@@ -4383,9 +4409,9 @@ export function ReharmHome() {
         ))}
       </div>
 
-      {soloScaleLabel && !cpFullOn && (
+      {soloScaleLabel && (isTwist || !cpFullOn) && (
         <p className="text-sm font-semibold text-amber-key">
-          Gam giang tấu: {soloScaleLabel}
+          {isTwist ? 'Màu solo' : 'Gam giang tấu'}: {soloScaleLabel}
         </p>
       )}
 
@@ -4610,6 +4636,10 @@ export function ReharmHome() {
             onSelect={(id) => {
               setStyleId(id)
               const next = getStyle(id)
+              if (next?.family === 'twist') {
+                stopPlay()
+                setNgheLaiStt(0)
+              }
               if (next && laBossaCP(next)) {
                 // Bossa CP chỉ có bộ solo Cà Pháo giọng thứ đã được duyệt;
                 // đổi điệu thì không giữ lại thầy khác từ lựa chọn trước.
@@ -4622,7 +4652,7 @@ export function ReharmHome() {
           />
         </div>
 
-        <div className="mb-3">
+        {!isTwist && <div className="mb-3">
           <p className="mb-1.5 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
             Hợp âm + giai điệu dạo / giang tấu / kết
           </p>
@@ -4772,7 +4802,7 @@ export function ReharmHome() {
               ))}
             </div>
           )}
-        </div>
+        </div>}
 
         <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
 
@@ -5168,6 +5198,7 @@ export function ReharmHome() {
 
       {songSources && (
         <ArrangementEditor
+          {...(isTwist ? { interludeLabel: 'Giang tấu Blues (12 ô mỗi lượt)' } : {})}
           sources={songSources}
           steps={bossaRhythmOnly ? arrangementSteps : steps}
           onChange={setArrangement}
@@ -5225,6 +5256,11 @@ export function ReharmHome() {
             {cpPreview?.placements.filter(p => p.source.id.startsWith('cp-transition-')).map(p =>
               ` Hợp âm ${p.mainIndex + 1}: CP Run advanced từ ${p.source.song}, ô ${p.source.bar} (${p.source.notes.length} nốt tay phải, ${p.end-p.start} phách).`).join('')}
           </p>}
+          {isTwist && <p className="text-sm text-pink-300">
+            Twist Blues: dạo 4 ô · giang 12 ô mỗi lượt · kết 4 ô. Tay trái bass Boogie, tay phải bè đôi và câu nhắc–đáp.
+            {' '}Phát cả bài để đổi câu mới; tick một/hai lần chỉ áp dụng đệm hát. Tầm tay phải C4–C6.
+          </p>}
+          {!isTwist && <>
           {cpComposeOn && <label className="flex items-center gap-2 text-sm text-cream">Cách tạo solo CP
             <select aria-label="Cách tạo solo CP" value={caPhaoSoloMode} onChange={event => {
               stopPlay(); setCaPhaoSoloMode(event.target.value === 'simulate' ? 'simulate' : 'compose')
@@ -5285,11 +5321,12 @@ export function ReharmHome() {
           </div>}
           {cpFullOn && !cpComposeOn && <p className="text-xs text-dim">Mỗi lần phát soạn lại nốt trên khung full của nguồn đã chọn, đúng màu trưởng/thứ; không đổi số ô giữa các lượt lặp.</p>}
           {(cpFullOn || cpComposeOn) && 'phraseSources' in song && Array.isArray(song.phraseSources) && <p className="text-xs text-dim">{song.phraseSources.join(' · ')}</p>}
+          </>}
           {[...new Set(song.phraseWarnings)].map(warning => (
             <p key={warning} role="status" className="text-sm text-amber-400">{warning}</p>
           ))}
           {bossaSoloOn && !cpFullOn && !cpComposeOn && <p className="text-xs text-amber-400">Bossa CP thứ: đã mở lại dạo · giang · kết. Soạn mới mỗi lần phát; khung đệm hát giữ nguyên ngoài câu CP Lick.</p>}
-          {thaySolo ? (
+          {isTwist ? <p className="text-xs text-dim">Theo sheet Boogie Woogie: phối màu trưởng với nốt Blues, swing 2:1. Giọng thứ là bản chuyển dụng; câu mới đang chờ nghe duyệt.</p> : thaySolo ? (
             <p className="text-[10px] leading-snug text-dim">
               Nốt dạo / giang / kết theo sheet thầy, không dùng gam hay nguồn nốt
               tự chọn.

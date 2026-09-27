@@ -133,8 +133,8 @@ C6/F9/G7. Người dùng vẫn chọn màu hợp âm theo cơ chế hiện tại
   bass chung, nếu bật, vẫn thay tuyến bass theo chức năng hiện có.
 - Giữ nghỉ RH khi hợp âm đổi giữa ô: thêm riêng `twist` vào `KEEP_RH_RESTS`,
   tránh renderer tự chèn cú chặn ngoài hai mốc đo được.
-- Chưa soạn dạo/giang/kết riêng cho Twist; việc này không thuộc lượt trích
-  tiết tấu đệm. `soloMaxStrikes = 8` khai đủ mật độ bass cho đường solo chung.
+- Lượt trích tiết tấu ban đầu chưa có solo riêng. Từ 27/9/2026, Twist có
+  bộ câu Blues riêng cho dạo/giang/kết; xem `TWIST-SOLO-SOURCE.md`.
 
 ## 5. Nghe thử và kiểm tra
 

@@ -19,12 +19,14 @@ import { useLongPress } from '../../shared/ui/useLongPress'
  */
 
 interface ArrangementEditorProps {
+  interludeLabel?: string
   sources: readonly SourceSection[]
   steps: readonly ArrangementStep[]
   onChange: (steps: ArrangementStep[]) => void
 }
 
 export function ArrangementEditor({
+  interludeLabel,
   sources,
   steps,
   onChange,
@@ -161,7 +163,9 @@ export function ArrangementEditor({
                   step.type === 'interlude' ? 'text-teal-key' : 'text-cream'
                 }`}
               >
-                {stepLabel(step, sources)}
+                {step.type === 'interlude' && interludeLabel
+                  ? `${interludeLabel}${step.loops > 1 ? ` ×${step.loops}` : ''}`
+                  : stepLabel(step, sources)}
               </span>
 
               {step.type === 'section' && step.ending && (

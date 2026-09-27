@@ -7,6 +7,7 @@ import type { StylePattern, TimelineEvent } from './types'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
 import { linhNhiSolo } from './linhNhiSolo'
+import { twistSolo } from './twistSolo'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
@@ -626,6 +627,7 @@ function oXenPap(soO: number, take: number, nhieuPap = false): Set<number> {
 export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
+  if (options.style.family === 'twist') return twistSolo(options)
   if (options.linhNhiSolo && options.key) {
     return linhNhiSolo({
       kind: options.kind, key: options.key, style: options.style,
