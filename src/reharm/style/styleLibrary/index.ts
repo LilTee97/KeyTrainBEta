@@ -7,8 +7,7 @@ import { CA_PHAO_BALLAD } from './caPhaoBallad'
 import { CP_BALLAD_DE_EM_STYLES, CP_BALLAD_SONG_STYLES } from './caPhaoBalladSongs'
 import { LINH_NHI_SLOW_ROCK } from './linhNhiSlowRock'
 import { SLOW_ROCK_LT } from './slowRockLT'
-import { BLUES_DUC_THINH } from './bluesDucThinh'
-import { BLUES_CODEX_1 } from './bluesCodex'
+import { BLUE_SUN, BLUE_SUN_CHORUS } from './bluesClaude'
 import { BALLAD_DERX } from './balladDerx'
 import { TWIST } from './twist'
 import testerStylesJson from './testerStyles.json'
@@ -536,8 +535,8 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   ...BOLERO_STYLES,
   ...LINH_NHI_SLOW_ROCK,
   ...SLOW_ROCK_LT,
-  BLUES_DUC_THINH,
-  BLUES_CODEX_1,
+  BLUE_SUN,
+  BLUE_SUN_CHORUS,
   TWIST,
   ...TESTER_STYLES,
 ]
@@ -555,7 +554,6 @@ const CODEX_STYLE_IDS = new Set([
   ...SLOW_ROCK_LT.map(style => style.id),
   ...BALLAD_DERX.map(style => style.id),
   TWIST.id,
-  BLUES_CODEX_1.id,
 ])
 
 export function isCodexStyle(id: string): boolean {

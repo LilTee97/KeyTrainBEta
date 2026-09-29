@@ -3,7 +3,7 @@ import type { PitchClass } from '../../shared/musicTheory/types'
 import type { ParsedChord } from '../types'
 import type { ColorConflict } from './colorConflicts'
 import { analyzeColorConflicts } from './colorConflicts'
-import { colorBluesHarmony } from './bluesHarmony'
+import { colorBlueSun, luotBlueSun } from './mauBlueSun'
 import type { AnalyzedChord } from './degreeAnalysis'
 import { analyzeInKey } from './degreeAnalysis'
 import type { KeyCandidate } from './keyDetection'
@@ -38,8 +38,11 @@ import {
  */
 
 export interface ReharmOptions extends ColorOptions {
-  /** Điệu Blues chọn hòa âm riêng trước voicing và solo, độc lập màu của thầy khác. */
-  harmonyStyle?: 'blues'
+  /** Điệu Blues chọn hòa âm riêng trước voicing và solo, độc lập màu của thầy khác. `'blue-sun'`: nút Slow Blues (`'blues'` của Blues Codex 1 đã xoá cùng nút, 29/9/2026)
+   *  — màu Blues đo từ ba sheet (`colorBlueSun`). */
+  harmonyStyle?: 'blue-sun'
+  /** Blue Sun (ô tick): tự chèn hợp âm lướt Blues ở ô cuối mỗi đoạn (`luotBlueSun`). */
+  bluesLuot?: boolean
   /**
    * Giọng do người dùng chỉ định. Bỏ trống thì app tự dò.
    * Luôn cho phép chỉ định tay vì việc dò giọng không bao giờ chắc chắn tuyệt
@@ -141,6 +144,7 @@ export function reharmonize(
     sectionRanges,
     beatsPerMeasure = 4,
     harmonyStyle,
+    bluesLuot = false,
     ...colorOptions
   } = options
 
@@ -194,7 +198,7 @@ export function reharmonize(
       }))
 
   // Khâu 3 — thêm màu, theo bậc nếu biết giọng.
-  const painted = harmonyStyle === 'blues' ? colorBluesHarmony(original, activeKey) : activeKey
+  const painted = harmonyStyle === 'blue-sun' ? colorBlueSun(original, activeKey) : activeKey
     ? colorAnalyzedSequence(analyzed, activeKey.scale, {
         ...colorOptions,
         tonic: activeKey.tonic,
@@ -205,7 +209,7 @@ export function reharmonize(
       })
     : colorSequence(original, colorOptions)
   const held =
-    harmonyStyle === 'blues' ||
+    harmonyStyle !== undefined ||
     colorOptions.intensity === 'off' ||
     colorOptions.intensity === 'linhNhi' ||
     colorOptions.intensity === 'caPhao' ||
@@ -217,7 +221,7 @@ export function reharmonize(
           skipHeldAt: options.skipHeldAt,
         })
   const colored =
-    harmonyStyle !== 'blues' &&
+    harmonyStyle === undefined &&
     varyOnRepeat &&
     colorOptions.intensity !== 'linhNhi' &&
     colorOptions.intensity !== 'caPhao' &&
@@ -252,8 +256,13 @@ export function reharmonize(
       )
     : colored
 
+  // Blue Sun: hợp âm lướt Blues cuối đoạn — nối sau các gợi ý người dùng đã nhận; chỗ đã có gợi ý người dùng thì nhường.
+  const tuChen = harmonyStyle === 'blue-sun' && bluesLuot && activeKey && sectionRanges
+    ? luotBlueSun(timed, activeKey, sectionRanges, beatsPerChord)
+      .filter((a) => !acceptedPassing.some((x) => x.insertBeforeIndex === a.insertBeforeIndex))
+    : []
   const harmonic = explodeHeldBars(
-    applySuggestions(timed, acceptedPassing, beatsPerChord),
+    applySuggestions(timed, [...acceptedPassing, ...tuChen], beatsPerChord),
     beatsPerChord,
   )
 
@@ -280,7 +289,7 @@ export function reharmonize(
     // báo nói về lựa chọn màu của người dùng chứ không về hợp âm app tự chèn.
     conflicts: activeKey
       ? analyzeColorConflicts(colored, analyzed, {
-          blues: harmonyStyle === 'blues',
+          blues: harmonyStyle !== undefined,
           tonic: activeKey.tonic,
           scale: activeKey.scale,
           allowTonicMinorSeventh:

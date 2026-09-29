@@ -747,8 +747,12 @@ function renderWithCell(
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
 const EPSILON = 0.001
 
-/** Họ điệu mà tay phải trống là CỐ Ý — `missingChordHits` không chêm hợp âm vào. */
-const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'twist', 'blues-codex-1'])
+/**
+ * Họ điệu mà tay phải trống là CỐ Ý — `missingChordHits` không chêm hợp âm vào.
+ * Slow Blues (id `blue-sun`): tay trái lo trọn đệm, tay phải là câu chạy ngón của Bộ Soạn Blues (The House of the Rising Sun — tay phải không
+ * đệm hợp âm ô nào).
+ */
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'twist', 'blue-sun'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.

@@ -59,6 +59,15 @@ export interface SongSnapshot {
   cpBalladThu?: boolean
   /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → tắt. */
   slowRockMotO?: boolean
+  /** Slow rock: chêm lick Blues (chép từ Rockhouse) ở chỗ fill — ô tick nghe thử. Bài cũ → tắt. */
+  bluesLickSR?: boolean
+  /** Blues Claude · Blue Sun: Bộ Soạn Blues lượt 6 (soạn từ nhóm ba) — ô tick nghe thử. Bài cũ → tắt. */
+  bluesSoan6?: boolean
+  /** Blue Sun: ô tick "Bản Blues rút gọn" (lượt 12 — chạy ngón cuối câu hát rơi đúng phách chuyển hợp âm, nốt nhẹ trong câu, tay
+   *  trái nối hợp âm). Bài cũ → tắt. Lượt 7–11 đã gỡ (29/9/2026). */
+  bluesSoan12?: boolean
+  /** Blue Sun: hợp âm lướt Blues ở cuối đoạn (`luotBlueSun`) — ô tick nghe thử. Bài cũ → tắt. */
+  bluesLuot?: boolean
   /** Twist: bật = một mẫu 4 phách/hợp âm; tắt hoặc bài cũ = hai mẫu (8 phách). */
   twistSinglePass?: boolean
   caPhaoFullSource?: string

@@ -8,7 +8,7 @@ import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 import { holdUntilStruckAgain, renderPattern } from './patternRenderer'
 import { linhNhiSolo } from './linhNhiSolo'
 import { twistSolo } from './twistSolo'
-import { bluesCodexSolo } from './bluesCodexSolo'
+import { bluesClaudeSolo } from './boSoanBlues'
 import { khongTiaTayTrai, laBoleroTuan, thienVeCuaHo } from './hoDieu'
 import { soloTeacherOf } from '../fillSoloGenerator/soloTeacher'
 import { caPhaoSolo, caPhaoBossaMinorIntro, caPhaoBossaMinorSolo, caPhaoFullSolo } from './caPhaoSolo'
@@ -98,6 +98,8 @@ export interface PhraseSectionOptions {
   motif?: 'chiec-la'
   /** Ô tick nghe thử: siết mức bám hợp âm về đúng bản ký âm. */
   siet?: boolean
+  /** Slow Blues (id `blue-sun`) — ô tick "Bộ Soạn Blues lượt 6": soạn tay phải từ nhóm ba của ba sheet (`soanCauBlues`). */
+  bluesSoan?: boolean
   /** Ô tick nghe thử: vòng dạo giống sheet trưởng. */
   daoTruong?: boolean
   /** Ô tick nghe thử: vòng dạo giống sheet thứ. */
@@ -629,7 +631,7 @@ export function buildPhraseSection(
   options: PhraseSectionOptions,
 ): PhraseSection | null {
   if (options.style.family === 'twist') return twistSolo(options)
-  if (options.style.family === 'blues-codex-1') return bluesCodexSolo(options)
+  if (options.style.family === 'blue-sun') return bluesClaudeSolo(options)
   if (options.linhNhiSolo && options.key) {
     return linhNhiSolo({
       kind: options.kind, key: options.key, style: options.style,

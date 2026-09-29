@@ -1,5 +1,7 @@
 # Blues Codex 1
 
+> **Nút đã xoá 29/9/2026** theo người dùng (chỉ giữ Slow Blues). File giữ làm hồ sơ; mã khôi phục từ commit 7d62e6f.
+
 Cập nhật 28/09/2026: hòa âm, dạo/giang/kết riêng và nhấn 1–4 theo yêu cầu Slow Blues. Bản nghe thử, chưa được người dùng chốt âm nhạc.
 
 ## Nguồn

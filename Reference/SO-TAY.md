@@ -4332,3 +4332,58 @@ hai bản (có/không dạo đầu) rồi so số dòng lời phải khớp nhau
 rồi áp-lên-bản-không-có.
 
 Toàn suite **2.875 qua / 7 file đỏ (8 test đỏ)** — đúng 7 file đỏ cũ (`tuyenSolo.test.ts` có 2 test đỏ).
+
+## Bước — Slow Blues ĐÃ NGHE DUYỆT 29/9/2026; xoá ba điệu Blues còn lại
+
+Người dùng: *"Điệu Blues Sun đã ổn, hãy lưu lại và đổi tên nút thành Điệu Slow Blues và ghi vào md sổ tay, và ghi vào md
+Điệu Blues. Xóa những điệu Blues khác cũng như là nút của chúng"*.
+
+**Nút còn lại: Slow Blues** — tên hiện (`name` · `familyName` trong `styleLibrary/bluesClaude.ts`) đổi từ "Blue Sun"; **id
+`blue-sun` / `blue-sun-chorus` và mọi tên trường lưu bài giữ nguyên** để bài đã lưu mở lại đúng điệu. Nội dung (hồ sơ đầy đủ:
+`Reference/BLUES-CLAUDE.md`, số đo ba sheet: `PianoBrain/knowledge/BLUES-CHON-HOP-AM-VA-NOT.md`):
+- đệm 6/8 mẫu *The House of the Rising Sun*: tay trái bass phách 1 · hợp âm phách 4 · bass dẫn nửa cung phách 6; tay phải chạy
+  ngón (`chayBlueSun`); mỗi hợp âm 6 móc đơn; ♩ 92;
+- bấm nút là tô màu Blues TRONG GIỌNG (`reharmEngine/mauBlueSun.ts` bản 2);
+- dạo · giang · kết: `bluesClaudeSolo`;
+- ô tick: "Bản Blues rút gọn" (bản 3 — mục dưới), "Bộ Soạn Blues lượt 6", "Slow Blues: hợp âm lướt Blues ở cuối đoạn".
+Chưa rõ người dùng nghe duyệt với ô tick nào bật — các ô tick giữ nguyên, mặc định tắt. Đây là lần đầu toàn bộ phần Blues của
+Claude (lượt 1–12, màu Blues, hợp âm lướt) vào git.
+
+**Đã xoá** (nút + mã chỉ nút ấy dùng):
+- **Blues Claude** (`blues-claude`, `blues-claude-chorus`) — cell lượt 4 CHƯA TỪNG COMMIT; định nghĩa còn ở `BLUES-CLAUDE.md`
+  mục "Điệu" và chú thích đầu `styleLibrary/bluesClaude.ts`.
+- **Blues Đức Thịnh** (`blues-duc-thinh`): `styleLibrary/bluesDucThinh.ts`, `style/blueDucThinhLicks.ts` và test — khôi phục từ
+  commit 4926973 · 2787246.
+- **Blues Codex 1** (`blues-codex-1`): `styleLibrary/bluesCodex.ts`, `style/bluesCodex.ts`, `style/bluesCodexSolo.ts`,
+  `reharmEngine/bluesHarmony.ts` (`harmonyStyle: 'blues'`), mọi nhánh `isBluesCodex` trong `ReharmHome.tsx` (cổng CP Lick ·
+  `cpComposeOn` · `cpFullOn`, dòng gam solo, thứ tự chơi, lời chú thích dưới nút), `CODEX_STYLE_IDS`, test — khôi phục từ commit
+  27aa6df · 2cdd2c5 · 43e564f · 7d62e6f.
+
+**Giữ**: `chayBluesClaude` + kho nửa ô Rockhouse (`bluesClaudeO.json`) — ô tick "chêm lick Blues" của họ Slow Rock còn dùng
+(`bluesLick` giờ = `laSlowRock && bluesLickSR`); `autoFillRun` của `generateFillLine` (sinh cho Blues Đức Thịnh, nay lick Blues ô
+tick slow rock dùng). Nhánh nửa ô Ray trong `bluesClaudeSolo` (điệu khác `blue-sun`) còn trong mã nhưng không nút nào gọi — để
+nguyên cho khỏi đụng đường Slow Blues vừa duyệt.
+
+**Bài đã lưu với điệu đã xoá**: `getStyle` trả `undefined` → lùi về `BALLAD` (`style = getStyle(...) ?? BALLAD`), không lỗi.
+
+**Bẫy**: nhiều file mã nửa CRLF nửa LF, và `grep -c $'\r'` của Git Bash báo 0 cả khi file CRLF — thay chuỗi nhiều dòng phải chuẩn
+hoá `\r\n` trước khi so.
+
+**Test**: bỏ 3 test chỉ đo solo nửa ô Ray của Blues Claude (khung AAB · luật bậc ba blue · "không phô" theo thước nốt láy của
+Ray) và 2 test cell Blues Claude. Chạy 3 test ấy trên Slow Blues thì đỏ — ghi làm số đo, CHƯA sửa (người dùng vừa duyệt): dạo Đô
+thứ lượt 0 ô 4 (Cm7) có nốt lạc giọng theo thước của Ray; trên F7 giọng Đô trưởng có E (bậc 3 trưởng của chủ trên IV); khung AAB
+0,43 < 0,5 (không áp — Slow Blues không theo khung của Ray). Test "mọi ô thân" chuyển sang Slow Blues, trần tay phải 88 → 96 (tầm
+`chayBlueSun`).
+
+Toàn suite **2.906 qua / 7 đỏ** — 7 trong 8 đỏ cũ; `cpComposition` "CP color owns every fill/run route" hết đỏ vì cổng `cpLick`
+không còn nhánh Blues Codex.
+
+### Bản Blues rút gọn: nốt "trong giọng" vẫn chói nếu đè nửa cung lên nốt hợp âm đang vang
+
+Người dùng (bài "Thành phố buồn", ô D9 hết câu): *"Khi tick vào ô Blues rút gọn thì chỗ D9 chơi nghe chói tai hơn"*. Bản 2 chỉ
+đòi nốt nối tay trái nằm trong giọng — G thuộc Mi thứ nhưng G3 trên D9 là bậc 11, đè nửa cung lên F#, ở bè trầm. Tay phải đáp
+C5+E5 trên Em9 (bộ lọc chỉ xét nốt đỉnh). Sửa (`boSoanBlues.ts`): nốt nối tay trái không cách nốt hợp âm đang vang nửa cung
+(`satNuaCung`) và không chồng nửa cung lên tay phải; tay phải ở phách 1 · 4, nốt ngân, nốt cuối nhóm không là nốt tránh
+(`tranhVang`); cú đáp toàn nốt hợp âm mới. Đo hai vòng × 6 lượt: nốt nối chói 15/90 · 12/90 → 0/77 · 0/82; thời điểm có cặp nửa
+cung 11/525 · 10/529 → 0. **Giá trị cũ**: chỉ xét "trong giọng", đáp chỉ xét nốt đỉnh. **Triệu chứng để lùi**: "tay trái nối ít,
+nghe đều đều" (13/90 · 8/90 chỗ đổi hợp âm mất nốt nối) → bỏ điều kiện chồng nửa cung với tay phải trước.

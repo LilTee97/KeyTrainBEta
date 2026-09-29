@@ -33,6 +33,8 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'slow-rock-la-thu': 'slow-rock-la-thu-chorus',
   'slow-rock-la-thu-hai-tay': 'slow-rock-la-thu-hai-tay-chorus',
   'slow-rock-lt': 'slow-rock-lt-chorus',
+  // Slow Blues (id `blue-sun`, The House of the Rising Sun): tay trái lo trọn đệm; điệp thêm quãng tám ở bass phách 1.
+  'blue-sun': 'blue-sun-chorus',
   'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
   /*
     Điệp khúc DÀY THEO CHIỀU DỌC — hai bài trên năm bài bolero Linh Nhi làm vậy.

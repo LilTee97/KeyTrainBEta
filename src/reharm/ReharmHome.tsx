@@ -103,9 +103,7 @@ import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch
 import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
-import { chayBlueDucThinh } from './style/blueDucThinhLicks'
-import { bluesCodexPass, weaveBluesCodexBacking, generateBluesCodexFills } from './style/bluesCodex'
-import { composeBluesCodexLine } from './style/bluesCodexSolo'
+import { chayBluesClaude, chayBlueSun, nhuongTayPhai, nhuongTayTrai } from './style/boSoanBlues'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -687,8 +685,7 @@ export function ReharmHome() {
   const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
-  // Blues Codex có câu chêm riêng; các điệu khác vẫn theo bộ soạn của màu Cà Pháo.
-  const cpLick = styleId !== 'blues-codex-1' && (intensity === 'caPhao' || cpLickSelected)
+  const cpLick = intensity === 'caPhao' || cpLickSelected
   const [susDominant, setSusDominant] = useState(true)
   /** Màu của chủ âm — quyết định gu chung của cả vòng. */
   const [tonicColor, setTonicColor] = useState<MajorChordColor>('add9')
@@ -955,8 +952,7 @@ export function ReharmHome() {
     dạo/giang/kết hai tay rải Linh Nhi.
     Tôn Hùng: dạo/giang/kết hai tay rải ballad Chiếc Lá.
    */
-  const isBluesCodex = style.family === 'blues-codex-1'
-  const styleSolo = isBluesCodex ? style :
+  const styleSolo =
     getStyle(
       soloThay === 'linh-nhi'
         ? LINH_NHI_RAI
@@ -988,12 +984,54 @@ export function ReharmHome() {
   const [twistSinglePass, setTwistSinglePass] = useState(false)
   const laSlowRock = hoCuaDieu(style.id) === 'slow-rock'
   const isTwist = style.family === 'twist'
+  /*
+    LICK BLUES — họ slow rock bật bằng ô tick nghe thử (nút Blues Claude từng bật sẵn — đã xoá 29/9/2026) (người dùng 27/9/2026: "tạo được những câu
+    lick và run theo phong cách blues và đưa vào các tiết tấu đệm Slow rock (làm ô tick)"). Chỗ fill / run chêm câu lick chép
+    từ Rockhouse (`chayBluesClaude`), ô fill rộng một ô 6 phách, không chạy bè trầm. Lưu theo bài. Nghe ổn thì giữ ô tick.
+  */
+  const [bluesLickSR, setBluesLickSR] = useState(false)
+  /*
+    Blue Sun — HỢP ÂM LƯỚT BLUES Ở CUỐI ĐOẠN (ô tick nghe thử, 29/9/2026; người dùng: "Làm việc đó đi" — tự chèn hợp âm lướt kiểu
+    Robert / Ray): `luotBlueSun` chèn nửa sau ô cuối mỗi đoạn — bII7 / V7 (V7#9) / hợp âm giảm nửa cung dưới hợp âm đích. Lưu theo bài.
+  */
+  const [bluesLuot, setBluesLuot] = useState(false)
+  const bluesLick = laSlowRock && bluesLickSR
+  /*
+    Slow Blues (id `blue-sun`) có bộ soạn dạo · giang · kết riêng (`bluesClaudeSolo`, mỗi hợp âm 6 phách) — mở cổng như màu Linh
+    Nhi; không đi qua `coChiDanCodex`. Người dùng 27/9/2026: "soạn được những câu solo Blues".
+  */
+  const bluesSolo = style.family === 'blue-sun'
+  /*
+    BỘ SOẠN BLUES LƯỢT 6 — ô tick nghe thử (28/9/2026) ở Slow Blues: tay phải SOẠN từ nhóm ba của ba sheet
+    (`soanCauBlues`) thay cho chép nguyên nửa ô Rockhouse / trọn ô Rising Sun — câu chạy Blue Sun, câu chèn Blues Claude và
+    dạo · giang · kết. Lưu theo bài. Người dùng duyệt thì GIỮ ô tick; chỉ gộp vào mặc định khi người dùng bảo.
+  */
+  const [bluesSoan6, setBluesSoan6] = useState(false)
+  /*
+    "BẢN BLUES RÚT GỌN" (lượt 12 của Bộ Soạn Blues) — ô tick ở Blue Sun, đứng một mình. Người dùng tả lối thầy Đức Thịnh trong video:
+    câu chạy ở CUỐI mỗi câu hát, trọn, rơi đúng phách chuyển hợp âm; trong câu hát nốt nhẹ chia đều; và "tay trái chỉ biết dặm tiết
+    tấu chứ ko liên kết gì tới hợp âm kế tiếp" → `luot12` trong `chayBlueSun` trả cả nốt TAY TRÁI nối hợp âm; nốt dẫn cũ của cell ở
+    đó bị bỏ (`nhuongTayTrai`). Lượt 7–11 (bám hợp âm · chừa chỗ · thưa hơn · theo video · nối hợp âm) đã gỡ theo người dùng 29/9/2026:
+    "Bỏ từ lượt 7 đến 11 đi chỉ giữ lượt 12 và đặt tên cho ô tick là Bản Blues rút gọn". Tên trường lưu bài giữ `bluesSoan12`.
+  */
+  const [bluesSoan12, setBluesSoan12] = useState(false)
+  const luot12Blues = style.family === 'blue-sun' && bluesSoan12
+  const soanBlues = bluesSolo && bluesSoan6
+  // Tay phải chạy câu thì nhường: lick Blues bỏ hợp âm đệm tay phải bị đè (`nhuongTayPhai`); điệu khác dời xuống tay trái như cũ.
+  const nhuongKhiChayCau = (backing: Parameters<typeof giveCompingToLeft>[0], fill: Parameters<typeof giveCompingToLeft>[1]) =>
+    bluesLick ? nhuongTayPhai(backing, fill)
+      : luot12Blues ? nhuongTayTrai(giveCompingToLeft(backing, fill, style.beatsPerMeasure), fill)
+      : giveCompingToLeft(backing, fill, style.beatsPerMeasure)
   const chordBeats = useMemo(() => {
     if (isTwist) return style.beatsPerMeasure * (twistSinglePass ? 1 : 2)
-    if (laSlowRock && slowRockMotO) return style.beatsPerMeasure * (style.gridUnit ?? 1)
+    // Slow Blues: mỗi hợp âm MỘT ô 6/8 — người dùng 27/9/2026: "Đánh 6 phách là chuyển hợp âm". Cũ: nhánh dưới ra
+    // `beatsPerMeasure` = 6 phách máy = 12 móc đơn (không nhân `gridUnit`).
+    if ((laSlowRock && slowRockMotO) || style.family === 'blue-sun') {
+      return style.beatsPerMeasure * (style.gridUnit ?? 1)
+    }
     const measures = beatsPerChord / 4
     return Math.max(1, measures * style.beatsPerMeasure)
-  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, laSlowRock, slowRockMotO, isTwist, twistSinglePass])
+  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, style.family, laSlowRock, slowRockMotO, isTwist, twistSinglePass])
 
   /**
    * Hợp âm kết mỗi đoạn, trừ đoạn cuối bài.
@@ -1103,7 +1141,9 @@ export function ReharmHome() {
 
     // Chạy vòng đầu để lấy danh sách gợi ý, rồi lọc ra những cái đã chấp nhận.
     const firstPass = reharmonize(sequence.chords, {
-      harmonyStyle: isBluesCodex ? 'blues' : undefined,
+      // Slow Blues: bấm nút là vòng hợp âm được tô màu Blues (`colorBlueSun`) — người dùng 29/9/2026.
+      harmonyStyle: style.family === 'blue-sun' ? 'blue-sun' : undefined,
+      bluesLuot: style.family === 'blue-sun' && bluesLuot,
       intensity,
       teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
@@ -1144,7 +1184,9 @@ export function ReharmHome() {
       })
 
     const result = reharmonize(sequence.chords, {
-      harmonyStyle: isBluesCodex ? 'blues' : undefined,
+      // Slow Blues: bấm nút là vòng hợp âm được tô màu Blues (`colorBlueSun`) — người dùng 29/9/2026.
+      harmonyStyle: style.family === 'blue-sun' ? 'blue-sun' : undefined,
+      bluesLuot: style.family === 'blue-sun' && bluesLuot,
       intensity,
       teacherGenre: hoCuaDieu(style.id) === 'bossa' ? 'bossa' : 'ballad',
       susDominant,
@@ -1187,7 +1229,8 @@ export function ReharmHome() {
     halvedBeats,
     mutedHeld,
     isTwist,
-    isBluesCodex,
+    style.family,
+    bluesLuot,
   ])
 
   const bossaSoloOn = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
@@ -1195,9 +1238,9 @@ export function ReharmHome() {
   const twistSoloKey = useMemo(() => lockedKey
     ? { tonic: normalizePitchClass(lockedKey.tonic + effectiveTranspose), scale: lockedKey.scale }
     : reharm.key, [lockedKey, effectiveTranspose, reharm.key])
-  const cpComposeOn = style.family !== 'blues-codex-1' && intensity === 'caPhao'
+  const cpComposeOn = intensity === 'caPhao'
   const cpSimulationOn = cpComposeOn && caPhaoSoloMode === 'simulate'
-  const cpFullOn = !isBluesCodex && (cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn)))
+  const cpFullOn = cpSimulationOn || (caPhaoFull && (thaySolo === 'ca-phao' || cpComposeOn))
   const cpFullSources = useMemo(() => caPhaoFullSources(style, reharm.key, cpSimulationOn), [style, reharm.key, cpSimulationOn])
   const cpFullSource = cpFullSources.includes(caPhaoFullSource) ? caPhaoFullSource : ''
   const bossaRhythmOnly = laBossaCP(style) && !bossaSoloOn && !cpFullOn && !cpComposeOn
@@ -1484,8 +1527,6 @@ export function ReharmHome() {
    */
   const builtLine = useCallback(
     (list: readonly ParsedChord[], spin: number, giangTau = false) => {
-      if (isBluesCodex) return composeBluesCodexLine(list, { key: reharm.key,
-        beatsPerChord: chordBeats, take: spin + phraseSpin + playSpin.current, range: tamSolo })
       if (thaySolo || !lineSolo || !phraseScale) return null
       const anchors = accentBeats(style)
       if (anchors.length === 0) return null
@@ -1510,7 +1551,7 @@ export function ReharmHome() {
       })
       return line.length > 0 ? lineToTimeline(line) : null
     },
-    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin, tamSolo, isBluesCodex, reharm.key],
+    [lineSolo, phraseScale, style, thaySolo, chordBeats, phrasePulseBar, ballad, phraseSpin, tamSolo],
   )
 
 
@@ -1839,9 +1880,7 @@ export function ReharmHome() {
       ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
-    const rendered = style.family === 'blues-codex-1'
-      ? weaveBluesCodexBacking(rawBacking, withPassing, chordBeats, { cellBreaks: breaks, muteWindows }) : rawBacking
-    const plan = planCpBalladBacking(rendered, withPassing, {
+    const plan = planCpBalladBacking(rawBacking, withPassing, {
       style, walkingOn, beatsPerChord: chordBeats, transitions, key: reharm.key, muteWindows,
     })
     const played = plan.backing
@@ -2653,15 +2692,22 @@ export function ReharmHome() {
     (take: number) => {
       if (cpLick) return cpPlan(take).events
       if (laBossaCP(style)) return []
-      const makeLine = style.family === 'blues-codex-1' ? generateBluesCodexFills
-        : (chords: readonly ParsedChord[], options: Parameters<typeof generateFillLine>[1]) => soloToTimeline(generateFillLine(chords, options))
-      const line = makeLine(withPassing, {
+      /*
+        Blue Sun: tay phải CHẠY NGÓN mọi ô (câu chạy · riff · câu thưa của The House of the Rising Sun), không chỉ chêm ở chỗ
+        ca sĩ nghỉ — người dùng 28/9/2026: "Trong lúc đệm tác giả cũng chạy ngón chứ ko đơn thuần dặm hợp âm".
+      */
+      if (style.family === 'blue-sun') {
+        return chayBlueSun(withPassing, { key: reharm.key, beatsPerChord: chordBeats, take, breaths, soan: soanBlues || luot12Blues,
+          luot12: luot12Blues, singing })
+      }
+      const line = soloToTimeline(generateFillLine(withPassing, {
           breaths,
           sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitionsDieu,
           beatsPerChord: chordBeats,
           // Điệu nào khai chỗ đứng của câu lót thì theo nó; không khai thì để
           // `generateFillLine` tự chọn như cũ.
-          ...(style.fillBeats !== undefined ? { fillBeats: style.fillBeats } : {}),
+          ...(bluesLick ? { fillBeats: style.beatsPerMeasure * (style.gridUnit ?? 1) }
+            : style.fillBeats !== undefined ? { fillBeats: style.fillBeats } : {}),
           ...(style.fillMaxNotes !== undefined ? { fillMaxNotes: style.fillMaxNotes } : {}),
           /*
             Nhịp mẫu số 8 — slow rock và họ hàng — thì câu lót thuộc về bè trầm.
@@ -2669,7 +2715,7 @@ export function ReharmHome() {
             kép, không phải sở thích của một điệu. Điệu nào muốn khác thì khai
             `fillBassChance` để đè lên.
           */
-          fillBassChance:
+          fillBassChance: bluesLick ? 0 :
             style.fillBassChance ??
             (style.timeSignature.endsWith('/8') ? 0.8 : 0),
           raiChiaDoi: style.raiHopAmChiaDoi === true,
@@ -2695,23 +2741,17 @@ export function ReharmHome() {
           linhNhiRuns: cauLinhNhi,
           // Linh Run cho họ Slow Rock: câu chạy slow rock của chị (+ cao độ câu chạy bolero trên tiết tấu
           // slow rock), không dùng sổ bolero 4/4 — xem `chayLinhNhi`.
-          ...(cauLinhNhi && reharm.key && hoCuaDieu(style.id) === 'slow-rock'
+          // Lick Blues (ô tick ở họ slow rock) đứng trước mọi đường khác — xem `bluesLick`.
+          ...(bluesLick
+            ? (() => {
+                const lick = (yeuCau: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
+                  chayBluesClaude({ ...yeuCau, key: reharm.key, mocDon: style.gridUnit ?? 1, soan: soanBlues })
+                return { linhRun: lick, autoFillRun: lick }
+              })()
+            : cauLinhNhi && reharm.key && hoCuaDieu(style.id) === 'slow-rock'
             ? { linhRun: (yeuCau: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
                 chayLinhNhi({ ...yeuCau, key: reharm.key! }) }
-            /*
-              Lick/run Blues Đức Thịnh — riêng cho điệu này, không đi qua cổng Linh Nhi. Không cần
-              `reharm.key`: sổ lick tính hoàn toàn theo gốc hợp âm đang vang và hợp âm sau, giống
-              cách chơi Blues thật (đổi giọng thì hợp âm đổi, câu lick tự theo). Xem `chayBlueDucThinh`.
-            */
-            : style.family === 'blues-duc-thinh'
-              /*
-                `autoFillRun` — cùng hàm, nhưng còn được hỏi ở ô fill (tự động lẫn tự chêm), không chỉ
-                ô Run. Người dùng 27/9/2026: "ngoài khung tiếng ra thầy Đức Thịnh cũng chêm câu fill và
-                câu chạy nốt màu Blues" — chỉ nối `linhRun` (ô Run tự bấm) thì bài không lời nào tự chêm
-                gì cả, phải tự bấm Run từng ô mới nghe được câu Blues.
-              */
-              ? { linhRun: chayBlueDucThinh, autoFillRun: chayBlueDucThinh }
-              : {}),
+            : {}),
           lickyMode,
           take: take + phraseSpin + playSpin.current,
           vocal: singing,
@@ -2723,7 +2763,7 @@ export function ReharmHome() {
                   take: playSpin.current,
                 })
             : undefined,
-        })
+        }))
       // Preserve the CP backing and its bass links; optional fills use free space.
       return style.cpBalladChordLeads && !walkingOn
         ? bossaFillsInGaps(line, accompaniment) : line
@@ -2754,6 +2794,9 @@ export function ReharmHome() {
       breaths,
       transitions,
       transitionsDieu,
+      bluesLick,
+      soanBlues,
+      luot12Blues,
     ],
   )
 
@@ -2765,11 +2808,6 @@ export function ReharmHome() {
    */
   const soloTake = useMemo(() => {
     if (bossaRhythmOnly) return () => []
-    if (isBluesCodex) return (take: number) => composeBluesCodexLine(withPassing, {
-      key: reharm.key, beatsPerChord: chordBeats, range: tamSolo,
-      take: take + phraseSpin + playSpin.current,
-    }).flatMap(event => event.notes.map(note => ({ note, startBeat: event.startBeat,
-      durationBeats: event.durationBeats, isGrace: !!event.grace, hand: event.hand })))
     const args = {
       beatsPerChord: chordBeats,
       direction: soloDirection,
@@ -2806,7 +2844,6 @@ export function ReharmHome() {
     // Đổi điệu là đổi cách chia nhịp câu chạy — phải dựng lại.
     styleId,
     bossaRhythmOnly,
-    isBluesCodex,
   ])
 
   /**
@@ -2924,6 +2961,10 @@ export function ReharmHome() {
       cpBalladThu,
       slowRockMotO,
       twistSinglePass,
+      bluesLickSR,
+      bluesSoan6,
+      bluesSoan12,
+      bluesLuot,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       acceptedPassing,
@@ -2982,6 +3023,10 @@ export function ReharmHome() {
       cpBalladThu,
       slowRockMotO,
       twistSinglePass,
+      bluesLickSR,
+      bluesSoan6,
+      bluesSoan12,
+      bluesLuot,
       caPhaoFullSource,
       caPhaoKeyboardRange,
       styleId,
@@ -3040,6 +3085,10 @@ export function ReharmHome() {
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
     setCpBalladThu(saved.cpBalladThu ?? true)
     setSlowRockMotO(saved.slowRockMotO ?? false)
+    setBluesLickSR(saved.bluesLickSR ?? false)
+    setBluesSoan6(saved.bluesSoan6 ?? false)
+    setBluesSoan12(saved.bluesSoan12 ?? false)
+    setBluesLuot(saved.bluesLuot ?? false)
     setTwistSinglePass(saved.twistSinglePass === true)
     setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
     setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
@@ -3254,14 +3303,12 @@ export function ReharmHome() {
 
   const steps = useMemo(() => {
     let base = arrangementSteps
-    if (isBluesCodex && songSources) return bossaSoloSteps(base, songSources)
-      .map(step => step.type === 'interlude' ? { ...step, loops: 1 } : step)
     if (isTwist && songSources) return bossaSoloSteps(base, songSources)
     if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
     if ((bossaSoloOn || cpFullOn || cpComposeOn) && songSources) return bossaSoloSteps(base, songSources)
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
     const cpBossaMinor = laBossaCP(style) && thaySolo === 'ca-phao' && reharm.key?.scale === 'minor'
-    const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor
+    const themSolo = thaySolo === 'linh-nhi' || chiecLa || giangThuTuan || cpBossaMinor || bluesSolo
     if (!themSolo) return base
     base = base.filter((step) => {
       if (step.type !== 'section' || !songSources) return true
@@ -3270,14 +3317,15 @@ export function ReharmHome() {
     if (!base.some((step) => step.type === 'intro')) {
       base = [{ type: 'intro' as const, restAfter: 0 }, ...base]
     }
-    if ((thaySolo === 'linh-nhi' || giangThuTuan || cpBossaMinor) && songSources && songSources.length > 0) {
+    if ((thaySolo === 'linh-nhi' || giangThuTuan || cpBossaMinor || bluesSolo) && songSources && songSources.length > 0) {
       if (!base.some((step) => step.type === 'interlude')) {
         const chorus = songSources.findIndex((source) => /điệp/i.test(source.name))
         const over = chorus >= 0 ? chorus : Math.max(0, songSources.length - 1)
         const giang = { type: 'interlude' as const, over, loops: 2, restAfter: 0 }
         const ket = base.findIndex((step) => step.type === 'outro')
         const afterChorus = base.findIndex((step) => step.type === 'section' && step.source === over)
-        base = (giangThuTuan || cpBossaMinor) && afterChorus >= 0
+        // Slow Blues: giang sau điệp rồi hát lại điệp — không để giang (48 phách) dính liền đoạn kết.
+        base = (giangThuTuan || cpBossaMinor || bluesSolo) && afterChorus >= 0
           ? [...base.slice(0, afterChorus + 1), giang, { type: 'section' as const, source: over }, ...base.slice(afterChorus + 1)]
           :
           ket >= 0
@@ -3288,11 +3336,12 @@ export function ReharmHome() {
         base = [...base, { type: 'outro' as const }]
       }
     }
-    if (laBoleroTuan(style)) {
+    // Giang Slow Blues = 8 ô Blues (48 phách) — một lượt là đủ.
+    if (laBoleroTuan(style) || bluesSolo) {
       base = base.map((s) => (s.type === 'interlude' ? { ...s, loops: 1 } : s))
     }
     return base
-  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn, isTwist, isBluesCodex])
+  }, [arrangementSteps, songSources, chiecLa, thaySolo, style, reharm.key, bossaRhythmOnly, bossaSoloOn, cpFullOn, cpComposeOn, isTwist, bluesSolo])
 
   /**
    * Dựng cả bài cho **lần phát thứ mấy**.
@@ -3327,21 +3376,18 @@ export function ReharmHome() {
   const buildPass = useCallback(
     (pass: number, takesPerPass: number, interludeTake = activeInterludePass.current?.(0) ?? 0) => {
       // One plan owns BOTH hands: never pair a new take's notes with another take's backing cuts.
-      // Blues dùng đúng một bản câu đáp/cắt đệm cho cả lượt, không cắt theo take khác đang phát.
-      const cpPass = cpLick ? cpPlan(pass) : style.family === 'blues-codex-1'
-        ? bluesCodexPass(accompaniment, fills(pass)) : null
-      if (isTwist || isBluesCodex) {
+      const cpPass = cpLick ? cpPlan(pass) : null
+      if (isTwist) {
         const spans = mainChordSpans(withPassing, chordBeats)
         return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
           (kind, take, nextStart) => buildPhraseSection({
-            kind, key: isBluesCodex ? reharm.key : twistSoloKey, style, bpm, dropRoot,
-            // Solo có ô Blues 4 phách riêng; tick một/hai lần chỉ đổi thời lượng đệm hát.
-            beatsPerChord: isBluesCodex ? chordBeats : 4,
-            ...(isBluesCodex ? { songChords: withPassing } : {}),
+            kind, key: twistSoloKey, style, bpm, dropRoot,
+            // Twist: solo giữ ô 4 phách; tick một/hai lần chỉ đổi thời lượng đệm hát.
+            beatsPerChord: 4,
             opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
             // pass đã mã hóa playSpin; cộng cả hai sẽ thành bước 528, luôn trùng modulo 4.
             take: phraseSpin + playSpin.current + take,
-            range: isBluesCodex ? tamSolo : { low: 60, high: 84 }, solo: () => [],
+            range: { low: 60, high: 84 }, solo: () => [],
           }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? [], true)
       }
       if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
@@ -3367,7 +3413,7 @@ export function ReharmHome() {
         const phraseWarnings: string[] = []
         const arranged = buildArrangedSong({
           accompaniment: cpPass ? cpPass.backing : yieldToFill(
-            giveCompingToLeft(backingFor(fills(pass)), fills(pass), style.beatsPerMeasure),
+            nhuongKhiChayCau(backingFor(fills(pass)), fills(pass)),
             fills(pass),
           ),
           fills: (take) => cpPass ? cpPass.events : fills(take + pass * 11),
@@ -3376,11 +3422,13 @@ export function ReharmHome() {
           steps,
           turnaround: undefined,
           // Mở riêng giang tấu THỨ Tuấn đã có bộ phát triển mô-típ mới.
-          interludeRange: lnSau && reharm.key
+          interludeRange: (lnSau || bluesSolo) && reharm.key
             ? (over, _next, take) => {
-                // Màu Linh Nhi: hai tay lấy nguyên từ một đoạn giang thật của chị.
+                // Màu Linh Nhi: hai tay lấy nguyên từ một đoạn giang thật của chị. Blues Claude: `buildPhraseSection`
+                // rẽ sang `bluesClaudeSolo` theo họ điệu trước khi xét cờ Linh Nhi.
                 const built = buildPhraseSection({
                   kind: 'interlude', key: reharm.key, style, linhNhiSolo: true,
+                  ...(soanBlues ? { bluesSoan: true } : {}),
                   beatsPerChord: chordBeats, dropRoot, opening: null, solo: () => [],
                   songChords: vongPhienKhuc, vongPhienKhuc,
                   take: phraseSpin + playSpin.current + interludeTake + take, range: tamSolo,
@@ -3454,7 +3502,7 @@ export function ReharmHome() {
             */
             const lnDoan = kind === 'intro' ? lnDao : lnSau
             if (
-              !lnDoan &&
+              !lnDoan && !bluesSolo &&
               !coChiDanCodex(kind, laBoleroTuan(style), reharm.key?.scale === 'minor',
                 laBossaCP(style) && thaySolo === 'ca-phao')
             ) {
@@ -3505,7 +3553,7 @@ export function ReharmHome() {
                 mà người dùng quen — lúc ấy trả về `kind === 'intro' && laBoleroTuan(style)`.
               */
               style:
-                (laBoleroTuan(style) && (kind === 'intro' || kind === 'outro')) || lnSlowRock
+                (laBoleroTuan(style) && (kind === 'intro' || kind === 'outro')) || lnSlowRock || bluesSolo
                   ? style
                   : styleSolo,
               thay: thaySolo,
@@ -3572,6 +3620,7 @@ export function ReharmHome() {
               ...(daoThu ? { daoThu: true } : {}),
               ...(giangThu ? { giangThu: true } : {}),
               ...(chayNgan ? { chayNgan: true } : {}),
+              ...(soanBlues ? { bluesSoan: true } : {}),
               solo: (chords) =>
                 phraseSolo(chords, kind === 'outro' ? 1 : 0, false),
             })
@@ -3590,7 +3639,7 @@ export function ReharmHome() {
 
       const body = buildSongTimeline({
         accompaniment: cpPass ? cpPass.backing : yieldToFill(
-          giveCompingToLeft(backingFor(fills(pass)), fills(pass), style.beatsPerMeasure),
+          nhuongKhiChayCau(backingFor(fills(pass)), fills(pass)),
           fills(pass),
         ),
         fills: cpPass ? cpPass.events : fills,
@@ -3646,7 +3695,6 @@ export function ReharmHome() {
       accompaniment,
       backingFor,
       isTwist,
-      isBluesCodex,
       twistSoloKey,
       lnDao,
       lnSau,
@@ -3660,6 +3708,9 @@ export function ReharmHome() {
       cpFullSource,
       caPhaoKeyboardRange,
       cpBalladThu,
+      bluesLick,
+      soanBlues,
+      luot12Blues,
       withPassing,
       chordBeats,
       dropRoot,
@@ -3702,9 +3753,9 @@ export function ReharmHome() {
   const soloNoteCount = useMemo(() => laBossaCP(style)
     ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : isTwist || isBluesCodex || cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
+    : isTwist || cpFullOn || cpComposeOn ? song.events.filter(e => e.hand === 'right' && song.soloSpans.some(s =>
       s.kind === 'interlude' && e.startBeat >= s.startBeat && e.startBeat < s.startBeat + s.lengthBeats)).length
-    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn, isTwist, isBluesCodex])
+    : soloTake(0).length, [style, song, soloTake, cpFullOn, cpComposeOn, isTwist])
   const fillNoteCount = useMemo(() => fills(0).length, [fills])
 
   /**
@@ -3764,7 +3815,6 @@ export function ReharmHome() {
   const timelineHien = looping && playingTimeline ? playingTimeline : song
 
   const soloScaleLabel = useMemo(() => {
-    if (isBluesCodex) return reharm.key ? `${pitchClassName(reharm.key.tonic)} Blues + nốt hợp âm` : null
     if (isTwist) return twistSoloKey ? `${pitchClassName(twistSoloKey.tonic)} Blues` : null
     // Nhánh giang thứ này soạn theo chức năng hợp âm, không dùng gam ngũ cung
     // do bộ gợi ý cho phần hát trả về; đừng hiển thị nhầm là gam đang phát.
@@ -3774,7 +3824,7 @@ export function ReharmHome() {
     const chord = recolored.filter((item) => !item.passing)[idx]
     if (!chord) return null
     return scaleLabelForChord(chord, reharm.key)
-  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style, isTwist, twistSoloKey, isBluesCodex])
+  }, [activeChordIndex, selectedIndex, recolored, reharm.key, style, isTwist, twistSoloKey])
 
 
   const timeline = song.events
@@ -3796,7 +3846,7 @@ export function ReharmHome() {
       Người dùng 24/9/2026: *"tại sao giang tấu vẫn ko đổi hợp âm mỗi lần phát giống như intro hay outro"* —
       tiếng đã đổi vòng mỗi lượt, nhưng dòng chữ vẫn lấy `interludeWindow` (đuôi điệp khúc cố định).
     */
-    if (isTwist || isBluesCodex || lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
+    if (isTwist || bluesSolo || lnSau || cpFullOn || cpComposeOn || ((laBoleroTuan(style) || laBossaCP(style)) && reharm.key?.scale === 'minor')) {
       const span = displayedSoloSpan(timelineHien.soloSpans, 'interlude', activeSolo?.span)
       return [...(span?.chords ?? [])]
     }
@@ -3806,7 +3856,7 @@ export function ReharmHome() {
       songSources.find((source) => /điệp\s*khúc/i.test(source.name)) ??
       songSources[0]!
     return [...(interludeWindow(over, null)?.kyHieu ?? [])]
-  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau, isTwist, isBluesCodex])
+  }, [songSources, steps, interludeWindow, timelineHien, style, reharm.key, cpFullOn, cpComposeOn, activeSolo?.span, lnSau, isTwist, bluesSolo])
 
   /**
    * Bản nhạc ĐỂ HIỆN — thêm dòng hợp âm giang tấu dưới nhãn giang tấu.
@@ -4673,7 +4723,7 @@ export function ReharmHome() {
             onSelect={(id) => {
               setStyleId(id)
               const next = getStyle(id)
-              if (next?.family === 'twist' || next?.family === 'blues-codex-1') {
+              if (next?.family === 'twist') {
                 stopPlay()
                 setNgheLaiStt(0)
               }
@@ -4689,10 +4739,7 @@ export function ReharmHome() {
           />
         </div>
 
-        {isBluesCodex && <p className="mb-3 text-xs text-pink-200">
-          Blues Codex 1 tự soạn hòa âm và dạo · giang · kết theo Blues. Câu chạy bám giọng bài, có nghỉ và ngân; hợp âm bạn sửa tay được giữ.
-        </p>}
-        {!isTwist && !isBluesCodex && <div className="mb-3">
+        {!isTwist && <div className="mb-3">
           <p className="mb-1.5 font-mono text-[10px] tracking-[0.08em] text-dim uppercase">
             Hợp âm + giai điệu dạo / giang tấu / kết
           </p>
@@ -4944,6 +4991,30 @@ export function ReharmHome() {
             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
               <input type="checkbox" checked={slowRockMotO} onChange={() => setSlowRockMotO((on) => !on)} />
               Slow rock: mỗi hợp âm 6 phách rồi chuyển (không phải 2 lần 6 phách)
+            </label>
+          )}
+          {laSlowRock && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input type="checkbox" checked={bluesLickSR} onChange={() => setBluesLickSR((on) => !on)} />
+              Slow rock: chêm lick Blues (chép từ Rockhouse) ở chỗ fill (nghe thử)
+            </label>
+          )}
+          {bluesSolo && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input type="checkbox" checked={bluesSoan6} onChange={() => setBluesSoan6((on) => !on)} />
+              Blues: Bộ Soạn lượt 6 — soạn câu mới từ nhóm ba của 3 sheet (nghe thử)
+            </label>
+          )}
+          {style.family === 'blue-sun' && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input type="checkbox" checked={bluesSoan12} onChange={() => setBluesSoan12((on) => !on)} />
+              Bản Blues rút gọn
+            </label>
+          )}
+          {style.family === 'blue-sun' && (
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
+              <input type="checkbox" checked={bluesLuot} onChange={() => setBluesLuot((on) => !on)} />
+              Slow Blues: hợp âm lướt Blues ở cuối đoạn (nghe thử)
             </label>
           )}
         </div>
@@ -5274,14 +5345,12 @@ export function ReharmHome() {
         </div>
 
         <label className="mb-2 flex items-center gap-2 text-sm text-cream">
-          <input type="checkbox" checked={cpLick} disabled={intensity === 'caPhao' || style.family === 'blues-codex-1'} onChange={event => {
+          <input type="checkbox" checked={cpLick} disabled={intensity === 'caPhao'} onChange={event => {
             stopPlay()
             setCpLick(event.target.checked)
           }} />
           CP Lick
-          <span className="text-xs text-dim">{style.family === 'blues-codex-1'
-            ? 'Blues Codex 1 dùng câu chêm Blues riêng'
-            : intensity === 'caPhao'
+          <span className="text-xs text-dim">{intensity === 'caPhao'
             ? 'Mặc định theo màu Cà Pháo · thay hoàn toàn Licky Fill/Run'
             : 'Phối hai tay theo sheet tại câu chêm · giữ khung ngoài câu'}</span>
         </label>
@@ -5291,10 +5360,6 @@ export function ReharmHome() {
         </p>}
 
         <div className="flex flex-col gap-3">
-          {style.family === 'blues-codex-1' && <p className="text-sm text-pink-300">
-            Blues Codex 1: tay trái giữ bass, tay phải nhắp hợp âm rồi chêm câu đáp, nốt láy và bè đôi.
-            {' '}Fill tự chêm theo mật độ/chỗ nghỉ; chọn Run tại hợp âm để chạy dài hơn.
-          </p>}
           {cpLick && intensity === 'caPhao' && <p className="text-xs text-dim">
             Màu Cà Pháo bật CP Lick và CP Run advanced: 8–12 nốt, khoảng 2–4 phách,
             soạn từ nét chạy trong sheet; độ dài thay đổi mỗi lượt, không đổi mốc vào đoạn sau;

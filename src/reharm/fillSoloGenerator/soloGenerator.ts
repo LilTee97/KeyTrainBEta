@@ -680,6 +680,7 @@ export function generateFillLine(
      * Thịnh cũng có chêm vào các câu fill và các câu chạy nốt theo giai điệu màu Blues. Sao ko thấy bạn
      * chơi như vậy"* — trước đó `chayBlueDucThinh` chỉ được gọi ở ô Run tự bấm; ô fill tự động rơi vào
      * `drawsBass` (điệu 6/8 mặc định 80% chạy bè trầm) hoặc sổ Licky chung, không câu nào mang màu Blues.
+     * (Nút Blues Đức Thịnh đã xoá 29/9/2026; nay chỉ lick Blues ô tick họ slow rock dùng đường này.)
      */
     autoFillRun?: (request: {
       chord: ParsedChord
