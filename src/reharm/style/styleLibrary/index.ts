@@ -10,6 +10,7 @@ import { SLOW_ROCK_LT } from './slowRockLT'
 import { BLUE_SUN, BLUE_SUN_CHORUS } from './bluesClaude'
 import { BALLAD_DERX } from './balladDerx'
 import { TWIST } from './twist'
+import { KIM } from './kim'
 import testerStylesJson from './testerStyles.json'
 
 const DELETED_KEY = 'keytrain-deleted-styles'
@@ -538,6 +539,7 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   BLUE_SUN,
   BLUE_SUN_CHORUS,
   TWIST,
+  KIM,
   ...TESTER_STYLES,
 ]
 

@@ -4444,3 +4444,27 @@ mô-típ bè đôi) → khôi phục `twistSolo.ts` và nhánh Twist của `buil
 **Chưa đo:** chưa nghe trên bài có lời thật (chỗ `breaths` của app); đoạn lặp lại trong Thứ tự chơi dùng cùng một bản câu chạy trong
 một lượt phát; khi thứ tự chơi không theo thứ tự nguồn, cú đáp của câu chạy cuối đoạn có thể rơi vào đầu đoạn NGUỒN kế tiếp chứ không
 phải đoạn thật sự phát sau (Claude suy từ cách `buildArrangedSong` cắt câu fill theo đoạn nguồn — chưa đo).
+
+## Bước — Nút Kim: tiết tấu đệm đo từ bản thu ASIA "Kim" (29/9/2026)
+
+Người dùng: *"bạn có thể tạo tiết tấu đệm như trong video Kim ở trên và cho nó vào nút Kim ko"* (video `fjG-uQVhPqI`, Công Thành &
+Lynn, ASIA 1; bài Kim — Y Vũ, sheet ghi "Rock", khung 12 ô blues). Hồ sơ đầy đủ: `Reference/KIM.md`; tái lập: `tools/kim_ban_thu.py`.
+
+**Mẫu** (`styleLibrary/kim.ts`, nút Kim nhóm 4/4, ♩ 152 đo): tay trái 1 1 3 3 5 5 6 5 móc đơn thẳng (34/44 ô đủ 8 nốt); tay phải
+chặn hợp âm cả 8 móc đơn; nhấn tay phải 2 · 2& · 4 theo snare (0,91 · 1,00 · 0,90; 98 ô) — chuyển dụng, tay đệm của ban nhạc gõ đều;
+nốt ¼ phách (đo trung vị 0,17, tứ phân vị trên 0,25). **Khác Twist:** Twist là swing 2:1 từ sheet Boogie; Kim đo ra thẳng (đỉnh tiếng
+gõ thứ hai 0,50 phách, 592 phách).
+
+**Bẫy đã sập:**
+- Bè bass của demucs **gần như im** (RMS 0,0–0,4 so với bè "khác" 1,5–4,1): bass bản 1993 nằm trong bè "khác". Dò cao độ trên bè bass
+  (pyin, rồi CQT cộng hoạ âm) chỉ đủ 8 nốt ở 7–8/146 ô. Đúng đường: chép nốt bè "khác", tách nốt dưới MIDI 50 làm tay trái.
+- Đổi trường độ sang phách bằng khoảng lưới ĐẦU TIÊN (`grid[1] − grid[0]`) ra 0,13 phách — sai; phải chia khoảng lưới trung vị (0,17).
+- Phép đếm hình 1–3–5–6 tự động bằng CQT trên cả bản trộn bắt 0,2 cụm/100 phách ngay trên chính bài Kim — không dùng được để lọc
+  video khác.
+
+**Chưa làm:** ngừng ở ô V của khung 12 ô (ban nhạc đánh một cú phách 1 rồi lặng — 7+ lần trong bài), hình 1 1 5 5 ♭7 ♭7 8 8 (6/44 ô),
+câu dạo · giang · kết riêng. **Chưa nghe duyệt.**
+
+**Triệu chứng để lùi:** tay phải nặng → bỏ cú chặn 1& · 3& · 4&; mất phách 2–4 → nhấn 1,15 → 1,3; đục → trường độ ¼ → ⅛.
+
+Toàn suite **2.937 qua / 7 đỏ** — đúng 7 đỏ cũ. `tsc` sạch.
