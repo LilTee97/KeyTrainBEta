@@ -124,7 +124,7 @@ Các lựa chọn không được coi là số đo nguồn: tỷ lệ swing2:1; 
 
 Phạm vi thay đổi mong muốn: một đường soạn Blues **chỉ cho Twist**; giữ các điệu và các trạng thái âm nhạc đã duyệt ngoài Twist. Tài liệu này ghi nguồn và ranh suy luận, không chứng nhận đầu ra ngẫu hứng đã được nghe duyệt.
 
-## Bản soạn trong KeyTrain — 27/9/2026
+## Bản soạn trong KeyTrain — 27/9/2026 (ĐÃ THAY 29/9/2026 bằng Bộ Soạn Blues — mục dưới; mã cũ ở commit 291d555)
 
 `src/reharm/style/twistSolo.ts`, gọi từ đầu `buildPhraseSection` riêng family `twist`.
 Đây là bốn cặp motif mới có nhắc–đáp, chọn xác định theo lượt phát; không phải vô hạn câu ngẫu nhiên và không phải chép cả đoạn nguồn.
@@ -139,3 +139,37 @@ Phạm vi thay đổi mong muốn: một đường soạn Blues **chỉ cho Twis
 - App dùng bộ ráp đoạn hiện có `buildBossaSoloSong` (tên lịch sử); một bản soạn sở hữu cả hai tay. Có đủ dạo/giang/kết kể cả nhập vòng trơn. Bài có lời giữ thứ tự phần hát; chỉ bổ sung loại đoạn solo còn thiếu.
 
 Kiểm hồi quy: `twistSolo.test.ts` kiểm12 giọng,4 lượt,3 loại đoạn, tính tái lập, nốt nối/khoảng nghỉ, không gõ đè phím đang ngân, cadence vào hợp âm thật, chuyển dụng thứ, cùng đường ráp cả bài và hai chế độ đệm8/4 phách. `twist.test.tsx` giữ kiểm lỗi hợp âm chuyển sớm. Kiểm thử kỹ thuật không thay cho nghe duyệt.
+
+## Bộ Soạn Blues — MẶC ĐỊNH của Twist từ 29/9/2026
+
+Người dùng: *"Làm một nút nhỏ trong điệu Twist để: dùng bộ soạn Blues để soạn các câu solo và các câu fill cho điệu Twist … điều chỉnh câu cho khớp tiết tấu của điệu nút Twist … học từ điệu Slow Blues để chèn các câu chạy nốt vào lúc đệm hát … Câu chạy nốt cũng nên sử dụng các riff theo kiểu Blues giống như điệu Slow Blues … nên ít nốt hơn trong Slow Blues nhưng vẫn giữ đủ kết cấu … thưa ra, chủ yếu đặt ở cuối câu hát và nên có nốt dẫn qua hợp âm kế tiếp … chèn những kỹ thuật khác của Blues vào tiết tấu đệm hát"*.
+
+Dựng trước làm ô tick nghe thử "Twist: Bộ Soạn Blues" (lưu theo bài `twistBlues`); cùng ngày người dùng: *"Hãy biến nút Twist: bộ soạn Blues (như trong ảnh) thành mặc định cho điệu Twist"* → gỡ ô tick, cờ và trường lưu bài; Twist luôn chạy đường này. Bài lưu trong lúc có ô tick còn trường `twistBlues` — bộ đọc bỏ qua. Bộ mô-típ 27/9 (`calls` / `answers` / `motif` trong `twistSolo.ts`) đã xoá — khôi phục từ commit 291d555.
+
+**Khớp nhịp Twist.** Bộ Soạn Blues (`soanCauBlues`) soạn theo NHÓM BA. Ở Twist một nhóm ba = MỘT PHÁCH swing (móc = ⅓ phách): Rockhouse vốn là 4/4 lưới chùm ba (♩ 88), **735/810 cú đúng lưới**, và swing 2:1 của Twist đặt tiếng "và" ở ⅔ phách = móc thứ ba của nhóm. Rising Sun chép theo thời gian thật, chỉ **25/185 cú** đúng lưới → không dùng (`chiNguon: 'ray'`). Mỗi cú tối đa 2 nốt (`notToiDa`) — nốt đơn và bè đôi như tay phải solo của sheet (76% bè đôi). Đo lưới: `node` trên `bluesClaudeO.json` / `blueSunO.json` (phần lẻ của `t`).
+
+**Đệm hát** (`chayTwistBlues` trong `boSoanBlues.ts`; chỗ đặt theo lối "Bản Blues rút gọn" của Slow Blues, mọi con số là biên soạn của Claude):
+- CÂU CHẠY chỉ ở 2 phách cuối hợp âm hết câu (1/3 số lần 3 phách), 1–3 cú mỗi phách; chưa dán lời → mỗi 16 phách một câu. Cú ĐÁP đúng phách 1 hợp âm sau, toàn nốt hợp âm mới, vang CÙNG cú chặn tay phải của mẫu đệm; nốt cuối câu cách cú đáp **1–2 nửa cung** (`noiBuoc: [1, 2]`) — nốt dẫn. Trong lúc chạy tay phải thôi chặn (cú 3& ô cuối).
+- RIFF: mọi nhóm được lặp liền tối đa 2 lần (`lapMoiNhom`) — riff Slow Blues là hình ngắn lặp lại (Rising Sun E–G ×3), không phải chùm hợp âm.
+- LÁY BLUES vào cú chặn đầu mỗi hợp âm: nốt blue của giọng (trưởng b3 · b5 · b7; thứ b5 · b7) nửa cung dưới bậc 3 / bậc 5 có trong thế chặn. Đô trưởng: C nhận láy đôi Eb+Gb → E+G (sheet ô 25 · 29), G nhận Bb → B, F không có. Mẫu đệm ô 6–16 của sheet KHÔNG có láy — đây là chèn thêm.
+- ĐI BASS CUỐI ĐOẠN: ô cuối trước đoạn mới, tay trái bỏ mẫu boogie, bốn nốt đen quãng tám — gốc rồi ba nốt nửa cung một lên gốc mới (sheet ô 4 · 20: C–E–F–F# vào G; F · F# nảy như ô 32). Gốc mới cách < 4 nửa cung (đi lên) thì không đi.
+
+**Dạo · giang · kết**: khung Twist giữ nguyên (bass boogie, ô đi bass ngược chiều, ô báo, hợp âm kết); ô mô-típ để `soanCauBlues` soạn tay phải. Khuôn nhắc – đáp theo ô 22–31: ô chẵn và ô cuối — phách 1–3 câu thưa 1–2 cú, phách 4 nghỉ; ô lẻ — phách 1–2 thưa, phách 3–4 câu chạy 2–3 cú mỗi phách. Solo KHÔNG lặp mọi nhóm như riff: bản đầu có lặp thì gần như ô nào cũng một nhóm đánh 3 lần liền.
+
+**Số đo** (test `twistBlues.test.ts`; 4 bài 8 hợp âm × 8 phách, câu hát kết ở hợp âm 2 · 4 · 6 · 8, 6 lượt):
+
+| | Twist | Slow Blues (Bản Blues rút gọn, cùng bài, cùng cách đếm) |
+|---|---|---|
+| cú mỗi câu chạy — trung vị (tầm) | 4 (2–7) | 6 (4–13) |
+| tổng nốt trong câu chạy | 610 | 840 |
+| câu có cú đáp vào hợp âm sau | 72/72 | — |
+| câu có riff lặp liền | 16/96 | — |
+| chỗ đổi hợp âm có láy | 108/168 | — |
+
+Solo (Đô trưởng, 4 lượt): 6,4 cú mỗi ô soạn (sheet ô 22–31: 50 cú / 10 ô = 5); nhóm lặp liền 5/188; 4 lượt giang ra 4 bản khác nhau.
+
+**Bẫy đã sập khi làm:** luật cũ của bộ soạn cộng điểm khi câu kết ĐÚNG nốt hợp âm mới — hợp âm ba không có hai nốt cách nhau 1–2 nửa cung (F–A–C), nên đòi nốt dẫn thì cú đáp trống. Khi `noiBuoc` ≥ 1, điểm thưởng đổi sang nốt cách một nốt hợp âm mới 1–2 nửa cung mà không phải chính nốt ấy (+2, không thì −2). Slow Blues không truyền `noiBuoc` → giữ luật cũ.
+
+**Triệu chứng để lùi:** "láy nhiều quá" → chỉ láy ở hợp âm sau câu chạy; "đi bass cuối đoạn nghe phô" → bỏ ba nốt nửa cung, giữ mẫu boogie (Slow Blues bản 2 từng bị chê phô vì nốt nối ngoài giọng); "câu chạy cụt" → nâng mức 1–3 cú mỗi phách; "riff lặp nhàm" → tắt `lapMoiNhom`.
+
+**Chưa đo:** chưa có tai người dùng; nghe trên bài có lời thật (chỗ `breaths` của app) chưa đo; đoạn lặp lại trong Thứ tự chơi dùng cùng một bản câu chạy trong một lượt phát (phần đệm nhường đúng chỗ câu chạy của bản ấy) — đổi bản giữa các lần lặp thì phải cắt phần đệm theo từng lần.

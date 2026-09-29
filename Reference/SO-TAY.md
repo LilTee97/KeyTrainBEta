@@ -4387,3 +4387,60 @@ C5+E5 trên Em9 (bộ lọc chỉ xét nốt đỉnh). Sửa (`boSoanBlues.ts`):
 (`tranhVang`); cú đáp toàn nốt hợp âm mới. Đo hai vòng × 6 lượt: nốt nối chói 15/90 · 12/90 → 0/77 · 0/82; thời điểm có cặp nửa
 cung 11/525 · 10/529 → 0. **Giá trị cũ**: chỉ xét "trong giọng", đáp chỉ xét nốt đỉnh. **Triệu chứng để lùi**: "tay trái nối ít,
 nghe đều đều" (13/90 · 8/90 chỗ đổi hợp âm mất nốt nối) → bỏ điều kiện chồng nửa cung với tay phải trước.
+
+## Bước — Twist: Bộ Soạn Blues soạn câu solo và câu chạy lúc đệm hát, thành MẶC ĐỊNH (29/9/2026)
+
+Người dùng: *"Làm một nút nhỏ trong điệu Twist để: dùng bộ soạn Blues để soạn các câu solo và các câu fill cho điệu Twist … điều
+chỉnh câu cho khớp tiết tấu của điệu nút Twist … học từ điệu Slow Blues để chèn các câu chạy nốt vào lúc đệm hát … Các câu chạy
+nốt nên ít nốt hơn trong Slow Blues nhưng vẫn giữ đủ kết cấu … chủ yếu đặt ở cuối câu hát và nên có nốt dẫn qua hợp âm kế tiếp …
+chèn những kỹ thuật khác của Blues vào tiết tấu đệm hát"*. Dựng làm ô tick "Twist: Bộ Soạn Blues (nghe thử)"; cùng ngày: *"Hãy biến
+nút Twist: bộ soạn Blues (như trong ảnh) thành mặc định cho điệu Twist"* → gỡ ô tick, cờ `twistBlues` và trường lưu bài (bài lưu
+trong lúc có ô tick còn trường ấy — bộ đọc bỏ qua).
+
+**Đổi gì:**
+- `boSoanBlues.ts` — `chayTwistBlues`: câu chạy cuối câu hát, láy blues vào cú chặn, đi bass cuối đoạn; trả cả phần đệm đã nhường
+  chỗ. `soanCauBlues` thêm `chiNguon` · `noiBuoc` · `notToiDa` · `lapMoiNhom` — Slow Blues không truyền cái nào, hành vi giữ nguyên.
+- `twistSolo.ts` — dạo · giang · kết: khung Twist giữ nguyên, tay phải ô câu nhạc do `soanCauBlues` soạn. Bộ mô-típ 27/9 (`calls` /
+  `answers` / `motif` / `grace`) đã XOÁ.
+- `ReharmHome.tsx` — nhánh Twist của `buildPass`: phần đệm = `chayTwistBlues(...).backing`, câu fill = `.events` (trước đây Twist
+  không đi đường câu fill nào trừ CP Lick). CP Lick bật thì CP Lick thắng như cũ.
+- Hồ sơ: `Reference/TWIST-BOOGIE.md` mục 7 (tóm tắt), `Reference/TWIST-SOLO-SOURCE.md` mục "Bộ Soạn Blues — MẶC ĐỊNH của Twist"
+  (số đo đủ), `Reference/BLUES-CLAUDE.md` (tuỳ chọn mới của bộ soạn).
+
+**Khớp nhịp — số đo:** một nhóm ba = MỘT PHÁCH swing của Twist (móc = ⅓ phách). Rockhouse là 4/4 lưới chùm ba: 735/810 cú đúng
+lưới. Rising Sun chép theo thời gian thật: 25/185 cú đúng lưới → không dùng (`chiNguon: 'ray'`).
+
+**Số đo đầu ra** (test `twistBlues.test.ts`; 4 bài × 6 lượt, 96 câu chạy; Slow Blues = Bản Blues rút gọn cùng bài, cùng cách đếm):
+cú mỗi câu chạy trung vị 4 (2–7) · Slow Blues 6 (4–13); tổng nốt 610 · 840; cú đáp vào phách 1 hợp âm sau 72/72, nốt cuối câu cách
+cú đáp 1–2 nửa cung; riff lặp 16/96 câu; láy 108/168 chỗ đổi hợp âm. Solo Đô trưởng 4 lượt: 6,4 cú mỗi ô (sheet ô 22–31: 5), nhóm
+lặp liền 5/188.
+
+### Đòi nốt dẫn thì không được thưởng câu kết ĐÚNG nốt hợp âm mới
+
+Luật cũ của `soanCauBlues` (lượt 11) cộng +1 khi nốt cuối câu là nốt của hợp âm mới. Hợp âm ba không có hai nốt cách nhau 1–2 nửa
+cung (F–A–C), nên câu kết đúng nốt hợp âm mới thì KHÔNG còn cú đáp nào đạt bước 1–2 → cú đáp trống. Bản đầu (bước 0–2) thì ngược
+lại: nhiều câu kết bằng chính nốt đáp (81 → 81) — vào sớm, không phải nốt dẫn. Sửa: khi `noiBuoc[0]` ≥ 1, thưởng nốt cách một nốt
+hợp âm mới 1–2 nửa cung mà không phải chính nốt ấy (+2, không thì −2). **Giá trị cũ**: `noiBuoc` là một số (trần 5), sàn 0.
+
+### Riff chùm hợp âm của Ray không phải "câu chạy nốt"; riff ở solo thì nhàm
+
+Bản đầu lấy cả nhóm riff chùm 4 nốt của Ray (76+79+81+84 đánh 4 lần) — nghe như đệm dày. `notToiDa: 2` giữ 141/163 nhóm nốt đơn ·
+60/80 bè đôi, còn 15/141 nhóm riff chùm. Riff kiểu Slow Blues (Rising Sun E–G ×3) là HÌNH NGẮN LẶP LẠI → `lapMoiNhom` cho mọi nhóm
+lặp liền tối đa 2 lần — CHỈ ở câu chạy lúc đệm hát. Bật ở solo thì gần như ô nào cũng một nhóm ×3 → bỏ ở solo.
+
+### Test solo Twist quá 5 giây khi chạy chung
+
+144 lần soạn (12 giọng × 3 đoạn × 4 lượt): chạy riêng 1,8 s, chạy chung cả bộ quá 5 s → `{ timeout: 30_000 }` như các test Blues.
+Khẳng định riêng của bộ mô-típ cũ (một nét dời nguyên qua 12 giọng, bè đôi > 60%, pickup nối ô 3/5/7/9, ô 2 = ô 6) đã bỏ khỏi
+`twistSolo.test.ts`.
+
+**Test**: 2.914 qua / 7 đỏ — đúng 7 đỏ cũ (`phraseAcrossBar`, `daoTruongLinhNhi`, `handSplitAudit`, `leftArpeggioAboveRoot`,
+`sietHopAm`, 2 × `tuyenSolo`). `tsc` sạch.
+
+**Triệu chứng để lùi:** "láy nhiều quá" → chỉ láy ở hợp âm sau câu chạy; "đi bass cuối đoạn nghe phô" → bỏ ba nốt nửa cung, giữ mẫu
+boogie; "câu chạy cụt" → nâng mức 1–3 cú mỗi phách; "riff lặp nhàm" → tắt `lapMoiNhom`; muốn về Twist cũ (không câu chạy, solo
+mô-típ bè đôi) → khôi phục `twistSolo.ts` và nhánh Twist của `buildPass` từ commit 291d555.
+
+**Chưa đo:** chưa nghe trên bài có lời thật (chỗ `breaths` của app); đoạn lặp lại trong Thứ tự chơi dùng cùng một bản câu chạy trong
+một lượt phát; khi thứ tự chơi không theo thứ tự nguồn, cú đáp của câu chạy cuối đoạn có thể rơi vào đầu đoạn NGUỒN kế tiếp chứ không
+phải đoạn thật sự phát sau (Claude suy từ cách `buildArrangedSong` cắt câu fill theo đoạn nguồn — chưa đo).

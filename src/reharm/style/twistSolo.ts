@@ -1,21 +1,9 @@
 import { normalizePitchClass, pitchClassName } from '../../shared/musicTheory/pitch'
+import { parseChordInput } from '../input/chordInputParser'
+import type { ParsedChord } from '../types'
+import { soanCauBlues } from './boSoanBlues'
 import type { PhraseSection, PhraseSectionOptions } from './phraseSection'
 import type { TimelineEvent } from './types'
-
-// Vốn câu mới, theo cách phát triển bè đôi/nhắc–đáp của ô 22–31.
-// Quãng tính từ TONIC bài, không đổi theo từng root bass. Xem TWIST-SOLO-SOURCE.md.
-const calls = [
-  [[7, 12], [4, 7], [5, 9], [3, 6], [4, 7]],
-  [[7, 12], [5, 9], [4, 7], [3, 6], [4, 7]],
-  [[7, 12], [4, 7], [3, 6], [4, 7], [0]],
-  [[7, 12], [3, 6], [4, 7], [5, 9], [4, 7]],
-] as const
-const answers = [
-  [[0], [5, 9], [4, 7], [3, 6], [4, 7]],
-  [[4, 7], [5, 9], [7, 12], [4, 7], [0]],
-  [[7, 12], [5, 9], [3, 6], [4, 7], [0]],
-  [[0], [3, 6], [4, 7], [5, 9], [4, 7]],
-] as const
 
 // Warp cả onset lẫn endpoint: tie qua vạch ô vẫn là MỘT tiếng.
 const swing = (beat: number) => {
@@ -24,7 +12,11 @@ const swing = (beat: number) => {
   return whole + (fraction <= .5 ? fraction * 4 / 3 : 2 / 3 + (fraction - .5) * 2 / 3)
 }
 
-/** Câu Blues mới; LH boogie và RH solo cùng một bản soạn, không chồng RH đệm. */
+/*
+  Dạo · giang · kết Twist. MẶC ĐỊNH từ 29/9/2026 (người dùng: "Hãy biến nút Twist: bộ soạn Blues … thành mặc định cho điệu Twist"):
+  khung Twist (bass boogie, ô đi bass ngược chiều, ô báo, hợp âm kết) + tay phải các ô câu nhạc do Bộ Soạn Blues soạn (`soanCauBlues`).
+  Cũ (27/9 – 29/9): bốn cặp mô-típ bè đôi nhắc–đáp dựng tay (`calls` / `answers`) — khôi phục từ commit 291d555.
+*/
 export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   const empty = (reason: string): PhraseSection => ({
     events: [], lengthBeats: 0, chords: [], beatsEach: [], unavailableReason: reason,
@@ -34,7 +26,8 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   const minor = scale === 'minor'
   const { kind } = options
   const take = Math.abs(Math.trunc(options.take ?? 0))
-  const variant = take % calls.length
+  // Hai biến thể đường giảm tay phải ở ô đi bass và câu kết, đổi theo lượt.
+  const lech = take % 2
   const range = options.range ?? { low: 60, high: 84 }
   // Chuyển cả câu theo quãng tám, không bẻ từng nốt làm hỏng nét đi bè đôi.
   const bases = Array.from({ length: 10 }, (_, i) => 12 * i + tonic)
@@ -52,33 +45,25 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   }
   const right = (at: number, duration: number, offsets: readonly number[], velocity = 88) =>
     emit('right', at, duration, offsets.map(n => base + color(n)), velocity)
-  const grace = (at: number) => {
-    const end = swing(at)
-    events.push({ hand: 'right', startBeat: end - .12, durationBeats: .12,
-      notes: [base + color(3), base + 6], velocity: 67, grace: true })
-  }
-  const bass = (bar: number, degree: number, count = 8) => {
+  const bass = (bar: number, degree: number) => {
     const root = 36 + normalizePitchClass(tonic + degree)
     const third = minor && degree === 0 ? 3 : 4
     const line = [0, 0, third - 1, third, 7, 0, 9, 7]
-    for (let i = 0; i < count; i++) emit('left', bar * 4 + i / 2, .5, [root + line[i]!], i % 2 ? 68 : 76)
+    for (let i = 0; i < 8; i++) emit('left', bar * 4 + i / 2, .5, [root + line[i]!], i % 2 ? 68 : 76)
   }
   const harmony = (degree: number) => `${name(tonic + degree)}${degree === 0 ? minor ? 'm6' : '6' : degree === 5 ? '9' : '7'}`
   const barChord = (symbol: string, beats = 4) => { chords.push(symbol); beatsEach.push(beats) }
-  const motif = (bar: number, answer: boolean, tiedIn: boolean, pickup: boolean, development = 0) => {
-    const index = (variant + development) % calls.length
-    const notes = answer ? answers[index]! : calls[index]!
-    const times = [answer ? .5 : 0, 1, 1.5, 2, 2.5]
-    notes.forEach((pair, i) => {
-      if (i === 0 && tiedIn) return
-      if (i === 0 && answer && pair[0] === 4) grace(bar * 4 + times[i]!)
-      right(bar * 4 + times[i]!, i === 0 && !answer ? 1 : .5, pair, answer ? 84 : 90)
-    })
-    if (pickup) right(bar * 4 + 3.5, 1.5, [7, 12], 85)
+  // Ô câu nhạc: bass boogie đủ 8 tiếng; tay phải gom lại cho `soanCauBlues` soạn ở cuối hàm.
+  const soan: { chord: ParsedChord; start: number; beats: number }[] = []
+  const oCau = (bar: number, degree: number) => {
+    barChord(harmony(degree))
+    bass(bar, degree)
+    const chord = parseChordInput(harmony(degree)).chords[0]
+    if (chord) soan.push({ chord, start: bar * 4, beats: 4 })
   }
   const walk = (bar: number) => {
     // Chuyển động ngược RH giảm/LH tăng từ ô 4,32; nhịp và đuôi được soạn lại.
-    const top = variant % 2 ? [12, 9, 10, 8] : [12, 10, 9, 8]
+    const top = lech ? [12, 9, 10, 8] : [12, 10, 9, 8]
     const low = [0, minor ? 3 : 4, 5, 6]
     for (let i = 0; i < 4; i++) {
       emit('left', bar * 4 + i, i > 1 ? .65 : 1, [36 + tonic + low[i]!], 77)
@@ -106,39 +91,21 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   }
 
   if (kind === 'intro') {
-    for (let bar = 0; bar < 2; bar++) {
-      const degree = bar === 0 ? 0 : 5
-      barChord(harmony(degree))
-      bass(bar, degree, 5)
-      const word = bar === 0 ? calls[variant]! : answers[variant]!
-      for (let i = 0; i < 3; i++) right(bar * 4 + i, i === 2 ? .4 : .5, word[i]!)
-      grace(bar * 4 + 2.5)
-      const tail = variant % 2 ? [4, 9, 7] : [4, 7, 9]
-      tail.forEach((n, i) => right(bar * 4 + 2.5 + i / 2, .5, [n], 80 + i * 3))
-    }
+    oCau(0, 0)
+    oCau(1, 5)
     walk(2)
     // Slash names follow the chromatic bass; never label the whole walk tonic.
     for (const degree of [0, minor ? 3 : 4, 5, 6]) barChord(`${name(tonic)}${minor ? 'm7' : '7'}/${name(tonic + degree)}`, 1)
     cue(3)
   } else if (kind === 'interlude') {
-    const roots = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5]
-    roots.forEach((degree, bar) => {
-      barChord(harmony(degree))
-      bass(bar, degree)
-      // Nhắc rồi đáp: cùng hạt nhân trên I/IV, phát triển sang biến thể khác ở V/IV.
-      motif(bar, bar % 2 === 1, bar > 0 && bar % 2 === 0, bar % 2 === 1 && bar < 8, bar >= 8 ? 1 : 0)
-    })
-    barChord(harmony(0))
-    bass(10, 0)
-    motif(10, false, false, false, 2)
+    // Khung 12 ô Boogie: I I I I | IV IV | I I | V IV | I | báo.
+    [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0].forEach((degree, bar) => oCau(bar, degree))
     cue(11)
   } else {
-    barChord(harmony(0))
-    bass(0, 0)
-    motif(0, false, false, false)
+    oCau(0, 0)
     walk(1)
     for (const degree of [0, minor ? 3 : 4, 5, 6]) barChord(`${name(tonic)}${minor ? 'm7' : '7'}/${name(tonic + degree)}`, 1)
-    const upper = variant % 2 ? [9, 7, 5, 0] : [7, 5, 3, 0]
+    const upper = lech ? [9, 7, 5, 0] : [7, 5, 3, 0]
     const lower = [7, 9, 11, 12]
     for (let i = 0; i < 4; i++) {
       right(8 + i / 2, .5, [upper[i]!], 84 - i * 3)
@@ -151,6 +118,26 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
     emit('right', 11, 5, [2, minor ? 3 : 4, 7, minor ? 9 : 10].map(n => base + n), 84)
     barChord(`${name(tonic)}${minor ? 'm6/9' : '9'}`, 5)
   }
+  /*
+    Tay phải ô câu nhạc: nhóm ba Rockhouse, một nhóm = một phách swing (móc = ⅓ phách — Rockhouse là 4/4 lưới chùm ba, 735/810 cú
+    đúng lưới). Mỗi cú tối đa 2 nốt (nốt đơn · bè đôi như sheet Twist). Khuôn nhắc – đáp theo sheet ô 22–31 (câu nhắc thở ở phách 4;
+    câu đáp chạy nửa sau ô sang ô kế): ô chẵn và ô cuối — phách 1–3 câu thưa 1–2 cú, phách 4 nghỉ; ô lẻ — phách 1–2 thưa, phách 3–4
+    câu chạy 2–3 cú mỗi phách. Mức cú là biên soạn của Claude — đo Đô trưởng 4 lượt: 6,4 cú mỗi ô (sheet: 50 cú / 10 ô = 5).
+    Solo KHÔNG lặp mọi nhóm như riff (`lapMoiNhom` chỉ cho câu chạy lúc đệm hát): bản thử có lặp thì gần như ô nào cũng một nhóm ×3.
+  */
+  let iTruoc = -1, k = 0
+  const r = soanCauBlues(soan, {
+    key: options.key, take, mocDon: 1 / 3, uuTien: 'ray', chiNguon: 'ray', tam: [range.low, range.high], day: () => false, notToiDa: 2,
+    loai: (_, i) => {
+      k = i === iTruoc ? k + 1 : 0
+      iTruoc = i
+      if (i % 2 === 0 || i === soan.length - 1) return k === 3 ? 'nghi' : 'thua'
+      return k >= 2 ? 'day' : 'thua'
+    },
+    muc: { thua: [1, 2], day: [2, 3] }, luc: (manh, n) => (manh ? 90 : n >= 3 ? 84 : 80),
+    bamHop: true, noiHop: true, doiLuot: 2.5,
+  })
+  events.push(...r.events)
   if (events.some(e => e.hand === 'right' && e.notes.some(n => n < range.low || n > range.high))) {
     return empty('Tầm tay phải không đủ cho thế bấm báo vào của giọng này.')
   }
@@ -163,9 +150,8 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   })
   return {
     events, chords, beatsEach: swungBeatsEach, lengthBeats: kind === 'interlude' ? 48 : 16,
-    sourcePhrase: { id: 'twist-boogie-blues', song: 'Boogie Woogie Basics',
-      fromBar: kind === 'intro' ? 2 : kind === 'interlude' ? 22 : 32,
-      barCount: kind === 'intro' ? 4 : kind === 'interlude' ? 10 : 3, method: 'motif-development' },
-    adaptationNote: `Twist Blues · câu mới ${variant + 1}/4 từ bè đôi, nhắc–đáp và khoảng nghỉ Boogie Woogie; swing 2:1.${minor ? ' Giọng thứ là chuyển dụng Dorian Blues, nguồn chỉ có tâm C trưởng.' : ''}`,
+    sourcePhrase: { id: 'twist-bo-soan-blues', song: 'Rockhouse · Bộ Soạn Blues', fromBar: 1, barCount: soan.length, method: 'source-variation' },
+    adaptationNote: `Twist · Bộ Soạn Blues: nhóm ba Rockhouse, một nhóm = một phách swing · nhóm: ${r.nguon.map(x => x.replace('Rockhouse:', '')).join(' ')}.` +
+      (minor ? ' Giọng thứ là chuyển dụng: câu Rockhouse đặt ở giọng trưởng tương đối.' : ''),
   }
 }

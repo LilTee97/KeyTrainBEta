@@ -11,8 +11,11 @@ const make = (kind: PhraseSectionOptions['kind'], tonic = 0, take = 0, extra: Pa
     beatsPerChord: 8, opening: null, dropRoot: false, solo: () => { throw Error('Legacy solo called') },
     take, range: { low: 60, high: 84 }, ...extra })!
 
-describe('Twist Blues composed phrases', () => {
-  it('renders all three sections, transposes whole contours in 12 keys, and keeps hands/gates/rests valid', () => {
+// Soạn 144 đoạn bằng Bộ Soạn Blues: chạy riêng 1,8 s, chạy chung cả bộ quá 5 s — nới thời hạn như `soanNhomBa.test.ts`.
+describe('Twist Blues composed phrases', { timeout: 30_000 }, () => {
+  // 29/9/2026: tay phải do Bộ Soạn Blues soạn (mặc định) — câu chọn theo giọng, không còn cùng một nét dời nguyên qua 12 giọng như
+  // bộ mô-típ cũ; các khẳng định riêng của bộ mô-típ (bè đôi > 60%, pickup nối ô 3/5/7/9, ô 2 = ô 6) đã bỏ. Xem twistBlues.test.ts.
+  it('renders all three sections in 12 keys and keeps hands/gates/rests valid', () => {
     for (const kind of ['intro', 'interlude', 'outro'] as const) {
       const source = make(kind)
       expect(source.lengthBeats).toBe(kind === 'interlude' ? 48 : 16)
@@ -36,28 +39,13 @@ describe('Twist Blues composed phrases', () => {
             expect(later.notes.some(n => e.notes.includes(n))).toBe(false)
           }
         }
-        const origin = make(kind, 0, take)
-        expect(made.events.map(e => [e.startBeat, e.durationBeats, e.hand])).toEqual(origin.events.map(e => [e.startBeat, e.durationBeats, e.hand]))
-        made.events.forEach((e, i) => expect(e.notes.map(n => ((n - tonic) % 12 + 12) % 12))
-          .toEqual(origin.events[i]!.notes.map(n => n % 12)))
       }
     }
   })
 
-  it('develops repeated tonic motifs over I/IV/V, preserves tied pickups, and changes takes reproducibly', () => {
+  it('keeps the 12-bar I/IV/V frame and changes takes reproducibly', () => {
     const phrase = make('interlude')
     expect(phrase.chords).toEqual(['C6', 'C6', 'C6', 'C6', 'F9', 'F9', 'C6', 'C6', 'G7', 'F9', 'C6', 'G7'])
-    const right = phrase.events.filter(e => e.hand === 'right')
-    expect(right.filter(e => e.notes.length === 2).length / right.length).toBeGreaterThan(.6)
-    for (const start of [8, 16, 24, 32]) {
-      expect(right.some(e => Math.abs(e.startBeat - start) < 1e-8)).toBe(false)
-      const tied = right.find(e => e.startBeat < start && e.startBeat + e.durationBeats > start)!
-      expect(tied.notes).toEqual([67, 72])
-      expect(tied.startBeat + tied.durationBeats).toBeCloseTo(start + 1)
-    }
-    // Same melodic answer over C and F; no per-chord root transposition.
-    const barNotes = (bar: number) => right.filter(e => e.startBeat >= bar * 4 && e.startBeat < bar * 4 + 4).map(e => e.notes)
-    expect(barNotes(1)).toEqual(barNotes(5))
     expect(new Set(Array.from({ length: 4 }, (_, take) => JSON.stringify(make('interlude', 0, take).events))).size).toBe(4)
     expect(make('interlude', 0, 2)).toEqual(make('interlude', 0, 2))
     expect(make('interlude', 0, 0, { beatsPerChord: 4 })).toEqual(phrase)

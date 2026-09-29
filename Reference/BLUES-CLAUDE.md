@@ -667,3 +667,10 @@ từng khung, mọi ô thân có câu + bass phách 1 và 4 (12 giọng × 2 × 
 - Lượt 1 (bị bác "nghe chưa ổn"): cell 12 móc đơn (hợp âm 12 phách), tay phải ở phách 3 và 6; kho 49 câu lick cắt bỏ riff;
   mỗi ô chêm một câu rời. Số đo lượt 1 còn đúng: nốt câu Rockhouse so gốc hợp âm 1 22% · 5 19% · 6 12% · 3 10% · 2 9% ·
   4 7% · b7 6% · b3 6% (74 câu, 503 nốt) — ngũ cung trưởng của hợp âm 72%.
+
+## Bộ Soạn Blues phục vụ nút Twist (29/9/2026 — mặc định của Twist)
+
+`soanCauBlues` thêm bốn tuỳ chọn, Slow Blues không truyền cái nào (hành vi giữ nguyên): `chiNguon` (chỉ một sheet), `noiBuoc`
+([ít nhất, nhiều nhất] nửa cung từ nốt cuối câu tới cú đáp; cũ: chỉ trần 5), `notToiDa` (số nốt mỗi cú), `lapMoiNhom` (mọi nhóm lặp
+như riff). `chayTwistBlues` soạn câu chạy lúc đệm hát cho Twist. Hồ sơ và số đo: `Reference/TWIST-SOLO-SOURCE.md`, mục "Bộ Soạn Blues —
+MẶC ĐỊNH của Twist"; tóm tắt ở `Reference/TWIST-BOOGIE.md` mục 7.

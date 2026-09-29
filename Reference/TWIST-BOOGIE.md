@@ -2,7 +2,7 @@
 
 Ngày triển khai: 26/9/2026. Người dùng yêu cầu phân tích sheet
 `D:/PianoBrain/video/Linh_Nhi/boogie woogie-Linh Nhi.mxl`, lấy tiết tấu đệm,
-tạo nút riêng và đặt tên **Twist**. Trạng thái: đã dựng để nghe thử, chưa nghe duyệt.
+tạo nút riêng và đặt tên **Twist**. Trạng thái: đã dựng để nghe thử, chưa nghe duyệt. Câu solo và câu chạy lúc đệm hát: Bộ Soạn Blues, mặc định từ 29/9/2026 (mục 7).
 
 ## 1. Nguồn và cách đo
 
@@ -134,7 +134,8 @@ C6/F9/G7. Người dùng vẫn chọn màu hợp âm theo cơ chế hiện tại
 - Giữ nghỉ RH khi hợp âm đổi giữa ô: thêm riêng `twist` vào `KEEP_RH_RESTS`,
   tránh renderer tự chèn cú chặn ngoài hai mốc đo được.
 - Lượt trích tiết tấu ban đầu chưa có solo riêng. Từ 27/9/2026, Twist có
-  bộ câu Blues riêng cho dạo/giang/kết; xem `TWIST-SOLO-SOURCE.md`.
+  bộ câu Blues riêng cho dạo/giang/kết; xem `TWIST-SOLO-SOURCE.md`. Từ 29/9/2026 thay bằng
+  Bộ Soạn Blues (mục 7).
 
 ## 5. Nghe thử và kiểm tra
 
@@ -180,3 +181,33 @@ nguồn. Giữ màu đã chọn đủ 8 phách (hoặc 4 khi tick); không tự 
 add2→maj7. Điệu khác tiếp tục dùng lựa chọn xoay màu hiện có. Kiểm thử đi
 từ lời ChordPro → tái hòa âm → neo lời/biên đoạn → timeline hai tay,
 bao gồm cùng gốc lặp lại và C/G/D như đoạn người dùng báo.
+
+## 7. Bộ Soạn Blues — mặc định từ 29/9/2026
+
+Người dùng: *"dùng bộ soạn Blues để soạn các câu solo và các câu fill cho điệu Twist … điều chỉnh câu cho khớp tiết tấu của
+điệu nút Twist … chèn các câu chạy nốt vào lúc đệm hát … ít nốt hơn trong Slow Blues nhưng vẫn giữ đủ kết cấu … chủ yếu đặt ở
+cuối câu hát và nên có nốt dẫn qua hợp âm kế tiếp … chèn những kỹ thuật khác của Blues vào tiết tấu đệm hát"*. Dựng làm ô tick
+nghe thử, cùng ngày người dùng bảo *"biến nút Twist: bộ soạn Blues thành mặc định cho điệu Twist"* → gỡ ô tick; Twist luôn
+chạy đường này. Mẫu đệm hai tay ở mục 2–6 KHÔNG đổi.
+
+**Khớp nhịp:** Bộ Soạn Blues soạn theo nhóm ba; ở Twist một nhóm ba = một phách swing (móc = ⅓ phách). Rockhouse là 4/4 lưới
+chùm ba — 735/810 cú đúng lưới — nên đặt vào swing 2:1 của Twist là khớp; Rising Sun (25/185 cú đúng lưới) không dùng. Mỗi
+cú tối đa 2 nốt: nốt đơn và bè đôi như tay phải solo của sheet.
+
+**Lúc đệm hát** (`chayTwistBlues` trong `style/boSoanBlues.ts`; con số là biên soạn của Claude):
+- câu chạy ở 2 phách cuối hợp âm hết câu hát (1/3 số lần 3 phách), 1–3 cú mỗi phách; nốt cuối câu cách cú đáp 1–2 nửa cung
+  (nốt dẫn); cú đáp đúng phách 1 hợp âm sau, vang cùng cú chặn tay phải; trong lúc chạy tay phải thôi cú chặn 3&;
+- riff = một hình ngắn lặp liền (tối đa 2 lần), như riff Slow Blues;
+- láy blues (nốt blue của giọng nửa cung dưới bậc 3 / 5 của cú chặn đầu hợp âm): C nhận Eb+Gb → E+G, G nhận Bb → B, F không;
+- đi bass cuối đoạn: ô cuối trước đoạn mới, bốn nốt đen quãng tám, ba nốt cuối nửa cung một lên gốc mới (sheet ô 4 · 20 · 32).
+
+**Dạo · giang · kết** (`twistSolo.ts`): khung giữ nguyên (bass boogie, ô đi bass ngược chiều, ô báo, hợp âm kết); tay phải
+các ô câu nhạc do Bộ Soạn Blues soạn theo khuôn nhắc – đáp của ô 22–31.
+
+**Số đo** (4 bài × 6 lượt, 96 câu chạy; so Slow Blues Bản Blues rút gọn cùng bài, cùng cách đếm): cú mỗi câu chạy trung vị
+4 (2–7) · Slow Blues 6 (4–13); tổng nốt 610 · 840; cú đáp vào hợp âm sau 72/72; riff lặp 16/96 câu; láy 108/168 chỗ đổi hợp
+âm. Solo Đô trưởng 4 lượt: 6,4 cú mỗi ô (sheet ô 22–31: 5). Chi tiết, bẫy đã sập, triệu chứng để lùi: `TWIST-SOLO-SOURCE.md`
+mục "Bộ Soạn Blues — MẶC ĐỊNH của Twist".
+
+**Cũ — để lùi:** trước 29/9 Twist không có câu chạy lúc đệm hát, dạo · giang · kết là bốn cặp mô-típ bè đôi dựng tay
+(`calls` / `answers`) — khôi phục từ commit 291d555.

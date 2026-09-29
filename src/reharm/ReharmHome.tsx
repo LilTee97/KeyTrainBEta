@@ -103,7 +103,7 @@ import { normalizePitchClass, pitchClassName } from '../shared/musicTheory/pitch
 import { hoCuaDieu } from './style/hoDieu'
 import { slowRockSoanLinhNhi } from './style/linhNhiSolo'
 import { chayLinhNhi } from './style/soanSlowRockLinhNhi'
-import { chayBluesClaude, chayBlueSun, nhuongTayPhai, nhuongTayTrai } from './style/boSoanBlues'
+import { chayBluesClaude, chayBlueSun, chayTwistBlues, nhuongTayPhai, nhuongTayTrai } from './style/boSoanBlues'
 import { bluesChoice, prefersBlues, prefersSingleScale, suggestScales } from './style/phraseScale'
 import {
   LONG_INTERLUDE_BARS,
@@ -3379,7 +3379,14 @@ export function ReharmHome() {
       const cpPass = cpLick ? cpPlan(pass) : null
       if (isTwist) {
         const spans = mainChordSpans(withPassing, chordBeats)
-        return buildBossaSoloSong(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
+        /*
+          Bộ Soạn Blues — MẶC ĐỊNH của Twist từ 29/9/2026 (ô tick "Twist: Bộ Soạn Blues" đã gộp vào): lúc đệm hát chèn câu chạy cuối câu
+          hát, láy blues vào cú chặn, đi bass cuối đoạn (`chayTwistBlues`); dạo · giang · kết soạn trong `twistSolo`. Một bản cho cả lượt
+          phát: phần đệm nhường đúng chỗ câu chạy của chính bản ấy. Cũ: Twist không có câu fill lúc đệm hát — khôi phục từ commit 291d555.
+        */
+        const blues = cpPass ? null : chayTwistBlues(withPassing, { key: twistSoloKey, beatsPerChord: chordBeats,
+          take: pass + phraseSpin, breaths, sectionEnds: transitionAt, backing: accompaniment })
+        return buildBossaSoloSong(cpPass?.backing ?? blues?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
           (kind, take, nextStart) => buildPhraseSection({
             kind, key: twistSoloKey, style, bpm, dropRoot,
             // Twist: solo giữ ô 4 phách; tick một/hai lần chỉ đổi thời lượng đệm hát.
@@ -3388,7 +3395,7 @@ export function ReharmHome() {
             // pass đã mã hóa playSpin; cộng cả hai sẽ thành bước 528, luôn trùng modulo 4.
             take: phraseSpin + playSpin.current + take,
             range: { low: 60, high: 84 }, solo: () => [],
-          }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? [], true)
+          }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? blues?.events ?? [], true)
       }
       if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
       if (bossaSoloOn || cpFullOn || cpComposeOn) {
@@ -3696,6 +3703,8 @@ export function ReharmHome() {
       backingFor,
       isTwist,
       twistSoloKey,
+      breaths,
+      transitionAt,
       lnDao,
       lnSau,
       lnSlowRock,
@@ -5368,7 +5377,7 @@ export function ReharmHome() {
               ` Hợp âm ${p.mainIndex + 1}: CP Run advanced từ ${p.source.song}, ô ${p.source.bar} (${p.source.notes.length} nốt tay phải, ${p.end-p.start} phách).`).join('')}
           </p>}
           {isTwist && <p className="text-sm text-pink-300">
-            Twist Blues: dạo 4 ô · giang 12 ô mỗi lượt · kết 4 ô. Tay trái bass Boogie, tay phải bè đôi và câu nhắc–đáp.
+            Twist Blues: dạo 4 ô · giang 12 ô mỗi lượt · kết 4 ô. Tay trái bass Boogie, tay phải do Bộ Soạn Blues soạn (nhắc–đáp, nốt đơn · bè đôi). Đệm hát: câu chạy cuối câu hát dẫn vào hợp âm sau, láy blues, đi bass cuối đoạn.
             {' '}Phát cả bài để đổi câu mới; tick một/hai lần chỉ áp dụng đệm hát. Tầm tay phải C4–C6.
           </p>}
           {!isTwist && <>
@@ -5437,7 +5446,7 @@ export function ReharmHome() {
             <p key={warning} role="status" className="text-sm text-amber-400">{warning}</p>
           ))}
           {bossaSoloOn && !cpFullOn && !cpComposeOn && <p className="text-xs text-amber-400">Bossa CP thứ: đã mở lại dạo · giang · kết. Soạn mới mỗi lần phát; khung đệm hát giữ nguyên ngoài câu CP Lick.</p>}
-          {isTwist ? <p className="text-xs text-dim">Theo sheet Boogie Woogie: phối màu trưởng với nốt Blues, swing 2:1. Giọng thứ là bản chuyển dụng; câu mới đang chờ nghe duyệt.</p> : thaySolo ? (
+          {isTwist ? <p className="text-xs text-dim">Theo sheet Boogie Woogie: phối màu trưởng với nốt Blues, swing 2:1. Giọng thứ là bản chuyển dụng. Câu solo và câu chạy: Bộ Soạn Blues (nhóm ba Rockhouse, một nhóm = một phách swing).</p> : thaySolo ? (
             <p className="text-[10px] leading-snug text-dim">
               Nốt dạo / giang / kết theo sheet thầy, không dùng gam hay nguồn nốt
               tự chọn.

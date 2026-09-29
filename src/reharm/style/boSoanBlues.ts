@@ -533,6 +533,90 @@ export function nhuongTayPhai<T extends Su2>(backing: readonly T[], fill: readon
 }
 
 /*
+  TWIST · BỘ SOẠN BLUES — ĐỆM HÁT (mặc định của Twist từ 29/9/2026; từng là ô tick nghe thử cùng ngày).
+  Người dùng: *"dùng bộ soạn Blues để soạn các câu solo và các câu fill cho điệu Twist … Hãy học từ điệu Slow Blues để chèn các câu chạy nốt vào lúc đệm hát và chèn cho khớp với nhịp phách của điệu Twist
+  … Các câu chạy nốt nên ít nốt hơn trong Slow Blues nhưng vẫn giữ đủ kết cấu. Các chỗ chạy nốt nên thưa ra, chủ yếu đặt ở cuối câu hát
+  và nên có nốt dẫn qua hợp âm kế tiếp. Ngoài các câu chạy nốt thì cũng hãy chèn những kỹ thuật khác của Blues vào tiết tấu đệm hát"*.
+
+  NHỊP: một nhóm ba = MỘT PHÁCH swing của Twist (móc = ⅓ phách). Rockhouse vốn là 4/4 lưới chùm ba (♩ 88): 735/810 cú đúng lưới, và
+  swing 2:1 của Twist đặt tiếng "và" ở ⅔ phách = móc thứ ba của nhóm. Rising Sun chép theo thời gian thật (25/185 cú đúng lưới) — bỏ.
+
+  Ba kỹ thuật (chỗ đặt theo lối "Bản Blues rút gọn" của Slow Blues; con số là BIÊN SOẠN của Claude, không phải số đo):
+   · CÂU CHẠY cuối câu hát: 2 phách cuối hợp âm hết câu (1/3 số lần 3 phách), 1–3 cú mỗi phách — Slow Blues: 4–7 cú trong MỘT nhóm
+     ba. Nốt cuối câu cách cú đáp ≤ 2 nửa cung (nốt dẫn); cú đáp đúng phách 1 hợp âm sau, toàn nốt hợp âm mới, vang cùng cú chặn tay
+     phải của mẫu đệm. Chưa dán lời → mỗi 16 phách một câu. Trong lúc chạy tay phải thôi chặn (cú 3& ô cuối).
+   · LÁY BLUES vào cú chặn đầu mỗi hợp âm: nốt blue của giọng (trưởng b3 · b5 · b7; thứ b5 · b7) nửa cung dưới bậc 3 / bậc 5 có trong
+     thế chặn — sheet Boogie ô 25 · 29 láy [Eb,Gb] → [E,G], ô 1 · 2 · 17 Eb → E. Mẫu đệm ô 6–16 của sheet KHÔNG có láy: chèn thêm.
+   · ĐI BASS CUỐI ĐOẠN: ô cuối trước đoạn mới, tay trái bỏ mẫu boogie, đi quãng tám bốn nốt đen — gốc rồi ba nốt nửa cung lên gốc mới
+     (sheet ô 4 · 20: C–E–F–F# vào G; ô 32: F · F# nảy). Gốc mới cách gốc cũ < 4 nửa cung (đi lên) thì không đi.
+  Trả cả PHẦN ĐỆM đã nhường chỗ (`backing`) để nơi gọi không phải tự cắt.
+*/
+export function chayTwistBlues(chords: readonly ParsedChord[], o: {
+  key: Giong | null; beatsPerChord: number; take: number
+  /** Hợp âm chính mà câu hát kết ở đó. */
+  breaths?: ReadonlySet<number>
+  /** Hợp âm chính cuối mỗi đoạn (mốc chuyển đoạn). */
+  sectionEnds?: ReadonlySet<number>
+  /** Phần đệm Twist cả bài. */
+  backing: readonly TimelineEvent[]
+}): { events: TimelineEvent[]; backing: TimelineEvent[] } {
+  if (!o.key) return { events: [], backing: [...o.backing] }
+  const g = o.key
+  const spans = mainChordSpans(chords, o.beatsPerChord)
+  const coLoi = !!o.breaths?.size
+  const moc16 = (x: number) => Math.floor(x / 16 + 1e-6)
+  const hetCau = (i: number) => coLoi ? o.breaths!.has(i) : moc16(spans[i]!.start + spans[i]!.beats) > moc16(spans[i]!.start)
+  let iTruoc = -1, k = 0, truoc: KieuNhom = 'nghi'
+  const loai = (_: number, i: number): KieuNhom => {
+    const moi = i !== iTruoc
+    k = moi ? 0 : k + 1
+    iTruoc = i
+    const n = Math.round(spans[i]!.beats)
+    const dai = bam(o.take, i * 11 + 1) % 3 === 0 ? 3 : 2
+    const kieu: KieuNhom = moi && truoc === 'day' ? 'noi' : hetCau(i) && n >= dai && k >= n - dai ? 'day' : 'nghi'
+    truoc = kieu
+    return kieu
+  }
+  const phai = soanCauBlues(spans, {
+    key: g, take: o.take, mocDon: 1 / 3, uuTien: 'ray', chiNguon: 'ray', tam: [60, 91], day: () => false, loai,
+    muc: { thua: [1, 2], day: [1, 3], noi: [1, 2] }, tamKieu: { day: [67, 91], noi: [64, 91] },
+    luc: manh => (manh ? 74 : 66), bamHop: true, noiHop: true, noiBat: true, noiBuoc: [1, 2], notToiDa: 2, lapMoiNhom: true, doiLuot: 2.5,
+  }).events
+  // Cú đáp (nửa phách đầu hợp âm) vang CÙNG cú chặn — không bắt cú chặn nhường.
+  const dauHop = (t: number) => spans.some(s => t >= s.start - 1e-6 && t < s.start + .5 + 1e-6)
+  let backing = nhuongTayPhai(o.backing, phai.filter(e => !dauHop(e.startBeat)))
+
+  const blue = new Set((g.scale === 'minor' ? [6, 10] : [3, 6, 10]).map(x => pc(x + g.tonic)))
+  const lay: TimelineEvent[] = []
+  for (const s of spans) {
+    const chan = s.start >= .12 && o.backing.find(e => e.hand === 'right' && Math.abs(e.startBeat - s.start) < 1e-6)
+    if (!chan) continue
+    const iv = s.chord.quality.intervals
+    const ba = iv.includes(4) ? 4 : iv.includes(3) ? 3 : -1
+    const notes = chan.notes.flatMap(x => {
+      const r = pc(x - s.chord.root)
+      return (r === ba || r === 7) && blue.has(pc(x - 1)) && !hopPc(s.chord).includes(pc(x - 1)) ? [x - 1] : []
+    })
+    if (notes.length) lay.push({ hand: 'right', startBeat: s.start - .12, durationBeats: .12, notes: notes as MidiNote[], velocity: 67, grace: true })
+  }
+
+  const trai: TimelineEvent[] = []
+  for (const i of o.sectionEnds ?? []) {
+    const s = spans[i], sau = spans[i + 1]
+    if (!s || !sau || s.beats < 4 - 1e-6) continue
+    const len = pc(sau.chord.root - s.chord.root)
+    if (len < 4) continue
+    const den = 36 + pc(sau.chord.root)
+    let di = [den - len, den - 3, den - 2, den - 1]
+    if (di[0]! < 28) di = di.map(x => x + 12)
+    const t0 = sau.start - 4
+    backing = backing.filter(e => e.hand !== 'left' || e.startBeat < t0 - 1e-6 || e.startBeat >= sau.start - 1e-6)
+    di.forEach((n, q) => trai.push({ hand: 'left', startBeat: t0 + q, durationBeats: q > 1 ? .65 : 1, notes: [n, n + 12] as MidiNote[], velocity: 77 }))
+  }
+  return { events: [...phai, ...lay, ...trai].sort((a, b) => a.startBeat - b.startBeat), backing }
+}
+
+/*
   DẠO · GIANG · KẾT.
 
   ĐƠN VỊ: một ô 6/8 = 6 móc đơn = 3 phách máy = MỘT hợp âm = MỘT nửa ô Rockhouse.
@@ -971,6 +1055,16 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
   bamHop?: boolean
   /** Lượt 11: câu TRỌN (mở / kết đúng chỗ mở / kết câu trong sheet, nốt cuối câu ngân đủ) và DẪN NỐI qua hợp âm kế tiếp. */
   noiHop?: boolean
+  /** Chỉ lấy nhóm ba của một sheet (Twist: Rockhouse — 735/810 cú đúng lưới chùm ba; Rising Sun theo thời gian thật chỉ 25/185). */
+  chiNguon?: Nhom['nguon']
+  /** Nhóm 'noi': cú đáp cách nốt cuối câu trước [ít nhất, nhiều nhất] nửa cung (mặc định [0, 5]). Twist: [1, 2] — nốt cuối câu là
+   *  nốt DẪN vào hợp âm sau, không phải chính nốt đáp (bản đầu cho 0: nhiều câu kết bằng đúng nốt đáp, 81 → 81). */
+  noiBuoc?: readonly [number, number]
+  /** Số nốt tối đa mỗi cú (Twist: 2 — nốt đơn và bè đôi như sheet Twist; bản đầu có riff chùm 4 nốt của Ray lặp 4 lần). */
+  notToiDa?: number
+  /** Mọi nhóm lặp liền được như riff (tối đa 2 lần), không chỉ nhóm chùm hợp âm của Ray — riff Slow Blues là hình ngắn lặp lại
+   *  (Rising Sun E–G ×3, E–B ×5), không phải chùm hợp âm. */
+  lapMoiNhom?: boolean
 }): { events: TimelineEvent[]; nguon: string[] } {
   const g = o.key
   const MOC = o.mocDon ?? .5
@@ -985,6 +1079,8 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
       u = [{ n: null, dat: [], tin: false, lo: 0, hi: 0, bam: 0 }]
       for (const n of KHO_NHOM) {
         if (o.chiGiaiDieu && n.kieu === 'riff' && n.nguon === 'ray') continue
+        if (o.chiNguon && n.nguon !== o.chiNguon) continue
+        if (o.notToiDa && n.su.some(s => new Set(s[2]).size > o.notToiDa!)) continue
         const d = doiNhom(n, g)
         const dat = n.su.filter(s => s[0] < dai - 1e-6).map(([t, dd, ns]) => ({ t, d: dd, notes: ns.map(x => x + d) }))
         if (!dat.length) continue
@@ -1083,7 +1179,8 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
         if (doi === null) continue
         // Nhóm 'noi': cú đầu đúng phách 1 (±0,2 móc), là nốt của hợp âm mới, cách nốt cuối câu trước ≤ quãng 4 (5 nửa cung).
         // MỌI nốt của cú đáp là nốt hợp âm mới — cũ chỉ xét nốt đỉnh: C5+E5 đáp trên Em9 (C = b13, chói).
-        if (s.kieu === 'noi' && (nut.cuoi === null || u.dat[0]!.t >= .2 || Math.abs(dau + doi - nut.cuoi) > 5 ||
+        if (s.kieu === 'noi' && (nut.cuoi === null || u.dat[0]!.t >= .2 || Math.abs(dau + doi - nut.cuoi) > (o.noiBuoc?.[1] ?? 5) ||
+          Math.abs(dau + doi - nut.cuoi) < (o.noiBuoc?.[0] ?? 0) ||
           u.dat[0]!.notes.some(x => !hopPc(s.chord).includes(pc(x))))) continue
         const vao = moc0 + u.dat[0]!.t
         const noiGiua = nut.cuoi !== null && vao - nut.het < 1 - 1e-6
@@ -1098,7 +1195,7 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
         if (o.bamHop) d += u.bam
         else if (u.dat[0]!.t < 1e-6) d += diemPhach(dau, s.chord, g)
         if (cach8 && cach8.id !== n.id && cach8.nhip === n.nhip) d += 1
-        if (lapRiff) d += n.kieu === 'riff' && nut.lap < 2 ? 1.5 : -4
+        if (lapRiff) d += (n.kieu === 'riff' || o.lapMoiNhom) && nut.lap < 2 ? 1.5 : -4
         else if (nut.gan.includes(n.id)) d -= 4
         if (n.nguon === o.uuTien) d += 1
         if (g.scale === 'minor' && n.nguon === 'sun') d += 1
@@ -1116,7 +1213,14 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
             const nx = oList[j + 1]!.chord
             const moi = new Set(nx.quality.intervals.map(x => pc(x + nx.root)))
             const cu = new Set(s.chord.quality.intervals.map(x => pc(x + s.chord.root)))
-            if (moi.has(pc(cuoiNot)) || ((moi.has(pc(cuoiNot + 1)) || moi.has(pc(cuoiNot - 1))) && !cu.has(pc(cuoiNot)))) d += 1
+            const [it0, nhieu0] = o.noiBuoc ?? [0, 5]
+            if (it0 >= 1) {
+              // Twist (`noiBuoc` [1, 2]): nốt cuối là nốt DẪN — cách một nốt hợp âm mới 1–2 nửa cung, không phải chính nốt ấy. Kết đúng
+              // nốt hợp âm mới thì hợp âm ba không còn cú đáp nào cách 1–2 nửa cung (F–A–C) → cú đáp trống (đo bản đầu).
+              const dan = !moi.has(pc(cuoiNot)) &&
+                Array.from({ length: nhieu0 - it0 + 1 }, (_, b) => b + it0).some(b => moi.has(pc(cuoiNot + b)) || moi.has(pc(cuoiNot - b)))
+              d += dan ? 2 : -2
+            } else if (moi.has(pc(cuoiNot)) || ((moi.has(pc(cuoiNot + 1)) || moi.has(pc(cuoiNot - 1))) && !cu.has(pc(cuoiNot)))) d += 1
           }
         }
         if (j === oList.length - 1) {
