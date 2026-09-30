@@ -335,7 +335,12 @@ function walkSlot(v: TwoHandVoicing, bum: boolean, tayPhai: readonly number[]): 
   return { gam: new Set(gam.map((x) => (x + root) % 12)), hopAm, bum, tayPhai }
 }
 
-function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: number, high: number):
+/*
+  `giaiDieu` (dòng TAY PHẢI, Ballad cứ đi 29/9/2026): nốt ngoài gam +6 (không miễn nốt dẫn nửa cung), nhảy quãng 3 lên nốt khác chỉ +1.
+  Luật walking bass (ngoài gam +3, nửa cung vào đích +1, nhảy +4) cho giai điệu tay phải đi nốt lướt ngoài giọng ở tiếng nhấn: Fm → Bbm
+  Ab4 A4 → Bb4, Ab → Db C5 D5 → Db5 (đo khi sửa) — thay vì nhảy lên nốt hợp âm Ab4 C5 → Bb4.
+*/
+function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: number, high: number, giaiDieu = false):
   { path: number[]; score: number } | undefined {
   const pc = (n: number) => ((n % 12) + 12) % 12
   // Bước liền bậc trước; nhảy quãng 3 (3–4 nửa cung) phạt +4, chỉ dùng khi đi liền bậc buộc phải chói — Fadd2 → G9 tay phải
@@ -360,10 +365,10 @@ function walkingBass(tu: number, den: number, slots: readonly WalkSlot[], low: n
       if (n < low || n > high) continue
       const slot = slots[i]
       let s = score
-      if (!slot.gam.has(pc(n))) s += i === slots.length - 1 && Math.abs(den - n) === 1 ? 1 : 3
+      if (!slot.gam.has(pc(n))) s += giaiDieu ? 6 : i === slots.length - 1 && Math.abs(den - n) === 1 ? 1 : 3
       if (slot.bum && !slot.hopAm.has(pc(n))) s += 2
       if (dir && Math.sign(step) !== dir) s += 2
-      if (Math.abs(step) > 2) s += 4
+      if (Math.abs(step) > 2) s += giaiDieu ? 1 : 4
       if (truocNua === n) s += 1
       if (slot.tayPhai.some((r) => [1, 6, 11].includes(pc(r - n)))) s += 10
       path.push(n)
@@ -572,9 +577,12 @@ function renderWithCell(
           chỗ bản dựng bossa trước hỏng. Không có hợp âm sau (cuối bài) thì lui
           về hợp âm hiện tại, thà mất cử chỉ còn hơn mất tiếng.
         */
-        const sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
+        let sauDo = hit.som ? starts.find((one) => one > startBeat + EPSILON) : undefined
         if (hit.requireNextChord && (sauDo === undefined ||
-          Math.abs(sauDo - startBeat - hit.durationBeats) > EPSILON)) continue
+          Math.abs(sauDo - startBeat - hit.durationBeats) > EPSILON)) {
+          if (!hit.giuKhiKhongDoi) continue
+          sauDo = undefined
+        }
         const voicing = (sauDo !== undefined ? voicingAt(sauDo) : undefined) ?? voicingAt(startBeat)
         if (!voicing) continue
 
@@ -604,45 +612,75 @@ function renderWithCell(
               : undefined,
         )
         let raw = dat
-        if (hand === 'left' && !hit.danVao) {
+        if (!hit.danVao) {
           if (walk && walkLand !== undefined) raw = dat.map((n) => (n % 12 === walkLand! % 12 ? walkLand : n) as MidiNote)
           walk = walkLand = undefined
         }
-        if (hand === 'left' && hit.danVao) {
+        /*
+          Dòng đi liền bậc (`danVao`). Tay trái: walking bass (Ballad Để em). Tay phải (29/9/2026, Ballad cứ đi — ô tick "giai điệu
+          dẫn vào hợp âm sau"): dòng GIAI ĐIỆU đi từ nốt đỉnh tiếng trước tới tiếng đích, trong tầm tay phải của điệu.
+        */
+        if (hit.danVao) {
           if (!walk) {
-            const low = LEFT_ARPEGGIO_LOW, high = pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH
+            const [low, high] = hand === 'left'
+              ? [LEFT_ARPEGGIO_LOW, pattern.leftHandTop ?? LEFT_ARPEGGIO_HIGH]
+              : [pattern.rightHandRegister?.rootFloor ?? 55, pattern.rightHandRegister?.high ?? 84]
             const fold = (n: number) => { while (n > high) n -= 12; while (n < low) n += 12; return n }
+            const khac = hand === 'left' ? 'right' : 'left'
             const i = hits.indexOf(hit)
             let j = i
             while (hits[j]?.danVao) j += 1
-            const dich = hits[j], denV = dich ? voicingAt(offset + dich.beat) : undefined
-            const den = dich && denV ? notesForVoice(denV.left, dich.voice, dich.toneIndex, dich.tones,
+            // Dòng chạm cuối ô: nhắm tiếng cùng tay ĐẦU Ô SAU — hợp âm kế tiếp (Ballad cứ đi, ô tick nối hợp âm sau, 29/9/2026).
+            // Cuối bài: không có đích → tiếng đi theo `tones`. Để em (dòng luôn có tiếng đích trong ô) không đổi.
+            const sau = hits[j] || until >= totalBeats - EPSILON ? undefined : (cellAt?.(until) ?? fallback)?.[hand][0]
+            const dich = hits[j] ?? sau
+            const tDich = dich ? (hits[j] ? offset : until) + dich.beat : 0
+            // Đích là tiếng VÀO SỚM (`som`) thì lấy thế bấm hợp âm SAU; đích sẽ bị bỏ (`requireNextChord` không khớp — vd giữa hợp âm
+            // ngân 8 phách) thì không soạn dòng, các tiếng đi theo `tones`.
+            const somDich = dich?.som ? starts.find((one) => one > tDich + EPSILON) : undefined
+            const lechDich = !!dich?.som && !!dich.requireNextChord &&
+              (somDich === undefined || Math.abs(somDich - tDich - dich.durationBeats) > EPSILON)
+            // Đích lệch mà có `giuKhiKhongDoi`: đích vẫn đánh, theo hợp âm đang vang.
+            const boDich = lechDich && !dich?.giuKhiKhongDoi
+            const sauDich = lechDich ? undefined : somDich
+            const denV = dich && !boDich ? voicingAt(sauDich ?? tDich) : undefined
+            const den = dich && denV ? notesForVoice(hand === 'left' ? denV.left : denV.right, dich.voice, dich.toneIndex, dich.tones,
               Math.min(...denV.left) % 12, undefined, denV.harmonicNotes ?? [...denV.left, ...denV.right], { low, high })[0]
               : undefined
             const slots = hits.slice(i, j).map((h) =>
-              walkSlot(voicingAt(offset + h.beat) ?? voicing, cell.right.some((r) => Math.abs(r.beat - h.beat) < EPSILON),
-                // Mọi nốt tay phải VANG TRONG LÚC nốt bass ngân, không chỉ nốt gõ cùng lúc. Cũ: chỉ xét nốt gõ cùng lúc → Fadd2
+              // Tay phải: ưu tiên nốt hợp âm như tiếng bùm — nốt đỉnh của Cà Pháo là nốt hợp âm 63% (md Cà Pháo, solo ballad). Không
+              // thì C7 → Fm đi E4 Gb4 Ab4 (Gb ngoài giọng) thay vì E4 G4 Ab4.
+              walkSlot(voicingAt(offset + h.beat) ?? voicing, hand === 'right' || cell[khac].some((r) => Math.abs(r.beat - h.beat) < EPSILON),
+                // Mọi nốt tay kia VANG TRONG LÚC nốt của dòng ngân, không chỉ nốt gõ cùng lúc. Cũ: chỉ xét nốt gõ cùng lúc → Fadd2
                 // bum 9 Ab3 dưới A4 của chát 8 còn ngân; F#3 ngân ½ chồng lên F4 của chát 10 vào sau (quãng 9 thứ / 7 trưởng).
-                events.filter((e) => e.hand === 'right' && e.startBeat < offset + h.beat + h.durationBeats - EPSILON
+                events.filter((e) => e.hand === khac && e.startBeat < offset + h.beat + h.durationBeats - EPSILON
                   && e.startBeat + e.durationBeats > offset + h.beat + EPSILON).flatMap((e) => e.notes)))
             walk = []
             // Đầu dòng: MỌI nốt tay trái của tiếng ngay trước (bùm 3 gõ gốc + bậc 5 cùng lúc), lấy dòng tốt nhất. Chỉ lấy
             // `near` (nốt ghi sau cùng) thì trên Gadd9 → D9sus4 đầu dòng là bậc 5 D3 → dòng D3 … D3 vòng qua Bb2.
-            const truoc = events.filter((e) => e.hand === 'left' && e.startBeat < startBeat - EPSILON)
+            // Tay phải cũng thử MỌI nốt tiếng trước: tiếng nhấn quãng tám kép (Ab4+Ab5) — chỉ lấy nốt đỉnh thì dòng vọt lên C6
+            // (Ballad cứ đi, đo khi sửa 29/9); hoà điểm thì đích quãng tám gần (`fold(den)` thử trước) thắng.
+            const truoc = events.filter((e) => e.hand === hand && e.startBeat < startBeat - EPSILON)
             const moc = Math.max(...truoc.map((e) => e.startBeat))
             const dau = [...new Set(truoc.filter((e) => Math.abs(e.startBeat - moc) < EPSILON).flatMap((e) => e.notes).map(fold))]
             // Hạ cánh ĐÚNG nốt của tiếng kế; chỉ khi không có dòng nào mới thử quãng tám kề (tiếng kế đánh theo). Cũ: so điểm
             // hai quãng tám (+6 nếu đổi) — ô 2 phần lấp trên Dm7 hạ A3 thay A2, nốt đầu câu chạy vọt lên một quãng tám, câu chạy
             // A2 → D3 thành A3 → D3. Đích xa quá số bước (C3 → B3: 11 nửa cung) thì mới cần quãng tám kề.
+            // Tay phải, đích ở Ô SAU: hạ cánh ĐÚNG nốt đích — tiếng ô sau đánh đúng cao độ ấy (`walkLand` không sang ô sau). Thử ba quãng
+            // tám thì Bm → E dòng lên F#5 (đích E5) mà tiếng 1 ô sau là E4 — 14 nửa cung / ¼ phách. Đích trong cùng ô: `walkLand` đổi
+            // quãng tám cho đích, nên vẫn thử ba quãng tám (ép một quãng tám: Cm → Bb7 không có dòng, 4¼ rơi về C4 rồi D5).
+            let tot: { path: number[]; score: number; d: number } | undefined
             if (near !== undefined && den !== undefined)
-              for (const d of [fold(den), fold(den) - 12, fold(den) + 12].filter((d) => d >= low && d <= high)) {
+              for (const d of (hand === 'right' && !hits[j] ? [den] : [fold(den), fold(den) - 12, fold(den) + 12]).filter((d) => d >= low && d <= high)) {
                 let found: { path: number[]; score: number } | undefined
                 for (const tu of dau) {
-                  const one = walkingBass(tu, d, slots, low, high)
+                  const one = walkingBass(tu, d, slots, low, high, hand === 'right')
                   if (one && (!found || one.score < found.score)) found = one
                 }
-                if (found) { walk = found.path; walkLand = d; break }
+                if (found && hand === 'left') { walk = found.path; walkLand = d; break }
+                if (found && (!tot || found.score < tot.score)) tot = { ...found, d }
               }
+            if (tot) { walk = tot.path; walkLand = tot.d }
           }
           const n = walk.shift()
           if (n !== undefined) raw = [n as MidiNote]
@@ -706,7 +744,10 @@ function renderWithCell(
           // So với MỘT ô nhịp, không phải cả chu kỳ mẫu (có thể 2–4 ô).
           // Nếu so với cell 8 phách, hợp âm đủ 4 phách cũng bị ép bass thể bấm,
           // kéo D2 lên D3 trong khi nốt tiếp cận và bậc 5 vẫn nằm ở quãng tám 2.
-          const short = durations[index] < pattern.beatsPerMeasure * (pattern.gridUnit ?? 1) - EPSILON
+          // Ô ngắn hơn một ô nhịp (Ballad cứ đi "mỗi hợp âm 8 phách rồi chuyển": ô 2 phách = một lượt rải trọn) thì hợp âm dài
+          // đúng một ô KHÔNG phải hợp âm lướt — ô đã có gốc ở tiếng 1. Cũ (so với ô nhịp): Fm 2 phách bị ép bass F2 → F3, sóng mở
+          // F3 rồi xuống C3. Mọi ô khác dài ≥ một ô nhịp → như cũ.
+          const short = durations[index] < Math.min(pattern.beatsPerMeasure * (pattern.gridUnit ?? 1), cell.lengthBeats) - EPSILON
           if (short && !rootForced.has(index)) {
             rootForced.add(index)
             const bass = voicing.left.length > 0 ? Math.min(...voicing.left) : undefined
@@ -726,6 +767,7 @@ function renderWithCell(
             BASE_VELOCITY * (hit.velocityScale ?? 1) * handScale,
           ),
           ...(hit.som && sauDo !== undefined ? { som: true } : {}),
+          ...(hand === 'left' && pattern.tayTraiLenCao ? { giuTay: true } : {}),
         })
       }
     }
@@ -733,7 +775,7 @@ function renderWithCell(
     offset = until
   }
 
-  return [
+  const all = [
     ...events,
     ...missingChordHits(events, voicings, starts, releaseRatio).filter(
       (event) => !inMuteWindow(event.startBeat, muteWindows)
@@ -742,6 +784,35 @@ function renderWithCell(
         && !(KEEP_RH_RESTS.has(pattern.family) && event.hand === 'right'),
     ),
   ]
+  return pattern.giuTamTay ? giuTamTay(all, pattern.rightHandRegister?.low ?? 48, pattern.rightHandRegister?.high ?? 84) : all
+}
+
+/*
+  GIỮ TẦM TAY PHẢI (điệu khai `giuTamTay`; Ballad cứ đi, 29/9/2026). Người dùng: *"vẫn còn sót chỗ mà tầm nốt xa như trong hình. Tay
+  người ko thể đánh như trong ảnh được"*. Tầm tay phải đặt gốc hợp âm theo TÊN nốt (sàn C3), nên gốc cao (A · Bb · B) nằm cao gần một
+  quãng tám so với gốc thấp (C · D · E). Ô có hai hợp âm 2 phách: đỉnh sóng hợp âm trước (Bm: F#5 ở 1¾) liền tiếng 1 hợp âm sau (E: E4
+  ở phách 2) = 14 nửa cung / ¼ phách — khuôn không biết trước hợp âm nào chen giữa ô. Quét 4 vòng dài × 6 cách chia độ dài: 16/3620 cú.
+  Cách giữ: đi theo thời gian, tiếng tay phải mà cùng các nốt tay phải gõ trong ½ phách trước nó vượt một quãng tám → dời CẢ tiếng một
+  quãng tám về phía chúng, nếu vẫn trong tầm và vừa một quãng tám; không được thì để nguyên. Chỗ không vi phạm không đổi nốt nào.
+*/
+function giuTamTay(events: TimelineEvent[], low: number, high: number): TimelineEvent[] {
+  const span = (ns: readonly number[]) => Math.max(...ns) - Math.min(...ns)
+  const doi = new Map<TimelineEvent, TimelineEvent>()
+  const da: TimelineEvent[] = []
+  for (const e of events.filter((x) => x.hand === 'right').sort((a, b) => a.startBeat - b.startBeat)) {
+    const truoc = da.filter((x) => x.startBeat > e.startBeat - .5 + EPSILON && x.startBeat < e.startBeat - EPSILON).flatMap((x) => x.notes)
+    let moi = e
+    if (truoc.length && span([...truoc, ...e.notes]) > 12) {
+      const huong = Math.sign((Math.max(...truoc) + Math.min(...truoc)) / 2 - (Math.max(...e.notes) + Math.min(...e.notes)) / 2) * 12
+      const dich = e.notes.map((n) => n + huong)
+      if (huong && Math.min(...dich) >= low && Math.max(...dich) <= high && span([...truoc, ...dich]) <= 12) {
+        moi = { ...e, notes: dich as MidiNote[] }
+        doi.set(e, moi)
+      }
+    }
+    da.push(moi)
+  }
+  return doi.size ? events.map((e) => doi.get(e) ?? e) : events
 }
 
 /** Sai số khi so mốc phách, tránh lỗi làm tròn số thực. */
@@ -752,7 +823,7 @@ const EPSILON = 0.001
  * Slow Blues (id `blue-sun`): tay trái lo trọn đệm, tay phải là câu chạy ngón của Bộ Soạn Blues (The House of the Rising Sun — tay phải không
  * đệm hợp âm ô nào).
  */
-const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'twist', 'blue-sun'])
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'ca-phao-ballad-cu-di', 'twist', 'blue-sun'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.

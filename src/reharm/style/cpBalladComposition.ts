@@ -332,8 +332,21 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     giai điệu/hợp âm/kỹ thuật vẫn từ mọi sheet (luật người dùng: tiết tấu từ sheet cùng điệu, cao độ mượn sheet khác của thầy).
   */
   const ownRhythm = !!style.cpSoloOwnRhythm && !!ownSong
-  const ownPool = ownRhythm ? cpBalladGestures.filter(t => t.source.song === ownSong && activeGesture(t) &&
+  // Tay trái dưới solo là SÓNG RẢI lên cao (Ballad cứ đi bật ô tick "solo · lick · run": `soloCell` + `tayTraiLenCao`) — xem chỗ
+  // dựng tay trái và chỗ giữ tầm tay phải bên dưới. Điệu khác, và Ballad cứ đi khi tắt ô tick: như cũ.
+  const song = !!style.soloCell && !!style.tayTraiLenCao
+  const ownAll = ownRhythm ? cpBalladGestures.filter(t => t.source.song === ownSong &&
     (kind === 'outro' ? t.source.kind === 'outro' : t.source.kind !== 'outro')) : []
+  /*
+    Bài có ít solo (Anh Cứ Đi Đi: MỘT khung chạy liền cho dạo/giang — ô 34–35, một cho kết — ô 63–64) thì thêm khung để không lặp một
+    tiết tấu suốt đoạn. Để Em đủ khung chạy liền → như cũ.
+    - kết: thêm câu đóng của chính đoạn kết (ô 67–68 rải vút lên Bb6). Đo (Fa thứ, 12 lượt): dặm 15% · nốt chạy 47% — sheet 6% · 50%.
+    - dạo/giang: thêm khung chạy liền của đoạn kết (ô 63–64, đường đơn). KHÔNG lấy ô 35–36 (dặm cụm vút lên): thử rồi, dặm 29–30% ·
+      nốt chạy 5–7% — người dùng đã chê thân dạo/giang "quá nhiều dặm hợp âm, ít chạy nốt" (Để em 26/9).
+  */
+  const ownActive = ownAll.filter(activeGesture)
+  const ownPool = ownActive.length >= 2 ? ownActive : kind === 'outro' ? ownAll : [...ownActive,
+    ...cpBalladGestures.filter(t => t.source.song === ownSong && t.source.kind === 'outro' && activeGesture(t))]
   // Câu đóng đặc trưng của bài ở cuối đoạn (Để Em Rời Xa dạo ô 2–3: chuỗi quãng 4 vút lên G6+C7 rồi cụm Dm9).
   const closing = ownCadence && ownPool.includes(ownCadence) ? ownCadence :
     ownPool.filter(t => t.source.kind === kind).reduce<Gesture | undefined>((a, b) => !a || b.from > a.from ? b : a, undefined)
@@ -642,6 +655,21 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     })
     right.push(...groups.values())
   })
+  /*
+    Giữ tầm tay phải (`song`): bè trong / quãng tám dưới của một cú thấp hơn nốt đỉnh cao nhất trong ½ phách quanh nó quá một quãng
+    tám thì bỏ — nốt giai điệu giữ nguyên. Đo trước khi sửa (Đô trưởng giang tấu, 12 lượt): 33/1330 cú tay phải phải mở > 12 nửa
+    cung trong ½ phách, vd G5 rồi ¼ phách sau F4+A4+D5, C6 rồi E4+G4+C5.
+  */
+  if (song) {
+    const slotOf = (at: number) => lineSlots.findLastIndex(s => s.at <= at + 1e-6)
+    for (const e of right) {
+      if (e.grace) continue
+      const i = slotOf(e.startBeat), at = lineSlots[i].at
+      const floor = Math.max(...lineSlots.flatMap((s, k) => Math.abs(s.at - at) < .5 - 1e-6 ? [melody[k]] : [])) - 12
+      e.notes = e.notes.filter(n => n === melody[i] || n >= floor)
+    }
+    right.splice(0, right.length, ...right.filter(e => e.notes.length))
+  }
   // Keep every destination bass attack and add only source-attested joint
   // solo punches. Never add these to the sung accompaniment renderer.
   const bassEvents = backing.filter(e => e.hand === 'left')
@@ -664,11 +692,24 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     const gesture = leftGestures.find(g => near(g.at, e.startBeat))
     const gate = Math.min(Math.max(e.durationBeats, gesture?.gate ?? 0),
       (harmony[ci + 1]?.at ?? lengthBeats) - e.startBeat)
-    const overlap = right.filter(r => r.startBeat < e.startBeat + gate && r.startBeat + r.durationBeats > e.startBeat)
-    const ceiling = Math.min(keyboard.high, overlap.length ? Math.min(...overlap.map(r => Math.min(...r.notes) - 2)) : range.low - 2)
+    /*
+      Sóng rải tay trái dưới câu solo (`song`: Ballad cứ đi bật ô tick) gốc · 5 · 8 · 9 · 10 — sheet Anh Cứ Đi Đi ô 33 F2 C3
+      F3 G3 Ab3. Ba chỗ khác cũ, đều để sóng không gãy:
+      - trần tính theo nốt tay phải đang vang LÚC GÕ; nốt tay phải thấp vào sau thì CẮT NGÂN tay trái (cũ: tính cả quãng ngân → bậc 8
+        ngân 1½ phách đụng Bb3 tay phải ở 1¼ thì rơi xuống Bb2: Bb2 F3 Bb2 C3 Db3);
+      - tay phải không vang thì trần là `leftHandTop` của điệu (cũ: C4−2 = Bb3 — gốc A · Bb · B thì bậc 9 · 10 rơi quãng tám dưới);
+      - bậc 9 móc kép giữ nguyên (cũ: nắn về gốc → F3 F3 lặp).
+    */
+    const overlap = right.filter(r => r.startBeat < e.startBeat + (song ? 1e-6 : gate) && r.startBeat + r.durationBeats > e.startBeat)
+    const ceiling = Math.min(keyboard.high, overlap.length ? Math.min(...overlap.map(r => Math.min(...r.notes) - 2)) :
+      song ? Math.max(range.low - 2, style.leftHandTop ?? 0) : range.low - 2)
     const pool = Array.from({ length: Math.max(0, ceiling - keyboard.low + 1) }, (_, i) => keyboard.low + i)
     const notes = [...new Set(e.notes.map(n => {
-      const same = pool.filter(p => pc(p) === pc(n) && (stable[ci].has(pc(p)) || chord.bass === pc(p)))
+      const ngan = song && e.durationBeats <= .5
+      const same = pool.filter(p => pc(p) === pc(n) && (stable[ci].has(pc(p)) || chord.bass === pc(p) || ngan && scale.has(pc(p))))
+      // Bậc 9 ngoài giọng (C7 · Gm7b5 ở Fa thứ: D · A) → nốt trong giọng sát bên, ưu tiên nốt dưới = b9 như ô 16 sheet (C7: Db).
+      const ke = ngan && !same.length ? pool.filter(p => Math.abs(p - n) === 1 && scale.has(pc(p)) && !stable[ci].has(pc(p))) : []
+      if (ke.length) return Math.min(...ke)
       const choices = same.length ? same : pool.filter(p => pc(p) === (chord.bass ?? chord.root))
       return choices.sort((a, b) => Math.abs(a - n) - Math.abs(b - n))[0]
     }))].sort((a, b) => a - b)
@@ -678,7 +719,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
       if (!more.length) break
       notes.push(more[0])
     }
-    return { ...e, notes: notes.sort((a, b) => a - b), durationBeats: gate,
+    notes.sort((a, b) => a - b)
+    const vao = song ? right.filter(r => r.startBeat > e.startBeat + 1e-6 && r.startBeat < e.startBeat + gate &&
+      Math.min(...r.notes) - 2 < notes.at(-1)!).map(r => r.startBeat) : []
+    return { ...e, notes, durationBeats: Math.min(gate, ...vao.map(at => at - e.startBeat)),
       velocity: Math.max(1, Math.min(127, (e.velocity ?? 64) + (gesture?.touch ?? 0))) }
   })
   if (left.some(e => e.notes.some(n => !Number.isFinite(n)))) return empty('Không đủ tầm bass cho câu solo này.')

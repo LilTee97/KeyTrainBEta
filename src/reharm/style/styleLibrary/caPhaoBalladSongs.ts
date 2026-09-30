@@ -362,8 +362,170 @@ const deEmChorus: StylePattern = {
   },
 }
 
+/*
+  BALLAD CỨ ĐI — đệm RẢI HAI TAY của Cà Pháo trong *Anh Cứ Đi Đi* (Fa thứ, ♩ 63), từ ô 9. Người dùng 29/9/2026: *"từ ô 9 trở đi
+  … CP đệm bằng kỹ thuật rải hợp âm kết hợp 2 tay"*. Khác nút Ballad ACDD của Codex (nền dặm ô 40, xen rải 2/8 ô).
+  Số đo (`scripts/audit_cp_acdd_rai.py`, lưới móc kép, 0 cú lệch lưới; bass đầu ô là gốc hợp âm in ở mọi ô — vạch nhịp đúng pha):
+  - Ô có CHUỖI RẢI HAI TAY (móc kép liền, cao độ đi lên, có cả hai tay, dài ≥ 4): ô 1–8 3/8 · ô 9–16 7/8 · phiên 2 (38–45) 5/8 ·
+    điệp 17–32 2/16 · điệp 46–61 6/16. Rải hai tay là lối của PHIÊN; điệp dùng lối khác (giai điệu quãng tám, dặm cụm).
+  - Lúc hát nốt đỉnh tay phải là giai điệu lời (48/62 nốt đỉnh ô 9–16 trùng phiên 2). Nốt tay phải trong chuỗi rải là phần đệm:
+    cùng một câu rải ở mọi lượt phiên (ô 2 · 10 · 39: Db4 F4 Db5 ở phách 2–2¾).
+  - NỬA ĐẦU Ô: chuỗi 8 móc kép, tay trái 1–5–8–9 rồi 10 ngân, tay phải bắt tiếp 12–15–19 — ô 9 đúng từng nốt F2 C3 F3 G3 Ab3 |
+    C4 F4 C5. Chuyển tay ở phách 2¼ 4/11 lần (2: 2 · 3½: 2 · 4: 2). Tay trái 1–5–8–9: ô 9 · 10 · 14; ô 11 (Eb7) 1–5–8–10.
+  - NỬA SAU Ô (ô 9–16): tay trái gõ phách 3 ở 7/8 ô (gốc) · 3¼ 7/8 (bậc 5) · 4& 6/8; tay phải ĐỆM (ngoài giai điệu) nhiều nhất ở
+    phách 4 (4/8): cặp 3+b7 (Eb7, Db7) · 3+5 (Ab).
+  BIÊN SOẠN của Claude: độ ngân (sheet ghi móc kép, không ghi pedal) — bass ngân nửa ô, các nốt rải ngân tới hết nửa ô như giữ
+  pedal, riêng bậc 9 ngắn (móc kép) cho khỏi cọ bậc 10; cặp tay phải phách 4 = bậc 7 (hợp âm ba: bậc 5) dưới bậc 10; lực.
+*/
+
+/*
+  KHUÔN "chêm tiếng nối hợp âm sau" — MẶC ĐỊNH của Ballad cứ đi từ 29/9/2026 (dựng làm ô tick nghe thử cùng ngày). Người dùng nghe
+  nút: *"tiết tấu ballad cứ đi nghe ổn nhưng tôi muốn bạn hãy thêm vào mấy tiếng nữa cho đủ phách nối đến hợp âm kế tiếp luôn. Sau 8
+  tiếng đầu bạn chơi thêm 2 tiếng nữa rồi nghỉ, nhưng tôi muốn bạn chêm thêm tiếng ở khoảng nghỉ đó để nối vào hợp âm kế tiếp … căn cứ
+  vào tiết tấu đệm Ballad cứ đi rồi phát triển thêm tiếng, nhớ phải khớp với tiết tấu điệu"*.
+  Giữ mọi tiếng của khuôn; nửa sau thành 8 móc kép liền như nửa đầu — SÓNG LÊN RỒI XUỐNG vào hợp âm sau, lối của sheet ô 9 (tay trái
+  F3 Ab3 C4 lên, tay phải F4, Ab3 xuống) và ô 16 (Db3 F3 Ab3 B3 lên, Bb3 G3 E3 C3 xuống vào Fm):
+    · 3& · 3¾ (mới): tay trái 8 · 9 — đi tiếp lên sau bass · 5, như 1–5–8–9 của nửa đầu;
+    · phách 4: chát tay phải (cũ) — đỉnh sóng;
+    · 4¼ · 4& · 4¾: WALKING BASS (`danVao`) — một dòng đi liền bậc từ nốt 9 phách 3¾ XUỐNG bass hợp âm sau (4& là bum cũ, giữ
+      chỗ, đổi nốt). Người dùng đã duyệt walking bass ở Ballad Để em ("bum phải là dẫn bass qua tiếng kế tiếp"). Hợp âm ngân
+      8 phách: dòng đi về chính gốc của nó ở ô sau; cuối bài: theo `tones` (10 · 8 · 5).
+  Bản đầu (bỏ): nốt dẫn cố định = gốc hợp âm sau + 1 cung (`som`) — đúng bước vào bass nhưng ở quãng tám 2, sau bậc 8 quãng tám 3
+  → nhảy 13–17 nửa cung ở 4/8 chỗ đổi hợp âm (Bbm → Eb7, Ab → Db, Bbm → G7, G7 → C7).
+  Biên soạn của Claude trên hai ô ấy: sheet lúc hát không ô nào đủ 8 móc kép nửa sau (tay phải là giai điệu lời).
+*/
+/*
+  Người dùng nghe ô tick này (29/9/2026): *"khi chơi 8 tiếng thì tiếng 1 5 và 8 là phách mạnh hãy đánh rõ. Tới 8 tiếng lần 2 tôi nghe
+  thấy bạn có dặm hợp âm ở tiếng thứ 5, nhưng đừng đánh vậy mà hãy để tiếng 5 chơi một cách hòa hợp với 8 tiếng, nhưng mà vẫn tuân thủ
+  phách 1 5 8 mạnh"*. Mỗi nửa ô là một nhóm 8 móc kép; tiếng 1 · 5 · 8 = phách 1 · 2 · 2¾ và phách 3 · 4 · 4¾.
+  - NHẤN 1 · 5 · 8 (ý người dùng; cùng mức nhấn câu tám tiếng ACDD, người dùng cũng xin nhấn 1–5–8 ở đó): tay trái 1,0 → lực 68, tay
+    phải 0,9 → 72; tiếng khác giữ 0,5–0,55 (34–44). Chỉ trong ô tick — nút gốc (người dùng nghe ổn) không đổi.
+    Cũ: tiếng 1 · 5 · 8 nhóm 1 = 0,85 · 0,62 · 0,7 (58 · 42 · 56); nhóm 2 = 0,8 · cặp chát 0,6 · walking 0,6 (54 · 48 · 41).
+  - TIẾNG 5 NHÓM 2 = MỘT NỐT trong sóng rải: bậc 10 tay trái, như tiếng 5 nhóm 1 (1–5–8–9–10) — sóng F2 C3 F3 G3 Ab3 rồi walking
+    xuống. Cũ: cặp chát tay phải bậc 7 (hợp âm ba: 5) + 10, ngân 1 phách (C4+Ab4 trên Fm) — người dùng nghe là "dặm hợp âm".
+  Triệu chứng để lùi: "nhấn nghe giật, nặng tay" → hạ tiếng nhấn về 0,85 (tay trái) · 0,8 (tay phải).
+  Người dùng nghe tiếp (29/9): *"nhấn 1 5 8 chưa rõ, sao ko thêm nốt bên tay phải"*. Tăng lực chưa đủ: 5/6 tiếng nhấn chỉ một nốt tay
+  trái (lực × 0,85, bè trầm). Nên THÊM TAY PHẢI ở tiếng nhấn — NHÂN QUÃNG TÁM nốt tay trái, không thêm hoà âm (người dùng không muốn
+  "dặm hợp âm"): tiếng 1 = gốc +2 quãng tám (F2 → F4), tiếng 5 = bậc 10 quãng tám trên (Ab3 → Ab4), tiếng 8 nhóm 1 = tay phải sẵn
+  (C5), tiếng 8 nhóm 2 = một nốt tay phải đi liền bậc vào gốc hợp âm sau (`danVao` tay phải, đích = tiếng 1 tay phải ô sau). Tay
+  phải thành một đường trên F4 · Ab4 · C5 | F4 · Ab4 · C5 → Bb4 (Fm → Bbm). Cũ: tay phải chỉ ba nốt rải 1¼ · 1½ · 1¾.
+  Người dùng: *"phách 5 đánh dày hơn nữa"* → bản đầu: bậc 10 quãng tám kép tay phải (Ab4+Ab5). Người dùng: *"sao tay phải đánh phách
+  5 mà các nốt xa nhau vậy, tay người sao mà đánh được"* — móc kép liền sau tay phải phải xuống C4 (chuỗi rải): Ab5 → C4 = 20 nửa cung
+  trong ¼ phách. Bản sau: tiếng 5 tay phải = bậc 10 + 12 (Ab4 + C5). Người dùng: *"nốt ở tay phải vẫn xa nhau"* — trên B9sus4 (bài người
+  dùng) bậc 3 thiếu nên renderer lùi về bậc 7: A5 + Gb5, rồi móc kép sau xuống Gb4 = 15 nửa cung; và bậc 10 + 12 nằm TRÊN chuỗi rải nên
+  cả cụm ½ phách căng đủ quãng tám. Nay: tiếng 5 tay phải = bậc 8 + 10, SÁT DƯỚI chuỗi rải (Fm: F4 + Ab4, rồi C4 F4 C5 — cụm ½ phách 8
+  nửa cung); bậc 3 thiếu (hợp âm treo) lấy NỐT TREO (`ba3`, như Ballad Để em) — B9sus4: B4 + E5. Test đo tầm tay cạnh khuôn, gồm hợp âm
+  treo · add9 · m9 · m7b5 · maj7.
+  Người dùng: *"tay phải đã gần nhau hơn rồi nhưng tôi muốn phách 5 phải là giai điệu hơi cao lên chứ ko phải ngang với các phách còn
+  lại"* — hỏi ba cách (tiếng 5 lên C5 giữ chuỗi rải sheet · lên C5 và chuỗi rải bắt cao F4 Ab4 C5 · tiếng 5 cao nhất ô F5), người dùng
+  chọn cách 1: tiếng 5 tay phải = bậc 10 + 12, đỉnh là bậc 5 (Fm: Ab4 + C5) — cao hơn chuỗi rải C4 F4 ngay sau; tay phải mở một quãng
+  tám C4–C5 như chính chuỗi rải sheet. Hợp âm treo: nốt treo + 5 (B9sus4: E5 + F#5). Cũ (bản trước): 8 + 10 (F4 + Ab4). Người dùng dặn:
+  nghe không ổn thì đưa lại các phương án để chọn.
+*/
+const NHAN_T = 1, NHAN_P = .9
+export const CU_DI_NOI_CELL: RhythmCell = {
+  lengthBeats: 4,
+  left: [
+    hit(0, 2, [tone(0)], NHAN_T),                                       // 1 — bass (nhấn)
+    hit(.25, 1.75, [tone(2)], .55),                                     // 2 — 5
+    hit(.5, 1.5, [tone(0, 12)], .55),                                   // 3 — 8
+    hit(.75, .25, [tone(0, 14)], .5),                                   // 4 — 9 lướt
+    hit(1, 1, [ba3(12)], NHAN_T),                                       // 5 — 10 (nhấn; hợp âm treo: nốt treo)
+    hit(2, 2, [tone(0)], NHAN_T),                                       // nhóm 2 · 1 — bass (nhấn)
+    hit(2.25, 1.25, [tone(2)], .55),                                    // 2 — 5
+    hit(2.5, .75, [tone(0, 12)], .55),                                  // 3 — 8
+    hit(2.75, .25, [tone(0, 14)], .5),                                  // 4 — 9 lướt
+    hit(3, .5, [ba3(12)], NHAN_T),                                      // 5 — 10 (nhấn), thay cặp chát
+    { ...hit(3.25, .25, [tone(1, 12)], .55), danVao: true },            // 6 — walking
+    { ...hit(3.5, .25, [tone(0, 12)], .55), danVao: true },             // 7 — walking
+    { ...hit(3.75, .25, [tone(2)], NHAN_T), danVao: true },             // 8 — walking → bass ô sau (nhấn)
+  ],
+  right: [
+    hit(0, 1, [tone(0, 12)], NHAN_P),                                   // 1 — gốc, quãng tám kép trên bass (nhấn)
+    hit(1, .25, [ba3(12), tone(2, 12)], NHAN_P),                        // 5 — 10 + 12: giai điệu nhô lên C5 (nhấn, nhả ngay)
+    { ...hit(1.25, .75, [tone(2)], .55), raiNoi: true },                // 6 — 12
+    { ...hit(1.5, .5, [tone(0, 12)], .55), raiNoi: true },              // 7 — 15
+    { ...hit(1.75, 1, [tone(2, 12)], NHAN_P), raiNoi: true },           // 8 — 19, đỉnh sóng (nhấn)
+    hit(2, 1, [tone(0, 12)], NHAN_P),                                   // nhóm 2 · 1 (nhấn)
+    // Nhấn rồi nhả (¼): ngân ¾ thì đè lên dòng walking tay trái, tay trái phải né chói → Eb7 đi Eb3 B2 A2 (đo khi sửa).
+    hit(3, .25, [ba3(12), tone(2, 12)], NHAN_P),                        // 5 — 10 + 12 (nhấn, nhả ngay)
+    /*
+      8 — nốt trên GỐC HỢP ÂM SAU một cung (`som`), đặt trong tầm tay phải của ô sau → luôn cách tiếng 1 ô sau đúng 2 nửa cung. Hợp âm
+      không đổi ở vạch (ngân 8 phách, cuối bài) → theo hợp âm đang vang (`giuKhiKhongDoi`). Cũ: dòng `danVao` tay phải đi từ tiếng 5 —
+      tầm tay phải đặt gốc theo tên nốt (C3–B3) nên chỗ đổi gốc cao → gốc thấp (Bm → E) dòng lên F#5 rồi ô sau vào E4: 14 nửa cung /
+      ¼ phách (người dùng: "vẫn còn sót chỗ mà tầm nốt xa … tay người ko thể đánh", 71/3538 cú trên 4 vòng dài).
+    */
+    { ...hit(3.75, .25, [tone(0, 14)], NHAN_P), som: true, requireNextChord: true, giuKhiKhongDoi: true }, // 8 (nhấn)
+  ],
+}
+
+/*
+  "MỖI HỢP ÂM 8 PHÁCH RỒI CHUYỂN" — MẶC ĐỊNH của Ballad cứ đi từ 30/9/2026 (người dùng tick nghe rồi bảo: *"2 chỗ tôi chọn hãy đặt làm
+  mặc định cho điệu Ballad cứ đi"*; ô tick `balladCuDiMotLuot` đã gỡ). Lúc đầu người dùng nói *"ở điệu Ballad cứ đi thì mỗi hợp âm chơi
+  8 phách rồi chuyển"* — hỏi lại thì chọn: "phách" = TIẾNG của sóng rải (móc kép), mỗi hợp âm MỘT lượt 8 tiếng thay cho hai lượt mỗi ô
+  nhịp; 8 tiếng = sóng lên trọn lượt đầu của khuôn chêm tiếng nối (tay trái 1 · 5 · 8 · 9 · 10, tay phải bắt tiếp 12 · 15 · 19; nhấn
+  1 · 5 · 8), không còn tiếng chêm nối. Ô 2 phách máy: ReharmHome đặt mỗi hợp âm = độ dài ô này, bỏ qua ô chọn "Mỗi hợp âm".
+  Để lùi: `cell: CU_DI_NOI_CELL` (hai lượt mỗi ô nhịp, lượt hai có 3 tiếng chêm walking — mặc định 29/9) và bỏ nhánh `laCuDi` ở
+  `chordBeats`. Cách 2 người dùng dặn nếu nghe chưa ổn: 5 tiếng lên + 3 tiếng chêm nối (lượt hai của `CU_DI_NOI_CELL`).
+  Ô tick "giai điệu dẫn vào hợp âm sau" (`CU_DI_DAN_CELL`, 29/9) đã gỡ 30/9 theo người dùng: *"Ô giai điệu dẫn vào hợp âm sau hãy bỏ"*.
+*/
+export const CU_DI_MOT_LUOT_CELL: RhythmCell = {
+  lengthBeats: 2,
+  left: CU_DI_NOI_CELL.left.filter(h => h.beat < 2).map(h => ({ ...h, durationBeats: Math.min(h.durationBeats, 2 - h.beat) })),
+  right: CU_DI_NOI_CELL.right.filter(h => h.beat < 2).map(h => ({ ...h, durationBeats: Math.min(h.durationBeats, 2 - h.beat) })),
+}
+
+/*
+  "SOLO · LICK · RUN CÀ PHÁO KHỚP SÓNG RẢI" — MẶC ĐỊNH của Ballad cứ đi từ 30/9/2026 (người dùng tick nghe rồi bảo đặt làm mặc định; ô
+  tick `balladCuDiSolo` đã gỡ, các cờ nay nằm thẳng trên điệu). Để lùi: bỏ bốn cờ `soloCell` · `cpSoloOwnRhythm` · `cpSoloSheetTexture`
+  · `cpDanSong` khỏi `cuDi`. Lúc làm (29/9) người dùng: *"dùng bộ soạn ballad Cà Pháo và
+  kết hợp với tư duy của bạn hãy soạn ra các câu solo và các lick, run và mốc chuyển đoạn chơi theo phong cách Cà Pháo … phải soạn cho
+  khớp với tiết tấu điệu ballad anh cứ sau khi đã đặt ô tick chêm tiếng nối hợp âm sau"*. Chỉ nghe được ở màu Cà Pháo.
+  - Dạo · giang · kết: bộ soạn ballad CP; tiết tấu tay phải từ solo CHÍNH bài (giang ô 34–36 cho dạo/giang, kết ô 63–64 · 67–68 cho
+    kết), giai điệu/hợp âm/kỹ thuật từ mọi sheet ballad CP; chấm chất liệu theo sheet (như Ballad Để em).
+  - Tay trái dưới câu solo = mốc gõ tay trái của khuôn mặc định (13 tiếng, kể cả ba tiếng chêm 4¼ · 4½ · 4¾), nhưng ba tiếng chêm là
+    nốt HỢP ÂM ĐANG VANG (10 · 8 · 5 đi xuống), không walking sang hợp âm sau. Số đo: tay trái dưới solo sheet Anh Cứ Đi Đi (giang ô
+    33–37, kết ô 62–67; n = 11 ô) rải gốc · 5 · 8 (· 9) · 10 móc kép rồi ngân — ô 33 F2 C3 F3 G3 Ab3 đúng sóng của điệu; phách 4–4¾
+    gõ nốt hợp âm đang vang (ô 62 G3 → Eb3, ô 35 D3 → F3), không đi bass sang hợp âm sau.
+  - Lick / run lúc hát và mốc chuyển đoạn: `cpDanSong` (licky/cpLick.ts).
+*/
+export const CU_DI_SOLO_LEFT: RhythmCell = {
+  lengthBeats: 4,
+  right: [],
+  left: CU_DI_NOI_CELL.left.map(({ danVao: _, ...h }) => h),
+}
+const cuDi: StylePattern = {
+  soloCell: CU_DI_SOLO_LEFT, cpSoloOwnRhythm: true, cpSoloSheetTexture: true, cpDanSong: true,
+  timeSignature: '4/4', beatsPerMeasure: 4, feel: 'straight-block-chord', verified: true, releaseRatio: 1, leftHandTop: 67,
+  // Sàn gốc tay phải C3 (48) — như Slow Rock Lá thư hai tay: gốc tay trái C2–B2 thì gốc tay phải cao đúng một quãng tám, sóng
+  // rải liền từ tay trái sang tay phải ở mọi hợp âm (Fm: Ab3 tay trái → C4 F4 C5 tay phải, đúng ô 9).
+  rightHandRegister: { rootFloor: 48, low: 48, high: 84 },
+  // Giữ tầm tay phải (ô hai hợp âm 2 phách: đỉnh sóng hợp âm trước liền tiếng 1 hợp âm sau). Khuôn gốc không vi phạm chỗ nào.
+  giuTamTay: true,
+  // Sóng tay trái 1–5–8–9–10 lên tới D#4 (gốc B) — sheet ô 14 tay trái Db4. Giữ nhãn tay trái (`fixHandByRegister` không đổi).
+  tayTraiLenCao: true,
+  id: 'ca-phao-ballad-cu-di', name: 'Ballad cứ đi', family: 'ca-phao-ballad-cu-di', familyName: 'Ballad cứ đi', variant: 1, bpm: 63,
+  cpSoloSong: 'Anh Cu Di Di',
+  /*
+    Câu fill Cà Pháo ở chỗ ca sĩ nghỉ — MẶC ĐỊNH từ 30/9/2026 (người dùng: *"hãy biến ô tick câu fill Cà Pháo làm mặc định cho điệu
+    Ballad Cứ đi"*): điệu tự lót fill, ReharmHome soạn câu bằng `cuDiFill.ts` (bảy kỹ thuật xoay vòng, có hợp âm lướt).
+    Cũ: `autoFills: false` (sóng rải tự lấp chỗ trống, không câu lót tự động — như Ballad Để em). Để lùi ("fill dày / chen lời"):
+    trả `autoFills: false` — chỉ còn fill ở ô người dùng tự bấm.
+  */
+  sourceVideos: ['Cà Pháo · Anh cứ đi đi · rải hai tay phiên ô XML 9–16 (khuôn ô 9); đối chiếu 10 · 11 · 14 · 38–45'],
+  note: 'Rải hai tay, mỗi hợp âm một lượt 8 móc kép: tay trái 1–5–8–9–10 rồi tay phải 12–15–19; nhấn 1 · 5 · 8 có tay phải. Mặc định 30/9/2026 (người dùng nghe duyệt).',
+  /*
+    MẶC ĐỊNH từ 30/9/2026 = một lượt 8 tiếng mỗi hợp âm (`CU_DI_MOT_LUOT_CELL`, xem trên). 29/9 → 30/9 là khuôn "chêm tiếng nối hợp âm
+    sau" (`CU_DI_NOI_CELL`; người dùng 29/9: *"đã ổn, hãy đặt ô tick đó làm mặc định"*). Khuôn gốc đầu tiên (chưa từng commit): tay trái
+    bass(0, 2, .85) · 5(.25) · 8(.5) · 9(.75, ¼) · 10(1, 1 phách, .62) · bass(2, 2, .8) · 5(2.25, 1¼) · 8(3.5, ½); tay phải raiNoi 12(1.25)
+    · 15(1.5) · 19(1.75, 1 phách, .7) · cặp [bậc 7 (hợp âm ba: 5), 10](3, 1 phách, .6).
+  */
+  cell: CU_DI_MOT_LUOT_CELL,
+}
+
 export const CP_BALLAD_SONG_STYLES: readonly StylePattern[] = [coEmCho, coEmChoChorus, ngayMai, ngayMaiChorus, acdd, acddChorus]
 // Tách mảng riêng: nút do Claude soạn, không mang màu Codex và không đổi test sáu điệu của Codex.
 export const CP_BALLAD_DE_EM_STYLES: readonly StylePattern[] = [deEm, deEmChorus]
-export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES, ...BALLAD_DERX].map(style => style.id)
+export const CP_BALLAD_CU_DI_STYLES: readonly StylePattern[] = [cuDi]
+export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES, ...CP_BALLAD_CU_DI_STYLES, ...BALLAD_DERX].map(style => style.id)
 export const CP_BALLAD_SONG_FAMILIES = [coEmCho.family, ngayMai.family, acdd.family]

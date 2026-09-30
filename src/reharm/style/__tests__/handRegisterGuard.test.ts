@@ -44,6 +44,10 @@ describe('nhãn tay phải khớp vùng phím', () => {
     expect(fixHandByRegister([at([61], 'left')])[0].hand).toBe('right')
   })
 
+  it('tiếng tay trái mang `giuTay` (điệu cố ý rải tay trái lên trên C4 như sheet — Ballad cứ đi) thì giữ nhãn', () => {
+    expect(fixHandByRegister([{ ...at([61], 'left'), giuTay: true }])[0].hand).toBe('left')
+  })
+
   it('không đụng gì tới tay phải', () => {
     for (const notes of [[36], [67], [40, 55]]) {
       expect(fixHandByRegister([at(notes, 'right')])[0].hand).toBe('right')

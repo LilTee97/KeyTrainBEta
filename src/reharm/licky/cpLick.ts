@@ -4,6 +4,7 @@ import type { SongKey } from '../fillSoloGenerator/soloVocabulary'
 import { scaleTones } from '../reharmEngine/keyDetection'
 import { beatsOf, chordStarts } from '../chordTiming'
 import { hoCuaDieu } from '../style/hoDieu'
+import { acddRunPitches } from '../style/cpBalladConnections'
 import type { StylePattern, TimelineEvent } from '../style/types'
 import data from './cpPhrases.json'
 
@@ -32,6 +33,48 @@ export function cpBacking(backing: readonly TimelineEvent[], windows: readonly {
     return [{ ...event, durationBeats: window.start - event.startBeat }]
   })
 }
+
+/*
+  CÂU LICK ĐAN VÀO SÓNG RẢI (điệu khai `cpDanSong`, Ballad cứ đi — ô tick nghe thử 29/9/2026). Người dùng: *"phải soạn cho khớp
+  với tiết tấu điệu ballad anh cứ sau khi đã đặt ô tick chêm tiếng nối hợp âm sau"*. Cũ (`cpBacking`): tắt cả hai tay trong khung,
+  thay bằng bè trầm của sheet nguồn (bài khác) → sóng rải đứt giữa ô. Nay:
+  - tay của câu (lick: tay phải; câu chạy chuyển đoạn: tay trái) tắt trong khung như cũ;
+  - tay kia GIỮ tiếng ngân dài (≥ 1 phách: gốc, bậc 10 phách 2) và mọi tiếng câu không gõ trùng; NHƯỜNG tiếng móc kép gõ cùng lúc
+    với câu, và mọi tiếng chéo / trùng phím với câu. Câu gõ dày thì tay kia chỉ còn gốc ngân — đúng cách CP đệm dưới câu chêm
+    (cửa fill đã xác nhận: Để Em 40 · Chưa Bao Giờ 22 · 75→76 tay trái chỉ giữ một cú ngân dưới câu; Anh Cứ Đi Đi ô 21 · 29 · 50 ·
+    58 cùng hình nhưng VAI CHƯA XÁC NHẬN — có thể là giai điệu lời); câu thưa thì sóng rải lấp chỗ nghỉ.
+  - chỗ nghỉ đôn ra [exit, end) im cả hai tay.
+  Đây là cách ghép của Claude, không phải số đo.
+*/
+export function cpDanSong(backing: readonly TimelineEvent[],
+  placements: readonly { start: number; end: number; exit?: number; events: readonly TimelineEvent[] }[]): TimelineEvent[] {
+  const lo = (e: TimelineEvent) => Math.min(...e.notes), hi = (e: TimelineEvent) => Math.max(...e.notes)
+  return backing.flatMap(event => {
+    const p = placements.find(w => event.startBeat < w.end - 1e-6 && event.startBeat + event.durationBeats > w.start + 1e-6)
+    if (!p) return [event]
+    const exit = p.exit ?? Infinity
+    // Câu có nốt của CHÍNH tay này (câu hai tay: câu fill Ballad cứ đi có vỏ hợp âm lướt tay trái) → tay này nhường trọn khoảng
+    // nốt ấy chiếm; ngoài khoảng ấy thì theo luật tay kia bên dưới.
+    const cung = p.events.filter(a => a.hand === event.hand)
+    const tu = cung.length ? Math.min(...cung.map(a => a.startBeat)) : Infinity
+    const den = cung.length ? Math.max(...cung.map(a => a.startBeat + a.durationBeats)) : -Infinity
+    if (event.startBeat >= exit - 1e-6 || (event.startBeat < den - 1e-6 && event.startBeat + event.durationBeats > tu + 1e-6))
+      return event.startBeat >= Math.min(tu, exit) - 1e-6 ? [] : [{ ...event, durationBeats: Math.min(tu, exit) - event.startBeat }]
+    const kia = p.events.filter(a => a.hand !== event.hand)
+    const clash = (a: TimelineEvent) => overlap(a, event) && (event.hand === 'left' ? hi(event) >= lo(a) : lo(event) <= hi(a))
+    const until = Math.min(event.startBeat + event.durationBeats, exit)
+    if (event.startBeat < p.start - 1e-6 || event.durationBeats >= 1 - 1e-6) {
+      const cut = Math.min(until, ...kia.filter(clash).map(a => a.startBeat))
+      return cut > event.startBeat + 1e-6 ? [{ ...event, durationBeats: cut - event.startBeat }] : []
+    }
+    if (kia.some(a => Math.abs(a.startBeat - event.startBeat) < 1e-6 || clash(a))) return []
+    return [{ ...event, durationBeats: until - event.startBeat }]
+  })
+}
+
+/** Nguồn của câu chạy chuyển đoạn `cpDanSong`: tay trái ô 16 Anh Cứ Đi Đi (Db3 F3 Ab3 B3 | Bb3 G3 E3 C3 vào điệp). */
+const ACDD_16: CpPhrase = { id: 'acdd-16', song: 'Anh Cu Di Di', genre: 'ballad', mode: 'minor', hand: 'left', kind: 'run',
+  bar: 16, offset: 2, meter: 4, supportComplete: true, support: [], evidence: 'confirmed-transition', span: 2, tags: [], notes: [] }
 
 export function cpGenre(style: StylePattern): string | null {
   return hoCuaDieu(style.id) ?? (style.id.includes('bossa') ? 'bossa' : null)
@@ -173,19 +216,31 @@ export interface CpLickOptions {
    */
   transitionRests?: ReadonlyMap<number, number>
   keyboard?: { low: number; high: number }
+  /**
+   * Điệu tự soạn câu FILL (Ballad cứ đi — `fillCuDi`): ở chỗ fill (không phải run / chuyển đoạn) hỏi hàm này trước kho câu CP;
+   * câu trả về đan vào sóng rải (`cpDanSong`), không cắt tay trái. Trả rỗng thì lui về kho câu như cũ.
+   */
+  datFill?: (yc: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
+    readonly { note: number; startBeat: number; durationBeats: number; hand?: 'left' | 'right'; velocity?: number }[]
 }
+
+/** Nguồn ghi cho câu fill điệu tự soạn (`datFill`). */
+const DAT_FILL: CpPhrase = { ...ACDD_16, id: 'dieu-tu-soan-fill', song: 'soạn theo điệu', kind: 'fill', hand: 'right', bar: 0,
+  offset: 0, span: 0, evidence: 'style-composed' }
 
 export function planCpLicks(options: CpLickOptions) {
   const { chords, style, key, backing, beatsPerChord, breaths, vocal, sectionEnds,
     extraFills, extraRuns, skip, take = 0 } = options
   const reason = cpAvailability(style, key)
   const placements: { mainIndex: number; kind: 'fill' | 'run'; source: CpPhrase; events: TimelineEvent[];
-    start: number; end: number; advanced?: boolean }[] = []
+    start: number; end: number; exit?: number; advanced?: boolean }[] = []
+  const dan = !!style.cpDanSong
   const skipped: number[] = []
   const protectedAt = (start: number, end: number) => options.protectedWindows?.some(w =>
     start < w.end - 1e-6 && end > w.start + 1e-6)
   if (reason || !key || vocal === 'full') return { events: [], backing: [...backing], placements, skipped, reason }
-  const book = cpPhrases.filter(p => p.genre === cpGenre(style))
+  // Đan vào sóng: tay trái là của điệu, chỉ câu tay phải chen vào.
+  const book = cpPhrases.filter(p => p.genre === cpGenre(style) && (!dan || p.hand === 'right'))
   const starts = chordStarts(chords, beatsPerChord)
   let main = -1
   let lastEnd = -Infinity
@@ -205,6 +260,19 @@ export function planCpLicks(options: CpLickOptions) {
     const exit = end - nghi
     if (transition && !extraFills?.has(main)) {
       const windowStart = starts[i] + (options.transitionDelays?.get(main) ?? 0)
+      if (dan) {
+        // Câu chạy chuyển đoạn của CHÍNH bài: sheet Anh Cứ Đi Đi có 1/4 chỗ chuyển đoạn là câu chạy đàn (ô 16 → điệp; ô 32 ·
+        // 37 · 61 là giai điệu lấy đà) — tay trái 8 móc kép phách 3–4 đúng chỗ 8 tiếng nửa sau sóng rải, tay phải giữ. Thiếu
+        // chỗ thì lấy đuôi câu (4–7 tiếng), vẫn móc kép, kết ở `exit`.
+        const n = Math.min(8, Math.floor((exit - Math.max(windowStart, exit - 2)) * 4 + 1e-6))
+        if (n < 4) { skipped.push(main); continue }
+        const run = acddRunPitches(chord, chords[i + 1]).slice(8 - n).map((pitch, k): TimelineEvent => ({
+          hand: 'left', notes: [pitch], startBeat: exit - (n - k) * .25, durationBeats: .25, velocity: k === 0 || k === n - 4 ? 66 : 56 }))
+        placements.push({ mainIndex: main, kind: 'run', source: ACDD_16, events: run, start: run[0].startBeat, end,
+          exit: nghi > 0 ? exit : undefined })
+        lastEnd = end
+        continue
+      }
       // Prefer marked transition gestures; reduce BEFORE fitting the available rest.
       const candidates = cpTransitions.filter(p => p.meter === style.beatsPerMeasure)
       const rank = (p: CpPhrase) => (p.genre === cpGenre(style) ? 0 : 4) +
@@ -252,9 +320,22 @@ export function planCpLicks(options: CpLickOptions) {
     }
     if (!forced && end - lastEnd < style.beatsPerMeasure * 2) continue
     const wantRun = extraRuns?.has(main) || (!extraFills?.has(main) && sectionEnds?.has(main))
+    if (options.datFill && !wantRun && nghi === 0 && i + 1 < chords.length) {
+      const not = options.datFill({ chord, next: chords[i + 1], endBeat: exit, beats: exit - starts[i], take: take + main })
+      if (not.length) {
+        const events = not.map((x): TimelineEvent => ({ hand: x.hand ?? 'right', notes: [x.note as MidiNote], startBeat: x.startBeat,
+          durationBeats: x.durationBeats, velocity: x.velocity ?? 64 }))
+        placements.push({ mainIndex: main, kind: 'fill', source: DAT_FILL, events,
+          start: Math.min(...events.map(e => e.startBeat)), end: Math.max(...events.map(e => e.startBeat + e.durationBeats)) })
+        lastEnd = end
+        continue
+      }
+    }
     const kinds = wantRun ? (forced ? ['run'] : ['run', 'fill']) : ['fill']
     let found = false
     for (const kind of kinds) {
+      // Đan vào sóng vẫn chỉ lấy câu sheet ghi đủ hai tay (câu trọn): mở cả mẩu thiếu bè thì câu chêm vụn — TB 2,9 nốt · 1 phách
+      // so với 3,6 nốt · 1,3 phách (16 chỗ chêm, vòng Fa thứ 16 hợp âm, 8 lượt).
       const byKind = book.filter(p => p.kind === kind && p.supportComplete && p.meter === style.beatsPerMeasure)
       const sameMode = byKind.filter(p => p.mode === key.scale)
       const pool = sameMode.length ? sameMode : byKind
@@ -272,15 +353,18 @@ export function planCpLicks(options: CpLickOptions) {
           if (protectedAt(start, start + phrase.span)) continue
           const lead = placeCpPhrase(phrase, chord, chords[i + 1], key, start, take)
           if (!lead.length) continue
-          const support = phrase.support.length ? placeCpPhrase({ ...phrase, notes: phrase.support,
+          const support = phrase.support.length && !dan ? placeCpPhrase({ ...phrase, notes: phrase.support,
             hand: phrase.hand === 'right' ? 'left' : 'right' }, chord, chords[i + 1], key, start, take) : []
-          if (phrase.support.length && !support.length) continue
+          if (phrase.support.length && !dan && !support.length) continue
           const events = [...lead, ...support]
           // Different hands cannot strike/hold the same physical key over one another.
           if (lead.some(a => support.some(b => overlap(a, b) && a.notes.some(n => b.notes.includes(n))))) continue
-          const window = { start, end: nghi > 0 ? end : start + phrase.span }
+          // Đan vào sóng: tiếng ngân dài tay trái (gốc, bậc 10) ở lại dưới câu — chéo / trùng phím thì dời câu, không tắt nền.
+          if (dan && backing.some(b => b.hand === 'left' && b.durationBeats >= 1 - 1e-6 &&
+            lead.some(a => overlap(a, b) && Math.max(...b.notes) >= Math.min(...a.notes)))) continue
+          const window = { start, end: nghi > 0 ? end : start + phrase.span, exit: dan && nghi > 0 ? exit : undefined }
           // A held note crossing the exit needs a longer source cell; do not silence it outside the cell.
-          if (backing.some(e => overlap(e, { ...lead[0], startBeat: start, durationBeats: phrase.span }) &&
+          if (backing.some(e => (!dan || e.hand === 'right') && overlap(e, { ...lead[0], startBeat: start, durationBeats: phrase.span }) &&
             e.startBeat + e.durationBeats > window.end + 1e-6)) continue
           placements.push({ mainIndex: main, kind: kind as 'fill' | 'run', source: phrase, events, ...window })
           lastEnd = end
@@ -293,5 +377,8 @@ export function planCpLicks(options: CpLickOptions) {
     }
     if (!found && forced) skipped.push(main)
   }
-  return { events: placements.flatMap(p => p.events), backing: cpBacking(backing, placements), placements, skipped, reason }
+  // Câu điệu tự soạn luôn đan vào sóng; câu kho CP đan khi điệu khai `cpDanSong`, không thì thay cả hai tay như cũ.
+  const danVao = (p: typeof placements[number]) => dan || p.source === DAT_FILL
+  return { events: placements.flatMap(p => p.events),
+    backing: cpBacking(cpDanSong(backing, placements.filter(danVao)), placements.filter(p => !danVao(p))), placements, skipped, reason }
 }

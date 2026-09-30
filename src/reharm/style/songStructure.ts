@@ -348,8 +348,9 @@ function shift(
 export function fixHandByRegister(
   events: readonly TimelineEvent[],
 ): TimelineEvent[] {
+  // `giuTay`: điệu cố ý cho tay trái rải lên trên C4 như sheet (Ballad cứ đi) — nhãn đúng, không đổi.
   return events.map((event) =>
-    event.hand === 'left' && Math.min(...event.notes) > 60
+    event.hand === 'left' && !event.giuTay && Math.min(...event.notes) > 60
       ? { ...event, hand: 'right' as const }
       : event,
   )

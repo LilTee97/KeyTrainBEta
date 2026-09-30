@@ -4,7 +4,7 @@ import { HAI_STYLES } from './haiStyles'
 import { TON_HUNG_STYLES } from './tonHungStyles'
 import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED } from './caPhaoBossa'
 import { CA_PHAO_BALLAD } from './caPhaoBallad'
-import { CP_BALLAD_DE_EM_STYLES, CP_BALLAD_SONG_STYLES } from './caPhaoBalladSongs'
+import { CP_BALLAD_CU_DI_STYLES, CP_BALLAD_DE_EM_STYLES, CP_BALLAD_SONG_STYLES } from './caPhaoBalladSongs'
 import { LINH_NHI_SLOW_ROCK } from './linhNhiSlowRock'
 import { SLOW_ROCK_LT } from './slowRockLT'
 import { BLUE_SUN, BLUE_SUN_CHORUS } from './bluesClaude'
@@ -532,6 +532,7 @@ export const VERIFIED_STYLES: readonly StylePattern[] = [
   ...CA_PHAO_BALLAD,
   ...CP_BALLAD_SONG_STYLES,
   ...CP_BALLAD_DE_EM_STYLES,
+  ...CP_BALLAD_CU_DI_STYLES,
   ...BALLAD_DERX,
   ...BOLERO_STYLES,
   ...LINH_NHI_SLOW_ROCK,

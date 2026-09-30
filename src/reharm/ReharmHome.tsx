@@ -338,6 +338,7 @@ import {
   BALLAD,
   getStyle,
 } from './style/styleLibrary'
+import { cuDiFillTheoThu, danFillVaoSong } from './style/cuDiFill'
 import { StylePicker } from './style/StylePicker'
 import type { ParsedChord } from './types'
 import { voiceLeadTwoHands } from './voicingGenerator/handSplitVoicing'
@@ -995,6 +996,18 @@ export function ReharmHome() {
     Robert / Ray): `luotBlueSun` chèn nửa sau ô cuối mỗi đoạn — bII7 / V7 (V7#9) / hợp âm giảm nửa cung dưới hợp âm đích. Lưu theo bài.
   */
   const [bluesLuot, setBluesLuot] = useState(false)
+  /*
+    Ballad cứ đi — mặc định 30/9/2026: mỗi hợp âm MỘT lượt 8 tiếng (`cell` của điệu = `CU_DI_MOT_LUOT_CELL`, 2 phách máy; `chordBeats`
+    theo độ dài ô, bỏ qua ô chọn "Mỗi hợp âm") và solo · lick · run Cà Pháo khớp sóng rải (cờ trên điệu). Ba ô tick "giai điệu dẫn",
+    "mỗi hợp âm 8 phách", "solo · lick · run" đã gỡ (người dùng: "2 chỗ tôi chọn hãy đặt làm mặc định … Ô giai điệu dẫn … hãy bỏ").
+  */
+  /*
+    Ballad cứ đi — CÂU FILL CÀ PHÁO mặc định từ 30/9/2026 (ô tick `balladCuDiFill` đã gỡ; người dùng: "hãy biến ô tick câu fill Cà Pháo
+    làm mặc định"): ở chỗ fill, câu do `cuDiFill.ts` soạn — bảy kỹ thuật xoay vòng theo thứ tự chỗ fill, có hợp âm lướt — đan vào sóng rải.
+    Chạy cả màu thường (`autoFillRun` của bộ chêm) lẫn màu Cà Pháo (CP Lick hỏi `datFill` trước kho câu). Ô fill bật/tắt tay dùng như cũ.
+  */
+  const laCuDi = style.family === 'ca-phao-ballad-cu-di'
+  const cuDiFill = laCuDi
   const bluesLick = laSlowRock && bluesLickSR
   /*
     Slow Blues (id `blue-sun`) có bộ soạn dạo · giang · kết riêng (`bluesClaudeSolo`, mỗi hợp âm 6 phách) — mở cổng như màu Linh
@@ -1019,7 +1032,8 @@ export function ReharmHome() {
   const soanBlues = bluesSolo && bluesSoan6
   // Tay phải chạy câu thì nhường: lick Blues bỏ hợp âm đệm tay phải bị đè (`nhuongTayPhai`); điệu khác dời xuống tay trái như cũ.
   const nhuongKhiChayCau = (backing: Parameters<typeof giveCompingToLeft>[0], fill: Parameters<typeof giveCompingToLeft>[1]) =>
-    bluesLick ? nhuongTayPhai(backing, fill)
+    cuDiFill ? danFillVaoSong(backing, fill)
+      : bluesLick ? nhuongTayPhai(backing, fill)
       : luot12Blues ? nhuongTayTrai(giveCompingToLeft(backing, fill, style.beatsPerMeasure), fill)
       : giveCompingToLeft(backing, fill, style.beatsPerMeasure)
   const chordBeats = useMemo(() => {
@@ -1029,9 +1043,10 @@ export function ReharmHome() {
     if ((laSlowRock && slowRockMotO) || style.family === 'blue-sun') {
       return style.beatsPerMeasure * (style.gridUnit ?? 1)
     }
+    if (laCuDi) return style.cell!.lengthBeats
     const measures = beatsPerChord / 4
     return Math.max(1, measures * style.beatsPerMeasure)
-  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, style.family, laSlowRock, slowRockMotO, isTwist, twistSinglePass])
+  }, [beatsPerChord, style.beatsPerMeasure, style.gridUnit, style.family, laSlowRock, slowRockMotO, isTwist, twistSinglePass, laCuDi, style.cell])
 
   /**
    * Hợp âm kết mỗi đoạn, trừ đoạn cuối bài.
@@ -2428,8 +2443,10 @@ export function ReharmHome() {
     transitionDelays: new Map([...transitions].map(([i, run]) => [i, run.octaves <= 0 ? Infinity : run.delayBeats ?? 0])),
     transitionRests: new Map(Object.entries(nghiDonRa).map(([i, rest]) => [Number(i), rest])),
     take: take + phraseSpin + playSpin.current,
+    // Chỗ fill thứ mấy trong bài → kỹ thuật fill xoay vòng (người dùng: "phải chơi đa dạng các kỹ thuật … ko phải lặp lại đúng 1 kiểu").
+    ...(cuDiFill ? { datFill: cuDiFillTheoThu(take + phraseSpin + playSpin.current) } : {}),
   }), [withPassing, style, reharm.key, accompaniment, accompanimentPlan.protectedWindows, chordBeats, breaths, singing,
-    transitions, extraFills, extraRuns, fillSkip, phraseSpin, intensity, caPhaoKeyboardRange, nghiDonRa])
+    transitions, extraFills, extraRuns, fillSkip, phraseSpin, intensity, caPhaoKeyboardRange, nghiDonRa, cuDiFill])
   const cpPreview = useMemo(() => cpLick ? cpPlan(0) : null, [cpLick, cpPlan])
 
   /**
@@ -2742,7 +2759,8 @@ export function ReharmHome() {
           // Linh Run cho họ Slow Rock: câu chạy slow rock của chị (+ cao độ câu chạy bolero trên tiết tấu
           // slow rock), không dùng sổ bolero 4/4 — xem `chayLinhNhi`.
           // Lick Blues (ô tick ở họ slow rock) đứng trước mọi đường khác — xem `bluesLick`.
-          ...(bluesLick
+          ...(cuDiFill ? { autoFillRun: cuDiFillTheoThu(take + phraseSpin + playSpin.current) }
+            : bluesLick
             ? (() => {
                 const lick = (yeuCau: { chord: ParsedChord; next: ParsedChord; endBeat: number; beats: number; take: number }) =>
                   chayBluesClaude({ ...yeuCau, key: reharm.key, mocDon: style.gridUnit ?? 1, soan: soanBlues })
@@ -2797,6 +2815,7 @@ export function ReharmHome() {
       bluesLick,
       soanBlues,
       luot12Blues,
+      cuDiFill,
     ],
   )
 
@@ -4983,7 +5002,7 @@ export function ReharmHome() {
               Mỗi hợp âm
               <select
                 value={beatsPerChord}
-                disabled={laSlowRock && slowRockMotO}
+                disabled={(laSlowRock && slowRockMotO) || laCuDi}
                 onChange={(event) =>
                   setBeatsPerChord(Number(event.target.value))
                 }

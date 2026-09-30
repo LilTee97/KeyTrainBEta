@@ -75,6 +75,9 @@ export interface RhythmHit {
     /** Với som: chỉ đánh nếu hợp âm kế tiếp bắt đầu đúng lúc tiếng này hết.
      * Bass dẫn không được nhắm một hợp âm còn xa hoặc tự dẫn ở cuối bài. */
     requireNextChord?: boolean
+    /** Với som + requireNextChord: hợp âm sau KHÔNG vào đúng lúc tiếng này hết (hợp âm đang vang còn ngân, cuối bài) thì vẫn đánh,
+     *  theo hợp âm ĐANG VANG — thay vì bỏ tiếng (Ballad cứ đi: tiếng 8 cuối ô luôn sát tiếng 1 ô sau). */
+    giuKhiKhongDoi?: boolean
     /** Walking bass (chỉ tay trái): các tiếng mang cờ liền nhau được soạn cùng lúc thành một dòng đi liền bậc từ nốt
      * bass trước tới nốt bass của tiếng kế không mang cờ; `tones` chỉ dùng khi không soạn được (xem `walkingBass`). */
     danVao?: boolean
@@ -180,6 +183,13 @@ export interface StylePattern {
   leftHandTop?: number
   /** Fixed RH register for a scored two-hand arpeggio; avoids nearest-octave folding. */
   rightHandRegister?: { rootFloor: number; low: number; high: number }
+  /** Giữ tầm tay phải: tiếng tay phải mà cùng các nốt tay phải gõ trong ½ phách trước nó vượt một quãng tám thì dời cả tiếng một
+   *  quãng tám về phía chúng (`giuTamTay` trong patternRenderer). Ballad cứ đi — người dùng: "tay người ko thể đánh". */
+  giuTamTay?: boolean
+  /** Tay trái của điệu cố ý lên trên C4 (rải theo sheet): tiếng tay trái mang `giuTay`, `fixHandByRegister` không dán nhãn tay phải.
+   *  Không có cờ này thì Ballad cứ đi hiện C#4 (bậc 10 tay trái trên A) thành tay phải cùng lúc C#5+E5 — người dùng: "tay phải đánh
+   *  bị xa khó đánh". */
+  tayTraiLenCao?: boolean
 
   /**
    * Trần số cú gõ tay trái ở đoạn solo, nếu điệu này cần nới.
@@ -250,6 +260,12 @@ export interface StylePattern {
    * cụm thì nhận kỹ thuật ấy. Bỏ trống = như cũ (chỉ mượn tiết tấu bài gốc một khung khi khác giọng).
    */
   cpSoloOwnRhythm?: boolean
+  /**
+   * CP Lick ĐAN vào sóng rải của điệu (Ballad cứ đi): câu lick chỉ thay tay phải, bỏ bè trầm của sheet nguồn; tay trái của
+   * điệu giữ tiếng ngân dài, nhường đúng tiếng câu lick gõ. Mốc chuyển đoạn = câu chạy tay trái ô 16 Anh Cứ Đi Đi
+   * (`acddRunPitches`), tay phải giữ. Xem `cpDanSong` trong `licky/cpLick.ts`. Bỏ trống = như cũ (thay cả hai tay).
+   */
+  cpDanSong?: boolean
   /** `false`: ô đệm tự lấp chỗ trống, tắt câu lót tự động (ô người dùng chọn, chỗ chuyển đoạn vẫn chêm). */
   autoFills?: false
   /** Giải thích ngắn cho người dùng. */
@@ -283,4 +299,9 @@ export interface TimelineEvent {
    * nên cử chỉ. Xem `RhythmHit.som`.
    */
   som?: boolean
+  /**
+   * Nhãn tay CỐ Ý — `fixHandByRegister` không đổi. Tay trái của điệu rải lên trên C4 như sheet (Ballad cứ đi: sóng 1–5–8–9–10 trên
+   * gốc A · Bb · B lên C#4 · D4 · D#4; sheet Cà Pháo ô 14 tay trái Db4). Xem `StylePattern.tayTraiLenCao`.
+   */
+  giuTay?: boolean
 }

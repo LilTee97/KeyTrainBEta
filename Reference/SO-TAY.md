@@ -4468,3 +4468,94 @@ câu dạo · giang · kết riêng. **Chưa nghe duyệt.**
 **Triệu chứng để lùi:** tay phải nặng → bỏ cú chặn 1& · 3& · 4&; mất phách 2–4 → nhấn 1,15 → 1,3; đục → trường độ ¼ → ⅛.
 
 Toàn suite **2.937 qua / 7 đỏ** — đúng 7 đỏ cũ. `tsc` sạch.
+
+## Bước — Nút "Ballad cứ đi": đệm rải hai tay Cà Pháo (*Anh Cứ Đi Đi*), solo · lick · run · câu fill Cà Pháo — ĐÃ NGHE DUYỆT làm mặc định (29–30/9/2026)
+
+Người dùng (29/9): *"hãy phân tích kỹ lại sheet Anh cứ đi đi của Cà Pháo để trích tiết tấu đệm rải ballad (từ ô 9 trở đi) … Tạo
+thành nút Ballad cứ đi"*. Mỗi lối chơi dựng sau một ô tick nghe thử, rồi người dùng chốt: *"tick chêm tiếng nối hợp âm sau đã ổn, hãy
+đặt ô tick đó làm mặc định"* (29/9) → *"2 chỗ tôi chọn hãy đặt làm mặc định … Ô giai điệu dẫn vào hợp âm sau hãy bỏ"* (30/9: mỗi hợp
+âm 8 phách · solo · lick · run) → *"hãy biến ô tick câu fill Cà Pháo làm mặc định"* (30/9). Mọi ô tick và trường lưu bài của nút đã gỡ
+(`balladCuDiNoi` · `balladCuDiDan` · `balladCuDiMotLuot` · `balladCuDiSolo` · `balladCuDiFill` — bài lưu còn trường ấy, bộ đọc bỏ qua).
+Hồ sơ đầy đủ (mọi lượt sửa, lời người dùng, số đo): `Reference/CA-PHAO-BALLAD-CU-DI.md`; md thầy: mục "Điệu Ballad cứ đi" trong
+`PianoBrain/knowledge/teachers/ca-phao.md`.
+
+**Đổi gì:**
+- `styleLibrary/caPhaoBalladSongs.ts` — nút `cuDi` (♩ 63): khuôn `CU_DI_MOT_LUOT_CELL` = mỗi hợp âm MỘT lượt 8 móc kép (2 phách máy):
+  tay trái 1 · 5 · 8 · 9 · 10 rồi tay phải bắt tiếp 12 · 15 · 19, nhấn tiếng 1 · 5 · 8 có tay phải (Fm: F2 C3 F3 G3 Ab3 | C4 F4 C5 —
+  đúng ô 9). `CU_DI_NOI_CELL` (hai lượt mỗi ô nhịp, lượt hai 3 tiếng chêm walking — mặc định 29/9) giữ để lùi; `CU_DI_SOLO_LEFT` (tay
+  trái dưới solo). Cờ điệu: `soloCell` · `cpSoloOwnRhythm` · `cpSoloSheetTexture` · `cpDanSong` · `giuTamTay` · `tayTraiLenCao`; bỏ
+  `autoFills: false`.
+- `ReharmHome.tsx` — `chordBeats` của Ballad cứ đi = độ dài ô (ô chọn "Mỗi hợp âm" khoá); câu fill `cuDiFillTheoThu` ở cả đường fill
+  thường (`autoFillRun`) lẫn CP Lick (`datFill`); đệm nhường câu fill bằng `danFillVaoSong`.
+- `style/cuDiFill.ts` (mới) — câu fill Cà Pháo: bảy kỹ thuật xoay vòng theo THỨ TỰ CHỖ FILL (leo · tay trái dẫn · mở · bass đi · sóng
+  lên xuống · câu đơn · chuyển quãng tám), hợp âm lướt `chonHopAmLuot`.
+- `licky/cpLick.ts` — `cpDanSong`: câu lick CP đan vào sóng rải (câu chỉ thay tay phải; tay kia giữ tiếng ngân, nhường tiếng trùng;
+  câu hai tay thì mỗi tay nhường khoảng tay ấy chiếm). Mốc chuyển đoạn = câu chạy tay trái ô 16 (`acddRunPitches`). `datFill`.
+- `cpBalladComposition.ts` — chỉ khi điệu có `soloCell` + `tayTraiLenCao` (Ballad cứ đi): trần tay trái theo nốt tay phải LÚC GÕ, tay
+  phải vào thấp sau thì cắt ngân; tay phải không vang thì trần `leftHandTop`; bậc 9 móc kép giữ (ngoài giọng → nốt trong giọng sát
+  dưới); bỏ bè trong thấp hơn đỉnh trong ½ phách quá quãng tám. Kho tiết tấu bài gốc chỉ một khung → thêm khung (dạo/giang + kết
+  63–64; kết + 67–68).
+- `patternRenderer.ts` — `danVao` chạy cả hai tay, đích ở ô sau; `som` + `giuKhiKhongDoi`; hậu kỳ `giuTamTay`; cờ `giuTay`; `rootForced`
+  so với min(ô nhịp, độ dài ô). `songStructure.ts` — `fixHandByRegister` bỏ qua tiếng `giuTay`.
+- Script đo: `scripts/audit_cp_acdd_rai.py` (rải hai tay Anh Cứ Đi Đi), `scripts/audit_cp_noi_hop_am.py` (Cà Pháo nối hợp âm).
+
+**Số đo** (Anh Cứ Đi Đi: vạch nhịp đúng pha, 0 cú lệch lưới móc kép): chuỗi rải vắt hai tay ô 9–16 **7/8** ô · phiên 2 5/8 · điệp
+2/16 · 6/16. Tay trái dưới câu solo vẫn là sóng rải (n = 11 ô). Chỗ chuyển đoạn: 1/4 là câu chạy đàn (ô 16). Câu fill: 5 cửa người
+dùng đã xác nhận (Để Em 40 · 59, Chưa Bao Giờ 22 · 50→51 · 75→76) — 4/5 ôm vạch nhịp, 4/5 thế bấm leo 1–3 quãng tám, 4/5 kết cú ngân.
+Hợp âm lướt (5 bài đúng pha, 288 chỗ đổi hợp âm phần hát): ghi ký hiệu 19 (7%) · ngầm trong tay trái 16 (6%); luật chọn khớp 10/11
+chỗ soi tận nốt.
+
+### Tầm tay phải phải đo SAU `fixHandByRegister` — bậc 10 tay trái trên C4 bị dán nhãn tay phải
+
+Hai lần báo "0 chỗ vượt quãng tám" mà người dùng vẫn gửi ảnh tay phải xa. Lần 1: test chỉ dựng vòng hai hợp âm thứ/trưởng/bảy — chỗ
+vượt thật ở hợp âm treo (bậc 3 thiếu → lùi bậc 7, A5 + Gb5) và ở chỗ nối hai ô (71/3538 cú → 0/3620 sau `som` + `giuTamTay`). Lần 2:
+`fixHandByRegister` (cuối `buildArrangedSong`) đổi nhãn cụm tay trái nằm hết trên C4 sang tay phải — C#4 của sóng trên A thành "tay
+phải" cùng C#5+E5 (15 nửa cung); test đo thẳng đầu ra bộ dựng nên không thấy. Sửa bằng cờ `tayTraiLenCao` → `giuTay` (chỉ nhãn, âm
+thanh không đổi): tắt cờ 44/223 cú vượt, bật 0/192. Test tầm tay nay quét vòng dài × độ dài hợp âm 2 · 4 · 6 · 8 phách, qua
+`fixHandByRegister`.
+
+### Ô ngắn hơn một ô nhịp: `rootForced` ép bass — ngưỡng "hợp âm ngắn" = min(ô nhịp, độ dài ô)
+
+Khuôn một lượt dài 2 phách → hợp âm 2 phách nào cũng "ngắn hơn ô nhịp" → tiếng bass đầu bị ép lên nốt thấp nhất của thế bấm: Fm ra F3
+thay F2, sóng mở F3 rồi xuống C3. **Cũ:** so với ô nhịp (`beatsPerMeasure × gridUnit`). Mọi ô của các điệu khác dài ≥ một ô nhịp →
+không đổi (toàn bộ test: vẫn đúng 7 đỏ cũ).
+
+### "Phách" ở Ballad cứ đi = tiếng móc kép của sóng rải
+
+*"mỗi hợp âm chơi 8 phách rồi chuyển"* — hỏi lại mới rõ: 8 phách = một lượt 8 TIẾNG (2 nốt đen máy), không phải 8 nốt đen. Người dùng
+gọi "phách 5" cho tiếng thứ 5 của lượt rải (như Slow rock đếm móc đơn).
+
+### Hợp âm lướt Cà Pháo: đếm KÝ HIỆU thì hiếm, đếm NỐT thì ~1/8 chỗ đổi hợp âm
+
+md Cà Pháo từng ghi hợp âm lướt "hiếm — 2 chỗ trên hơn 400 ký hiệu". Đo trên nốt tay trái: át 7 của hợp âm sau với bass là nốt cảm
+âm (F7/A → Bbm), bII7 nửa cung trên hợp âm đích (Db7 → C7), bII7 hàng xóm rồi về (Db7 trong ô C7 trước Fm) — không in tên. Luật "cho
+bass đi gần nhất" bản đầu chỉ khớp 7/11 và ra Gb7 cho C7 → Fm (sheet: Db7 hàng xóm) → bỏ.
+
+### Câu chêm Anh Cứ Đi Đi ô 21 · 29 · 50 · 58: vai CHƯA XÁC NHẬN
+
+Ghi 29/9 như số đo "câu chêm lúc hát" — thật ra suy từ hình nốt; sheet không có lời, người dùng chưa chốt cửa lời trong phần hát.
+md Cà Pháo đã cảnh báo đúng bẫy ấy ("không suy vai từ hình nốt"). Sửa 30/9 ở cả ba chỗ ghi.
+
+### Python ghi file ở chế độ văn bản trên Windows đổi LF → CRLF — test đọc mã nguồn đỏ
+
+`open(p, 'w')` dịch `\n` thành `\r\n`: ReharmHome.tsx thành 6 307 dòng CRLF, `caPhaoFullSolo.test.ts` (đọc chuỗi trong mã) đỏ. Repo bật
+`core.autocrlf` nên `git diff` không lộ. Ghi file bằng `newline=''` (hoặc công cụ sửa), đếm `\r\n` sau khi ghi.
+
+**Test**: `caPhaoBalladCuDi.test.ts` 24 test (khuôn · nhấn · tầm tay trên vòng dài · solo tiết tấu bài gốc · sóng tay trái dưới solo
+· chất liệu · lick đan · câu chạy ô 16 · nghỉ đôn ra · hợp âm lướt 11 chỗ sheet · bảy kỹ thuật fill × 12 gốc × 4 bước × 6 cặp loại · 7
+chỗ fill liền nhau ra 7 câu khác nhau); `handRegisterGuard.test.ts` thêm ca `giuTay`. Toàn bộ **2.947 qua / 7 đỏ** — đúng 7 đỏ cũ
+(`phraseAcrossBar`, `daoTruongLinhNhi`, `handSplitAudit`, `leftArpeggioAboveRoot`, `sietHopAm`, 2 × `tuyenSolo`; đỏ y hệt trên HEAD sạch,
+đã chạy thử bằng worktree tạm). `tsc` sạch.
+
+**Triệu chứng để lùi:**
+- "8 tiếng mỗi hợp âm, đổi hợp âm vội" → `cell: CU_DI_NOI_CELL` và bỏ nhánh `laCuDi` ở `chordBeats` (mặc định 29/9).
+- "nhấn nghe giật, nặng tay" → `NHAN_T` · `NHAN_P` 1 · 0,9 → 0,85 · 0,8. Lực trước khi nhấn: tiếng 1 · 5 · 8 = 58 · 42 · 56.
+- "fill dày / chen lời" → trả `autoFills: false` (chỉ fill ô tự bấm) hoặc hạ mật độ fill; "một kỹ thuật fill không hợp" → bỏ khỏi
+  `KIEU_FILL`; "hợp âm lướt chói" → cho `chonHopAmLuot` trả null (leo/mở không hợp âm lướt như bản đầu). Đỉnh câu fill `DINH` 86 (mới).
+- "lick lấn sóng rải" → bỏ `cpDanSong` (về `cpBacking`: tắt cả hai tay trong khung câu, bè trầm của sheet nguồn).
+- "solo khác chất" → bỏ bốn cờ `soloCell` · `cpSoloOwnRhythm` · `cpSoloSheetTexture` · `cpDanSong` khỏi `cuDi`.
+
+**Chưa đo:** chưa nghe trên bài có lời thật (chỗ `breaths`) — không lời thì hợp âm 2 phách + mật độ "Vừa" ≈ mỗi 4 phách một câu fill;
+vai câu chêm Anh Cứ Đi Đi; kho CP Lick chưa có Anh Cứ Đi Đi (câu lick mượn Để Em · Chưa Bao Giờ · Chúng Ta · Hồng Kông); luật hợp âm
+lướt lệch Có Em Chờ 44→45 (sheet A7, luật Eb7/G); điệp khúc Anh Cứ Đi Đi (giai điệu quãng tám, dặm cụm) chưa dựng; dạo/giang đóng bằng
+ii–V của Codex (kho chưa có câu đóng đáng tin của bài).
