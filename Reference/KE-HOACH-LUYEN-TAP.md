@@ -118,10 +118,14 @@ còn là lượt nguội.
    đánh sớm/muộn của người tập — chủ ý: chấm độ đều so với chính mình. Cần đổi đồng hồ âm thanh ↔ đồng hồ MIDI.
 4. **Dấu thời gian MIDI** — `midiStore` đang đóng dấu bằng `performance.now()` lúc xử lý (dòng 73, 104), tức lệch theo độ
    bận của trang. Chuyển sang `timeStamp` của chính sự kiện MIDI.
-5. **Nhật ký lượt tập** — kho IndexedDB mới, chỉ ghi thêm, mỗi lượt một dòng. Trạng thái bậc là hàm thuần đọc nhật ký:
-   một nguồn sự thật, và có sẵn số ngày tập cho mục 1.2.
+5. **Nhật ký lượt tập** — GĐ 0 ghi `LuyenTap.json` ở gốc repo qua máy chủ dev (cùng lối `Nguon.json`), để Claude đọc
+   được số đo thật mà chốt ngưỡng. Kho IndexedDB cho trạng thái bậc dời sang GĐ 1 — bản cài trên điện thoại không có máy
+   chủ dev. Trạng thái bậc vẫn là hàm thuần đọc nhật ký.
 
 **Demo:** một điệu, một vòng 4 hợp âm, bảng kết quả cuối lượt. Người dùng tập thử → đo phân bố lệch thật → chốt ngưỡng.
+
+**Đã dựng 1/10/2026 — chờ người dùng tập thử bằng đàn.** Tab Luyện đệm → nút **Theo nhịp**
+(`playback/TimedPractice.tsx`, bộ chấm `playback/timedScoring.ts`). Chi tiết, hằng số và bẫy: `SO-TAY.md` mục cùng ngày.
 
 ### GĐ 1 — Mục Điệu (bàn với người dùng trước khi dựng)
 
@@ -151,14 +155,21 @@ còn là lượt nguội.
 
 ---
 
-## 4. Chờ chốt — GĐ 0 và GĐ 1
+## 4. GĐ 0 và GĐ 1 — người dùng trả lời 1/10/2026
 
-1. Mục 1 làm 7 điệu đã duyệt, hay đủ 9? **Mặc định 7** — Bolero Tuấn, Tango Tuấn chưa có ghi chép duyệt; vào sau khi
-   người dùng nghe duyệt.
-2. Vòng tập = vòng của chính bài gốc mà điệu rút ra; vòng kiểm (bậc 7) = vòng bài khác, giọng khác? **Mặc định: có.**
-3. Bậc 7 chấm đúng y thế bấm của app, hay nhận thế bấm khác miễn đúng nốt hợp âm, đúng bass, đúng khung tiếng?
-   **Mặc định: nhận** — đệm hát thật không ai bấm y một thế, mà không có nốt rơi thì người tập không biết thế của app.
-4. Thứ tự điệu dễ → khó: Claude đo (tiếng/ô, nốt mỗi cú, độ giãn tay, tempo) rồi đề xuất? **Mặc định: có.**
+1. **Đủ 9 điệu** — *"làm 9 điệu"*. Bolero Tuấn, Tango Tuấn chưa có ghi chép duyệt; lượt nghe lại trước khi đóng băng
+   (GĐ 1) áp cho cả 9.
+2. **Vòng tập do bộ soạn của thầy sinh ra** — *"Tập trên vòng bạn soạn từ các bộ soạn của Cà Pháo, Linh Nhi và bộ soạn
+   Blues, làm vòng vừa phải đừng dài quá"*. Thay cho mặc định cũ (vòng của bài gốc).
+   - Nguồn vòng (đo trong code): `buildPhraseSection` trả `chords` + `beatsEach` của đoạn dạo · giang · kết; thầy theo
+     `soloTeacherOf`. Bốn nút Cà Pháo → bộ soạn Cà Pháo · Slow Rock Lá thư → Linh Nhi · Slow Blues (`bluesClaudeSolo`) và
+     Twist (`twistSolo`) → Bộ Soạn Blues · **Bolero Tuấn, Tango Tuấn: câu trả lời không nêu → tạm lấy Linh Nhi, chờ xác
+     nhận.**
+   - Độ dài — đề xuất của Claude: vòng tập 4 ô (cắt vòng của bộ soạn ở vạch ô); Blues tập từng dòng 4 ô của khung 12 ô.
+     Bậc 7 kiểm trên vòng 8 ô (Blues: đủ 12 ô) chưa gặp ở bậc 1–6.
+3. **Bậc 7 chấm thế nào** — người dùng: *"tôi chưa rõ câu hỏi của bạn"* → giải thích lại bằng ví dụ, chờ trả lời.
+   Không chặn GĐ 0.
+4. **Thứ tự điệu** — *"làm như bạn đề xuất"*: Claude đo (tiếng/ô, nốt mỗi cú, độ giãn tay, tempo) rồi đề xuất ở GĐ 1.
 
 ---
 

@@ -117,13 +117,16 @@ function handleTick(time: number): void {
  * Bắt đầu đếm nhịp. Phải gọi từ một thao tác thật của người dùng vì trình
  * duyệt chặn phát tiếng tự động.
  */
-export async function startMetronome(): Promise<void> {
+export async function startMetronome(
+  /** Nhịp độ chạy lần này mà không đổi nhịp độ đã lưu — chế độ chơi theo nhịp tập ở 60 · 80 % nhịp bài. */
+  bpmOverride?: number,
+): Promise<void> {
   if (useMetronomeStore.getState().running) return
 
   await Tone.start()
 
   const transport = Tone.getTransport()
-  transport.bpm.value = useMetronomeStore.getState().bpm
+  transport.bpm.value = bpmOverride ?? useMetronomeStore.getState().bpm
 
   tickIndex = 0
   loop ??= new Tone.Loop(handleTick, '4n')

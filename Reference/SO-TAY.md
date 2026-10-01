@@ -4711,3 +4711,44 @@ cái đã thuộc (guidance hypothesis, Salmoni, Schmidt & Walter 1984). Và "t�
 
 **Chưa đo:** độ trễ đàn + loa trên máy người dùng; ngưỡng cửa đạt (≥ 90% · ≤ 40 ms là đoán); người dùng có tập đều không — nhật ký
 lượt tập trả lời sau 3 tuần, khi đó mới xét chuỗi ngày.
+
+## Bước — Lộ trình tập GĐ 0: chế độ chơi THEO NHỊP ở tab Luyện đệm (1/10/2026)
+
+Người dùng trả lời bốn câu GĐ 0 · GĐ 1: *"làm 9 điệu"* · *"Tập trên vòng bạn soạn từ các bộ soạn của Cà Pháo, Linh Nhi và bộ soạn
+Blues, làm vòng vừa phải đừng dài quá"* · câu bậc 7 *"tôi chưa rõ câu hỏi của bạn"* (giải thích lại, không chặn GĐ 0) · thứ tự điệu
+*"làm như bạn đề xuất"*. Ghi ở `KE-HOACH-LUYEN-TAP.md` mục 4. **Chờ người dùng tập thử bằng đàn** — chưa ai chơi chế độ này.
+
+**Dùng:** tab Luyện đệm → nút **Theo nhịp** (cạnh *Chờ đúng nốt*). Chọn tay, nhịp độ 60 · 80 · 100 % nhịp bài; lần đầu bấm **Đo
+độ trễ** (gõ một phím theo click: 4 tiếng nghe + 16 tiếng gõ, 80 BPM). Bắt đầu: một ô click đếm vào, máy chơi phần tay KHÔNG tập
+(tay đang tập im), đánh sai không dừng, hết bài chấm: đúng nốt x/y · lệch trung vị tuyệt đối · thói quen sớm/muộn · phím thừa.
+
+**Mã:** `playback/timedScoring.ts` (hàm thuần: `expectedNotesOf` bỏ nốt láy như chế độ chờ; `scoreTimed` ghép cặp lệch ít nhất
+trước — ghép lần lượt theo thời gian thì hai nốt cùng phím sát nhau giành nhau một phím bấm; `latencyFromTaps`) ·
+`playback/TimedPractice.tsx` · `playback/luyenTapPlugin.ts` (máy chủ dev ghi `LuyenTap.json`, hai bảng `luot` · `doTre`, gitignore
+như `Nguon.json`) · `audioEngine.beatAtPerformanceTime` · `startMetronome(bpmOverride)` · cài đặt `latencyMs` (null = chưa đo →
+chưa cho bắt đầu) · `midiStore.noteOn/noteOff(…, time)` + `midiInput` truyền `event.timeStamp`.
+
+**Hằng số — MỚI, tất cả là ĐOÁN, chưa đo:** `MATCH_WINDOW_MS` 150 (cửa sổ ghép phím ↔ nốt; lùi khi móc kép cùng phím lặp sát nhau
+bị ghép chéo → thu hẹp, hay đánh đúng mà báo trượt ở nhịp chậm → nới) · `PASS_HIT_RATIO` 0,9 · `PASS_MEDIAN_ABS_MS` 40 · đo độ trễ
+80 BPM, 4 + 16 tiếng, `MIN_TAPS` 8, quy lần gõ về [−¼, +¾) phách quanh tiếng click (80 BPM: −187 … +562 ms — tai nghe không dây
+vẫn lọt) · đếm vào = `meter` phách.
+
+**Bẫy:**
+- **Không có `getOutputTimestamp`.** Tone bọc AudioContext qua standardized-audio-context, lớp ấy không lộ hàm này (grep cả gói: 0
+  chỗ). Đổi giờ bấm → phách bằng `currentTime`, mà `currentTime` nhảy theo khối âm thanh → nhiễu vài–10 ms mỗi tiếng (ghi
+  `ponytail:` tại chỗ). Trễ loa + trễ đàn + thói quen sớm/muộn gộp vào một số đo bằng tay — không tách được trễ đàn từ trình duyệt.
+- **`Loop.stop()` không đối số xoá SẠCH trạng thái** (`ToneEvent.stop` → `cancel(-Infinity)`, đọc nguồn Tone 15.1.22) — nên tắt rồi
+  bật lại máy đếm nhịp click đúng từ phách 0. Tôi đã ngờ nó im giữa chừng ở lượt sau; đọc nguồn thì không.
+- **Thứ tự:** `startTimelineLoop` (đặt đồng hồ về 0, khởi động) TRƯỚC, `startMetronome` SAU — `startMetronome` đặt lại nhịp độ
+  bằng nhịp đã lưu nếu không truyền `bpmOverride`, tức xoá 60 · 80 %.
+- **Tập hai tay không còn tiếng nào để phát** → `startTimelineLoop` không chạy với danh sách rỗng; thêm mốc rỗng ở cuối bài.
+- `midiInput`: `timeStamp` bằng 0, ở tương lai hay cũ hơn 1 giây → lấy `performance.now()`.
+- Sửa kèm, có từ trước: `FallingNotes` trả `null` TRƯỚC các hook → danh sách chặng đổi rỗng ↔ có (đổi tay tập) là lệch thứ tự hook.
+  Dời xuống sau hook; hành vi không đổi.
+
+**Kiểm (1/10):** `timedScoring.test.ts` 14 test. Toàn suite **2 529 qua / 5 đỏ** (2 534 test, 173 file) — đúng 5 đỏ cũ. `tsc` app +
+node sạch; `eslint` các file đổi sạch; `vite build` qua. Máy chủ dev tạm ở cổng 5199: POST `/__luyen-tap/luot` · `/do-tre` ghi
+đúng cột, GET đọc lại, `TimedPractice.tsx` · `PracticeHome.tsx` biên dịch 200 — xoá file thử, tắt máy chủ.
+
+**Chưa đo:** chưa ai chơi bằng đàn thật — độ trễ thật, nhiễu `currentTime` thật, ngưỡng đạt đều chờ `LuyenTap.json`; giao diện
+`TimedPractice` không có test tự động (chỉ biên dịch); bài dài có dạo · giang · kết thì tập cả câu solo — GĐ 0 chưa cắt đoạn.

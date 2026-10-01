@@ -31,5 +31,8 @@ pnpm-debug.log*
 # PianoBrain/knowledge/teachers/linh-nhi-piano.md, va file ay o trong git.
 Nguon.json
 
+# Nhật ký chế độ chơi theo nhịp (Lộ trình tập) — số đo thô trên tay người dùng, lớn thêm mỗi lượt.
+LuyenTap.json
+
 # Bộ đo Python trong tools/ sinh ra
 __pycache__/

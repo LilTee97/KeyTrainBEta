@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { pianobrainKnowledge, pianobrainRoot } from './src/reharm/brain/pianobrainPlugin'
 import { nguonJson } from './src/reharm/nguon/nguonPlugin'
+import { luyenTapJson } from './src/reharm/playback/luyenTapPlugin'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -34,6 +35,8 @@ export default defineConfig({
       Chỉ chạy khi `npm run dev`; bản dựng tĩnh không có máy chủ để ghi.
     */
     nguonJson(HERE),
+    // Nhật ký chế độ chơi theo nhịp — `LuyenTap.json`, cùng lối với `Nguon.json`.
+    luyenTapJson(HERE),
     pianobrainKnowledge(HERE),
     react(),
     tailwindcss(),

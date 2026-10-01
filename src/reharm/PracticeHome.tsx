@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { ChordOverview } from './input/ChordOverview'
 import { SongLibrary } from './persistence/SongLibrary'
 import { NoteGatedPractice } from './playback/NoteGatedPractice'
+import { TimedPractice } from './playback/TimedPractice'
 import { usePracticeStore } from './playback/practiceStore'
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { usePlaybackStore } from '../shared/audio/audioEngine'
@@ -26,6 +28,8 @@ export function PracticeHome() {
   const bpm = useMetronomeStore((state) => state.bpm)
   const looping = usePlaybackStore((state) => state.looping)
   const positionBeats = usePlaybackStore((state) => state.positionBeats)
+  /* Chờ đúng nốt = học nốt; theo nhịp = nhạc chạy, sai không dừng, hết lượt chấm (KE-HOACH-LUYEN-TAP.md). */
+  const [mode, setMode] = useState<'gated' | 'timed'>('gated')
 
   return (
     <section className="flex flex-col gap-4">
@@ -138,12 +142,42 @@ export function PracticeHome() {
               onDuplicateChord={grid?.onDuplicateChord}
             />
           )}
-          <NoteGatedPractice
-            timeline={song.timeline}
-            voicings={song.voicings}
-            beatsPerChord={song.beatsPerChord}
-            perBeat={song.perBeat}
-          />
+          <div className="flex gap-1">
+            {([
+              ['gated', 'Chờ đúng nốt'],
+              ['timed', 'Theo nhịp'],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`rounded-lg border px-3 py-1.5 text-xs ${
+                  mode === value
+                    ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                    : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {mode === 'gated' ? (
+            <NoteGatedPractice
+              timeline={song.timeline}
+              voicings={song.voicings}
+              beatsPerChord={song.beatsPerChord}
+              perBeat={song.perBeat}
+            />
+          ) : (
+            <TimedPractice
+              title={song.title}
+              timeline={song.timeline}
+              voicings={song.voicings}
+              beatsPerChord={song.beatsPerChord}
+              perBeat={song.perBeat}
+              meter={song.meter}
+            />
+          )}
         </>
       ) : (
         <div className="rounded-xl border border-line bg-black/25 p-4">

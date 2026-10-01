@@ -86,12 +86,21 @@ function handleMidiMessage(event: MIDIMessageEvent): void {
 
   const store = useMidiStore.getState()
 
+  /*
+    Lúc phím được bấm, theo đồng hồ `performance.now()` — chế độ chơi theo nhịp chấm bằng nó. Trình duyệt
+    nào trả `timeStamp` khác đồng hồ ấy (bằng 0, ở tương lai, hay cũ hơn một giây) thì lấy lúc xử lý.
+  */
+  const now = performance.now()
+  const at = event.timeStamp > 0 && event.timeStamp <= now && now - event.timeStamp < 1000
+    ? event.timeStamp
+    : now
+
   switch (command.type) {
     case 'noteOn':
-      store.noteOn(command.note, command.velocity, 'hardware')
+      store.noteOn(command.note, command.velocity, 'hardware', at)
       break
     case 'noteOff':
-      store.noteOff(command.note, 'hardware')
+      store.noteOff(command.note, 'hardware', at)
       break
     case 'allNotesOff':
       store.releaseAll()

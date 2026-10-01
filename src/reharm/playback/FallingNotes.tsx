@@ -54,7 +54,6 @@ export function FallingNotes({
   const [bucket, setBucket] = useState(0)
   const layout = buildKeyboardLayout(lowNote, highNote)
   const parked = steps[index]?.startBeat
-  if (parked === undefined && !live) return null
 
   useEffect(() => {
     if (!live) return
@@ -91,6 +90,9 @@ export function FallingNotes({
   useEffect(() => {
     onSymbol?.(symbol)
   }, [symbol, onSymbol])
+
+  // Sau mọi hook: trả `null` trước hook thì danh sách chặng đổi từ rỗng sang có (đổi tay tập) là lệch thứ tự hook.
+  if (parked === undefined && !live) return null
 
   return (
     <div

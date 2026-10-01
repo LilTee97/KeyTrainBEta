@@ -39,8 +39,13 @@ export interface MidiState {
   setDevices: (devices: MidiDeviceInfo[]) => void
   selectDevice: (deviceId: string | null) => void
 
-  noteOn: (note: MidiNote, velocity: number, source: NoteSource) => void
-  noteOff: (note: MidiNote, source: NoteSource) => void
+  /**
+   * `time` theo đồng hồ `performance.now()`. Đàn thật truyền `timeStamp` của chính sự kiện MIDI — lúc phím
+   * được bấm, không phải lúc trang rảnh tay xử lý (trang đang bận vẽ thì chênh vài chục mili giây, đủ làm
+   * sai phép chấm nhịp). Bỏ trống thì lấy lúc gọi.
+   */
+  noteOn: (note: MidiNote, velocity: number, source: NoteSource, time?: number) => void
+  noteOff: (note: MidiNote, source: NoteSource, time?: number) => void
   /** Nhả hết mọi nốt — dùng khi rút đàn hoặc đổi cổng đang nghe. */
   releaseAll: () => void
 }
@@ -62,7 +67,7 @@ export const useMidiStore = create<MidiState>((set) => ({
     // Đổi cổng thì nhả hết nốt, tránh nốt của cổng cũ bị kẹt lại.
     set({ selectedDeviceId: deviceId, heldNotes: [], velocities: {} }),
 
-  noteOn: (note, velocity, source) =>
+  noteOn: (note, velocity, source, time = performance.now()) =>
     set((state) => {
       if (!isValidMidiNote(note)) return state
 
@@ -70,7 +75,7 @@ export const useMidiStore = create<MidiState>((set) => ({
         note,
         velocity,
         source,
-        time: performance.now(),
+        time,
       }
 
       // Đàn gửi lại note-on cho nốt đang giữ (khi bấm lại lúc chưa nhả hết)
@@ -87,7 +92,7 @@ export const useMidiStore = create<MidiState>((set) => ({
       }
     }),
 
-  noteOff: (note, source) =>
+  noteOff: (note, source, time = performance.now()) =>
     set((state) => {
       if (!state.heldNotes.includes(note)) return state
 
@@ -101,7 +106,7 @@ export const useMidiStore = create<MidiState>((set) => ({
           note,
           velocity: 0,
           source,
-          time: performance.now(),
+          time,
         },
       }
     }),

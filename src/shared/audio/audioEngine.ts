@@ -499,6 +499,22 @@ export function getPlaybackBeats(): number {
   return raw - (getSyncOffsetMs() / 1000) * beatsPerSecond
 }
 
+/**
+ * Phách của đồng hồ phát nhạc tại một mốc `performance.now()` — để chấm phím bấm ở chế độ chơi theo nhịp.
+ *
+ * Là phách ở giờ của đồng hồ thẻ âm thanh, CHƯA trừ trễ ra loa và chưa trừ bù lệch hình–tiếng. Trễ loa, trễ
+ * đàn và thói quen đánh sớm/muộn của người chơi gộp vào MỘT con số đo bằng lượt gõ theo click
+ * (`latencyFromTaps`) — tách từng phần thì phải đo từng phần, mà trễ đàn thì trình duyệt không đo được.
+ *
+ * ponytail: `currentTime` nhảy theo khối âm thanh (vài–10 ms) nên mỗi tiếng nhiễu cỡ ấy. Cần mịn hơn thì dùng
+ * `getOutputTimestamp` của AudioContext gốc — Tone bọc qua standardized-audio-context, lớp ấy không lộ hàm này.
+ */
+export function beatAtPerformanceTime(performanceMs: number): number {
+  const at = Tone.getContext().currentTime + (performanceMs - performance.now()) / 1000
+  const transport = Tone.getTransport()
+  return transport.getTicksAtTime(at) / transport.PPQ
+}
+
 /** Đồng hồ báo vị trí cho giao diện, chạy song song với vòng lặp phần đệm. */
 let positionTicker: Tone.Loop | null = null
 

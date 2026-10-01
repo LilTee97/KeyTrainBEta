@@ -43,6 +43,12 @@ export interface Settings {
    * `null`, tức lại theo máy.
    */
   syncOffsetMs: number | null
+
+  /**
+   * Độ trễ đo bằng lượt gõ theo click — loa + đàn + thói quen đánh sớm/muộn, mili giây. Chế độ chơi theo
+   * nhịp trừ nó trước khi chấm. `null` = chưa đo: chưa cho tập theo nhịp. Đổi loa / tai nghe thì đo lại.
+   */
+  latencyMs: number | null
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -65,6 +71,8 @@ export const DEFAULT_SETTINGS: Settings = {
   midiKeyboardKeys: 61,
 
   syncOffsetMs: null,
+
+  latencyMs: null,
 }
 
 /**
