@@ -26,7 +26,7 @@ describe('tách thầy khi sinh solo', () => {
   })
 
   it('Cà Pháo bossa và Linh Nhi bolero mỗi người một lối', () => {
-    expect(soloTeacherOf('bossa-ca-phao-som')).toBe('ca-phao')
+    expect(soloTeacherOf('ca-phao-bossa-improved')).toBe('ca-phao')
     expect(soloTeacherOf('bolero-linh-nhi-2')).toBe('linh-nhi')
     expect(noteSourceForTeacher('linh-nhi')).toBe('chordTone')
     expect(teacherEndsWithRun('linh-nhi')).toBe(false)

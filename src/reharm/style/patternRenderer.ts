@@ -7,7 +7,6 @@ import {
   type TwoHandVoicing,
 } from '../voicingGenerator/handSplitVoicing'
 import type { HitVoice, RhythmCell, StylePattern, TimelineEvent } from './types'
-import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
 import { CP_BALLAD_SONG_IDS } from './styleLibrary/caPhaoBalladSongs'
 
 /**
@@ -737,7 +736,7 @@ function renderWithCell(
         // Ballad CP giữ bè trong đã rút gọn cả khi dùng thế bấm màu CP.
         // Các điệu cũ giữ nguyên cách phát hợp âm đã được nghe duyệt.
         let notes = hand === 'left' ? split.left
-          : CP_BALLAD_IDS.includes(pattern.id) || CP_BALLAD_SONG_IDS.includes(pattern.id) || hit.raiNoi ? raw : split.right
+          : CP_BALLAD_SONG_IDS.includes(pattern.id) || hit.raiNoi ? raw : split.right
 
         if (hand === 'left') {
           const index = indexAt(startBeat)
@@ -823,7 +822,7 @@ const EPSILON = 0.001
  * Slow Blues (id `blue-sun`): tay trái lo trọn đệm, tay phải là câu chạy ngón của Bộ Soạn Blues (The House of the Rising Sun — tay phải không
  * đệm hợp âm ô nào).
  */
-const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-acdd', 'slow-rock-la-thu', 'slow-rock-lt', 'ballad-derx', 'ca-phao-ballad-de-em-roi-xa', 'ca-phao-ballad-cu-di', 'twist', 'blue-sun'])
+const KEEP_RH_RESTS: ReadonlySet<string> = new Set(['ca-phao-ballad-de-em-roi-xa', 'ca-phao-ballad-cu-di', 'twist', 'blue-sun'])
 
 /**
  * Bù tiếng đàn cho những hợp âm mà mẫu tiết tấu bỏ sót.

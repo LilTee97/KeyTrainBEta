@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildPhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
+import { MAU_BALLAD, MAU_BOSSA, MAU_SWING, MAU_VALSE } from './mauThu'
 import { reStruck } from './playableOutput.test'
 import { generateSolo, soloToTimeline } from '../../fillSoloGenerator/soloGenerator'
 import { scaleForChord } from '../../brain/chordScale'
@@ -17,22 +18,18 @@ import type { TimelineEvent } from '../types'
  * gõ bốn lần trong khi nó còn đang ngân — Mi và Sol cũng vậy.
  */
 const KEY = { tonic: 0 as const, scale: 'major' as const }
-const STYLES = [
-  'pop-1',
-  'bossa-nova-1',
-  'swing-1',
-  'slow-rock-2',
-  'waltz-1',
-  'hai-slow-rock',
-  'hai-pop-ballad',
-  'hai-bossa-nova',
-] as const
+/*
+  Đường ráp dạo / kết CHUNG (không thầy) — kiểm trên khuôn mẫu riêng cho test. 30/9/2026: điệu cũ (Pop 1, Bossa Nova 1,
+  Swing 1, Slow Rock 2, Waltz 1, ba điệu Hải) đã xoá; chín điệu còn giữ đều đi bộ soạn riêng của thầy.
+*/
+const MAU = Object.fromEntries([MAU_BALLAD, MAU_BOSSA, MAU_SWING, MAU_VALSE].map((style) => [style.id, style]))
+const STYLES = Object.keys(MAU)
 
 const doan = (kind: 'intro' | 'outro', styleId: string, take = 0) =>
   buildPhraseSection({
     kind,
     key: KEY,
-    style: getStyle(styleId)!,
+    style: MAU[styleId] ?? getStyle(styleId)!,
     beatsPerChord: 4,
     dropRoot: true,
     take,

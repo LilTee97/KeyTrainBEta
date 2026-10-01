@@ -20,7 +20,8 @@ import { getStyle } from '../styleLibrary'
 */
 
 const CHORDS = parseChordInput('Cmaj7 Am7 Dm7 G7 Cmaj7 Fmaj7 Dm7 G7').chords
-const STYLE = getStyle('bossa-ca-phao-som')!
+// Bossa CP cải tiến. Cũ: bossa-ca-phao-som (bản cũ đã bị bác, xoá 30/9/2026).
+const STYLE = getStyle('ca-phao-bossa-improved')!
 const BAR = STYLE.beatsPerMeasure
 
 function dung(take: number) {
@@ -38,10 +39,10 @@ function dung(take: number) {
 
 describe('câu solo tự do Cà Pháo', () => {
   it('điệu Cà Pháo bật cờ này, và nó đứng TRƯỚC lối bám tay trái', () => {
-    expect(soloTuDoCaPhao('bossa-ca-phao-som')).toBe(true)
-    // Điệu bossa khác vẫn giữ lối bám tay trái như người dùng đã yêu cầu.
-    expect(soloTuDoCaPhao('bossa-nova-1')).toBe(false)
-    expect(raiTheoTayTrai('bossa-nova-1')).toBe(true)
+    expect(soloTuDoCaPhao('ca-phao-bossa-improved')).toBe(true)
+    // Họ khác vẫn giữ lối bám tay trái như người dùng đã yêu cầu. Cũ: Bossa Nova 1 (đã xoá 30/9/2026).
+    expect(soloTuDoCaPhao('bolero-tu-n-improv-bai-04-00001')).toBe(false)
+    expect(raiTheoTayTrai('bolero-tu-n-improv-bai-04-00001')).toBe(true)
   })
 
   it('mật độ tay phải nằm trong khoảng đo được', () => {
@@ -174,11 +175,12 @@ describe('lối tự do mở tới đâu', () => {
     chiều. Ballad và bossa để TRỘN vì mỗi họ chứa cả hai cực.
   */
   it('ballad và slow rock đều có, mỗi họ một chỗ nghiêng', () => {
-    for (const id of ['pop-1', 'hai-pop-ballad', 'hai-ballad-dan-ca']) {
+    // 30/9/2026: điệu còn giữ. Cũ: Pop 1, Pop Ballad (Hải), Ballad dân ca (Hải) · Slow Rock 2, Slow Rock (Hải), Đức Thịnh 3.
+    for (const id of ['ca-phao-ballad-cu-di', 'ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa']) {
       expect(soloTuDoCaPhao(id), id).toBe(true)
       expect(thienVeCuaHo(id), id).toBeUndefined()
     }
-    for (const id of ['slow-rock-2', 'hai-slow-rock', 'slow-rock-duc-thinh-3']) {
+    for (const id of ['slow-rock-la-thu-hai-tay']) {
       expect(soloTuDoCaPhao(id), id).toBe(true)
       expect(thienVeCuaHo(id), id).toBe('chum')
     }

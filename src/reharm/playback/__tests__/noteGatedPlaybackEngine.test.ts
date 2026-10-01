@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { renderPattern } from '../../style/patternRenderer'
-import { BALLAD, VALSE } from '../../style/styleLibrary'
+import { MAU_BALLAD as BALLAD, MAU_VALSE as VALSE } from '../../style/__tests__/mauThu'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import type { TwoHandVoicing } from '../../voicingGenerator/handSplitVoicing'
 import type { GatedStep } from '../noteGatedPlaybackEngine'

@@ -3,6 +3,7 @@
 Ngày triển khai: 26/9/2026. Người dùng yêu cầu phân tích sheet
 `D:/PianoBrain/video/Linh_Nhi/boogie woogie-Linh Nhi.mxl`, lấy tiết tấu đệm,
 tạo nút riêng và đặt tên **Twist**. Trạng thái: đã dựng để nghe thử, chưa nghe duyệt. Câu solo và câu chạy lúc đệm hát: Bộ Soạn Blues, mặc định từ 29/9/2026 (mục 7).
+Nút **Twist điệp khúc** dựng 30/9/2026 rồi xoá cùng ngày; sửa kèm còn giữ cho nút Twist: mục 8.
 
 ## 1. Nguồn và cách đo
 
@@ -139,7 +140,8 @@ C6/F9/G7. Người dùng vẫn chọn màu hợp âm theo cơ chế hiện tại
 
 ## 5. Nghe thử và kiểm tra
 
-Chọn **Twist** trong nhóm 4/4; nghe C–F–G, mặc định mỗi hợp âm hai ô, 180 BPM;
+Chọn **Twist** trong nhóm 4/4; nghe C–F–G, mặc định mỗi hợp âm một ô, 140 BPM, giang tấu một lượt
+(người dùng 30/9/2026; trước đó: hai ô, 180 BPM theo sheet, giang tấu hai lượt);
 tắt Walking bass khi muốn nghe chính tuyến bass được trích. Có thể giảm BPM
 để nghe cặp tiếp cận ♭3→3 và hai cú chặn tay phải.
 
@@ -211,3 +213,27 @@ mục "Bộ Soạn Blues — MẶC ĐỊNH của Twist".
 
 **Cũ — để lùi:** trước 29/9 Twist không có câu chạy lúc đệm hát, dạo · giang · kết là bốn cặp mô-típ bè đôi dựng tay
 (`calls` / `answers`) — khôi phục từ commit 291d555.
+
+## 8. Nút Twist điệp khúc — đã xoá (30/9/2026)
+
+Dựng rồi xoá trong cùng ngày. Người dùng: *"bỏ nút Twist điệp khúc và xóa điệu đi"*. Hai lượt nội dung, chưa lượt nào được duyệt:
+1. Riff piano Pattern 01 + 03 của video *PianoStyles | Twist - Basic Patterns* (`F0LVFKZGrLQ`): tay trái móc đơn thẳng
+   1–1–♭3–3–5–6–♭3–3 (96/96 móc đơn mỗi pattern), tay phải bè hai nốt 3 · 5-8 · – · gốc · 5-8 · gốc · 4-6 · ♭3-5.
+2. Nền trống của video — đo ở khúc chỉ có trống (11 + 12 ô): trống cái ở phách 1 · 3, snare ở 2 · 2& · 4 (ba tiếng to ngang nhau),
+   hi-hat nhẹ 1& · 3&, móc đơn thẳng (2& ở +0,53 · +0,505 phách), ♩ 128 → Bùm₁ chát₂ chát₂& Bùm₃ chát₄.
+
+Mã, nút và test của điệu đã gỡ hết; nút Twist không đổi (không có bản điệp khúc).
+
+### Sửa kèm còn giữ — `chayTwistBlues` nhả phím (nút Twist)
+
+Lớp câu chạy gộp vào sau `holdUntilStruckAgain`, nên lọt chỗ **gõ lại phím đang ngân**. Đếm trên đệm + câu chạy đã gộp (vòng 16 hợp
+âm màu × 12 giọng × trưởng/thứ × 3 lượt):
+
+| | trước | sau |
+|---|---:|---:|
+| Hợp âm 4 · 8 phách (144 bài) — nốt câu chạy gõ lại cú chặn còn ngân | 226 | 0 |
+| Hợp âm 2 phách (72 bài) — cú chặn gõ lại nốt câu chạy còn ngân | 18 | 0 |
+
+- Lớp nào gõ lại một phím lớp kia đang giữ thì tiếng đang giữ nhả đúng lúc ấy (hàm `nha`). Chỉ đổi độ ngân, không đổi nốt.
+- Test: `twistBlues.test.ts` › "không gõ lại phím đang ngân — câu chạy ↔ cú chặn, hợp âm 2 · 4 · 8 phách" (đỏ khi tắt `nha`).
+- Để lùi: bỏ hàm `nha` trong `chayTwistBlues`. Triệu chứng để lùi: cú chặn đầu hợp âm nghe hụt tiếng lúc câu chạy vào.

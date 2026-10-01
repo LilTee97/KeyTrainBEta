@@ -48,7 +48,7 @@ export function nhipCuaDieu(style: StylePattern): Nhip | null {
 export function slowRockSoanLinhNhi(style: StylePattern, mauLinhNhi: boolean, thay: string | null): boolean {
   return hoCuaDieu(style.id) === 'slow-rock'
     && (mauLinhNhi || thay === 'linh-nhi'
-      || (thay == null && ['slow-rock-la-thu', 'slow-rock-lt', 'slow-rock-la-thu-hai-tay'].includes(style.family)))
+      || (thay == null && style.family === 'slow-rock-la-thu-hai-tay'))
 }
 
 export function linhNhiSolo(options: {

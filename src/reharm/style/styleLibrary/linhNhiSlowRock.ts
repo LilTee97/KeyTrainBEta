@@ -73,82 +73,6 @@ const C22: RhythmCell = {
 }
 
 /*
-  PHIÊN (lúc hát) — tay trái c15–c16 (Bb → C, ô sheet 12 phách 3 → 14 phách 1); c15 lặp
-  y hệt ở c87. Rải 1–3–5–8–5–3, sáu móc đơn đều — nhịp tay trái nhiều nhất bài (25 ô).
-  Tay phải trống.
-
-  Giá trị trước: `594e7f7` phiên = c22 lặp mọi hợp âm; `5cfcb1e` thêm hợp âm tay phải
-  ở tiếng 1 ngân 3 móc đơn. Người dùng bác cả hai (xem đầu file).
-*/
-const laThu: StylePattern = {
-  ...common,
-  id: 'slow-rock-la-thu',
-  name: 'Slow Rock Lá thư · Phiên khúc',
-  variant: 1,
-  fillCell: C22,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · hát: c15–c16 (ô ký âm 12 phách 3 → 14 phách 1); chỗ fill: c22 (ô 17), lặp ở c93'],
-  note: 'Lúc hát: tay trái rải 1–3–5–8–5–3, tay phải để cho giọng. Chỗ có fill: hai tay như sheet chỗ lời nghỉ. Đã nghe duyệt 25/9/2026.',
-  cell: {
-    lengthBeats: 12,
-    left: [
-      // c15 Bb: Bb2 D3 F3 Bb3 F3 D3. Lực = trung bình c15 và c87 (cùng nốt, cùng nhịp).
-      hit(0, 1, .84, [tone(0)]), hit(1, 1, .51, [tone(1)]), hit(2, 1, .69, [tone(2)]),
-      hit(3, 1, .75, [tone(0, 12)]), hit(4, 1, .7, [tone(2)]), hit(5, 1, .67, [tone(1)]),
-      // c16 C: C3 E3 G3 C3/C4 G3 E3 — tiếng 4 bấm gốc kèm quãng tám.
-      hit(6, 1, .66, [tone(0)]), hit(7, 1, .88, [tone(1)]), hit(8, 1, .85, [tone(2)]),
-      hit(9, 1, .68, octave), hit(10, 1, .64, [tone(2)]), hit(11, 1, .86, [tone(1)]),
-    ],
-    right: [],
-  },
-}
-
-// Cụm dập trên hợp âm bảy: gốc+8, bậc 3, bậc 7. Hợp âm ba nốt thì bậc 7 lùi về
-// bậc 5 (DEGREE_CHAIN), nên không đẻ nốt trùng. Sheet có cả A3 lẫn C4 trên D7;
-// bỏ A3 là lựa chọn biên soạn để một khai báo đúng cho cả hai loại hợp âm.
-const pulse = [tone(0, 12), tone(1, 12), tone(3, 12)]
-// Cụm dập trên hợp âm ba nốt ở c42 Gm: D3 G3 Bb3 D4.
-const triad = [tone(2), tone(0, 12), tone(1, 12), tone(2, 12)]
-
-/*
-  ĐIỆP — c41–c42 (D7 → Gm, ô sheet 32 phách 1 → 33 phách 3); c45–c46 cùng lối cả
-  hai tay, cao trào c106/c109 lặp phần tay trái.
-  Tay trái: bass, dập cụm hợp âm theo từng móc đơn, bass lại ở tiếng 6.
-  Tay phải trống. Sheet có nốt bè ngón cái dưới giai điệu (c41 A4, c42 D4 gõ lại ở 2½)
-  nhưng nó đi theo nhịp giai điệu — cùng lý do như phiên. Giá trị trước (`594e7f7`,
-  `5cfcb1e`): tay phải A4 ngân 4 · D4 ở 5½ · D4 · D4 ở 2½.
-*/
-const laThuChorus: StylePattern = {
-  ...common,
-  id: 'slow-rock-la-thu-chorus',
-  name: 'Slow Rock Lá thư · Điệp khúc',
-  variant: 2,
-  fillCell: C22,
-  sourceVideos: ['Linh Nhi · Lá Thư Trần Thế · c41–c42 = ô ký âm 32 phách 1 → 33 phách 3 (D7, Gm); cùng lối c45–c46, cao trào c106'],
-  note: 'Điệp: tay trái bass rồi dập hợp âm theo móc đơn chùm ba; tay phải để cho giọng. Chỗ có fill: hai tay như sheet. Đã nghe duyệt 25/9/2026.',
-  cell: {
-    lengthBeats: 12,
-    left: [
-      // c41 D7
-      hit(0, .75, 1.08, [tone(0)]),
-      hit(1, .5, .8, [tone(0), ...pulse]),
-      hit(1.5, .5, .84, pulse), hit(2, .5, .86, pulse),
-      hit(2.5, .5, .71, [tone(1, 12)]),
-      hit(3, 1, .96, pulse), hit(4, 1, .86, pulse),
-      hit(5, .75, 1.11, [tone(0)]),
-      // c42 Gm. Bỏ D2 ở tiếng đầu: đó là gốc của D7 ngân nối sang, không phải bậc của Gm.
-      hit(6, 1, 1, octave),
-      hit(7, .5, .86, [tone(2), tone(1, 12), tone(2, 12)]),
-      hit(7.5, .5, .9, [tone(0), tone(2), tone(1, 12)]),
-      hit(8, 1, .9, triad),
-      hit(9, 1, .95, [tone(0), ...triad]),
-      hit(10, 1, .79, triad),
-      hit(11, 1, .91, octave),
-    ],
-    right: [],
-  },
-}
-
-/*
   HAI TAY RẢI — dựng làm kiểu THỬ cạnh kiểu trên; người dùng nghe duyệt CẢ HAI ngày 25/9/2026 (*"điệu Slow
   Rock Lá Thư và Slow rock hai tay Lá Thư đều đã đạt"*) nên giữ cả hai nút, bỏ nhãn "(thử)". Đường đã duyệt:
   đừng đổi nốt nào nếu người dùng chưa yêu cầu.
@@ -215,4 +139,5 @@ const laThuHaiTayChorus: StylePattern = {
   },
 }
 
-export const LINH_NHI_SLOW_ROCK: readonly StylePattern[] = [laThu, laThuChorus, laThuHaiTay, laThuHaiTayChorus]
+// 30/9/2026: người dùng xoá nút Slow Rock Lá thư (một tay) — chỉ giữ nút hai tay.
+export const LINH_NHI_SLOW_ROCK: readonly StylePattern[] = [laThuHaiTay, laThuHaiTayChorus]

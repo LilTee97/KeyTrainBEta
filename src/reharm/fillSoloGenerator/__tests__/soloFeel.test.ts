@@ -32,27 +32,24 @@ const line = (feel: 'straight' | 'swing' | 'bossa') =>
   })
 
 describe('điệu nào thì chia nhịp nấy', () => {
-  it('jazz và swing thì nảy', () => {
-    expect(soloFeelFor('swing-1')).toBe('swing')
+  // 30/9/2026: điệu OneMotion / Hải đã xoá — kiểm trên chín điệu còn giữ.
+  it('điệu khai feel swing thì nảy', () => {
+    expect(soloFeelFor('twist')).toBe('swing')
   })
 
-  it('bossa và samba thì đảo phách, KHÔNG nảy', () => {
+  it('bossa thì đảo phách, KHÔNG nảy', () => {
     // Nhạc Brazil chơi móc đơn đều; trộn cái nảy của jazz vào là lỗi nghe ra ngay.
-    expect(soloFeelFor('bossa-nova-1')).toBe('bossa')
-    expect(soloFeelFor('bossa-nova-2')).toBe('bossa')
-    expect(soloFeelFor('samba-1')).toBe('bossa')
+    expect(soloFeelFor('ca-phao-bossa-improved')).toBe('bossa')
   })
 
-  it('ballad, slow rock, pop thì đều', () => {
-    expect(soloFeelFor('pop-1')).toBe('straight')
-    expect(soloFeelFor('slow-rock-2')).toBe('straight')
-    expect(soloFeelFor('hai-pop-ballad')).toBe('straight')
+  it('ballad, slow rock thì đều', () => {
+    expect(soloFeelFor('ca-phao-ballad-cu-di')).toBe('straight')
+    expect(soloFeelFor('ca-phao-ballad-co-em-cho')).toBe('straight')
+    expect(soloFeelFor('slow-rock-la-thu-hai-tay')).toBe('straight')
   })
 
-  it('nhãn đảo phách rộng không biến reggae, funk và salsa thành bossa', () => {
-    expect(soloFeelFor('reggae-1')).toBe('straight')
-    expect(soloFeelFor('funk-1')).toBe('straight')
-    expect(soloFeelFor('salsa-1')).toBe('straight')
+  it('nhãn đảo phách rộng không biến bolero thành bossa', () => {
+    expect(soloFeelFor('bolero-tu-n-improv-bai-04-00001')).toBe('straight')
   })
 
   it('không biết điệu thì đều, không đoán', () => {

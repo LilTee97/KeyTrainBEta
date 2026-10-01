@@ -14,7 +14,8 @@ import type { TimelineEvent } from '../../style/types'
 import type { SongKey } from '../../fillSoloGenerator/soloVocabulary'
 import { scaleTones } from '../../reharmEngine/keyDetection'
 
-const ballad = getStyle('pop-1')!
+// Điệu họ ballad còn giữ (30/9/2026). Cũ: Pop 1 — đã xoá.
+const ballad = getStyle('ca-phao-ballad-co-em-cho')!
 const chords = parseChordInput('Am9 Dm9 E7 Am9').chords
 const key: SongKey = { tonic: 9, scale: 'minor' }
 

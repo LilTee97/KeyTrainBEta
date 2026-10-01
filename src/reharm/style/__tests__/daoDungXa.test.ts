@@ -287,6 +287,7 @@ describe('mặc định cho thầy Linh Nhi', () => {
   })
 
   it('điệu khác KHÔNG bị đắp câu dạo bolero lên', () => {
-    expect(dung(undefined, 'bossa-nova-1').lengthBeats).toBe(16)
+    // Cũ: Bossa Nova 1 (đã xoá 30/9/2026).
+    expect(dung(undefined, 'tango-tu-n-improv-bai-04-00004').lengthBeats).toBe(16)
   })
 })

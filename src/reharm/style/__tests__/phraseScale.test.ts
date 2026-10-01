@@ -86,9 +86,9 @@ describe('slow rock lấy gam Blues', () => {
   })
 
   it('nhận ra họ slow rock', () => {
-    expect(prefersBlues(getStyle('slow-rock-duc-thinh-1')!)).toBe(true)
-    expect(prefersBlues(getStyle('slow-rock-duc-thinh-3')!)).toBe(true)
-    expect(prefersBlues(getStyle('pop-1')!)).toBe(false)
+    // 30/9/2026: điệu còn giữ. Cũ: Slow Rock Đức Thịnh 1 · 3, Pop 1 — đã xoá.
+    expect(prefersBlues(getStyle('slow-rock-la-thu-hai-tay')!)).toBe(true)
+    expect(prefersBlues(getStyle('ca-phao-ballad-cu-di')!)).toBe(false)
   })
 })
 
@@ -118,20 +118,23 @@ describe('hai định nghĩa gam Blues không được trôi khỏi nhau', () =>
   chỉ 5%.
 */
 describe('mọi họ điệu có mặc định một gam', () => {
-  it.each(['slow-rock-duc-thinh-3', 'bolero-1', 'bossa-nova-1', 'pop-1', 'hai-pop-ballad'] as const)(
+  // 30/9/2026: chín điệu còn giữ. Cũ: Đức Thịnh 3, Bolero 1, Bossa Nova 1, Pop 1, Pop Ballad (Hải) · Swing 1,
+  // Waltz 1, Reggae 1, Tango 1 — đã xoá.
+  it.each(['slow-rock-la-thu-hai-tay', 'bolero-tu-n-improv-bai-04-00001', 'ca-phao-bossa-improved', 'ca-phao-ballad-cu-di',
+    'ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa'] as const)(
     '%s: thuộc diện mặc định một gam',
     (styleId) => {
       expect(prefersSingleScale(getStyle(styleId)!)).toBe(true)
     },
   )
 
-  it.each(['swing-1', 'waltz-1', 'reggae-1', 'tango-1'] as const)('%s: cũng có một gam mặc định', (styleId) => {
+  it.each(['twist', 'tango-tu-n-improv-bai-04-00004', 'blue-sun'] as const)('%s: cũng có một gam mặc định', (styleId) => {
     expect(prefersSingleScale(getStyle(styleId)!)).toBe(true)
   })
 
   /* Slow rock vẫn ưu tiên Blues — luật riêng của nó, đứng trước luật chung. */
   it('slow rock lấy Blues chứ không lấy gam khớp nhất', () => {
-    const style = getStyle('slow-rock-duc-thinh-3')!
+    const style = getStyle('slow-rock-la-thu-hai-tay')!
     expect(prefersBlues(style) && prefersSingleScale(style)).toBe(true)
   })
 })

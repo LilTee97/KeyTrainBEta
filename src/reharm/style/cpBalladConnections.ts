@@ -1,5 +1,5 @@
 import { chordPitchClasses } from '../../shared/musicTheory/chordDefinitions'
-import { beatsOf, chordStarts } from '../chordTiming'
+import { chordStarts } from '../chordTiming'
 import { stepInScale } from '../fillSoloGenerator/graceNoteOrnamenter'
 import type { TransitionRun } from '../fillSoloGenerator/soloGenerator'
 import type { SongKey } from '../fillSoloGenerator/soloVocabulary'
@@ -20,13 +20,12 @@ export function planCpBalladBacking(backing: readonly TimelineEvent[], chords: r
   options: ConnectionOptions & { style: StylePattern; walkingOn?: boolean }): ConnectionPlan {
   if (!options.style.cpBalladChordLeads || options.walkingOn)
     return { backing: [...backing], protectedWindows: [] }
-  return options.style.family === 'ca-phao-ballad-acdd'
-    ? planAcddConnections(backing, chords, options) : planBalladChordLeads(backing, chords, options)
+  return planBalladChordLeads(backing, chords, options)
 }
 
 const pc = (pitch: number) => ((pitch % 12) + 12) % 12
 
-/** ACDD 16 LH: Db3-F3-Ab3-B3 | Bb3-G3-E3-C3, not the RH vocal octaves. */
+/** ACDD 16 LH: Db3-F3-Ab3-B3 | Bb3-G3-E3-C3, not the RH vocal octaves. Câu chạy của Ballad cứ đi (cpLick, cuDiFill). */
 export function acddRunPitches(chord: ParsedChord, next: ParsedChord): number[] {
   const intervals = new Set(chord.quality.intervals.map(pc))
   const nextIntervals = new Set(next.quality.intervals.map(pc))
@@ -53,63 +52,7 @@ function replaceLeft(backing: readonly TimelineEvent[], from: number, to: number
   }), ...notes].sort((a, b) => a.startBeat - b.startBeat)
 }
 
-/** Source-shaped transitions + one-beat bass links. No extra beats or chord changes. */
-export function acddConnections(
-  backing: readonly TimelineEvent[],
-  chords: readonly ParsedChord[],
-  options: ConnectionOptions,
-): TimelineEvent[] {
-  return planAcddConnections(backing, chords, options).backing
-}
-
-function planAcddConnections(backing: readonly TimelineEvent[], chords: readonly ParsedChord[],
-  options: ConnectionOptions): ConnectionPlan {
-  const { beatsPerChord, transitions } = options
-  const starts = chordStarts(chords, beatsPerChord)
-  let result = [...backing]
-  const protectedWindows: ConnectionPlan['protectedWindows'] = []
-  let mainIndex = -1
-  for (let index = 0; index < chords.length - 1; index++) {
-    const chord = chords[index], next = chords[index + 1]
-    if (!chord.passing) mainIndex++
-    const start = starts[index], end = starts[index + 1]
-    // A passing chain keeps its own harmony; only its final chord can host a run.
-    if (next.passing) continue
-    const transition = transitions.get(mainIndex)
-    if (transition) {
-      // The style owns this boundary, including a manually disabled run.
-      protectedWindows.push({ start, end })
-      if (transition.octaves <= 0) continue
-      const available = beatsOf(chord, beatsPerChord)
-      const delay = Math.max(0, Math.min(transition.delayBeats ?? 0, available))
-      // CP ACDD 16 runs through 3.75 into the next downbeat. Old saved rests (2)
-      // belong to the generic arpeggio and must not create silence after this run.
-      const runEnd = end
-      const length = Math.min(2, runEnd - start - delay)
-      if (length < 1) continue
-      const from = runEnd - length
-      const pitches = acddRunPitches(chord, next)
-      const selected = length >= 2 ? pitches : pitches.slice(4)
-      const each = length / selected.length
-      const run = selected.map((pitch, i): TimelineEvent => ({
-        hand: 'left', notes: [pitch], startBeat: from + each * i,
-        durationBeats: each, velocity: i === 0 || i === 4 ? 66 : 56,
-      }))
-      result = replaceLeft(result, from, end, run)
-      // A held RH chord can support the bass run; repeated RH punches must not mask it.
-      result = result.flatMap(event => {
-        if (event.hand !== 'right' || event.startBeat >= end || event.startBeat + event.durationBeats <= from) return [event]
-        if (event.startBeat > from + 1e-6) return []
-        return [{ ...event, durationBeats: Math.min(event.durationBeats, runEnd - event.startBeat) }]
-      })
-      continue
-    }
-  }
-  const leads = planBalladChordLeads(result, chords, options)
-  return { backing: leads.backing, protectedWindows: [...protectedWindows, ...leads.protectedWindows] }
-}
-
-/** Shared one-beat links for ACDD and Co Em Cho; section runs keep priority. */
+/** One-beat bass links for Co Em Cho; section runs keep priority. */
 export function balladChordLeads(
   backing: readonly TimelineEvent[],
   chords: readonly ParsedChord[],

@@ -18,7 +18,15 @@ import { CA_PHAO_RANGE, profileLine, within, type LineProfile } from '../stylePr
 
 const KEY = { tonic: 9 as const, scale: 'minor' as const }
 const SONG = 'Am Dm E7 Am F G C E7 Am F Dm E7 Am C G Am'
-const STYLES = ['slow-rock-duc-thinh-3', 'bossa-nova-1', 'bolero-1', 'pop-1'] as const
+/*
+  30/9/2026: một điệu còn giữ cho mỗi họ. Cũ: Slow Rock Đức Thịnh 3, Bossa Nova 1, Bolero 1, Pop 1 (đã xoá) — ô 6 và 4 nốt đen.
+  Slow rock còn lại (Lá thư hai tay) KHÔNG vào bộ này. Ô của nó 3 nốt đen (6 móc đơn); đo 16 lượt trên bài dưới: liền bậc
+  24,6% (khoảng người thật 6–22%), câu rải 9,8% (đã nằm trong 2–11%). Số đo, chưa ai nghe. Mặc định câu solo của nó đi bộ
+  soạn Linh Nhi (`slowRockSoanLinhNhi`), không qua `buildLine`.
+*/
+const STYLES = ['ca-phao-bossa-improved', 'bolero-tu-n-improv-bai-04-00001', 'ca-phao-ballad-cu-di'] as const
+const BOLERO = 'bolero-tu-n-improv-bai-04-00001'
+const BALLAD = 'ca-phao-ballad-cu-di'
 const TAKES = 16
 
 function setup(styleId: string) {
@@ -82,15 +90,17 @@ const shapeMiss = (profile: LineProfile) =>
   miss(profile.mixed, CA_PHAO_RANGE.mixed)
 
 describe('bộ soạn nhịp-trước', () => {
+  // Chín điệu còn trên bảng chọn (30/9/2026). Cũ: Pop 1, Rock 1, Swing 1, Waltz 1, Reggae 1, Salsa 1, Tango 1, Flamenco 1.
   const GENRE_STYLES = [
-    'pop-1',
-    'rock-1',
-    'swing-1',
-    'waltz-1',
-    'reggae-1',
-    'salsa-1',
-    'tango-1',
-    'flamenco-1',
+    'ca-phao-ballad-cu-di',
+    'ca-phao-ballad-co-em-cho',
+    'ca-phao-ballad-de-em-roi-xa',
+    'ca-phao-bossa-improved',
+    'slow-rock-la-thu-hai-tay',
+    'blue-sun',
+    'twist',
+    'bolero-tu-n-improv-bai-04-00001',
+    'tango-tu-n-improv-bai-04-00004',
   ] as const
 
   it.each(GENRE_STYLES)('%s: tự soạn được câu ở đúng nhịp và tầm đàn', (styleId) => {
@@ -115,7 +125,7 @@ describe('bộ soạn nhịp-trước', () => {
     expect(line.every((note) => note.note >= 60 && note.note <= 84)).toBe(true)
   })
 
-  it('pop, swing, reggae và tango không còn dùng cùng một lưới tiết tấu', () => {
+  it('ballad, twist, bolero và tango không dùng cùng một lưới tiết tấu', () => {
     const fingerprint = (styleId: string) => {
       const { chords, bar, scale, anchors } = setup(styleId)
       return buildLine({
@@ -133,7 +143,7 @@ describe('bộ soạn nhịp-trước', () => {
     }
 
     expect(
-      new Set(['pop-1', 'swing-1', 'reggae-1', 'tango-1'].map(fingerprint)).size,
+      new Set([BALLAD, 'twist', BOLERO, 'tango-tu-n-improv-bai-04-00004'].map(fingerprint)).size,
     ).toBe(4)
   })
 
@@ -181,7 +191,7 @@ describe('bộ soạn nhịp-trước', () => {
   })
 
   it('không ép câu sau lặp hình nhịp câu trước', () => {
-    const { chords, bar, scale, anchors } = setup('pop-1')
+    const { chords, bar, scale, anchors } = setup(BALLAD)
     const line = buildLine({
       chords, beatsPerChord: bar, barBeats: bar, anchors, scale,
       range: { low: 60, high: 84 }, take: 2,
@@ -206,7 +216,7 @@ describe('bộ soạn nhịp-trước', () => {
     chữ số. Test này giữ lại lý do, để lần sau khỏi viết lại đoạn code chết ấy.
   */
   it('trên gam bảy nốt, mỗi cỡ bước chỉ có đúng một nốt', () => {
-    const { scale } = setup('pop-1')
+    const { scale } = setup(BALLAD)
     const ladder = ladderOf(scale, 60, 84)
     for (let at = 0; at + 2 < ladder.length; at += 1) {
       expect(ladder[at + 1]! - ladder[at]!).toBeGreaterThanOrEqual(1)
@@ -282,12 +292,12 @@ describe('bộ soạn nhịp-trước', () => {
   })
 
   it('bolero hết lệch riêng, dù có cặp cọc cách nhau nửa phách', () => {
-    expect(accentBeats(getStyle('bolero-1')!)).toContain(0.5)
-    expect(within(score('bolero-1', 'moi').scale, CA_PHAO_RANGE.scale)).toBe(true)
+    expect(accentBeats(getStyle(BOLERO)!)).toContain(0.5)
+    expect(within(score(BOLERO, 'moi').scale, CA_PHAO_RANGE.scale)).toBe(true)
   })
 
   it('mỗi lượt cho một đường khác nhau', () => {
-    const { chords, bar, scale, anchors } = setup('pop-1')
+    const { chords, bar, scale, anchors } = setup(BALLAD)
     const of = (take: number) =>
       buildLine({ chords, beatsPerChord: bar, barBeats: bar, anchors, scale, range: { low: 60, high: 84 }, take })
         .map((note) => note.note)

@@ -37,10 +37,10 @@ describe('tách phong cách từng thầy', () => {
   })
 
   it('điệu Cà Pháo KHÔNG dính lối bám tay trái của Linh Nhi', () => {
-    expect(soloTuDoCaPhao('bossa-ca-phao-som')).toBe(true)
-    expect(raiTheoTayTrai('bossa-ca-phao-som')).toBe(false)
-    // Điệu bossa khác trong cùng họ thì vẫn giữ lối Linh Nhi.
-    expect(raiTheoTayTrai('bossa-nova-1')).toBe(true)
+    expect(soloTuDoCaPhao('ca-phao-bossa-improved')).toBe(true)
+    expect(raiTheoTayTrai('ca-phao-bossa-improved')).toBe(false)
+    // Họ bolero (Bolero Tuấn) thì vẫn giữ lối Linh Nhi. Cũ (trước 30/9/2026): Bossa Nova 1 — đã xoá.
+    expect(raiTheoTayTrai('bolero-tu-n-improv-bai-04-00001')).toBe(true)
   })
 
   /*

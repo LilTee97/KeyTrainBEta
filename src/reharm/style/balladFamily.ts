@@ -1,5 +1,4 @@
 import { getStyle } from './styleLibrary'
-import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
 import { CP_BALLAD_SONG_IDS } from './styleLibrary/caPhaoBalladSongs'
 
 /**
@@ -16,20 +15,7 @@ import { CP_BALLAD_SONG_IDS } from './styleLibrary/caPhaoBalladSongs'
  * một tiết điệu riêng với tay trái bass phách 1 và 3, không phải ballad.
  */
 export const BALLAD_FAMILY_IDS: readonly string[] = [
-  /** Điệu ballad mặc định của app, và là chỗ mọi alias `ballad*` trỏ tới. */
-  'pop-1',
-  'slow-rock-2',
-  /* Ballad của thầy Hải trên bảng chọn — xem `styleLibrary/haiStyles.ts`. */
-  'hai-pop-ballad',
-  'hai-pop-ballad-chorus',
-  'hai-slow-rock',
-  'hai-slow-rock-chorus',
-  'hai-ballad-dan-ca',
-  /* Biến tấu KeyTrain dựng từ Pop Ballad (Hải) — vẫn là ballad. */
-  'hai-pop-ballad-free',
-  'hai-pop-ballad-free-chorus',
   'ton-hung-ballad',
-  ...CP_BALLAD_IDS,
   ...CP_BALLAD_SONG_IDS,
 ]
 

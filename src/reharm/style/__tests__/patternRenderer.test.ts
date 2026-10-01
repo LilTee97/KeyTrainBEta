@@ -8,7 +8,7 @@ import {
   renderPattern,
   timelineLengthBeats,
 } from '../patternRenderer'
-import { BALLAD } from '../styleLibrary'
+import { MAU_BALLAD as BALLAD } from './mauThu'
 import type { StylePattern } from '../types'
 
 function voicings(input: string): TwoHandVoicing[] {
@@ -37,24 +37,6 @@ const FAKE_CELL_STYLE: StylePattern = {
   },
   note: 'Chỉ dùng cho test.',
 }
-
-describe('dữ liệu điệu ballad', () => {
-  it('là Pop 1 (OneMotion), mẫu 4 phách', () => {
-    expect(BALLAD.id).toBe('pop-1')
-    expect(BALLAD.cell).not.toBeNull()
-    expect(BALLAD.cell!.lengthBeats).toBe(4)
-  })
-
-  it('được đánh dấu là đã xác nhận từ video', () => {
-    expect(BALLAD.verified).toBe(true)
-    expect(BALLAD.sourceVideos?.length).toBeGreaterThan(0)
-  })
-
-  it('là nhịp bốn bốn, hợp âm khối', () => {
-    expect(BALLAD.beatsPerMeasure).toBe(4)
-    expect(BALLAD.feel).toBe('straight-block-chord')
-  })
-})
 
 describe('renderPattern — nhánh ballad', () => {
   it('chuỗi rỗng cho dòng thời gian rỗng', () => {

@@ -57,7 +57,7 @@ export interface SongSnapshot {
   caPhaoSoloMode?: 'compose' | 'simulate'
   /** Ô tick solo lượt 4 (điệu khai `cpSoloOwnRhythm`). Bài cũ không có trường này → bật (người dùng đã duyệt 26/9/2026). */
   cpBalladThu?: boolean
-  /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → tắt. */
+  /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → bật (mặc định từ 30/9/2026; trước: tắt). */
   slowRockMotO?: boolean
   /** Slow rock: chêm lick Blues (chép từ Rockhouse) ở chỗ fill — ô tick nghe thử. Bài cũ → tắt. */
   bluesLickSR?: boolean
@@ -68,7 +68,7 @@ export interface SongSnapshot {
   bluesSoan12?: boolean
   /** Blue Sun: hợp âm lướt Blues ở cuối đoạn (`luotBlueSun`) — ô tick nghe thử. Bài cũ → tắt. */
   bluesLuot?: boolean
-  /** Twist: bật = một mẫu 4 phách/hợp âm; tắt hoặc bài cũ = hai mẫu (8 phách). */
+  /** Twist: bật = một mẫu 4 phách/hợp âm; tắt = hai mẫu (8 phách). Bài cũ → bật (mặc định từ 30/9/2026; trước: tắt). */
   twistSinglePass?: boolean
   caPhaoFullSource?: string
   caPhaoKeyboardRange?: { low: number; high: number }

@@ -14,7 +14,8 @@ import { readSnapshot } from '../../persistence/songSnapshot'
 import { scaleTones } from '../../reharmEngine/keyDetection'
 import { caPhaoFullSources, type FullSolo } from '../caPhaoSolo'
 
-const ballad = ALL_STYLES.find(s => cpGenre(s) === 'ballad')!
+// Điệu họ ballad KHÔNG mang sheet riêng — trước 30/9/2026 là Pop 1 (đã xoá); nay mượn Có Em Chờ, bỏ tên sheet.
+const ballad = { ...ALL_STYLES.find(s => cpGenre(s) === 'ballad')!, cpSoloSong: undefined }
 const base: PhraseSectionOptions = { kind: 'interlude', key: { tonic: 2, scale: 'minor' },
   style: bossa, thay: 'ca-phao', beatsPerChord: 4, opening: null, dropRoot: true,
   solo: () => [], take: 0, caPhaoFull: true, caPhaoKeyboardRange: { low: 21, high: 108 } }
@@ -40,7 +41,7 @@ it('pins sheet-specific simulation to its named song, including stale saved sour
 
 it('does not silently substitute a missing simulation section or a future named sheet', () => {
   for (const style of [{ ...ballad, cpSoloSong: 'Missing future ballad' },
-    ALL_STYLES.find(s => s.id === 'ca-phao-ballad-acdd')!]) {
+    ALL_STYLES.find(s => s.id === 'ca-phao-ballad-cu-di')!]) {
     const made = buildPhraseSection({ ...base, style, caPhaoSimulate: true })!
     expect(made.events).toEqual([])
     expect(made.unavailableReason).toContain('Không thay bằng sheet khác')

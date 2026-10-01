@@ -1,14 +1,5 @@
 import { useEffect, useState } from 'react'
 import {
-  getSourceCurrentTime,
-  hasSourceFile,
-  isSourcePlaying,
-  pauseSource,
-  playSourceFrom,
-  setSourceVolume,
-  stopSource,
-} from '../../shared/audio/sourceAudio'
-import {
   INSTRUMENTS,
   setInstrument,
   useAudioStore,
@@ -44,7 +35,6 @@ export function PlaybackToolbar({
   onBpm?: (bpm: number) => void
 }) {
   const [shift, setShift] = useState(0)
-  const [volume, setVolume] = useState(45)
   const instrument = useAudioStore((state) => state.instrument)
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -117,22 +107,6 @@ export function PlaybackToolbar({
             </option>
           ))}
         </select>
-      </label>
-      <label className="flex items-center gap-1.5 text-xs text-dim">
-        Vol
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={volume}
-          disabled={!canPlay}
-          onChange={(event) => {
-            const value = Number(event.target.value)
-            setVolume(value)
-            setSourceVolume(value / 100)
-          }}
-          className="w-16 accent-amber-key"
-        />
       </label>
     </div>
   )
@@ -244,7 +218,6 @@ interface ChordOverviewProps {
   slashHintAt?: (chordIndex: number) => string | null
   onToggleSlash?: (chordIndex: number) => void
   transitionAt?: (chordIndex: number) => TransitionOption | null
-  cpBalladTransition?: boolean
   onToggleTransition?: (chordIndex: number) => void
   onSetTransition?: (chordIndex: number, run: TransitionOption) => void
   onRemoveChord?: (index: number) => void
@@ -294,15 +267,12 @@ export function ChordOverview({
   slashHintAt,
   onToggleSlash,
   transitionAt,
-  cpBalladTransition,
   onToggleTransition,
   onSetTransition,
   onRemoveChord,
   onDuplicateChord,
 }: ChordOverviewProps) {
   const [shift, setShift] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [cursor, setCursor] = useState<number | null>(null)
   const [menuBeat, setMenuBeat] = useState<number | null>(null)
   const [menu, setMenu] = useState<{
     chordIndex: number
@@ -314,33 +284,10 @@ export function ChordOverview({
   const shown = onTone
     ? [...perBeat]
     : perBeat.map((symbol) => transposeSymbol(symbol, shift))
-  const canPlay = playEnabled ?? hasSourceFile()
+  const canPlay = playEnabled ?? false
   const cellsPerRow = meter * BARS_PER_ROW
 
-  useEffect(() => {
-    if (!playing) return
-    let frame = 0
-    const tick = () => {
-      if (!isSourcePlaying()) {
-        setPlaying(false)
-        setCursor(null)
-        return
-      }
-      const beat = Math.floor((getSourceCurrentTime() * bpm) / 60)
-      setCursor(beat >= 0 && beat < perBeat.length ? beat : null)
-      frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [playing, bpm, perBeat.length])
-
-  const playFrom = (beat: number) => {
-    playSourceFrom((beat * 60) / Math.max(1, bpm), bpm)
-    setPlaying(true)
-    setCursor(beat)
-  }
-
-  const active = activeBeat !== undefined ? activeBeat : cursor
+  const active = activeBeat ?? null
   const playhead = active === null || active === undefined ? null : Math.floor(active)
   const activeChord =
     playhead !== null && chordIndexAt ? chordIndexAt(playhead) : null
@@ -363,18 +310,9 @@ export function ChordOverview({
       {showToolbar && (
         <PlaybackToolbar
           canPlay={canPlay}
-          onPlay={() => (onPlay ? onPlay() : playFrom(active ?? 0))}
-          onPause={() => {
-            if (onPause) onPause()
-            else pauseSource()
-            setPlaying(false)
-          }}
-          onStop={() => {
-            if (onStop) onStop()
-            else stopSource()
-            setPlaying(false)
-            setCursor(null)
-          }}
+          onPlay={() => onPlay?.()}
+          onPause={() => onPause?.()}
+          onStop={() => onStop?.()}
           onTone={onTone ?? ((delta) => setShift((value) => value + delta))}
           toneLabel={toneLabel}
           bpm={bpm}
@@ -432,10 +370,7 @@ export function ChordOverview({
                       type="button"
                       data-beat={beat}
                       {...press}
-                      onClick={() => {
-                        if (onSeekBeat) onSeekBeat(beat)
-                        else if (canPlay) playFrom(beat)
-                      }}
+                      onClick={() => onSeekBeat?.(beat)}
                       className={`min-h-9 border-b border-r border-white/10 px-0.5 py-1 text-center font-mono text-[11px] ${
                         barStart ? 'border-l-2 border-l-white/35' : ''
                       } ${
@@ -509,7 +444,6 @@ export function ChordOverview({
               : undefined
           }
           transition={transitionAt?.(menu.chordIndex) ?? null}
-          cpBalladTransition={cpBalladTransition}
           canMarkTransition={onToggleTransition !== undefined}
           onToggleTransition={
             onToggleTransition

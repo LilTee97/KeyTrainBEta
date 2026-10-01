@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   LOOP_PASSES,
-  setInstrument,
   setVolumeDb,
   startAudio,
   startTimelineLoop,
@@ -9,16 +8,6 @@ import {
   useAudioStore,
   usePlaybackStore,
 } from '../shared/audio/audioEngine'
-import {
-  loadSourceFile,
-  pauseSource,
-  stopSource,
-  setSourceEnabled,
-  setSourceNativeBpm,
-  setSourceVolume,
-  startSourceAtBeat,
-  syncSourceRate,
-} from '../shared/audio/sourceAudio'
 import { setBpm, useMetronomeStore } from '../shared/audio/metronome'
 import { usePracticeStore } from './playback/practiceStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
@@ -48,8 +37,7 @@ import { SongImport } from './input/SongImport'
 import { ChordOverview } from './input/ChordOverview'
 import { accentBeats, soloLeftHand } from './style/soloLeftHand'
 import { buildLine, lineToTimeline } from './fillSoloGenerator/lineBuilder'
-import { expandToBeats } from './input/chromaMatch'
-import { listToBeatTable } from './input/importedTrack'
+import { expandToBeats, listToBeatTable } from './input/importedTrack'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
 import type { SectionMark } from './input/songSheet'
@@ -143,13 +131,13 @@ import { cueChord, phraseChords } from './style/phraseChords'
 import { interludeChordsForTeacher } from './style/teacherSoloChords'
 import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
+import { noiCauVaoSolo } from './style/twistSolo'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
 import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
 import { planCpBalladBacking } from './style/cpBalladConnections'
 import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
   hasChorusVariant,
-  isSplitAwareStyle,
   nghiCuaMoc,
   nghiDonRaTheoMoc,
   hasTonicVariant,
@@ -335,8 +323,9 @@ const GRACE_OPTIONS: readonly {
 import { ArrangementEditor } from './style/ArrangementEditor'
 import {
   ALL_STYLES,
-  BALLAD,
+  DEFAULT_STYLE,
   getStyle,
+  styleIdOrDefault,
 } from './style/styleLibrary'
 import { cuDiFillTheoThu, danFillVaoSong } from './style/cuDiFill'
 import { StylePicker } from './style/StylePicker'
@@ -604,9 +593,6 @@ export function ReharmHome() {
   const [importedBeats, setImportedBeats] = useState<Record<number, number>>({})
   /** Có bài (file/lưu) thì giữ BPM bài, không đổi theo điệu. */
   const [lockSongBpm, setLockSongBpm] = useState(false)
-  const [hasSource, setHasSource] = useState(false)
-  const [sourceOn, setSourceOn] = useState(false)
-  const [sourceVol, setSourceVol] = useState(45)
   /**
    * Các chỗ người dùng đã tắt câu fill, tính theo vòng hợp âm chính.
    *
@@ -657,7 +643,7 @@ export function ReharmHome() {
   const [dropRoot, setDropRoot] = useState(true)
   /** Số phách mỗi hợp âm chiếm — chính là nhịp đổi hợp âm của bài. */
   const [beatsPerChord, setBeatsPerChord] = useState(4)
-  const [styleId, setStyleId] = useState('pop-1')
+  const [styleId, setStyleId] = useState(DEFAULT_STYLE.id)
   /** Thầy cho dạo / giang tấu / kết. `null` = theo điệu đệm. */
   const [soloThay, setSoloThay] = useState<SoloTeacher>(null)
   /*
@@ -940,7 +926,7 @@ export function ReharmHome() {
    * Chạy cả đường ống tái hòa âm: dò giọng → phân tích bậc → thêm màu → gợi ý
    * hợp âm lướt. Thứ tự này quan trọng, xem ghi chú trong reharmPipeline.ts.
    */
-  const style = getStyle(resolveStyleForSection(styleId, 'verse')) ?? BALLAD
+  const style = getStyle(resolveStyleForSection(styleId, 'verse')) ?? DEFAULT_STYLE
 
   /*
     Kiểu dùng cho CÂU SOLO — dạo đầu, giang tấu, kết bài.
@@ -980,9 +966,18 @@ export function ReharmHome() {
     chính nó. Tắt thì y như cũ. Lưu theo bài.
     (Lượt đầu tôi hiểu sai thành "coi hợp âm ghép đôi là trọn một ô" — người dùng bác.)
   */
-  const [slowRockMotO, setSlowRockMotO] = useState(false)
-  // Twist: mỗi hợp âm lặp mẫu hai tay 2 lần (8 phách); tick thì 1 lần (4 phách).
-  const [twistSinglePass, setTwistSinglePass] = useState(false)
+  /*
+    MẶC ĐỊNH BẬT từ 30/9/2026 — người dùng: *"Điệu Slow rock lá thư 2 tay cũng đặt ô tick trong ảnh làm mặc định"* (Lá thư hai
+    tay là điệu slow rock duy nhất còn lại). Cũ: tắt (mỗi hợp âm 2 lần 6 phách). Bài đã lưu giữ lựa chọn đã lưu; bài lưu trước khi
+    có trường này → bật. Để lùi ("hợp âm đổi quá nhanh ở bài 2 ô một hợp âm"): trả `useState(false)` và `?? false` lúc nạp bài.
+  */
+  const [slowRockMotO, setSlowRockMotO] = useState(true)
+  /*
+    Twist: tick = mỗi hợp âm MỘT lần mẫu hai tay (4 phách) rồi chuyển; bỏ tick = 2 lần (8 phách). MẶC ĐỊNH BẬT từ 30/9/2026 —
+    người dùng: *"hãy đưa ô tick mỗi hợp âm đánh một lần rồi chuyển làm mặc định"*. Cũ: tắt. Bài đã lưu giữ lựa chọn đã lưu; bài
+    lưu trước khi có trường này → bật. Để lùi: `useState(false)`, `?? false` lúc nạp bài, `setTwistSinglePass(false)` lúc dán bài mới.
+  */
+  const [twistSinglePass, setTwistSinglePass] = useState(true)
   const laSlowRock = hoCuaDieu(style.id) === 'slow-rock'
   const isTwist = style.family === 'twist'
   /*
@@ -1124,8 +1119,8 @@ export function ReharmHome() {
    */
   // Nghỉ ở mốc chuyển đoạn được đôn ra thêm vào hợp âm ở mốc — xem `nghiDonRaTheoMoc`.
   const nghiDonRa = useMemo(
-    () => nghiDonRaTheoMoc(transitions, style, style.family === 'ca-phao-ballad-acdd' && !walkingOn),
-    [transitions, style, walkingOn],
+    () => nghiDonRaTheoMoc(transitions, style),
+    [transitions, style],
   )
 
   const halvedBeats = useMemo(() => {
@@ -1417,7 +1412,7 @@ export function ReharmHome() {
    */
   const muteWindows = useMemo(() => {
     const spans = mainChordSpans(withPassing, chordBeats)
-    const windows = transitionMuteWindows(style.id, spans, transitionsDieu)
+    const windows = transitionMuteWindows(spans, transitionsDieu)
     for (const [key, rest] of Object.entries(fillRests)) {
       if (rest <= 0) continue
       const main = Number(key)
@@ -1866,9 +1861,6 @@ export function ReharmHome() {
       chordStarts.push(running)
       running += beats
     }
-    const splitStarts = isSplitAwareStyle(style.id)
-      ? chordStarts.filter((_, index) => beatsEach[index] < chordBeats)
-      : []
     /*
       Mốc chuyển đoạn ĐÔN RA N phách (`nghiDonRa`) làm ô nối dài lẻ (vd 6 + 2 móc đơn): mở lại ô đệm ngay hợp âm sau mốc.
       Không thì ô đệm — trải liên tục theo thời gian — lệch pha suốt phần còn lại của bài. Người dùng 26/9/2026: *"sao từ lúc
@@ -1884,7 +1876,6 @@ export function ReharmHome() {
 
     const breaks = [
       ...sectionCellBreaks(style.id, songSources),
-      ...splitStarts,
       ...sauNghi,
     ]
 
@@ -2719,7 +2710,7 @@ export function ReharmHome() {
       }
       const line = soloToTimeline(generateFillLine(withPassing, {
           breaths,
-          sectionEnds: style.family === 'ca-phao-ballad-acdd' && !walkingOn ? undefined : transitionsDieu,
+          sectionEnds: transitionsDieu,
           beatsPerChord: chordBeats,
           // Điệu nào khai chỗ đứng của câu lót thì theo nó; không khai thì để
           // `generateFillLine` tự chọn như cũ.
@@ -2739,8 +2730,7 @@ export function ReharmHome() {
           direction: soloDirection,
           density: fillDensity,
           key: reharm.key,
-          skipFills: style.family === 'ca-phao-ballad-acdd' && !walkingOn
-            ? new Set([...mutedFills, ...transitions.keys()]) : fillSkip,
+          skipFills: fillSkip,
           extraFills: new Set(
             [...extraFills].filter((index) => !transitions.has(index)),
           ),
@@ -3103,19 +3093,19 @@ export function ReharmHome() {
     setCaPhaoFull(saved.caPhaoFull ?? false)
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
     setCpBalladThu(saved.cpBalladThu ?? true)
-    setSlowRockMotO(saved.slowRockMotO ?? false)
+    setSlowRockMotO(saved.slowRockMotO ?? true)
     setBluesLickSR(saved.bluesLickSR ?? false)
     setBluesSoan6(saved.bluesSoan6 ?? false)
     setBluesSoan12(saved.bluesSoan12 ?? false)
     setBluesLuot(saved.bluesLuot ?? false)
-    setTwistSinglePass(saved.twistSinglePass === true)
+    setTwistSinglePass(saved.twistSinglePass ?? true)
     setCaPhaoFullSource(saved.caPhaoFullSource ?? '')
     setCaPhaoKeyboardRange(saved.caPhaoKeyboardRange ?? { low: 36, high: 96 })
     setLickyRuns(saved.lickyRuns ?? false)
     setLickyMode((saved.lickyMode as LickyMode | undefined) ?? 'clone')
     setAcceptedPassing(saved.acceptedPassing)
 
-    setStyleId(saved.styleId)
+    setStyleId(styleIdOrDefault(saved.styleId))
     setBeatsPerChord(saved.beatsPerChord)
     setImportedBeats(listToBeatTable(saved.chordDurations) ?? {})
     if (saved.bpm !== undefined) {
@@ -3123,13 +3113,9 @@ export function ReharmHome() {
       setLockSongBpm(true)
     } else {
       setLockSongBpm(false)
-      const styleBpm = getStyle(saved.styleId)?.bpm
+      const styleBpm = getStyle(styleIdOrDefault(saved.styleId))?.bpm
       if (styleBpm) setBpm(styleBpm)
     }
-    loadSourceFile(null)
-    setHasSource(false)
-    setSourceOn(false)
-    setSourceEnabled(false)
     setSmoothVoicing(saved.smoothVoicing)
     setDropRoot(saved.dropRoot)
     setUseSlashChords(saved.useSlashChords)
@@ -3193,7 +3179,7 @@ export function ReharmHome() {
     setManualKey('')
     setPairedChords(new Set())
     setImportedBeats({})
-    setTwistSinglePass(false)
+    setTwistSinglePass(true)
     setLockSongBpm(false)
     const styleBpm = getStyle(styleId)?.bpm
     if (styleBpm) setBpm(styleBpm)
@@ -3322,7 +3308,8 @@ export function ReharmHome() {
 
   const steps = useMemo(() => {
     let base = arrangementSteps
-    if (isTwist && songSources) return bossaSoloSteps(base, songSources)
+    // Twist: giang tấu Blues tự chèn chơi MỘT lượt (12 ô) — người dùng 30/9/2026. Cũ: 2 lượt (24 ô).
+    if (isTwist && songSources) return bossaSoloSteps(base, songSources, 1)
     if (bossaRhythmOnly) return bossaBackingSteps(base, songSources)
     if ((bossaSoloOn || cpFullOn || cpComposeOn) && songSources) return bossaSoloSteps(base, songSources)
     const giangThuTuan = laBoleroTuan(style) && reharm.key?.scale === 'minor'
@@ -3405,7 +3392,7 @@ export function ReharmHome() {
         */
         const blues = cpPass ? null : chayTwistBlues(withPassing, { key: twistSoloKey, beatsPerChord: chordBeats,
           take: pass + phraseSpin, breaths, sectionEnds: transitionAt, backing: accompaniment })
-        return buildBossaSoloSong(cpPass?.backing ?? blues?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
+        const twistSong = buildBossaSoloSong(cpPass?.backing ?? blues?.backing ?? accompaniment, oneLoopBeats, songSources, steps,
           (kind, take, nextStart) => buildPhraseSection({
             kind, key: twistSoloKey, style, bpm, dropRoot,
             // Twist: solo giữ ô 4 phách; tick một/hai lần chỉ đổi thời lượng đệm hát.
@@ -3414,7 +3401,9 @@ export function ReharmHome() {
             // pass đã mã hóa playSpin; cộng cả hai sẽ thành bước 528, luôn trùng modulo 4.
             take: phraseSpin + playSpin.current + take,
             range: { low: 60, high: 84 }, solo: () => [],
-          }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? blues?.events ?? [], true)
+          }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, cpPass?.events ?? blues?.events ?? [], true, 1)
+        // Chỗ nối câu hát ↔ dạo · giang · kết cũng trong tầm tay (người dùng 30/9/2026) — xem `noiCauVaoSolo`.
+        return { ...twistSong, events: noiCauVaoSolo(twistSong.events, twistSong.soloSpans) }
       }
       if (bossaRhythmOnly) return buildBossaRhythmOnly(cpPass?.backing ?? accompaniment, oneLoopBeats, songSources, steps, cpPass?.events ?? [])
       if (bossaSoloOn || cpFullOn || cpComposeOn) {
@@ -4025,7 +4014,6 @@ export function ReharmHome() {
       slashHintAt,
       onToggleSlash: toggleSlash,
       transitionAt: (chordIndex) => transitions.get(chordIndex) ?? null,
-      cpBalladTransition: style.family === 'ca-phao-ballad-acdd' && !walkingOn,
       onToggleTransition: markTransition,
       onSetTransition: (chordIndex, run) =>
         setTransitionEdits((current) => ({ ...current, [chordIndex]: run })),
@@ -4160,7 +4148,6 @@ export function ReharmHome() {
     async (cau: CauOn) => {
       await startAudio()
       stopTimelineLoop()
-      pauseSource()
       const events = suKienTuNot(cau.not)
       const oNhip = style.beatsPerMeasure * (style.gridUnit ?? 1)
       const length =
@@ -4184,7 +4171,7 @@ export function ReharmHome() {
   )
 
   const playFromBeat = useCallback(
-    async (beat: number, sourceBeat = beat, recompose = false) => {
+    async (beat: number, recompose = false) => {
       if (recompose && !bossaRhythmOnly && ngheLaiStt > 0) {
         let cau = cauOnDs.find((c) => c.stt === ngheLaiStt)
         if (!cau) {
@@ -4202,12 +4189,10 @@ export function ReharmHome() {
       const heard = looping && playbackSong.current ? playbackSong.current : song
       await startAudio()
       stopTimelineLoop()
-      pauseSource()
       if (!recompose) {
         playbackSong.current = heard
         setPlayingTimeline(heard)
         startTimelineLoop(eventsForHand(heard.events, hand), bpm, heard.totalBeats, beat, playsOnce)
-        if (!bossaRhythmOnly) startSourceAtBeat(sourceBeat, bpm, !playsOnce)
         return
       }
       playSpin.current += 1
@@ -4302,7 +4287,6 @@ export function ReharmHome() {
         beat,
         playsOnce,
       )
-      if (!bossaRhythmOnly) startSourceAtBeat(sourceBeat, bpm, !playsOnce)
       advanceRound()
     },
     [
@@ -4336,7 +4320,7 @@ export function ReharmHome() {
       const heard = looping && playbackSong.current ? playbackSong.current : song
       const at =
         arrangedBeatAt(heard.segments, sourceBeat, heard.sections) ?? sourceBeat
-      void playFromBeat(at, sourceBeat)
+      void playFromBeat(at)
     },
     [song, looping, playFromBeat],
   )
@@ -4374,18 +4358,16 @@ export function ReharmHome() {
 
   const pausePlay = useCallback(() => {
     stopTimelineLoop()
-    pauseSource()
   }, [])
 
   const stopPlay = useCallback(() => {
     stopTimelineLoop()
-    stopSource()
   }, [])
 
   useEffect(() => {
     setPracticeTransport({
       playFrom: playFromSourceBeat,
-      playAll: () => void playFromBeat(0, 0, true),
+      playAll: () => void playFromBeat(0, true),
       pause: pausePlay,
       stop: stopPlay,
       onTone: (delta) => setTranspose((value) => value + delta),
@@ -4405,10 +4387,6 @@ export function ReharmHome() {
     song,
   ])
 
-  useEffect(() => {
-    if (looping) syncSourceRate(bpm)
-  }, [bpm, looping])
-
   const playingStyle = useRef(styleId)
   useEffect(() => {
     if (playingStyle.current === styleId) return
@@ -4418,7 +4396,6 @@ export function ReharmHome() {
     const length = Math.max(1, loopLengthBeats)
     const from = usePlaybackStore.getState().positionBeats % length
     stopTimelineLoop()
-    pauseSource()
     startTimelineLoop(
       (pass) => eventsForHand(passAt(pass), hand),
       bpm,
@@ -4426,8 +4403,7 @@ export function ReharmHome() {
       from,
       playsOnce,
     )
-    if (!bossaRhythmOnly) startSourceAtBeat(from, bpm, !playsOnce)
-  }, [styleId, passAt, hand, bpm, loopLengthBeats, playsOnce, bossaRhythmOnly])
+  }, [styleId, passAt, hand, bpm, loopLengthBeats, playsOnce])
 
   /**
    * Đổi màu chủ âm thì đặt lại cả bộ màu cho ăn khớp.
@@ -4570,7 +4546,7 @@ export function ReharmHome() {
                 )
               : null
           }
-          onPlay={() => void playFromBeat(0, 0, true)}
+          onPlay={() => void playFromBeat(0, true)}
           onPause={pausePlay}
           onStop={stopPlay}
           onSeekBeat={(beat) => {
@@ -4625,7 +4601,6 @@ export function ReharmHome() {
             })
           }}
           transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-          cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !walkingOn}
           onToggleTransition={markTransition}
           onSetTransition={(chordIndex, run) =>
             setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
@@ -4698,10 +4673,6 @@ export function ReharmHome() {
       )}
 
       <SongImport
-        onSourceFile={(file) => {
-          loadSourceFile(file)
-          setHasSource(!!file)
-        }}
         onImport={(track) => {
           const text = track.chords.map((entry) => entry.symbol).join(' ')
           loadSong(parseSongText(text), text)
@@ -4711,12 +4682,9 @@ export function ReharmHome() {
             ),
           )
           setBeatsPerChord(track.beatsPerMeasure)
-          if (track.beatsPerMeasure === 3) setStyleId('waltz-1')
           setBpm(track.bpm)
           setLockSongBpm(true)
-          setSourceNativeBpm(track.bpm)
           setSongTitle(track.title)
-          if (track.key) setManualKey(track.key)
         }}
       />
 
@@ -4761,7 +4729,6 @@ export function ReharmHome() {
                 setSoloThay('ca-phao')
                 setIntensity('caPhao')
               }
-              if (next?.family === 'flamenco') void setInstrument('guitar')
               if (!lockSongBpm && next) setBpm(next.bpm)
             }}
           />
@@ -5192,7 +5159,6 @@ export function ReharmHome() {
               )
             }
             transitionAt={(chordIndex) => transitions.get(chordIndex) ?? null}
-            cpBalladTransition={style.family === 'ca-phao-ballad-acdd' && !walkingOn}
             onToggleTransition={markTransition}
             onSetTransition={(chordIndex, run) =>
               setTransitionEdits((current) => ({ ...current, [chordIndex]: run }))
@@ -5224,7 +5190,7 @@ export function ReharmHome() {
                 <button
                   type="button"
                   onClick={() =>
-                    looping ? pausePlay() : void playFromBeat(0, 0, true)
+                    looping ? pausePlay() : void playFromBeat(0, true)
                   }
                   disabled={timeline.length === 0 && ngheLaiStt <= 0}
                   className={`rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-40 ${
@@ -5337,7 +5303,7 @@ export function ReharmHome() {
 
       {songSources && (
         <ArrangementEditor
-          {...(isTwist ? { interludeLabel: 'Giang tấu Blues (12 ô mỗi lượt)' } : {})}
+          {...(isTwist ? { interludeLabel: 'Giang tấu Blues (12 ô mỗi lượt)', interludeLoops: 1 } : {})}
           sources={songSources}
           steps={bossaRhythmOnly ? arrangementSteps : steps}
           onChange={setArrangement}
@@ -5833,52 +5799,6 @@ export function ReharmHome() {
                 className="w-24 accent-amber-key"
               />
             </label>
-
-            <label
-              className={`flex items-center gap-1.5 text-xs ${hasSource ? 'text-dim' : 'text-dim/40'}`}
-              title={
-                hasSource
-                  ? 'Phát file nhạc đã chọn làm nền'
-                  : 'Chọn file nhạc ở khung nhập bài trước'
-              }
-            >
-              <input
-                type="checkbox"
-                checked={sourceOn && !bossaRhythmOnly}
-                disabled={!hasSource || bossaRhythmOnly}
-                onChange={(event) => {
-                  const on = event.target.checked
-                  setSourceOn(on)
-                  setSourceEnabled(on)
-                  if (on && looping) {
-                    startSourceAtBeat(positionBeats, bpm, !playsOnce)
-                  } else {
-                    pauseSource()
-                  }
-                }}
-                className="accent-amber-key"
-              />
-              Nhạc gốc nền
-            </label>
-
-            {hasSource && (
-              <label className="flex items-center gap-2 text-xs text-dim">
-                Nền
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={sourceVol}
-                  onChange={(event) => {
-                    const value = Number(event.target.value)
-                    setSourceVol(value)
-                    setSourceVolume(value / 100)
-                  }}
-                  aria-label="Âm lượng nhạc gốc"
-                  className="w-20 accent-amber-key"
-                />
-              </label>
-            )}
 
             <span className="font-mono text-[11px] text-dim">
               {loopLengthBeats} phách · giang tấu {soloNoteCount} nốt ·{' '}

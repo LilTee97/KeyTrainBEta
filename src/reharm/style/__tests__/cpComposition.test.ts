@@ -99,7 +99,8 @@ it('CP color owns every fill/run route, including old snapshots and context menu
 
 
 it('new solos preserve genre form, vary notes and colors, and fit all keys and keyboards',()=>{
-  for(const style of [bossa,getStyle('pop-1')!]) for(const caPhaoFull of [false,true])
+  // Ballad ngoài nhóm sheet CP (không cờ cpBalladChordLeads): Tôn Hùng, khuôn ngầm. Cũ: Pop 1 — đã xoá 30/9/2026.
+  for(const style of [bossa,getStyle('ton-hung-ballad')!]) for(const caPhaoFull of [false,true])
     for(const scale of ['minor','major'] as const) for(const kind of ['intro','interlude','outro'] as const){
       const harmony=new Set<string>(),roots=new Set<string>(),rhythms=new Set<string>(),melodies=new Set<string>()
       for(let take=0;take<12;take++){
@@ -193,7 +194,7 @@ it('each fixed key changes notes and colors without requiring destructive rhythm
 
 it('same-key wide-keyboard simulation preserves every source pitch, pickup, grace and written harmony',()=>{
   for(const source of sources.sections){
-    const made=buildPhraseSection({...base,style:source.genre==='bossa nova'?bossa:getStyle('pop-1')!,
+    const made=buildPhraseSection({...base,style:source.genre==='bossa nova'?bossa:getStyle('ton-hung-ballad')!,
       kind:source.kind as PhraseSectionOptions['kind'],key:{tonic:source.tonic as PitchClass,scale:source.mode as 'major'|'minor'},
       caPhaoSimulate:true,caPhaoFullSource:source.song,caPhaoKeyboardRange:{low:0,high:127}})!
     expect(made.unavailableReason).toBeUndefined()
@@ -476,6 +477,7 @@ it('full-play alone requests a new take; chord seeking and automatic repeat reus
   expect(seek).toContain('return')
   expect(seek).not.toMatch(/buildPass\(|luuCauDao\(|advanceRound\(|setPhraseSpin\(/)
   expect(play).toContain('buildPlaybackPass(),')
-  expect(app.match(/playFromBeat\(0, 0, true\)/g)).toHaveLength(3)
+  // 30/9/2026: bỏ tham số `sourceBeat` (nhạc gốc nền đã xoá). Cũ: playFromBeat(0, 0, true).
+  expect(app.match(/playFromBeat\(0, true\)/g)).toHaveLength(3)
   expect(app).toContain('arrangedBeatAt(heard.segments, sourceBeat, heard.sections)')
 })

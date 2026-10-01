@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { buildPhraseSection } from '../phraseSection'
 import { getStyle } from '../styleLibrary'
-import { raiTheoTayTrai } from '../hoDieu'
 import { patternOnsets } from '../soloLeftHand'
+import type { StylePattern } from '../types'
+import { MAU_BALLAD, MAU_BOSSA, MAU_SWING, MAU_VALSE } from './mauThu'
 
 /*
   Dạo đầu, kết bài và giang tấu chơi **đúng điệu đang chọn** — mọi điệu.
@@ -20,16 +21,26 @@ import { patternOnsets } from '../soloLeftHand'
 const SONG = 'Am Dm G C F G Em Am'
 const KEY = { tonic: 9, scale: 'minor' } as const
 
-const STYLES = [
-  'pop-1',
-  'bossa-nova-1',
-  'swing-1',
-  'waltz-1',
-  'slow-rock-2',
-  'hai-slow-rock',
-  'hai-pop-ballad',
-  'slow-rock-duc-thinh-3',
-] as const
+/*
+  30/9/2026: điệu cũ (Pop 1, Bossa Nova 1, Swing 1, Waltz 1, Slow Rock 2, Slow Rock · Pop Ballad Hải, Đức Thịnh 3) đã
+  xoá. Kiểm trên khuôn mẫu riêng cho test + điệu còn giữ đi đường dạo / kết chung. Đo 30/9/2026 (13 khuôn): ba điệu còn
+  giữ KHÔNG vào đây vì đi đường riêng đã có test khác — Bossa CP cải tiến (ô hai ô A–B, dạo gõ thêm 3,5 của ô B), Slow
+  Blues (bộ soạn Blues: dạo 0 · 1,5 · 2,5) và Bolero Tuấn dạo (Pùng-Pắp hai tay có câu chạy, `boleroLinhNhi.test`).
+*/
+const STYLES: readonly (StylePattern | string)[] = [
+  MAU_BALLAD,
+  MAU_BOSSA,
+  MAU_SWING,
+  MAU_VALSE,
+  'ca-phao-ballad-cu-di',
+  'ca-phao-ballad-co-em-cho',
+  'ca-phao-ballad-de-em-roi-xa',
+  'slow-rock-la-thu-hai-tay',
+  'twist',
+  'tango-tu-n-improv-bai-04-00004',
+]
+const styleOf = (style: StylePattern | string) => typeof style === 'string' ? getStyle(style)! : style
+const CASES = STYLES.map((style) => [styleOf(style).id, styleOf(style)] as const)
 
 /**
  * Chỗ gõ tay trái mà điệu đòi ở ĐOẠN KHÔNG LỜI.
@@ -42,12 +53,12 @@ const STYLES = [
  * Thứ phải giữ vẫn nguyên: nhịp lấy từ CHÍNH điệu đang chọn, không mượn điệu
  * khác. Đó là điều test này canh, và nó không đổi.
  */
-function cellLeftBeats(styleId: string): number[] {
-  return patternOnsets(getStyle(styleId)!, 'left')
+function cellLeftBeats(styleOrId: StylePattern | string): number[] {
+  return patternOnsets(styleOf(styleOrId), 'left')
 }
 
-function phraseLeftBeats(styleId: string, kind: 'intro' | 'outro'): number[] {
-  const style = getStyle(styleId)!
+function phraseLeftBeats(styleOrId: StylePattern | string, kind: 'intro' | 'outro'): number[] {
+  const style = styleOf(styleOrId)
   const bar = style.beatsPerMeasure * (style.gridUnit ?? 1)
   const chords = parseChordInput(SONG).chords
   const built = buildPhraseSection({
@@ -70,12 +81,12 @@ function phraseLeftBeats(styleId: string, kind: 'intro' | 'outro'): number[] {
 }
 
 describe('đoạn không lời chơi đúng điệu đã chọn', () => {
-  it.each(STYLES)('%s: dạo đầu gõ tay trái đúng ô nhịp của điệu', (styleId) => {
-    expect(phraseLeftBeats(styleId, 'intro')).toEqual(cellLeftBeats(styleId))
+  it.each(CASES)('%s: dạo đầu gõ tay trái đúng ô nhịp của điệu', (_id, style) => {
+    expect(phraseLeftBeats(style, 'intro')).toEqual(cellLeftBeats(style))
   })
 
-  it.each(STYLES)('%s: kết bài gõ tay trái đúng ô nhịp của điệu', (styleId) => {
-    expect(phraseLeftBeats(styleId, 'outro')).toEqual(cellLeftBeats(styleId))
+  it.each(CASES)('%s: kết bài gõ tay trái đúng ô nhịp của điệu', (_id, style) => {
+    expect(phraseLeftBeats(style, 'outro')).toEqual(cellLeftBeats(style))
   })
 
   /*
@@ -83,40 +94,17 @@ describe('đoạn không lời chơi đúng điệu đã chọn', () => {
     quả KHÁC nhau. Nếu chúng bằng nhau thì luật thay điệu đã lẻn về.
   */
   it('slow rock không gõ giống ballad', () => {
-    expect(phraseLeftBeats('slow-rock-duc-thinh-3', 'intro')).not.toEqual(
-      phraseLeftBeats('pop-1', 'intro'),
+    expect(phraseLeftBeats('slow-rock-la-thu-hai-tay', 'intro')).not.toEqual(
+      phraseLeftBeats('ca-phao-ballad-cu-di', 'intro'),
     )
-    expect(phraseLeftBeats('hai-slow-rock', 'intro')).not.toEqual(
-      phraseLeftBeats('hai-pop-ballad', 'intro'),
+    expect(phraseLeftBeats('slow-rock-la-thu-hai-tay', 'intro')).not.toEqual(
+      phraseLeftBeats(MAU_BALLAD, 'intro'),
     )
   })
 })
 
-/*
-  BOSSA DÙNG LỐI BÁM TAY TRÁI CỦA LINH NHI, NHƯNG TAY TRÁI VẪN LÀ BOSSA.
-
-  Người dùng hỏi mở cơ chế ghép hai tay của Linh Nhi cho bossa. Đo trước khi
-  mở: bắt chéo 0, phách 1 100%, mốc chung 32% (bolero 44% — lỏng hơn đúng theo
-  tỉ lệ tay trái thưa hơn, 4 mốc mỗi ô so với 9).
-
-  Thứ phải khoá là luật cũ vẫn đứng: đổi cách dựng TAY PHẢI thì được, tay trái
-  vẫn phải gõ đúng ô nhịp của điệu đã chọn.
-*/
-describe('bossa bật lối bám tay trái mà không mất chất điệu', () => {
-  it('họ bossa có bật cờ bám tay trái', () => {
-    for (const id of ['bossa-nova-1', 'bossa-nova-2', 'hai-bossa-nova']) {
-      expect(raiTheoTayTrai(id), id).toBe(true)
-    }
-  })
-
-  it('tay trái bossa vẫn đúng ô nhịp của điệu ở cả dạo đầu lẫn kết bài', () => {
-    for (const id of ['bossa-nova-1', 'hai-bossa-nova']) {
-      for (const kind of ['intro', 'outro'] as const) {
-        expect(phraseLeftBeats(id, kind), `${id} / ${kind}`).toEqual(cellLeftBeats(id))
-      }
-    }
-  })
-})
+// 30/9/2026: bỏ nhóm "bossa bật lối bám tay trái" — hai điệu bossa còn lại (Cà Pháo) đi lối solo tự do Cà Pháo,
+// không bám tay trái; ba điệu bossa từng mang cờ ấy (Bossa Nova 1 · 2, Hải) đã xoá.
 
 describe('Tôn Hùng hai tay', () => {
   it('dạo: LH chỉ phách 1', () => {

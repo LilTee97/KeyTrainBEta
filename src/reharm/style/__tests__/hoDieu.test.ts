@@ -9,6 +9,10 @@ import {
 } from '../hoDieu'
 import { getStyle } from '../styleLibrary'
 
+// 30/9/2026: kiểm trên điệu còn giữ (+ khuôn ngầm). Điệu cũ (Bolero 1, Bolero trữ tình, Slow Rock 2, Đức Thịnh,
+// Pop, Hải…) đã xoá.
+const BT = 'bolero-tu-n-improv-bai-04-00001'
+
 /*
   HỌ ĐIỆU chứa nhiều KIỂU ĐỆM, và các kiểu ấy dùng lẫn nhau được.
 
@@ -46,26 +50,23 @@ describe('họ điệu gom các kiểu lại', () => {
     là CÙNG MỘT HỌ, không phải hai điệu rời.
   */
   it('laBoleroTuan chỉ Pùng-Pắp, không rải Linh Nhi', () => {
-    expect(laBoleroTuan(getStyle('bolero-1')!)).toBe(true)
-    expect(laBoleroTuan(getStyle('bolero-tu-n-improv-bai-04-00001')!)).toBe(true)
+    expect(laBoleroTuan(getStyle(BT)!)).toBe(true)
     expect(laBoleroTuan(getStyle('bolero-linh-nhi-2')!)).toBe(false)
   })
 
   it('bolero Tuấn Lưu và bolero Linh Nhi cùng một họ', () => {
-    expect(hoCuaDieu('bolero-1')).toBe('bolero')
-    expect(hoCuaDieu('bolero-linh-nhi')).toBe('bolero')
     expect(hoCuaDieu('bolero-linh-nhi-2')).toBe('bolero')
-    expect(hoCuaDieu('bolero-tu-n-improv-bai-04-00001')).toBe('bolero')
+    expect(hoCuaDieu(BT)).toBe('bolero')
   })
 
-  it('slow rock của ba nguồn cùng một họ', () => {
-    for (const id of ['slow-rock-2', 'slow-rock-duc-thinh-3', 'hai-slow-rock']) {
+  it('slow rock Lá thư hai tay thuộc họ slow rock', () => {
+    for (const id of ['slow-rock-la-thu-hai-tay', 'slow-rock-la-thu-hai-tay-chorus']) {
       expect(hoCuaDieu(id), id).toBe('slow-rock')
     }
   })
 
-  it('ballad của bốn nguồn cùng một họ', () => {
-    for (const id of ['pop-1', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca']) {
+  it('ballad của hai thầy cùng một họ', () => {
+    for (const id of ['ca-phao-ballad-cu-di', 'ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa', 'ton-hung-ballad']) {
       expect(hoCuaDieu(id), id).toBe('ballad')
     }
   })
@@ -90,12 +91,11 @@ describe('họ điệu gom các kiểu lại', () => {
 
 describe('chọn kiểu cho câu solo', () => {
   it('bolero không chọn thì tự lấy bản rải của Linh Nhi', () => {
-    expect(kieuChoSolo('bolero-1')).toBe('bolero-linh-nhi-2')
-    expect(kieuChoSolo('bolero-tu-n-improv-bai-04-00001')).toBe('bolero-linh-nhi-2')
+    expect(kieuChoSolo(BT)).toBe('bolero-linh-nhi-2')
   })
 
   it('người dùng chọn rồi thì theo họ', () => {
-    expect(kieuChoSolo('bolero-linh-nhi-2', 'bolero-1')).toBe('bolero-1')
+    expect(kieuChoSolo(BT, BT)).toBe(BT)
   })
 
   /*
@@ -104,19 +104,19 @@ describe('chọn kiểu cho câu solo', () => {
     ballad.
   */
   it('lựa chọn NGOÀI HỌ bị bỏ, không bao giờ được dùng', () => {
-    expect(kieuChoSolo('slow-rock-duc-thinh-3', 'hai-pop-ballad')).not.toBe('hai-pop-ballad')
-    expect(hoCuaDieu(kieuChoSolo('slow-rock-duc-thinh-3', 'hai-pop-ballad'))).toBe('slow-rock')
+    expect(kieuChoSolo('slow-rock-la-thu-hai-tay', 'ca-phao-ballad-cu-di')).not.toBe('ca-phao-ballad-cu-di')
+    expect(hoCuaDieu(kieuChoSolo('slow-rock-la-thu-hai-tay', 'ca-phao-ballad-cu-di'))).toBe('slow-rock')
   })
 
   it('họ không khai kiểu ưu tiên thì câu solo dùng luôn kiểu phần hát', () => {
     expect(HO_DIEU['slow-rock']!.soloUuTien).toBeUndefined()
-    expect(kieuChoSolo('slow-rock-duc-thinh-3')).toBe('slow-rock-duc-thinh-3')
+    expect(kieuChoSolo('slow-rock-la-thu-hai-tay')).toBe('slow-rock-la-thu-hai-tay')
   })
 
   it('điệu chưa gom vào họ nào thì giữ nguyên, không đổi gì', () => {
-    expect(hoCuaDieu('funk-1')).toBe(null)
-    expect(kieuChoSolo('funk-1')).toBe('funk-1')
-    expect(kieuChoSolo('funk-1', 'rock-1')).toBe('funk-1')
+    expect(hoCuaDieu('blue-sun')).toBe(null)
+    expect(kieuChoSolo('blue-sun')).toBe('blue-sun')
+    expect(kieuChoSolo('blue-sun', 'twist')).toBe('blue-sun')
   })
 
   it('kiểu ưu tiên phải là điệu có thật', () => {
@@ -130,15 +130,15 @@ describe('chọn kiểu cho câu solo', () => {
 
 describe('chọn kiểu cho điệp khúc', () => {
   it('không chọn thì theo phiên khúc', () => {
-    expect(kieuChoDiepKhuc('bolero-1')).toBe('bolero-1')
-    expect(kieuChoDiepKhuc('bolero-1', null)).toBe('bolero-1')
+    expect(kieuChoDiepKhuc(BT)).toBe(BT)
+    expect(kieuChoDiepKhuc(BT, null)).toBe(BT)
   })
 
   it('chọn trong cùng họ thì đổi', () => {
-    expect(kieuChoDiepKhuc('bolero-1', 'bolero-linh-nhi-2')).toBe('bolero-linh-nhi-2')
+    expect(kieuChoDiepKhuc(BT, 'bolero-linh-nhi-2')).toBe('bolero-linh-nhi-2')
   })
 
   it('chọn ngoài họ thì bỏ, quay về phiên khúc', () => {
-    expect(kieuChoDiepKhuc('bolero-1', 'hai-pop-ballad')).toBe('bolero-1')
+    expect(kieuChoDiepKhuc(BT, 'ca-phao-ballad-cu-di')).toBe(BT)
   })
 })

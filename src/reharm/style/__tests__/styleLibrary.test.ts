@@ -3,21 +3,62 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import type { TwoHandVoicing } from '../../voicingGenerator/handSplitVoicing'
 import { renderPattern, timelineLengthBeats } from '../patternRenderer'
+import { resolveStyleForSection } from '../sectionStyles'
 import {
   ALL_STYLES,
-  BALLAD,
-  BOSSA_NOVA,
-  SWING,
-  UNVERIFIED_STYLES,
-  VALSE,
-  VERIFIED_STYLES,
+  DEFAULT_STYLE,
   getStyle,
-  isPlayable,
+  getVisibleStyles,
+  styleFamilies,
+  styleIdOrDefault,
 } from '../styleLibrary'
+import { MAU_BALLAD, MAU_VALSE } from './mauThu'
 
 function voicings(input: string): TwoHandVoicing[] {
   return voiceLeadTwoHands(parseChordInput(input).chords)
 }
+
+describe('chín nút người dùng giữ (30/9/2026)', () => {
+  const nut = () => styleFamilies(
+    getVisibleStyles().filter((style) => resolveStyleForSection(style.id, 'verse') === style.id),
+  ).map((family) => family.family)
+
+  it('bảng chọn chỉ còn đúng chín họ, theo thứ tự cũ', () => {
+    expect(nut()).toEqual([
+      'ca-phao-bossa-improved',
+      'ca-phao-ballad-co-em-cho',
+      'ca-phao-ballad-de-em-roi-xa',
+      'ca-phao-ballad-cu-di',
+      'slow-rock-la-thu-hai-tay',
+      'blue-sun',
+      'twist',
+      'bolero-tu-n',
+      'tango-tu-n',
+    ])
+  })
+
+  it('khuôn ngầm tra được nhưng không có nút', () => {
+    const visible = new Set(getVisibleStyles().map((style) => style.id))
+    for (const id of ['bolero-linh-nhi-2', 'bolero-linh-nhi-2-chorus', 'ton-hung-ballad', 'ton-hung-ballad-chorus',
+      'ton-hung-ballad-giang', 'ton-hung-tinh-em-giang', 'ca-phao-bossa-sheet-9-10']) {
+      expect(getStyle(id)?.id, id).toBe(id)
+      expect(visible.has(id), id).toBe(false)
+    }
+  })
+
+  it('điệu đã xoá không còn, bài lưu mang điệu ấy về Ballad cứ đi', () => {
+    for (const id of ['pop-1', 'ballad', 'bolero-1', 'waltz-1', 'hai-pop-ballad', 'ca-phao-ballad-acdd', 'kim',
+      'slow-rock-la-thu', 'slow-rock-duc-thinh-1']) {
+      expect(getStyle(id), id).toBeUndefined()
+      expect(styleIdOrDefault(id), id).toBe('ca-phao-ballad-cu-di')
+    }
+    expect(DEFAULT_STYLE.id).toBe('ca-phao-ballad-cu-di')
+    // Khuôn ngầm cũng không được mở làm điệu đệm từ bài lưu.
+    expect(styleIdOrDefault('bolero-linh-nhi-2')).toBe('ca-phao-ballad-cu-di')
+    expect(styleIdOrDefault('twist')).toBe('twist')
+    expect(styleIdOrDefault('ca-phao-ballad-co-em-cho-chorus')).toBe('ca-phao-ballad-co-em-cho-chorus')
+  })
+})
 
 describe('tính toàn vẹn của thư viện điệu', () => {
   it('mọi định danh đều duy nhất', () => {
@@ -25,12 +66,11 @@ describe('tính toàn vẹn của thư viện điệu', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('các điệu đã xác nhận đều có nguồn video', () => {
-    expect(VERIFIED_STYLES.length).toBeGreaterThanOrEqual(4)
-
-    for (const style of VERIFIED_STYLES) {
-      expect(style.verified).toBe(true)
-      expect(style.sourceVideos?.length).toBeGreaterThan(0)
+  it('mọi điệu đều có nguồn và mẫu tiết tấu', () => {
+    for (const style of ALL_STYLES) {
+      expect(style.verified, style.id).toBe(true)
+      expect(style.sourceVideos?.length, style.id).toBeGreaterThan(0)
+      expect(style.cell, style.id).not.toBeNull()
     }
   })
 
@@ -38,7 +78,6 @@ describe('tính toàn vẹn của thư viện điệu', () => {
     const style = getStyle('ton-hung-ballad')
     expect(style?.name).toBe('Ballad rải (Tôn Hùng)')
     expect(style?.bpm).toBe(120)
-    expect(isPlayable(style!)).toBe(true)
     expect(style!.cell!.left.map((hit) => hit.beat)).toEqual([0, 0.5, 1])
   })
 
@@ -58,20 +97,6 @@ describe('tính toàn vẹn của thư viện điệu', () => {
     const beats = getStyle('ton-hung-tinh-em-giang')!.cell!.left.map((hit) => hit.beat)
     expect(beats).toContain(0.25)
     expect(beats.length).toBeGreaterThan(8)
-  })
-
-  it('điệu chưa xác nhận không có mẫu tiết tấu', () => {
-    // Thà báo là chưa có còn hơn bịa mẫu rồi dạy sai
-    for (const style of UNVERIFIED_STYLES) {
-      expect(style.verified).toBe(false)
-      expect(style.cell).toBeNull()
-      expect(style.sourceVideos).toBeUndefined()
-    }
-  })
-
-  it('chỉ điệu đã xác nhận mới chơi được', () => {
-    for (const style of VERIFIED_STYLES) expect(isPlayable(style)).toBe(true)
-    for (const style of UNVERIFIED_STYLES) expect(isPlayable(style)).toBe(false)
   })
 
   it('số phách mỗi ô nhịp khớp với nhịp ghi trên nhãn', () => {
@@ -94,120 +119,13 @@ describe('tính toàn vẹn của thư viện điệu', () => {
   })
 
   it('tra được điệu theo định danh', () => {
-    expect(getStyle('valse')).toBe(VALSE)
+    expect(getStyle('twist')?.id).toBe('twist')
     expect(getStyle('không-có-thật')).toBeUndefined()
   })
 })
 
-describe('bí danh bài cũ', () => {
-  it('ballad / bossa / valse / swing trỏ về biến thể OneMotion', () => {
-    expect(getStyle('ballad')).toBe(BALLAD)
-    expect(getStyle('ballad-pre')).toBe(BALLAD)
-    expect(getStyle('bossa-nova')).toBe(BOSSA_NOVA)
-    expect(getStyle('valse')).toBe(VALSE)
-    expect(getStyle('swing')).toBe(SWING)
-    expect(getStyle('slow-rock')?.id).toBe('slow-rock-2')
-  })
-})
-
-describe('Slow Rock 6/8', () => {
-  it('điệp nhấn 1 và 4', () => {
-    const style = getStyle('slow-rock-2')!
-    expect(style.timeSignature).toBe('6/8')
-    expect(style.cell!.left.map((hit) => hit.beat)).toEqual([0, 3])
-    expect(style.cell!.right).toHaveLength(6)
-    expect(style.cell!.right[0]!.velocityScale).toBe(1)
-    expect(style.cell!.right[3]!.velocityScale).toBe(1)
-  })
-
-  it('rải gốc–5–8–3–5–8', () => {
-    expect(
-      getStyle('slow-rock-3')!.cell!.right.map((hit) => hit.toneIndex ?? hit.tones?.[0]?.toneIndex),
-    ).toEqual([0, 2, 0, 1, 2, 0])
-  })
-
-  it('hai tay: bass 1+4, phải lệch 2-3 và 5-6', () => {
-    const style = getStyle('slow-rock-4')!
-    expect(style.cell!.left.map((hit) => hit.beat)).toEqual([0, 3])
-    expect(style.cell!.right.map((hit) => hit.beat)).toEqual([1, 2, 4, 5])
-  })
-})
-
-describe('Flamenco OneMotion', () => {
-  it('1: 6/8 lặp quạt, bass gốc+5 ở phách 1 và 4', () => {
-    const style = getStyle('flamenco-1')!
-    expect(style.timeSignature).toBe('6/8')
-    expect(style.cell!.right.map((hit) => hit.beat)).toEqual([1, 4])
-    const downbeats = style.cell!.left.filter(
-      (hit) => hit.beat === 0 || hit.beat === 3,
-    )
-    expect(downbeats).toHaveLength(2)
-    expect(
-      downbeats.every((hit) => hit.tones?.some((tone) => tone.semitones === 7)),
-    ).toBe(true)
-  })
-
-  it('2: 13 là nốt 1+3, không quạt cả hợp âm', () => {
-    const hit = getStyle('flamenco-2')!.cell!.right.find((entry) => entry.beat === 1)
-    expect(hit?.tones?.map((tone) => tone.toneIndex)).toEqual([0, 2])
-  })
-
-  it('3: rasgueado 1-2-3-4', () => {
-    expect(
-      getStyle('flamenco-3')!.cell!.right.map((hit) => hit.tones?.[0]?.toneIndex),
-    ).toEqual([0, 1, 2, 3, 0, 1, 2, 3])
-  })
-})
-
-describe('điệu OneMotion', () => {
-  it('mỗi điệu có họ, biến thể và mẫu', () => {
-    expect(VERIFIED_STYLES.length).toBeGreaterThan(30)
-    for (const style of VERIFIED_STYLES) {
-      expect(style.family.length).toBeGreaterThan(0)
-      expect(style.variant).toBeGreaterThan(0)
-      expect(style.cell).not.toBeNull()
-      expect(isPlayable(style)).toBe(true)
-    }
-  })
-
-  it('mỗi điệu có BPM OneMotion', () => {
-    for (const style of VERIFIED_STYLES) {
-      expect(style.bpm).toBeGreaterThanOrEqual(40)
-      expect(style.bpm).toBeLessThanOrEqual(200)
-    }
-    expect(getStyle('pop-1')!.bpm).toBe(120)
-    expect(getStyle('pop-2')!.bpm).toBe(90)
-    expect(getStyle('swing-1')!.bpm).toBe(130)
-    expect(getStyle('reggae-1')!.bpm).toBe(80)
-    expect(getStyle('flamenco-1')!.bpm).toBe(100)
-  })
-
-  it('Rock / Pop / Funk có nhiều dạng', () => {
-    expect(VERIFIED_STYLES.filter((style) => style.family === 'rock')).toHaveLength(4)
-    expect(VERIFIED_STYLES.filter((style) => style.family === 'pop')).toHaveLength(4)
-    expect(VERIFIED_STYLES.filter((style) => style.family === 'funk')).toHaveLength(5)
-  })
-
-  it('có Once và Basic 1–4', () => {
-    expect(
-      VERIFIED_STYLES.filter((style) => style.family === 'basic').map(
-        (style) => style.id,
-      ),
-    ).toEqual(['once', 'basic-1', 'basic-2', 'basic-3', 'basic-4'])
-  })
-
-  it('Basic 2 rải từng nốt, 8 tiếng một ô', () => {
-    const events = renderPattern(voicings('C'), getStyle('basic-2')!)
-    const right = events.filter(
-      (event) => event.hand === 'right' && event.startBeat < 4,
-    )
-    expect(right).toHaveLength(8)
-    expect(right.every((event) => event.notes.length === 1)).toBe(true)
-  })
-})
-
 describe('dựng phần đệm cho từng điệu', () => {
-  it.each(VERIFIED_STYLES.map((style) => [style.name, style] as const))(
+  it.each(ALL_STYLES.map((style) => [style.name, style] as const))(
     'điệu %s dựng được dòng thời gian',
     (_name, style) => {
       const events = renderPattern(voicings('Dm7 G7 Cmaj7'), style)
@@ -216,12 +134,13 @@ describe('dựng phần đệm cho từng điệu', () => {
       expect(events.some((event) => event.hand === 'left')).toBe(true)
       // Điệu có `fillCell` được để trống tay phải lúc hát; tay phải nằm ở ô fill.
       // Slow Blues (id `blue-sun`): tay phải là câu chạy ngón của Bộ Soạn Blues (`chayBlueSun`); cell tay phải trống.
+      // Khuôn ngầm bolero rải Linh Nhi: bản độc tấu, tay phải giữ giai điệu — ô nhịp không có tay phải.
       expect(events.some((event) => event.hand === 'right') || (style.fillCell?.right.length ?? 0) > 0 ||
-        style.family === 'blue-sun').toBe(true)
+        style.family === 'blue-sun' || style.cell!.right.length === 0).toBe(true)
     },
   )
 
-  it.each(VERIFIED_STYLES.map((style) => [style.name, style] as const))(
+  it.each(ALL_STYLES.map((style) => [style.name, style] as const))(
     'điệu %s cho lực nhấn hợp lệ',
     (_name, style) => {
       for (const event of renderPattern(voicings('Dm7 G7'), style)) {
@@ -232,13 +151,13 @@ describe('dựng phần đệm cho từng điệu', () => {
     },
   )
 
-  it('điệu valse dựng theo nhịp ba bốn', () => {
-    const events = renderPattern(voicings('C F G'), VALSE)
+  it('khuôn ba bốn dựng theo nhịp ba bốn', () => {
+    const events = renderPattern(voicings('C F G'), MAU_VALSE)
     expect(timelineLengthBeats(events)).toBeLessThanOrEqual(10)
   })
 
   it('điệu có mẫu cố định lặp y hệt bất kể hợp âm', () => {
-    const events = renderPattern(voicings('Dm7 G7'), VALSE)
+    const events = renderPattern(voicings('Dm7 G7'), MAU_VALSE)
 
     const firstMeasure = events
       .filter((event) => event.startBeat < 3)
@@ -251,8 +170,7 @@ describe('dựng phần đệm cho từng điệu', () => {
   })
 
   it('điệu 4/4 lặp mẫu cố định sang ô sau', () => {
-    const pop = getStyle('pop-2')!
-    const events = renderPattern(voicings('Dm7 G7'), pop)
+    const events = renderPattern(voicings('Dm7 G7'), MAU_BALLAD)
     const firstBar = events
       .filter((event) => event.startBeat < 4)
       .map((event) => `${event.hand}:${event.startBeat.toFixed(2)}`)

@@ -163,12 +163,13 @@ describe('Bossa Cà Pháo: rút gọn ô 9–10, kiểm cả timeline thật', (
     }
   })
 
-  it('nút mới riêng, nhận họ Bossa và thầy Cà Pháo; ID cũ vẫn mở được', () => {
+  // 30/9/2026: người dùng bỏ nút này (chỉ giữ Bossa CP cải tiến) — thành khuôn ngầm cho nút thầy Cà Pháo.
+  it('khuôn ngầm không nút, vẫn nhận họ Bossa và thầy Cà Pháo; bản cũ đã xoá', () => {
     const style = getStyle(CA_PHAO_BOSSA.id)!
-    expect(styleFamilies(getVisibleStyles()).find(f => f.family === style.family)?.styles[0].id).toBe(style.id)
+    expect(getVisibleStyles().some(s => s.id === style.id)).toBe(false)
     expect(hoCuaDieu(style.id)).toBe('bossa')
     expect(kieuTrongHo('bossa').map(s => s.id)).toContain(style.id)
     expect(soloTeacherOf(style.id)).toBe('ca-phao')
-    expect(getStyle('bossa-ca-phao-som')).toBeDefined()
+    expect(getStyle('bossa-ca-phao-som')).toBeUndefined()
   })
 })

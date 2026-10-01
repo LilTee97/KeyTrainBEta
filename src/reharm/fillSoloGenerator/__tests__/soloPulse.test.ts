@@ -23,10 +23,13 @@ import { cellPulseOf, pulseForStyle, soloFeelFor, soloLocksToCell, snapToPulse }
 const KEY = { tonic: 9 as const, scale: 'minor' as const }
 const SONG = 'Am Dm E7 Am'
 
-/** Ba họ người dùng chỉ đích danh. */
-const LOCKED = ['slow-rock-duc-thinh-3', 'slow-rock-duc-thinh-1', 'bolero-1', 'bossa-nova-1'] as const
-/** Điệu ngoài ba họ ấy: phải giữ nguyên hành vi cũ. */
-const FREE = ['pop-1', 'swing-1', 'waltz-1'] as const
+/**
+ * Ba họ người dùng chỉ đích danh. 30/9/2026: đo trên điệu còn giữ của từng họ — cũ: Slow Rock Đức Thịnh 3 · 1,
+ * Bolero 1, Bossa Nova 1 (đã xoá).
+ */
+const LOCKED = ['slow-rock-la-thu-hai-tay', 'bolero-tu-n-improv-bai-04-00001', 'ca-phao-bossa-improved'] as const
+/** Điệu ngoài ba họ ấy: phải giữ nguyên hành vi cũ. Cũ: Pop 1, Swing 1, Waltz 1 (đã xoá). */
+const FREE = ['ca-phao-ballad-cu-di', 'twist', 'blue-sun'] as const
 
 function onsets(styleId: string, withPulse: boolean): number[] {
   const style = getStyle(styleId)!

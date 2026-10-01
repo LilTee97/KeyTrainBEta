@@ -1,6 +1,5 @@
 import { ALL_STYLES, getStyle } from './styleLibrary'
 import type { StylePattern } from './types'
-import { CP_BALLAD_IDS } from './styleLibrary/caPhaoBallad'
 import { CP_BALLAD_SONG_FAMILIES } from './styleLibrary/caPhaoBalladSongs'
 
 /**
@@ -47,16 +46,11 @@ export interface HoDieu {
   soloUuTien?: string
 }
 
+// 30/9/2026: chỉ còn các family của chín nút người dùng giữ (+ khuôn ngầm bolero-linh-nhi-2, Tôn Hùng, bossa sheet CP).
 export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   bolero: {
     ten: 'Bolero',
-    families: [
-      'bolero',
-      'bolero-tu-n',
-      'bolero-linh-nhi',
-      'bolero-linh-nhi-2',
-      'bolero-linh-nhi-3',
-    ],
+    families: ['bolero-tu-n', 'bolero-linh-nhi-2'],
     /*
       Bolero rải của Linh Nhi được ưu tiên cho câu solo, theo yêu cầu người dùng.
 
@@ -69,35 +63,23 @@ export const HO_DIEU: Readonly<Record<string, HoDieu>> = {
   },
   'slow-rock': {
     ten: 'Slow Rock',
-    families: ['slow-rock', 'slow-rock-duc-thinh', 'hai-slow-rock', 'slow-rock-la-thu', 'slow-rock-lt', 'slow-rock-la-thu-hai-tay'],
+    families: ['slow-rock-la-thu-hai-tay'],
   },
   ballad: {
     ten: 'Ballad',
-    families: ['pop', 'hai-pop-ballad', 'hai-pop-ballad-free', 'hai-ballad-dan-ca', 'ton-hung-ballad', ...CP_BALLAD_IDS, ...CP_BALLAD_SONG_FAMILIES, 'ca-phao-ballad-de-em-roi-xa', 'ca-phao-ballad-cu-di', 'ballad-derx'],
+    families: ['ton-hung-ballad', ...CP_BALLAD_SONG_FAMILIES, 'ca-phao-ballad-de-em-roi-xa', 'ca-phao-ballad-cu-di'],
   },
   bossa: {
     ten: 'Bossa Nova',
-    families: ['bossa', 'bossa-clave', 'hai-bossa-nova', 'bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved'],
-  },
-  rumba: {
-    ten: 'Rumba',
-    families: ['hai-rumba', 'cinquillo', 'habanera'],
-  },
-  swing: {
-    ten: 'Swing',
-    families: ['swing', 'hai-swing'],
+    families: ['ca-phao-bossa-sheet', 'ca-phao-bossa-improved'],
   },
   twist: {
     ten: 'Twist',
     families: ['twist'],
   },
-  waltz: {
-    ten: 'Waltz',
-    families: ['hai-waltz', 'jazz-waltz'],
-  },
   tango: {
     ten: 'Tango',
-    families: ['tango', 'tango-tu-n', 'hai-tango'],
+    families: ['tango-tu-n'],
   },
 }
 
@@ -109,7 +91,7 @@ const HO_CUA_FAMILY: Readonly<Record<string, string>> = Object.fromEntries(
 /** Bolero Pùng-Pắp Tuấn Lưu — không phải rải Linh Nhi. */
 export function laBoleroTuan(style: { family?: string }): boolean {
   const f = style.family ?? ''
-  return f === 'bolero' || f === 'bolero-tu-n'
+  return f === 'bolero-tu-n'
 }
 
 /** Điệu này thuộc họ nào. Điệu chưa gom vào họ nào thì trả `null`. */
@@ -255,7 +237,7 @@ const RAI_THEO_TAY_TRAI: readonly string[] = ['bolero', 'bossa']
  * Linh Nhi (mốc gõ chung ở giang tấu tụt còn 30-39%, tức hai tay rời ra). Các
  * điệu bossa khác vẫn giữ lối bám tay trái như người dùng đã yêu cầu.
  */
-const SOLO_TU_DO: readonly string[] = ['bossa-ca-phao', 'ca-phao-bossa-sheet', 'ca-phao-bossa-improved']
+const SOLO_TU_DO: readonly string[] = ['ca-phao-bossa-sheet', 'ca-phao-bossa-improved']
 
 /**
  * HỌ nào cũng chơi lối tự do ấy — mở theo SỐ ĐO, không theo cảm tính.

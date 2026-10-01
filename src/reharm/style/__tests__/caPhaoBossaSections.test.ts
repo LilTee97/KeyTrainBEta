@@ -60,7 +60,7 @@ describe('Bossa CP cải tiến qua ranh giới phiên khúc', () => {
     }
     expect(sectionCellBreaks(CA_PHAO_BOSSA.id, sections)).toEqual([])
     expect(sectionCellBreaks('bossa-1', sections)).toEqual([])
-    expect(sectionCellBreaks('hai-pop-ballad', sections)).toEqual([0, 12])
+    expect(sectionCellBreaks('ca-phao-ballad-co-em-cho', sections)).toEqual([0, 12])
     expect(sectionCellBreaks('bolero-linh-nhi-2', sections)).toEqual([0, 12])
   })
 })

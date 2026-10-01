@@ -577,15 +577,8 @@ export function chayTwistBlues(chords: readonly ParsedChord[], o: {
     truoc = kieu
     return kieu
   }
-  const phai = soanCauBlues(spans, {
-    key: g, take: o.take, mocDon: 1 / 3, uuTien: 'ray', chiNguon: 'ray', tam: [60, 91], day: () => false, loai,
-    muc: { thua: [1, 2], day: [1, 3], noi: [1, 2] }, tamKieu: { day: [67, 91], noi: [64, 91] },
-    luc: manh => (manh ? 74 : 66), bamHop: true, noiHop: true, noiBat: true, noiBuoc: [1, 2], notToiDa: 2, lapMoiNhom: true, doiLuot: 2.5,
-  }).events
   // Cú đáp (nửa phách đầu hợp âm) vang CÙNG cú chặn — không bắt cú chặn nhường.
   const dauHop = (t: number) => spans.some(s => t >= s.start - 1e-6 && t < s.start + .5 + 1e-6)
-  let backing = nhuongTayPhai(o.backing, phai.filter(e => !dauHop(e.startBeat)))
-
   const blue = new Set((g.scale === 'minor' ? [6, 10] : [3, 6, 10]).map(x => pc(x + g.tonic)))
   const lay: TimelineEvent[] = []
   for (const s of spans) {
@@ -599,6 +592,35 @@ export function chayTwistBlues(chords: readonly ParsedChord[], o: {
     })
     if (notes.length) lay.push({ hand: 'right', startBeat: s.start - .12, durationBeats: .12, notes: notes as MidiNote[], velocity: 67, grace: true })
   }
+  /*
+    TẦM TAY (người dùng 30/9/2026, ảnh Dm11: cú chặn C4 E4 G4 cùng lúc câu đáp A5 — *"thế bấm dặm hợp âm quá xa tay người ko thể
+    đánh được"*): câu chạy chọn nhóm và quãng tám sao cho mọi nốt tay phải gõ cách nhau dưới ½ phách — kể cả cú chặn đầu hợp âm
+    (vang cùng câu đáp) và nốt láy vào nó — nằm trong một quãng tám. Đo trước khi sửa (12 giọng trưởng/thứ × 5 vòng × hợp âm 4 · 8
+    phách × có/không bỏ gốc × 3 lượt, sau khi ráp bài): 4 226 / 109 552 cú tay phải vượt, xa nhất 31 nửa cung — tầm câu chạy 64–91
+    trong khi cú chặn nằm C4–B4. Cũ: không xét tầm tay (`tamTay` không khai).
+  */
+  const phai = soanCauBlues(spans, {
+    key: g, take: o.take, mocDon: 1 / 3, uuTien: 'ray', chiNguon: 'ray', tam: [60, 91], day: () => false, loai,
+    muc: { thua: [1, 2], day: [1, 3], noi: [1, 2] }, tamKieu: { day: [67, 91], noi: [64, 91] },
+    luc: manh => (manh ? 74 : 66), bamHop: true, noiHop: true, noiBat: true, noiBuoc: [1, 2], notToiDa: 2, lapMoiNhom: true, doiLuot: 2.5,
+    tamTay: 12, tayPhaiCo: [...o.backing.filter(e => e.hand === 'right' && dauHop(e.startBeat)), ...lay],
+  }).events
+  let backing = nhuongTayPhai(o.backing, phai.filter(e => !dauHop(e.startBeat)))
+  // Cú chặn còn lại mà một nốt câu chạy gõ cách dưới ½ phách vượt tầm tay (cú 3& sát câu chạy nhưng không bị đè) → nhường câu chạy.
+  backing = backing.filter(e => e.hand !== 'right' || phai.every(f => Math.abs(f.startBeat - e.startBeat) >= .5 - 1e-6 ||
+    Math.max(...e.notes, ...f.notes) - Math.min(...e.notes, ...f.notes) <= 12))
+  // Lớp nào gõ lại một phím lớp kia đang giữ thì tiếng đang giữ nhả đúng lúc ấy (luật `holdUntilStruckAgain` — lớp câu chạy gộp vào
+  // SAU bước ấy). Đo 30/9/2026 trên nút Twist, 144 bài thử hợp âm 4 · 8 phách: 226 chỗ nốt câu chạy gõ lại cú chặn đầu hợp âm (vang
+  // cùng cú đáp); hợp âm 2 phách, 72 bài: thêm 18 chỗ cú chặn hợp âm sau gõ lại nốt câu chạy còn ngân. Cũ: không nhả. Triệu chứng để
+  // lùi: cú chặn đầu hợp âm nghe hụt tiếng lúc câu chạy vào.
+  const nha = (ev: readonly TimelineEvent[], khac: readonly TimelineEvent[]) => ev.map(e => {
+    if (e.hand !== 'right') return e
+    const lai = khac.filter(f => f.hand === 'right' && f.startBeat > e.startBeat + 1e-6
+      && f.startBeat < e.startBeat + e.durationBeats - 1e-6 && f.notes.some(n => e.notes.includes(n)))
+    return lai.length ? { ...e, durationBeats: Math.min(...lai.map(f => f.startBeat)) - e.startBeat } : e
+  })
+  backing = nha(backing, phai)
+  const cau = nha(phai, backing)
 
   const trai: TimelineEvent[] = []
   for (const i of o.sectionEnds ?? []) {
@@ -613,7 +635,7 @@ export function chayTwistBlues(chords: readonly ParsedChord[], o: {
     backing = backing.filter(e => e.hand !== 'left' || e.startBeat < t0 - 1e-6 || e.startBeat >= sau.start - 1e-6)
     di.forEach((n, q) => trai.push({ hand: 'left', startBeat: t0 + q, durationBeats: q > 1 ? .65 : 1, notes: [n, n + 12] as MidiNote[], velocity: 77 }))
   }
-  return { events: [...phai, ...lay, ...trai].sort((a, b) => a.startBeat - b.startBeat), backing }
+  return { events: [...cau, ...lay, ...trai].sort((a, b) => a.startBeat - b.startBeat), backing }
 }
 
 /*
@@ -1065,9 +1087,18 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
   /** Mọi nhóm lặp liền được như riff (tối đa 2 lần), không chỉ nhóm chùm hợp âm của Ray — riff Slow Blues là hình ngắn lặp lại
    *  (Rising Sun E–G ×3, E–B ×5), không phải chùm hợp âm. */
   lapMoiNhom?: boolean
+  /**
+   * TẦM TAY (nửa cung): mọi nốt tay phải gõ cách nhau dưới ½ phách — cú của nhóm này, cú nhóm trước, nốt có sẵn `tayPhaiCo` —
+   * nằm trong tầm này; quãng tám của nhóm (và nhóm) nào không với tới thì bỏ. Twist: 12 — người dùng 30/9/2026 (ảnh Dm11: cú chặn
+   * C4 E4 G4 cùng lúc câu đáp A5): *"thế bấm dặm hợp âm quá xa tay người ko thể đánh được"*. Không khai → không xét (Slow Blues).
+   */
+  tamTay?: number
+  /** Nốt tay phải có sẵn mà câu phải với tới cùng thế tay: cú chặn đầu hợp âm, nốt láy; ô đi bass · ô báo · hợp âm kết của dạo / kết. */
+  tayPhaiCo?: readonly { startBeat: number; notes: readonly number[] }[]
 }): { events: TimelineEvent[]; nguon: string[] } {
   const g = o.key
   const MOC = o.mocDon ?? .5
+  const coSan = (o.tayPhaiCo ?? []).map(e => ({ t: e.startBeat, notes: e.notes }))
   const NHOM3 = 3 * MOC
   const giongSet = new Set((g.scale === 'minor' ? [0, 2, 3, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 11]).map(x => pc(x + g.tonic)))
   // Nhóm trống (nghỉ) luôn được — Rockhouse 35/424 nhóm ba trống: chỗ nghỉ có chủ đích.
@@ -1172,7 +1203,16 @@ export function soanCauBlues(spans: readonly SpanBlues[], o: {
         const dau = u.dat[0]!.notes.at(-1)!
         const [lo, hi] = (s.kieu !== 'nghi' && o.tamKieu?.[s.kieu]) || o.tam
         const giua = (lo + hi) / 2
-        const vua = (q: number) => u.lo + q >= lo && u.hi + q <= hi
+        // `tamTay`: cú nhóm này (dời q) với chính nó, cú nhóm trước, nốt có sẵn — cặp nào gõ cách dưới ½ phách phải trong tầm tay.
+        const voiTay = (q: number) => {
+          if (o.tamTay === undefined) return true
+          const nay = u.dat.map(c => ({ t: s.at + c.t * MOC, notes: c.notes.map(x => x + q) }))
+          const quanh = [...(truoc?.u.n ? truoc.u.dat.map(c => ({ t: oList[j - 1]!.at + c.t * MOC, notes: c.notes.map(x => x + truoc.doi) }))
+            : []), ...coSan.filter(c => Math.abs(c.t - s.at) < 2)]
+          return nay.every((x, a) => [...nay.slice(a), ...quanh].every(y => Math.abs(x.t - y.t) >= .5 - 1e-6 ||
+            Math.max(...x.notes, ...y.notes) - Math.min(...x.notes, ...y.notes) <= o.tamTay!))
+        }
+        const vua = (q: number) => u.lo + q >= lo && u.hi + q <= hi && voiTay(q)
         const xa = (q: number) => nut.cuoi === null ? Math.abs((u.lo + u.hi) / 2 + q - giua) : Math.abs(dau + q - nut.cuoi)
         let doi: number | null = (lienNguon || lapRiff) && vua(truoc!.doi) ? truoc!.doi : null
         if (doi === null) for (let q = -36; q <= 36; q += 12) if (vua(q) && (doi === null || xa(q) < xa(doi))) doi = q

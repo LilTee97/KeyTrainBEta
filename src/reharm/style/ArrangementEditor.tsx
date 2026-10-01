@@ -20,6 +20,8 @@ import { useLongPress } from '../../shared/ui/useLongPress'
 
 interface ArrangementEditorProps {
   interludeLabel?: string
+  /** Số lượt khi bấm "+ Giang tấu". Mặc định 2; Twist 1 (người dùng 30/9/2026). */
+  interludeLoops?: number
   sources: readonly SourceSection[]
   steps: readonly ArrangementStep[]
   onChange: (steps: ArrangementStep[]) => void
@@ -27,6 +29,7 @@ interface ArrangementEditorProps {
 
 export function ArrangementEditor({
   interludeLabel,
+  interludeLoops = 2,
   sources,
   steps,
   onChange,
@@ -339,9 +342,10 @@ export function ArrangementEditor({
               /*
                 Hai lượt là mặc định vì đó là độ dài thường gặp: một lượt trôi
                 qua trước khi người nghe kịp bắt được câu, ba lượt trở lên thì
-                bài đứng lại chờ phần ngẫu hứng.
+                bài đứng lại chờ phần ngẫu hứng. Điệu nào muốn khác thì truyền
+                `interludeLoops` (Twist: 1 — giang tấu Blues đã dài 12 ô).
               */
-              loops: 2,
+              loops: interludeLoops,
               restAfter: DEFAULT_REST_AFTER,
             })
           }

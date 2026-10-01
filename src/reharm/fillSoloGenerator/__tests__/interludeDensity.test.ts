@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
-import { getStyle } from '../../style/styleLibrary'
+import { MAU_BALLAD } from '../../style/__tests__/mauThu'
 import { generateSolo } from '../soloGenerator'
 import { LONG_INTERLUDE_BARS, interludeDensity, pulseForStyle, soloFeelFor } from '../soloFeel'
 import { chooseChorusLoop } from '../../style/interludeLoop'
@@ -26,8 +26,9 @@ const KEY = { tonic: 9 as const, scale: 'minor' as const }
 const SONG = 'Am Dm E7 Am'
 
 function noteCount(bars: number): number {
-  const style = getStyle('pop-1')!
-  const pulse = pulseForStyle('pop-1')
+  // Khuôn ballad mẫu cho test — như Pop 1 cũ (đã xoá 30/9/2026): không neo mạch, chia nhịp đều.
+  const style = MAU_BALLAD
+  const pulse = pulseForStyle(style.id)
   let total = 0
   for (let take = 0; take < 12; take += 1) {
     total += generateSolo(parseChordInput(SONG).chords, {
@@ -36,7 +37,7 @@ function noteCount(bars: number): number {
       key: KEY,
       take,
       interlude: true,
-      feel: soloFeelFor('pop-1'),
+      feel: soloFeelFor(style.id),
       ...(pulse.length > 0 ? { pulse, pulseBar: style.beatsPerMeasure } : {}),
     }).length
   }

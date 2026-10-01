@@ -4559,3 +4559,64 @@ chỗ fill liền nhau ra 7 câu khác nhau); `handRegisterGuard.test.ts` thêm 
 vai câu chêm Anh Cứ Đi Đi; kho CP Lick chưa có Anh Cứ Đi Đi (câu lick mượn Để Em · Chưa Bao Giờ · Chúng Ta · Hồng Kông); luật hợp âm
 lướt lệch Có Em Chờ 44→45 (sheet A7, luật Eb7/G); điệp khúc Anh Cứ Đi Đi (giai điệu quãng tám, dặm cụm) chưa dựng; dạo/giang đóng bằng
 ii–V của Codex (kho chưa có câu đóng đáng tin của bài).
+
+## Bước — Dọn bảng chọn còn chín nút · nhập bài chỉ bằng lưới · Twist 140 BPM, một lượt, trong tầm tay (30/9/2026)
+
+Làm chiều–tối 30/9, commit 1/10. Mục này ghi lại từ diff và chú thích code — lời người dùng chọn chín nút không còn nguyên văn; các
+câu trích dưới đây chép từ chú thích code ghi lúc làm.
+
+**Bảng chọn — chín nút** (`styleLibrary/index.ts` › `PICKER_STYLES`, thứ tự cũ): Bossa CP cải tiến · Ballad Có em chờ (phiên · điệp)
+· Ballad Để em · Ballad cứ đi · Slow Rock Lá thư 2 tay (phiên · điệp) · Slow Blues (+ điệp) · Twist · Bolero Tuấn · Tango Tuấn (hai
+nút cuối là điệu tester trong `testerStyles.json`).
+- **Xoá hẳn — mã, nút, test:** OneMotion (`onemotion.ts` + Pop · Rock · Swing · Waltz · Reggae · Salsa · Tango · Flamenco 1 …), thầy
+  Hải (`haiStyles.ts`), Ballad CP sáu kiểu (`caPhaoBallad.ts`), Ballad ACDD cùng câu nối ACDD (`acddConnections`) và nút
+  "Câu chuyển đoạn CP" (cờ `cpBalladTransition`), Ngày mai em đi, DERX (`balladDerx.ts`), Bolero 1 Tuấn Lưu (`bolero-1`), Bolero trữ
+  tình Linh Nhi (`bolero-linh-nhi`), Bolero Nhi (`bolero-linh-nhi-3`), nút Bolero rải, Slow Rock Lá thư một tay (`slow-rock-la-thu`),
+  Slow Rock LT (`slowRockLT.ts`), Slow Rock Đức Thịnh 1 · 3 (tester), Kim (`kim.ts` — chưa từng nghe duyệt), bossa CP cũ
+  (`bossa-ca-phao-som`), Twist điệp khúc (dựng rồi xoá cùng ngày — `TWIST-BOOGIE.md` mục 8). Khôi phục bất kỳ điệu nào: commit c58be15.
+- **Khuôn ngầm** (`INTERNAL_STYLES`: không nút, `getStyle` vẫn thấy, bia mộ `localStorage` không chôn được): `bolero-linh-nhi-2` (+
+  vòm cao) — nguồn nốt solo Linh Nhi; bốn khuôn Tôn Hùng — dạo · giang · kết của nút thầy Tôn Hùng; `CA_PHAO_BOSSA` (sheet ô 9–10) —
+  nút thầy Cà Pháo và gốc của Bossa CP cải tiến.
+- **Điệu mặc định** = Ballad cứ đi (`DEFAULT_STYLE`). Cũ: `pop-1`. Bài lưu mang điệu đã xoá hay khuôn ngầm → `styleIdOrDefault` trả về
+  Ballad cứ đi.
+- Code chỉ phục vụ điệu đã xoá gỡ theo: `isSplitAwareStyle` / `SPLIT_AWARE`, `INTERLUDE_AS_CHORUS`, nhánh `ca-phao-ballad-acdd` ở
+  ReharmHome, các family đã xoá trong `KEEP_RH_RESTS` · `hoDieu` · `nhipCuaDieu` · `soloTeacherOf`.
+- Test máy chung (renderer, phát theo nốt, bù hợp âm lướt, cảm nhịp solo) cần ô đệm đơn giản → `__tests__/mauThu.ts`: bốn khuôn chép
+  NGUYÊN số liệu Pop 1 · Bossa Nova 1 · Waltz 1 · Swing 1 tại c58be15, đổi id (`mau-*`) cho khỏi lẫn với điệu thật. Hồ sơ các điệu đã
+  xoá vẫn nằm trong `Reference/` (KIM.md, SLOW-ROCK-LT.md, BALLAD-DERX.md, CA-PHAO-BALLAD*.md …) — là tài liệu cũ, không còn nút.
+
+**Nhập bài chỉ còn lưới hợp âm** (`SongImport.tsx`, `importedTrack.ts`): bỏ nhập từ link và từ file trên máy (nhạc / JSON sidecar),
+bỏ phát kèm audio gốc (`shared/audio/sourceAudio.ts`, ô bật/âm lượng nguồn). Xoá theo: `analyzeAudio` · `chromaMatch` · `chordNet` ·
+`estimateBpm`, `parseSidecarTrack`, `titleFromSource`. `expandToBeats` chuyển sang `importedTrack.ts`.
+
+**Twist** (chi tiết: `TWIST-BOOGIE.md` mục 5 · 8):
+- ♩ 140 — *"Tempo mặc định giảm xuống còn 140 thôi"*. **Cũ: 180** (sheet Boogie Woogie). Lùi khi: nghe lê, mất độ nảy.
+- Ô tick mỗi hợp âm MỘT lần mẫu hai tay (4 phách) **mặc định bật** — *"hãy đưa ô tick mỗi hợp âm đánh một lần rồi chuyển làm mặc
+  định"*. Cũ: tắt (8 phách). Bài lưu trước khi có trường `twistSinglePass` → bật.
+- Giang tấu Blues tự chèn và nút "+ Giang tấu" chơi MỘT lượt 12 ô (`bossaSoloSteps(…, 1)`, `interludeLoops: 1`). Cũ: 2 lượt (24 ô).
+  Bossa CP giữ 2.
+- **Tầm tay** — *"thế bấm dặm hợp âm quá xa tay người ko thể đánh được"* (ảnh Dm11: cú chặn C4 E4 G4 cùng lúc câu đáp A5). Luật: mọi
+  nốt tay phải gõ cách nhau dưới ½ phách nằm trong một quãng tám. Ba chỗ sửa:
+  1. `soanCauBlues` thêm `tamTay` + `tayPhaiCo`: câu chạy chọn quãng tám sao cho với tới cú chặn đầu hợp âm, nốt láy, nhóm trước.
+     Không khai → không xét (Slow Blues không đổi). Đo trước khi sửa, câu chạy lúc đệm hát (12 giọng × trưởng/thứ × 5 vòng × hợp âm
+     4 · 8 phách × có/không bỏ gốc × 3 lượt): **4 226 / 109 552** cú tay phải vượt, xa nhất 31 nửa cung.
+  2. Dạo · giang · kết (`twistSolo.ts`) cũng khai `tamTay: 12` với tay phải ô đi bass · ô báo · hợp âm kết. Trước khi sửa: 952 chỗ vượt.
+  3. Chỗ nối câu hát ↔ dạo · giang · kết: hai lớp soạn riêng nên không biết nhau — sau 1 và 2 còn **142 / 108 316** cú vượt, cả 142 ở
+     chỗ nối (câu chạy ⅓ phách trước vạch đoạn). `noiCauVaoSolo` bỏ nốt tay phải ngoài đoạn solo vượt tầm với nốt solo → câu solo thay.
+  Cú chặn còn sót mà nốt câu chạy gõ sát vượt tầm → nhường câu chạy. Để lùi: bỏ `tamTay` ở hai chỗ khai và bỏ `noiCauVaoSolo`.
+- Nhả phím `nha` (`chayTwistBlues`): lớp nào gõ lại phím lớp kia đang ngân thì tiếng đang ngân nhả đúng lúc ấy. Hợp âm 4 · 8 phách
+  (144 bài) **226 → 0**; hợp âm 2 phách (72 bài) **18 → 0**. Triệu chứng để lùi: cú chặn đầu hợp âm nghe hụt tiếng lúc câu chạy vào.
+
+**Slow Rock Lá thư 2 tay:** ô tick "mỗi hợp âm một ô 6 phách" **mặc định bật** — *"Điệu Slow rock lá thư 2 tay cũng đặt ô tick trong
+ảnh làm mặc định"*. Cũ: tắt (mỗi hợp âm 2 lần 6 phách). Bài lưu trước khi có trường → bật. Lùi khi: hợp âm đổi quá nhanh ở bài 2 ô
+một hợp âm → `useState(false)` và `?? false` lúc nạp bài.
+
+**Kiểm (chạy 1/10):** `tsc` sạch. Toàn suite **2 516 qua / 5 đỏ** (2 521 test, 172 file) — cả 5 thuộc 7 đỏ cũ: `phraseAcrossBar`,
+`daoTruongLinhNhi`, `sietHopAm`, 2 × `tuyenSolo`. Hai đỏ cũ còn lại: `handSplitAudit` xoá cùng điệu; `leftArpeggioAboveRoot` nay qua
+21/21 — **chưa xem vì sao** (đoán: vế đỏ nằm ở điệu đã xoá). Số test giảm 2 954 → 2 521 vì test của điệu đã xoá đi theo. Test mới:
+`styleLibrary` (chín họ đúng thứ tự · khuôn ngầm không nút · điệu đã xoá → Ballad cứ đi), `StylePicker` (khuôn ngầm không hiện, bia mộ
+trên khuôn ngầm không làm hỏng nguồn solo), `twistBlues` (tầm tay mọi nốt tay phải ≤ 12 nửa cung · không gõ lại phím đang ngân,
+hợp âm 2 · 4 · 8 phách), `bossaRhythmOnly` (giang tấu Bossa CP 2 lượt, Twist 1).
+
+**Chưa đo:** chín nút chưa nghe lại sau khi gỡ code dùng chung (chỉ có test máy); Twist đệm hai tay vẫn **chưa nghe duyệt**; tầm tay
+Twist mới đo trên vòng mẫu, chưa trên bài có lời thật; Bolero Tuấn · Tango Tuấn chưa có ghi chép duyệt.

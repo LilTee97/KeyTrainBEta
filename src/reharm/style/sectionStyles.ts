@@ -21,27 +21,11 @@ import type { StylePattern } from './types'
  * có bản điệp khúc mà tự ghép bừa một điệu khác vào là đổi bài của người ta.
  */
 export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
-  'ca-phao-ballad-acdd': 'ca-phao-ballad-acdd-chorus',
   'ca-phao-ballad-co-em-cho': 'ca-phao-ballad-co-em-cho-chorus',
-  'ca-phao-ballad-ngay-mai-em-di': 'ca-phao-ballad-ngay-mai-em-di-chorus',
   'ca-phao-ballad-de-em-roi-xa': 'ca-phao-ballad-de-em-roi-xa-chorus',
-  'ballad-derx': 'ballad-derx-chorus',
-  'hai-pop-ballad': 'hai-pop-ballad-chorus',
-  'hai-pop-ballad-free': 'hai-pop-ballad-free-chorus',
-  'hai-slow-rock': 'hai-slow-rock-chorus',
-  // Lá Thư Trần Thế: phiên rải c15–c16, điệp dập hợp âm c41–c42. Xem linhNhiSlowRock.ts.
-  'slow-rock-la-thu': 'slow-rock-la-thu-chorus',
   'slow-rock-la-thu-hai-tay': 'slow-rock-la-thu-hai-tay-chorus',
-  'slow-rock-lt': 'slow-rock-lt-chorus',
   // Slow Blues (id `blue-sun`, The House of the Rising Sun): tay trái lo trọn đệm; điệp thêm quãng tám ở bass phách 1.
   'blue-sun': 'blue-sun-chorus',
-  'bolero-linh-nhi': 'bolero-linh-nhi-chorus',
-  /*
-    Điệp khúc DÀY THEO CHIỀU DỌC — hai bài trên năm bài bolero Linh Nhi làm vậy.
-    Xem chú thích họ `bolero-linh-nhi-3` trong `styleLibrary/index.ts`. Đây là
-    đổi theo ĐOẠN, đúng loại việc bảng này sinh ra để làm.
-  */
-  'bolero-linh-nhi-3': 'bolero-linh-nhi-3-chorus',
   /*
     Bolero rải: vòm thấp cho phiên khúc, vòm cao cho điệp khúc.
 
@@ -61,18 +45,6 @@ export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
   'bolero-linh-nhi-2': 'bolero-linh-nhi-2-chorus',
   'ton-hung-ballad': 'ton-hung-ballad-chorus',
 }
-
-/**
- * Điệu nào dùng bản CAO TRÀO cho cả **giang tấu**, không chỉ điệp khúc.
- *
- * Mặc định giang tấu tính như phiên khúc — nó là chỗ nghỉ giữa hai lần cao
- * trào. Bảng này là chỗ nói ngược lại, và phải khai báo từng điệu một.
- *
- * Bolero trữ tình vào đây vì đặc tả gộp điệp khúc và giang tấu làm một kết cấu
- * (arpeggio tám móc đơn). Không cho cả bảng `CHORUS_PAIRS` cùng đổi: ballad và
- * slow rock của thầy Hải chưa ai bảo giang tấu phải lên cao trào.
- */
-const INTERLUDE_AS_CHORUS: readonly string[] = ['bolero-linh-nhi']
 
 /**
  * Điệu nào **mở vòm rộng trên CHỦ ÂM** — đổi theo hoà âm, không theo đoạn.
@@ -141,13 +113,11 @@ export function hasChorusVariant(styleId: string): boolean {
   return id in CHORUS_PAIRS || id in VERSE_OF
 }
 
-/** ACDD keeps its sung backing at transitions; an absent run must not silence the chord. */
+/** Chỗ đệm im nhường câu chạy ở mốc chuyển đoạn. */
 export function transitionMuteWindows(
-  styleId: string,
   spans: readonly { start: number; beats: number; chord?: ParsedChord }[],
   transitions: ReadonlyMap<number, TransitionRun>,
 ): { from: number; to: number }[] {
-  if (resolveStyleForSection(styleId, 'verse') === 'ca-phao-ballad-acdd') return []
   const windows: { from: number; to: number }[] = []
   for (const [main, run] of transitions) {
     const span = spans[main]
@@ -181,16 +151,13 @@ export const nghiCuaMoc = (run: TransitionRun) => run.restTheoSheet ? NGHI_MAC_D
   câu chạy lại chơi nhanh hơn. Nghỉ bao nhiêu phách thì đôn ra bấy nhiêu phách"*, rồi *"nút nghỉ phách mặc định và cơ chế
   đôn phách mà vẫn giữ gìn tiết tấu hãy áp dụng cho mọi điệu"*. Câu chạy giữ tốc độ, kết ở vạch cũ, rồi lặng N phách
   (`transitionRunNotes`; màu Cà Pháo: `planCpLicks` · `transitionRests`). Ô đệm / ô fill mở lại sau hợp âm dài lẻ để giữ tiết
-  tấu (`ReharmHome`). Không đôn ra: mốc không chạy ngón (0 quãng tám — ô đệm thường); `laAcdd` (menu ACDD không có số phách
-  nghỉ; câu nối ACDD kết đúng vạch như sheet). Cũ: nghỉ nằm trong ô, cắt vào chỗ chạy; màu Cà Pháo bỏ qua số phách nghỉ.
+  tấu (`ReharmHome`). Không đôn ra: mốc không chạy ngón (0 quãng tám — ô đệm thường). Cũ: nghỉ nằm trong ô, cắt vào chỗ chạy; màu Cà Pháo bỏ qua số phách nghỉ.
 */
 export function nghiDonRaTheoMoc(
   transitions: ReadonlyMap<number, TransitionRun>,
   style: Pick<StylePattern, 'gridUnit'>,
-  laAcdd: boolean,
 ): Record<number, number> {
   const out: Record<number, number> = {}
-  if (laAcdd) return out
   for (const [index, run] of transitions) {
     const rest = nghiCuaMoc(run) * (style.gridUnit ?? 1)
     if (run.octaves > 0 && rest > 0) out[index] = rest
@@ -206,7 +173,7 @@ export function sectionCellBreaks(
   // CP cải tiến có câu hai ô A–B nhưng không có biến thể điệp khúc.
   // Sau đoạn dài số ô lẻ phải mở lại A, không lấy nửa B của chu kỳ toàn bài.
   const restart = hasChorusVariant(styleId) || hasTonicVariant(styleId)
-    || laBossaCP(canonical(styleId)) || canonical(styleId) === 'ca-phao-ballad-signature'
+    || laBossaCP(canonical(styleId))
   return restart ? sections?.map(section => section.startBeat) ?? [] : []
 }
 
@@ -216,9 +183,9 @@ export function sectionCellBreaks(
  * Nhận cả ID phiên lẫn ID điệp của bài lưu cũ. Bảng chọn chỉ bày điệu chính;
  * mẫu điệp là biến thể nội bộ, rời điệp thì tự quay về phiên.
  *
- * Đoạn giang tấu MẶC ĐỊNH tính như phiên khúc: nó là chỗ nghỉ giữa hai lần cao
- * trào, chứ không phải cao trào. Điệu nào muốn ngược lại thì khai báo trong
- * `INTERLUDE_AS_CHORUS` — từng điệu một, không đổi cả bảng.
+ * Đoạn giang tấu tính như phiên khúc: nó là chỗ nghỉ giữa hai lần cao trào,
+ * chứ không phải cao trào. (Cũ: `INTERLUDE_AS_CHORUS` cho Bolero trữ tình Linh
+ * Nhi — điệu ấy đã xoá 30/9/2026.)
  */
 export function resolveStyleForSection(
   styleId: string,
@@ -226,31 +193,6 @@ export function resolveStyleForSection(
 ): string {
   const id = canonical(styleId)
   const verse = VERSE_OF[id] ?? id
-  const wantsChorus =
-    section === 'chorus' ||
-    (section === 'interlude' && INTERLUDE_AS_CHORUS.includes(verse))
-  if (!wantsChorus) return verse
+  if (section !== 'chorus') return verse
   return CHORUS_PAIRS[verse] ?? verse
-}
-
-/**
- * Điệu nào phải **mở lại ô nhịp ở giữa ô khi hợp âm chia đôi**.
- *
- * Ô ballad thường dài trọn một ô nhịp: bass mạnh ở đầu, nhẹ ở giữa. Nhưng khi
- * một ô mang **hai hợp âm**, cái mốc "nhẹ ở giữa" rơi đúng vào lúc hợp âm thứ
- * hai vừa vào — nghe thành hợp âm mới bị đánh bằng nhịp yếu của hợp âm cũ, còn
- * nốt gốc của nó thì không được nhấn lần nào.
- *
- * Mỗi nửa ô mở một ô nhịp riêng: hợp âm nào cũng có phách mạnh của chính nó.
- * Bolero Linh Nhi: nửa ô chỉ chơi 1-5 (verse) hoặc 1-5-8-10 (chorus).
- */
-const SPLIT_AWARE = new Set([
-  'hai-pop-ballad-free',
-  'hai-pop-ballad-free-chorus',
-  'bolero-linh-nhi',
-  'bolero-linh-nhi-chorus',
-])
-
-export function isSplitAwareStyle(styleId: string): boolean {
-  return SPLIT_AWARE.has(canonical(styleId))
 }

@@ -134,7 +134,8 @@ describe('shared, source-audited CP ballad composer', () => {
 
   it('composes all CP ballad variants and future flagged styles in every major/minor key', () => {
     const future = { ...base.style, id: 'future-ballad', family: 'future-ballad' }
-    for (const style of [...CP_BALLAD_SONG_STYLES, future, getStyle('pop-1')!])
+    // Điệu họ ballad ngoài nhóm sheet CP: Tôn Hùng (khuôn ngầm). Cũ: Pop 1 — đã xoá 30/9/2026.
+    for (const style of [...CP_BALLAD_SONG_STYLES, future, getStyle('ton-hung-ballad')!])
       for (const scale of ['major', 'minor'] as const) for (let tonic = 0; tonic < 12; tonic++)
         for (const kind of ['intro', 'interlude', 'outro'] as const) {
           const keyboard = tonic % 2 ? { low: 48, high: 84 } : { low: 36, high: 96 }
@@ -200,7 +201,8 @@ describe('shared, source-audited CP ballad composer', () => {
       }
       rhythms.add(JSON.stringify(made.events.filter(e => e.hand === 'right').map(e => e.startBeat)))
     }
-    expect(rhythms.size).toBeGreaterThan(3)
+    // Mỗi điệu một tiết tấu tay phải. Cũ: > 3 trên sáu điệu — Ngày mai em đi, ACDD đã xoá 30/9/2026, còn Có Em Chờ (phiên · điệp).
+    expect(rhythms.size).toBe(CP_BALLAD_SONG_STYLES.length)
   })
 
   it('does not mistake ending decay for an active melody or hide RH gaps behind a sounding bass', () => {
@@ -481,7 +483,7 @@ describe('shared, source-audited CP ballad composer', () => {
   })
 
   it('retains protected sung connecting beats after assembling newly composed solos', () => {
-    for (const style of [base.style, getStyle('ca-phao-ballad-acdd')!]) {
+    for (const style of [base.style]) {
       const chords = parseChordInput('Em9 Am9 F#m7b5 B9sus4').chords.map(c => ({ ...c, voicingStyle: 'ca-phao' as const }))
       const connected = planCpBalladBacking(renderPattern(voiceLeadTwoHands(chords), style), chords,
         { style, key: base.key!, beatsPerChord: 4, transitions: new Map() })

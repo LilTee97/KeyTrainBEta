@@ -10,7 +10,7 @@ import { getStyle, getVisibleStyles, hiddenBuiltIns, removeStyle, restoreHiddenS
   lên — người dùng phải tự hỏi "sao chưa thấy" chứ app không nói gì.
 */
 describe('hiện lại điệu dựng sẵn đã xoá', () => {
-  const ID = 'bossa-ca-phao-som'
+  const ID = 'twist'
 
   it('xoá rồi thì biến mất, nhưng ĐẾM ĐƯỢC là đang ẩn', () => {
     expect(getStyle(ID)).toBeDefined()

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseChordInput } from '../../input/chordInputParser'
 import { chordPitchClasses } from '../../../shared/musicTheory/chordDefinitions'
 import { getStyle } from '../styleLibrary'
-import { accentBeats, patternOnsets, patternStrikes, soloLeftHand } from '../soloLeftHand'
+import { accentBeats, patternOnsets, soloLeftHand } from '../soloLeftHand'
 
 /*
   Tay trái ở đoạn không lời: chơi PHẦN CỦA MÌNH, và ĐI chứ không đứng.
@@ -21,12 +21,16 @@ import { accentBeats, patternOnsets, patternStrikes, soloLeftHand } from '../sol
   phải nghe đủ sáu phách.
 */
 
+/*
+  30/9/2026: một điệu còn giữ cho mỗi họ. Cũ: Pop 1, Bossa Nova 1, Bolero 1, Đức Thịnh 3, Slow Rock (Hải) — đã xoá.
+  Đo 30/9/2026 trên cả chín điệu: mọi luật dưới đều qua, trừ trần sáu cú của Twist (8 cú — ô swing tám móc).
+*/
 const STYLES = [
-  'pop-1',
-  'bossa-nova-1',
-  'bolero-1',
-  'slow-rock-duc-thinh-3',
-  'hai-slow-rock',
+  'ca-phao-ballad-cu-di',
+  'ca-phao-bossa-improved',
+  'bolero-tu-n-improv-bai-04-00001',
+  'slow-rock-la-thu-hai-tay',
+  'tango-tu-n-improv-bai-04-00004',
 ] as const
 
 const build = (styleId: string, input = 'Am Dm G C') => {
@@ -73,7 +77,7 @@ describe('tay trái gánh mẫu đệm ở đoạn không lời', () => {
   })
 
   /* Nhịp kép: sáu phách phải nghe thấy đủ sáu, không phải bốn. */
-  it.each(['slow-rock-duc-thinh-3', 'hai-slow-rock', 'slow-rock-2'] as const)(
+  it.each(['slow-rock-la-thu-hai-tay', 'blue-sun'] as const)(
     '%s: nhịp 6/8 gõ đủ sáu phách',
     (styleId) => {
       expect(patternOnsets(getStyle(styleId)!, 'left')).toHaveLength(6)
@@ -114,7 +118,7 @@ describe('tay trái gánh mẫu đệm ở đoạn không lời', () => {
     trong nó, không bóp cả ô nhịp vào nửa ô.
   */
   it('hợp âm nửa ô chỉ lấy nửa số cú gõ', () => {
-    const style = getStyle('bolero-1')!
+    const style = getStyle('bolero-tu-n-improv-bai-04-00001')!
     const bar = style.beatsPerMeasure
     const chords = parseChordInput('Am Dm').chords
     const full = soloLeftHand({ chords, beatsEach: [bar, bar], style })
@@ -154,37 +158,7 @@ describe('giai điệu neo vào cú gõ mạnh, không vào mọi cú', () => {
     expect(patternOnsets(getStyle(styleId)!).length).toBeLessThanOrEqual(6)
   })
 
-  /*
-    Mẫu Slow Rock 3 của thầy Đức Thịnh: phách 4 vào SỚM ở 1,45, không phải 1,5.
-    Đó là chỗ giật cục của mẫu, và người dùng đã nắn nó bằng tai. Bản trước của
-    hàm này thay cả hàng bằng một lưới đều tăm tắp và xoá mất nó.
-  */
-  /*
-    Chỗ giật cục 1,45 là hợp âm tay PHẢI của mẫu (ô nhịp ghi beat 2,9 × lưới
-    0,5). Tay trái không gõ nó nữa, nhưng mạch nhấn thì vẫn tính cả hai tay —
-    nên giai điệu vẫn neo vào đúng chỗ ấy. Tính cách của mẫu chuyển sang tay
-    phải, không mất đi.
-  */
-  it('giữ chỗ vào sớm 1,45 của thầy Đức Thịnh', () => {
-    expect(patternOnsets(getStyle('slow-rock-duc-thinh-3')!)).toContain(1.45)
-    expect(accentBeats(getStyle('slow-rock-duc-thinh-3')!)).toContain(1.45)
-  })
-
-  it('giữ trường độ và độ nhấn của chính ô nhịp điệu', () => {
-    const strikes = patternStrikes(getStyle('slow-rock-duc-thinh-3')!)
-    const real = strikes.filter((strike) => !strike.filler)
-    // Bốn cú gõ thật, mỗi cú một trường độ khác nhau — không bị làm phẳng.
-    expect(new Set(real.map((strike) => strike.durationBeats)).size).toBeGreaterThan(2)
-    expect(new Set(real.map((strike) => strike.velocityScale)).size).toBeGreaterThan(2)
-    // Nốt chèn phải nhẹ hơn mọi cú gõ thật.
-    const filler = strikes.filter((strike) => strike.filler)
-    expect(filler.length).toBe(2)
-    for (const one of filler) {
-      expect(one.velocityScale).toBeLessThan(
-        Math.min(...real.map((strike) => strike.velocityScale)),
-      )
-    }
-  })
+  // 30/9/2026: bỏ hai test mẫu Slow Rock 3 Đức Thịnh (chỗ vào sớm 1,45; trường độ · độ nhấn · nốt chèn) — điệu đã xoá.
 
   it('Tôn Hùng dạo: chỉ phách 1', () => {
     const style = getStyle('ton-hung-ballad')!

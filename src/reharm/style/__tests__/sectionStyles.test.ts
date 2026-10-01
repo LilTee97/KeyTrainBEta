@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   CHORUS_PAIRS,
   hasChorusVariant,
-  isSplitAwareStyle,
   hasTonicVariant,
   resolveStyleForChord,
   resolveStyleForSection,
@@ -77,20 +76,13 @@ describe('bảng ghép phiên khúc - điệp khúc', () => {
   })
 
   /*
-    Giang tấu MẶC ĐỊNH là chỗ nghỉ giữa hai lần cao trào, không phải cao trào.
-
-     Bolero trữ tình là ngoại lệ, và là ngoại lệ có khai báo: đặc tả gộp điệp
-     khúc và giang tấu. Ngoại lệ phải khai từng điệu một, không cho cả bảng cùng
-     đổi — ballad và slow rock của thầy Hải chưa ai bảo giang tấu phải lên cao trào.
+    Giang tấu là chỗ nghỉ giữa hai lần cao trào, không phải cao trào. Ngoại lệ duy nhất từng có — Bolero trữ tình
+    (Linh Nhi), đặc tả gộp điệp khúc và giang tấu — đã xoá 30/9/2026 cùng điệu ấy.
   */
-  it('giang tấu giữ bản chính, trừ điệu có khai báo riêng', () => {
+  it('giang tấu giữ bản chính', () => {
     for (const verse of Object.keys(CHORUS_PAIRS)) {
-      if (verse === 'bolero-linh-nhi') continue
       expect(resolveStyleForSection(verse, 'interlude'), verse).toBe(verse)
     }
-    expect(resolveStyleForSection('bolero-linh-nhi', 'interlude')).toBe(
-      'bolero-linh-nhi-chorus',
-    )
   })
 
   it('bấm sẵn bản điệp khúc thì phiên khúc vẫn tự lùi về bản chính', () => {
@@ -101,25 +93,20 @@ describe('bảng ghép phiên khúc - điệp khúc', () => {
   })
 
   it('điệu không có bản điệp khúc thì giữ nguyên cả bài', () => {
-    for (const id of ['hai-tango', 'pop-1', 'swing-1', 'hai-rumba', 'hai-16-beat']) {
+    for (const id of ['tango-tu-n-improv-bai-04-00004', 'twist', 'ca-phao-ballad-cu-di', 'ca-phao-bossa-improved',
+      'bolero-tu-n-improv-bai-04-00001']) {
       expect(hasChorusVariant(id), id).toBe(false)
       for (const kind of ['verse', 'chorus', 'interlude'] as const) {
         expect(resolveStyleForSection(id, kind), `${id}/${kind}`).toBe(id)
       }
     }
   })
-
-  it('alias quy về cùng một mối', () => {
-    expect(resolveStyleForSection('hai-pop-ballad-1', 'chorus')).toBe(
-      'hai-pop-ballad-chorus',
-    )
-    expect(resolveStyleForSection('ballad', 'chorus')).toBe('pop-1')
-  })
 })
 
 describe('phần đệm đổi ô nhịp đúng ranh giới đoạn', () => {
-  it('Pop Ballad (Hải): điệp khúc chơi hình khác phiên khúc', () => {
-    const events = play('hai-pop-ballad')
+  // 30/9/2026: kiểm trên hai điệu còn giữ có bản điệp. Cũ: Pop Ballad (Hải) và bản rải tự do — đã xoá.
+  it('Có Em Chờ: điệp khúc chơi hình khác phiên khúc', () => {
+    const events = play('ca-phao-ballad-co-em-cho')
     const verse = beatsIn(events, 0, 8)
     const chorus = beatsIn(events, 8, 16)
     const backToVerse = beatsIn(events, 16, 24)
@@ -129,28 +116,30 @@ describe('phần đệm đổi ô nhịp đúng ranh giới đoạn', () => {
     expect(backToVerse).toEqual(verse)
   })
 
-  it('biến tấu rải tự do cũng đổi được', () => {
-    const events = play('hai-pop-ballad-free')
+  it('Để em cũng đổi được', () => {
+    const events = play('ca-phao-ballad-de-em-roi-xa')
     expect(beatsIn(events, 8, 16)).not.toEqual(beatsIn(events, 0, 8))
   })
 
   it('điệp khúc vào ĐÚNG vạch đoạn, không trễ nhịp nào', () => {
     /*
-      Ô nhịp phiên khúc của bản rải tự do dài 16 phách, dài hơn cả đoạn. Không
-      cắt ở vạch thì nó tràn qua và điệp khúc phải chờ hết ô — trễ tám phách.
+      Ô nhịp dài hơn đoạn mà không cắt ở vạch thì tràn qua, điệp khúc phải chờ hết ô. Ca gốc (bản rải tự do 16 phách,
+      Hải) đã xoá 30/9/2026; hai điệu còn giữ ô 8 phách, vừa khít đoạn — vẫn giữ kiểm tiếng vào đúng vạch.
     */
-    const events = play('hai-pop-ballad-free')
-    expect(events.some((e) => Math.abs(e.startBeat - 8) < 0.001)).toBe(true)
+    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa']) {
+      const events = play(id)
+      expect(events.some((e) => Math.abs(e.startBeat - 8) < 0.001), id).toBe(true)
+    }
   })
 
   it('điệu không có cặp thì cả bài đúng một hình', () => {
-    const events = play('hai-tango')
+    const events = play('tango-tu-n-improv-bai-04-00004')
     expect(beatsIn(events, 8, 16)).toEqual(beatsIn(events, 0, 8))
     expect(beatsIn(events, 16, 24)).toEqual(beatsIn(events, 0, 8))
   })
 
   it('đổi ô nhịp không làm mất tiếng: đoạn nào cũng có đủ hai tay', () => {
-    for (const id of ['hai-pop-ballad', 'hai-pop-ballad-free']) {
+    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa']) {
       const events = play(id)
       for (const section of SECTIONS) {
         const inSection = events.filter(
@@ -171,183 +160,8 @@ describe('phần đệm đổi ô nhịp đúng ranh giới đoạn', () => {
   })
 })
 
-describe('hợp âm chia đôi: mỗi nửa ô một hợp âm, mỗi nửa một phách mạnh', () => {
-  const FREE = 'hai-pop-ballad-free'
-  const FREE_CHORUS = 'hai-pop-ballad-free-chorus'
-
-  /** Ô đầu chia đôi cho C và Am, hai ô sau nguyên vẹn. */
-  const SPLIT_BEATS = [2, 2, 4, 4]
-
-  /** Dựng đúng như `ReharmHome`: cắt ô nhịp ở đầu mỗi nửa. */
-  function playSplit(styleId: string) {
-    const style = getStyle(styleId)!
-    const chords = parseChordInput('C Am F G').chords
-    const voicings = voiceLeadTwoHands(chords)
-
-    const starts: number[] = []
-    let running = 0
-    for (const beats of SPLIT_BEATS) {
-      starts.push(running)
-      running += beats
-    }
-    const splitStarts = isSplitAwareStyle(styleId)
-      ? starts.filter((_, index) => SPLIT_BEATS[index] < 4)
-      : []
-
-    return renderPattern(voicings, style, {
-      beatsPerChord: 4,
-      beatsEach: SPLIT_BEATS,
-      ...(splitStarts.length > 0 ? { cellBreaks: splitStarts } : {}),
-    })
-  }
-
-  it('hai điệu rải tự do đều mở ô mới ở giữa ô, điệu khác thì không', () => {
-    expect(isSplitAwareStyle(FREE)).toBe(true)
-    expect(isSplitAwareStyle(FREE_CHORUS)).toBe(true)
-    expect(isSplitAwareStyle('bolero-linh-nhi')).toBe(true)
-    expect(isSplitAwareStyle('bolero-linh-nhi-chorus')).toBe(true)
-    for (const id of ['hai-pop-ballad', 'pop-1', 'hai-tango']) {
-      expect(isSplitAwareStyle(id), id).toBe(false)
-    }
-  })
-
-  it('mỗi nửa ô có phách mạnh của chính nó: bass ngay đầu nửa', () => {
-    for (const id of [FREE, FREE_CHORUS]) {
-      const events = playSplit(id)
-      for (const start of [0, 2]) {
-        expect(
-          events.some(
-            (e) => e.hand === 'left' && Math.abs(e.startBeat - start) < 0.001,
-          ),
-          `${id}: nửa ô bắt đầu ở phách ${start} không có bass`,
-        ).toBe(true)
-        expect(
-          events.some(
-            (e) => e.hand === 'right' && Math.abs(e.startBeat - start) < 0.001,
-          ),
-          `${id}: nửa ô bắt đầu ở phách ${start} không mở rải`,
-        ).toBe(true)
-      }
-    }
-  })
-
-  it('nửa ô chỉ có MỘT mốc mạnh, ở ngay đầu nửa', () => {
-    /*
-      Ô trọn vẹn có hai mốc: mạnh ở đầu ô, nhẹ ở giữa ô. Nửa ô chỉ được **một**
-      mốc mạnh, đặt ở đầu nửa. Điệp khúc vẫn được chen tiếng bass giật chồm sau
-      đó — nó là tiếng phụ, đánh nhẹ hơn, không phải mốc thứ hai; nên chỗ này đo
-      lực nhấn chứ không đếm đầu tiếng.
-    */
-    for (const id of [FREE, FREE_CHORUS]) {
-      const events = playSplit(id)
-      for (const start of [0, 2]) {
-        const bass = events
-          .filter(
-            (e) =>
-              e.hand === 'left' &&
-              e.startBeat >= start - 0.001 &&
-              e.startBeat < start + 2 - 0.001,
-          )
-          .sort((a, b) => a.startBeat - b.startBeat)
-
-        expect(bass.length, `${id}: nửa ô ở phách ${start} không có bass`).toBeGreaterThan(0)
-        expect(bass[0].startBeat - start, `${id}: mốc mạnh không ở đầu nửa`).toBeLessThan(0.001)
-
-        for (const later of bass.slice(1)) {
-          expect(
-            later.velocity,
-            `${id} @ ${later.startBeat}: tiếng sau to ngang mốc mạnh`,
-          ).toBeLessThan(bass[0].velocity)
-        }
-      }
-    }
-  })
-
-  it('nửa sau MỞ LẠI câu rải từ nốt gốc hợp âm của nó', () => {
-    /*
-      Đây là chỗ dễ sai nhất. Thế bấm sắp theo cao độ chứ không theo bậc: La thứ
-      bấm Đô - Mi - La, nên "nốt thứ nhất của thế bấm" ra nốt Đô. Nửa sau mở
-      bằng nốt đó thì nghe y như còn dính hợp âm Đô của nửa trước, dù trên giấy
-      đã sang La thứ.
-    */
-    const chords = parseChordInput('C Am F G').chords
-    const rootOf = (index: number) => chords[index].root
-
-    for (const id of [FREE, FREE_CHORUS]) {
-      const events = playSplit(id)
-
-      for (const [half, start] of [[0, 0], [1, 2]] as const) {
-        const first = events
-          .filter(
-            (e) =>
-              e.hand === 'right' &&
-              e.startBeat >= start - 0.001 &&
-              e.startBeat < start + 2 - 0.001,
-          )
-          .sort((a, b) => a.startBeat - b.startBeat)[0]
-
-        expect(first, `${id}: nửa ${half + 1} không có tiếng rải nào`).toBeTruthy()
-        expect(
-          ((first.notes[0] % 12) + 12) % 12,
-          `${id}: nửa ${half + 1} mở không đúng nốt gốc`,
-        ).toBe(rootOf(half))
-      }
-    }
-  })
-
-  it('nửa sau không kế nốt giữa hay cuối hình rải của nửa trước', () => {
-    for (const id of [FREE, FREE_CHORUS]) {
-      const events = playSplit(id)
-      const rh = (start: number) =>
-        events
-          .filter(
-            (e) =>
-              e.hand === 'right' &&
-              e.startBeat >= start - 0.001 &&
-              e.startBeat < start + 2 - 0.001,
-          )
-          .sort((a, b) => a.startBeat - b.startBeat)
-
-      const first = rh(0)
-      const second = rh(2)
-      // Hai nửa mở cùng một vị trí trong hình rải, nên lệch phách đầu phải bằng nhau.
-      expect(second[0].startBeat - 2, id).toBeCloseTo(first[0].startBeat - 0, 5)
-      expect(second.length, id).toBe(first.length)
-    }
-  })
-
-  it('hai nửa độc lập: nửa sau chơi nốt của hợp âm nửa sau', () => {
-    const chords = parseChordInput('C Am F G').chords
-    for (const id of [FREE, FREE_CHORUS]) {
-      const events = playSplit(id)
-      const second = events.filter(
-        (e) => e.startBeat >= 2 - 0.001 && e.startBeat < 4 - 0.001,
-      )
-      expect(second.length, id).toBeGreaterThan(0)
-
-      const am = new Set(
-        chords[1].quality.intervals.map((step) => (chords[1].root + step) % 12),
-      )
-      for (const event of second) {
-        for (const note of event.notes) {
-          expect(
-            am.has(((note % 12) + 12) % 12),
-            `${id} @ ${event.startBeat}: không phải nốt của Am`,
-          ).toBe(true)
-        }
-      }
-    }
-  })
-
-  it('ô trọn vẹn vẫn giữ luật cũ: bass đầu ô và giữa ô', () => {
-    const events = playSplit(FREE)
-    const third = events.filter(
-      (e) => e.hand === 'left' && e.startBeat >= 4 - 0.001 && e.startBeat < 8 - 0.001,
-    )
-    expect(third.map((e) => e.startBeat - 4)).toContain(0)
-    expect(third.map((e) => e.startBeat - 4)).toContain(2)
-  })
-})
+// 30/9/2026: bỏ nhóm test "hợp âm chia đôi" (`isSplitAwareStyle`) — chỉ Pop Ballad tự do (Hải) và Bolero trữ tình
+// (Linh Nhi) dùng, cả hai đã xoá.
 
 /*
   HAI PHÉP ĐỔI, HAI BẢN CHẤT KHÁC NHAU.
@@ -375,7 +189,7 @@ describe('đổi điệu theo hoà âm, khác với đổi theo đoạn', () => 
   })
 
   it('điệu không khai vòm theo chủ âm thì không đổi gì', () => {
-    for (const id of ['pop-1', 'bolero-1', 'hai-pop-ballad']) {
+    for (const id of ['ca-phao-ballad-cu-di', 'bolero-tu-n-improv-bai-04-00001', 'ca-phao-ballad-co-em-cho']) {
       expect(hasTonicVariant(id), id).toBe(false)
       expect(resolveStyleForChord(id, RE, RE), id).toBe(id)
     }

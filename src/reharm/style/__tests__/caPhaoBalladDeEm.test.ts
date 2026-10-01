@@ -3,7 +3,6 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { renderPattern } from '../patternRenderer'
 import { getStyle, isCodexStyle } from '../styleLibrary'
-import { BALLAD_DERX } from '../styleLibrary/balladDerx'
 import { hoCuaDieu } from '../hoDieu'
 import { isBalladStyle } from '../balladFamily'
 import { resolveStyleForSection } from '../sectionStyles'
@@ -25,8 +24,13 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
 describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
   it('điệp giữ mốc gõ DERX; phiên: Bùm chát bùm → Chát-bùm bum chát bùm chát bùm bum | bùm–bum chát bùm (chát×3) → câu chạy', () => {
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
+    // Mốc gõ điệp của Ballad DERX (cửa sổ 24–25) — chép số từ `balladDerx.ts` trước khi điệu ấy bị xoá 30/9/2026.
+    const DERX_DIEP = {
+      left: [0, 0.5, 1, 2, 2.5, 3, 4, 4.5, 5.75, 6, 7],
+      right: [0, 0.75, 1.3333, 2, 2.75, 3, 3.25, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75, 7.25],
+    }
     for (const hand of ['left', 'right'] as const)
-      expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(beats(BALLAD_DERX[1].cell![hand]))
+      expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(DERX_DIEP[hand])
     const verse = getStyle(VERSE)!.cell!
     const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], lap = [5, 5.25, 5.5, 5.75, 6]
     const run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]

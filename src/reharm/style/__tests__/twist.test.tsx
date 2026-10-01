@@ -28,7 +28,7 @@ describe('Twist extracted from the Boogie Woogie sheet', () => {
     const style = getStyle('twist')!
     expect(style).toMatchObject({
       family: 'twist', familyName: 'Twist', timeSignature: '4/4', beatsPerMeasure: 4,
-      bpm: 180, feel: 'swing', releaseRatio: 1, soloMaxStrikes: 8, autoFills: false,
+      bpm: 140, feel: 'swing', releaseRatio: 1, soloMaxStrikes: 8, autoFills: false,
     })
     expect(hoCuaDieu(style.id)).toBe('twist')
     expect(isCodexStyle(style.id)).toBe(true)

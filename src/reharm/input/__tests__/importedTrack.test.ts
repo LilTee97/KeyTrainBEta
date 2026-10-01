@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  expandToBeats,
   parseChordGrid,
-  parseSidecarTrack,
-  titleFromSource,
   trackToBeatTable,
   trackToSongText,
 } from '../importedTrack'
@@ -40,64 +39,6 @@ describe('parseChordGrid', () => {
   })
 })
 
-describe('parseSidecarTrack', () => {
-  it('đọc JSON {symbol, beats}', () => {
-    expect(
-      parseSidecarTrack({
-        title: 'Sai Nguoi',
-        bpm: 72,
-        beatsPerMeasure: 4,
-        key: 'G',
-        chords: [
-          { symbol: 'G', beats: 4 },
-          { symbol: 'D', beats: 2 },
-        ],
-      }),
-    ).toEqual({
-      title: 'Sai Nguoi',
-      bpm: 72,
-      beatsPerMeasure: 4,
-      key: 'G',
-      sourceUrl: undefined,
-      chords: [
-        { symbol: 'G', beats: 4 },
-        { symbol: 'D', beats: 2 },
-      ],
-    })
-  })
-
-  it('đổi {chord, time} ra số phách', () => {
-    const track = parseSidecarTrack({
-      bpm: 60,
-      chords: [
-        { chord: 'G', time: 0 },
-        { chord: 'D', time: 4 },
-      ],
-    })
-    expect(track?.chords[0]).toEqual({ symbol: 'G', beats: 4 })
-    expect(track?.chords[1].symbol).toBe('D')
-  })
-
-  it('JSON hỏng thì null', () => {
-    expect(parseSidecarTrack({ bpm: 72 })).toBeNull()
-    expect(parseSidecarTrack(null)).toBeNull()
-  })
-})
-
-describe('titleFromSource', () => {
-  it('lấy slug từ đường dẫn Chordify', () => {
-    expect(
-      titleFromSource(
-        'https://chordify.net/chords/nguoi-ay-trinh-thang-binh-official-pops-music',
-      ),
-    ).toBe('Nguoi Ay Trinh Thang Binh Official Pops Music')
-  })
-
-  it('file thì bỏ đuôi', () => {
-    expect(titleFromSource('nguoi-ay.mp3')).toBe('nguoi-ay')
-  })
-})
-
 describe('đổ sang vòng KeyTrain', () => {
   const track = {
     title: 'Người Ấy',
@@ -112,5 +53,13 @@ describe('đổ sang vòng KeyTrain', () => {
 
   it('bảng phách khớp số thứ tự', () => {
     expect(trackToBeatTable(track)).toEqual({ 0: 2, 1: 2, 2: 4, 3: 4 })
+  })
+})
+
+describe('bung hợp âm ra từng phách', () => {
+  it('hợp âm không ghi số phách thì lấy số phách mặc định', () => {
+    expect(expandToBeats([{ symbol: 'Cadd2', beats: 2 }, { symbol: 'G' }], 4)).toEqual(
+      ['Cadd2', 'Cadd2', 'G', 'G', 'G', 'G'],
+    )
   })
 })

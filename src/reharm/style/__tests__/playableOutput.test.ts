@@ -27,15 +27,18 @@ import type { TimelineEvent } from '../types'
  *   đúng phách 2 — chồng ở **mọi ô nhịp của mọi bài valse**.
  */
 const KEY = { tonic: 0 as const, scale: 'major' as const }
+/* 30/9/2026: chín điệu còn trên bảng chọn. Cũ: Pop 1, Bossa Nova 1, Swing 1, Slow Rock 2, Waltz 1, Slow Rock · Pop
+   Ballad · Bossa Nova (Hải) — đã xoá. */
 const STYLES = [
-  'pop-1',
-  'bossa-nova-1',
-  'swing-1',
-  'slow-rock-2',
-  'waltz-1',
-  'hai-slow-rock',
-  'hai-pop-ballad',
-  'hai-bossa-nova',
+  'ca-phao-ballad-cu-di',
+  'ca-phao-ballad-co-em-cho',
+  'ca-phao-ballad-de-em-roi-xa',
+  'ca-phao-bossa-improved',
+  'slow-rock-la-thu-hai-tay',
+  'blue-sun',
+  'twist',
+  'bolero-tu-n-improv-bai-04-00001',
+  'tango-tu-n-improv-bai-04-00004',
 ] as const
 
 const backing = (source: string, styleId: string) => {
@@ -101,7 +104,8 @@ describe('không gõ lại phím đang ngân', () => {
   })
 
   it('câu solo giang tấu, mọi điệu mọi nguồn nốt', () => {
-    for (const styleId of ['pop-1', 'bossa-nova-1', 'swing-1'] as const) {
+    // Ba cách chia nhịp: đều · bossa · swing. Cũ: Pop 1, Bossa Nova 1, Swing 1 (đã xoá 30/9/2026).
+    for (const styleId of ['ca-phao-ballad-cu-di', 'ca-phao-bossa-improved', 'twist'] as const) {
       for (const noteSource of ['chordTone', 'chordPentatonic', 'blues', 'storeScale'] as const) {
         for (let take = 0; take < 4; take += 1) {
           const events = soloToTimeline(
@@ -156,13 +160,18 @@ describe('mọi tiếng đều đàn được', () => {
   */
   it('tay trái đoạn giang tấu không leo lên vùng tay phải', () => {
     for (const styleId of STYLES) {
+      /*
+        Trần tay trái của điệu: khai `leftHandTop` (đo từ sheet — Có Em Chờ 67, Ballad cứ đi 67…) thì theo nó, không khai
+        thì dưới C4. Cũ (trước 30/9/2026): < 60 cho mọi điệu — tám điệu mẫu khi ấy đều không khai trần riêng.
+      */
+      const tran = getStyle(styleId)!.leftHandTop ?? 59
       const bass = backing('Dm7 G7 Cmaj7 Cmaj7 Ebmaj7 Bbm7', styleId).filter(
         (event) => event.hand === 'left',
       )
       expect(bass.length, styleId).toBeGreaterThan(0)
       for (const event of bass) {
         for (const note of event.notes) {
-          expect(note, `${styleId} bass @${event.startBeat}`).toBeLessThan(60)
+          expect(note, `${styleId} bass @${event.startBeat}`).toBeLessThanOrEqual(tran)
         }
       }
     }

@@ -39,16 +39,11 @@ describe('CP sheet ballads retain connections under color, licks and full solos'
           }
         }
       }
-      if (style.family === 'ca-phao-ballad-acdd') {
-        const run = connected.backing.filter(e => e.hand === 'left' && e.startBeat >= 22 && e.startBeat < 24)
-        expect(run.map(e => e.startBeat)).toEqual([22, 22.25, 22.5, 22.75, 23, 23.25, 23.5, 23.75])
-        expect(run.at(-1)!.startBeat + run.at(-1)!.durationBeats).toBe(24)
-      }
     }
   })
 
   it('keeps the sung links after assembling real full solo sections', () => {
-    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-acdd']) {
+    for (const id of ['ca-phao-ballad-co-em-cho']) {
       const style = getStyle(id)!
       const connected = planCpBalladBacking(renderPattern(voiceLeadTwoHands(chords), style), chords,
         { style, key, beatsPerChord: 4, transitions: new Map() })
@@ -77,7 +72,7 @@ describe('CP sheet ballads retain connections under color, licks and full solos'
     const plain = renderPattern(voiceLeadTwoHands(chords), source)
     const options = { key, beatsPerChord: 4, transitions: new Map() }
     expect(planCpBalladBacking(plain, chords, { ...options, style: future }).protectedWindows.length).toBeGreaterThan(0)
-    for (const style of [getStyle('ca-phao-bossa-improved')!, getStyle('pop-1')!])
+    for (const style of [getStyle('ca-phao-bossa-improved')!, getStyle('twist')!])
       expect(planCpBalladBacking(plain, chords, { ...options, style })).toEqual({ backing: plain, protectedWindows: [] })
     expect(planCpBalladBacking(plain, chords, { ...options, style: source, walkingOn: true }))
       .toEqual({ backing: plain, protectedWindows: [] })

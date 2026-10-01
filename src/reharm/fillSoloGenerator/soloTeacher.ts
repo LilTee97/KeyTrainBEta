@@ -43,7 +43,7 @@ export function soloTeacherOf(styleId: string | undefined | null): SoloTeacher {
   const family = (styleId ? getStyle(styleId)?.family : null) ?? ''
   if (family === 'ton-hung-ballad') return 'ton-hung'
   if (family.includes('linh-nhi')) return 'linh-nhi'
-  if (family === 'bossa-ca-phao' || family.startsWith('ca-phao')) return 'ca-phao'
+  if (family.startsWith('ca-phao')) return 'ca-phao'
   if (styleId && soloTuDoCaPhao(styleId)) return 'ca-phao'
   if (styleId && raiTheoTayTrai(styleId)) return 'linh-nhi'
   return null

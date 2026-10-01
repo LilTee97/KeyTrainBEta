@@ -3,7 +3,7 @@ import { chordDurations, chordStarts } from '../chordTiming'
 import { parseChordInput } from '../input/chordInputParser'
 import { reharmonize } from '../reharmEngine/reharmPipeline'
 import { renderPattern } from '../style/patternRenderer'
-import { getStyle } from '../style/styleLibrary'
+import { MAU_BALLAD, MAU_BOSSA, MAU_SWING, MAU_VALSE } from '../style/__tests__/mauThu'
 import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
 
 /**
@@ -15,7 +15,7 @@ import { voiceLeadTwoHands } from '../voicingGenerator/handSplitVoicing'
  * **sáu trên mười hợp âm không có nốt bass nào**.
  */
 
-const STYLES = ['ballad', 'bossa-nova', 'valse', 'swing']
+const STYLES = [MAU_BALLAD, MAU_BOSSA, MAU_VALSE, MAU_SWING]
 
 function build(text: string, withPassing: boolean) {
   const chords = parseChordInput(text).chords
@@ -39,9 +39,9 @@ function build(text: string, withPassing: boolean) {
 
 describe('phần đệm khi có hợp âm lướt', () => {
   it('mỗi hợp âm đều được đánh ít nhất một tiếng ở mỗi tay', () => {
-    for (const styleId of STYLES) {
+    for (const style of STYLES) {
       const { chords, hands, durations, starts } = build('C Am F G', true)
-      const events = renderPattern(hands, getStyle(styleId)!, {
+      const events = renderPattern(hands, style, {
         beatsPerChord: 4,
         beatsEach: durations,
       })
@@ -62,7 +62,7 @@ describe('phần đệm khi có hợp âm lướt', () => {
 
           expect(
             hits.length,
-            `${styleId}: ${chord.symbol} ở phách ${from} không có tiếng ${hand}`,
+            `${style.id}: ${chord.symbol} ở phách ${from} không có tiếng ${hand}`,
           ).toBeGreaterThan(0)
         }
       })
@@ -70,9 +70,9 @@ describe('phần đệm khi có hợp âm lướt', () => {
   })
 
   it('không tiếng nào ngân đè sang hợp âm sau', () => {
-    for (const styleId of STYLES) {
+    for (const style of STYLES) {
       const { hands, durations, starts } = build('C Am F G', true)
-      const events = renderPattern(hands, getStyle(styleId)!, {
+      const events = renderPattern(hands, style, {
         beatsPerChord: 4,
         beatsEach: durations,
       })
@@ -83,7 +83,7 @@ describe('phần đệm khi có hợp âm lướt', () => {
 
         expect(
           event.startBeat + event.durationBeats,
-          `${styleId}: tiếng ở phách ${event.startBeat} ngân qua ${nextStart}`,
+          `${style.id}: tiếng ở phách ${event.startBeat} ngân qua ${nextStart}`,
         ).toBeLessThanOrEqual(nextStart + 0.001)
       }
     }
@@ -94,15 +94,15 @@ describe('phần đệm khi có hợp âm lướt', () => {
       Quan trọng không kém: bản sửa chỉ được động tới trường hợp có hợp âm
       lướt, không được đổi tiếng của điệu ở trường hợp thường.
     */
-    for (const styleId of STYLES) {
+    for (const style of STYLES) {
       const { hands, durations } = build('C Am F G', false)
-      const events = renderPattern(hands, getStyle(styleId)!, {
+      const events = renderPattern(hands, style, {
         beatsPerChord: 4,
         beatsEach: durations,
       })
 
       const left = events.filter((event) => event.hand === 'left')
-      expect(left.length, styleId).toBeGreaterThan(0)
+      expect(left.length, style.id).toBeGreaterThan(0)
     }
   })
 })

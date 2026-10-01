@@ -11,9 +11,7 @@ import { LINH_NHI_SLOW_ROCK } from '../styleLibrary/linhNhiSlowRock'
 import type { StylePattern } from '../types'
 
 const slowRock = LINH_NHI_SLOW_ROCK[0]!
-const slowRock6 = getStyle('slow-rock-2')!
 const bolero = getStyle('bolero-linh-nhi-2')!
-const pop = getStyle('pop-1')!
 const RONG = { low: 21, high: 108 } as const
 const KINDS = ['intro', 'interlude', 'outro'] as const
 type Kind = (typeof KINDS)[number]
@@ -41,9 +39,9 @@ const TAT_CA_SR = KINDS.flatMap((kind) => [true, false].flatMap((minor) =>
 describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu', () => {
   it('nhận nhịp; điệu không có sheet Linh Nhi thì báo, không mượn điệu khác', () => {
     expect(nhipCuaDieu(slowRock)).toEqual({ kep: true, o: 3 })
-    expect(nhipCuaDieu(slowRock6)).toEqual({ kep: true, o: 6 })
     expect(nhipCuaDieu(bolero)).toEqual({ kep: false, o: 4 })
-    for (const style of [getStyle('waltz-1')!, pop]) {
+    // Cũ: Waltz 1, Pop 1 (đã xoá 30/9/2026).
+    for (const style of [getStyle('twist')!, getStyle('ca-phao-ballad-cu-di')!]) {
       expect(soan(style, 'intro', 0, false).unavailableReason).toContain('chưa có sheet')
       expect(soan(style, 'outro', 9, true).events).toHaveLength(0)
     }
@@ -147,16 +145,7 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     expect(trong).toBe(0)
   })
 
-  it('slow rock: điệu 6/8 ô 6 phách soạn đúng câu ấy, giãn gấp đôi', () => {
-    for (const kind of KINDS) {
-      const a = soan(slowRock, kind, 7, true, 1)
-      const b = soan(slowRock6, kind, 7, true, 1)
-      expect(b.lengthBeats).toBe(a.lengthBeats * 2)
-      expect(b.chords).toEqual(a.chords)
-      expect(b.events.map((e) => [e.startBeat / 2, e.durationBeats / 2, e.notes])).toEqual(
-        a.events.map((e) => [e.startBeat, e.durationBeats, e.notes]))
-    }
-  })
+  // 30/9/2026: bỏ test "ô 6 phách giãn gấp đôi" — Slow Rock 2 (OneMotion, ô 6 nốt đen) đã xoá; slow rock còn lại ô 3 nốt đen.
 
   /*
     Người dùng 24/9/2026: *"Vòng hợp âm phải được đổi mới chứ ko phải giữ nguyên một vòng rồi đổi giai
@@ -182,7 +171,8 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
       const vong = new Set(Array.from({ length: 40 }, (_, take) => soan(slowRock, kind, 4, true, take).chords.join(' ')))
       expect(vong.size, kind).toBeGreaterThanOrEqual(25)
     }
-  })
+    // Trần 20 giây: chạy một mình ~4 giây, cả bộ chạy song song có lần quá trần mặc định 5 giây (30/9/2026).
+  }, 20_000)
 
   it('slow rock: nắn nhịp — mọi mốc tay phải nằm trên móc đơn hoặc móc kép', () => {
     for (const { kind, minor, tonic, take, made } of TAT_CA_SR) {
@@ -205,8 +195,6 @@ describe('câu solo Linh Nhi chỉ lấy vật liệu từ sheet cùng điệu',
     expect(slowRockSoanLinhNhi(slowRock, false, null)).toBe(true)
     expect(slowRockSoanLinhNhi(slowRock, true, null)).toBe(true)
     expect(slowRockSoanLinhNhi(slowRock, false, 'ton-hung')).toBe(false)
-    expect(slowRockSoanLinhNhi(slowRock6, false, null)).toBe(false)
-    expect(slowRockSoanLinhNhi(slowRock6, true, null)).toBe(true)
     expect(slowRockSoanLinhNhi(bolero, true, 'linh-nhi')).toBe(false)
   })
 

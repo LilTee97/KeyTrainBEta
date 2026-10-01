@@ -143,7 +143,8 @@ describe('vòng hợp âm đoạn dạo', () => {
 })
 
 describe('đoạn dạo có bass, không để tay trái trống', () => {
-  for (const styleId of ['pop-1', 'hai-pop-ballad', 'hai-pop-ballad-free']) {
+  // 30/9/2026: ba điệu ballad còn giữ. Cũ: Pop 1, Pop Ballad (Hải), bản rải tự do — đã xoá.
+  for (const styleId of ['ca-phao-ballad-cu-di', 'ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa']) {
     it(`${styleId}: dạo đầu có tiếng tay trái ở mọi ô`, () => {
       const { backing } = play('intro', styleId)
       expect(backing.length).toBeGreaterThan(0)
@@ -166,7 +167,7 @@ describe('đoạn dạo có bass, không để tay trái trống', () => {
   }
 
   it('bass đi theo đúng hợp âm từng ô', () => {
-    const { chords, backing } = play('intro', 'hai-pop-ballad')
+    const { chords, backing } = play('intro', 'ca-phao-ballad-co-em-cho')
     for (const event of backing.filter((e) => e.hand === 'left')) {
       const chord = chords[Math.min(3, Math.floor(event.startBeat / 4))]
       const tones = new Set(
@@ -181,7 +182,7 @@ describe('đoạn dạo có bass, không để tay trái trống', () => {
 
 describe('nốt não chồng lên đệm, không thay bass', () => {
   it('vẫn còn nốt tay phải của não, và có item Kingsley cho phép', () => {
-    const { melody } = play('intro', 'hai-pop-ballad')
+    const { melody } = play('intro', 'ca-phao-ballad-co-em-cho')
     expect(melody).not.toBeNull()
     expect(melody!.events.length).toBeGreaterThanOrEqual(24)
     expect(melody!.authorizedBy).toContain('kingsley-sus2-to-3')
@@ -189,14 +190,14 @@ describe('nốt não chồng lên đệm, không thay bass', () => {
   })
 
   it('giai điệu não nằm cao hơn bass', () => {
-    const { backing, melody } = play('intro', 'hai-pop-ballad')
+    const { backing, melody } = play('intro', 'ca-phao-ballad-co-em-cho')
     const bass = backing.filter((e) => e.hand === 'left').flatMap((e) => e.notes)
     const rh = melody!.events.flatMap((e) => e.notes)
     expect(Math.min(...rh)).toBeGreaterThan(Math.max(...bass))
   })
 
   it('não im thì vẫn còn nguyên phần đệm, không mất tiếng cả đoạn', () => {
-    const { backing } = play('intro', 'pop-1')
+    const { backing } = play('intro', 'ca-phao-ballad-cu-di')
     // Đây là thứ phát ra khi `brainPhrase` trả null: chỉ còn đệm, và vẫn kêu.
     expect(backing.length).toBeGreaterThan(0)
     expect(backing.some((e) => e.hand === 'left')).toBe(true)

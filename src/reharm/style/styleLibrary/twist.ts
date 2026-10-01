@@ -8,10 +8,13 @@ const bass = [tone(0), tone(0), tone(1, -1), tone(1), tone(2), tone(0), tone(0, 
 
 export const TWIST: StylePattern = {
   id: 'twist', name: 'Twist', family: 'twist', familyName: 'Twist', variant: 1,
-  timeSignature: '4/4', beatsPerMeasure: 4, bpm: 180, feel: 'swing',
+  timeSignature: '4/4', beatsPerMeasure: 4,
+  // Người dùng 30/9/2026: "Tempo mặc định giảm xuống còn 140 thôi". Cũ: 180 (nốt đen = 180 ghi trên sheet Boogie Woogie).
+  // Triệu chứng để lùi: Twist nghe lê, mất độ nảy → trả 180.
+  bpm: 140, feel: 'swing',
   verified: true, releaseRatio: 1, leftHandTop: 60, soloMaxStrikes: 8, autoFills: false,
   sourceVideos: ['boogie woogie-Linh Nhi.mxl · ô 6–16, LH 22–31 · credit trong sheet: Marco Brandt'],
-  note: 'Twist · đệm hai tay: bass 1–1–♭3–3–5–1–6–5, tay phải chặn cùng bass gốc ở 1 và 3&. Theo sheet Boogie Woogie; swing 2:1, 180 BPM. Chờ nghe duyệt.',
+  note: 'Twist · đệm hai tay: bass 1–1–♭3–3–5–1–6–5, tay phải chặn cùng bass gốc ở 1 và 3&. Theo sheet Boogie Woogie; swing 2:1, 140 BPM (sheet ghi 180). Chờ nghe duyệt.',
   cell: {
     lengthBeats: 4,
     // Hai tiếng gốc đầu ô là hai lần GÕ, không gộp ngân. Bậc ba/năm theo hợp âm;

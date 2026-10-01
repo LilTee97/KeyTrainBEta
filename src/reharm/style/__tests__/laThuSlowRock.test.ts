@@ -10,6 +10,7 @@ import type { StylePattern, TimelineEvent } from '../types'
 import { transitionMuteWindows } from '../sectionStyles'
 import { mainChordSpans } from '../../chordTiming'
 
+// 30/9/2026: Lá thư một tay (phiên c15–c16 · điệp c41–c42) đã xoá — còn cặp hai tay rải.
 const [verse, chorus] = LINH_NHI_SLOW_ROCK
 const atFill = (style: StylePattern): StylePattern => ({ ...style, cell: style.fillCell! })
 const render = (chords: string, style = verse, options = {}) =>
@@ -18,14 +19,6 @@ const hand = (events: TimelineEvent[], which: 'left' | 'right') =>
   events.filter(e => e.hand === which).map(e => [e.startBeat, e.notes])
 
 describe('Slow Rock Lá thư (Linh Nhi)', () => {
-  it('while singing: LH rolls sheet cells c15–c16, RH is left to the voice', () => {
-    const events = render('Bb C')
-    expect(hand(events, 'left').slice(0, 6))
-      .toEqual([[0, [46]], [.5, [50]], [1, [53]], [1.5, [58]], [2, [53]], [2.5, [50]]])
-    expect(hand(events, 'right')).toEqual([])
-    expect(hand(render('D7 Gm', chorus), 'right')).toEqual([])
-  })
-
   it('at a fill chord replays sheet cell c22 on A7 note for note (the 594e7f7 numbers)', () => {
     const events = render('A7', atFill(verse))
     expect(hand(events, 'left')).toEqual([
@@ -157,7 +150,7 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
     const chords = parseChordInput('Am Dm E7 Am F').chords.map(c => ({ ...c, beats: 6 }))
     const tr = new Map([[3, { octaves: 2, delayBeats: 1, restBeats: 0 }]])
     const spans = mainChordSpans(chords, 6)
-    const mute = transitionMuteWindows(verse.id, spans, tr)
+    const mute = transitionMuteWindows(spans, tr)
     const fills = soloToTimeline(generateFillLine(chords, { beatsPerChord: 6, fillBassChance: .8, take: 0, sectionEnds: tr }))
     const run = fills.filter(e => e.startBeat >= 18 - 1e-6 && e.startBeat <= 24 + 1e-6)
     expect(Math.max(...run.map(e => e.startBeat))).toBeCloseTo(24, 6)
@@ -183,13 +176,9 @@ describe('Slow Rock Lá thư (Linh Nhi)', () => {
 
   it('scales the section cell supplied by cellAt with gridUnit, like the main cell', () => {
     const events = render('D7 Gm', verse, { cellAt: () => chorus.cell! })
-    expect(events.filter(e => e.hand === 'left').map(e => e.startBeat))
-      .toEqual(chorus.cell!.left.map(hit => hit.beat / 2))
-  })
-
-  it('keeps the b7 of D7 in the chorus pulse', () => {
-    const d7 = render('D7 Gm', chorus).find(e => e.hand === 'left' && e.startBeat === 1.5)!
-    expect(d7.notes).toEqual([50, 54, 60])
+    const sorted = (beats: number[]) => beats.sort((a, b) => a - b)
+    expect(sorted(events.filter(e => e.hand === 'left').map(e => e.startBeat)))
+      .toEqual(sorted(chorus.cell!.left.map(hit => hit.beat / 2)))
   })
 
   it('is one Slow Rock button whose chorus variant switches in by section', () => {

@@ -7,9 +7,14 @@ import { buildArrangedSong } from '../arrangement'
 import { renderPattern } from '../patternRenderer'
 import { buildSongTimeline, getSongForm } from '../songStructure'
 import { getStyle } from '../styleLibrary'
-import type { TimelineEvent } from '../types'
+import type { StylePattern, TimelineEvent } from '../types'
+import { MAU_BALLAD, MAU_BOSSA, MAU_SWING, MAU_VALSE } from './mauThu'
 
-function build(styleId: string, beatsPerChord = 4) {
+// 30/9/2026: điệu OneMotion / Hải đã xoá — máy chung kiểm trên khuôn mẫu riêng cho test (`mauThu.ts`), còn ca
+// "giữ tay trái của điệu" kiểm trên điệu còn giữ.
+const styleOf = (style: StylePattern | string) => typeof style === 'string' ? getStyle(style)! : style
+
+function build(styleOrId: StylePattern | string, beatsPerChord = 4) {
   const chords = parseChordInput('C Am F G').chords
   const first = reharmonize(chords, {})
   const reharm = reharmonize(chords, {
@@ -19,7 +24,7 @@ function build(styleId: string, beatsPerChord = 4) {
     beatsPerChord,
   })
 
-  const style = getStyle(styleId)!
+  const style = styleOf(styleOrId)
   const full = reharm.final
   const backing = renderPattern(
     voiceLeadTwoHands(full, { dropRootFromRightHand: true }),
@@ -63,17 +68,17 @@ const bassPhases = (
 }
 
 describe('phần đệm đoạn giang tấu', () => {
-  it.each(['pop-1', 'bossa-nova-1', 'waltz-1', 'swing-1'] as const)(
+  it.each([MAU_BALLAD, MAU_BOSSA, MAU_VALSE, MAU_SWING].map((style) => [style.id, style] as const))(
     '%s: tiết tấu bass giang tấu trùng đoạn hát',
-    (styleId) => {
-      const beats = styleId === 'waltz-1' ? 3 : 4
-      const { song } = build(styleId, beats)
+    (_id, style) => {
+      const beats = style.beatsPerMeasure === 3 ? 3 : 4
+      const { song } = build(style, beats)
       expect(bassPhases(song, 'interlude')).toEqual(bassPhases(song, 'verse'))
     },
   )
 
   it('đoạn có lời vẫn chơi đủ hợp âm lướt', () => {
-    const { full, song } = build('pop-1')
+    const { full, song } = build(MAU_BALLAD)
 
     const passingRoots = full
       .filter((chord) => chord.passing)
@@ -86,10 +91,9 @@ describe('phần đệm đoạn giang tấu', () => {
     for (const root of passingRoots) expect(bass).toContain(root)
   })
 
-  it.each(['waltz-1', 'pop-1', 'flamenco-1', 'slow-rock-2'] as const)(
+  it.each([MAU_VALSE, MAU_BALLAD, 'ca-phao-ballad-cu-di', 'blue-sun'].map((style) => [styleOf(style).id, styleOf(style)] as const))(
     '%s: cửa sổ lệch ô vẫn cùng pha bass với phiên khúc',
-    (styleId) => {
-      const style = getStyle(styleId)!
+    (_id, style) => {
       const beats = 4
       const chords = parseChordInput('C Am F G C Am F G').chords
       const reharm = reharmonize(chords, { beatsPerChord: beats })
@@ -145,7 +149,7 @@ describe('phần đệm đoạn giang tấu', () => {
 
     Danh sách dưới đây có slow rock chính vì thế: nó là ca hỏng đã báo.
   */
-  it.each(['slow-rock-2', 'hai-slow-rock', 'hai-pop-ballad'] as const)(
+  it.each(['slow-rock-la-thu-hai-tay', 'ca-phao-ballad-cu-di', 'ca-phao-ballad-co-em-cho'] as const)(
     '%s: giang tấu giữ nguyên tay trái của điệu, không đổi sang rải ballad',
     (styleId) => {
       const { song } = build(styleId)
@@ -154,7 +158,7 @@ describe('phần đệm đoạn giang tấu', () => {
   )
 
   it('đoạn giang tấu vẫn dài đúng bằng đoạn có lời', () => {
-    const { song } = build('pop-1')
+    const { song } = build(MAU_BALLAD)
     const lengths = song.sections.map((section) => section.lengthBeats)
     expect(new Set(lengths).size).toBe(1)
   })

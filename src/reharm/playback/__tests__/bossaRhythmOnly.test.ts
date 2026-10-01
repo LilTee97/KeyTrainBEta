@@ -4,7 +4,7 @@ import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { renderPattern } from '../../style/patternRenderer'
 import { CA_PHAO_BOSSA, CA_PHAO_BOSSA_IMPROVED as style } from '../../style/styleLibrary/caPhaoBossa'
 import type { ArrangementStep, SourceSection } from '../../style/arrangement'
-import { bossaBackingSteps, buildBossaRhythmOnly } from '../bossaRhythmOnly'
+import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly } from '../bossaRhythmOnly'
 
 it('giữ nhịp 6 tiếng ô A nguồn, nhấn rõ Bùm 3; thêm đúng 5 tiếng ô B', () => {
   // Khung chính thức được người dùng nghe duyệt 13/9/2026. Solo không được sửa snapshot này.
@@ -76,4 +76,14 @@ it('bài có intro/giang/outro chỉ còn các đoạn đệm, không mất chá
   const introSources: SourceSection[] = [{ ...sources[0], name: 'Intro' }]
   const withoutSolo = bossaBackingSteps([{ type: 'section', source: 0 }], introSources)
   expect(buildBossaRhythmOnly(backing, 16, introSources, withoutSolo).events).toEqual([])
+})
+
+it('giang tấu tự chèn: Bossa CP 2 lượt; Twist 1 lượt (người dùng 30/9/2026, cũ 2)', () => {
+  const sources: SourceSection[] = [{ name: 'Phiên', kind: 'verse', startBeat: 0, lengthBeats: 16 }]
+  const giang = (steps: ArrangementStep[]) => steps.find(step => step.type === 'interlude')
+  expect(giang(bossaSoloSteps([{ type: 'section', source: 0 }], sources))).toMatchObject({ loops: 2 })
+  expect(giang(bossaSoloSteps([{ type: 'section', source: 0 }], sources, 1))).toMatchObject({ loops: 1 })
+  // Giang tấu người dùng đã sắp thì giữ nguyên số lượt của họ.
+  const sap: ArrangementStep[] = [{ type: 'section', source: 0 }, { type: 'interlude', over: 0, loops: 3 }]
+  expect(giang(bossaSoloSteps(sap, sources, 1))).toMatchObject({ loops: 3 })
 })

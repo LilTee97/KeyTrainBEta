@@ -5,6 +5,11 @@ import { renderPattern } from '../patternRenderer'
 import { buildPhraseSection } from '../phraseSection'
 import { TWIST } from '../styleLibrary/twist'
 import { chayBlueSun, chayTwistBlues } from '../boSoanBlues'
+import { buildBossaSoloSong } from '../../playback/bossaRhythmOnly'
+import { mainChordSpans } from '../../chordTiming'
+import { noiCauVaoSolo } from '../twistSolo'
+import { reStruck } from './playableOutput.test'
+import type { PitchClass } from '../../../shared/musicTheory/types'
 
 /*
   Twist · Bộ Soạn Blues — mặc định từ 29/9/2026 (cùng ngày là ô tick nghe thử). Người dùng: câu chạy "ít nốt hơn trong Slow Blues nhưng vẫn giữ đủ kết cấu",
@@ -94,7 +99,7 @@ describe('Twist · Bộ Soạn Blues — đệm hát', { timeout: 60_000 }, () =
     expect(lap / tong, `${lap}/${tong}`).toBeLessThan(.6)
   })
 
-  it('phần đệm nhường: chỉ bỏ cú chặn tay phải trong lúc chạy; cú chặn đầu hợp âm (vang cùng cú đáp) giữ nguyên', () => {
+  it('phần đệm nhường: chỉ bỏ cú chặn tay phải bị câu chạy đè hoặc với không tới câu chạy; cú chặn đầu hợp âm (vang cùng cú đáp) giữ nguyên', () => {
     for (const [vong, key] of BAI) for (let take = 0; take < LUOT; take++) {
       const { backing, r } = moi(vong, key, take)
       const chanCu = backing.filter(e => e.hand === 'right')
@@ -104,7 +109,10 @@ describe('Twist · Bộ Soạn Blues — đệm hát', { timeout: 60_000 }, () =
         if (Math.abs(e.startBeat % 8) < 1e-6) expect(con, `${vong} lượt ${take}: cú chặn đầu hợp âm ${e.startBeat}`).toBe(true)
         const bi = r.events.some(f => f.hand === 'right' && !f.grace && f.startBeat % 8 > .5 &&
           f.startBeat < e.startBeat + e.durationBeats - 1e-6 && f.startBeat + f.durationBeats > e.startBeat + 1e-6)
-        expect(con, `${vong} lượt ${take}: cú chặn ${e.startBeat}`).toBe(!bi)
+        // 30/9/2026: nốt câu chạy gõ cách dưới ½ phách mà cùng cú chặn vượt quãng tám (tay không với tới) → cú chặn cũng nhường.
+        const xa = r.events.some(f => f.hand === 'right' && !f.grace && Math.abs(f.startBeat - e.startBeat) < .5 - 1e-6 &&
+          Math.max(...f.notes, ...e.notes) - Math.min(...f.notes, ...e.notes) > 12)
+        expect(con, `${vong} lượt ${take}: cú chặn ${e.startBeat}`).toBe(!bi && !xa)
       }
     }
   })
@@ -190,4 +198,58 @@ describe('Twist · Bộ Soạn Blues — dạo · giang · kết', { timeout: 60
     }
   })
 
+})
+
+/*
+  TẦM TAY — người dùng 30/9/2026 (ảnh Dm11: cú chặn C4 E4 G4 cùng lúc câu đáp A5): *"điệu twist bên tay phải bị thế bấm dặm hợp âm
+  quá xa tay người ko thể dánh được"*. Đo SAU bước ráp bài (đệm → câu chạy lúc hát → dạo · giang · kết → `noiCauVaoSolo`), trên vòng
+  tám hợp âm có hợp âm màu (m11 · add9 · 9sus4 · m7b5 · maj7), hợp âm 4 và 8 phách, cả 12 giọng trưởng / thứ. Trước khi sửa, phép
+  quét rộng hơn (5 vòng × 3 lượt × có / không bỏ gốc): 5 352 / 109 552 cú vượt, xa nhất 31 nửa cung; sau: 0 / 108 174.
+*/
+describe('Twist — tay phải đánh được bằng tay người', { timeout: 60_000 }, () => {
+  const TEN = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+  const MAU = {
+    major: [[0, 'add9'], [9, 'm7'], [5, 'maj7'], [7, '7'], [4, 'm7'], [2, 'm11'], [7, '9sus4'], [0, '6']],
+    minor: [[0, 'm11'], [5, 'm9'], [10, '7'], [3, 'maj7'], [8, 'maj7'], [2, 'm7b5'], [7, '7'], [0, 'm']],
+  } as const
+  it('mọi nốt tay phải gõ cách nhau dưới ½ phách nằm trong một quãng tám — câu chạy, cú chặn, láy, dạo · giang · kết', () => {
+    for (let tonic = 0; tonic < 12; tonic++) for (const scale of ['major', 'minor'] as const) {
+      const len = tonic % 2 ? 8 : 4, take = tonic % 3, dropRoot = tonic % 4 < 2
+      const vong = MAU[scale].map(([b, q]) => TEN[(tonic + b) % 12] + q).join(' ')
+      const chords = parseChordInput(vong).chords
+      const key = { tonic: tonic as PitchClass, scale }
+      const backing = renderPattern(voiceLeadTwoHands(chords, { dropRootFromRightHand: dropRoot }), TWIST,
+        { beatsPerChord: len, beatsEach: chords.map(() => len) })
+      const r = chayTwistBlues(chords, { key, beatsPerChord: len, take, breaths, sectionEnds, backing })
+      const spans = mainChordSpans(chords, len)
+      const song = buildBossaSoloSong(r.backing, chords.length * len, null, [], (kind, t, nextStart) => buildPhraseSection({
+        kind, key, style: TWIST, bpm: 140, dropRoot, beatsPerChord: 4, take: take + t, range: { low: 60, high: 84 }, solo: () => [],
+        opening: nextStart === undefined ? null : spans.find(s => Math.abs(s.start - nextStart) < .001)?.chord ?? null,
+      }) ?? { events: [], lengthBeats: 0, chords: [], beatsEach: [] }, r.events, true, 1)
+      const p = noiCauVaoSolo(song.events, song.soloSpans).filter(e => e.hand === 'right')
+      for (const x of p) {
+        const cum = p.filter(y => y.startBeat >= x.startBeat - 1e-6 && y.startBeat < x.startBeat + .5 - 1e-6).flatMap(y => y.notes)
+        expect(Math.max(...cum) - Math.min(...cum), `${vong} · ${len} phách · phách ${x.startBeat.toFixed(2)}`).toBeLessThanOrEqual(12)
+      }
+    }
+  })
+
+  /*
+    Lớp câu chạy gộp vào SAU `holdUntilStruckAgain`. Trước khi `chayTwistBlues` nhả phím hai chiều (30/9/2026), vòng 16 hợp âm màu ×
+    12 giọng × trưởng/thứ × 3 lượt: 226 chỗ nốt câu chạy gõ lại cú chặn còn ngân (144 bài hợp âm 4 · 8 phách) + 18 chỗ cú chặn gõ lại
+    nốt câu chạy còn ngân (72 bài hợp âm 2 phách). Ở đây mỗi giọng một thang cho vừa thời gian chạy.
+  */
+  it('không gõ lại phím đang ngân — câu chạy ↔ cú chặn, hợp âm 2 · 4 · 8 phách', { timeout: 180_000 }, () => {
+    const hetCau = new Set([1, 3, 5, 7, 9, 11, 13, 15])
+    for (const len of [2, 4, 8]) for (let tonic = 0; tonic < 12; tonic++) {
+      const scale = tonic % 2 ? 'minor' as const : 'major' as const
+      const vong = [...MAU[scale], ...MAU[scale]].map(([b, q]) => TEN[(tonic + b) % 12] + q).join(' ')
+      const chords = parseChordInput(vong).chords
+      const backing = renderPattern(voiceLeadTwoHands(chords), TWIST, { beatsPerChord: len, beatsEach: chords.map(() => len) })
+      const r = chayTwistBlues(chords, { key: { tonic: tonic as PitchClass, scale }, beatsPerChord: len, take: tonic % 3,
+        breaths: hetCau, sectionEnds: new Set([7]), backing })
+      const bad = reStruck([...r.backing, ...r.events])
+      expect(bad, `${vong} · ${len} phách: ${bad[0]}`).toHaveLength(0)
+    }
+  })
 })

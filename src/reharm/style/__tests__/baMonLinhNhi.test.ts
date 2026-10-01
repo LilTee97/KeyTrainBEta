@@ -23,7 +23,8 @@ const doan = (kind: 'intro' | 'outro', txt: string, tonic: number, minor: boolea
   return buildPhraseSection({
     kind,
     key,
-    style: getStyle('bolero-linh-nhi-3')!,
+    // Cũ: `bolero-linh-nhi-3` (Bolero Nhi — đã xoá 30/9/2026); phiên khúc của nó dùng đúng lưới chín cú gõ của khuôn này.
+    style: getStyle('bolero-linh-nhi-2')!,
     thay: 'linh-nhi',
     beatsPerChord: 4,
     dropRoot: true,
@@ -113,54 +114,7 @@ describe('MÓN 1 — giang tấu lấy lại câu dạo', () => {
   })
 })
 
-describe('MÓN 2 — điệp khúc dày bằng NẮM DÀY HƠN', () => {
-  /*
-    Đo 2125 mốc gõ tay trái ở phiên khúc và 1026 ở điệp khúc, cả bảy sheet:
-
-    | | mốc gõ | nốt mỗi mốc |
-    |---|---|---|
-    | phiên khúc | không đổi | **1,22** |
-    | điệp khúc | không đổi | **1,60** |
-
-    Số mốc gõ gần như đứng yên (6,6→6,4 giọng thứ, 7,7→7,8 giọng trưởng); thứ tăng là số
-    NỐT mỗi mốc. Thêm mốc cho điệp khúc thì ra tiếng dồn dập chứ không ra tiếng dày.
-
-    Và nắm dày rơi vào PHÁCH LẺ: off-beat 1,74-1,96 nốt/mốc trong khi phách 0 và 2 chỉ
-    1,30-1,32. Phách mạnh là chỗ bass trụ, chị ấy để một nốt.
-  */
-  /* Đọc thẳng ô nhịp của điệu — `patternStrikes` không giữ số nốt mỗi mốc. */
-  const trai = (styleId: string) => getStyle(styleId)!.cell?.left ?? []
-  const dayCua = (styleId: string) => {
-    const c = trai(styleId)
-    const not = c.reduce((a, x) => a + (x.tones ?? []).length, 0)
-    return { moc: c.length, not, tren: not / c.length }
-  }
-
-  it('phiên khúc 1,22 và điệp khúc 1,60 nốt mỗi mốc', () => {
-    const phien = dayCua('bolero-linh-nhi-3')
-    const diep = dayCua('bolero-linh-nhi-3-chorus')
-    /* Cũ: phiên 1,00 (quá mỏng) và điệp 2,33 (quá dày). */
-    expect(phien.tren).toBeGreaterThan(1.1)
-    expect(phien.tren).toBeLessThan(1.35)
-    expect(diep.tren).toBeGreaterThan(1.45)
-    expect(diep.tren).toBeLessThan(1.75)
-  })
-
-  it('điệp khúc KHÔNG gõ nhiều mốc hơn phiên khúc', () => {
-    /* Đây là chỗ dễ làm sai nhất. Số mốc phải bằng nhau, chỉ nốt mỗi mốc mới tăng. */
-    expect(dayCua('bolero-linh-nhi-3-chorus').moc).toBe(dayCua('bolero-linh-nhi-3').moc)
-  })
-
-  it('phách mạnh của điệp khúc vẫn để MỘT nốt', () => {
-    /* Đo: phách 0 là 1,32 và phách 2 là 1,30 nốt/mốc — mỏng hơn hẳn off-beat. */
-    const c = trai('bolero-linh-nhi-3-chorus')
-    for (const beat of [0, 2]) {
-      const cu = c.find((x) => Math.abs(x.beat - beat) < 1e-6)
-      expect(cu, `phách ${beat}`).toBeDefined()
-      expect((cu!.tones ?? []).length, `phách ${beat}`).toBe(1)
-    }
-  })
-})
+// 30/9/2026: bỏ MÓN 2 (điệp khúc dày theo chiều dọc) — chỉ Bolero Nhi (`bolero-linh-nhi-3`) mang nó, điệu ấy đã xoá.
 
 describe('MÓN 3 — tay trái mỏng đi ở đoạn không lời', () => {
   /*
@@ -260,21 +214,19 @@ describe('MÓN 4 — hai tay CÀI vào nhau, và câu nằm đúng tầm', () =>
   }
 
   it('tay trái vẫn còn mốc gõ MỘT MÌNH — bản ký âm 41%', () => {
-    for (const sid of ['bolero-linh-nhi-2', 'bolero-linh-nhi-3']) {
+    for (const sid of ['bolero-linh-nhi-2']) {
       const r = doiTay('intro', THU, 9, true, sid)
       /* Cũ: 21-24%, tức tay trái gần như không bao giờ nói một mình. */
       expect(r.motMinh, `${sid}: ${(r.motMinh * 100).toFixed(0)}%`).toBeGreaterThan(0.3)
     }
   })
 
-  it('TỈ LỆ chứ không phải số mốc — hai mẫu đệm khác nhau ra cùng mật độ', () => {
+  it('TỈ LỆ chứ không phải số mốc — mật độ tay trái đoạn dạo giọng thứ đúng bản ký âm', () => {
     /*
-      Chốt chặn của cách đặt theo tỉ lệ. Trần tuyệt đối thì `bolero-linh-nhi-2` ra 3,7
-      còn `bolero-linh-nhi-3` ra 4,4 — lệch nhau nửa mốc trên cùng một bài.
+      Chốt chặn của cách đặt theo tỉ lệ. Trần tuyệt đối thì `bolero-linh-nhi-2` ra 3,7 còn `bolero-linh-nhi-3` ra 4,4 —
+      lệch nhau nửa mốc trên cùng một bài. Vế so với `bolero-linh-nhi-3` bỏ 30/9/2026 (điệu ấy đã xoá).
     */
     const a = doiTay('intro', THU, 9, true, 'bolero-linh-nhi-2').moc
-    const b = doiTay('intro', THU, 9, true, 'bolero-linh-nhi-3').moc
-    expect(Math.abs(a - b)).toBeLessThan(0.5)
     expect(Math.abs(a - 4.6)).toBeLessThan(0.6)
   })
 

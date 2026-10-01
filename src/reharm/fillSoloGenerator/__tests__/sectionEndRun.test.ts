@@ -4,6 +4,7 @@ import type { TransitionRun } from '../soloGenerator'
 import { fillPositions, generateFillLine } from '../soloGenerator'
 import { NGHI_MAC_DINH, nghiDonRaTheoMoc } from '../../style/sectionStyles'
 import { getStyle } from '../../style/styleLibrary'
+import { MAU_BALLAD } from '../../style/__tests__/mauThu'
 
 /**
  * Chỗ chuyển đoạn: hợp âm cuối đoạn được cấp **thêm một ô nhịp**, và ô thêm
@@ -210,20 +211,19 @@ describe('câu chạy ở ô nối sang đoạn mới', () => {
     expect(line.every(n => n.startBeat + n.durationBeats <= 6.25 + 1e-6)).toBe(true)
   })
 
-  it('nghỉ đôn ra ở MỌI điệu: số nốt đen cộng vào hợp âm ở mốc — "Mặc định" theo sheet = im 0; trừ mốc không chạy ngón, ACDD', () => {
+  it('nghỉ đôn ra ở MỌI điệu: số nốt đen cộng vào hợp âm ở mốc — "Mặc định" theo sheet = im 0; trừ mốc không chạy ngón', () => {
     // Người dùng 26/9/2026: "nút nghỉ phách mặc định và cơ chế đôn phách mà vẫn giữ gìn tiết tấu hãy áp dụng cho mọi điệu".
-    const laThu = getStyle('slow-rock-la-thu-hai-tay')!, pop = getStyle('pop-1')!
+    const laThu = getStyle('slow-rock-la-thu-hai-tay')!, pop = MAU_BALLAD
     const moc = (run: TransitionRun) => new Map([[1, run]])
     // Lá thư: phách = móc đơn (gridUnit 0,5) → im 3 = 1,5 nốt đen.
-    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3 }), laThu, false)).toEqual({ 1: 1.5 })
-    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 2 }), pop, false)).toEqual({ 1: 2 })
+    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3 }), laThu)).toEqual({ 1: 1.5 })
+    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 2 }), pop)).toEqual({ 1: 2 })
     // "Mặc định" = theo sheet: 18 sheet · 112 mốc, mọi thầy chơi tới sát vạch → im 0, không đôn — ở MỌI điệu.
     expect(NGHI_MAC_DINH).toBe(0)
     for (const style of [laThu, pop]) {
-      expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3, restTheoSheet: true }), style, false)).toEqual({})
+      expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3, restTheoSheet: true }), style)).toEqual({})
     }
-    expect(nghiDonRaTheoMoc(moc({ octaves: 0, restBeats: 3 }), laThu, false)).toEqual({})
-    expect(nghiDonRaTheoMoc(moc({ octaves: 2, restBeats: 3 }), laThu, true)).toEqual({})
+    expect(nghiDonRaTheoMoc(moc({ octaves: 0, restBeats: 3 }), laThu)).toEqual({})
   })
 
   it('giữa đoạn vẫn là câu fill ngắn kết ở nốt dẫn', () => {

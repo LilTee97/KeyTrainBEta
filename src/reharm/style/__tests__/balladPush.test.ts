@@ -3,7 +3,7 @@ import { parseChordInput } from '../../input/chordInputParser'
 import { chordDurations } from '../../chordTiming'
 import { voiceLeadTwoHands } from '../../voicingGenerator/handSplitVoicing'
 import { renderPattern } from '../patternRenderer'
-import { BALLAD } from '../styleLibrary'
+import { MAU_BALLAD as BALLAD } from './mauThu'
 
 /**
  * Kiểm tra render cell OneMotion (Pop 1) và im ô nhường fill.

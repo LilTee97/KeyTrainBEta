@@ -17,6 +17,19 @@ const swing = (beat: number) => {
   khung Twist (bass boogie, ô đi bass ngược chiều, ô báo, hợp âm kết) + tay phải các ô câu nhạc do Bộ Soạn Blues soạn (`soanCauBlues`).
   Cũ (27/9 – 29/9): bốn cặp mô-típ bè đôi nhắc–đáp dựng tay (`calls` / `answers`) — khôi phục từ commit 291d555.
 */
+/**
+ * CHỖ NỐI câu hát ↔ dạo · giang · kết (Twist): nốt tay phải NGOÀI đoạn solo (câu chạy cuối câu hát, cú chặn) gõ cách một nốt của
+ * đoạn solo dưới ½ phách mà hai nốt vượt tầm tay thì bỏ — câu solo vào thay. Hai lớp soạn riêng nên không biết nhau. Đo 30/9/2026
+ * sau khi xét tầm tay trong từng lớp: còn 142 / 108 316 cú tay phải vượt, cả 142 ở chỗ nối này (câu chạy ⅓ phách trước vạch đoạn).
+ */
+export function noiCauVaoSolo(events: readonly TimelineEvent[], soloSpans: readonly { startBeat: number; lengthBeats: number }[],
+  tamTay = 12): TimelineEvent[] {
+  const trong = (t: number) => soloSpans.some(s => t >= s.startBeat - 1e-6 && t < s.startBeat + s.lengthBeats - 1e-6)
+  const solo = events.filter(e => e.hand === 'right' && trong(e.startBeat))
+  return events.filter(e => e.hand !== 'right' || trong(e.startBeat) || solo.every(f => Math.abs(f.startBeat - e.startBeat) >= .5 - 1e-6 ||
+    Math.max(...e.notes, ...f.notes) - Math.min(...e.notes, ...f.notes) <= tamTay))
+}
+
 export function twistSolo(options: PhraseSectionOptions): PhraseSection {
   const empty = (reason: string): PhraseSection => ({
     events: [], lengthBeats: 0, chords: [], beatsEach: [], unavailableReason: reason,
@@ -136,6 +149,9 @@ export function twistSolo(options: PhraseSectionOptions): PhraseSection {
     },
     muc: { thua: [1, 2], day: [2, 3] }, luc: (manh, n) => (manh ? 90 : n >= 3 ? 84 : 80),
     bamHop: true, noiHop: true, doiLuot: 2.5,
+    // Tầm tay: cú gõ cách dưới ½ phách trong một quãng tám, kể cả tay phải ô đi bass · ô báo · hợp âm kết (người dùng 30/9/2026).
+    // Cũ: không xét — đo trước khi sửa 952 chỗ vượt ở dạo · giang · kết (bè đôi Eb5/G5 rồi ⅓ phách sau Eb4/G4).
+    tamTay: 12, tayPhaiCo: events.filter(e => e.hand === 'right'),
   })
   events.push(...r.events)
   if (events.some(e => e.hand === 'right' && e.notes.some(n => n < range.low || n > range.high))) {

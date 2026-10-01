@@ -30,7 +30,8 @@ import {
 
 const KEY = { tonic: 9 as const, scale: 'minor' as const }
 const SONG = 'Am Dm E7 Am F G C E7 Am F Dm E7 Am C G Am'
-const STYLES = ['slow-rock-duc-thinh-3', 'bossa-nova-1', 'bolero-1', 'pop-1'] as const
+// 30/9/2026: một điệu còn giữ cho mỗi họ. Cũ: Slow Rock Đức Thịnh 3, Bossa Nova 1, Bolero 1, Pop 1 (đã xoá).
+const STYLES = ['slow-rock-la-thu-hai-tay', 'ca-phao-bossa-improved', 'bolero-tu-n-improv-bai-04-00001', 'ca-phao-ballad-cu-di'] as const
 /** Gộp nhiều lượt để mẫu đủ lớn: một lượt chỉ cho vài câu, số nhảy loạn. */
 const TAKES = 16
 
