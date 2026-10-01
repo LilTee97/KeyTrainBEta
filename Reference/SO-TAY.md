@@ -4752,3 +4752,10 @@ node sạch; `eslint` các file đổi sạch; `vite build` qua. Máy chủ dev 
 
 **Chưa đo:** chưa ai chơi bằng đàn thật — độ trễ thật, nhiễu `currentTime` thật, ngưỡng đạt đều chờ `LuyenTap.json`; giao diện
 `TimedPractice` không có test tự động (chỉ biên dịch); bài dài có dạo · giang · kết thì tập cả câu solo — GĐ 0 chưa cắt đoạn.
+
+### Bậc 7 chấm theo hợp âm + bass + khung — người dùng chọn (b) (1/10/2026)
+
+*"câu 3 chọn b"*: bậc cuối (tắt nốt rơi) nhận thế bấm khác miễn đúng nốt của hợp âm, đúng bass, đúng khung bùm – chát; bậc 1–6
+vẫn đúng từng phím. Chấm bằng lớp cao độ (`scoreTimed` + `ignoreOctave` đã có), GĐ 1 thêm kiểm **nốt thấp nhất** quanh tiếng bass —
+thiếu thì tay phải bấm La4 cũng thành "bass La". Bỏ nốt màu (Am thay Am9) tính là thiếu nốt. Chưa viết mã — thuộc GĐ 1
+(`KE-HOACH-LUYEN-TAP.md` mục 4).

@@ -167,8 +167,13 @@ còn là lượt nguội.
      nhận.**
    - Độ dài — đề xuất của Claude: vòng tập 4 ô (cắt vòng của bộ soạn ở vạch ô); Blues tập từng dòng 4 ô của khung 12 ô.
      Bậc 7 kiểm trên vòng 8 ô (Blues: đủ 12 ô) chưa gặp ở bậc 1–6.
-3. **Bậc 7 chấm thế nào** — người dùng: *"tôi chưa rõ câu hỏi của bạn"* → giải thích lại bằng ví dụ, chờ trả lời.
-   Không chặn GĐ 0.
+3. **Bậc 7 chấm theo (b)** — *"câu 3 chọn b"* (sau khi giải thích lại bằng ví dụ Am9: app soạn Đô4–Mi4–Sol4–Si4, người tập
+   bấm Mi4–Sol4–Si4–Đô5). Nhận thế bấm khác miễn đúng nốt của hợp âm, đúng bass, đúng khung bùm – chát. Bậc 1–6 vẫn chấm
+   đúng từng phím. Cách chấm:
+   - So theo lớp cao độ — bỏ quãng tám, bỏ thứ tự đảo. Bộ chấm GĐ 0 đã có sẵn (`ignoreOctave`).
+   - GĐ 1 thêm kiểm bass: nốt **thấp nhất** quanh mỗi tiếng bass phải đúng lớp cao độ của bass. Thiếu bước này thì tay
+     phải bấm La4 cũng được tính là bass La.
+   - Bỏ nốt màu (đánh Am thay Am9) = thiếu nốt ấy, tính vào tỉ lệ đúng nốt — vì (b) là "đúng nốt của **Am9**".
 4. **Thứ tự điệu** — *"làm như bạn đề xuất"*: Claude đo (tiếng/ô, nốt mỗi cú, độ giãn tay, tempo) rồi đề xuất ở GĐ 1.
 
 ---
