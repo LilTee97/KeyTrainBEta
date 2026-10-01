@@ -14,7 +14,7 @@ export const TWIST: StylePattern = {
   bpm: 140, feel: 'swing',
   verified: true, releaseRatio: 1, leftHandTop: 60, soloMaxStrikes: 8, autoFills: false,
   sourceVideos: ['boogie woogie-Linh Nhi.mxl · ô 6–16, LH 22–31 · credit trong sheet: Marco Brandt'],
-  note: 'Twist · đệm hai tay: bass 1–1–♭3–3–5–1–6–5, tay phải chặn cùng bass gốc ở 1 và 3&. Theo sheet Boogie Woogie; swing 2:1, 140 BPM (sheet ghi 180). Chờ nghe duyệt.',
+  note: 'Twist · đệm hai tay: bass 1–1–♭3–3–5–1–6–5, tay phải chặn cùng bass gốc ở 1 và 3&. Theo sheet Boogie Woogie; swing 2:1, 140 BPM (sheet ghi 180). Đã nghe duyệt 1/10/2026 (đệm + Bộ Soạn Blues).',
   cell: {
     lengthBeats: 4,
     // Hai tiếng gốc đầu ô là hai lần GÕ, không gộp ngân. Bậc ba/năm theo hợp âm;

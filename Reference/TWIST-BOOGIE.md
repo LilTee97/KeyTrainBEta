@@ -2,7 +2,9 @@
 
 Ngày triển khai: 26/9/2026. Người dùng yêu cầu phân tích sheet
 `D:/PianoBrain/video/Linh_Nhi/boogie woogie-Linh Nhi.mxl`, lấy tiết tấu đệm,
-tạo nút riêng và đặt tên **Twist**. Trạng thái: đã dựng để nghe thử, chưa nghe duyệt. Câu solo và câu chạy lúc đệm hát: Bộ Soạn Blues, mặc định từ 29/9/2026 (mục 7).
+tạo nút riêng và đặt tên **Twist**. Trạng thái: **ĐÃ NGHE DUYỆT 1/10/2026** — người dùng: *"Điệu Twist đã ổn"* (bản ở commit
+2f7bf1a: mục 2–8). Câu solo và câu chạy lúc đệm hát: Bộ Soạn Blues, mặc định từ 29/9/2026 (mục 7). Tổng kết dạy lại:
+`PianoBrain/knowledge/TWIST.md`.
 Nút **Twist điệp khúc** dựng 30/9/2026 rồi xoá cùng ngày; sửa kèm còn giữ cho nút Twist: mục 8.
 
 ## 1. Nguồn và cách đo

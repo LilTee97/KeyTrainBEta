@@ -4620,3 +4620,24 @@ hợp âm 2 · 4 · 8 phách), `bossaRhythmOnly` (giang tấu Bossa CP 2 lượt
 
 **Chưa đo:** chín nút chưa nghe lại sau khi gỡ code dùng chung (chỉ có test máy); Twist đệm hai tay vẫn **chưa nghe duyệt**; tầm tay
 Twist mới đo trên vòng mẫu, chưa trên bài có lời thật; Bolero Tuấn · Tango Tuấn chưa có ghi chép duyệt.
+
+## Bước — Twist ĐÃ NGHE DUYỆT (1/10/2026)
+
+Người dùng: *"Điệu Twist đã ổn hãy ghi vào sổ tay và thêm MD Twist rồi ghi vào"*. Bản được duyệt = commit 2f7bf1a, không đổi nốt
+nào: đệm hai tay sheet Boogie Woogie ô 6–16 (bass 1–1–♭3–3–5–1–6–5, hai cú chặn cùng bass gốc ở phách 1 và 3⅔, swing 2:1) · ♩ 140
+· mỗi hợp âm một mẫu 4 phách · giang tấu Blues một lượt 12 ô · Bộ Soạn Blues soạn câu solo và câu chạy lúc đệm hát · tầm tay một
+quãng tám · nhả phím đang ngân.
+
+**Ghi ở đâu:**
+- `PianoBrain/knowledge/TWIST.md` (MỚI) — tài liệu dạy lại cả điệu: nguồn, khung tiếng bùm – chát kèm độ dài phách, mặc định đã
+  duyệt (cũ ↔ mới), chọn hợp âm, chọn nốt, tầm tay, bảng triệu chứng để lùi, đã thử rồi bỏ, chưa đo. Số đo chép từ hai hồ sơ dưới —
+  hồ sơ là nguồn, sửa số thì sửa ở hồ sơ trước.
+- `Reference/TWIST-BOOGIE.md` — dòng trạng thái đổi "chưa nghe duyệt" → đã duyệt 1/10, trỏ sang TWIST.md.
+- `PianoBrain/knowledge/BLUES-CHON-HOP-AM-VA-NOT.md` mục 9 — ghi duyệt, trỏ sang TWIST.md.
+- `styleLibrary/twist.ts` — `note` của nút: "Chờ nghe duyệt" → "Đã nghe duyệt 1/10/2026 (đệm + Bộ Soạn Blues)". Không đổi hành vi.
+
+**Không ghi vào md Linh Nhi:** sheet mang tên Linh Nhi nhưng credit trong file là Marco Brandt (*Boogie Woogie Basics*) — chưa
+xác định Linh Nhi soạn hay chỉ chép, nên Twist không phải số đo phong cách của chị ấy.
+
+**Chưa đo (giữ nguyên từ trước):** chưa nghe trên bài có lời thật (chỗ `breaths`); tầm tay mới đo trên vòng mẫu; hợp âm treo /
+giảm / biến âm / slash chưa kiểm mẫu bass.
