@@ -4687,3 +4687,27 @@ cũ; `tsc` sạch.
 
 **Chưa đo:** đo tác dụng là mô phỏng định tuyến của app, không qua giao diện; ô Câu chạy tự soạn có từng bật lúc duyệt 5 câu
 Tuấn thứ ngày 9/9 hay không — chưa xác định (chuỗi 6 nốt móc kép có ở 2/5 câu, nhưng cũng có ở câu 7/9 khi chưa có ô).
+
+## Bước — Kế hoạch Lộ trình tập: cửa đạt, không game, không app riêng (1/10/2026)
+
+Người dùng muốn biến KeyTrain thành app cắm đàn MIDI tập theo bậc tới thuần thục — ba mục: điệu (chín nút), kỹ thuật (Cà Pháo,
+Linh Nhi, Blues, Twist), lý thuyết (không MIDI). Hỏi có nên làm thành app game mới; trả lời hai câu quyết định: *"App này là để
+tôi tự tập"* · *"Sau khi có app rồi thì tôi sẽ tập mỗi ngày"*. Kế hoạch đủ ở `Reference/KE-HOACH-LUYEN-TAP.md`. Chưa viết dòng
+code nào.
+
+**Chốt:** làm trong KeyTrain (tab "Lộ trình"), không app riêng · cửa đạt hai mức — "Đã qua" (trong buổi) và "Đã thuộc" (lượt nguội
+ở buổi khác ngày, kiểm lại theo Leitner sẵn có) · không điểm, sao, huy hiệu, bảng xếp hạng, chuỗi ngày · bậc cuối tắt nốt rơi ·
+chế độ theo nhịp đánh sai không dừng · bài tập là bản đóng băng (ghi commit nguồn, test báo khi điệu đổi).
+
+**Bẫy — Claude tự sửa trong ngày:** đề xuất đầu lấy "đạt hai lượt liền" làm cửa đạt — đo phong độ ngay sau khi tập lặp, không đo
+cái đã thuộc (guidance hypothesis, Salmoni, Schmidt & Walter 1984). Và "tắt nốt rơi" từng để thành câu hỏi tuỳ chọn — nay bắt buộc.
+
+**Đo trong code (1/10):** đường dựng điệu nằm trong `ReharmHome.tsx` (6 201 dòng, 147 dòng có hook); tab Luyện đệm nhờ nó dựng
+(`ReharmHome.tsx:3917`) — lý do chính không tách app. `midiStore` đóng dấu thời gian bằng `performance.now()` lúc xử lý (dòng 73,
+104), chưa dùng `timeStamp` của sự kiện MIDI. Không chỗ nào trong `reharm/playback` · `shared/audio` câm theo tay.
+
+`KE-HOACH.md` thêm ngoại lệ: Lộ trình lưu tiến độ bậc (cửa đạt), vẫn không game hoá. `CLAUDE.md` thêm file kế hoạch vào danh sách
+đọc.
+
+**Chưa đo:** độ trễ đàn + loa trên máy người dùng; ngưỡng cửa đạt (≥ 90% · ≤ 40 ms là đoán); người dùng có tập đều không — nhật ký
+lượt tập trả lời sau 3 tuần, khi đó mới xét chuỗi ngày.

@@ -125,6 +125,8 @@ Phần tái hòa âm và đệm hát **không có bất kỳ yếu tố game ho�
 
 Chế độ chờ đánh đúng nốt (bước 27-28) vẫn cho phản hồi đúng/sai tức thì để người học biết mình bấm trúng chưa — nhưng đó là **phản hồi kỹ thuật**, không phải chấm điểm, và không có gì được tích luỹ hay lưu lại thành thành tích.
 
+**Ngoại lệ 1/10/2026 — Lộ trình tập** (`KE-HOACH-LUYEN-TAP.md`): người dùng muốn tập theo bậc tới thuần thục, nên Lộ trình **lưu tiến độ bậc và lịch kiểm lại**. Đó là cửa đạt — chưa đạt thì chưa mở bậc sau — không phải thành tích: vẫn không điểm, không sao, không combo, không huy hiệu, không bảng xếp hạng, không streak.
+
 ---
 
 ## Data model
