@@ -79,7 +79,7 @@ export interface PhraseChordOptions {
   songIntro?: readonly ParsedChord[]
   /** Ô tick: vòng dạo giống sheet trưởng. Mặc định tắt. */
   daoTruong?: boolean
-  /** Ô tick: vòng dạo giống sheet thứ. Mặc định tắt. */
+  /** Vòng dạo giống sheet thứ — chỉ Bolero Tuấn giọng thứ, luôn bật (ô tick gỡ 1/10/2026). */
   daoThu?: boolean
   take?: number
 }

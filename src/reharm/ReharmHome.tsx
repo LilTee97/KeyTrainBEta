@@ -656,14 +656,25 @@ export function ReharmHome() {
     Mặc định TẮT — đây là đổi lối chơi, luật người dùng đặt là phải nghe thử trước.
   */
   const [siet, setSiet] = useState(false)
-  /* Trần 84 nghe thử. Mặc định tắt — cũ 79. Xem SOLO_TRAN_MO. */
+  /*
+    Trần 84 nghe thử. Mặc định tắt — cũ 79. Xem SOLO_TRAN_MO. GIỮ (người dùng 1/10/2026): ở trần 79 có ca soạn không ra — kết thứ
+    Bolero Tuấn 6/24, giang + kết Bossa CP khi đổi màu khỏi Cà Pháo 16/48 (Fa · Fa♯ · Sol · Sol♯ thứ); trần 84: 0. Hai câu báo lỗi
+    trỏ về ô này.
+  */
   const [tranMo, setTranMo] = useState(false)
-  /* Vòng dạo giống 3 sheet trưởng. Mặc định tắt. Cũ: xoay vốn bài → I-ii-iii-IV. */
+  /*
+    Vòng dạo giống 3 sheet trưởng. Mặc định tắt. Cũ: xoay vốn bài → I-ii-iii-IV. GIỮ (1/10/2026): cả 6/6 câu dạo trưởng chấm "Đã
+    ổn" (Linh Nhi #157 #160 #163 — 6/9; Bolero Tuấn #472 #480 #484 — 8/9) đi vòng mẫu sheet trưởng mà chỉ ô này sinh ra — dựng lại
+    bằng code 1/10: bật khớp 16/24 lượt, tắt 0/24 (`Nguon.json` không ghi ô tick).
+  */
   const [daoTruong, setDaoTruong] = useState(false)
-  const [daoThu, setDaoThu] = useState(false)
+  /*
+    Hai ô "Vòng dạo giống sheet thứ" / "Vòng giang tấu giống sheet thứ" GỠ 1/10/2026 (người dùng). Đo trước khi gỡ: ô giang đổi
+    0 ca ở mọi nút; ô dạo thứ không câu "Đã ổn" nào dùng (Bolero Tuấn giọng thứ vốn luôn bật vòng sheet thứ — vẫn giữ).
+    Khôi phục: commit 54b3463.
+  */
   const [cauOnDs, setCauOnDs] = useState<CauOn[]>([])
   const [ngheLaiStt, setNgheLaiStt] = useState(0)
-  const [giangThu, setGiangThu] = useState(false)
   const [interludeCadence, setInterludeCadence] = useState<'dominant' | 'ii-v'>('ii-v')
   const [chayNgan, setChayNgan] = useState(false)
   /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
@@ -1695,9 +1706,7 @@ export function ReharmHome() {
         thay: thaySolo,
         songIntro: hopAmDaoGoc(),
         ...(daoTruong ? { daoTruong: true } : {}),
-        ...(daoThu || (laBoleroTuan(style) && reharm.key?.scale === 'minor')
-          ? { daoThu: true }
-          : {}),
+        ...(laBoleroTuan(style) && reharm.key?.scale === 'minor' ? { daoThu: true } : {}),
         take: phraseSpin,
       }).map((chord) => chord.symbol),
       ...(cue ? [`${cue.symbol} (báo)`] : []),
@@ -1706,7 +1715,7 @@ export function ReharmHome() {
         `daoDungXa.ts`. Không thêm ở đây thì lưới hiện tám ô còn tai nghe chín,
         và người dùng đọc lưới ra kết luận là nút tick chẳng làm gì.
       */
-      ...(reharm.key && (thaySolo === 'linh-nhi' || daoTruong || daoThu || laBoleroTuan(style))
+      ...(reharm.key && (thaySolo === 'linh-nhi' || daoTruong || laBoleroTuan(style))
         ? [`${pitchClassName(normalizePitchClass(reharm.key.tonic + 7))} (hút)`]
         : []),
     ]
@@ -1719,7 +1728,6 @@ export function ReharmHome() {
     thaySolo,
     hopAmDaoGoc,
     daoTruong,
-    daoThu,
     style,
     phraseSpin,
   ])
@@ -2083,7 +2091,6 @@ export function ReharmHome() {
           range: tamSolo,
           ...(siet ? { siet: true } : {}),
           ...(daoTruong ? { daoTruong: true } : {}),
-          ...(giangThu ? { giangThu: true } : {}),
           solo: () => [],
         })
         if (built) {
@@ -2391,7 +2398,6 @@ export function ReharmHome() {
       vongPhienKhuc,
       hopAmDaoGoc,
       tamSolo,
-      giangThu,
       interludeCadence,
       siet,
       tiLeChiaHat,
@@ -3632,8 +3638,6 @@ export function ReharmHome() {
               ...(chiecLa && kind === 'intro' ? { motif: 'chiec-la' as const } : {}),
               ...(siet ? { siet: true } : {}),
               ...(daoTruong ? { daoTruong: true } : {}),
-              ...(daoThu ? { daoThu: true } : {}),
-              ...(giangThu ? { giangThu: true } : {}),
               ...(chayNgan ? { chayNgan: true } : {}),
               ...(soanBlues ? { bluesSoan: true } : {}),
               solo: (chords) =>
@@ -3756,8 +3760,6 @@ export function ReharmHome() {
       steps,
       chiecLa,
       daoTruong,
-      daoThu,
-      giangThu,
       chayNgan,
     ],
   )
@@ -4807,22 +4809,6 @@ export function ReharmHome() {
             />
             Vòng dạo giống sheet trưởng (nghe thử)
           </label>
-          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
-            <input
-              type="checkbox"
-              checked={daoThu}
-              onChange={() => setDaoThu((on) => !on)}
-            />
-            Vòng dạo giống sheet thứ (nghe thử)
-          </label>
-          <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
-            <input
-              type="checkbox"
-              checked={giangThu}
-              onChange={() => setGiangThu((on) => !on)}
-            />
-            Vòng giang tấu giống sheet thứ (nghe thử)
-          </label>
           {laBoleroTuan(style) && reharm.key?.scale === 'minor' && (
             <div className="mt-1.5 text-xs text-dim">
               <label className="flex items-center gap-2">
@@ -4838,7 +4824,7 @@ export function ReharmHome() {
                 Giang tấu thứ Tuấn: 8 ô có câu chạy vừa/dài, thêm 1 ô hút, nghỉ 2 phách cuối.
                 Mỗi lượt đổi vòng hòa âm phù hợp và soạn nốt cùng vòng đó.
                 Vòng ii–V tính theo hợp âm sắp hát; I/i vào cùng phần hát.
-                Không cần bật ô “Vòng giang tấu giống sheet thứ”. Đang nghe thử, chưa được duyệt.
+                Đang nghe thử, chưa được duyệt.
               </p>
             </div>
           )}

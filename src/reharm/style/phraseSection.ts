@@ -102,10 +102,10 @@ export interface PhraseSectionOptions {
   bluesSoan?: boolean
   /** Ô tick nghe thử: vòng dạo giống sheet trưởng. */
   daoTruong?: boolean
-  /** Ô tick nghe thử: vòng dạo giống sheet thứ. */
-  daoThu?: boolean
-  /** Ô tick nghe thử: vòng giang giống sheet thứ. */
-  giangThu?: boolean
+  /*
+    Ô "vòng dạo giống sheet thứ" (`daoThu`) và "vòng giang giống sheet thứ" (`giangThu`) gỡ 1/10/2026 — người dùng. Vòng dạo
+    sheet thứ vẫn LUÔN bật cho Bolero Tuấn giọng thứ (dựng ngầm bên dưới). Khôi phục: commit 54b3463.
+  */
   /** Giang thứ Tuấn: ii–V dặm hoặc V ngân; đích nằm ở đầu đoạn hát kế. */
   interludeCadence?: 'dominant' | 'ii-v'
   /** Ô tick: câu chạy tự soạn 4/6. Tắt = chép sheet thứ. */
@@ -668,8 +668,6 @@ export function buildPhraseSection(
     tiLeChiaHat,
     songIntro,
     daoTruong,
-    daoThu,
-    giangThu,
     chayNgan,
   } = options
 
@@ -703,7 +701,6 @@ export function buildPhraseSection(
             key,
             songChords: vongPhienKhuc ?? songChords ?? [],
             ...(tuan ? { soO: 12 } : {}),
-            ...(giangThu ? { giangThu: true } : {}),
             ...(tiLeChiaHat === undefined ? {} : { tiLeChiaHat }),
           })
           return v.length > 0 ? v : [...(songChords ?? [])]
@@ -715,7 +712,7 @@ export function buildPhraseSection(
           ...(tiLeChiaHat === undefined ? {} : { tiLeChiaHat }),
           ...(songIntro ? { songIntro } : {}),
           ...(daoTruong ? { daoTruong: true } : {}),
-          ...(daoThu || (tuan && key?.scale === 'minor') ? { daoThu: true } : {}),
+          ...(tuan && key?.scale === 'minor' ? { daoThu: true } : {}),
           take: take ?? 0,
         })
   if (chords.length === 0) return null
@@ -1050,7 +1047,7 @@ export function buildPhraseSection(
     const p: TimelineEvent[] = []
     for (let o = 0; o < soO; o += 1) {
       const inO = (e: TimelineEvent) => Math.floor(e.startBeat / barBeats + 1e-9) === o
-      if (laOPap(o, take ?? 0, nhieuPap) && (nhieuPap || !daoThu) && !(nhieuPap && o === soO - 1)) {
+      if (laOPap(o, take ?? 0, nhieuPap) && !(nhieuPap && o === soO - 1)) {
         t.push(...full.filter((e) => e.hand === 'left' && inO(e)))
         p.push(...full.filter((e) => e.hand === 'right' && inO(e)))
         oPapChum.add(o)
@@ -1389,8 +1386,8 @@ export function buildPhraseSection(
 
   if (
     key &&
-    ((kind === 'intro' && (thay === 'linh-nhi' || daoTuan || daoTruong || daoThu)) ||
-      (kind === 'interlude' && !interludePlan && (tuan || giangThu)))
+    ((kind === 'intro' && (thay === 'linh-nhi' || daoTuan || daoTruong)) ||
+      (kind === 'interlude' && !interludePlan && tuan))
   ) {
     return {
       chords: kyHieu,

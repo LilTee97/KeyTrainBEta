@@ -243,18 +243,16 @@ export function vonHopAmLinhNhi(options: {
    */
   daoTruong?: boolean
   /**
-   * Ô tick / Tuấn intro thứ: vòng dạo theo 8 sheet thứ, xoay `take`.
+   * Tuấn intro thứ (luôn bật — ô tick "vòng dạo giống sheet thứ" gỡ 1/10/2026): vòng dạo theo 8 sheet thứ, xoay `take`.
    * Cũ n=3 khóa tonic%3 → A thứ luôn Đừng Xa. Lùi: intro thứ lại một vòng Am G F C.
    */
   daoThu?: boolean
   /** Lượt phát — xoay mẫu sheet thứ. */
   take?: number
-  /**
-   * Ô tick: vòng giang giống sheet thứ.
-   * n=3: Đừng Xa ♭VII–♭VI–♭III · Tình Em ♭VI–♭VII–♭III · Chiếc Lá V–i–♭VII.
-   * 2 thầy (Cà Pháo giang = i–ii lặp — không lấy).
-   */
-  giangThu?: boolean
+  /*
+    Ô tick "vòng giang giống sheet thứ" (`giangThu`, mẫu `MAU_GIANG_THU`: Đừng Xa ♭VII–♭VI–♭III · Tình Em ♭VI–♭VII–♭III ·
+    Chiếc Lá V–i–♭VII, n=3) gỡ 1/10/2026 — người dùng; đo trước khi gỡ: đổi 0 ca ở mọi nút. Khôi phục: commit 54b3463.
+  */
 }): ParsedChord[] {
   const { kind, key, songChords } = options
   const soO = options.soO ?? SO_O
@@ -274,14 +272,13 @@ export function vonHopAmLinhNhi(options: {
     Bật `theoSheet` kéo theo hai việc cùng lúc: vòng chép theo **mẫu của sheet** thay vì
     xoay vốn bài, và kho hợp âm được `tronBa` — đó là chỗ hợp âm ba trơn ra đời.
 
-    Không đặt sau ô tick như `daoThu` / `giangThu`: đoạn dạo giọng thứ cũng đang **luôn
-    bật** mẫu sheet, nên để đoạn kết sau một ô tick thì hai đoạn lại lệch nhau đúng như
-    người dùng vừa phàn nàn. Triệu chứng để lùi: đoạn kết mất hẳn màu của bài.
+    Không đặt sau ô tick: đoạn dạo giọng thứ (Bolero Tuấn) cũng đang **luôn bật** mẫu sheet,
+    nên để đoạn kết sau một ô tick thì hai đoạn lại lệch nhau đúng như người dùng vừa phàn
+    nàn. Triệu chứng để lùi: đoạn kết mất hẳn màu của bài.
   */
   const theoSheet =
     (kind === 'intro' &&
       ((thu && options.daoThu === true) || (!thu && options.daoTruong === true))) ||
-    (kind === 'interlude' && thu && options.giangThu === true) ||
     (kind === 'outro' && thu)
   const kho = theoSheet ? von(gocKho.map(tronBa)) : gocKho
   /*
@@ -314,11 +311,6 @@ export function vonHopAmLinhNhi(options: {
     [0, 9, 2, 4, 9, 2, 4],
     [0, 9, 2, 7, 9, 5, 2],
   ] as const
-  const MAU_GIANG_THU = [
-    [0, 7, 10, 8, 3, 5],
-    [0, 8, 10, 3, 5, 7],
-    [0, 10, 5, 7, 0, 7],
-  ] as const
   const dung = (bac: number, chat: Chat): ParsedChord | undefined => {
     const q = getChordQuality(chat === 'm' ? 'min' : chat === '7' ? '7' : 'maj')
     if (!q) return undefined
@@ -344,7 +336,7 @@ export function vonHopAmLinhNhi(options: {
       sheet đòi `Em`/`E7` vẫn dựng được.
 
       Riêng ĐOẠN KẾT thì bậc **không có trong bài** trả rỗng, để mẫu bỏ qua bậc ấy. Đoạn
-      dạo và giang tấu vẫn được dựng, vì hai bài kiểm `daoThu lấy bậc và chất hợp âm trực
+      dạo vẫn được dựng (giang tấu không còn đi mẫu sheet từ 1/10/2026), vì hai bài kiểm `daoThu lấy bậc và chất hợp âm trực
       tiếp từ sheet` và `vòng solo Am giữ được ii thật` đòi đúng điều ngược lại — chặn cả
       hai đường làm chúng đỏ. Đo bảy bản ký âm:
       16 trên 20 đoạn không lời KHÔNG dùng bậc nào ngoài đoạn hát — `vonHopAmLinhNhi.test.ts`
@@ -368,15 +360,6 @@ export function vonHopAmLinhNhi(options: {
   }
   const theoMau = (): ParsedChord[] => {
     const ra: ParsedChord[] = []
-    if (kind === 'interlude' && thu) {
-      const mau = MAU_GIANG_THU[(options.take ?? 0) % MAU_GIANG_THU.length]!
-      for (let i = 0; ra.length < soHopAm && i < mau.length * 4; i += 1) {
-        const bac = mau[i % mau.length]!
-        const h = hopBac(bac)
-        if (h) ra.push(h)
-      }
-      return moChu(ra)
-    }
     if (thu) {
       /* Đoạn kết học đoạn kết, đoạn dạo học đoạn dạo — không mượn chéo. */
       /*

@@ -4641,3 +4641,49 @@ xác định Linh Nhi soạn hay chỉ chép, nên Twist không phải số đo 
 
 **Chưa đo (giữ nguyên từ trước):** chưa nghe trên bài có lời thật (chỗ `breaths`); tầm tay mới đo trên vòng mẫu; hợp âm treo /
 giảm / biến âm / slash chưa kiểm mẫu bass.
+
+## Bước — Gỡ hai ô tick vòng thứ (mức 2: cả mã lẫn nút); giữ bốn ô còn lại (1/10/2026)
+
+Người dùng hỏi sáu ô "nghe thử" dưới nút thầy (Siết · Trần 84 · Vòng dạo giống sheet trưởng · Vòng dạo giống sheet thứ · Vòng
+giang tấu giống sheet thứ · Câu chạy tự soạn — dựng 6–10/9, mặc định tắt, KHÔNG lưu theo bài) còn cần không, rồi chốt: *"những phần
+nên giữ thì hãy giữ lại … 2 phần cần bỏ thì hãy bỏ và bỏ ở mức 2"*.
+
+**Đo tác dụng trước khi quyết** — gọi thẳng bộ dựng dạo · giang · kết như ReharmHome gọi (mô phỏng định tuyến, không qua giao
+diện), vòng 4 hợp âm × 12 giọng × trưởng/thứ × 2 lượt = 48 ca mỗi đoạn, đếm ca đầu ra khác khi bật một ô (lối mặc định):
+
+| ô | ca đổi khi bật |
+|---|---|
+| Siết | dạo Có em chờ 36/48 · Để em 36/48 · Ballad cứ đi 48/48 · Bolero Tuấn 24/48 |
+| Trần 84 | Bossa CP dạo 46/48 · giang 47/48 · kết 45/48; Bolero Tuấn dạo 43/48 · giang 24/24 · kết 8/24 |
+| Vòng dạo trưởng / thứ | dạo ba ballad CP 48/48 · Bolero Tuấn 24/48 · Tango Tuấn 48/48 |
+| Vòng giang thứ | **0 ca ở mọi nút** — `phrase` chỉ gọi dạo/kết, giang thứ Tuấn đi `planMinorInterlude` |
+| Câu chạy tự soạn | Bolero Tuấn dạo giọng thứ 24/48 |
+
+Slow Rock Lá thư 2 tay, Slow Blues: cả sáu ô 0/48 (bộ soạn riêng không đọc). Twist: ô ẩn.
+
+**Bẫy suýt sập — ô "Vòng dạo giống sheet trưởng" ĐÃ ĐƯỢC DUYỆT, chỉ là không ai ghi.** `Nguon.json` không ghi trạng thái ô tick,
+nên tôi đã báo nhầm "các lần duyệt nhiều khả năng lúc ô tắt". Dựng lại vòng hợp âm: cả **6/6** câu dạo trưởng chấm "Đã ổn" — Linh
+Nhi #157 #160 #163 (đêm 6/9, `C Am Em G …` = I–vi–iii–V mẫu *Mùa Xuân*) và Bolero Tuấn #472 #480 #484 (8/9, `C Am Dm G Am F Dm G` ·
+`C Am Dm Em Am Dm Em G`) — đi vòng mẫu sheet trưởng; code 1/10 với vốn `C Am Dm G Em F`: ô bật khớp 16/24 lượt, tắt 0/24. Bài học:
+trước khi gọi một ô tick là "chưa ai nghe", dựng lại đầu ra của các câu "Đã ổn" (vòng hợp âm có trong `hopAm`) xem ô ấy có bật không.
+
+**Giữ:** Vòng dạo giống sheet trưởng (đã duyệt — như trên) · Trần 84 (ở trần 79: kết thứ Bolero Tuấn soạn không ra 6/24, giang +
+kết Bossa CP khi đổi màu khỏi Cà Pháo 16/48 — đúng Fa · Fa♯ · Sol · Sol♯ thứ; trần 84: 0/24 · 0/48; hai câu báo lỗi trỏ về ô này) ·
+Siết · Câu chạy tự soạn (nhật ký không chứng minh được chưa từng bật lúc duyệt; Siết: đo 9/9 bật thì kéo SAI chiều — chưa đo lại).
+
+**Gỡ (mức 2):**
+- `ReharmHome.tsx` — hai ô, `daoThu` · `giangThu` (state), chỗ truyền cờ, dòng "Không cần bật ô …" dưới Bolero Tuấn.
+- `phraseSection.ts` — bỏ tuỳ chọn ngoài `daoThu` · `giangThu`; `(nhieuPap || !daoThu)` bỏ (cờ ngoài luôn tắt → luôn đúng);
+  `daoThu` nội bộ cho Bolero Tuấn giọng thứ **giữ** (`tuan && minor`).
+- `vonHopAmLinhNhi.ts` — bỏ `giangThu`, nhánh giang theo mẫu và `MAU_GIANG_THU` (chỉ ô ấy tới được); `daoThu` nội bộ giữ.
+- Test: bỏ "TICK giangThu" (`vonHopAmLinhNhi.test.ts`); `boleroLinhNhi.test.ts` thôi truyền `daoThu` (Tuấn thứ vốn luôn bật).
+
+**Đo tương đương:** chụp đầu ra trước/sau trên 30 528 ca — bộ dựng dạo · giang · kết (8 nút × không thầy / Linh Nhi / Tôn Hùng ×
+3 đoạn × 24 giọng × 2 lượt × 5 bộ ô còn giữ) + vòng hợp âm dạo/kết (`phraseChords`) + vốn hợp âm Linh Nhi; chạy lại khi chưa sửa:
+lệch 0 (tất định). Sau khi sửa: **khác 0 / 30 528**. Toàn suite **2 515 qua / 5 đỏ** (2 520 test — bớt 1 test giangThu), đúng 5 đỏ
+cũ; `tsc` sạch.
+
+**Khôi phục:** commit 54b3463 (hai ô, nhánh giang theo mẫu, test).
+
+**Chưa đo:** đo tác dụng là mô phỏng định tuyến của app, không qua giao diện; ô Câu chạy tự soạn có từng bật lúc duyệt 5 câu
+Tuấn thứ ngày 9/9 hay không — chưa xác định (chuỗi 6 nốt móc kép có ở 2/5 câu, nhưng cũng có ở câu 7/9 khi chưa có ô).

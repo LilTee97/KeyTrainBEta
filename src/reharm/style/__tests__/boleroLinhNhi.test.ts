@@ -190,7 +190,7 @@ describe('intro bolero Tuấn = Pùng-Pắp hai tay', () => {
       opening: chords[0]!,
       solo: () => [],
       songChords: chords,
-      daoThu: true,
+      // Vòng sheet thứ luôn bật cho Bolero Tuấn giọng thứ — không cần cờ (ô tick gỡ 1/10/2026).
     })!
     expect(d.chords.length).toBeGreaterThan(3)
     expect(d.chords[0]!.startsWith('A')).toBe(true)

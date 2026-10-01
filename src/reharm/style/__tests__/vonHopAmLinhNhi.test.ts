@@ -106,7 +106,7 @@ describe('vốn hợp âm rút từ bài', () => {
     expect(ra.map((c) => c.symbol)).toEqual(['C', 'Am', 'Em', 'G', 'C', 'Em', 'C', 'G'])
   })
 
-  it('TICK daoThu: mẫu Đừng Xa i-♭VII-♭VI, cửa V (n=8 sheet thứ, take 0)', () => {
+  it('daoThu (Bolero Tuấn thứ, luôn bật): mẫu Đừng Xa i-♭VII-♭VI, cửa V (n=8 sheet thứ, take 0)', () => {
     const ra = vonHopAmLinhNhi({ kind: 'intro', key: AM, songChords: BAI, daoThu: true })
     const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
     expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 10, 8])
@@ -173,18 +173,7 @@ describe('vốn hợp âm rút từ bài', () => {
     expect(coLap).toBe(true)
   })
 
-  it('TICK giangThu: mẫu giang Đừng Xa ♭VII-♭VI-♭III, cửa V (n=3 bài, 2 thầy)', () => {
-    const ra = vonHopAmLinhNhi({
-      kind: 'interlude',
-      key: AM,
-      songChords: BAI,
-      giangThu: true,
-      soO: 12,
-    })
-    const bac = (c: { root: number }) => (((c.root - 9) % 12) + 12) % 12
-    expect([bac(ra[0]!), bac(ra[1]!), bac(ra[2]!)]).toEqual([0, 7, 10])
-    expect(bac(ra[ra.length - 1]!)).toBe(7)
-  })
+  // 1/10/2026: bỏ test "TICK giangThu" — ô tick vòng giang giống sheet thứ đã gỡ (khôi phục: commit 54b3463).
 
   it('vòng solo Am giữ được ii thật của Nỗi Buồn Hoa Phượng; luôn mở chủ âm', () => {
     let coBacHai = false
