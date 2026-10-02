@@ -285,16 +285,28 @@ export function isAudioReady(): boolean {
   return useAudioStore.getState().ready
 }
 
+/*
+  Phím người chơi bấm phát NGAY (`Tone.immediate()` = `currentTime`), không qua khoảng đệm lookAhead.
+
+  Cũ (tới 2/10/2026): `Tone.now()` = `currentTime + lookAhead`, mà lookAhead mặc định của Tone là 0,1 s (app không
+  chỉnh) — mỗi phím bấm kêu muộn thêm 100 ms, cộng dồn lên trễ loa/tai nghe. Người dùng đeo Galaxy Buds 2 thấy
+  "độ trễ âm thanh quá lớn". Khoảng đệm ấy cần cho nốt XẾP LỊCH trước (nhạc nền trên đồng hồ vận chuyển), không cần
+  cho phím vừa bấm.
+
+  Lùi khi: tiếng phím bấm nứt, mất hay bị cắt lúc nhạc nền đang phát — Tone khuyên không trộn `now` với `immediate`
+  cho những tiếng cần khớp nhau; phím bấm thì không xếp lịch cùng nhạc nền.
+*/
+
 /** Bấm và giữ một nốt. `velocity` theo thang MIDI 0-127. */
 export function attackNote(note: MidiNote, velocity = 90): void {
   if (!isAudioReady()) return
-  getSynth().triggerAttack(toFrequency(note), Tone.now(), velocity / 127)
+  getSynth().triggerAttack(toFrequency(note), Tone.immediate(), velocity / 127)
 }
 
 /** Nhả một nốt đang giữ. */
 export function releaseNote(note: MidiNote): void {
   if (!isAudioReady()) return
-  getSynth().triggerRelease(toFrequency(note), Tone.now())
+  getSynth().triggerRelease(toFrequency(note), Tone.immediate())
 }
 
 /**

@@ -25,8 +25,12 @@ export const COT = {
     'truot',
     /** Phím thừa: [phách, nốt MIDI]. */
     'phimThua',
+    /** Mọi phím đã bấm: [phách, nốt MIDI, lực] — thêm 2/10/2026, dòng cũ không có. */
+    'phim',
+    /** Trình duyệt nhận tín hiệu đàn → app xử lý, từng phím, ms — thêm 2/10/2026. */
+    'xuLyMs',
   ],
-  doTre: ['stt', 'luc', 'bpm', 'doTreMs', 'daoDongMs', 'soLanGo', 'lechMs'],
+  doTre: ['stt', 'luc', 'bpm', 'doTreMs', 'daoDongMs', 'soLanGo', 'lechMs', 'xuLyMs'],
 } as const
 
 type TenBang = keyof typeof COT
@@ -43,7 +47,12 @@ const soRong = (): So => ({
 function doc(duong: string): So {
   try {
     const so = JSON.parse(fs.readFileSync(duong, 'utf8')) as So
-    if (so?.luot?.dong && so?.doTre?.dong) return so
+    if (so?.luot?.dong && so?.doTre?.dong) {
+      // Cột chỉ thêm vào cuối, nên dòng tiêu đề lấy theo mã là đúng cho cả dòng cũ (dòng cũ ngắn hơn, thiếu cột mới).
+      so.luot.cot = [...COT.luot]
+      so.doTre.cot = [...COT.doTre]
+      return so
+    }
   } catch {
     /* Chưa có file, hoặc file hỏng — bắt đầu từ sổ rỗng. */
   }

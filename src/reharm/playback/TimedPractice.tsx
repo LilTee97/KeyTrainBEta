@@ -28,6 +28,7 @@ import {
   PASS_MEDIAN_ABS_MS,
   expectedNotesOf,
   latencyFromTaps,
+  median,
   passes,
   scoreTimed,
   type LatencyMeasure,
@@ -61,12 +62,21 @@ function ghi(bang: 'luot' | 'do-tre', than: Record<string, unknown>): void {
   }).catch(() => {})
 }
 
-/** Nghe phím bấm (đàn thật lẫn phím ảo), quy ra phách của đồng hồ phát nhạc. */
-function listenPresses(onPress: (press: PlayedNote) => void): () => void {
+/**
+ * Nghe phím bấm (đàn thật lẫn phím ảo), quy ra phách của đồng hồ phát nhạc.
+ *
+ * `handlingMs` = lúc app xử lý − lúc trình duyệt nhận tín hiệu đàn (`timeStamp`): phần trễ MIDI đo được từ trong
+ * trình duyệt. Đoạn phím → USB → Windows → trình duyệt thì phần mềm không đo được. Phép chấm không dính phần này
+ * (chấm theo `timeStamp`), nhưng tiếng phím bấm thì phát lúc xử lý — nên đo để biết nó có góp vào trễ nghe không.
+ */
+function listenPresses(onPress: (press: PlayedNote, handlingMs: number) => void): () => void {
   return useMidiStore.subscribe((state, previous) => {
     const event = state.lastEvent
     if (!event || event === previous.lastEvent || event.velocity === 0) return
-    onPress({ note: event.note, beat: beatAtPerformanceTime(event.time), velocity: event.velocity })
+    onPress(
+      { note: event.note, beat: beatAtPerformanceTime(event.time), velocity: event.velocity },
+      performance.now() - event.time,
+    )
   })
 }
 
@@ -119,6 +129,8 @@ export function TimedPractice({
   })
 
   const presses = useRef<PlayedNote[]>([])
+  const handling = useRef<number[]>([])
+  const [handlingMedian, setHandlingMedian] = useState<number | null>(null)
   const unlisten = useRef<(() => void) | null>(null)
   const aborted = useRef(false)
   const calTimer = useRef<number | null>(null)
@@ -215,9 +227,13 @@ export function TimedPractice({
     stopMetronome()
     aborted.current = false
     presses.current = []
+    handling.current = []
     setResult(null)
     stopListening()
-    unlisten.current = listenPresses((press) => presses.current.push(press))
+    unlisten.current = listenPresses((press, handlingMs) => {
+      presses.current.push(press)
+      handling.current.push(handlingMs)
+    })
     startTimelineLoop(backing, practiceBpm, undefined, 0, true)
     // Sau vòng phát: vòng phát đặt đồng hồ về phách 0, tiếng click bám theo từ đó.
     await startMetronome(practiceBpm)
@@ -252,6 +268,9 @@ export function TimedPractice({
       lechMs: score.errorsMs,
       truot: score.missed.map((note) => [round2(note.beat - countIn), note.note]),
       phimThua: score.extra.map((note) => [round2(note.beat - countIn), note.note]),
+      // Mọi phím đã bấm, kể cả ngoài lúc bài chạy — để soi lại một lượt mà không phải đoán.
+      phim: presses.current.map((press) => [round2(press.beat - countIn), press.note, press.velocity]),
+      xuLyMs: handling.current.map(Math.round),
     })
   }, [phase, looping, expected, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
 
@@ -260,12 +279,15 @@ export function TimedPractice({
     stopTimelineLoop()
     stopMetronome()
     setCalibration(null)
+    setHandlingMedian(null)
     setTaps(0)
     const tapBeats: number[] = []
+    const tapHandling: number[] = []
     stopListening()
-    unlisten.current = listenPresses(({ beat }) => {
+    unlisten.current = listenPresses(({ beat }, handlingMs) => {
       if (beat < CAL_COUNT_IN - 0.5) return
       tapBeats.push(beat)
+      tapHandling.push(handlingMs)
       setTaps(tapBeats.length)
     })
     await startMetronome(CAL_BPM)
@@ -278,6 +300,8 @@ export function TimedPractice({
         setPhase('idle')
         const found = latencyFromTaps(tapBeats, 60000 / CAL_BPM)
         setCalibration(found ?? 'few')
+        const handlingMs = median(tapHandling)
+        setHandlingMedian(handlingMs === null ? null : Math.round(handlingMs * 10) / 10)
         if (!found) return
         setLatencyMs(found.latencyMs)
         writeSetting('latencyMs', found.latencyMs)
@@ -287,6 +311,7 @@ export function TimedPractice({
           daoDongMs: found.spreadMs,
           soLanGo: found.n,
           lechMs: found.errorsMs,
+          xuLyMs: tapHandling.map((ms) => Math.round(ms * 10) / 10),
         })
       },
       ((CAL_COUNT_IN + CAL_TAPS + 0.5) * 60000) / CAL_BPM,
@@ -406,6 +431,11 @@ export function TimedPractice({
               <span className="text-dim">
                 Vừa đo: {calibration.latencyMs} ms, dao động ±{calibration.spreadMs} ms ({calibration.n}{' '}
                 lần gõ). Đổi loa hay tai nghe thì đo lại.
+              </span>
+            )}
+            {handlingMedian !== null && (
+              <span className="text-dim">
+                Trình duyệt nhận tín hiệu đàn → app xử lý: trung vị {handlingMedian} ms.
               </span>
             )}
           </>

@@ -4759,3 +4759,36 @@ node sạch; `eslint` các file đổi sạch; `vite build` qua. Máy chủ dev 
 vẫn đúng từng phím. Chấm bằng lớp cao độ (`scoreTimed` + `ignoreOctave` đã có), GĐ 1 thêm kiểm **nốt thấp nhất** quanh tiếng bass —
 thiếu thì tay phải bấm La4 cũng thành "bass La". Bỏ nốt màu (Am thay Am9) tính là thiếu nốt. Chưa viết mã — thuộc GĐ 1
 (`KE-HOACH-LUYEN-TAP.md` mục 4).
+
+## Bước — Trễ khi nghe phím bấm: bỏ 100 ms lookAhead; đo trễ MIDI trong trình duyệt (2/10/2026)
+
+Người dùng tập vài lượt Theo nhịp, thấy *"độ trễ âm thanh khi tôi đeo tai nghe galaxy bud 2 là quá lớn"*, nhờ đo trễ từ lúc bấm
+phím MIDI tới lúc app nhận.
+
+**Số đo — `LuyenTap.json` 2/10 (bài "test", 38 BPM = 60 % của 63):**
+- Đo độ trễ: #2 −50 ms, dao động ±91 (n = 17) — trôi đều +220 → −170 ms, tay chưa bám click, bỏ · #3 **278 ms** ±49 (n = 15) ·
+  #4 **251 ms** ±49 (n = 16).
+- 7 lượt: trúng **0–2 / 20–43** nốt. Phím thừa nằm trong bài (0–7,2 phách), nốt trúng lệch −68 … +137 ms → phép quy phách KHÔNG
+  hỏng. Nốt bấm khác nốt bài: tay trái điệu rải C2 G2 C3 D3 E3 móc kép, người dùng bấm C3 G3 B3 A3 … hay G2 A2 B2 C3.
+- **Dòng `stt` 1 ở cả hai bảng là dòng thử của Claude 1/10 (bài "THU")** — tưởng đã xoá file thử, nó vẫn còn. Loại khỏi mọi phân
+  tích; không sửa dòng sổ.
+
+**Tìm trong mã:** `attackNote` / `releaseNote` (chỉ `useLiveSound` gọi) dùng `Tone.now()` = `currentTime + lookAhead`; lookAhead
+mặc định Tone 15.1.22 = 0,1 s, app không chỉnh → **mọi phím bấm kêu muộn thêm 100 ms** trên mọi loa. Sửa: `Tone.immediate()`. Cũ:
+`Tone.now()`. Lùi khi: tiếng phím bấm nứt, mất hay bị cắt lúc nhạc nền đang phát (Tone khuyên không trộn `now` / `immediate` cho
+tiếng cần khớp nhau; phím bấm không xếp lịch cùng nhạc nền).
+
+**Phép chấm không dính 100 ms ấy:** nhạc nền xếp đúng giờ đồng hồ âm thanh, phím bấm quy theo giờ ấy — nên 251–278 ms = trễ ra tai
+nghe + trễ MIDI + thói quen tay. Chấm đúng nếu đo độ trễ bằng chính tai nghe đang dùng; đổi tai nghe không đo lại thì lệch cả lượt.
+
+**Thêm đo:** `xuLyMs` = lúc app xử lý − `timeStamp` của sự kiện MIDI (trình duyệt nhận → app), từng phím; cột mới CUỐI bảng
+(`luot`: `phim` = mọi phím [phách, nốt, lực] · `xuLyMs`; `doTre`: `xuLyMs`); tiêu đề file cũ cập nhật theo mã. Màn hình đo độ trễ
+hiện trung vị. Đoạn phím → USB → Windows → trình duyệt: phần mềm không đo được.
+
+**Nghiên cứu:** Pfordresher & Palmer 2002 (*Psychological Research* 66) — phản hồi thính giác trễ làm rối nhịp người chơi piano;
+người chơi tự chọn chậm lại tới khoảng cách nốt ≈ 2 × độ trễ.
+
+**Kiểm:** `tsc` app + node sạch, `eslint` sạch, 378 test `playback` + `shared` qua; máy chủ dev 5173 đã nạp cột mới (GET).
+
+**Chưa đo:** phần Bluetooth riêng (cần một lần đo với tai nghe dây / loa để so với Buds) · `xuLyMs` thật · `Tone.immediate()` có
+làm nứt tiếng không — chờ người dùng nghe. Chưa đẩy lên GitHub Pages.
