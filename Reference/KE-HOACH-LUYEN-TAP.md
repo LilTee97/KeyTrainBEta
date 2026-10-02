@@ -322,7 +322,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   tiết tấu phiên (lỗi app: bản điệp không bao giờ chơi ở thân đoạn) — **chờ nghe duyệt** tiết tấu điệp.
 - GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang: Cà Pháo
   Ballad cứ đi → Để em điệp → Để em phiên → Có em chờ phiên → Có em chờ điệp → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow
-  Blues. Hai chỗ tay người không đánh được (Có em chờ điệp quãng 10 tay trái; Slow Blues D6→A4 trong 27 ms) — chờ người dùng quyết.
+  Blues. Hai chỗ tay người không đánh được — người dùng duyệt đề xuất 2/10: quãng 10 tay trái Có em chờ điệp giữ nguyên, chấm bỏ
+  quãng tám riêng cú vượt tầm tay; 8 nốt cuối câu chạy Slow Blues (dính đầu ô sau) thành nốt láy.
 - GĐ 1 bước 5 — thang 7 bậc trong tab Điệu: **xong 2/10/2026** (`KhungLoTrinh.tsx`, `loTrinh.ts`; nhật ký lượt tập IndexedDB `luotTap`).
   Ngưỡng do Claude quyết trong vai gia sư — chưa đo. Bậc 7 đã chấm bỏ quãng tám; kiểm bass + nốt sai để bước 7.
   **Kế tiếp: bước 6 — "Đã thuộc" (lượt nguội khác ngày) + lịch kiểm lại**, đọc từ nhật ký đã ghi.

@@ -197,6 +197,16 @@ describe('isStepMatched', () => {
     expect(isStepMatched([], step)).toBe(false)
   })
 
+  it('cú vượt tầm một bàn tay (quãng 10 C2+E3) chấm bỏ quãng tám: C3+E3 vẫn qua', () => {
+    const muoi: GatedStep = { startBeat: 2, durationBeats: 0.25, notes: [36, 52], leftNotes: [36, 52], rightNotes: [], symbol: 'C' }
+    expect(isStepMatched([48, 52], muoi)).toBe(true)
+    expect(isStepMatched([48, 51], muoi)).toBe(false)
+    expect(missingNotes([48], muoi)).toEqual([52])
+    // Cú trong tầm tay vẫn đòi đúng phím.
+    const tam: GatedStep = { startBeat: 0, durationBeats: 1, notes: [36, 43], leftNotes: [36, 43], rightNotes: [], symbol: 'C' }
+    expect(isStepMatched([48, 55], tam)).toBe(false)
+  })
+
   it('mặc định đòi đúng quãng tám', () => {
     // Bấm đúng lớp cao độ nhưng sai quãng tám
     expect(isStepMatched([52, 72, 76, 79], step)).toBe(false)

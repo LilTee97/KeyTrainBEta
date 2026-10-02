@@ -5218,3 +5218,32 @@ bỏ trùng khi vẽ. Tiếng không đụng: gộp nốt đôi đổi âm lư�
 
 **Chưa đo / chưa làm:** mọi ngưỡng chưa đo trên tay người dùng; bậc theo nhịp chưa ai chạy thật (cần đo độ trễ trước); bước 6 (Đã
 thuộc, lịch kiểm lại); bước 7 (kiểm bass, nốt sai ở bậc 7); chưa thử trên Android.
+
+## Bước — Hai chỗ tay người không đánh được: người dùng duyệt đề xuất (2/10/2026)
+
+Người dùng: *"2 chỗ này của bước 4 làm theo đề xuất của bạn"*.
+
+### Cú vượt tầm một bàn tay → chấm bỏ quãng tám riêng cú ấy
+
+- Đề xuất đã duyệt: giữ nguyên quãng 10 tay trái của Có em chờ điệp (C2+E3, sheet, đã nghe duyệt 25/9); bấm C3+E3 vẫn tính đúng.
+- **Chỉnh so với lời đề xuất:** đề xuất nói "bật ô Bỏ qua quãng tám", nhưng lộ trình (bước 5) khoá ô ấy ở bậc 1–6. Nên luật nằm
+  trong hàm dùng chung: chặng có cú của một tay vượt quá 12 nửa cung (`vuotTamTay`, `TAM_TAY` — `noteGatedPlaybackEngine.ts`) thì
+  `isStepMatched` / `missingNotes` chấm bỏ quãng tám cả chặng; `expectedNotesOf` gắn `tuDoQuangTam` cho nốt của cú ấy và
+  `scoreTimed` so theo lớp cao độ riêng nốt đó — nốt khác vẫn đúng phím. Áp cả tab Luyện đệm.
+- Chạy thử (Chrome, n = 1): bậc 1 Có em chờ điệp, 40 chặng, 2 cú quãng 10 bấm thu (bass lên một quãng tám) → "Đạt — vấp 0/40".
+- Test: `noteGatedPlaybackEngine.test.ts` (C3+E3 qua, C3+Eb3 không, cú trong tầm vẫn đòi đúng phím) · `timedScoring.test.ts` (chỉ
+  nốt của cú vượt tầm được bỏ quãng tám).
+
+### Nốt cuối câu chạy dính đầu ô sau (Slow Blues tay phải) → nốt láy
+
+- Đề xuất đã duyệt: coi D6 là nốt láy — tiếng giữ y nguyên, lúc tập không chấm.
+- **Dò lại cả hai vòng (trước chỉ đo vòng tập, và chỉ báo chỗ nhanh nhất):** 8 chỗ, đều Slow Blues tay phải — D6 → A4(·C5) 27 ms
+  (vòng tập 2, vòng kiểm 4) và C6 (móc tam) → A4 82 ms nhảy 15 nửa cung (vòng tập 1, vòng kiểm 1). Cùng một kiểu nên áp cùng cách
+  cho cả 8: `grace: true` trong `src/thay/baiTap/blue-sun.json` (tiếng giữ nguyên; nốt rơi vẽ mờ; chờ nốt và bộ chấm theo nhịp bỏ
+  qua nốt láy). Bài vẫn mang `duyet` — tiếng không đổi.
+- Sau sửa: tay phải Slow Blues vòng tập 73 cú (cũ 76), hai cú sát nhất 54 ms (cũ 27), dời thế tay nhanh nhất 163 ms (cũ 27); điểm độ
+  khó 57,5 không đổi, vẫn khó nhất.
+- Test mới `baiTap.test.ts`: không cú chấm điểm nào bắt một tay dời thế quá quãng tám trong dưới 100 ms (ngưỡng ĐOÁN, chưa đo) —
+  đỏ trên bản cũ ("phách 5.95835 → 6: 27 ms" …), xanh trên bản mới. Sinh lại Slow Blues mà đỏ ở đây thì làm y như vậy.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite **2 560 qua / 5 đỏ** (5 đỏ cũ).

@@ -192,13 +192,28 @@ export interface MatchOptions {
   ignoreOctave?: boolean
 }
 
+/** Tầm một bàn tay: các nốt cùng tay gõ một lúc không quá một quãng tám (luật "nốt đệm phải đánh được bằng tay người"). */
+export const TAM_TAY = 12
+
+/** Một cú của MỘT tay vượt tầm bàn tay — vd quãng 10 tay trái C2+E3 ở Có em chờ điệp (đúng sheet, người dùng giữ 2/10/2026). */
+export function vuotTamTay(notes: readonly MidiNote[]): boolean {
+  return notes.length > 1 && Math.max(...notes) - Math.min(...notes) > TAM_TAY
+}
+
+/**
+ * Chặng có cú vượt tầm tay thì chấm bỏ quãng tám cả chặng: bấm thu trong một quãng tám (C3+E3 cho C2+E3) vẫn đúng. Người dùng
+ * 2/10/2026 duyệt "giữ nguyên cú ấy, bấm C3+E3 vẫn được tính đúng" — lộ trình khoá ô "Bỏ qua quãng tám", nên luật nằm ở đây.
+ */
+const boQuaQuangTam = (step: GatedStep, options: MatchOptions) =>
+  options.ignoreOctave === true || vuotTamTay(step.leftNotes) || vuotTamTay(step.rightNotes)
+
 /** Người học đã bấm đúng chặng này chưa. */
 export function isStepMatched(
   heldNotes: readonly MidiNote[],
   step: GatedStep,
   options: MatchOptions = {},
 ): boolean {
-  const { ignoreOctave = false } = options
+  const ignoreOctave = boQuaQuangTam(step, options)
   if (step.notes.length === 0) return false
 
   const toKey = (note: MidiNote) => (ignoreOctave ? pitchClassOf(note) : note)
@@ -220,7 +235,7 @@ export function missingNotes(
   step: GatedStep,
   options: MatchOptions = {},
 ): MidiNote[] {
-  const { ignoreOctave = false } = options
+  const ignoreOctave = boQuaQuangTam(step, options)
   const toKey = (note: MidiNote) => (ignoreOctave ? pitchClassOf(note) : note)
 
   const held = new Set(heldNotes.map(toKey))

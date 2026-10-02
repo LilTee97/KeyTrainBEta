@@ -93,6 +93,18 @@ describe('scoreTimed', () => {
     expect(score.hit).toBe(1)
   })
 
+  it('cú vượt tầm một bàn tay (quãng 10 C2+E3) chấm bỏ quãng tám riêng nó; nốt khác vẫn đúng phím', () => {
+    const events: TimelineEvent[] = [
+      { notes: [36, 52], startBeat: 0, durationBeats: 0.25, hand: 'left', velocity: 80 },
+      { notes: [43], startBeat: 1, durationBeats: 1, hand: 'left', velocity: 80 },
+    ]
+    const expected = expectedNotesOf(events, 'left')
+    expect(expected.map((n) => n.tuDoQuangTam ?? false)).toEqual([true, true, false])
+    const score = scoreTimed(expected, [got(48, 0), got(52, 0), got(55, 1)], opts)
+    expect(score.hit).toBe(2)
+    expect(score.extra.map((n) => n.note)).toEqual([55])
+  })
+
   it('đánh trượt quá một phần mười thì chưa đạt dù đều tay', () => {
     const score = scoreTimed(line, line.slice(0, 3).map((n) => got(n.note, n.beat)), opts)
     expect(score.hit).toBe(3)

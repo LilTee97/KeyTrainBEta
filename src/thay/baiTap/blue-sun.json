@@ -263,7 +263,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -517,7 +518,8 @@
     "notes": [
      84
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -820,7 +822,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -1369,7 +1372,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -1786,7 +1790,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -2188,7 +2193,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -2442,7 +2448,8 @@
     "notes": [
      84
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [
@@ -2641,7 +2648,8 @@
     "notes": [
      86
     ],
-    "velocity": 66
+    "velocity": 66,
+    "grace": true
    },
    {
     "notes": [

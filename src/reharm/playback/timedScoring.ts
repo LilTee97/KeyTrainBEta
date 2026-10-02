@@ -1,7 +1,7 @@
 import { pitchClassOf } from '../../shared/musicTheory/pitch'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import type { TimelineEvent } from '../style/types'
-import type { PracticeHand } from './noteGatedPlaybackEngine'
+import { vuotTamTay, type PracticeHand } from './noteGatedPlaybackEngine'
 
 /**
  * Chấm chế độ chơi THEO NHỊP — nhạc chạy, đánh sai không dừng, hết lượt mới chấm.
@@ -18,6 +18,8 @@ export interface ExpectedNote {
   /** Phách của dòng thời gian. */
   beat: number
   hand: 'left' | 'right'
+  /** Nốt của một cú vượt tầm bàn tay (`vuotTamTay`) — chấm bỏ quãng tám riêng nốt này, như chế độ chờ đúng nốt. */
+  tuDoQuangTam?: true
 }
 
 /** Một phím đã bấm, đã quy ra phách của đồng hồ phát nhạc (`beatAtPerformanceTime`). */
@@ -75,12 +77,17 @@ export function expectedNotesOf(
   hand: PracticeHand,
 ): ExpectedNote[] {
   const notes: ExpectedNote[] = []
+  const cu = new Map<string, MidiNote[]>()
+  const khoa = (one: { hand: string; beat: number }) => `${one.hand}@${Math.round(one.beat * 1000)}`
   for (const event of events) {
     // Nốt láy là cú vuốt liền tay vào nốt chính — chế độ chờ đúng nốt cũng không chấm nó.
     if (event.grace) continue
     if (hand !== 'both' && event.hand !== hand) continue
+    const key = khoa({ hand: event.hand, beat: event.startBeat })
+    cu.set(key, [...(cu.get(key) ?? []), ...event.notes])
     for (const note of event.notes) notes.push({ note, beat: event.startBeat, hand: event.hand })
   }
+  for (const one of notes) if (vuotTamTay(cu.get(khoa(one))!)) one.tuDoQuangTam = true
   return notes.sort((a, b) => a.beat - b.beat || a.note - b.note)
 }
 
@@ -97,8 +104,8 @@ export function scoreTimed(
   options: TimedScoreOptions,
 ): TimedScore {
   const { msPerBeat, latencyMs, windowMs = MATCH_WINDOW_MS, ignoreOctave = false } = options
-  const same = (a: MidiNote, b: MidiNote) =>
-    ignoreOctave ? pitchClassOf(a) === pitchClassOf(b) : a === b
+  const same = (want: ExpectedNote, got: PlayedNote) =>
+    ignoreOctave || want.tuDoQuangTam ? pitchClassOf(want.note) === pitchClassOf(got.note) : want.note === got.note
   // Mili giây nguyên: tai và đàn không phân biệt nhỏ hơn thế, mà số lẻ dấu phẩy động làm bẩn nhật ký.
   const errorOf = (want: ExpectedNote, got: PlayedNote) =>
     Math.round((got.beat - want.beat) * msPerBeat - latencyMs)
@@ -110,7 +117,7 @@ export function scoreTimed(
   const pairs: { want: number; got: number; error: number }[] = []
   expected.forEach((want, wantIndex) => {
     played.forEach((got, gotIndex) => {
-      if (!same(want.note, got.note)) return
+      if (!same(want, got)) return
       const error = errorOf(want, got)
       if (Math.abs(error) <= windowMs) pairs.push({ want: wantIndex, got: gotIndex, error })
     })
