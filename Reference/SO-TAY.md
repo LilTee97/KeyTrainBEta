@@ -4899,3 +4899,17 @@ Rock (`slowRockMotO`), Slow Blues (`harmonyStyle: 'blue-sun'`, `chayBlueSun`), B
 (`cuDiFill`), ballad CP (`planCpBalladBacking`) … chép ra là hai nguồn sự thật. **Bẫy:** ô đệm Slow Blues có `right: []` — tay
 phải của điệu là câu chạy Bộ Soạn Blues sinh mỗi ô, nên "tắt câu chèn" thì Slow Blues chỉ còn tay trái → thành câu hỏi 2 cho
 người dùng.
+
+## Bước — Người dùng trả lời GĐ 1; ý tưởng TRANG THEO THẦY (2/10/2026)
+
+**Trả lời** (ghi đủ ở `KE-HOACH-LUYEN-TAP.md` mục 4b): phiên/điệp khác tiết tấu thì tách hai bài tập · Slow Blues tay phải đóng
+băng một bản soạn · giọng bậc 1–6 Đô trưởng / La thứ · tempo 100 % = tempo mặc định của nút · lộ trình gộp vào ý tưởng trang ·
+bước 6–8 theo đề xuất. Lực nhấn chưa trả lời → mặc định chỉ hiện nhận xét.
+
+**Số đo — phiên vs điệp, so mốc gõ từng tay trong ô đệm** (`vite-node`, script tạm đã xoá): Có em chờ KHÁC (trái 10 vs 16, phải 10
+vs 6 mốc) · Để em KHÁC (trái 17 vs 11, phải 14 vs 15) · Slow Rock Lá thư hai tay GIỐNG (điệp chỉ thêm quãng tám) · Slow Blues GIỐNG
+(tay trái; tay phải do bộ soạn). → Cà Pháo 6 bài tập, Linh Nhi 1, Tuấn 2, Blues 2.
+
+**Ý tưởng người dùng:** trang Cà Pháo · Linh Nhi · Tuấn · Blues, mỗi trang tab Điệu · Kỹ thuật đánh · Học cách soạn câu, khung nốt
+rơi cỡ tab Luyện đệm; các tab cũ gom thành một trang; Claude tư vấn tab nên có. Kế hoạch để bàn ở `KE-HOACH-LUYEN-TAP.md` mục 4c:
+khung tập dùng chung, trang Hôm nay (Claude đề xuất), ẩn tab chưa có nội dung, thứ tự dựng 6 bước, câu hỏi A–F. Chưa viết mã.

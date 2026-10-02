@@ -230,6 +230,81 @@ Mỗi bước: test + người dùng tập thử, xong mới sang bước sau. B
 
 ---
 
+## 4b. GĐ 1 — người dùng trả lời 2/10/2026
+
+Người dùng trả lời theo số câu hỏi (1–4) rồi theo số bước (5–8) của kế hoạch GĐ 1:
+
+1. **Phiên / điệp** — *"Nếu điệu nào có phiên và điệp khúc mang tiết tấu đàn khác nhau thì hãy làm riêng 2 tiết tấu đó để
+   tập"*. **Số đo (2/10, so mốc gõ từng tay trong ô đệm):** Có em chờ — KHÁC cả hai tay (trái 10 vs 16 mốc, phải 10 vs 6) → 2 bài
+   tập · Để em — KHÁC cả hai tay (trái 17 vs 11, phải 14 vs 15) → 2 bài tập · Slow Rock Lá thư hai tay — GIỐNG (điệp chỉ thêm
+   quãng tám) → 1 bài tập · Slow Blues — GIỐNG tay trái (tay phải do bộ soạn) → 1 bài tập.
+2. Slow Blues tay phải: **(a)** đóng băng một bản soạn của Bộ Soạn Blues rồi tập luôn — *"Hãy làm như bạn đề xuất"*.
+3. Giọng bậc 1–6: **Đô trưởng / La thứ** — *"Hãy làm như bạn đề xuất"*.
+4. Tempo 100 % = **tempo mặc định của nút** — *"Đúng vậy"*.
+5. Tab Lộ trình — *"Hãy tích hợp tính năng lộ trình ... vào ý tưởng của tôi về việc làm thành từng trang"* → mục 4c.
+6–8. Lưu tiến độ IndexedDB · bậc 7 chấm (b) · màn Hôm nay — *"làm theo đề xuất của bạn"*.
+
+Chưa trả lời: **lực nhấn** (câu 5 cũ) → giữ mặc định của Claude: chỉ hiện nhận xét, không chặn qua bậc, tới khi có số đo lực
+thật. **Vòng của Tuấn** (câu 6 cũ) → nay Tuấn có trang riêng, xem mục 4c câu hỏi C.
+
+---
+
+## 4c. Kiến trúc trang theo thầy — ý người dùng 2/10/2026 (kế hoạch để bàn)
+
+**Ý người dùng (nguyên văn tóm):** tạo các trang **Cà Pháo · Linh Nhi · Tuấn · Blues** (Blues coi như một thầy). Mỗi trang có
+các tab: **Điệu** (điệu của thầy) · **Kỹ thuật đánh** (kỹ thuật thầy chơi trong các sheet gốc, để tập theo) · **Học cách soạn
+câu** (lý thuyết thầy chọn vòng hợp âm, chọn nốt giai điệu để thành câu solo, câu fill, câu chạy). Mỗi trang có khung nốt rơi để
+tập, cỡ như tab Luyện đệm. Các tab hiện có (Tái hòa âm, Luyện đệm …) gom thành một trang. Gặp tab nào nên có thì Claude tư vấn.
+
+→ Ba mục của kế hoạch nay là ba tab trong mỗi trang thầy: **Mục 1 = tab Điệu** (lộ trình 7 bậc nằm trong đây), **Mục 2 = tab Kỹ
+thuật đánh**, **Mục 3 = tab Học cách soạn câu**.
+
+**Bản đồ nội dung (số trong mã và kho, 2/10):**
+
+| Trang | Tab Điệu (mục 1) | Tab Kỹ thuật đánh (mục 2) — nguồn | Tab Học cách soạn câu (mục 3) — nguồn |
+|---|---|---|---|
+| Cà Pháo | Bossa CP cải tiến · Có em chờ phiên · Có em chờ điệp · Để em phiên · Để em điệp · Ballad cứ đi — **6 bài** | CP Lick/Run (`cpPhrases.json`, 9 sheet) · câu fill CP · walking bass, hai tay đan (*Để Em Rời Xa*) | `teachers/ca-phao.md` (1 497 dòng) |
+| Linh Nhi | Slow Rock Lá thư hai tay — **1 bài** | Linh Run · rải hai tay · câu fill (7 sheet) | `teachers/linh-nhi-piano.md` (3 637) · `LUAT-SOAN-NOT.md` (1 387) |
+| Tuấn | Bolero Tuấn · Tango Tuấn — **2 bài, chưa nghe duyệt** | sheet Tuấn Lưu (PatternTester) | `teachers/tuan-luu-piano.md` (404) |
+| Blues | Slow Blues (tay phải: một bản soạn đóng băng) · Twist — **2 bài** | nốt láy, blue note, riff, câu chạy · bass boogie | `BLUES-CHON-HOP-AM-VA-NOT.md` (729) · `TWIST.md` (144) |
+
+**Đề xuất của Claude:**
+
+- **Khung tập dùng chung** cho mọi trang thầy = khung của tab Luyện đệm hiện nay (nốt rơi + bàn phím + chờ đúng nốt / theo nhịp
+  + toàn màn hình), trang rộng tối đa 1800 px. Một component, mọi trang gọi lại.
+- **Trang thầy không cần dựng lại gì lúc chạy** — bài tập là bản đóng băng (mục 1.6), nên trang thầy chỉ đọc file + phát. Trang
+  gom tab cũ vẫn chạy ngầm Tái hòa âm như hiện nay (Luyện đệm cần nó).
+- **Trang "Hôm nay"** (tab Claude tư vấn thêm) — lượt nguội + bậc đến hạn kiểm lại + bậc đang học của MỌI thầy trên một danh
+  sách, là trang mở đầu. Lý do nên: buổi tập hằng ngày đi qua nhiều thầy; để mỗi trang thầy giữ "hôm nay" riêng thì phải mở bốn
+  trang mới biết hôm nay tập gì. Lý do không nên: thêm một trang; ai chỉ tập một thầy một thời gian thì trang thầy là đủ.
+- **Tab chưa có nội dung thì ẩn**, hiện ra khi mục 2, 3 có bài. Lý do: 4 thầy × 2 tab chưa có gì = 8 tab bấm vào trống nằm đó
+  nhiều tuần. Lý do không nên: muốn thấy khung tổng thể ngay để hình dung — khi ấy hiện mờ "sắp có".
+- **Điện thoại:** hàng trang cuộn ngang + hàng tab bên dưới; app nhớ trang / tab mở lần cuối.
+
+**Thứ tự dựng đề xuất:**
+
+1. **Khung điều hướng** — các trang + tab; gom 6 tab cũ vào một trang (không đổi gì bên trong). Trang thầy lúc đầu chỉ có tab
+   Điệu, chưa có bài.
+2. **Dữ liệu bài tập** (GĐ 1 bước 1–4) — vòng từ bộ soạn, dựng bằng chính app, **người dùng nghe duyệt** (Tuấn bắt buộc), đo độ
+   khó → thứ tự trong từng trang.
+3. **Tab Điệu của 4 trang** — khung tập dùng chung, lộ trình 7 bậc, lưu tiến độ IndexedDB, bậc 7 chấm (b).
+4. **Trang Hôm nay** — nếu người dùng đồng ý.
+5. **Tab Kỹ thuật đánh** (mục 2) — bàn chi tiết với người dùng khi tới.
+6. **Tab Học cách soạn câu** (mục 3) — bàn chi tiết với người dùng khi tới.
+
+**Câu hỏi để bàn (chờ trả lời):**
+
+A. **Trang Hôm nay** — làm, và là trang mở đầu? (khuyến nghị: có)
+B. **Tên trang gom tab cũ** — "Bài hát" (khuyến nghị: nó xoay quanh dựng và tập bài hát) hay tên khác?
+C. **Vòng tập của Tuấn** — dùng đường soạn sẵn có của chính nút Tuấn (app đã có nhánh riêng `laBoleroTuan`) thay cho bộ soạn
+   Linh Nhi tạm đặt hôm qua? (khuyến nghị: có — Tuấn nay là một thầy riêng)
+D. **Trang Linh Nhi chỉ có 1 điệu** — giữ vậy, hay đưa lại một điệu bolero của chị (đã xoá 30/9, lấy lại được từ commit c58be15)?
+E. **Tab chưa có nội dung** — ẩn (khuyến nghị) hay hiện mờ "sắp có"?
+F. **Tôn Hùng** — app có sẵn nút thầy Tôn Hùng (dạo · giang · kết) và `teachers/ton-hung.md` (375 dòng) nhưng không có trong danh
+   sách trang. Để sau, hay làm trang luôn?
+
+---
+
 ## 5. Chưa đo
 
 - Độ trễ đàn + loa trên máy người dùng. Chú thích trong `audioEngine.ts` ghi Windows "thường 100–250 ms" — chưa đo trên máy
