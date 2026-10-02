@@ -1,5 +1,6 @@
 import { pitchClassOf } from '../../shared/musicTheory/pitch'
 import type { MidiNote } from '../../shared/musicTheory/types'
+import { parseChordInput } from '../input/chordInputParser'
 import type { TimelineEvent } from '../style/types'
 import { vuotTamTay, type PracticeHand } from './noteGatedPlaybackEngine'
 
@@ -157,6 +158,102 @@ export function scoreTimed(
     medianMs: median(errorsMs),
     medianAbsMs: median(errorsMs.map(Math.abs)),
   }
+}
+
+/**
+ * Bậc 7 — chấm (b) (người dùng 1/10/2026, "câu 3 chọn b"): thế bấm tự chọn, miễn đúng NỐT của hợp âm, đúng BASS, đúng khung. Gộp
+ * các nốt cùng tên trong một lúc (khuôn A2+A3, hay A2 tay trái + A4 tay phải) thành một: bấm một nốt La là đủ.
+ */
+export function gopLopCaoDo(expected: readonly ExpectedNote[]): ExpectedNote[] {
+  const daCo = new Set<string>()
+  return expected.filter((one) => {
+    const khoa = `${Math.round(one.beat * 1000)}:${pitchClassOf(one.note)}`
+    if (daCo.has(khoa)) return false
+    daCo.add(khoa)
+    return true
+  })
+}
+
+/** Hợp âm đang vang: các tên nốt (lớp cao độ) của nó, và tên nốt bass — gốc, hay nốt sau gạch chéo (Am/C → C). */
+export interface HopAmLuc {
+  lop: ReadonlySet<number>
+  bass: number
+}
+
+/** Hợp âm theo phách của dòng thời gian có `demVao` phách đếm vào, đọc từ lưới MỘT vòng `perBeat` (lặp theo phách). */
+export function hopAmTheoPhach(perBeat: readonly string[], demVao: number): (beat: number) => HopAmLuc | null {
+  const daDoc = new Map<string, HopAmLuc | null>()
+  const doc = (symbol: string): HopAmLuc | null => {
+    if (!daDoc.has(symbol)) {
+      const chord = symbol ? parseChordInput(symbol).chords[0] : undefined
+      daDoc.set(
+        symbol,
+        chord
+          ? {
+              lop: new Set([
+                ...chord.quality.intervals.map((step) => (chord.root + step) % 12),
+                ...(chord.bass !== undefined ? [chord.bass] : []),
+              ]),
+              bass: chord.bass ?? chord.root,
+            }
+          : null,
+      )
+    }
+    return daDoc.get(symbol)!
+  }
+  return (beat) => {
+    const i = Math.floor(beat - demVao + 1e-6)
+    if (i < 0 || perBeat.length === 0) return null
+    return doc(perBeat[i % perBeat.length] ?? '')
+  }
+}
+
+export interface ChamHopAm {
+  /** Tiếng bass của khuôn (cú tay trái mà nốt thấp nhất là bass của hợp âm) · số tiếng bấm đúng bass. */
+  bassTong: number
+  bassDung: number
+  /** Phím thừa mang nốt NGOÀI hợp âm đang vang. */
+  notSai: number
+}
+
+/**
+ * Kiểm bass và nốt sai cho bậc 7.
+ * - Tiếng bass = cú tay trái của khuôn mà nốt thấp nhất LÀ bass của hợp âm. Nốt đi bass khác (bậc 5, bậc 3, nốt rải …) không kiểm —
+ *   thế bấm tự chọn. Đúng khi nốt THẤP NHẤT trong các phím bấm quanh đó (± cửa sổ, đã trừ độ trễ) cùng tên nốt bass: tay phải bấm La4
+ *   trên một bass khác thì không tính là bass La.
+ * - Nốt sai = phím thừa (không ghép được với nốt nào của khuôn) mang nốt NGOÀI hợp âm đang vang. Thừa mà là nốt của hợp âm (bè khác,
+ *   gấp quãng tám) thì không tính.
+ */
+export function chamHopAm(
+  events: readonly TimelineEvent[],
+  played: readonly PlayedNote[],
+  extra: readonly PlayedNote[],
+  options: { msPerBeat: number; latencyMs: number; windowMs?: number; hopAmAt: (beat: number) => HopAmLuc | null },
+): ChamHopAm {
+  const { msPerBeat, latencyMs, windowMs = MATCH_WINDOW_MS, hopAmAt } = options
+  const tre = latencyMs / msPerBeat
+  const cua = windowMs / msPerBeat
+  const thapNhat = new Map<number, MidiNote>()
+  for (const event of events) {
+    if (event.hand !== 'left' || event.grace || event.notes.length === 0) continue
+    const khoa = Math.round(event.startBeat * 1000)
+    thapNhat.set(khoa, Math.min(thapNhat.get(khoa) ?? Infinity, ...event.notes))
+  }
+  let bassTong = 0
+  let bassDung = 0
+  for (const [khoa, note] of thapNhat) {
+    const beat = khoa / 1000
+    const hopAm = hopAmAt(beat)
+    if (!hopAm || pitchClassOf(note) !== hopAm.bass) continue
+    bassTong += 1
+    const quanh = played.filter((press) => Math.abs(press.beat - tre - beat) <= cua)
+    if (quanh.length > 0 && pitchClassOf(Math.min(...quanh.map((press) => press.note))) === hopAm.bass) bassDung += 1
+  }
+  const notSai = extra.filter((press) => {
+    const hopAm = hopAmAt(press.beat - tre)
+    return hopAm !== null && !hopAm.lop.has(pitchClassOf(press.note))
+  }).length
+  return { bassTong, bassDung, notSai }
 }
 
 /** Đạt ngưỡng tạm chưa. */

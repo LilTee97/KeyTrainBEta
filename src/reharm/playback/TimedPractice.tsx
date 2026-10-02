@@ -27,11 +27,15 @@ import {
   MIN_TAPS,
   PASS_HIT_RATIO,
   PASS_MEDIAN_ABS_MS,
+  chamHopAm,
   expectedNotesOf,
+  gopLopCaoDo,
+  hopAmTheoPhach,
   latencyFromTaps,
   median,
   passes,
   scoreTimed,
+  type ChamHopAm,
   type LatencyMeasure,
   type PlayedNote,
   type TimedScore,
@@ -104,7 +108,9 @@ export interface TimedPracticeProps {
     tempo: TempoStep
     boQuaQuangTam: boolean
     anNotRoi: boolean
-    onXong: (score: TimedScore) => { dat: boolean; tomTat: string }
+    /** Bậc 7 — chấm (b): gộp nốt cùng tên trong một lúc, kiểm bass và nốt ngoài hợp âm (`chamHopAm`). */
+    theoHopAm: boolean
+    onXong: (score: TimedScore, hopAm: ChamHopAm | null) => { dat: boolean; tomTat: string }
   }
 }
 
@@ -350,12 +356,21 @@ export function TimedPractice({
     setPhase('idle')
     if (aborted.current) return
 
-    const score = scoreTimed(expected, presses.current, {
-      msPerBeat: 60000 / practiceBpm,
+    const theoHopAm = bacRef.current?.theoHopAm === true
+    const msPerBeat = 60000 / practiceBpm
+    const score = scoreTimed(theoHopAm ? gopLopCaoDo(expected) : expected, presses.current, {
+      msPerBeat,
       latencyMs: latencyMs ?? 0,
       ignoreOctave,
     })
-    setResult({ score, bpm: practiceBpm, ketQua: bacRef.current?.onXong(score) ?? null })
+    const hopAm = theoHopAm
+      ? chamHopAm(shifted, presses.current, score.extra, {
+          msPerBeat,
+          latencyMs: latencyMs ?? 0,
+          hopAmAt: hopAmTheoPhach(perBeat, countIn),
+        })
+      : null
+    setResult({ score, bpm: practiceBpm, ketQua: bacRef.current?.onXong(score, hopAm) ?? null })
     ghi('luot', {
       bai: title,
       tay: hand,
@@ -374,7 +389,7 @@ export function TimedPractice({
       phim: presses.current.map((press) => [round2(press.beat - countIn), press.note, press.velocity]),
       xuLyMs: handling.current.map(Math.round),
     })
-  }, [phase, looping, expected, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
+  }, [phase, looping, expected, shifted, perBeat, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
 
   const calibrate = async () => {
     await startAudio()

@@ -5312,3 +5312,38 @@ Lần chạy trước khi có game: 2 550 qua / 5 đỏ cũ.
 
 **Chưa đo:** chưa ai tập thật qua nhiều ngày; khoảng Leitner vốn đặt cho nhớ hợp âm, chưa kiểm cho kỹ năng tay; trang Hôm nay (bước
 8) sẽ gom lượt nguội và bài đến hạn của mọi thầy lên một chỗ.
+
+## Bước — GĐ 1 bước 7: bậc 7 chấm (b) đủ — kiểm bass, nốt ngoài hợp âm; sửa lỗi quên độ trễ đã đo (2/10/2026)
+
+**Người dùng:** *"làm tiếp đi"*. Cách chấm (b) người dùng chọn 1/10/2026 (*"câu 3 chọn b"*): thế bấm tự chọn, miễn đúng NỐT của hợp
+âm, đúng BASS, đúng khung bùm – chát.
+
+### Chấm (b) — `timedScoring.ts`
+
+- **Gộp nốt cùng tên trong một lúc** (`gopLopCaoDo`): khuôn A2+A3, hay A2 tay trái + A4 tay phải → một nốt La là đủ.
+- **Kiểm bass** (`chamHopAm`): tiếng bass = cú tay trái của khuôn mà nốt thấp nhất LÀ bass của hợp âm đang vang (gốc, hay nốt sau gạch
+  chéo — `hopAmTheoPhach` đọc lưới `perBeat`). Đúng khi nốt THẤP NHẤT trong các phím bấm quanh đó (± cửa sổ ghép 150 ms, đã trừ độ
+  trễ) cùng tên nốt bass. Nốt đi bass (bậc 5, bậc 3, nốt rải) KHÔNG kiểm — thế bấm tự chọn; kế hoạch mục 4 viết "quanh mỗi tiếng
+  bass", làm rõ "tiếng bass" là tiếng đánh đúng bass của hợp âm. Khuôn không có tiếng bass nào thì tiêu chí bass bỏ trống.
+- **Nốt sai** = phím thừa (không ghép được với nốt nào của khuôn) mang nốt NGOÀI hợp âm đang vang; thừa mà là nốt của hợp âm (bè
+  khác, gấp quãng tám) thì không phạt.
+- **Ngưỡng bậc 7** (Claude trong vai gia sư, chưa đo): bass đúng ≥ 90 % (bass sai là người hát lạc theo) · nốt ngoài hợp âm ≤ 10 %
+  (chừa chỗ nốt lướt) · giữ đúng nốt ≥ 90 %, lệch ≤ 40 ms. Bỏ tiêu chí "phím thừa" thô ở bậc 7. Nhật ký `luotTap` ghi thêm
+  `bassTong`, `bassDung`, `notSai`.
+
+### Chạy thật (Chrome, độ trễ 0, phím giả bấm theo đồng hồ của bộ chấm; mỗi chiều n = 1)
+
+- Twist bậc 7, giọng Rê (D7 G7 A7), tay trái lên một quãng tám (thế bấm khác): đúng 100 % (154 nốt sau gộp) · lệch 3 ms · bass 33/33 ·
+  ngoài hợp âm 0 % → **Đạt**.
+- Lượt 2 giọng Si♭ (xoay đúng), tay trái lên quãng ba (sai bass): bass 0/33 · đúng 43 % · ngoài hợp âm 29 % → **Chưa đạt**.
+
+### Lỗi cũ lộ ra khi chạy thử: app quên độ trễ đã đo
+
+- `readSetting` so `typeof` giá trị đã lưu với mặc định; mặc định của `latencyMs` và `syncOffsetMs` là `null` (`typeof null` là
+  'object') → MỌI con số đã lưu bị bỏ khi đọc lại. Từ GĐ 0: đo độ trễ xong, tải lại trang là app báo "Chưa đo độ trễ"; "Lệch tiếng ↔
+  hình" chỉnh tay cũng không nhớ qua lần mở app.
+- Sửa: mặc định `null` thì nhận số hữu hạn hay `null`. Test mới (0, −35, 251, −40, null, chữ) đỏ trên mã cũ, xanh trên mã mới.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi mới · toàn suite **2 560 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+**Chưa đo:** ngưỡng bậc 7 chưa đo trên tay người dùng; bộ chấm bậc 7 mới thử bằng phím giả theo đồng hồ, chưa thử với đàn MIDI thật.

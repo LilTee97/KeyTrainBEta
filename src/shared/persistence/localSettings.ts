@@ -110,6 +110,15 @@ export function readSetting<K extends keyof Settings>(key: K): Settings[K] {
 
     const parsed: unknown = JSON.parse(raw)
 
+    /*
+      Mặc định `null` ("chưa đo" — `latencyMs`, `syncOffsetMs`, đều `number | null`): nhận số hay `null`. Cũ: so `typeof` với mặc
+      định, mà `typeof null` là 'object', nên MỌI con số đã lưu bị bỏ khi đọc lại — đo độ trễ xong, tải lại trang là app quên (lộ ra
+      2/10/2026 khi chạy thử bậc 7). Triệu chứng để lùi: không có — chỉ thêm đường nhận số.
+    */
+    if (DEFAULT_SETTINGS[key] === null) {
+      return (parsed === null || (typeof parsed === 'number' && Number.isFinite(parsed)) ? parsed : null) as Settings[K]
+    }
+
     // Dữ liệu cũ hoặc bị sửa tay có thể sai kiểu; kiểu sai thì bỏ qua và
     // dùng mặc định, thay vì để app vỡ ở nơi khác.
     if (typeof parsed !== typeof DEFAULT_SETTINGS[key]) {

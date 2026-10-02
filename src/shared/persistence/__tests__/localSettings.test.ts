@@ -55,6 +55,19 @@ describe('ghi và đọc', () => {
     expect(readSetting('bpm')).toBe(140)
   })
 
+  it('nhớ số đo ở cài đặt mặc định "chưa đo" (null) — kể cả 0 và số âm; chữ thì bỏ', () => {
+    for (const value of [0, -35, 251]) {
+      writeSetting('latencyMs', value)
+      expect(readSetting('latencyMs'), String(value)).toBe(value)
+    }
+    writeSetting('syncOffsetMs', -40)
+    expect(readSetting('syncOffsetMs')).toBe(-40)
+    writeSetting('latencyMs', null)
+    expect(readSetting('latencyMs')).toBeNull()
+    localStorage.setItem('keytrain:latencyMs', '"nhanh"')
+    expect(readSetting('latencyMs')).toBeNull()
+  })
+
   it('nhớ giá trị chuỗi', () => {
     writeSetting('drillVoicing', 'shell')
     expect(readSetting('drillVoicing')).toBe('shell')

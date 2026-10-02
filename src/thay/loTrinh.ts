@@ -1,5 +1,5 @@
 import type { PracticeHand } from '../reharm/playback/noteGatedPlaybackEngine'
-import type { TimedScore } from '../reharm/playback/timedScoring'
+import type { ChamHopAm, TimedScore } from '../reharm/playback/timedScoring'
 import { transposeSymbol } from '../reharm/transpose'
 import { BOX_INTERVALS_DAYS, MAX_BOX_LEVEL, nextBoxLevel } from '../earTraining/srs/srsEngine'
 import { dayKeyOf, type LuotTap } from '../shared/persistence/db'
@@ -40,8 +40,11 @@ export type Bac =
       dungToiThieu: number
       /** Trung vị lệch tuyệt đối, mili giây. */
       lechToiDa: number
-      /** Phím thừa / sai trên số nốt phải đánh; `null` = chưa chấm. */
+      /** Phím thừa / sai trên số nốt phải đánh; `null` = không chấm. */
       thuaToiDa: number | null
+      /** Bậc 7 — chấm (b): tỉ lệ tiếng bass bấm đúng bass, và nốt ngoài hợp âm trên số nốt phải đánh; `null` = không chấm. */
+      bassToiThieu: number | null
+      notSaiToiDa: number | null
     })
 
 export const BAC: readonly Bac[] = [
@@ -78,6 +81,8 @@ export const BAC: readonly Bac[] = [
     dungToiThieu: 0.85,
     lechToiDa: 60,
     thuaToiDa: 0.15,
+    bassToiThieu: null,
+    notSaiToiDa: null,
     viSao: 'Lần đầu có đồng hồ: điều quan trọng nhất là KHÔNG DỪNG — sai cứ đi tiếp. Đúng nốt nới về 85 %.',
   },
   {
@@ -89,6 +94,8 @@ export const BAC: readonly Bac[] = [
     dungToiThieu: 0.9,
     lechToiDa: 50,
     thuaToiDa: 0.1,
+    bassToiThieu: null,
+    notSaiToiDa: null,
     viSao: 'Nhanh hơn thì phải sạch hơn và đều hơn.',
   },
   {
@@ -100,6 +107,8 @@ export const BAC: readonly Bac[] = [
     dungToiThieu: 0.95,
     lechToiDa: 40,
     thuaToiDa: 0.05,
+    bassToiThieu: null,
+    notSaiToiDa: null,
     viSao: 'Tempo thật của nút: đủ sạch và đều để đệm cho người hát.',
   },
   {
@@ -111,8 +120,10 @@ export const BAC: readonly Bac[] = [
     dungToiThieu: 0.9,
     lechToiDa: 40,
     thuaToiDa: null,
+    bassToiThieu: 0.9,
+    notSaiToiDa: 0.1,
     viSao:
-      'Đệm vòng chưa gặp, giọng lạ, chỉ nhìn tên hợp âm như đệm hát thật. Thế bấm tự chọn (bỏ quãng tám) nên đúng nốt nới về 90 %; nhịp vẫn đều như bậc 6. Phím thừa chưa chấm — bước 7 thêm kiểm bass và nốt sai.',
+      'Đệm vòng chưa gặp, giọng lạ, chỉ nhìn tên hợp âm như đệm hát thật. Thế bấm tự chọn: chấm theo tên nốt của hợp âm (bỏ quãng tám; nốt trùng tên trong một cú chỉ cần một) nên đúng nốt nới về 90 %. Bass phải đúng — bass sai là người hát lạc theo. Nốt ngoài hợp âm được ≤ 10 %, chừa chỗ nốt lướt; bấm thêm nốt của hợp âm thì không phạt. Nhịp đều như bậc 6.',
   },
 ]
 
@@ -130,19 +141,34 @@ export function chamGated(vapToiDa: number, chang: number, vap: number): KetQuaL
 }
 
 /** Bậc 4–7: đúng nốt, độ đều, phím thừa. */
-export function chamTimed(bac: Extract<Bac, { cheDo: 'timed' }>, score: TimedScore): KetQuaLuot {
+export function chamTimed(
+  bac: Extract<Bac, { cheDo: 'timed' }>,
+  score: TimedScore,
+  hopAm: ChamHopAm | null = null,
+): KetQuaLuot {
   const dung = score.total > 0 ? score.hit / score.total : 0
   const thua = score.total > 0 ? score.extra.length / score.total : 0
   const lech = score.medianAbsMs
+  /* Bậc 7: không có tiếng bass nào để kiểm (khuôn không đánh bass của hợp âm) thì tiêu chí bass bỏ trống, không đánh trượt. */
+  const bass = hopAm && hopAm.bassTong > 0 ? hopAm.bassDung / hopAm.bassTong : null
+  const sai = hopAm && score.total > 0 ? hopAm.notSai / score.total : null
   const okDung = dung >= bac.dungToiThieu - 1e-9
   const okLech = lech !== null && lech <= bac.lechToiDa
   const okThua = bac.thuaToiDa === null || thua <= bac.thuaToiDa + 1e-9
+  const okBass = bac.bassToiThieu === null || (hopAm !== null && (bass === null || bass >= bac.bassToiThieu - 1e-9))
+  const okSai = bac.notSaiToiDa === null || (sai !== null && sai <= bac.notSaiToiDa + 1e-9)
   const phan = [
     `đúng ${phanTram(dung)} % (cần ≥ ${phanTram(bac.dungToiThieu)})`,
-    `lệch ${lech ?? '—'} ms (≤ ${bac.lechToiDa})`,
+    `lệch ${lech === null ? '—' : Math.round(lech)} ms (≤ ${bac.lechToiDa})`,
     ...(bac.thuaToiDa === null ? [] : [`thừa ${phanTram(thua)} % (≤ ${phanTram(bac.thuaToiDa)})`]),
+    ...(bac.bassToiThieu === null
+      ? []
+      : [`bass ${bass === null ? '—' : `${phanTram(bass)} %`} (cần ≥ ${phanTram(bac.bassToiThieu)})`]),
+    ...(bac.notSaiToiDa === null
+      ? []
+      : [`ngoài hợp âm ${sai === null ? '—' : `${phanTram(sai)} %`} (≤ ${phanTram(bac.notSaiToiDa)})`]),
   ]
-  return { dat: score.total > 0 && okDung && okLech && okThua, tomTat: phan.join(' · ') }
+  return { dat: score.total > 0 && okDung && okLech && okThua && okBass && okSai, tomTat: phan.join(' · ') }
 }
 
 /** khoá · mở (đang tập) · Đã qua (đạt trong buổi) · Đã thuộc (lượt nguội ngày khác vẫn đạt — `tienDoBai`). */

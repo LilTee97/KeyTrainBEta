@@ -80,9 +80,16 @@ describe('chấm một lượt', () => {
     )
   })
 
-  it('bậc 7 chưa chấm phím thừa (bước 7 thêm kiểm bass và nốt sai)', () => {
-    expect(chamTimed(timed(7), diem(92, 100, 35, 60)).dat).toBe(true)
-    expect(chamTimed(timed(7), diem(92, 100, 35, 60)).tomTat).not.toContain('thừa')
+  it('bậc 7: bấm thêm nốt của hợp âm không phạt; bass và nốt ngoài hợp âm mới chấm', () => {
+    const tot = { bassTong: 8, bassDung: 8, notSai: 2 }
+    expect(chamTimed(timed(7), diem(92, 100, 35, 60), tot).dat).toBe(true) // 60 phím thừa, chỉ 2 ngoài hợp âm
+    expect(chamTimed(timed(7), diem(92, 100, 35, 0), { ...tot, bassDung: 7 }).dat).toBe(false) // bass 7/8 = 88 %
+    expect(chamTimed(timed(7), diem(92, 100, 35, 0), { ...tot, notSai: 11 }).dat).toBe(false) // 11 % ngoài hợp âm
+    expect(chamTimed(timed(7), diem(92, 100, 35, 0), { bassTong: 0, bassDung: 0, notSai: 0 }).dat).toBe(true)
+    expect(chamTimed(timed(7), diem(92, 100, 35, 0), null).dat).toBe(false) // thiếu phép chấm hợp âm thì không cho qua
+    expect(chamTimed(timed(7), diem(92, 100, 35, 60), tot).tomTat).toBe(
+      'đúng 92 % (cần ≥ 90) · lệch 35 ms (≤ 40) · bass 100 % (cần ≥ 90) · ngoài hợp âm 2 % (≤ 10)',
+    )
   })
 })
 

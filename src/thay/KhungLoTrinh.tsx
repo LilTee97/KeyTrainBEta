@@ -27,7 +27,9 @@ function nguongChu(bac: Bac): string {
     `đúng nốt ≥ ${phanTram(bac.dungToiThieu)} %`,
     `lệch nhịp (trung vị) ≤ ${bac.lechToiDa} ms`,
     ...(bac.thuaToiDa === null ? [] : [`phím thừa ≤ ${phanTram(bac.thuaToiDa)} %`]),
-    ...(bac.kiem ? ['chấm theo hợp âm, bỏ quãng tám'] : []),
+    ...(bac.bassToiThieu === null ? [] : [`bass đúng ≥ ${phanTram(bac.bassToiThieu)} % (nốt thấp nhất phải là bass)`]),
+    ...(bac.notSaiToiDa === null ? [] : [`nốt ngoài hợp âm ≤ ${phanTram(bac.notSaiToiDa)} %`]),
+    ...(bac.kiem ? ['chấm theo tên nốt của hợp âm, bỏ quãng tám'] : []),
   ].join(' · ')
 }
 
@@ -211,8 +213,9 @@ export function LoTrinh({
             tempo: bac.tempo,
             boQuaQuangTam: bac.kiem,
             anNotRoi: bac.kiem,
-            onXong: (score) => {
-              const ketQua = chamTimed(bac, score)
+            theoHopAm: bac.kiem,
+            onXong: (score, hopAm) => {
+              const ketQua = chamTimed(bac, score, hopAm)
               ghi(ketQua.dat, {
                 tong: score.total,
                 trung: score.hit,
@@ -220,6 +223,7 @@ export function LoTrinh({
                 lechMs: score.medianAbsMs ?? -1,
                 bpm: Math.round((vong.bpm * bac.tempo) / 100),
                 ...(bac.kiem ? { dich } : {}),
+                ...(hopAm ? { bassTong: hopAm.bassTong, bassDung: hopAm.bassDung, notSai: hopAm.notSai } : {}),
               })
               return ketQua
             },

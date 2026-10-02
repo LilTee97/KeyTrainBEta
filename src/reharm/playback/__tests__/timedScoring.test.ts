@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { TimelineEvent } from '../../style/types'
 import {
+  chamHopAm,
   expectedNotesOf,
+  gopLopCaoDo,
+  hopAmTheoPhach,
   latencyFromTaps,
   passes,
   scoreTimed,
@@ -109,6 +112,39 @@ describe('scoreTimed', () => {
     const score = scoreTimed(line, line.slice(0, 3).map((n) => got(n.note, n.beat)), opts)
     expect(score.hit).toBe(3)
     expect(passes(score)).toBe(false)
+  })
+})
+
+describe('bậc 7 — chấm theo hợp âm (b)', () => {
+  const am = () => ({ lop: new Set([9, 0, 4]), bass: 9 })
+
+  it('gộp nốt cùng tên trong một lúc: khuôn A2+A3 (+A4 tay phải) chỉ cần một La', () => {
+    const notes: ExpectedNote[] = [want(45, 0), want(57, 0), { note: 69, beat: 0, hand: 'right' }, want(52, 1)]
+    expect(gopLopCaoDo(notes).map((n) => n.note)).toEqual([45, 52])
+  })
+
+  it('đọc hợp âm theo phách sau ô đếm vào, lặp theo vòng; gạch chéo thì bass là nốt sau gạch', () => {
+    const at = hopAmTheoPhach(['Am7', 'Am7', 'Dm/F', 'Dm/F'], 4)
+    expect(at(3)).toBeNull() // đang đếm vào
+    expect(at(4.2)!.bass).toBe(9)
+    expect([...at(4.2)!.lop].sort((a, b) => a - b)).toEqual([0, 4, 7, 9])
+    expect(at(6.5)!.bass).toBe(5)
+    expect(at(8)!.bass).toBe(9)
+  })
+
+  it('bass: nốt thấp nhất quanh tiếng bass phải cùng tên bass; nốt đi bass (bậc 5) không kiểm', () => {
+    const events: TimelineEvent[] = [
+      { notes: [45], startBeat: 0, durationBeats: 1, hand: 'left', velocity: 80 }, // A2 — bass của Am
+      { notes: [52], startBeat: 1, durationBeats: 1, hand: 'left', velocity: 80 }, // E3 — bậc 5, không kiểm
+    ]
+    const dung = chamHopAm(events, [got(57, 0), got(64, 0), got(40, 1)], [], { ...opts, hopAmAt: am })
+    expect([dung.bassTong, dung.bassDung]).toEqual([1, 1]) // A3 thấp nhất: thế bấm khác vẫn đúng bass
+    const sai = chamHopAm(events, [got(64, 0), got(69, 0)], [], { ...opts, hopAmAt: am })
+    expect([sai.bassTong, sai.bassDung]).toEqual([1, 0]) // thấp nhất E4 — La4 tay phải không tính là bass La
+  })
+
+  it('nốt sai: phím thừa ngoài hợp âm mới tính; thừa là nốt của hợp âm (bè khác) thì không', () => {
+    expect(chamHopAm([], [], [got(60, 0.5), got(63, 0.5)], { ...opts, hopAmAt: am }).notSai).toBe(1)
   })
 })
 
