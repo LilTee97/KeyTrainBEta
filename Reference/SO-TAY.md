@@ -4825,3 +4825,18 @@ lẫn thói quen tay → hình có thể sớm vài chục ms; thanh trượt v�
 
 **Chưa đo:** chưa ai nhìn trên màn hình — độ phóng có vừa mắt, nốt láy mờ có rõ, tên phím đen có tràn (chưa thử trên điện thoại);
 khối tối thiểu 5 px làm nốt cực ngắn trông dài hơn thật. Chưa đẩy lên GitHub Pages.
+
+### Phím đang bấm đậm theo lực nhấn (2/10/2026)
+
+Người dùng: đàn có cảm ứng lực, *"khi chạm nhẹ thì phím hiển thị mờ và rõ dần khi mạnh hơn"*. Lực nhấn vốn đã vào app
+(`midiStore.velocities`, tiếng đàn đã theo lực qua `attackNote`) — chỉ bàn phím chưa vẽ theo.
+
+`OnScreenPiano`: phím đang bấm phủ một lớp màu, độ mờ = 0,15 + 0,85 × velocity / 127 (tuyến tính; bàn phím ảo, phím máy tính bấm
+lực 90 → 0,75). Màu lớp phủ giữ nghĩa cũ: xanh ngọc = trúng nốt hợp âm, cam = không; nền dưới vẫn là màu tay / gợi ý. Phím đen bấm
+mạnh (lớp ≥ 0,5) thì chữ tên nốt đổi tối cho đọc được. **Cũ:** phím đang bấm tô màu đặc, không theo lực. Lùi khi: chạm nhẹ khó
+thấy → nâng `PRESS_MIN_OPACITY` (0,15).
+
+**Kiểm:** `tsc`, `eslint` sạch; 394 test `shared` + `playback` + `chordDrill` qua; máy chủ dev biên dịch 200.
+
+**Chưa đo:** đường lực của Casio ("Touch Response" Light / Normal / Heavy đổi dải velocity gửi ra) — chưa biết chạm nhẹ của người
+dùng ra velocity bao nhiêu; ánh xạ tuyến tính là đoán. Tắt cảm ứng lực trên đàn thì mọi cú bấm cùng một lực.

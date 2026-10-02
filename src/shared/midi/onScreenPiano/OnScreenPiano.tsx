@@ -12,13 +12,12 @@ import { buildKeyboardLayout } from './layout'
 const POINTER_VELOCITY = 90
 
 /**
- * Màu phím theo trạng thái. Nốt gợi ý và nốt bấm trúng dùng **cùng một màu**
- * (xanh ngọc), chỉ khác độ đậm — gợi ý thì nhạt, bấm trúng thì đậm — để
- * người học vừa thấy chỗ cần đặt tay vừa thấy mình đã bấm được tới đâu.
+ * Màu nền phím theo trạng thái. Nốt gợi ý và nốt bấm trúng dùng **cùng một màu**
+ * (xanh ngọc) — gợi ý là nền nhạt, bấm trúng là lớp phủ đậm theo lực nhấn
+ * (`pressOpacity`) — để người học vừa thấy chỗ cần đặt tay vừa thấy mình đã bấm
+ * được tới đâu, nhẹ hay mạnh.
  */
 const WHITE_KEY_STYLES = {
-  correct: 'bg-teal-key text-ink',
-  pressed: 'bg-amber-key text-ink',
   suggested: 'bg-teal-key/45 text-ink/60',
   leftHand: 'bg-left-hand/70 text-ink/70',
   rightHand: 'bg-right-hand/70 text-ink/70',
@@ -27,13 +26,22 @@ const WHITE_KEY_STYLES = {
 } as const
 
 const BLACK_KEY_STYLES = {
-  correct: 'bg-teal-key text-ink/80',
-  pressed: 'bg-amber-key text-ink/80',
   suggested: 'bg-teal-key/60 text-ink/80',
   leftHand: 'bg-left-hand text-ink/80',
   rightHand: 'bg-right-hand text-ink/80',
   idle: 'bg-neutral-900 text-cream/70 hover:bg-neutral-800',
 } as const
+
+/*
+  Phím ĐANG BẤM phủ một lớp màu đậm theo LỰC NHẤN — người dùng 2/10/2026: đàn có cảm ứng lực, "khi chạm nhẹ thì phím
+  hiển thị mờ và rõ dần khi mạnh hơn". Tuyến tính theo velocity MIDI 1–127; chạm nhẹ nhất vẫn còn thấy. Màu lớp phủ
+  giữ nghĩa cũ: xanh ngọc = trúng nốt hợp âm, cam = không. Đàn tắt cảm ứng lực (Touch Response: Off) thì mọi cú bấm gửi
+  cùng một lực → đậm như nhau. Cũ: phím đang bấm tô màu đặc, không theo lực. Lùi khi: chạm nhẹ khó thấy → nâng
+  `PRESS_MIN_OPACITY` (cũ: không có).
+*/
+const PRESS_MIN_OPACITY = 0.15
+const pressOpacity = (velocity: number) =>
+  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * Math.min(1, Math.max(0, velocity) / 127)
 
 /*
   Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt". Cũ: chỉ phím Đô (C3, C4 …).
@@ -98,6 +106,7 @@ export function OnScreenPiano({
   rightHandNotes,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
+  const velocities = useMidiStore((state) => state.velocities)
   const noteOn = useMidiStore((state) => state.noteOn)
   const noteOff = useMidiStore((state) => state.noteOff)
 
@@ -198,21 +207,30 @@ export function OnScreenPiano({
     chordToneClasses.has(pitchClassOf(note))
 
   /**
-   * Ba trạng thái hiển thị của một phím:
-   * - 'correct': đang bấm và trúng nốt của hợp âm
-   * - 'pressed': đang bấm nhưng không thuộc hợp âm (hoặc chưa có hợp âm nào)
-   * - 'suggested': chưa bấm, nhưng thuộc thế bấm đang được gợi ý
+   * Màu nền của phím, chưa tính lúc đang bấm (đang bấm thì phủ thêm lớp theo lực — `pressLayer`):
+   * tay trái / tay phải / thế bấm gợi ý / thường.
    */
   const keyStateOf = (
     note: MidiNote,
   ): keyof typeof WHITE_KEY_STYLES => {
-    if (isHeld(note)) return isChordTone(note) ? 'correct' : 'pressed'
     // Chỉ rõ tay nào bấm nốt nào, ưu tiên hơn cách tô một màu chung.
     if (leftHand.has(note)) return 'leftHand'
     if (rightHand.has(note)) return 'rightHand'
     if (suggested.has(note)) return 'suggested'
     return 'idle'
   }
+
+  /** Lớp phủ phím đang bấm: xanh ngọc nếu trúng nốt hợp âm, cam nếu không; đậm theo lực nhấn. */
+  const pressLayer = (note: MidiNote) =>
+    isHeld(note) ? (
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 rounded-b-md ${
+          isChordTone(note) ? 'bg-teal-key' : 'bg-amber-key'
+        }`}
+        style={{ opacity: pressOpacity(velocities[note] ?? POINTER_VELOCITY) }}
+      />
+    ) : null
 
   const keyHandlers = (note: MidiNote) => ({
     onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
@@ -237,11 +255,12 @@ export function OnScreenPiano({
             type="button"
             aria-label={midiToName(note, accidentalStyle)}
             {...keyHandlers(note)}
-            className={`flex flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
+            className={`relative flex flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
               WHITE_KEY_STYLES[keyStateOf(note)]
             }`}
           >
-            {whiteLabel(note)}
+            {pressLayer(note)}
+            <span className="relative">{whiteLabel(note)}</span>
           </button>
         ))}
       </div>
@@ -261,7 +280,17 @@ export function OnScreenPiano({
             BLACK_KEY_STYLES[keyStateOf(note)]
           }`}
         >
-          {blackNamed ? pitchClassName(pitchClassOf(note), accidentalStyle) : null}
+          {pressLayer(note)}
+          {blackNamed ? (
+            // Lớp phủ đậm (bấm mạnh) thì chữ sáng trên phím đen khó đọc — đổi sang chữ tối.
+            <span
+              className={`relative ${
+                isHeld(note) && pressOpacity(velocities[note] ?? POINTER_VELOCITY) >= 0.5 ? 'text-ink/80' : ''
+              }`}
+            >
+              {pitchClassName(pitchClassOf(note), accidentalStyle)}
+            </span>
+          ) : null}
         </button>
       ))}
     </div>
