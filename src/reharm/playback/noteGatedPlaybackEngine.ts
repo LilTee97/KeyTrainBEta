@@ -135,6 +135,53 @@ export function notesHittingAt(
   return { left, right }
 }
 
+/**
+ * Nốt đang KÊU tại một phách — phím sáng đúng từ lúc tiếng vào tới hết độ ngân.
+ *
+ * Thay cho `notesHittingAt` ở bàn phím lúc phát: cửa sổ cố định "0,05 phách trước tới 0,2 phách sau" thì nốt ngân
+ * dài chỉ nháy một cái, còn phím sáng sớm hơn tiếng — người dùng 2/10/2026 đòi hình khớp tiếng. Tắt sớm một chút
+ * (tối đa 0,05 phách, không quá ⅕ độ ngân) để hai nốt cùng phím đánh liền nhau vẫn thấy phím nháy lại.
+ */
+export function notesSoundingAt(
+  events: readonly TimelineEvent[],
+  beat: number,
+): { left: MidiNote[]; right: MidiNote[] } {
+  const left = new Set<MidiNote>()
+  const right = new Set<MidiNote>()
+  for (const event of events) {
+    const lit = event.durationBeats - Math.min(0.05, event.durationBeats * 0.2)
+    if (beat < event.startBeat || beat >= event.startBeat + lit) continue
+    for (const note of event.notes) (event.hand === 'left' ? left : right).add(note)
+  }
+  return { left: [...left], right: [...right] }
+}
+
+/** Hai tiếng sát nhau phổ biến của bài phải cách nhau chừng này điểm ảnh trên khung nốt rơi. */
+const MIN_SPACING_PX = 18
+const MIN_PX_PER_BEAT = 24
+const MAX_PX_PER_BEAT = 160
+
+/**
+ * Thu phóng khung nốt rơi theo chính bài: điểm ảnh mỗi phách.
+ *
+ * Lấy khoảng cách giữa hai tiếng liền nhau ở bách phân vị 10 (bỏ nốt láy — nó sát nốt chính là chủ ý) rồi phóng
+ * sao cho khoảng ấy được `MIN_SPACING_PX`: câu chạy móc kép thành chuỗi khối rời, không chồng lên nhau. Cũ: cố
+ * định 22,5 px/phách (8 phách trên 180 px) — móc kép cách nhau 5,6 px mà khối cao 20 px.
+ */
+export function pxPerBeatFor(events: readonly TimelineEvent[]): number {
+  const starts = [
+    ...new Set(events.filter((event) => !event.grace).map((event) => Math.round(event.startBeat * 1000) / 1000)),
+  ].sort((a, b) => a - b)
+  const gaps = starts
+    .slice(1)
+    .map((start, i) => start - starts[i]!)
+    .filter((gap) => gap > 0.02)
+    .sort((a, b) => a - b)
+  if (gaps.length === 0) return 30
+  const tight = gaps[Math.floor(gaps.length * 0.1)]!
+  return Math.min(MAX_PX_PER_BEAT, Math.max(MIN_PX_PER_BEAT, MIN_SPACING_PX / tight))
+}
+
 export interface MatchOptions {
   /**
    * Bỏ qua quãng tám khi so nốt.

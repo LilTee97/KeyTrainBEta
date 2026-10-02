@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react'
-import { midiToName, pitchClassOf } from '../../musicTheory/pitch'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { midiToName, pitchClassName, pitchClassOf } from '../../musicTheory/pitch'
 import type {
   AccidentalStyle,
   MidiNote,
@@ -22,17 +22,27 @@ const WHITE_KEY_STYLES = {
   suggested: 'bg-teal-key/45 text-ink/60',
   leftHand: 'bg-left-hand/70 text-ink/70',
   rightHand: 'bg-right-hand/70 text-ink/70',
-  idle: 'bg-cream text-ink/35 hover:bg-white',
+  // Cũ: text-ink/35 — lúc chỉ phím Đô có tên. Nay mọi phím có tên (2/10/2026) nên đậm hơn cho đọc được.
+  idle: 'bg-cream text-ink/55 hover:bg-white',
 } as const
 
 const BLACK_KEY_STYLES = {
-  correct: 'bg-teal-key',
-  pressed: 'bg-amber-key',
-  suggested: 'bg-teal-key/60',
-  leftHand: 'bg-left-hand',
-  rightHand: 'bg-right-hand',
-  idle: 'bg-neutral-900 hover:bg-neutral-800',
+  correct: 'bg-teal-key text-ink/80',
+  pressed: 'bg-amber-key text-ink/80',
+  suggested: 'bg-teal-key/60 text-ink/80',
+  leftHand: 'bg-left-hand text-ink/80',
+  rightHand: 'bg-right-hand text-ink/80',
+  idle: 'bg-neutral-900 text-cream/70 hover:bg-neutral-800',
 } as const
+
+/*
+  Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt". Cũ: chỉ phím Đô (C3, C4 …).
+  Phím trắng rộng ≥ 20 px thì ghi đủ tên kèm quãng tám (D4), hẹp hơn (điện thoại) thì chỉ chữ cái — phím Đô vẫn
+  kèm quãng tám như cũ để còn mốc. Phím đen rộng ≥ 13 px mới ghi (C#); hẹp hơn thì chữ tràn ra ngoài phím.
+*/
+const FULL_NAME_MIN_PX = 20
+const LETTER_MIN_PX = 9
+const BLACK_NAME_MIN_PX = 13
 
 export interface OnScreenPianoProps {
   /** Nốt thấp nhất hiển thị. Mặc định C3. */
@@ -92,6 +102,28 @@ export function OnScreenPiano({
   const noteOff = useMidiStore((state) => state.noteOff)
 
   const { whiteKeys, blackKeys } = buildKeyboardLayout(lowNote, highNote)
+
+  /* Bề ngang thật của bàn phím — quyết định ghi tên nốt đủ hay gọn (xem FULL_NAME_MIN_PX). */
+  const root = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  useLayoutEffect(() => {
+    const el = root.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    setWidth(el.clientWidth)
+    const observer = new ResizeObserver(() => setWidth(el.clientWidth))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  const whiteWidth = width / Math.max(1, whiteKeys.length)
+
+  /** Tên ghi trên phím trắng. */
+  const whiteLabel = (note: MidiNote) => {
+    if (!showNoteNames) return ''
+    const isC = pitchClassOf(note) === 0
+    if (whiteWidth >= FULL_NAME_MIN_PX || isC) return midiToName(note, accidentalStyle)
+    return whiteWidth >= LETTER_MIN_PX ? pitchClassName(pitchClassOf(note), accidentalStyle) : ''
+  }
+  const blackNamed = showNoteNames && whiteWidth * 0.62 >= BLACK_NAME_MIN_PX
 
   /** Con trỏ đang được giữ — dùng để rê tay qua nhiều phím liền nhau. */
   const pointerDown = useRef(false)
@@ -191,6 +223,7 @@ export function OnScreenPiano({
 
   return (
     <div
+      ref={root}
       className="relative w-full touch-none select-none"
       style={{ height: 150 }}
       role="group"
@@ -208,9 +241,7 @@ export function OnScreenPiano({
               WHITE_KEY_STYLES[keyStateOf(note)]
             }`}
           >
-            {showNoteNames && pitchClassOf(note) === 0
-              ? midiToName(note, accidentalStyle)
-              : ''}
+            {whiteLabel(note)}
           </button>
         ))}
       </div>
@@ -226,10 +257,12 @@ export function OnScreenPiano({
             left: `${position * 100}%`,
             width: `${(100 / whiteKeys.length) * 0.62}%`,
           }}
-          className={`absolute top-0 h-[62%] -translate-x-1/2 rounded-b-md border border-black/60 transition-colors ${
+          className={`absolute top-0 flex h-[62%] -translate-x-1/2 items-end justify-center rounded-b-md border border-black/60 pb-1 font-mono text-[8px] leading-none transition-colors ${
             BLACK_KEY_STYLES[keyStateOf(note)]
           }`}
-        />
+        >
+          {blackNamed ? pitchClassName(pitchClassOf(note), accidentalStyle) : null}
+        </button>
       ))}
     </div>
   )

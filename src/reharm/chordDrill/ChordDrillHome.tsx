@@ -259,10 +259,11 @@ export function ChordDrillHome() {
           </div>
           <div className="flex gap-1">
             {(
+              // Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). Cũ: trái · phải · hai tay.
               [
                 ['left', 'Trái'],
-                ['right', 'Phải'],
                 ['both', 'Hai tay'],
+                ['right', 'Phải'],
               ] as const
             ).map(([id, label]) => (
               <button

@@ -20,7 +20,7 @@ import { readSetting, writeSetting } from '../../shared/persistence/localSetting
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import { FallingNotes } from './FallingNotes'
-import { buildGatedSteps, notesHittingAt, type PracticeHand } from './noteGatedPlaybackEngine'
+import { buildGatedSteps, notesSoundingAt, type PracticeHand } from './noteGatedPlaybackEngine'
 import { usePracticeStore } from './practiceStore'
 import {
   MIN_TAPS,
@@ -189,18 +189,24 @@ export function TimedPractice({
     [shifted, hand, endBeat],
   )
 
+  /** Tiếng để vẽ nốt rơi và sáng phím: tay đang tập, kể cả nốt láy (không chấm, chỉ vẽ). */
+  const shown = useMemo(
+    () => (hand === 'both' ? shifted : shifted.filter((event) => event.hand === hand)),
+    [shifted, hand],
+  )
+
   const fallRange = useMemo(() => {
     let { low, high } = getKeyboardRange(readSetting('midiKeyboardKeys'))
-    for (const step of steps) {
-      for (const note of step.notes) {
+    for (const event of shown) {
+      for (const note of event.notes) {
         low = Math.min(low, note) as MidiNote
         high = Math.max(high, note) as MidiNote
       }
     }
     return { low, high }
-  }, [steps])
+  }, [shown])
 
-  /* Phím sáng theo đồng hồ trong lúc bài chạy. */
+  /* Phím sáng đúng lúc tiếng kêu, suốt độ ngân. */
   useEffect(() => {
     if (phase !== 'playing' || !looping) {
       setHitting({ left: [], right: [] })
@@ -209,7 +215,7 @@ export function TimedPractice({
     let frame = 0
     let last = ''
     const tick = () => {
-      const next = notesHittingAt(steps, getPlaybackBeats())
+      const next = notesSoundingAt(shown, getPlaybackBeats())
       const key = `${next.left.join()}/${next.right.join()}`
       if (key !== last) {
         last = key
@@ -219,7 +225,7 @@ export function TimedPractice({
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [phase, looping, steps])
+  }, [phase, looping, shown])
 
   const begin = async () => {
     await startAudio()
@@ -364,7 +370,8 @@ export function TimedPractice({
 
       <div className="mb-3 flex flex-wrap items-center gap-4">
         <div className="flex gap-1">
-          {(['left', 'right', 'both'] as const).map((value) => (
+          {/* Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). */}
+          {(['left', 'both', 'right'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -490,6 +497,7 @@ export function TimedPractice({
       )}
 
       <FallingNotes
+        events={shown}
         steps={steps}
         index={0}
         live={phase === 'playing' && looping}

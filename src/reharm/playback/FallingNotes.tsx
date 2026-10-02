@@ -1,28 +1,40 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import { buildKeyboardLayout, keyPlacement } from '../../shared/midi/onScreenPiano/layout'
 import { midiToName } from '../../shared/musicTheory/pitch'
 import { getPlaybackBeats } from '../../shared/audio/audioEngine'
-import type { GatedStep } from './noteGatedPlaybackEngine'
+import type { TimelineEvent } from '../style/types'
+import { pxPerBeatFor, type GatedStep } from './noteGatedPlaybackEngine'
 
 /**
  * Nốt rơi xuống bàn phím, kiểu Synthesia.
+ *
+ * Mỗi nốt là một khối DÀI THEO THỜI GIAN: đáy khối chạm vạch đúng lúc tiếng kêu, chiều cao = độ ngân. Nốt ngân
+ * dài thành thanh dài, nốt giật thành khối ngắn có khe trước nốt sau, câu chạy nhanh thành chuỗi khối rời. Người
+ * dùng 2/10/2026: *"Nếu nốt nào ngân dài thì hãy kéo dài hình nốt rơi"* · *"đánh giật hay đánh nhanh thì ... các
+ * nốt rơi cũng phải thể hiện thật chính xác và khớp hình với tiếng"*. Cũ: khối cao cố định 20 px, 8 phách trên
+ * 180 px — móc kép cách nhau 5,6 px mà khối cao 20 px nên chồng lên nhau. Thu phóng: `pxPerBeatFor`.
+ *
+ * Nốt láy cũng vẽ (mờ hơn, không ghi tên) — app có phát nó, thiếu hình là hình không khớp tiếng; nó vẫn không
+ * thuộc phần bị chấm.
  *
  * Tên hợp âm / gam nằm **dưới** khung (không overlay). Overlay + overflow-hidden
  * + textContent từ rAF bị React ghi đè mỗi phách — Android mất chữ.
  */
 
-const LOOK_AHEAD_BEATS = 8
-const HEIGHT = 180
-const NOTE_H = 20
+const HEIGHT = 220
+/** Khối ngắn nhất vẫn nhìn thấy được. */
+const MIN_BLOCK_PX = 5
+/** Khe giữa hai nốt liền nhau — nốt giật và nốt nối phân biệt được bằng mắt. */
+const GAP_PX = 2
+/** Khối đủ cao mới ghi tên nốt. */
+const LABEL_PX = 12
 
-function noteY(away: number): number {
-  return (1 - away / LOOK_AHEAD_BEATS) * (HEIGHT - NOTE_H)
-}
-
-function inWindow(away: number): boolean {
-  return away >= -0.5 && away <= LOOK_AHEAD_BEATS + 1
-}
+/** Đỉnh khối: đáy (= lúc tiếng vào) cách vạch `away` phách. */
+const topOf = (away: number, height: number, pxPerBeat: number) => HEIGHT - away * pxPerBeat - height
+/** Còn trong khung: chưa ở quá đỉnh khung, và đuôi (hết ngân) chưa qua vạch. */
+const shows = (away: number, duration: number, lookAhead: number) =>
+  away <= lookAhead + 0.5 && away + duration >= 0
 
 function symbolAtBeat(steps: readonly GatedStep[], beat: number): string {
   if (steps.length === 0) return ''
@@ -33,6 +45,9 @@ function symbolAtBeat(steps: readonly GatedStep[], beat: number): string {
 }
 
 interface FallingNotesProps {
+  /** Tiếng để VẼ — mọi tiếng của tay đang tập, kể cả nốt láy. */
+  events: readonly TimelineEvent[]
+  /** Chặng — để biết hợp âm đang vang và chỗ đứng chờ ở chế độ chờ đúng nốt. */
   steps: readonly GatedStep[]
   index: number
   live?: boolean
@@ -42,6 +57,7 @@ interface FallingNotesProps {
 }
 
 export function FallingNotes({
+  events,
   steps,
   index,
   live = false,
@@ -54,6 +70,8 @@ export function FallingNotes({
   const [bucket, setBucket] = useState(0)
   const layout = buildKeyboardLayout(lowNote, highNote)
   const parked = steps[index]?.startBeat
+  const pxPerBeat = useMemo(() => pxPerBeatFor(events), [events])
+  const lookAhead = HEIGHT / pxPerBeat
 
   useEffect(() => {
     if (!live) return
@@ -74,17 +92,23 @@ export function FallingNotes({
       for (const el of root.children) {
         if (!(el instanceof HTMLElement) || el.dataset.start === undefined) continue
         const away = Number(el.dataset.start) - now
-        el.style.transform = `translate3d(0,${noteY(away)}px,0)`
-        el.hidden = !inWindow(away)
+        el.style.transform = `translate3d(0,${topOf(away, Number(el.dataset.h), pxPerBeat)}px,0)`
+        el.hidden = !shows(away, Number(el.dataset.dur), lookAhead)
       }
       frame = window.requestAnimationFrame(tick)
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [live, steps])
+  }, [live, events, pxPerBeat, lookAhead])
 
   const origin = live ? bucket : (parked ?? 0)
-  const upcoming = steps.filter((step) => inWindow(step.startBeat - origin))
+  // Dựng sẵn khối sắp vào khung trong hai phách tới — `bucket` chỉ đổi mỗi phách một lần.
+  const upcoming = events
+    .map((event, at) => ({ event, at }))
+    .filter(({ event }) => {
+      const away = event.startBeat - origin
+      return away <= lookAhead + 2 && away + event.durationBeats >= -1
+    })
   const symbol = live ? symbolAtBeat(steps, origin) : (steps[index]?.symbol ?? '')
 
   useEffect(() => {
@@ -101,34 +125,37 @@ export function FallingNotes({
       role="img"
       aria-label={symbol ? `Hợp âm ${symbol}` : 'Nốt sắp tới'}
     >
-        <div ref={layer} className="absolute inset-0">
-          {upcoming.map((step) =>
-            step.notes.map((note) => {
-              const place = keyPlacement(layout, note)
-              if (!place) return null
-              const away = step.startBeat - origin
-              const isLeft = step.leftNotes.includes(note)
-              return (
-                <div
-                  key={`${step.startBeat}-${note}`}
-                  data-start={step.startBeat}
-                  hidden={!inWindow(away)}
-                  style={{
-                    left: `${place.left}%`,
-                    width: `${place.width}%`,
-                    height: NOTE_H,
-                    transform: `translate3d(0,${noteY(away)}px,0)`,
-                  }}
-                  className={`absolute top-0 flex items-center justify-center rounded text-[9px] font-semibold ${
-                    isLeft ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
-                  } ${!live && step.startBeat === parked ? 'ring-2 ring-cream' : 'opacity-70'}`}
-                >
-                  {midiToName(note)}
-                </div>
-              )
-            }),
-          )}
-        </div>
+      <div ref={layer} className="absolute inset-0">
+        {upcoming.map(({ event, at }) =>
+          event.notes.map((note) => {
+            const place = keyPlacement(layout, note)
+            if (!place) return null
+            const away = event.startBeat - origin
+            const height = Math.max(MIN_BLOCK_PX, event.durationBeats * pxPerBeat - GAP_PX)
+            const waiting = !live && Math.abs(event.startBeat - (parked ?? 0)) < 1e-3
+            return (
+              <div
+                key={`${at}-${note}`}
+                data-start={event.startBeat}
+                data-dur={event.durationBeats}
+                data-h={height}
+                hidden={!shows(away, event.durationBeats, lookAhead)}
+                style={{
+                  left: `${place.left}%`,
+                  width: `${place.width}%`,
+                  height,
+                  transform: `translate3d(0,${topOf(away, height, pxPerBeat)}px,0)`,
+                }}
+                className={`absolute top-0 flex items-end justify-center overflow-hidden rounded-sm pb-0.5 text-[9px] leading-none font-semibold ${
+                  event.hand === 'left' ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
+                } ${event.grace ? 'opacity-40' : waiting ? 'ring-2 ring-cream' : 'opacity-80'}`}
+              >
+                {!event.grace && height >= LABEL_PX ? midiToName(note) : null}
+              </div>
+            )
+          }),
+        )}
+      </div>
       <div className="absolute inset-x-0 bottom-0 h-px bg-cream/50" />
     </div>
   )

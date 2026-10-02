@@ -4913,9 +4913,10 @@ export function ReharmHome() {
 
           <div className="flex gap-1">
             {(
+              // Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). Cũ: hai tay · trái · phải.
               [
-                ['both', 'Hai tay'],
                 ['left', 'Tay trái'],
+                ['both', 'Hai tay'],
                 ['right', 'Tay phải'],
               ] as const
             ).map(([value, label]) => (

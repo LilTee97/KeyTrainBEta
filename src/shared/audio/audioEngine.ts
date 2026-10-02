@@ -466,10 +466,23 @@ export const usePlaybackStore = create<PlaybackState>(() => ({
 /** Không nhận quá nửa giây mỗi chiều: quá đó là hỏng chỗ khác, không phải lệch. */
 export const SYNC_LIMIT_MS = 500
 
-/** Bù mặc định, đo từ chính máy đang chạy. */
+/**
+ * Bù mặc định, đo từ chính máy đang chạy.
+ *
+ * Đã đo độ trễ ở chế độ Theo nhịp (`latencyMs` — gõ theo click: trễ loa/tai nghe + trễ đàn + thói quen tay) thì lấy
+ * lookAhead + số đo ấy. Lý do: tai nghe Bluetooth thì `outputLatency` trình duyệt báo thiếu — người dùng đeo Galaxy
+ * Buds 2 đo ra 251–278 ms (2/10/2026) mà máy báo ~0, hình chạy trước tiếng cả phần tư giây. Số đo lẫn thói quen tay
+ * (người gõ theo click hay đón sớm vài chục ms) nên hình có thể sớm chừng ấy; thanh trượt vẫn chỉnh tay được.
+ * Chưa đo thì như cũ: lookAhead + `outputLatency`.
+ */
 export function defaultSyncOffsetMs(): number {
   try {
     const context = Tone.getContext()
+    const measured = readSetting('latencyMs')
+    if (measured !== null) {
+      const ms = Math.round(context.lookAhead * 1000 + measured)
+      return Math.max(-SYNC_LIMIT_MS, Math.min(SYNC_LIMIT_MS, ms))
+    }
     const raw = context.rawContext as unknown as { outputLatency?: number }
     const output =
       typeof raw.outputLatency === 'number' && Number.isFinite(raw.outputLatency)
@@ -493,8 +506,9 @@ export function getSyncOffsetMs(): number {
  * `shared/persistence/localSettings` đã là chỗ cất cài đặt của cả app, và một
  * cái kho thứ hai nằm trong bộ máy âm thanh là một chỗ nữa để hai bên lệch nhau.
  */
-export function setSyncOffsetMs(ms: number): void {
-  syncOffsetMs = Math.max(-SYNC_LIMIT_MS, Math.min(SYNC_LIMIT_MS, Math.round(ms)))
+export function setSyncOffsetMs(ms: number | null): void {
+  // `null` = chưa dò tay: `getSyncOffsetMs` tính mặc định mỗi lần đọc, đo độ trễ xong là theo ngay.
+  syncOffsetMs = ms === null ? null : Math.max(-SYNC_LIMIT_MS, Math.min(SYNC_LIMIT_MS, Math.round(ms)))
 }
 
 /**

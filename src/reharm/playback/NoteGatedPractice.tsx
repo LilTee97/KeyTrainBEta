@@ -31,7 +31,7 @@ import {
   currentStep,
   isStepMatched,
   missingNotes,
-  notesHittingAt,
+  notesSoundingAt,
   progressOf,
   registerMiss,
   restart,
@@ -91,8 +91,12 @@ export function NoteGatedPractice({
   const [syncOffset, setSyncOffset] = useState(
     () => readSetting('syncOffsetMs') ?? defaultSyncOffsetMs(),
   )
+  /*
+    Chưa dò tay (`null`) thì để bộ máy âm thanh tự tính mặc định MỖI LẦN đọc — đo độ trễ ở chế độ Theo nhịp xong
+    là hình theo ngay số mới. Cũ: đẩy con số mặc định lúc mở khung vào, đo xong vẫn dùng số cũ.
+  */
   useEffect(() => {
-    setSyncOffsetMs(syncOffset)
+    setSyncOffsetMs(readSetting('syncOffsetMs'))
   }, [syncOffset])
 
   const applySyncOffset = (ms: number) => {
@@ -130,17 +134,24 @@ export function NoteGatedPractice({
     Nếu bài có nốt ngoài range đàn thì vẫn cố gắng hiển thị nhưng có thể bị cắt.
   */
   const range = keyboardRange
+
+  /** Tiếng để vẽ nốt rơi và sáng phím: mọi tiếng của tay đang tập, kể cả nốt láy (không chấm, chỉ vẽ). */
+  const shown = useMemo(
+    () => (hand === 'both' ? timeline : timeline.filter((event) => event.hand === hand)),
+    [timeline, hand],
+  )
+
   const fallRange = useMemo(() => {
     let low = range.low
     let high = range.high
-    for (const step of steps) {
-      for (const note of step.notes) {
+    for (const event of shown) {
+      for (const note of event.notes) {
         if (note < low) low = note
         if (note > high) high = note
       }
     }
     return { low, high }
-  }, [steps, range])
+  }, [shown, range])
 
   const [session, setSession] = useState(() => startGatedSession(steps))
 
@@ -169,7 +180,7 @@ export function NoteGatedPractice({
     let frame = 0
     let last = ''
     const tick = () => {
-      const next = notesHittingAt(steps, getPlaybackBeats())
+      const next = notesSoundingAt(shown, getPlaybackBeats())
       const key = `${next.left.join()}/${next.right.join()}`
       if (key !== last) {
         last = key
@@ -179,7 +190,7 @@ export function NoteGatedPractice({
     }
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [looping, active, step, steps])
+  }, [looping, active, step, shown])
 
   /**
    * Chỉ chấm sau khi người học nhả hết phím của chặng trước, nếu không thì
@@ -251,7 +262,8 @@ export function NoteGatedPractice({
       {/* Chọn tay và mức chặt */}
       <div className="mb-3 flex flex-wrap items-center gap-4">
         <div className="flex gap-1">
-          {(['right', 'left', 'both'] as const).map((value) => (
+          {/* Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). Cũ: phải · trái · hai tay. */}
+          {(['left', 'both', 'right'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -421,9 +433,8 @@ export function NoteGatedPractice({
             type="button"
             onClick={() => {
               writeSetting('syncOffsetMs', null)
-              const back = defaultSyncOffsetMs()
-              setSyncOffsetMs(back)
-              setSyncOffset(back)
+              setSyncOffsetMs(null)
+              setSyncOffset(defaultSyncOffsetMs())
             }}
             className="rounded border border-line px-2 py-0.5 text-[11px] text-cream hover:bg-white/6"
             title={`Về mức máy tự tính (${defaultSyncOffsetMs()} ms)`}
@@ -494,6 +505,7 @@ export function NoteGatedPractice({
         />
 
         <FallingNotes
+          events={shown}
           steps={steps}
           index={session.currentIndex}
           live={looping}

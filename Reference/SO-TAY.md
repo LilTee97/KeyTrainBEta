@@ -4792,3 +4792,36 @@ người chơi tự chọn chậm lại tới khoảng cách nốt ≈ 2 × đ�
 
 **Chưa đo:** phần Bluetooth riêng (cần một lần đo với tai nghe dây / loa để so với Buds) · `xuLyMs` thật · `Tone.immediate()` có
 làm nứt tiếng không — chờ người dùng nghe. Chưa đẩy lên GitHub Pages.
+
+## Bước — Nốt rơi dài theo độ ngân, tự thu phóng, có nốt láy · phím ghi tên · nút trái/phải đúng bên (2/10/2026)
+
+Người dùng: *"Nếu nốt nào ngân dài thì hãy kéo dài hình nốt rơi trên app cho tương xứng"* · *"Các phím trên app cũng nên để tên
+nốt"* · *"Nút tay trái để qua bên trái còn nút tay phải thì qua phải"* · *"Đối với các kỹ thuật đánh giật hay đánh nhanh thì tôi
+yêu cầu các nốt rơi cũng phải thể hiện thật chính xác và khớp hình với tiếng"*.
+
+**Nốt rơi (`FallingNotes`):** vẽ từ TIẾNG (`TimelineEvent`) của tay đang tập, không từ chặng — kể cả nốt láy (mờ, không ghi tên,
+vẫn không chấm). Khối cao = độ ngân × px/phách − 2 px khe, tối thiểu 5 px; đáy chạm vạch đúng lúc tiếng vào, khối trôi qua vạch
+suốt độ ngân. Thu phóng `pxPerBeatFor`: khoảng cách hai tiếng liền nhau ở bách phân vị 10 (bỏ nốt láy) được 18 px, kẹp 24–160
+px/phách; khung cao 220 px. **Cũ:** khối cao cố định 20 px, 8 phách trên 180 px (22,5 px/phách) — móc kép cách nhau 5,6 px mà
+khối cao 20 px nên chồng nhau; nốt láy không vẽ. Lùi khi: nhìn trước quá ít ở bài có câu chạy dày → hạ `MIN_SPACING_PX` hay nâng
+`HEIGHT`.
+
+**Phím sáng:** `notesSoundingAt` — từ lúc tiếng vào tới hết ngân, tắt sớm ≤ 0,05 phách để nốt lặp cùng phím còn nháy. **Cũ:**
+`notesHittingAt` sáng 0,05 phách TRƯỚC tiếng tới 0,2 phách sau, bất kể độ ngân.
+
+**Hình khớp tiếng:** mặc định bù lệch = lookAhead + `latencyMs` đã đo (nếu có). **Cũ:** lookAhead + `outputLatency` máy báo — với
+Galaxy Buds 2 máy báo ~0 trong khi đo ra 251–278 ms, hình chạy trước tiếng cả phần tư giây. `setSyncOffsetMs(null)` = tự tính mỗi
+lần đọc; khung Chờ đúng nốt đẩy `null` khi chưa dò tay (cũ: đẩy con số lúc mở khung, đo độ trễ xong vẫn dùng số cũ). Bù theo số đo
+lẫn thói quen tay → hình có thể sớm vài chục ms; thanh trượt vẫn chỉnh được.
+
+**Tên nốt trên phím (`OnScreenPiano`):** phím trắng rộng ≥ 20 px ghi đủ (D4), 9–20 px chỉ chữ cái (phím Đô vẫn kèm quãng tám), phím
+đen rộng ≥ 13 px ghi (C#). Chữ phím trắng thường `text-ink/35` → `/55`. **Cũ:** chỉ phím Đô.
+
+**Nút tay:** Tay trái · Hai tay · Tay phải ở Luyện đệm (cả hai chế độ), Tái hòa âm, Học hợp âm. **Cũ:** phải · trái · hai tay (Chờ
+đúng nốt) · hai tay · trái · phải (Tái hòa âm) · trái · phải · hai tay (Học hợp âm, Theo nhịp).
+
+**Kiểm:** 5 test mới (`notesSoundingAt` × 3, `pxPerBeatFor` × 2). Toàn suite **2 534 qua / 5 đỏ** (2 539) — đúng 5 đỏ cũ. `tsc`,
+`eslint` sạch; `vite build` qua; máy chủ dev 5173 biên dịch 4 file đổi (200).
+
+**Chưa đo:** chưa ai nhìn trên màn hình — độ phóng có vừa mắt, nốt láy mờ có rõ, tên phím đen có tràn (chưa thử trên điện thoại);
+khối tối thiểu 5 px làm nốt cực ngắn trông dài hơn thật. Chưa đẩy lên GitHub Pages.

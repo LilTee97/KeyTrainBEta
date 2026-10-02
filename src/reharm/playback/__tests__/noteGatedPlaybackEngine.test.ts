@@ -13,6 +13,8 @@ import {
   isStepMatched,
   missingNotes,
   notesHittingAt,
+  notesSoundingAt,
+  pxPerBeatFor,
   progressOf,
   registerMiss,
   restart,
@@ -399,5 +401,44 @@ describe('chặng chờ nốt bỏ qua nốt láy', () => {
     ]
 
     expect(buildGatedSteps(plain, [], { beatsPerChord: 4 })).toHaveLength(2)
+  })
+})
+
+describe('notesSoundingAt — phím sáng đúng lúc tiếng kêu, suốt độ ngân', () => {
+  const held: TimelineEvent[] = [
+    { notes: [48], startBeat: 0, durationBeats: 4, hand: 'left', velocity: 80 },
+    { notes: [72], startBeat: 1, durationBeats: 0.25, hand: 'right', velocity: 80 },
+    { notes: [72], startBeat: 1.25, durationBeats: 0.25, hand: 'right', velocity: 80 },
+  ]
+
+  it('nốt ngân dài sáng suốt độ ngân, không chỉ nháy lúc vào', () => {
+    expect(notesSoundingAt(held, 3.5).left).toEqual([48])
+  })
+
+  it('không sáng trước khi tiếng vào', () => {
+    expect(notesSoundingAt(held, 0.99).right).toEqual([])
+  })
+
+  it('hai móc kép cùng phím liền nhau: phím tắt một chút giữa hai tiếng', () => {
+    expect(notesSoundingAt(held, 1.1).right).toEqual([72])
+    expect(notesSoundingAt(held, 1.24).right).toEqual([])
+    expect(notesSoundingAt(held, 1.26).right).toEqual([72])
+  })
+})
+
+describe('pxPerBeatFor — câu chạy nhanh không chồng khối', () => {
+  const at = (starts: number[]): TimelineEvent[] =>
+    starts.map((startBeat) => ({ notes: [60], startBeat, durationBeats: 0.25, hand: 'right', velocity: 80 }))
+
+  it('móc kép (0,25 phách) cách nhau ít nhất 18 px', () => {
+    expect(0.25 * pxPerBeatFor(at([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75]))).toBeGreaterThanOrEqual(18)
+  })
+
+  it('nốt láy không kéo thu phóng lên trần', () => {
+    const events = [
+      ...at([0, 1, 2, 3]),
+      { notes: [59], startBeat: 1.9375, durationBeats: 0.0625, hand: 'right' as const, velocity: 60, grace: true },
+    ]
+    expect(pxPerBeatFor(events)).toBeLessThan(40)
   })
 })
