@@ -1,21 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { stopTimelineLoop, usePlaybackStore } from '../shared/audio/audioEngine'
 import { useMetronomeStore } from '../shared/audio/metronome'
+import { dayKeyOf, docLuotTap, ghiLuotTap, type LuotTap } from '../shared/persistence/db'
 import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
 import { TimedPractice } from '../reharm/playback/TimedPractice'
 import { taiBaiTap, type BaiTap, type VongBaiTap } from './baiTap'
 import { dungVong } from './dungVong'
+import { LoTrinh } from './KhungLoTrinh'
+import { trangThaiBac } from './loTrinh'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
 
-/** Theo nhịp chấm trên hai lượt vòng — đoán, chưa đo: một lượt 4 ô (~13 giây ở ♩72) ít tiếng quá để chấm. */
+/** Tập tự do theo nhịp chấm trên hai lượt vòng — đoán, chưa đo: một lượt 4 ô (~13 giây ở ♩72) ít tiếng quá để chấm. */
 const LUOT_THEO_NHIP = 2
 
-/** Thứ đang tập ở khung dưới: vòng tập / vòng kiểm của một bài, hoặc vòng tự tạo. */
+/** Thứ đang tập tự do: vòng tập của một bài, hoặc vòng tự tạo. */
 interface Muc {
   ten: string
   vong: VongBaiTap
 }
+
+/** Khung dưới đang mở gì: lộ trình 7 bậc của một bài, hay tập tự do. */
+type Che = { kieu: 'lo-trinh'; styleId: string } | { kieu: 'tu-do'; muc: Muc }
 
 const nut = (on: boolean) =>
   `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
@@ -29,9 +35,9 @@ const laThu = (one: BaiTap) => one.giong.includes('thứ')
 /**
  * Trang một thầy — tab Điệu · Kỹ thuật đánh · Học cách soạn câu (`Reference/KE-HOACH-LUYEN-TAP.md` mục 4c).
  *
- * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E) — hiện chỉ tab Điệu. Chọn một vòng (vòng tập, vòng kiểm của
- * bài, hoặc vòng tự tạo) rồi tập ở khung dưới bằng Chờ đúng nốt hay Theo nhịp — cùng hai khung của tab Luyện đệm, chạy
- * vòng riêng (`vongBpm`) chứ không qua bài đang mở ở tab Tái hòa âm.
+ * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E) — hiện chỉ tab Điệu. Mỗi bài có LỘ TRÌNH 7 bậc (`LoTrinh.tsx`, GĐ 1
+ * bước 5) và nút tập tự do trên vòng tập; vòng tự tạo cũng tập tự do. Vòng kiểm để dành cho bậc 7 — không mở cho tập tự do, tập
+ * trước thì bậc 7 hết là bài lạ.
  */
 export function TeacherPage({ teacher }: { teacher: Teacher }) {
   const [bai, setBai] = useState<BaiTap[] | null>(null)
@@ -45,12 +51,36 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
     }
   }, [teacher])
 
-  const [chon, setChon] = useState<Muc | null>(null)
+  /* Nhật ký lộ trình trên máy (IndexedDB). Không mở được (cửa sổ ẩn danh…) thì tiến độ chỉ sống trong buổi. */
+  const [luot, setLuot] = useState<LuotTap[]>([])
+  const [daTaiLuot, setDaTaiLuot] = useState(false)
+  useEffect(() => {
+    let alive = true
+    docLuotTap()
+      .then((all) => {
+        if (alive) setLuot(all)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (alive) setDaTaiLuot(true)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+  const ghi = (moi: Omit<LuotTap, 'id' | 'day'>) => {
+    setLuot((cu) => [...cu, { ...moi, day: dayKeyOf(new Date(moi.timestamp)) }])
+    void ghiLuotTap(moi).catch(() => {})
+  }
+
+  const [che, setChe] = useState<Che | null>(null)
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
   // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
 
-  const muc = chon ?? (bai?.[0] ? { ten: `${bai[0].ten} · vòng tập`, vong: bai[0].tap } : null)
+  const hien: Che | null = che ?? (bai?.[0] ? { kieu: 'lo-trinh', styleId: bai[0].styleId } : null)
+  const baiLoTrinh = hien?.kieu === 'lo-trinh' ? (bai?.find((one) => one.styleId === hien.styleId) ?? null) : null
+  const muc = hien?.kieu === 'tu-do' ? hien.muc : null
   const vong = muc?.vong ?? null
   /* Lưới hợp âm của MỘT vòng — lưới tab Tái hòa âm dựng còn kèm ô nối vòng. */
   const motVong = useMemo(() => vong?.perBeat.slice(0, vong.doDai) ?? [], [vong])
@@ -64,9 +94,9 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
     [vong],
   )
 
-  const tap = (next: Muc) => {
+  const doi = (next: Che) => {
     stopTimelineLoop()
-    setChon(next)
+    setChe(next)
   }
 
   if (bai === null) return <p className="text-sm text-dim">Đang tải bài tập…</p>
@@ -91,41 +121,54 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
       </div>
 
       <p className="text-xs text-dim">
-        Chọn vòng rồi tập ở khung dưới: vòng tập 4 ô (bậc 1–6), vòng kiểm chưa gặp (bậc 7), hoặc vòng tự tạo. Khung đệm
-        không có câu chèn; Slow Blues giữ tay phải của Bộ Soạn Blues.
+        Bài xếp từ dễ đến khó. Mỗi bài có lộ trình 7 bậc: tách tay chờ đúng nốt → hai tay → theo nhịp 60 · 80 · 100 % → chỉ nhìn
+        tên hợp âm ở giọng lạ. Qua bậc trước mới mở bậc sau; tiến độ lưu trên máy này. Tập tự do: chọn tay, tempo tuỳ ý trên vòng
+        tập, hoặc vòng tự tạo ở dưới.
       </p>
 
       <ul className="flex flex-col gap-2">
-        {bai.map((one) => (
-          <li key={one.styleId} className="rounded-xl border border-line bg-black/25 p-3">
-            <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-semibold text-cream">{one.ten}</span>
-              <span className="text-xs text-dim">
-                {one.giong} · ♩ {one.bpm}
-              </span>
-            </div>
-            <p className="mb-2 font-mono text-xs text-cream/80">
-              Vòng tập: {one.tap.hopAm.join(' · ')}
-              <span className="text-dim"> — vòng kiểm {one.kiem.hopAm.length} hợp âm</span>
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {(['tap', 'kiem'] as const).map((loai) => (
+        {bai.map((one) => {
+          const qua = trangThaiBac(luot, one.styleId).filter((tt) => tt === 'qua').length
+          return (
+            <li key={one.styleId} className="rounded-xl border border-line bg-black/25 p-3">
+              <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-semibold text-cream">{one.ten}</span>
+                <span className="text-xs text-dim">
+                  {one.giong} · ♩ {one.bpm}
+                </span>
+                {!one.duyet && <span className="text-[11px] text-rose-300">chờ nghe duyệt</span>}
+              </div>
+              <p className="mb-2 font-mono text-xs text-cream/80">Vòng tập: {one.tap.hopAm.join(' · ')}</p>
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  key={loai}
                   type="button"
-                  onClick={() => tap({ ten: `${one.ten} · vòng ${loai === 'tap' ? 'tập' : 'kiểm'}`, vong: one[loai] })}
-                  className={nut(vong === one[loai])}
+                  onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
+                  className={nut(baiLoTrinh?.styleId === one.styleId)}
                 >
-                  Tập vòng {loai === 'tap' ? 'tập' : 'kiểm'}
+                  Lộ trình · {qua}/7
                 </button>
-              ))}
-              <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
-            </div>
-          </li>
-        ))}
+                <button
+                  type="button"
+                  onClick={() => doi({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })}
+                  className={nut(vong === one.tap)}
+                >
+                  Tập tự do
+                </button>
+                <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
+              </div>
+            </li>
+          )
+        })}
       </ul>
 
-      <VongTuTao teacher={teacher} bai={bai} onXong={tap} />
+      <VongTuTao teacher={teacher} bai={bai} onXong={(m) => doi({ kieu: 'tu-do', muc: m })} />
+
+      {baiLoTrinh &&
+        (daTaiLuot ? (
+          <LoTrinh key={baiLoTrinh.styleId} bai={baiLoTrinh} luot={luot} onGhi={ghi} />
+        ) : (
+          <p className="text-sm text-dim">Đang tải tiến độ…</p>
+        ))}
 
       {muc && vong && (
         <div className="flex flex-col gap-3">
@@ -236,8 +279,12 @@ function VongTuTao({
   }
 
   return (
-    <div className="rounded-xl border border-line bg-black/25 p-3">
-      <h3 className="mb-2 font-semibold text-cream">Vòng tự tạo</h3>
+    // Thu gọn sẵn: mở trang là thấy ngay lộ trình bên dưới, không phải cuộn qua khung này.
+    <details className="rounded-xl border border-line bg-black/25 p-3">
+      <summary className="cursor-pointer font-semibold text-cream">
+        Vòng tự tạo <span className="text-xs font-normal text-dim">— tập tự do trên vòng của bạn</span>
+      </summary>
+      <div className="mt-2" />
 
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
         <label className="flex items-center gap-1.5 text-dim">
@@ -361,6 +408,6 @@ function VongTuTao({
         {ban && !dang && <span className="text-dim">Dừng phát trước khi dựng.</span>}
         {loi && <span className="text-rose-300">{loi}</span>}
       </div>
-    </div>
+    </details>
   )
 }

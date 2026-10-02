@@ -15,7 +15,8 @@ import { openDB } from 'idb'
  */
 
 const DB_NAME = 'keytrain'
-const DB_VERSION = 1
+/** 2 (2/10/2026): thêm kho `luotTap`. Cũ: 1. */
+const DB_VERSION = 2
 
 /** Một lần trả lời của người học. Kho này chỉ ghi thêm, không sửa. */
 export interface StatsEvent {
@@ -86,6 +87,23 @@ export interface StoredSong {
   snapshot?: unknown
 }
 
+/**
+ * Một lượt tập ở lộ trình bài tập điệu (trang thầy). Chỉ ghi thêm, không sửa: trạng thái bậc là hàm thuần đọc kho này
+ * (`thay/loTrinh.ts`) — thêm "Đã thuộc" (lượt nguội khác ngày) và lịch kiểm lại sau cũng chỉ là đọc thêm.
+ */
+export interface LuotTap {
+  id?: number
+  timestamp: number
+  /** Ngày theo giờ địa phương, 'YYYY-MM-DD'. */
+  day: string
+  styleId: string
+  /** Bậc 1–7. */
+  bac: number
+  dat: boolean
+  /** Số đo của lượt — bậc 1–3: `chang`, `vap`; bậc 4–7: `tong`, `trung`, `thua`, `lechMs`, `bpm` (bậc 7 thêm `dich`). */
+  soDo: Record<string, number>
+}
+
 interface KeyTrainDB extends DBSchema {
   statsEvents: {
     key: number
@@ -105,6 +123,11 @@ interface KeyTrainDB extends DBSchema {
     key: string
     value: StoredSong
     indexes: { 'by-updated': number }
+  }
+  luotTap: {
+    key: number
+    value: LuotTap
+    indexes: { 'by-style': string }
   }
 }
 
@@ -138,6 +161,16 @@ export function getDb(): Promise<IDBPDatabase<KeyTrainDB>> {
         const store = db.createObjectStore('songs', { keyPath: 'id' })
         store.createIndex('by-updated', 'updatedAt')
       }
+
+      if (!db.objectStoreNames.contains('luotTap')) {
+        const store = db.createObjectStore('luotTap', { keyPath: 'id', autoIncrement: true })
+        store.createIndex('by-style', 'styleId')
+      }
+    },
+    // Thẻ khác (bản app mới hơn) cần nâng phiên bản thì nhả kết nối này ra, đừng chặn nó.
+    blocking() {
+      void dbPromise?.then((db) => db.close())
+      dbPromise = null
     },
   })
 
@@ -236,6 +269,20 @@ export async function clearPracticeData(): Promise<void> {
     db.clear('reviewItems'),
     db.clear('progress'),
   ])
+}
+
+/** Ghi một lượt tập lộ trình; trả lại bản đã ghi (kèm `id`). */
+export async function ghiLuotTap(luot: Omit<LuotTap, 'id' | 'day'> & { day?: string }): Promise<LuotTap> {
+  const db = await getDb()
+  const ban: LuotTap = { ...luot, day: luot.day ?? dayKeyOf(new Date(luot.timestamp)) }
+  const id = await db.add('luotTap', ban)
+  return { ...ban, id }
+}
+
+/** Mọi lượt tập lộ trình, cũ trước. */
+export async function docLuotTap(): Promise<LuotTap[]> {
+  const db = await getDb()
+  return db.getAll('luotTap')
 }
 
 /** Đóng kết nối, dùng khi dọn dẹp hoặc khi test. */

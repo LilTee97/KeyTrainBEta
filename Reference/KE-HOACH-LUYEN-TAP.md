@@ -95,6 +95,9 @@ còn là lượt nguội.
 - Bậc 1–3 không đo nhịp: cửa đạt là đi hết vòng với số lần bấm sai ≤ N.
 - Bậc 4–7, cửa đạt — **đoán, chưa đo**: ≥ 90% tiếng đúng nốt, lệch trung vị ≤ 40 ms. Đo trên tay người dùng ở GĐ 0 rồi
   mới chốt.
+- **2/10/2026 — người dùng giao Claude "trong vai một gia sư piano nhiều kinh nghiệm" quyết ngưỡng từ dễ đến khó.** Ngưỡng từng
+  bậc (siết dần: vấp 15 · 15 · 10 %; theo nhịp 85 % · 60 ms → 90 % · 50 ms → 95 % · 40 ms; bậc 7 90 % · 40 ms) ở
+  `src/thay/loTrinh.ts` và `SO-TAY.md` cùng ngày — quyết định, chưa đo trên tay người dùng.
 - Kho bài tập chia **tập** / **kiểm**: bậc 7 chỉ lấy từ phần kiểm — vòng hợp âm và giọng không xuất hiện ở bậc 1–6.
 
 ---
@@ -320,7 +323,9 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang: Cà Pháo
   Ballad cứ đi → Để em điệp → Để em phiên → Có em chờ phiên → Có em chờ điệp → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow
   Blues. Hai chỗ tay người không đánh được (Có em chờ điệp quãng 10 tay trái; Slow Blues D6→A4 trong 27 ms) — chờ người dùng quyết.
-  **Kế tiếp: bước 5 — thang 7 bậc trong tab Điệu** (cửa đạt bậc 4–7 cần ngưỡng đạt từ lượt tập thật).
+- GĐ 1 bước 5 — thang 7 bậc trong tab Điệu: **xong 2/10/2026** (`KhungLoTrinh.tsx`, `loTrinh.ts`; nhật ký lượt tập IndexedDB `luotTap`).
+  Ngưỡng do Claude quyết trong vai gia sư — chưa đo. Bậc 7 đã chấm bỏ quãng tám; kiểm bass + nốt sai để bước 7.
+  **Kế tiếp: bước 6 — "Đã thuộc" (lượt nguội khác ngày) + lịch kiểm lại**, đọc từ nhật ký đã ghi.
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.
@@ -332,7 +337,7 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 
 - Độ trễ đàn + loa trên máy người dùng. Chú thích trong `audioEngine.ts` ghi Windows "thường 100–250 ms" — chưa đo trên máy
   này.
-- Ngưỡng cửa đạt (90% · 40 ms): đoán.
+- Ngưỡng 7 bậc (Claude quyết trong vai gia sư 2/10/2026): chưa đo trên tay người dùng — xem lại khi có ~20 lượt mỗi bậc.
 - Lượt nguội có sát "thuộc" hơn hai-lượt-liền **trên chính người dùng** không: lý thuyết, chưa đo.
 - Dải lực của đàn MIDI người dùng.
 - Người dùng có tập đều không: nhật ký trả lời sau 3 tuần.

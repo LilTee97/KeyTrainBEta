@@ -95,6 +95,81 @@ export interface TimedPracticeProps {
    * hợp âm đọc thẳng `perBeat` (một vòng, lặp theo phách) thay vì qua bộ phát của tab ấy.
    */
   vongBpm?: number
+  /**
+   * Bậc lộ trình (trang thầy): khoá tay · nhịp độ · quãng tám; `anNotRoi` (bậc 7) ẩn nốt rơi và phím đích, chỉ hiện tên hợp âm
+   * đang chơi và hợp âm kế. Hết lượt thì chấm theo ngưỡng của bậc (`onXong` trả lời chấm để hiện).
+   */
+  bac?: {
+    tay: PracticeHand
+    tempo: TempoStep
+    boQuaQuangTam: boolean
+    anNotRoi: boolean
+    onXong: (score: TimedScore) => { dat: boolean; tomTat: string }
+  }
+}
+
+/** Bậc 7 — chỉ tên hợp âm: hợp âm đang chơi và hợp âm kế (đọc trước, như đọc bảng hợp âm khi đệm hát). */
+function HopAmLon({
+  perBeat,
+  countIn,
+  playing,
+  full,
+}: {
+  perBeat: readonly string[]
+  countIn: number
+  playing: boolean
+  full: boolean
+}) {
+  const dau = { nay: perBeat[0] ?? '', ke: '', con: 0, demVao: true }
+  const [vi, setVi] = useState(dau)
+  useEffect(() => {
+    const len = perBeat.length
+    if (!playing || len === 0) {
+      setVi({ nay: perBeat[0] ?? '', ke: '', con: 0, demVao: true })
+      return
+    }
+    let frame = 0
+    let last = ''
+    const tick = () => {
+      const at = getPlaybackBeats() - countIn
+      const i = Math.max(0, Math.floor(at))
+      const nay = perBeat[i % len] ?? ''
+      let j = i + 1
+      while (j < i + len && (perBeat[j % len] ?? '') === nay) j += 1
+      const next = {
+        nay,
+        ke: j < i + len ? (perBeat[j % len] ?? '') : '',
+        con: Math.max(0, Math.ceil(j - Math.max(at, 0))),
+        demVao: at < 0,
+      }
+      const key = JSON.stringify(next)
+      if (key !== last) {
+        last = key
+        setVi(next)
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+    frame = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frame)
+  }, [perBeat, countIn, playing])
+  return (
+    <div
+      className={`flex flex-col items-center justify-center gap-1 rounded-lg border border-line bg-black/60 ${
+        full ? 'min-h-0 flex-1' : 'h-[220px]'
+      }`}
+    >
+      <span className="font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
+        {vi.demVao ? 'Đếm vào — hợp âm đầu' : 'Đang chơi'}
+      </span>
+      <span className="font-sans text-6xl font-bold text-amber-key">{vi.nay || '—'}</span>
+      {vi.ke && (
+        <span className="font-sans text-xl text-cream/80">
+          kế: <b>{vi.ke}</b>
+          <span className="ml-2 text-xs text-dim">sau {vi.con} phách</span>
+        </span>
+      )}
+    </div>
+  )
 }
 
 /**
@@ -113,6 +188,7 @@ export function TimedPractice({
   perBeat = [],
   meter,
   vongBpm,
+  bac,
 }: TimedPracticeProps) {
   const storeBpm = useMetronomeStore((state) => state.bpm)
   const bpm = vongBpm ?? storeBpm
@@ -123,14 +199,24 @@ export function TimedPractice({
   useLiveSound()
   useComputerKeyboard(60)
 
-  const [hand, setHand] = useState<PracticeHand>('both')
-  const [tempo, setTempo] = useState<TempoStep>(60)
-  const [ignoreOctave, setIgnoreOctave] = useState(false)
+  const [handTuDo, setHand] = useState<PracticeHand>('both')
+  const hand = bac?.tay ?? handTuDo
+  const [tempoTuDo, setTempo] = useState<TempoStep>(60)
+  const tempo = bac?.tempo ?? tempoTuDo
+  const [ignoreOctaveTuDo, setIgnoreOctave] = useState(false)
+  const ignoreOctave = bac?.boQuaQuangTam ?? ignoreOctaveTuDo
+  const anNotRoi = bac?.anNotRoi ?? false
+  const bacRef = useRef(bac)
+  bacRef.current = bac
   const [phase, setPhase] = useState<Phase>('idle')
   const [latencyMs, setLatencyMs] = useState(() => readSetting('latencyMs'))
   const [calibration, setCalibration] = useState<LatencyMeasure | 'few' | null>(null)
   const [taps, setTaps] = useState(0)
-  const [result, setResult] = useState<{ score: TimedScore; bpm: number } | null>(null)
+  const [result, setResult] = useState<{
+    score: TimedScore
+    bpm: number
+    ketQua: { dat: boolean; tomTat: string } | null
+  } | null>(null)
   const [nowSymbol, setNowSymbol] = useState('')
   const [hitting, setHitting] = useState<{ left: MidiNote[]; right: MidiNote[] }>({
     left: [],
@@ -269,7 +355,7 @@ export function TimedPractice({
       latencyMs: latencyMs ?? 0,
       ignoreOctave,
     })
-    setResult({ score, bpm: practiceBpm })
+    setResult({ score, bpm: practiceBpm, ketQua: bacRef.current?.onXong(score) ?? null })
     ghi('luot', {
       bai: title,
       tay: hand,
@@ -362,6 +448,8 @@ export function TimedPractice({
 
   const busy = phase !== 'idle'
   const score = result?.score
+  /* Bậc lộ trình chấm theo ngưỡng của bậc; tập tự do theo ngưỡng chung. */
+  const dat = result?.ketQua ? result.ketQua.dat : score ? passes(score) : false
   const button = (on: boolean) =>
     `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
       on
@@ -396,9 +484,7 @@ export function TimedPractice({
       {score && phase === 'idle' && (
         <span className="font-mono text-dim">
           Đúng {score.hit}/{score.total} · lệch {score.medianAbsMs ?? '—'} ms ·{' '}
-          <span className={passes(score) ? 'text-teal-key' : 'text-rose-300'}>
-            {passes(score) ? 'Đạt' : 'Chưa đạt'}
-          </span>
+          <span className={dat ? 'text-teal-key' : 'text-rose-300'}>{dat ? 'Đạt' : 'Chưa đạt'}</span>
         </span>
       )}
     </>
@@ -413,7 +499,8 @@ export function TimedPractice({
         <MidiConnect />
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-4">
+      {/* Bậc lộ trình đã định sẵn tay · nhịp độ · quãng tám. */}
+      <div className={`mb-3 flex flex-wrap items-center gap-4 ${bac ? 'hidden' : ''}`}>
         <div className="flex gap-1">
           {/* Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). */}
           {(['left', 'both', 'right'] as const).map((value) => (
@@ -532,42 +619,56 @@ export function TimedPractice({
             )}
           </p>
           <p>Phím thừa hoặc sai: {score.extra.length}</p>
-          <p className="mt-1 text-xs text-dim">
-            Ngưỡng tạm — đoán, chưa đo: ≥ {PASS_HIT_RATIO * 100}% đúng nốt và lệch ≤ {PASS_MEDIAN_ABS_MS} ms →{' '}
-            <span className={passes(score) ? 'text-teal-key' : 'text-rose-300'}>
-              {passes(score) ? 'Đạt' : 'Chưa đạt'}
-            </span>
-          </p>
+          {result?.ketQua ? (
+            <p className="mt-1 text-xs text-dim">
+              Ngưỡng của bậc: {result.ketQua.tomTat} →{' '}
+              <span className={dat ? 'font-semibold text-teal-key' : 'font-semibold text-rose-300'}>
+                {dat ? 'Đạt' : 'Chưa đạt'}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-dim">
+              Ngưỡng tạm — đoán, chưa đo: ≥ {PASS_HIT_RATIO * 100}% đúng nốt và lệch ≤ {PASS_MEDIAN_ABS_MS} ms →{' '}
+              <span className={dat ? 'text-teal-key' : 'text-rose-300'}>{dat ? 'Đạt' : 'Chưa đạt'}</span>
+            </p>
+          )}
         </div>
       )}
 
       <PracticeStage bar={fullscreenBar}>
         {(full) => (
           <>
-            <div className={full ? 'min-h-0 flex-1' : ''}>
-              <FallingNotes
-                events={shown}
-                steps={steps}
-                index={0}
-                live={phase === 'playing' && looping}
-                lowNote={fallRange.low}
-                highNote={fallRange.high}
-                onSymbol={setNowSymbol}
-                fill={full}
-              />
-            </div>
+            {/* Bậc 7 ẩn nốt rơi — chỉ còn tên hợp âm, như đệm hát thật. */}
+            {anNotRoi ? (
+              <HopAmLon perBeat={perBeat} countIn={countIn} playing={phase === 'playing' && looping} full={full} />
+            ) : (
+              <div className={full ? 'min-h-0 flex-1' : ''}>
+                <FallingNotes
+                  events={shown}
+                  steps={steps}
+                  index={0}
+                  live={phase === 'playing' && looping}
+                  lowNote={fallRange.low}
+                  highNote={fallRange.high}
+                  onSymbol={setNowSymbol}
+                  fill={full}
+                />
+              </div>
+            )}
             <div className={full ? 'h-[38vh] max-h-80 min-h-28 shrink-0' : ''}>
               <OnScreenPiano
                 lowNote={fallRange.low}
                 highNote={fallRange.high}
-                leftHandNotes={hitting.left}
-                rightHandNotes={hitting.right}
+                leftHandNotes={anNotRoi ? [] : hitting.left}
+                rightHandNotes={anNotRoi ? [] : hitting.right}
                 height={full ? '100%' : undefined}
               />
             </div>
-            <div className="shrink-0 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
-              <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
-            </div>
+            {!anNotRoi && (
+              <div className="shrink-0 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
+                <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
+              </div>
+            )}
           </>
         )}
       </PracticeStage>

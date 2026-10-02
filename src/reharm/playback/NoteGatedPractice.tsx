@@ -52,6 +52,14 @@ export interface NoteGatedPracticeProps {
    * khác) — tự phát `timeline` một lượt dài `perBeat.length` phách, tên hợp âm đọc thẳng `perBeat` theo phách.
    */
   vongBpm?: number
+  /**
+   * Bậc lộ trình (trang thầy): khoá tay tập và tắt "Bỏ qua quãng tám"; hết lượt thì báo số chặng · số chặng vấp ra ngoài và hiện
+   * lời chấm nhận về (cả khi toàn màn hình).
+   */
+  bac?: {
+    tay: PracticeHand
+    onXong: (ketQua: { chang: number; vap: number }) => { dat: boolean; tomTat: string }
+  }
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -73,6 +81,7 @@ export function NoteGatedPractice({
   beatsPerChord,
   perBeat = [],
   vongBpm,
+  bac,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
@@ -84,8 +93,10 @@ export function NoteGatedPractice({
   useLiveSound()
   useComputerKeyboard(60)
 
-  const [hand, setHand] = useState<PracticeHand>('both')
-  const [ignoreOctave, setIgnoreOctave] = useState(false)
+  const [handTuDo, setHand] = useState<PracticeHand>('both')
+  const hand = bac?.tay ?? handTuDo
+  const [ignoreOctaveTuDo, setIgnoreOctave] = useState(false)
+  const ignoreOctave = bac ? false : ignoreOctaveTuDo
   const [active, setActive] = useState(false)
 
   const [keyboardKeys, setKeyboardKeys] = useState(() => readSetting('midiKeyboardKeys'))
@@ -233,6 +244,20 @@ export function NoteGatedPractice({
     }
   }, [heldNotes, step, active, ignoreOctave])
 
+  /* Lộ trình: hết lượt thì chấm một lần cho mỗi lượt (lượt = đối tượng `session`). */
+  const bacRef = useRef(bac)
+  bacRef.current = bac
+  const daBao = useRef<typeof session | null>(null)
+  const [ketQua, setKetQua] = useState<{ dat: boolean; tomTat: string } | null>(null)
+  useEffect(() => {
+    if (!active || !session.finished || !bacRef.current || daBao.current === session) return
+    daBao.current = session
+    setKetQua(bacRef.current.onXong({ chang: session.steps.length, vap: session.stumbled.length }))
+  }, [active, session])
+  const ketQuaHien = session.finished ? ketQua : null
+  /* Bỏ qua chặng tính là vấp — không thì bậc chờ nốt "đạt" được mà chẳng bấm gì. */
+  const boQua = () => setSession((current) => advance(registerMiss(current)))
+
   const progress = progressOf(session)
   const missing = step ? missingNotes(heldNotes, step, { ignoreOctave }) : []
 
@@ -292,7 +317,13 @@ export function NoteGatedPractice({
         </button>
       ) : session.finished ? (
         <>
-          <span className="font-semibold text-teal-key">Xong cả lượt</span>
+          {ketQuaHien ? (
+            <span className={`font-semibold ${ketQuaHien.dat ? 'text-teal-key' : 'text-rose-300'}`}>
+              {ketQuaHien.dat ? 'Đạt' : 'Chưa đạt'} — {ketQuaHien.tomTat}
+            </span>
+          ) : (
+            <span className="font-semibold text-teal-key">Xong cả lượt</span>
+          )}
           <button type="button" onClick={() => setSession((current) => restart(current))} className={barButton}>
             Luyện lại
           </button>
@@ -308,7 +339,7 @@ export function NoteGatedPractice({
               ♪ Nghe chặng
             </button>
           )}
-          <button type="button" onClick={() => setSession((current) => advance(current))} className={barButton}>
+          <button type="button" onClick={boQua} className={barButton}>
             Bỏ qua →
           </button>
           <button type="button" onClick={() => setActive(false)} className={barButton}>
@@ -338,8 +369,8 @@ export function NoteGatedPractice({
         <MidiConnect />
       </div>
 
-      {/* Chọn tay và mức chặt */}
-      <div className="mb-3 flex flex-wrap items-center gap-4">
+      {/* Chọn tay và mức chặt — bậc lộ trình đã định sẵn cả hai. */}
+      <div className={`mb-3 flex flex-wrap items-center gap-4 ${bac ? 'hidden' : ''}`}>
         <div className="flex gap-1">
           {/* Trái bên trái, phải bên phải — như hai bàn tay (người dùng 2/10/2026). Cũ: phải · trái · hai tay. */}
           {(['left', 'both', 'right'] as const).map((value) => (
@@ -406,9 +437,16 @@ export function NoteGatedPractice({
         </button>
       ) : session.finished ? (
         <div className="flex flex-wrap items-center gap-4">
-          <span className="font-serif text-xl font-semibold text-teal-key">
-            Xong cả lượt
-          </span>
+          {ketQuaHien ? (
+            <span className={`font-serif text-xl font-semibold ${ketQuaHien.dat ? 'text-teal-key' : 'text-rose-300'}`}>
+              {ketQuaHien.dat ? 'Đạt' : 'Chưa đạt'}
+              <span className="ml-2 font-sans text-xs font-normal text-dim">{ketQuaHien.tomTat}</span>
+            </span>
+          ) : (
+            <span className="font-serif text-xl font-semibold text-teal-key">
+              Xong cả lượt
+            </span>
+          )}
           {session.stumbled.length > 0 && (
             <span className="text-xs text-dim">
               vướng ở {session.stumbled.length} chặng
@@ -459,8 +497,9 @@ export function NoteGatedPractice({
               </button>
               <button
                 type="button"
-                onClick={() => setSession((current) => advance(current))}
+                onClick={boQua}
                 className="rounded-lg border border-line px-3 py-1.5 text-xs text-dim hover:bg-white/6"
+                title="Tính là một chặng vấp"
               >
                 Bỏ qua chặng →
               </button>

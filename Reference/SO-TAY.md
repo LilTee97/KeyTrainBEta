@@ -5161,3 +5161,60 @@ nhau rất dễ mà lại lên hạng khó.
 Một số tiếng có cùng nốt hai lần (Bolero, Tango Tuấn tay trái `[A2, A2]`; Có em chờ tay phải `[64, 67, 67]`) — bộ dựng khuôn gập
 quãng tám ra trùng. `FallingNotes` vẽ hai khối trùng khoá (React cảnh báo "two children with the same key" ở trang Tuấn) → nay
 bỏ trùng khi vẽ. Tiếng không đụng: gộp nốt đôi đổi âm lượng tiếng đã duyệt.
+
+## Bước — GĐ 1 bước 5: lộ trình 7 bậc trong tab Điệu; ngưỡng đạt do Claude quyết trong vai gia sư (2/10/2026)
+
+**Người dùng:** *"làm bước 5 đi và trong vai một gia sư piano nhiều kinh nghiệm bạn hãy quyết định các ngưỡng đạt từ dễ đến khó"*.
+
+### Ngưỡng 7 bậc — quyết định của Claude, CHƯA ĐO trên tay người dùng (`src/thay/loTrinh.ts`, `BAC`)
+
+| Bậc | Việc | Ngưỡng đạt | Lời gia sư |
+|---|---|---|---|
+| 1 | tay trái · chờ đúng nốt | vấp ≤ 15 % số chặng | tách tay, học thế bấm; chưa có đồng hồ nên chỉ đếm phím sai |
+| 2 | tay phải · chờ đúng nốt | vấp ≤ 15 % | tay phải là việc mới, giữ như bậc 1 |
+| 3 | hai tay · chờ đúng nốt | vấp ≤ 10 % | bậc sau có đồng hồ — nốt phải thuộc trước |
+| 4 | hai tay · theo nhịp 60 % | đúng ≥ 85 % · lệch ≤ 60 ms · thừa ≤ 15 % | lần đầu có đồng hồ: ưu tiên không dừng |
+| 5 | hai tay · 80 % | đúng ≥ 90 % · lệch ≤ 50 ms · thừa ≤ 10 % | nhanh hơn thì sạch hơn, đều hơn |
+| 6 | hai tay · 100 % | đúng ≥ 95 % · lệch ≤ 40 ms · thừa ≤ 5 % | đủ sạch và đều để đệm cho người hát |
+| 7 | tên hợp âm · giọng lạ · 100 % | đúng ≥ 90 % (bỏ quãng tám) · lệch ≤ 40 ms · thừa chưa chấm | thế bấm tự chọn; nhịp đều như bậc 6 |
+
+- **Nguyên tắc:** tách tay trước, ghép sau; chậm trước, nhanh sau; mỗi lần thêm một việc mới (ghép tay, có đồng hồ, bỏ nốt rơi) thì
+  nới tiêu chí cũ một chút rồi siết dần. "Lệch" = trung vị độ lệch tuyệt đối (đã trừ độ trễ đo bằng lượt gõ). 40 ms ở ♩110 ≈ 7 %
+  một phách; 60 ms ở 60 % (♩66) ≈ 7 % — độ chặt so với phách giữ gần như nhau khi tempo tăng.
+- **Giá trị cũ:** một ngưỡng chung 90 % · 40 ms cho mọi lượt theo nhịp (đoán 1/10) — vẫn dùng cho tập tự do.
+- **Triệu chứng để chỉnh:** kẹt một bậc hơn một tuần dù tai nghe đã ổn → nới bậc ấy; qua bậc mà hôm sau lượt nguội trượt (bước 6)
+  → siết. Xem lại khi `LuyenTap.json` có chừng 20 lượt mỗi bậc theo nhịp (cột `bai` ghi "<tên> · bậc N").
+- **"Vấp"** = chặng có bấm sai hoặc bị bỏ qua. Cũ: "Bỏ qua chặng" đi tiếp như bấm đúng → bậc chờ nốt "đạt" được mà không bấm gì.
+  Nay bỏ qua tính vấp — cả ở tab Luyện đệm.
+- Một lượt đạt là **Đã qua** (mở bậc sau). **Đã thuộc** (lượt nguội khác ngày) và lịch kiểm lại: bước 6.
+- Bậc 4–6 chấm trên 2 lượt vòng tập liền (8 ô); bậc 7 một lượt vòng kiểm (8 ô, Blues 11).
+- **Bậc 7:** dịch vòng kiểm sang giọng lạ, mỗi lượt một giọng, xoay +2 (Rê / Si thứ) · −2 (Si♭ / Sol thứ) · +5 (Fa / Rê thứ) · −5
+  (Sol / Mi thứ). Ẩn nốt rơi và phím đích; hiện hợp âm đang chơi, hợp âm kế, còn mấy phách tới lúc đổi; thẻ bậc hiện cả vòng như
+  bảng hợp âm. Chấm bỏ quãng tám; kiểm bass và nốt sai: bước 7.
+- Vòng kiểm không còn mở cho tập tự do (bỏ nút "Tập vòng kiểm") — giữ nó là bài lạ cho bậc 7.
+
+### Dựng
+
+- `src/thay/loTrinh.ts`: 7 bậc + ngưỡng; chấm (`chamGated`, `chamTimed`); trạng thái đọc nhật ký (`trangThaiBac`, `bacKeTiep`); bậc 7
+  (`dichBac7`, `dichVong`, `tenGiong`). Test `loTrinh.test.ts` (11): thang đúng kế hoạch, siết dần, chấm đủ tiêu chí, mở khoá theo
+  nhật ký, giọng bậc 7 xoay, dịch vòng ghi tên giáng, ghi / đọc IndexedDB.
+- `src/shared/persistence/db.ts`: kho mới `luotTap` (`DB_VERSION` 1 → 2), chỉ ghi thêm; `ghiLuotTap`, `docLuotTap`; `blocking()` nhả
+  kết nối cũ khi thẻ khác nâng phiên bản. Triệu chứng để lùi: trang thầy đứng ở "Đang tải tiến độ…" → đóng các thẻ KeyTrain cũ.
+- `src/thay/KhungLoTrinh.tsx` (tên tệp khác `loTrinh.ts` vì ổ Windows không phân biệt hoa thường — `./LoTrinh` từng trỏ nhầm vào
+  `loTrinh.ts`): nút bậc (khoá · đang tập · đã qua), thẻ bậc, khung tập theo bậc, nút "Sang bậc sau".
+- `NoteGatedPractice` · `TimedPractice`: prop `bac` — khoá tay · nhịp độ · quãng tám, chấm theo bậc, hiện Đạt / Chưa đạt cả khi
+  toàn màn hình; bậc 7 dùng `HopAmLon` thay khung nốt rơi.
+- `TeacherPage`: mỗi bài "Lộ trình · n/7" + "Tập tự do"; nhãn "chờ nghe duyệt" cho bài chưa duyệt; mở trang là lộ trình của bài đầu
+  (dễ nhất), đúng bậc đang dở; "Vòng tự tạo" thu gọn để lộ trình nằm ngay dưới danh sách.
+
+### Chạy thử (Chrome mới, mỗi việc n = 1)
+
+- Bậc 1 Ballad cứ đi, tay trái, 40 chặng, cố tình sai 1 lần → "Đạt — vấp 1/40 chặng (được ≤ 6)", bậc 2 mở, nút "Sang bậc 2".
+- Tải lại trang: tiến độ còn (IndexedDB), mở thẳng bậc 2.
+- Gieo bậc 1–6 đạt cho Bossa → bậc 7 giọng Bm: "Bm9 · F#m7 · Bm7 · F#m7 · Em11 · Dmaj7 · F#7b13 · Bm9", không nốt rơi, ♩110.
+- Bậc 4: ♩66 (60 % ♩110), ẩn nút chọn tay. Điện thoại 390 px không tràn ngang.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite **2 557 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+**Chưa đo / chưa làm:** mọi ngưỡng chưa đo trên tay người dùng; bậc theo nhịp chưa ai chạy thật (cần đo độ trễ trước); bước 6 (Đã
+thuộc, lịch kiểm lại); bước 7 (kiểm bass, nốt sai ở bậc 7); chưa thử trên Android.
