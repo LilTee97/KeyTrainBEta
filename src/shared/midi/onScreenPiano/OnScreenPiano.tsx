@@ -41,11 +41,24 @@ const BLACK_KEY_STYLES = {
   Lần 2 (2/10/2026): người dùng *"chạm nhẹ quá mờ, chạm mạnh cũng mờ"*. Cũ: sàn 0,15, đặc hẳn ở velocity 127. Nay sàn
   0,45, đặc hẳn từ velocity 96. ĐOÁN — chưa đo lực đàn người dùng gửi ra (cột `phim` của `LuyenTap.json` sẽ có). Lùi
   khi: nhẹ với mạnh trông như nhau → hạ `PRESS_MIN_OPACITY` hay nâng `PRESS_FULL_VELOCITY`.
+
+  Lần 3 (2/10/2026): *"hãy cho lực mạnh màu đậm hơn nữa"* — lực mạnh đã đặc rồi nên phải SẪM màu: từ velocity 64 pha dần
+  sang tông sẫm (cam → nâu cam, xanh ngọc → xanh rêu), sẫm nhất 55 % ở velocity ≥ 120; đặc hẳn từ velocity 80. Cũ (lần
+  2): đặc từ 96, không sẫm. Lùi khi: lực vừa đã sẫm quá → nâng `DEEP_FROM_VELOCITY`.
 */
 const PRESS_MIN_OPACITY = 0.45
-const PRESS_FULL_VELOCITY = 96
+const PRESS_FULL_VELOCITY = 80
+const DEEP_FROM_VELOCITY = 64
+const DEEP_FULL_VELOCITY = 120
+const DEEP_MAX = 0.55
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
 const pressOpacity = (velocity: number) =>
-  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * Math.min(1, Math.max(0, velocity) / PRESS_FULL_VELOCITY)
+  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * clamp01(velocity / PRESS_FULL_VELOCITY)
+/** Phần tông sẫm pha vào màu phím đang bấm, 0 … DEEP_MAX. */
+const pressDepth = (velocity: number) =>
+  DEEP_MAX * clamp01((velocity - DEEP_FROM_VELOCITY) / (DEEP_FULL_VELOCITY - DEEP_FROM_VELOCITY))
+/** Đã sẫm tới mức này thì chữ trên phím đổi sang sáng cho đọc được. */
+const LIGHT_TEXT_DEPTH = 0.2
 
 /*
   Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt", rồi "các phím C đã có đánh số, hãy
@@ -251,16 +264,28 @@ export function OnScreenPiano({
   }
 
   /** Lớp phủ phím đang bấm: xanh ngọc nếu trúng nốt hợp âm, cam nếu không; đậm theo lực nhấn. */
-  const pressLayer = (note: MidiNote) =>
-    isHeld(note) ? (
+  const velocityOf = (note: MidiNote) => velocities[note] ?? POINTER_VELOCITY
+  /** Đang bấm mạnh tới mức màu đã sẫm — chữ trên phím phải đổi sang sáng. */
+  const pressedDark = (note: MidiNote) => isHeld(note) && pressDepth(velocityOf(note)) >= LIGHT_TEXT_DEPTH
+
+  const pressLayer = (note: MidiNote) => {
+    if (!isHeld(note)) return null
+    const velocity = velocityOf(note)
+    const [base, dark] = isChordTone(note)
+      ? ['var(--color-teal-key)', '#134e4a']
+      : ['var(--color-amber-key)', '#7c2d12']
+    const deep = Math.round(pressDepth(velocity) * 100)
+    return (
       <span
         aria-hidden
-        className={`pointer-events-none absolute inset-0 rounded-b-md ${
-          isChordTone(note) ? 'bg-teal-key' : 'bg-amber-key'
-        }`}
-        style={{ opacity: pressOpacity(velocities[note] ?? POINTER_VELOCITY) }}
+        className="pointer-events-none absolute inset-0 rounded-b-md"
+        style={{
+          opacity: pressOpacity(velocity),
+          backgroundColor: `color-mix(in srgb, ${base} ${100 - deep}%, ${dark} ${deep}%)`,
+        }}
       />
-    ) : null
+    )
+  }
 
   const keyHandlers = (note: MidiNote) => ({
     onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
@@ -291,7 +316,10 @@ export function OnScreenPiano({
           >
             {pressLayer(note)}
             {showNoteNames ? (
-              <span className="relative flex flex-col items-center leading-none" style={{ fontSize: whiteFontPx }}>
+              <span
+                className={`relative flex flex-col items-center leading-none ${pressedDark(note) ? 'text-cream' : ''}`}
+                style={{ fontSize: whiteFontPx }}
+              >
                 {label(note, whiteWidth >= ONE_LINE_MIN_PX)}
               </span>
             ) : null}
@@ -318,7 +346,9 @@ export function OnScreenPiano({
           {blackNamed ? (
             // Đang bấm thì lớp phủ sáng màu — chữ sáng trên phím đen khó đọc, đổi sang chữ tối.
             <span
-              className={`relative flex flex-col items-center leading-none ${isHeld(note) ? 'text-ink/80' : ''}`}
+              className={`relative flex flex-col items-center leading-none ${
+                pressedDark(note) ? 'text-cream' : isHeld(note) ? 'text-ink/80' : ''
+              }`}
               style={{ fontSize: blackFontPx }}
             >
               {label(note, false)}

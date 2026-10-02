@@ -4868,3 +4868,16 @@ hình, điện thoại ngang 800 × 360 toàn màn hình, điện thoại dọc 
 đậm, tên + số mọi phím. Toàn suite **2 534 qua / 5 đỏ** (đúng 5 đỏ cũ); `tsc`, `eslint` sạch; `vite build` qua.
 
 **Chưa đo:** chưa thử trên điện thoại thật (khoá xoay ngang chỉ kiểm được trên Android thật); lực nhấn thật của đàn người dùng.
+
+### Lực mạnh SẪM màu, không chỉ đặc (2/10/2026)
+
+Người dùng: *"hãy cho lực mạnh màu đậm hơn nữa"*. Lực mạnh vốn đã đặc (độ mờ 1 từ velocity 96) nên chỉ còn đường làm sẫm màu.
+Lớp phủ nay pha `color-mix` giữa màu phím (cam / xanh ngọc) với tông sẫm (#7c2d12 / #134e4a): từ velocity 64 bắt đầu sẫm, tới 55 %
+ở velocity ≥ 120; đặc hẳn từ velocity 80. Sẫm ≥ 20 % thì chữ trên phím đổi sang sáng. **Cũ (lần 2):** đặc từ 96, không sẫm. Lùi
+khi: lực vừa đã sẫm quá → nâng `DEEP_FROM_VELOCITY` (64).
+
+**Kiểm:** Chrome chạy ngầm, gọi thẳng `useMidiStore.noteOn` qua `import('/src/shared/midi/midiStore.ts')` (cùng mô-đun với app trên
+máy chủ dev) để giả lực 30 · 64 · 90 · 127 (phím trắng) và 110 (phím đen) — thấy nhạt → đặc → cam sẫm → nâu cam, chữ sáng trên phím
+sẫm. 394 test `shared` + `playback` + `chordDrill` qua; `tsc`, `eslint` sạch.
+
+**Chưa đo:** lực thật đàn người dùng gửi ra — mốc 64 / 80 / 120 vẫn là đoán.
