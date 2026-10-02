@@ -4913,3 +4913,16 @@ vs 6 mốc) · Để em KHÁC (trái 17 vs 11, phải 14 vs 15) · Slow Rock Lá
 **Ý tưởng người dùng:** trang Cà Pháo · Linh Nhi · Tuấn · Blues, mỗi trang tab Điệu · Kỹ thuật đánh · Học cách soạn câu, khung nốt
 rơi cỡ tab Luyện đệm; các tab cũ gom thành một trang; Claude tư vấn tab nên có. Kế hoạch để bàn ở `KE-HOACH-LUYEN-TAP.md` mục 4c:
 khung tập dùng chung, trang Hôm nay (Claude đề xuất), ẩn tab chưa có nội dung, thứ tự dựng 6 bước, câu hỏi A–F. Chưa viết mã.
+
+## Bước — Người dùng chốt A–F; gỡ nút Tôn Hùng (mức 1) (2/10/2026)
+
+Trả lời: *"Hãy làm theo đề xuất của bạn"* · A trang Hôm nay — làm · B trang gom tab cũ tên **"Tái Hòa Âm"** · C vòng tập của Tuấn
+lấy từ **hòa âm Linh Nhi** (giữ như hôm qua; Claude đã đề xuất đường soạn riêng của nút Tuấn — người dùng chọn khác) · D Linh Nhi
+giữ 1 điệu · E tab chưa có nội dung thì ẩn · F *"Hãy xóa nút Tôn Hùng vì ko có điệu nào và cũng ko lấy kiến thức gì từ thầy đó"*.
+
+**F — gỡ ở mức 1 (nút), mã bên trong để nguyên:** mã Tôn Hùng trải 87 dòng ở 18 file nguồn + 50 dòng ở 22 file test, đan vào bộ
+soạn dạo · giang · kết dùng chung với Cà Pháo và Linh Nhi (`tuyenSolo`, `soloVocabulary`, `lineBuilder`, `staticVoicingRules`,
+`reharmPipeline` …). Gỡ mã thì phải chụp đầu ra trước/sau để chắc câu đã duyệt của hai thầy kia không đổi — để người dùng quyết.
+`ReharmHome`: lọc Tôn Hùng khỏi nút thầy (`SOLO_THAY_NUT` giữ nguyên), bỏ nút "Tôn Hùng" ở hàng mức tái hòa âm, bỏ ô "Câu Chiếc
+Lá" và ba nút giang Tôn Hùng (chỉ hiện khi chọn Tôn Hùng), bỏ logic khoá nút giọng trưởng của anh. Bài lưu mang `intensity:
+'tonHung'` → mở ra "Đậm". Toàn suite **2 534 qua / 5 đỏ** (đúng 5 đỏ cũ); `tsc` sạch; `eslint` 0 lỗi (9 cảnh báo cũ).

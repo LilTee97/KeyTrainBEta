@@ -680,7 +680,8 @@ export function ReharmHome() {
   /* Xem chú thích "CÂU FILL / RUN CỦA LINH NHI BẬT THEO NÚT THẦY" ở trên. */
   const cauLinhNhi = soloThay === 'linh-nhi'
   const [chiecLa, setChiecLa] = useState(false)
-  const [tonHungGiang, setTonHungGiang] = useState<TonHungGiang>('hoa-tron')
+  // Nút chọn giang Tôn Hùng đã gỡ 2/10/2026 — giữ giá trị mặc định cho mã bên trong (mức 1).
+  const [tonHungGiang] = useState<TonHungGiang>('hoa-tron')
   /** Mức thêm màu cho hợp âm. */
   const [intensity, setIntensity] = useState<ColorIntensity>('full')
   const cpLick = intensity === 'caPhao' || cpLickSelected
@@ -3129,7 +3130,8 @@ export function ReharmHome() {
     setVaryOnRepeat(saved.varyOnRepeat ?? true)
 
     setAllowJazzColors(saved.allowJazzColors)
-    setIntensity(saved.intensity as ColorIntensity)
+    // Bài lưu lúc còn nút Tôn Hùng (gỡ 2/10/2026) → về "Đậm" (mặc định), khỏi giữ màu một thầy không còn nút chọn.
+    setIntensity(saved.intensity === 'tonHung' ? 'full' : (saved.intensity as ColorIntensity))
     setSusDominant(saved.susDominant)
     setTonicColor(saved.tonicColor as MajorChordColor)
     setMajorColor(saved.majorColor as MajorChordColor)
@@ -4741,43 +4743,32 @@ export function ReharmHome() {
             Hợp âm + giai điệu dạo / giang tấu / kết
           </p>
           <div className="flex flex-wrap gap-2">
-            {SOLO_THAY_NUT.map((nut) => {
+            {/*
+              Nút Tôn Hùng đã gỡ khỏi giao diện (người dùng 2/10/2026: "Hãy xóa nút Tôn Hùng vì ko có điệu nào và cũng ko lấy
+              kiến thức gì từ thầy đó"). Mức 1 — chỉ gỡ nút; mã Tôn Hùng bên trong (`SOLO_THAY_NUT`, khuôn ngầm, bộ soạn) còn
+              nguyên. Khôi phục: commit trước 2/10/2026 ghi gỡ nút này.
+            */}
+            {SOLO_THAY_NUT.filter((nut) => nut.id !== 'ton-hung').map((nut) => {
               const on = soloThay === nut.id
-              /*
-                TÔN HÙNG KHÔNG CÓ BẢN KÝ ÂM GIỌNG TRƯỞNG NÀO — đo vốn ô đoạn dạo: 17 ô,
-                cả 17 đều giọng thứ. Bài giọng trưởng chọn anh thì bộ ghép không có gì
-                để ghép. Khoá nút thay vì mượn ô của thầy khác: mượn là lấy luật thầy A
-                áp cho thầy B, đúng thứ người dùng đã cấm.
-              */
-              const khoa =
-                nut.id === 'ton-hung' &&
-                reharm.key !== null &&
-                reharm.key.scale !== 'minor'
               return (
                 <button
                   key={nut.label}
                   type="button"
-                  disabled={khoa}
                   onClick={() => {
                     setChiecLa(false)
                     setSoloThay(nut.id)
                     if (nut.id === 'linh-nhi') setIntensity('linhNhi')
                     else if (nut.id === 'ca-phao') setIntensity('caPhao')
-                    else if (nut.id === 'ton-hung') setIntensity('tonHung')
                   }}
                   title={
-                    khoa
-                      ? 'Tôn Hùng chưa có bản ký âm giọng trưởng nào — không có ô để ghép'
-                      : nut.id
-                        ? `Dạo / giang / kết theo sheet ${nut.label} — không dùng gam tự chọn`
-                        : 'Theo điệu đệm đang chọn'
+                    nut.id
+                      ? `Dạo / giang / kết theo sheet ${nut.label} — không dùng gam tự chọn`
+                      : 'Theo điệu đệm đang chọn'
                   }
                   className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    khoa
-                      ? 'cursor-not-allowed border-line bg-white/4 text-dim/40'
-                      : on
-                        ? 'border-teal-key bg-teal-key/20 text-teal-key'
-                        : 'border-line bg-white/4 text-dim hover:bg-white/8'
+                    on
+                      ? 'border-teal-key bg-teal-key/20 text-teal-key'
+                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
                   }`}
                 >
                   {nut.label}
@@ -4836,40 +4827,6 @@ export function ReharmHome() {
             />
             Câu chạy tự soạn (nghe thử)
           </label>
-          {thaySolo === 'ton-hung' && (
-            <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-xs text-dim">
-              <input
-                type="checkbox"
-                checked={chiecLa}
-                onChange={() => setChiecLa((on) => !on)}
-              />
-              Câu Chiếc Lá (dạo)
-            </label>
-          )}
-          {thaySolo === 'ton-hung' && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(
-                [
-                  ['chiec-la', 'Giang Chiếc Lá'],
-                  ['tinh-em', 'Giang Tình Em'],
-                  ['hoa-tron', 'Giang hòa trộn'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setTonHungGiang(id)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    tonHungGiang === id
-                      ? 'border-teal-key bg-teal-key/20 text-teal-key'
-                      : 'border-line bg-white/4 text-dim hover:bg-white/8'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>}
 
         <p className="mb-3 text-xs leading-relaxed text-dim">{style.note}</p>
@@ -5823,7 +5780,7 @@ export function ReharmHome() {
                 ['full', 'Đậm'],
                 ['linhNhi', 'Linh Nhi'],
                 ['caPhao', 'Cà Pháo'],
-                ['tonHung', 'Tôn Hùng'],
+                // 'Tôn Hùng' đã gỡ khỏi giao diện 2/10/2026 (mức 1) — xem nút thầy ở trên.
               ] as const
             ).map(([value, label]) => (
               <button
@@ -5832,18 +5789,12 @@ export function ReharmHome() {
                 onClick={() => {
                   stopPlay()
                   setIntensity(value)
-                  if (value === 'linhNhi' || value === 'caPhao' || value === 'tonHung') {
+                  if (value === 'linhNhi' || value === 'caPhao') {
                     setSusDominant(false)
                     setAllowJazzColors(false)
                     setVaryOnRepeat(false)
                     setUseSlashChords(false)
-                    setSoloThay(
-                      value === 'linhNhi'
-                        ? 'linh-nhi'
-                        : value === 'caPhao'
-                          ? 'ca-phao'
-                          : 'ton-hung',
-                    )
+                    setSoloThay(value === 'linhNhi' ? 'linh-nhi' : 'ca-phao')
                   }
                 }}
                 className={`rounded-lg border px-3 py-1.5 text-xs ${
