@@ -326,7 +326,9 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   quãng tám riêng cú vượt tầm tay; 8 nốt cuối câu chạy Slow Blues (dính đầu ô sau) thành nốt láy.
 - GĐ 1 bước 5 — thang 7 bậc trong tab Điệu: **xong 2/10/2026** (`KhungLoTrinh.tsx`, `loTrinh.ts`; nhật ký lượt tập IndexedDB `luotTap`).
   Ngưỡng do Claude quyết trong vai gia sư — chưa đo. Bậc 7 đã chấm bỏ quãng tám; kiểm bass + nốt sai để bước 7.
-  **Kế tiếp: bước 6 — "Đã thuộc" (lượt nguội khác ngày) + lịch kiểm lại**, đọc từ nhật ký đã ghi.
+- GĐ 1 bước 6 — "Đã thuộc" + lịch kiểm lại: **xong 2/10/2026** (`tienDoBai`, đọc nhật ký `luotTap`). Quyết định trong vai gia sư:
+  lượt nguội = lượt đầu tiên của BÀI trong ngày (siết so với mục 1.3); trượt → về hộp 0 (theo `srsEngine`, thay "lùi hộp" ở mục 1.3).
+  **Kế tiếp: bước 7 — bậc 7 chấm (b) đủ: kiểm nốt bass thấp nhất + nốt sai** (hiện chấm bỏ quãng tám, chưa kiểm bass).
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

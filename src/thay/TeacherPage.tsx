@@ -7,7 +7,7 @@ import { TimedPractice } from '../reharm/playback/TimedPractice'
 import { taiBaiTap, type BaiTap, type VongBaiTap } from './baiTap'
 import { dungVong } from './dungVong'
 import { LoTrinh } from './KhungLoTrinh'
-import { trangThaiBac } from './loTrinh'
+import { tienDoBai } from './loTrinh'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
 
@@ -128,7 +128,8 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
 
       <ul className="flex flex-col gap-2">
         {bai.map((one) => {
-          const qua = trangThaiBac(luot, one.styleId).filter((tt) => tt === 'qua').length
+          const tienDo = tienDoBai(luot, one.styleId, dayKeyOf(new Date()))
+          const qua = tienDo.trangThai.filter((tt) => tt === 'qua' || tt === 'thuoc').length
           return (
             <li key={one.styleId} className="rounded-xl border border-line bg-black/25 p-3">
               <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -145,8 +146,13 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
                   onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
                   className={nut(baiLoTrinh?.styleId === one.styleId)}
                 >
-                  Lộ trình · {qua}/7
+                  Lộ trình · {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
                 </button>
+                {tienDo.bacNguoi !== null && (
+                  <span className="text-[11px] text-amber-key">
+                    {tienDo.bacNguoi > tienDo.thuocCaoNhat ? 'lượt nguội' : 'kiểm lại'} hôm nay: bậc {tienDo.bacNguoi}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={() => doi({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })}

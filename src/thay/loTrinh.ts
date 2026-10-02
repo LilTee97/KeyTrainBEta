@@ -1,7 +1,8 @@
 import type { PracticeHand } from '../reharm/playback/noteGatedPlaybackEngine'
 import type { TimedScore } from '../reharm/playback/timedScoring'
 import { transposeSymbol } from '../reharm/transpose'
-import type { LuotTap } from '../shared/persistence/db'
+import { BOX_INTERVALS_DAYS, MAX_BOX_LEVEL, nextBoxLevel } from '../earTraining/srs/srsEngine'
+import { dayKeyOf, type LuotTap } from '../shared/persistence/db'
 import type { VongBaiTap } from './baiTap'
 import { GOC, kieuDau } from './vongThay'
 
@@ -144,7 +145,8 @@ export function chamTimed(bac: Extract<Bac, { cheDo: 'timed' }>, score: TimedSco
   return { dat: score.total > 0 && okDung && okLech && okThua, tomTat: phan.join(' · ') }
 }
 
-export type TrangThaiBac = 'khoa' | 'mo' | 'qua'
+/** khoá · mở (đang tập) · Đã qua (đạt trong buổi) · Đã thuộc (lượt nguội ngày khác vẫn đạt — `tienDoBai`). */
+export type TrangThaiBac = 'khoa' | 'mo' | 'qua' | 'thuoc'
 
 /** Trạng thái 7 bậc của một bài — hàm thuần đọc nhật ký: qua bậc trước mới mở bậc sau. */
 export function trangThaiBac(luot: readonly LuotTap[], styleId: string): TrangThaiBac[] {
@@ -195,4 +197,75 @@ export function dichVong(vong: VongBaiTap, dich: number, thu: boolean): VongBaiT
       ...(voicing.harmonicNotes ? { harmonicNotes: len(voicing.harmonicNotes) } : {}),
     })),
   }
+}
+
+/** Ngày 'YYYY-MM-DD' cộng `n` ngày, theo giờ địa phương. */
+export function congNgay(day: string, n: number): string {
+  const [y, m, d] = day.split('-').map(Number)
+  return dayKeyOf(new Date(y!, m! - 1, d! + n))
+}
+
+export interface TienDoBai {
+  trangThai: TrangThaiBac[]
+  /** Bậc thuộc cao nhất (0 = chưa thuộc bậc nào). Bậc thấp hơn tính thuộc theo — đánh được bậc cao là đánh được bậc thấp. */
+  thuocCaoNhat: number
+  /** Hộp Leitner của bậc thuộc cao nhất (0–5, `srsEngine`) và ngày đến hạn kiểm lại; `null` khi chưa thuộc bậc nào. */
+  hop: number | null
+  han: string | null
+  denHan: boolean
+  /** Lượt nguội hôm nay (lượt đầu tiên của bài trong ngày); `null` = hôm nay chưa tập bài này. */
+  nguoiHomNay: { bac: number; dat: boolean } | null
+  /** Bậc nên tập TRƯỚC TIÊN hôm nay làm lượt nguội — xác nhận Đã thuộc hay kiểm lại; `null` = không có gì cần kiểm. */
+  bacNguoi: number | null
+}
+
+/**
+ * Tiến độ một bài — hàm thuần đọc nhật ký (`Reference/KE-HOACH-LUYEN-TAP.md` mục 1.3, 1.7; GĐ 1 bước 6).
+ *
+ * Quyết định của Claude trong vai gia sư (người dùng giao các bước 6–8: *"làm theo đề xuất của bạn"*), chưa đo:
+ * - LƯỢT NGUỘI = lượt ĐẦU TIÊN của bài trong một ngày, ở bất kỳ bậc nào: tập bậc khác của cùng bài trước thì tay đã nóng.
+ * - ĐÃ THUỘC = lượt nguội đạt ở một bậc đã qua từ NGÀY TRƯỚC (guidance hypothesis: đạt khi đang được nhắc liên tục trong buổi chưa
+ *   nói được là đã học; lượt đầu của buổi sau mới nói). Thuộc bậc cao thì bậc thấp hơn tính thuộc theo.
+ * - KIỂM LẠI theo hộp Leitner có sẵn (`srsEngine`: 0 · 1 · 3 · 7 · 14 · 30 ngày) cho bậc thuộc cao nhất: lượt nguội đạt ở bậc ấy khi
+ *   đến hạn → lên hộp; lượt nguội trượt ở bậc ấy hay thấp hơn → về hộp 0, hôm sau kiểm lại (cùng lý do `nextBoxLevel`: sai là chưa
+ *   nhớ, lùi một hộp từ 30 xuống 14 ngày thì hai tuần sau mới gặp lại). Lượt nguội đạt sớm hơn hạn chỉ là tập, không lên hộp. Thuộc
+ *   bậc cao hơn thì bậc ấy thành bậc được kiểm, bắt đầu lại từ hộp 1.
+ */
+export function tienDoBai(luot: readonly LuotTap[], styleId: string, homNay: string): TienDoBai {
+  const cua = luot
+    .filter((one) => one.styleId === styleId)
+    .sort((a, b) => a.timestamp - b.timestamp || (a.id ?? 0) - (b.id ?? 0))
+  const ngayQua = new Map<number, string>()
+  let thuoc = 0
+  let hop: number | null = null
+  let han: string | null = null
+  let ngayTruoc = ''
+  let nguoiHomNay: TienDoBai['nguoiHomNay'] = null
+  for (const one of cua) {
+    const nguoi = one.day !== ngayTruoc
+    ngayTruoc = one.day
+    if (nguoi) {
+      if (one.day === homNay) nguoiHomNay = { bac: one.bac, dat: one.dat }
+      const choXacNhan = (ngayQua.get(one.bac) ?? one.day) < one.day
+      if (one.dat && choXacNhan && one.bac > thuoc) {
+        thuoc = one.bac
+        hop = 1
+        han = congNgay(one.day, BOX_INTERVALS_DAYS[1])
+      } else if (thuoc > 0 && one.bac <= thuoc && !one.dat) {
+        hop = nextBoxLevel(hop ?? 0, false)
+        han = congNgay(one.day, 1)
+      } else if (thuoc > 0 && one.bac === thuoc && one.dat && han !== null && one.day >= han) {
+        hop = nextBoxLevel(hop ?? 0, true)
+        han = congNgay(one.day, BOX_INTERVALS_DAYS[Math.min(hop, MAX_BOX_LEVEL)])
+      }
+    }
+    if (one.dat && !ngayQua.has(one.bac)) ngayQua.set(one.bac, one.day)
+  }
+
+  const trangThai = trangThaiBac(luot, styleId).map((tt, i): TrangThaiBac => (i < thuoc ? 'thuoc' : tt))
+  const denHan = han !== null && homNay >= han
+  /* Bậc đã qua từ ngày trước mà chưa thuộc — xác nhận bậc cao nhất (thuộc nó là thuộc luôn bậc dưới), trước cả việc kiểm lại. */
+  const cho = [...ngayQua.entries()].filter(([bac, ngay]) => bac > thuoc && ngay < homNay).map(([bac]) => bac)
+  const bacNguoi = nguoiHomNay !== null ? null : cho.length > 0 ? Math.max(...cho) : denHan ? thuoc : null
+  return { trangThai, thuocCaoNhat: thuoc, hop, han, denHan, nguoiHomNay, bacNguoi }
 }

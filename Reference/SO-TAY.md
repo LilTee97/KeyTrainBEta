@@ -5271,3 +5271,44 @@ Người dùng: *"2 chỗ này của bước 4 làm theo đề xuất của bạ
 
 **Kiểm:** `tsc` sạch · eslint các tệp sửa không thêm lỗi (lỗi `caPhaoBalladSongs.ts:307` có từ trước) · toàn suite **2 550 qua /
 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+## Bước — GĐ 1 bước 6: "Đã thuộc" bằng lượt nguội, lịch kiểm lại Leitner (2/10/2026)
+
+**Người dùng:** *"làm bước tiếp theo"* (các bước 6–8 đã giao: *"làm theo đề xuất của bạn"*).
+
+### Quyết định — Claude trong vai gia sư, chưa đo trên tay người dùng (`src/thay/loTrinh.ts`, `tienDoBai`)
+
+- **Lượt nguội** = lượt ĐẦU TIÊN của BÀI trong một ngày, ở bất kỳ bậc nào. Kế hoạch mục 1.3 viết "lượt đầu tiên của bậc ấy" — siết
+  thành "của bài", vì mục 1.7 đã nói: tập bậc khác của cùng bài trước thì tay đã nóng, hết là lượt nguội.
+- **Đã thuộc** = lượt nguội đạt ở một bậc đã qua từ NGÀY TRƯỚC. Thuộc bậc cao thì bậc thấp hơn tính thuộc theo (đánh được bậc cao là
+  đánh được bậc thấp) — một lượt nguội xác nhận được nhiều bậc.
+- **Kiểm lại** cho bậc thuộc cao nhất của mỗi bài, dùng Leitner có sẵn (`srsEngine`: hộp 0 · 1 · 3 · 7 · 14 · 30 ngày):
+  - lượt nguội đạt ở bậc ấy khi đến hạn → lên hộp; đạt sớm hơn hạn chỉ là tập, không lên hộp;
+  - lượt nguội trượt ở bậc ấy hay thấp hơn → về hộp 0, hôm sau kiểm. Kế hoạch mục 1.3 viết "trượt thì lùi hộp" — theo
+    `nextBoxLevel` về hẳn hộp 0, lý do ghi ở đó: sai là chưa nhớ; lùi một hộp từ 30 xuống 14 ngày thì hai tuần sau mới gặp lại;
+  - thuộc bậc cao hơn → bậc ấy thành bậc được kiểm, bắt đầu từ hộp 1.
+- **Hôm nay tập bậc nào trước:** bậc qua cao nhất chưa thuộc (qua từ ngày trước) — xác nhận nó là xác nhận luôn bậc dưới; không có
+  thì bậc thuộc cao nhất nếu đến hạn kiểm lại. App mở sẵn bậc ấy khi vào bài.
+
+### Dựng
+
+- `tienDoBai(luot, styleId, homNay)` — hàm thuần đọc nhật ký `luotTap` có sẵn (không thêm kho); `congNgay`. `TrangThaiBac` thêm
+  `'thuoc'`. Test `loTrinh.test.ts` thêm 5: đạt trong buổi là qua / lượt đầu ngày sau là thuộc kéo theo bậc dưới; tập bậc khác trước
+  thì hết nguội; lên hộp khi đến hạn, đạt sớm không lên, trượt về hộp 0; thuộc bậc cao hơn đi trước kiểm lại; cộng ngày qua tháng.
+- `KhungLoTrinh`: nút bậc ★ (thuộc) / ✓ (qua) + chú thích; dòng "x/7 đã qua · y đã thuộc · kiểm lại bậc T: ngày … (hộp h/5)"; khung
+  nhắc "Lượt nguội hôm nay: tập bậc X trước tiên…" + nút "Vào bậc X"; tập xong lượt nguội thì báo "bậc X — Đạt / Chưa đạt; các lượt
+  sau hôm nay là tập". `TeacherPage`: nút "Lộ trình · x/7 · ★y" và nhãn "lượt nguội / kiểm lại hôm nay: bậc X".
+
+### Chạy thử (Chrome, gieo nhật ký những ngày trước; mỗi việc n = 1)
+
+- Ballad cứ đi (qua bậc 1 ngày 29/9, lượt nguội đạt 30/9 → thuộc, hạn 1/10): hôm nay 2/10 → "★1 · kiểm lại hôm nay: bậc 1", "đến
+  hạn hôm nay (hộp 1/5)", khung nhắc kiểm lại.
+- Twist (qua bậc 1–2 ngày 30/9): mở sẵn bậc 2, nhắc "Đạt thì bậc 2 Đã thuộc"; bấm đủ 8 chặng tay phải → ★1 ★2, "kiểm lại bậc 2: ngày
+  2026-10-03 (hộp 1/5)", khung nhắc đổi thành "Lượt nguội hôm nay: bậc 2 — Đạt".
+
+**Kiểm:** `tsc` sạch · eslint `src/thay` 0 lỗi · `vite build` qua. Toàn suite chạy song song: 16 đỏ = 5 đỏ cũ + 11 HẾT GIỜ (5–30 s)
+ở test soạn câu nặng — lúc ấy máy đang chạy game (FC27, CPU 61–67 % khi rảnh). Chạy tuần tự 8 tệp hết giờ ấy: **111/111 xanh**.
+Lần chạy trước khi có game: 2 550 qua / 5 đỏ cũ.
+
+**Chưa đo:** chưa ai tập thật qua nhiều ngày; khoảng Leitner vốn đặt cho nhớ hợp âm, chưa kiểm cho kỹ năng tay; trang Hôm nay (bước
+8) sẽ gom lượt nguội và bài đến hạn của mọi thầy lên một chỗ.

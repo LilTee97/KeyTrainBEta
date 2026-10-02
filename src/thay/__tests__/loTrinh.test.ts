@@ -9,9 +9,11 @@ import {
   bacKeTiep,
   chamGated,
   chamTimed,
+  congNgay,
   dichBac7,
   dichVong,
   tenGiong,
+  tienDoBai,
   trangThaiBac,
   type Bac,
 } from '../loTrinh'
@@ -122,6 +124,54 @@ describe('bậc 7 — giọng lạ', () => {
     expect(sol.perBeat[0]).toBe('Gm9')
     expect(sol.hopAm).toContain('D7b13')
     expect(sol.voicings[0]!.left).toEqual(kiem.voicings[0]!.left.map((note) => note - 2))
+  })
+})
+
+describe('Đã thuộc và kiểm lại — lượt nguội (bước 6)', () => {
+  let t = 0
+  const lt = (day: string, bac: number, dat: boolean): LuotTap => ({ timestamp: ++t, day, styleId: 'twist', bac, dat, soDo: {} })
+
+  it('đạt trong buổi là Đã qua; lượt đầu ngày sau đạt thì Đã thuộc, kéo theo bậc dưới', () => {
+    const nk = [lt('2026-10-01', 1, true), lt('2026-10-01', 2, true)]
+    expect(tienDoBai(nk, 'twist', '2026-10-01').trangThai.slice(0, 3)).toEqual(['qua', 'qua', 'mo'])
+    expect(tienDoBai(nk, 'twist', '2026-10-01').bacNguoi).toBeNull() // hôm nay đã tập — hết nguội
+    expect(tienDoBai(nk, 'twist', '2026-10-02').bacNguoi).toBe(2) // ngày mới: kiểm bậc qua cao nhất trước tiên
+    nk.push(lt('2026-10-02', 2, true))
+    const td = tienDoBai(nk, 'twist', '2026-10-02')
+    expect(td.trangThai.slice(0, 3)).toEqual(['thuoc', 'thuoc', 'mo'])
+    expect([td.thuocCaoNhat, td.hop, td.han, td.denHan]).toEqual([2, 1, '2026-10-03', false])
+    expect(td.nguoiHomNay).toEqual({ bac: 2, dat: true })
+  })
+
+  it('tập bậc khác của cùng bài trước thì không còn là lượt nguội', () => {
+    const nk = [lt('2026-10-01', 1, true), lt('2026-10-01', 2, true), lt('2026-10-02', 1, true), lt('2026-10-02', 2, true)]
+    expect(tienDoBai(nk, 'twist', '2026-10-02').trangThai.slice(0, 2)).toEqual(['thuoc', 'qua'])
+  })
+
+  it('kiểm lại theo hộp: đạt khi đến hạn lên hộp; đạt sớm không lên; trượt về hộp 0, hôm sau kiểm', () => {
+    const nk = [lt('2026-10-01', 1, true), lt('2026-10-02', 1, true)] // thuộc bậc 1: hộp 1, hạn 10-03
+    const ngay = (day: string) => tienDoBai(nk, 'twist', day)
+    expect([ngay('2026-10-03').denHan, ngay('2026-10-03').bacNguoi]).toEqual([true, 1])
+    nk.push(lt('2026-10-03', 1, true)) // đến hạn, đạt → hộp 2, +3 ngày
+    expect([ngay('2026-10-03').hop, ngay('2026-10-03').han]).toEqual([2, '2026-10-06'])
+    nk.push(lt('2026-10-04', 1, true)) // sớm hơn hạn → chỉ là tập
+    expect([ngay('2026-10-04').hop, ngay('2026-10-04').han]).toEqual([2, '2026-10-06'])
+    nk.push(lt('2026-10-05', 1, false)) // trượt → hộp 0, hôm sau kiểm
+    expect([ngay('2026-10-05').hop, ngay('2026-10-05').han]).toEqual([0, '2026-10-06'])
+    nk.push(lt('2026-10-06', 1, true))
+    expect([ngay('2026-10-06').hop, ngay('2026-10-06').han]).toEqual([1, '2026-10-07'])
+  })
+
+  it('thuộc bậc cao hơn: xác nhận đi trước kiểm lại; bậc ấy thành bậc được kiểm, từ hộp 1', () => {
+    const nk = [lt('2026-10-01', 1, true), lt('2026-10-02', 1, true), lt('2026-10-02', 2, true)]
+    expect(tienDoBai(nk, 'twist', '2026-10-03').bacNguoi).toBe(2)
+    nk.push(lt('2026-10-03', 2, true))
+    const td = tienDoBai(nk, 'twist', '2026-10-03')
+    expect([td.thuocCaoNhat, td.hop, td.han]).toEqual([2, 1, '2026-10-04'])
+  })
+
+  it('cộng ngày qua cuối tháng', () => {
+    expect(congNgay('2026-10-30', 3)).toBe('2026-11-02')
   })
 })
 

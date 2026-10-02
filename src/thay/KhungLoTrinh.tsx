@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { stopTimelineLoop } from '../shared/audio/audioEngine'
-import type { LuotTap } from '../shared/persistence/db'
+import { dayKeyOf, type LuotTap } from '../shared/persistence/db'
 import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
 import { TimedPractice } from '../reharm/playback/TimedPractice'
 import type { BaiTap, VongBaiTap } from './baiTap'
-import { BAC, bacKeTiep, chamGated, chamTimed, dichBac7, dichVong, tenGiong, trangThaiBac, type Bac } from './loTrinh'
+import { BAC, bacKeTiep, chamGated, chamTimed, dichBac7, dichVong, tenGiong, tienDoBai, type Bac } from './loTrinh'
 
 /** Bậc 4–6 chấm trên hai lượt vòng tập liền nhau (8 ô) — đoán, chưa đo: một lượt 4 ô ít tiếng quá. Bậc 7: một lượt vòng kiểm. */
 const LUOT_THEO_NHIP = 2
@@ -44,8 +44,11 @@ export function LoTrinh({
   luot: readonly LuotTap[]
   onGhi: (luot: Omit<LuotTap, 'id' | 'day'>) => void
 }) {
-  const trangThai = trangThaiBac(luot, bai.styleId)
-  const [chon, setChon] = useState(() => bacKeTiep(trangThai))
+  const homNay = dayKeyOf(new Date())
+  const tienDo = tienDoBai(luot, bai.styleId, homNay)
+  const trangThai = tienDo.trangThai
+  // Ngày mới: mở sẵn bậc cần làm lượt nguội (xác nhận Đã thuộc / kiểm lại) — tập bậc khác trước là mất nguội.
+  const [chon, setChon] = useState(() => tienDo.bacNguoi ?? bacKeTiep(trangThai))
   const bac = BAC[chon - 1]!
   const thu = laThu(bai)
   const kiem = bac.cheDo === 'timed' && bac.kiem
@@ -71,8 +74,45 @@ export function LoTrinh({
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-xs text-dim">Lộ trình:</span>
         <span className="font-semibold text-amber-key">{bai.ten}</span>
-        <span className="text-xs text-dim">{trangThai.filter((one) => one === 'qua').length}/7 bậc đã qua</span>
+        <span className="text-xs text-dim">
+          {trangThai.filter((one) => one === 'qua' || one === 'thuoc').length}/7 bậc đã qua · {tienDo.thuocCaoNhat} đã thuộc
+        </span>
+        {tienDo.thuocCaoNhat > 0 && (
+          <span className={`text-xs ${tienDo.denHan ? 'text-amber-key' : 'text-dim'}`}>
+            · kiểm lại bậc {tienDo.thuocCaoNhat}: {tienDo.denHan ? 'đến hạn hôm nay' : `ngày ${tienDo.han}`} (hộp {tienDo.hop}/5)
+          </span>
+        )}
       </div>
+
+      {tienDo.bacNguoi !== null ? (
+        <div className="rounded-xl border border-amber-key/60 bg-amber-key/10 p-3 text-sm">
+          <b className="text-amber-key">Lượt nguội hôm nay:</b> tập <b>bậc {tienDo.bacNguoi}</b> trước tiên, chưa khởi động bài này.{' '}
+          <span className="text-cream/85">
+            {tienDo.bacNguoi > tienDo.thuocCaoNhat
+              ? `Đạt thì bậc ${tienDo.bacNguoi} Đã thuộc.`
+              : 'Đạt thì lên hộp, lần kiểm sau xa hơn; trượt thì mai kiểm lại.'}
+          </span>
+          {chon !== tienDo.bacNguoi && (
+            <button
+              type="button"
+              onClick={() => chonBac(tienDo.bacNguoi!)}
+              className="ml-2 rounded-lg bg-amber-key px-2.5 py-1 text-xs font-semibold text-ink"
+            >
+              Vào bậc {tienDo.bacNguoi}
+            </button>
+          )}
+        </div>
+      ) : (
+        tienDo.nguoiHomNay && (
+          <p className="text-xs text-dim">
+            Lượt nguội hôm nay: bậc {tienDo.nguoiHomNay.bac} —{' '}
+            <span className={tienDo.nguoiHomNay.dat ? 'text-teal-key' : 'text-rose-300'}>
+              {tienDo.nguoiHomNay.dat ? 'Đạt' : 'Chưa đạt'}
+            </span>
+            . Các lượt sau hôm nay là tập (Đã qua), không tính thuộc.
+          </p>
+        )
+      )}
 
       <div className="flex flex-wrap gap-1.5">
         {BAC.map((one, i) => {
@@ -87,19 +127,24 @@ export function LoTrinh({
               className={`rounded-lg border px-2.5 py-1.5 text-left text-xs disabled:cursor-not-allowed disabled:opacity-35 ${
                 chon === one.so
                   ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                  : tt === 'qua'
-                    ? 'border-teal-key/60 bg-teal-key/10 text-teal-key hover:bg-teal-key/20'
-                    : 'border-line bg-white/4 text-cream hover:bg-white/8'
+                  : tt === 'thuoc'
+                    ? 'border-teal-key bg-teal-key/25 text-teal-key hover:bg-teal-key/30'
+                    : tt === 'qua'
+                      ? 'border-teal-key/60 bg-teal-key/10 text-teal-key hover:bg-teal-key/20'
+                      : 'border-line bg-white/4 text-cream hover:bg-white/8'
               }`}
             >
               <span className="font-mono">
-                {tt === 'qua' ? '✓' : tt === 'khoa' ? '·' : '○'} {one.so}
+                {tt === 'thuoc' ? '★' : tt === 'qua' ? '✓' : tt === 'khoa' ? '·' : '○'} {one.so}
               </span>{' '}
               {one.ten}
             </button>
           )
         })}
       </div>
+      <p className="-mt-1.5 text-[11px] text-dim/80">
+        ✓ Đã qua: đạt trong buổi · ★ Đã thuộc: lượt đầu tiên của một ngày khác vẫn đạt — thuộc bậc cao là thuộc luôn bậc dưới.
+      </p>
 
       <div className="rounded-xl border border-line bg-black/25 p-3 text-sm">
         <p>
@@ -122,7 +167,7 @@ export function LoTrinh({
         )}
         <p className="mt-1 text-xs text-dim">
           Đã tập {cuaBac.length} lượt · đạt {cuaBac.filter((one) => one.dat).length}
-          {trangThai[chon - 1] === 'qua' && chon < BAC.length && (
+          {(trangThai[chon - 1] === 'qua' || trangThai[chon - 1] === 'thuoc') && chon < BAC.length && (
             <button
               type="button"
               onClick={() => chonBac(chon + 1)}
