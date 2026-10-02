@@ -4881,3 +4881,21 @@ máy chủ dev) để giả lực 30 · 64 · 90 · 127 (phím trắng) và 110 
 sẫm. 394 test `shared` + `playback` + `chordDrill` qua; `tsc`, `eslint` sạch.
 
 **Chưa đo:** lực thật đàn người dùng gửi ra — mốc 64 / 80 / 120 vẫn là đoán.
+
+## Bước — Đẩy lên GitHub Pages; tình trạng GĐ 0; kế hoạch GĐ 1 (2/10/2026)
+
+Người dùng: *"commit và push đi · xong mục 0 chưa giờ hãy qua làm plan để build mục 1"*. Đẩy `thuoc-cham-cau-solo` và đưa `main`
+lên `ddabd76` (fast-forward) → workflow Pages xanh (run 36964867271), bundle trên trang có mã toàn màn hình + lực nhấn. PianoBrain
+không có gì mới.
+
+**GĐ 0:** xong mục 1–5 + demo + các sửa giao diện ngày 2/10. **Chưa xong:** chốt ngưỡng đạt (chưa có lượt đủ dữ liệu), chấm tiếng
+nhấn (mục 2 của GĐ 0 — chưa làm), thử trên Android thật. Ghi ở `KE-HOACH-LUYEN-TAP.md` mục GĐ 0 "Tình trạng".
+
+**Kế hoạch GĐ 1** (`KE-HOACH-LUYEN-TAP.md` mục GĐ 1, chờ duyệt) — 8 bước; quyết định lớn: bài tập dựng **bằng chính app** (ảnh
+chụp bài → `practiceStore.requestOpen` → `song.timeline`), không viết hàm dựng riêng.
+
+**Số đo trong mã dẫn tới quyết định ấy (2/10):** ReharmHome có nhánh riêng cho Twist (`twistSinglePass`, `chayTwistBlues`), Slow
+Rock (`slowRockMotO`), Slow Blues (`harmonyStyle: 'blue-sun'`, `chayBlueSun`), Bossa CP (`bossaRhythmOnly`), Ballad cứ đi
+(`cuDiFill`), ballad CP (`planCpBalladBacking`) … chép ra là hai nguồn sự thật. **Bẫy:** ô đệm Slow Blues có `right: []` — tay
+phải của điệu là câu chạy Bộ Soạn Blues sinh mỗi ô, nên "tắt câu chèn" thì Slow Blues chỉ còn tay trái → thành câu hỏi 2 cho
+người dùng.

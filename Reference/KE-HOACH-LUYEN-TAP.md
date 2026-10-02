@@ -127,14 +127,66 @@ còn là lượt nguội.
 **Đã dựng 1/10/2026 — chờ người dùng tập thử bằng đàn.** Tab Luyện đệm → nút **Theo nhịp**
 (`playback/TimedPractice.tsx`, bộ chấm `playback/timedScoring.ts`). Chi tiết, hằng số và bẫy: `SO-TAY.md` mục cùng ngày.
 
-### GĐ 1 — Mục Điệu (bàn với người dùng trước khi dựng)
+**Tình trạng 2/10/2026:**
+- Xong mục 1–5 và bản demo. Làm thêm theo yêu cầu người dùng (2/10): phím bấm phát ngay (bỏ 100 ms lookAhead), nốt rơi
+  dài theo độ ngân + tự thu phóng + nốt láy, hình bù theo độ trễ đo được, tên + số mọi phím, phím đậm/sẫm theo lực nhấn, nút
+  trái/phải đúng bên, khung Luyện đệm rộng, nút toàn màn hình xoay ngang (cả Android). Đã đẩy lên GitHub Pages.
+- **Chưa xong:** (1) **chốt ngưỡng đạt** — chưa có lượt nào đủ dữ liệu (7 lượt 2/10 trúng 0–2 nốt, đeo Galaxy Buds 2 trễ 251–278
+  ms); (2) **chấm tiếng nhấn** (mục 2: so tiếng nhấn với tiếng thường) — chưa làm; (3) chưa thử trên Android thật.
+- Không chặn GĐ 1: ngưỡng chỉ cần khi bật cửa đạt (GĐ 1 bước 5–6). Trong lúc dựng bước 1–4, người dùng tập vài lượt trên máy
+  tính bằng tai nghe dây để có số.
 
-- Trước khi đóng băng: người dùng nghe lại các điệu đã duyệt — chưa ai nghe lại sau đợt gỡ code dùng chung 30/9.
-- Chỉ khung đệm lặp; tắt mọi câu chèn (fill, câu chạy, lick, solo). Câu chèn thuộc GĐ 2.
-- Cách xuất bản đóng băng — **chưa chọn**: (a) gọi bộ dựng ngoài React nếu tách được rẻ; (b) nút xuất trong app lấy đúng
-  dòng thời gian tab Luyện đệm đang có, chạy qua 12 giọng (`onTone`). Chọn sau khi đọc đường dựng từng điệu trong
-  ReharmHome.
-- Tab "Lộ trình": điệu → bậc → lượt.
+### GĐ 1 — Mục Điệu: kế hoạch dựng (viết 2/10/2026 — chờ người dùng duyệt)
+
+**Chín điệu — số trong mã (2/10/2026):**
+
+| nút | nhịp | ô đệm | tempo mặc định | vòng tập lấy từ bộ soạn |
+|---|---|---|---|---|
+| Bossa CP cải tiến | 4/4 | 8 phách | 110 | Cà Pháo |
+| Ballad Có em chờ (phiên · điệp) | 4/4 | 8 | 75 | Cà Pháo |
+| Ballad Để em (phiên · điệp) | 4/4 | 8 | 85 | Cà Pháo |
+| Ballad cứ đi | 4/4 | 2 (một lượt rải 8 móc kép) | 63 | Cà Pháo |
+| Slow Rock Lá thư 2 tay (phiên · điệp) | 6/8 | 12 | 86 | Linh Nhi |
+| Slow Blues (phiên · điệp) | 6/8 | 6 — **ô đệm chỉ có tay trái**; tay phải do Bộ Soạn Blues chạy ngón mỗi ô | 92 | Bộ Soạn Blues |
+| Twist | 4/4 swing | 4 | 140 | Bộ Soạn Blues |
+| Bolero Tuấn | 4/4 | 4 | 100 | tạm Linh Nhi — chờ xác nhận |
+| Tango Tuấn | 4/4 | 4 | 100 | tạm Linh Nhi — chờ xác nhận |
+
+**Các bước:**
+
+1. **Sinh vòng tập** — gọi bộ soạn của thầy (`buildPhraseSection`, đoạn dạo · giang · kết) lấy `chords` + `beatsEach`, cắt vòng
+   4 ô ở vạch ô (Blues: một dòng 4 ô của khung 12 ô). Vòng 8 ô (Blues 12 ô) để riêng làm phần kiểm cho bậc 7.
+2. **Dựng bài tập bằng chính app** — mỗi bài tập là một ảnh chụp bài (`SongSnapshot`: hợp âm + điệu + giọng + ô tick) đưa vào
+   đường mở bài sẵn có (`practiceStore.requestOpen`) → ReharmHome dựng như mọi bài → lấy `song.timeline`, ghi ra file nốt kèm commit
+   nguồn. Một script điều khiển app trên máy chủ dev chạy hết 9 điệu × vòng × giọng (cùng lối script chụp màn hình 2/10). Lý do
+   không viết hàm dựng riêng: ReharmHome có hàng chục nhánh riêng từng điệu (Twist một lượt, Slow Rock một ô, giai điệu Slow
+   Blues, Bossa CP chỉ tiết tấu, fill Ballad cứ đi …) — chép ra là hai nguồn sự thật; đi qua app thì bài tập đúng là cái người
+   dùng đã nghe duyệt.
+3. **Người dùng nghe duyệt bộ bài tập** — thay cho "nghe lại 9 điệu": nghe chính những bài sẽ tập; duyệt xong mới đóng băng.
+   Một test dựng lại và so với file để báo khi điệu đổi.
+4. **Đo độ khó → đề xuất thứ tự điệu** — số tiếng mỗi phách, số nốt bấm cùng lúc tối đa, độ giãn tay trong một cú, khoảng cách
+   hai tiếng sát nhất ở tempo 100 %, tempo.
+5. **Tab "Lộ trình"** — danh sách điệu theo thứ tự đề xuất → 7 bậc (chưa mở · đang tập · Đã qua · Đã thuộc · đến hạn kiểm lại) →
+   vào bậc là khung tập dùng lại `NoteGatedPractice` / `TimedPractice` với dữ liệu bài tập, có toàn màn hình.
+6. **Lưu tiến độ trên máy** — kho IndexedDB mới (nhật ký lượt, chỉ ghi thêm — chạy được trên Android); trạng thái bậc = hàm
+   thuần đọc nhật ký; kiểm lại theo Leitner. Máy chủ dev vẫn ghi `LuyenTap.json` cho Claude đọc số đo.
+7. **Bậc 7 chấm (b)** — lớp cao độ (`ignoreOctave`) + kiểm nốt thấp nhất quanh tiếng bass.
+8. **Buổi tập hôm nay** — màn đầu tab: lượt nguội (bậc chờ "Đã thuộc", bậc đến hạn kiểm lại) đi trước, rồi bậc đang học.
+
+Mỗi bước: test + người dùng tập thử, xong mới sang bước sau. Bước 1–4 làm được trước khi chốt ngưỡng.
+
+**Câu hỏi cho người dùng — chi tiết muốn học (chờ trả lời):**
+
+1. **Phiên / điệp** — bốn điệu có hai biến thể (Có em chờ, Để em, Slow Rock Lá thư, Slow Blues). Khuyến nghị: tập phiên khúc
+   trước; điệp khúc thành bài tập thứ hai, mở khi phiên đã qua bậc 6.
+2. **Câu chèn** — khung đệm không có câu chèn (fill, câu chạy, lick); câu chèn để mục 2. Riêng Slow Blues, tay phải CHÍNH LÀ câu
+   chạy Bộ Soạn Blues sinh mỗi ô: (a) đóng băng một bản soạn rồi tập luôn tay phải ấy (khuyến nghị) · (b) chỉ tập tay trái ·
+   (c) tay phải thay bằng hợp âm đơn giản.
+3. **Giọng ở bậc 1–6** — (a) Đô trưởng / La thứ cho mọi điệu, tập khuôn không vướng giọng (khuyến nghị) · (b) đúng giọng sheet
+   gốc từng điệu · (c) người dùng chọn. Bậc 7 thì giọng lạ.
+4. **Tempo 100 %** — lấy tempo mặc định của nút (bảng trên) hay người dùng đặt riêng?
+5. **Lực nhấn** — chỉ hiện nhận xét, không chặn qua bậc, cho tới khi có số đo lực thật (khuyến nghị) · hay chấm luôn?
+6. **Bolero Tuấn · Tango Tuấn** lấy vòng từ bộ soạn Linh Nhi — đồng ý?
 
 ### GĐ 2 — Mục Kỹ thuật (bàn với người dùng trước khi dựng)
 
