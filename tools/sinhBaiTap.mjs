@@ -12,8 +12,9 @@
 // sinh, tai người dùng duyệt. `hopAm` trong sổ là danh sách hợp âm chứ không phải ô (xem `thanhO`). Blues chưa có câu "đã ổn"
 // nào nên lấy khung giang tấu của Bộ Soạn Blues (`boSoanBlues.ts` KHUNG).
 //
-// LƯU Ý: tay phải Slow Blues do Bộ Soạn Blues sinh — mỗi lần chạy ra một bản khác. Bài đã được người dùng nghe duyệt thì đừng
-// chạy lại đè (hoặc chạy rồi chỉ giữ tệp của bài chưa duyệt).
+// BÀI ĐÃ DUYỆT (trường `duyet` trong tệp — người dùng duyệt cả 11 bài 2/10/2026) thì GIỮ, không sinh lại: tay phải Slow Blues do
+// Bộ Soạn Blues sinh, mỗi lần chạy ra một bản khác. Điệu đổi sau khi duyệt mà muốn sinh lại thì `--ghi-de`, rồi người dùng nghe
+// duyệt lại.
 
 import { spawn, execSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
@@ -161,6 +162,8 @@ for (let i = 0; i < 240 && !sanSang; i++) {
 if (!sanSang) throw new Error('App không lên sau 60 s — máy chủ dev có chạy ở cổng 5173 không?')
 
 const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim()
+const GHI_DE = process.argv.includes('--ghi-de')
+let soLanDung = 0
 
 /* Bài ở tab Tái hòa âm phải được trả lại Y HỆT sau mỗi lần dựng (`dungVong` gửi lại `chupBai()` kèm `giu`). */
 const chupTab = () =>
@@ -179,11 +182,18 @@ const dung = (styleId, giong, vong) =>
   })()`)
 
 for (const [thay, styleId, giong, tap, kiem] of BAI) {
+  const file = join(OUT, `${styleId}.json`)
+  const daDuyet = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')).duyet : undefined
+  if (daDuyet && !GHI_DE) {
+    console.log(`${styleId}: giữ bản đã duyệt ${daDuyet} (sinh đè: --ghi-de)`)
+    continue
+  }
+  soLanDung += 2
   const tapOut = await dung(styleId, giong, tap)
   const kiemOut = await dung(styleId, giong, kiem)
   const style = await evaluate(`(async () => { ${MOD}; const s = (await mod('/src/reharm/style/styleLibrary/index.ts')).getStyle(${JSON.stringify(styleId)}); return { ten: s.name, bpm: s.bpm } })()`)
   writeFileSync(
-    join(OUT, `${styleId}.json`),
+    file,
     `${JSON.stringify({ styleId, ten: style.ten, thay, giong: giong === 'minor' ? 'La thứ' : 'Đô trưởng', bpm: style.bpm,
       nguon: { tap: tap.nguon, kiem: kiem.nguon }, commit, tap: tapOut, kiem: kiemOut }, null, 1)}\n`,
   )
@@ -194,7 +204,7 @@ for (const [thay, styleId, giong, tap, kiem] of BAI) {
 if ((await chupTab()) !== truocKhiDung) {
   console.error('LỖI: bài ở tab Tái hòa âm KHÔNG được trả lại y hệt sau khi dựng — xem dungVong / OpenRequest.giu')
   process.exitCode = 1
-} else console.log('Bài ở tab Tái hòa âm trả lại y hệt sau 22 lần dựng.')
+} else console.log(`Bài ở tab Tái hòa âm trả lại y hệt sau ${soLanDung} lần dựng.`)
 
 /* Kho vòng: dịch về Đô trưởng / La thứ trong trang, bỏ trùng. */
 const kho = await evaluate(`(async () => {
@@ -222,4 +232,4 @@ ws.close()
 chrome.kill()
 await sleep(500)
 try { rmSync(profile, { recursive: true, force: true }) } catch { /* Chrome còn giữ tệp — để lại cũng được */ }
-console.log(`Xong ${BAI.length} bài → ${OUT}`)
+console.log(`Xong: sinh ${soLanDung / 2} bài, giữ ${BAI.length - soLanDung / 2} bài đã duyệt → ${OUT}`)

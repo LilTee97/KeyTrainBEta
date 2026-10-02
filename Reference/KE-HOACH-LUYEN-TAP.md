@@ -307,12 +307,15 @@ F. **Tôn Hùng** — app có sẵn nút thầy Tôn Hùng (dạo · giang · k�
 C vòng tập của Tuấn lấy từ **hòa âm Linh Nhi** (không theo đề xuất của Claude) · D Linh Nhi giữ 1 điệu · E tab chưa có nội dung thì
 ẩn · F *"Hãy xóa nút Tôn Hùng vì ko có điệu nào và cũng ko lấy kiến thức gì từ thầy đó"* → gỡ nút (mức 1; mã bên trong để nguyên —
 87 dòng ở 18 tệp, đan vào bộ soạn chung; gỡ mã cần chụp đầu ra trước/sau, chờ người dùng quyết).
+**Mức 2 — không xoá (2/10/2026):** đếm lại 113 dòng / 19 tệp nguồn + 77 dòng / 25 tệp test (87/18 là đếm thiếu). Tôn Hùng không
+phải mã chết: Bolero Tuấn giọng thứ lấy câu dạo của anh 2/6 lượt (đo trong app), giang Tuấn gộp ô giang ba thầy, nốt đáp câu fill
+theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người dùng quyết Tuấn có thôi mượn không (`SO-TAY.md`, cùng ngày).
 
 **Tình trạng (2/10/2026):**
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
-- Bước 2 — dữ liệu bài tập: **đã sinh 11 bài, CHỜ NGƯỜI DÙNG NGHE DUYỆT** (`tools/sinhBaiTap.mjs` → `src/thay/baiTap/*.json`; nghe ở
-  tab Điệu từng trang thầy: "Tập vòng tập / kiểm" → "▶ Nghe vòng"). Vòng tập lấy từ câu "đã ổn" trong `Nguon.json` (Blues: khung
-  Bộ Soạn Blues) — số câu nguồn ghi trong từng bài. Đo độ khó → thứ tự: chưa làm (sau khi duyệt).
+- Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
+  `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Còn: test
+  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. **Kế tiếp: GĐ 1 bước 4 — đo độ khó → đề xuất thứ tự điệu.**
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

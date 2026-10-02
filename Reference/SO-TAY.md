@@ -5031,3 +5031,65 @@ rơi, Theo nhịp 66 BPM (= 60% ♩110), trang Blues rộng 390 px không tràn 
 
 **Chưa đo:** người dùng chưa tập vòng tự tạo nào; hai lượt cho Theo nhịp là đoán. Kho Blues vòng 1 là `Am7 Am7 Am7 Am7` / `C7 C7 C7
 C7` (dòng đầu khung 12 ô) — đúng khung nhưng chỉ một hợp âm.
+
+## Bước — Người dùng duyệt vòng hợp âm 11 bài tập; khoá bài đã duyệt; Tôn Hùng KHÔNG phải mã chết (2/10/2026)
+
+### Người dùng duyệt vòng hợp âm của 11 bài (2/10/2026)
+
+Trả lời câu "nghe duyệt 11 bài": *"các vòng hợp âm đã ổn hãy ghi vào sổ tay"*. Bản duyệt = `src/thay/baiTap/*.json` ở commit
+c0179bc (sinh từ 13ac127); mỗi tệp nay mang `"duyet": "2/10/2026"`. "#" = số câu "đã ổn" trong `Nguon.json`.
+
+| Bài | Giọng · ♩ | Vòng tập (4 ô, bậc 1–6) | Vòng kiểm (bậc 7) | Nguồn tập / kiểm | Tiếng tập / kiểm |
+|---|---|---|---|---|---|
+| Bossa CP cải tiến | La thứ · 110 | Am9 G7 Bm7b5 E7 | Am9 Em7 Am7 Em7 Dm11 Cmaj7 E7b13 Am9 | #995 / #988 | 32 / 64 |
+| Có Em Chờ phiên | Đô trưởng · 75 | Cmaj7 Fmaj7 Em7 Dm7 | C Em7 Dm7 Gsus4 Cmaj7 Fmaj7 Dm7 G9sus4 G7 | #1350 / #1353 | 50 / 99 |
+| Có Em Chờ điệp | Đô trưởng · 75 | như phiên | như phiên | #1350 / #1353 | 50 / 99 |
+| Để Em Rời Xa phiên | La thứ · 85 | Am11 Em7 Bm7b5 E11 | Am Em7 Am11 G Am7 Bm7b5 Bm7b5 E7 | #992 / #984 | 66 / 132 |
+| Để Em Rời Xa điệp | La thứ · 85 | như phiên | như phiên | #992 / #984 | 66 / 132 |
+| Ballad cứ đi | La thứ · 63 | Am9 Em7 Am7 Em7 | Am Em7 Am11 G Am7 Bm7b5 Bm7b5 E7 | #988 / #984 | 80 / 160 |
+| Slow Rock Lá thư hai tay | La thứ · 86 | Am/C Fmaj7 Dm Bm7b5 | Am(add9) Fadd2 Dm9 G9 Cadd2 E9sus4 Am(add9) E9sus4 | #1382 / #182 | 48 / 96 |
+| Bolero Tuấn | La thứ · 100 | Am(add9) Fadd2 Dm9 G9 | Am/C Fmaj7 Dm Bm7b5 E7 E7/D Am Bdim | #182 / #1382 | 28 / 56 |
+| Tango Tuấn | La thứ · 100 | Cadd2 E9sus4 Am(add9) E9sus4 | Am/C Fmaj7 Dm Bm7b5 E7 E7/D Am Bdim | #182 ô 5–8 / #1382 | 24 / 48 |
+| Slow Blues | La thứ · 92 | Am9 Dm9 Am9 Am9 (nhập Am7 Dm7 Am7 Am7) | Am9 ×4 · Dm9 Dm9 · Am9 Am9 · F6/9 E7#9 · Am9 (nhập khung thứ 11 ô) | khung thứ Bộ Soạn Blues | 97 / 237 |
+| Twist | Đô trưởng · 140 | C7 F7 C7 C7 | C7 ×4 · F7 F7 · C7 C7 · G7 F7 · C7 | khung trưởng Bộ Soạn Blues | 43 / 118 |
+
+**Kho vòng "Tự soạn từ hợp âm chủ"** (`src/thay/vongThay.json`, lưu ở Đô trưởng / La thứ, dịch khi dùng). Nguồn là câu "đã ổn"
+(tai đã duyệt ở mức CÂU); người dùng chưa nghe riêng từng vòng 4 ô dưới dạng bài tập.
+- Cà Pháo trưởng: Cmaj7 Fmaj7 Em7 Dm7 (#1350 ô 1–4) · C Em7 Dm7 Gsus4 (#1353 ô 1–4).
+- Cà Pháo thứ: Am Em7 Am11 G (#984 ô 1–4) · Am7 Bm7b5 Bm7b5 E7 (#984 ô 5–8) · Am9 Em7 Am7 Em7 (#988 ô 1–4) · Dm11 Cmaj7 E7b13 Am9
+  (#988 ô 5–8) · Am11 Em7 Bm7b5 E11 (#992 ô 1–4) · Am9 G7 Bm7b5 E7 (#995 ô 1–4) · Am11 Bm7b5 Em7b5 A7 (#1001 ô 1–4) · Am7 Dm7
+  Em7b5 A11 (#1004 ô 1–4) · Am7 Fmaj7 G F (#1007 ô 1–4) · Am7 G Em7b5 A7 (#1007 ô 5–8) · Am7 Bm7b5 Em7 Am7 (#1010 ô 1–4) · Em7 Am7
+  Em7b5 A11 (#1010 ô 5–8).
+- Linh Nhi (Tuấn mượn) trưởng: C Am Em G (#157 ô 1–4) · C Em C G (#157 ô 5–8).
+- Linh Nhi thứ: Am(add9) Fadd2 Dm9 G9 (#182 ô 1–4) · Cadd2 E9sus4 Am(add9) E9sus4 (#182 ô 5–8) · Am/C Fmaj7 Dm Bm7b5 (#1382 ô
+  1–4) · E7 E7/D Am Bdim (#1382 ô 5–8).
+- Blues (4 dòng của khung 12 ô): trưởng C7 C7 C7 C7 · C7 F7 C7 C7 · F7 F7 C7 C7 · G7 F7 C7 C7; thứ Am7 Am7 Am7 Am7 · Am7 Dm7 Am7
+  Am7 · Dm7 Dm7 Am7 Am7 · F7 E7 Am7 Am7.
+
+**Khoá bài đã duyệt:** `tools/sinhBaiTap.mjs` gặp tệp có `duyet` thì GIỮ ("giữ bản đã duyệt"), chỉ sinh đè khi `--ghi-de` — tay phải
+Slow Blues do bộ soạn sinh, mỗi lần chạy một bản (95 · 97 · 100 tiếng ở ba lần chạy 2/10). Chạy thử: 11/11 giữ nguyên byte,
+`vongThay.json` sinh lại giống hệt. Điệu đổi sau khi duyệt thì sinh đè rồi người dùng nghe duyệt lại. Còn thiếu (mục 1.6 kế
+hoạch): test dựng lại và báo khi điệu đã đổi so với bản duyệt.
+
+### Tôn Hùng KHÔNG phải mã chết — chưa xoá mức 2 (2/10/2026)
+
+Người dùng: *"Tôn Hùng có cần xóa mức 2 ko nếu cần thì làm"*. Soát trước khi xoá:
+- Mã: **113 dòng ở 19 tệp nguồn + 77 dòng ở 25 tệp test** (grep `ton-?hung|tôn hùng`, không phân biệt hoa thường). Con số
+  "87 dòng ở 18 tệp" ghi ở kế hoạch mục 4c là đếm thiếu.
+- **Đang ra tiếng ở nút khác:**
+  1. Bolero Tuấn giọng thứ, đoạn dạo: thầy mặc định của nút là Linh Nhi (`soloTeacherOf`) → bộ ghép đi đường `gopThay` →
+     `minorSoloSourceForTake` xoay Linh Nhi · Cà Pháo · Tôn Hùng theo lượt. Chạy trong app, n = 6 lượt: lượt 2 câu dạo *Chiếc Lá
+     Mùa Đông*, lượt 5 *Tình Em Là Đại Dương* → **2/6 lượt là câu Tôn Hùng**.
+  2. Bolero Tuấn giọng thứ, giang tấu: vốn ô gộp giang của ba thầy (`vonO(…, gopThay)`), có hai giang Tôn Hùng. Chưa đo lượt nào
+     thật sự lấy ô của anh.
+  3. Câu fill (`generateFillLine`): nốt đáp và ba nốt ở hợp âm lướt xếp theo ao phách mạnh `'ton-hung'` (gốc → 3 → 5 → 7) — tham
+     số mặc định của `targetPitchClasses`. Đọc mã; chưa đo bao nhiêu câu fill chịu ảnh hưởng.
+  4. Chỉ chú thích: luật mốc lặng hai tay (`sectionStyles.ts`) viện dẫn "Tôn Hùng ballad 14/14".
+- Phần chết thật (không đường nào tới): nút thầy Tôn Hùng (`SOLO_THAY_NUT`, nhánh `thaySolo === 'ton-hung'`), 4 khuôn ngầm
+  `tonHungStyles.ts`, màu `tonHung`, chọn giang.
+- **Claude quyết: không xoá.** Xoá hết = đổi tiếng Bolero Tuấn giọng thứ (dạo 2/6 lượt, giang) và nốt đáp câu fill — thứ tai đã
+  nghe. Xoá riêng phần chết thì tiếng không đổi, chỉ gọn mã, mà phải sửa chừng 10 tệp nguồn + 20 tệp test. Câu 2/10 *"ko lấy
+  kiến thức gì từ thầy đó"* không khớp mã: Tuấn đang mượn câu của anh.
+- Muốn Tuấn thôi mượn: bỏ `'ton-hung'` khỏi vòng xoay `THAY` (`minorSoloSource.ts`) và khỏi vốn giang gộp → dạo Bolero Tuấn thứ
+  xoay hai thầy → nghe duyệt lại → khi ấy mới xoá mức 2 (ao `'ton-hung'` của câu fill đổi TÊN thành ao trung tính, giữ thứ tự,
+  để tiếng không đổi).

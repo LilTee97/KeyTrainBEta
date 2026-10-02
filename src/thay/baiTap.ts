@@ -32,6 +32,8 @@ export interface BaiTap {
   nguon: { tap: string; kiem: string }
   /** Commit KeyTrain lúc sinh — điệu đổi sau commit này thì sinh lại. */
   commit: string
+  /** Ngày người dùng nghe duyệt. Có thì `tools/sinhBaiTap.mjs` giữ bài, không sinh đè (trừ `--ghi-de`). */
+  duyet?: string
   tap: VongBaiTap
   kiem: VongBaiTap
 }
