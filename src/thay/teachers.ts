@@ -2,11 +2,12 @@
  * Bốn thầy của Lộ trình tập và điệu của mỗi thầy — `Reference/KE-HOACH-LUYEN-TAP.md` mục 4c (ý người dùng 2/10/2026:
  * trang Cà Pháo · Linh Nhi · Tuấn · Blues; Blues coi như một thầy).
  *
- * Phiên và điệp khác tiết tấu thì là HAI bài (Có em chờ, Để em — đo mốc gõ từng tay 2/10/2026); giống tiết tấu thì một bài
- * (Slow Rock Lá thư, Slow Blues — chỉ lấy phiên).
+ * Mỗi nút một bài. Có em chờ, Để em từng có bài điệp riêng (khác tiết tấu) — người dùng 2/10/2026 bỏ tiết tấu điệp của hai nút
+ * này; Slow Rock Lá thư, Slow Blues điệp chỉ khác chút nên vốn chỉ lấy phiên.
  *
  * Thứ tự = THỨ TỰ TẬP, dễ trước — đo độ khó 2/10/2026 (`tools/doKhoBaiTap.mjs`, `SO-TAY.md` cùng ngày): cộng hạng 6 chỉ số trên
- * vòng tập, vòng kiểm ra cùng thứ tự. Hai bài cùng một bài hát sát điểm nhau thì để liền nhau. Cũ: thứ tự trên bảng chọn.
+ * vòng tập, vòng kiểm ra cùng thứ tự. Đo lại sau khi bỏ hai bài điệp (9 bài): Để em 35,0 · Có em chờ 36,5 (vòng kiểm hoà 34,0) —
+ * sát nhau, thứ tự giữa hai bài ấy không chắc. Cũ: thứ tự trên bảng chọn.
  */
 export type TeacherId = 'ca-phao' | 'linh-nhi' | 'tuan' | 'blues'
 
@@ -23,10 +24,8 @@ export const TEACHERS: readonly Teacher[] = [
     label: 'Cà Pháo',
     styleIds: [
       'ca-phao-ballad-cu-di',
-      'ca-phao-ballad-de-em-roi-xa-chorus',
       'ca-phao-ballad-de-em-roi-xa',
       'ca-phao-ballad-co-em-cho',
-      'ca-phao-ballad-co-em-cho-chorus',
       'ca-phao-bossa-improved',
     ],
   },

@@ -12,8 +12,9 @@ import { texture, type Hit } from './cpSoloTexture.probe'
 
 // MIDI đo từ `PianoBrain/video/Ca_Phao/De Em Roi Xa-Ca Phao.mxl` trên cửa sổ k = [ô XML k phách 2,
 // ô k+1 phách 2), xem Reference/CA-PHAO-BALLAD-DE-EM.md. Hợp âm và độ dài đúng như sheet.
-const VERSE = 'ca-phao-ballad-de-em-roi-xa', CHORUS = 'ca-phao-ballad-de-em-roi-xa-chorus'
-const SHEET = { [VERSE]: ['Bbmaj7 C Dm7', [1.75, 2.25, 4]], [CHORUS]: ['Bb C A Dm7', [2, 2, 1.75, 2.25]] } as const
+// Bản điệp (cửa sổ 24–25, mốc DERX) đã bỏ 2/10/2026 — người dùng: mỗi nút một tiết tấu.
+const VERSE = 'ca-phao-ballad-de-em-roi-xa'
+const SHEET = { [VERSE]: ['Bbmaj7 C Dm7', [1.75, 2.25, 4]] } as const
 const render = (id: keyof typeof SHEET) =>
   renderPattern(voiceLeadTwoHands(parseChordInput(SHEET[id][0]).chords), getStyle(id)!, { beatsEach: [...SHEET[id][1]] })
 const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(render(id)
@@ -21,16 +22,9 @@ const onsets = (id: keyof typeof SHEET, hand: 'left' | 'right') => [...new Map(r
   .map(e => [+e.startBeat.toFixed(3), [...new Set(render(id).filter(x => x.hand === hand && Math.abs(x.startBeat - e.startBeat) < 1e-6)
     .flatMap(x => x.notes))].sort((a, b) => a - b)])
 
-describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dùng', () => {
-  it('điệp giữ mốc gõ DERX; phiên: Bùm chát bùm → Chát-bùm bum chát bùm chát bùm bum | bùm–bum chát bùm (chát×3) → câu chạy', () => {
+describe('Ballad Để em — phiên theo khung người dùng', () => {
+  it('phiên: Bùm chát bùm → Chát-bùm bum chát bùm chát bùm bum | bùm–bum chát bùm (chát×3) → câu chạy', () => {
     const beats = (hits: readonly { beat: number }[]) => [...new Set(hits.map(h => +h.beat.toFixed(4)))].sort((a, b) => a - b)
-    // Mốc gõ điệp của Ballad DERX (cửa sổ 24–25) — chép số từ `balladDerx.ts` trước khi điệu ấy bị xoá 30/9/2026.
-    const DERX_DIEP = {
-      left: [0, 0.5, 1, 2, 2.5, 3, 4, 4.5, 5.75, 6, 7],
-      right: [0, 0.75, 1.3333, 2, 2.75, 3, 3.25, 3.5, 4, 4.5, 4.75, 5, 5.25, 5.75, 7.25],
-    }
-    for (const hand of ['left', 'right'] as const)
-      expect(beats(getStyle(CHORUS)!.cell![hand]), hand).toEqual(DERX_DIEP[hand])
     const verse = getStyle(VERSE)!.cell!
     const run1 = [2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75], lap = [5, 5.25, 5.5, 5.75, 6]
     const run2 = [6.25, 6.5, 6.75, 7, 7.25, 7.5, 7.75]
@@ -58,7 +52,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   })
 
   it('không móc kép nào dưới hai nốt vang trên vòng của sheet — hết chỗ đứt của DERX', () => {
-    for (const id of [VERSE, CHORUS] as const) {
+    for (const id of [VERSE] as const) {
       const events = render(id)
       for (let s = 0; s < 32; s += 1) {
         const t = s / 4 + .01
@@ -184,7 +178,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
   })
 
   it('mô phỏng câu solo full khoá đúng Để Em Rời Xa, đúng vạch nhịp thật (không lấy Chưa Bao Giờ)', () => {
-    for (const id of [VERSE, CHORUS])
+    for (const id of [VERSE])
       for (const [kind, length] of [['intro', 16], ['interlude', 16], ['outro', 38]] as const) {
         const m = buildPhraseSection({ kind, key: { tonic: 9, scale: 'minor' }, style: getStyle(id)!, caPhaoCompose: true,
           caPhaoSimulate: true, caPhaoFull: true, thay: 'ca-phao', beatsPerChord: 4, dropRoot: true, opening: null, solo: () => [] })!
@@ -196,15 +190,8 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
       }
   })
 
-  it('cao độ điệp khớp sheet cửa sổ 24–25 (bỏ nốt trên 74)', () => {
-    expect(onsets(CHORUS, 'right')).toEqual([
-      [0, [65, 74]], [.75, [65, 74]], [1.333, [65, 70]], [2, [64, 72]],
-      [2.75, [60]], [3, [62, 67]], [3.25, [64]], [3.5, [60]],
-      [4, [69, 73]], [4.5, [69]], [4.75, [69]], [5, [64]], [5.25, [73]], [5.75, [65, 69]], [7.25, [60]]])
-  })
-
   it('hai tay không trùng phím, tay trái không quá 59', () => {
-    for (const [id, chords] of [[VERSE, 'Bb Dm7 C F'], [CHORUS, 'Bb C A7 Dm7'], [CHORUS, 'B E7 F#m G']] as const) {
+    for (const [id, chords] of [[VERSE, 'Bb Dm7 C F']] as const) {
       const events = renderPattern(voiceLeadTwoHands(parseChordInput(chords).chords), getStyle(id)!, { beatsPerChord: 4 })
       expect(Math.max(...events.filter(e => e.hand === 'left').flatMap(e => e.notes)), id).toBeLessThanOrEqual(59)
       for (const l of events.filter(e => e.hand === 'left'))
@@ -221,7 +208,7 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     expect(left('Bbmaj7 Dm7')).toEqual([[46, 53, 57], [50]])
     for (const root of ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'])
       for (const quality of ['', 'm', '7', 'maj7', 'm7', 'sus4', '9sus4'])
-        for (const id of [VERSE, CHORUS])
+        for (const id of [VERSE])
           for (const e of renderPattern(voiceLeadTwoHands(parseChordInput(`${root}${quality} ${root}${quality}`).chords), getStyle(id)!))
             expect(new Set(e.notes).size, `${id} ${root}${quality} ${e.hand} ${e.startBeat}`).toBe(e.notes.length)
   })
@@ -239,12 +226,11 @@ describe('Ballad Để em — điệp mốc DERX, phiên theo khung người dù
     expect([...autoFillSkip(6, new Set([4]), new Set([1, 4]))]).toEqual([0, 2, 3, 4, 5])
   })
 
-  it('là một nút Ballad riêng, tự đổi sang điệp, không mang màu Codex', () => {
+  it('là một nút Ballad riêng, không mang màu Codex; đoạn điệp chơi như phiên (bỏ bản điệp 2/10/2026)', () => {
     expect(hoCuaDieu(VERSE)).toBe('ballad')
     expect(isBalladStyle(VERSE)).toBe(true)
-    expect(resolveStyleForSection(VERSE, 'chorus')).toBe(CHORUS)
-    expect(resolveStyleForSection(CHORUS, 'verse')).toBe(VERSE)
-    expect(isCodexStyle(VERSE) || isCodexStyle(CHORUS)).toBe(false)
+    expect(resolveStyleForSection(VERSE, 'chorus')).toBe(VERSE)
+    expect(isCodexStyle(VERSE)).toBe(false)
     expect(getStyle(VERSE)!.bpm).toBe(85)
   })
 })

@@ -5,6 +5,7 @@ import {
   hasTonicVariant,
   resolveStyleForChord,
   resolveStyleForSection,
+  sectionCellBreaks,
 } from '../sectionStyles'
 import { getStyle } from '../styleLibrary'
 import { renderPattern } from '../patternRenderer'
@@ -104,21 +105,34 @@ describe('bảng ghép phiên khúc - điệp khúc', () => {
 })
 
 describe('phần đệm đổi ô nhịp đúng ranh giới đoạn', () => {
-  // 30/9/2026: kiểm trên hai điệu còn giữ có bản điệp. Cũ: Pop Ballad (Hải) và bản rải tự do — đã xoá.
-  it('Có Em Chờ: điệp khúc chơi hình khác phiên khúc', () => {
-    const events = play('ca-phao-ballad-co-em-cho')
-    const verse = beatsIn(events, 0, 8)
-    const chorus = beatsIn(events, 8, 16)
-    const backToVerse = beatsIn(events, 16, 24)
-
-    expect(chorus).not.toEqual(verse)
-    // Hết điệp khúc thì quay về đúng hình của phiên khúc.
-    expect(backToVerse).toEqual(verse)
+  /*
+    2/10/2026: Có Em Chờ, Để Em bỏ bản điệp (người dùng) — kiểm trên hai cặp còn lại. Bản điệp của hai điệu này chỉ thêm quãng
+    tám, cùng mốc gõ, nên so cả nốt: đoạn điệp khác bản phiên dựng cùng chỗ, ngoài đoạn điệp y hệt. Cũ: Có Em Chờ (khác hình),
+    Để em; trước nữa Pop Ballad (Hải), bản rải tự do — đã xoá.
+  */
+  it('Slow Rock Lá thư, Slow Blues: đoạn điệp đổi sang bản điệp, hết điệp quay về y như phiên', () => {
+    const hinh = (events: readonly TimelineEvent[], from: number, to: number) =>
+      JSON.stringify(events.filter((e) => e.startBeat >= from - 0.001 && e.startBeat < to - 0.001)
+        .map((e) => [e.startBeat, e.hand, [...e.notes].sort((a, b) => a - b)]))
+    for (const id of ['slow-rock-la-thu-hai-tay', 'blue-sun']) {
+      const style = getStyle(id)!
+      const doi = play(id)
+      const phien = renderPattern(voiceLeadTwoHands(parseChordInput('C Am F G C Am').chords), style, {
+        beatsPerChord: BEATS_PER_CHORD,
+        cellBreaks: SECTIONS.map((s) => s.startBeat),
+      })
+      expect(hinh(doi, 8, 16), id).not.toBe(hinh(phien, 8, 16))
+      expect(hinh(doi, 0, 8), id).toBe(hinh(phien, 0, 8))
+      expect(hinh(doi, 16, 24), id).toBe(hinh(phien, 16, 24))
+    }
   })
 
-  it('Để em cũng đổi được', () => {
-    const events = play('ca-phao-ballad-de-em-roi-xa')
-    expect(beatsIn(events, 8, 16)).not.toEqual(beatsIn(events, 0, 8))
+  it('Có Em Chờ, Để Em: đoạn điệp chơi như phiên (bỏ bản điệp 2/10/2026), đầu đoạn vẫn mở lại ô A', () => {
+    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa']) {
+      expect(hasChorusVariant(id), id).toBe(false)
+      expect(resolveStyleForSection(id, 'chorus'), id).toBe(id)
+      expect(sectionCellBreaks(id, [{ startBeat: 0 }, { startBeat: 12 }]), id).toEqual([0, 12])
+    }
   })
 
   it('điệp khúc vào ĐÚNG vạch đoạn, không trễ nhịp nào', () => {

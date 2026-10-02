@@ -81,9 +81,7 @@ const blues = (chords, nguon) => ({ o: chords.map((c) => [c]), dich: 0, nguon })
 const BAI = [
   ['ca-phao', 'ca-phao-bossa-improved', 'minor', vongTu(995, 0, 4), vongTu(988, 0, 8)],
   ['ca-phao', 'ca-phao-ballad-co-em-cho', 'major', vongTu(1350, 0, 4), vongTu(1353, 0, 8)],
-  ['ca-phao', 'ca-phao-ballad-co-em-cho-chorus', 'major', vongTu(1350, 0, 4), vongTu(1353, 0, 8)],
   ['ca-phao', 'ca-phao-ballad-de-em-roi-xa', 'minor', vongTu(992, 0, 4), vongTu(984, 0, 8)],
-  ['ca-phao', 'ca-phao-ballad-de-em-roi-xa-chorus', 'minor', vongTu(992, 0, 4), vongTu(984, 0, 8)],
   ['ca-phao', 'ca-phao-ballad-cu-di', 'minor', vongTu(988, 0, 4), vongTu(984, 0, 8)],
   ['linh-nhi', 'slow-rock-la-thu-hai-tay', 'minor', vongTu(1382, 0, 4), vongTu(182, 0, 8)],
   ['tuan', 'bolero-tu-n-improv-bai-04-00001', 'minor', vongTu(182, 0, 4), vongTu(1382, 0, 8)],

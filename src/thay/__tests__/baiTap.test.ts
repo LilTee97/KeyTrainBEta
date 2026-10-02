@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { CHORUS_PAIRS } from '../../reharm/style/sectionStyles'
 import { TEACHERS } from '../teachers'
 import type { BaiTap } from '../baiTap'
 
@@ -26,18 +25,6 @@ describe('bài tập điệu — bản đóng băng', () => {
         }
       }
     }
-  })
-
-  it('bài điệp khúc chơi tiết tấu điệp, khác bài phiên (cũ: dựng không đánh dấu đoạn → giống hệt bài phiên từng byte)', () => {
-    let soCap = 0
-    for (const [phien, diep] of Object.entries(CHORUS_PAIRS)) {
-      const a = bai.get(phien)
-      const b = bai.get(diep)
-      if (!a || !b) continue
-      soCap += 1
-      expect(JSON.stringify(b.tap.timeline), diep).not.toBe(JSON.stringify(a.tap.timeline))
-    }
-    expect(soCap).toBe(2)
   })
 
   /*

@@ -16,12 +16,6 @@ describe('họ ballad', () => {
     for (const id of BALLAD_FAMILY_IDS) expect(isBalladStyle(id), id).toBe(true)
   })
 
-  it('bản điệp khúc của điệu ballad cũng là ballad', () => {
-    for (const id of ['ca-phao-ballad-co-em-cho-chorus', 'ca-phao-ballad-de-em-roi-xa-chorus']) {
-      expect(isBalladStyle(id), id).toBe(true)
-    }
-  })
-
   it('điệu không phải ballad thì sai', () => {
     for (const id of [
       'ca-phao-bossa-improved',

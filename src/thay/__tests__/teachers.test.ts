@@ -14,7 +14,7 @@ describe('TEACHERS — điệu của từng thầy', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('chín nút thành 11 bài: Có em chờ và Để em tách phiên · điệp (khác tiết tấu), Lá thư và Slow Blues một bài', () => {
-    expect(TEACHERS.map((teacher) => teacher.styleIds.length)).toEqual([6, 1, 2, 2])
+  it('chín nút thành chín bài — bỏ bài điệp Có em chờ, Để em (người dùng 2/10/2026)', () => {
+    expect(TEACHERS.map((teacher) => teacher.styleIds.length)).toEqual([4, 1, 2, 2])
   })
 })

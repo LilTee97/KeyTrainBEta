@@ -39,33 +39,6 @@ const coEmCho: StylePattern = {
   },
 }
 
-const coEmChoChorus: StylePattern = {
-  ...common, id: 'ca-phao-ballad-co-em-cho-chorus',
-  name: 'Có Em Chờ · Điệp khúc', family: coEmCho.family,
-  cpSoloSong: coEmCho.cpSoloSong,
-  familyName: coEmCho.familyName, variant: 2, bpm: 75,
-  sourceVideos: ['Cà Pháo · Có Em Chờ · điệp ô XML 25–26; đối chiếu 41–42'],
-  note: 'Điệp: bass rải rộng, bè trong nhấn lệch móc kép. Ô 25–26, bỏ melody và pickup phụ thuộc hòa âm; đã nghe duyệt 25/09/2026.',
-  cell: {
-    lengthBeats: 8,
-    left: [
-      bass(0, .25), hit(.25, .5, [tone(2)]), hit(.75, .5, [tone(1, 12)]),
-      hit(1.25, .25, [tone(2, 12)]), hit(1.5, .5, [tone(1, 12)]),
-      hit(2, .25, [tone(0), tone(1, 12)]), hit(2.25, .5, [tone(2)]),
-      hit(2.75, .75, [tone(1, 12)]), hit(3.5, .5, [tone(0, 12)]),
-      bass(4, .5), hit(4.5, .5, [tone(2)]), hit(5, .75, [tone(0, 12)]),
-      bass(5.75, .75), bass(6.5, .25), hit(6.75, .25, [tone(3)]),
-      hit(7, 1, [tone(1, 12), tone(2, 12)]),
-    ],
-    right: [
-      hit(.75, .5, [tone(1)]), hit(1.25, .5, [tone(1)]),
-      hit(1.75, .75, [tone(1)]), hit(3, .25, [tone(2)]),
-      // The pickup at 25:3.75 and its tie-stop at 26:0 are omitted together.
-      hit(5.75, .5, [tone(3), tone(1)]), hit(6.25, 1, [tone(3)]),
-    ],
-  },
-}
-
 /*
   Để Em Rời Xa — soạn lại 25/9/2026 theo cách Codex dựng Ballad DERX (Reference/BALLAD-DERX.md). Đệm đã nghe duyệt 26/9/2026
   (bản 36); solo dạo · giang · kết đã nghe duyệt 26/9/2026 (lượt 4, ô tick `cpBalladThu`). Số đo: Reference/CA-PHAO-BALLAD-DE-EM.md, `scripts/audit_cp_de_em.py`.
@@ -197,35 +170,6 @@ const deEm: StylePattern = {
       hit(5, .5, [tone(2), tone(0, 12)], THUONG),             // chát 2: A4+D5 — ngân qua bum 2¼
       hit(5.5, .5, [ba3()], THUONG),                          // giai điệu 2&: F4 — ngân qua bum 2¾
       hit(6, 2, [ba3(), tone(3)], THUONG),                    // chát 3: F4+C5, ngân suốt câu chạy
-    ],
-  },
-}
-
-const deEmChorus: StylePattern = {
-  ...deEmCommon, id: 'ca-phao-ballad-de-em-roi-xa-chorus',
-  name: 'Để Em Rời Xa · Điệp khúc', family: deEm.family,
-  familyName: deEm.familyName, variant: 2, bpm: 85,
-  sourceVideos: ['Cà Pháo · Để Em Rời Xa · cửa sổ 24–25 (XML 24:2–26:2) như DERX, đầu bass theo 52; đối chiếu 52–53'],
-  note: 'Điệp: mốc gõ DERX (bass móc đơn, bè chêm lệch, chùm ba), ngân nối tới cú sau, F4+D5 đủ quãng đôi. Đã nghe duyệt 26/09/2026 (cả điệu).',
-  cell: {
-    lengthBeats: 8,
-    left: [
-      // Bb2 F3 Bb3 theo cửa sổ 52 (24 là Bb1-Bb2-Bb3, vượt trần) · C2 · C3+G3 · C3+G3.
-      bass(0, .5), hit(.5, .5, [tone(2)]), hit(1, 1, [tone(0, 12)]),
-      bass(2, .5), hit(2.5, .5, [tone(0, 12), tone(2, 12)]), hit(3, 1, [tone(0, 12), tone(2, 12)]),
-      // Cửa sổ 25: C#3 (A/C#, không ép thể đảo) · A3 sheet d 1 · D2 · D2 · D2 sheet d .75.
-      bass(4, .5), hit(4.5, 1.25, [tone(0, 12)]), bass(5.75, .25), bass(6, 1), bass(7, 1),
-    ],
-    right: [
-      hit(0, .75, [tone(2), ba3(12)]), hit(.75, 7 / 12, [tone(2), ba3(12)]), // F4+D5 ×2, sheet d .5
-      hit(4 / 3, 2 / 3, [tone(2), tone(0, 12)]),              // F4+Bb4 chùm ba (bỏ F5: vượt trần 74)
-      hit(2, .75, [ba3(), tone(0, 12)]),                    // E4+C5 (bỏ E5)
-      // Khe lời: C4 · D4+G4 · E4 · C4 (52 có D4/G4 · E4 y hệt).
-      hit(2.75, .25, [tone(0)]), hit(3, .25, [tone(0, 2), tone(2)]), hit(3.25, .25, [ba3()]), hit(3.5, .5, [tone(0)]),
-      hit(4, .5, [tone(0, 12), ba3(12)]), hit(4.5, .25, [tone(0, 12)]), hit(4.75, .25, [tone(0, 12)]),
-      hit(5, .25, [tone(2)]), hit(5.25, .5, [ba3(12)]),
-      hit(5.75, 1.5, [ba3(), tone(2)]),                     // F4+A4, sheet d .5
-      hit(7.25, .75, [tone(3, -12)]),                         // C4, sheet d .25
     ],
   },
 }
@@ -392,9 +336,11 @@ const cuDi: StylePattern = {
 }
 
 // 30/9/2026: người dùng xoá nút Ngày mai em đi và Ballad ACDD — chỉ còn Có Em Chờ trong nhóm Codex.
-export const CP_BALLAD_SONG_STYLES: readonly StylePattern[] = [coEmCho, coEmChoChorus]
+// 2/10/2026: bỏ bản điệp khúc của Có Em Chờ và Để Em (người dùng) — mỗi nút một tiết tấu. Cũ: [coEmCho, coEmChoChorus] ·
+// [deEm, deEmChorus] (commit 15b4b82).
+export const CP_BALLAD_SONG_STYLES: readonly StylePattern[] = [coEmCho]
 // Tách mảng riêng: nút do Claude soạn, không mang màu Codex.
-export const CP_BALLAD_DE_EM_STYLES: readonly StylePattern[] = [deEm, deEmChorus]
+export const CP_BALLAD_DE_EM_STYLES: readonly StylePattern[] = [deEm]
 export const CP_BALLAD_CU_DI_STYLES: readonly StylePattern[] = [cuDi]
 export const CP_BALLAD_SONG_IDS = [...CP_BALLAD_SONG_STYLES, ...CP_BALLAD_DE_EM_STYLES, ...CP_BALLAD_CU_DI_STYLES].map(style => style.id)
 export const CP_BALLAD_SONG_FAMILIES = [coEmCho.family]

@@ -40,10 +40,10 @@ describe('ACDD 16 run pitches from CP boundary evidence', () => {
 })
 
 describe('Co Em Cho one-beat chord leads', () => {
-  it('links the pictured progression in both sections, preserving RH, earlier beats and slash bass', () => {
+  it('links the pictured progression, preserving RH, earlier beats and slash bass', () => {
     const chords = parse('Gadd2 D9/F# Em(add9) D9 Cadd2 Bm7 Em(add9) Am9')
       .map((c, i) => ({ ...c, beats: i === 5 || i === 6 ? 2 : 4 }))
-    for (const id of ['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-co-em-cho-chorus']) {
+    for (const id of ['ca-phao-ballad-co-em-cho']) {
       const songStyle = getStyle(id)!
       const plain = renderPattern(voiceLeadTwoHands(chords), songStyle, { beatsEach: chords.map(c => c.beats) })
       const out = balladChordLeads(plain, chords, {

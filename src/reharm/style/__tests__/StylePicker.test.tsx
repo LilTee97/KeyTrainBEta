@@ -5,7 +5,9 @@ import { ALL_STYLES, getStyle, getVisibleStyles, hiddenBuiltIns, removeStyle, re
 import { CHORUS_PAIRS, getSectionPlaybackStyle, resolveStyleForSection } from '../sectionStyles'
 
 const base = 'ca-phao-ballad-co-em-cho'
-const chorus = `${base}-chorus`
+// Bản điệp Có Em Chờ đã bỏ 2/10/2026 — cơ chế điệp ẩn kiểm trên cặp còn lại.
+const slowRock = 'slow-rock-la-thu-hai-tay'
+const chorus = `${slowRock}-chorus`
 const markup = (selectedId = base) => renderToStaticMarkup(
   <StylePicker styles={ALL_STYLES} selectedId={selectedId} onSelect={() => {}} />,
 )
@@ -15,8 +17,8 @@ const button = (html: string, label: string) =>
 afterEach(() => restoreHiddenStyles())
 
 describe('single picker choice with automatic section variants', () => {
-  it('keeps pink Có Em Chờ separate from Claude Ballad Để em, including a saved chorus', () => {
-    const html = markup(chorus)
+  it('keeps pink Có Em Chờ separate from Claude Ballad Để em', () => {
+    const html = markup(base)
     expect(html.match(/>Ballad Có Em Chờ</g)).toHaveLength(1)
     expect(html).toMatch(/<button[^>]*aria-pressed="true"[^>]*text-pink-100[^>]*>Ballad Có Em Chờ<\/button>/)
     expect(html).toMatch(/<button[^>]*aria-pressed="false"[^>]*>Ballad Để em<\/button>/)
@@ -58,7 +60,7 @@ describe('single picker choice with automatic section variants', () => {
       expect(html).not.toContain(`>${getStyle(chorusId)!.name}</button>`)
       expect(html).toMatch(/aria-pressed="true"/)
     }
-    expect(markup(chorus).match(/>Ballad Có Em Chờ</g)).toHaveLength(1)
+    expect(markup(chorus).match(/>Slow Rock Lá thư hai tay</g)).toHaveLength(1)
   })
 
   it('does not resurrect a hidden base button through its chorus', async () => {
@@ -72,11 +74,11 @@ describe('single picker choice with automatic section variants', () => {
   it('can play an internal chorus hidden in the old UI without restoring buttons', async () => {
     await removeStyle(chorus)
     const before = hiddenBuiltIns().map(style => style.id)
-    const chosen = resolveStyleForSection(base, 'chorus')
+    const chosen = resolveStyleForSection(slowRock, 'chorus')
     expect(getSectionPlaybackStyle(chosen)?.id).toBe(chorus)
     expect(getStyle(chorus)).toBeUndefined()
     expect(hiddenBuiltIns().map(style => style.id)).toEqual(before)
-    expect(markup()).toContain('>Ballad Có Em Chờ</button>')
+    expect(markup()).toContain('>Slow Rock Lá thư hai tay</button>')
   })
 
   it('a tombstone left on an internal pattern does not break the solo source', async () => {

@@ -6,11 +6,12 @@ import { CP_BALLAD_SONG_STYLES as styles, CP_BALLAD_SONG_FAMILIES } from '../sty
 import { getStyle, styleFamilies } from '../styleLibrary'
 import { hoCuaDieu, kieuTrongHo } from '../hoDieu'
 import { isBalladStyle } from '../balladFamily'
-import { sectionCellBreaks, resolveStyleForSection } from '../sectionStyles'
+import { resolveStyleForSection } from '../sectionStyles'
 import { renderPattern } from '../patternRenderer'
 
-// 30/9/2026: người dùng xoá nút Ngày mai em đi và Ballad ACDD — nhóm sheet Codex chỉ còn Có Em Chờ (phiên · điệp).
-const sourceBars = [[9, 10], [25, 26]]
+// 30/9/2026: người dùng xoá nút Ngày mai em đi và Ballad ACDD — nhóm sheet Codex chỉ còn Có Em Chờ. 2/10/2026: bỏ bản điệp
+// (ô 25–26), chỉ còn phiên.
+const sourceBars = [[9, 10]]
 
 describe('CP ballad song-specific reductions', () => {
   it('preserves consecutive source LH attacks and durations', () => {
@@ -30,46 +31,17 @@ describe('CP ballad song-specific reductions', () => {
     })
   })
 
-  it('registers the song family with an automatic verse/chorus pair', () => {
+  it('registers the song family — one rhythm, the chorus plays the verse (chorus rhythm dropped 2/10/2026)', () => {
     expect(styleFamilies(styles).map(family => family.family)).toEqual(CP_BALLAD_SONG_FAMILIES)
-    expect(styles).toHaveLength(2)
+    expect(styles).toHaveLength(1)
     for (const style of styles) {
       expect(getStyle(style.id)).toBe(style)
       expect(hoCuaDieu(style.id)).toBe('ballad')
       expect(isBalladStyle(style.id)).toBe(true)
+      expect(resolveStyleForSection(style.id, 'chorus')).toBe(style.id)
     }
     expect(kieuTrongHo('ballad').filter(style => CP_BALLAD_SONG_FAMILIES.includes(style.family)))
       .toEqual([styles[0]])
-    for (const index of [0]) {
-      const verse = styles[index], chorus = styles[index + 1]
-      expect(verse.cell).not.toEqual(chorus.cell)
-      expect(verse.family).toBe(chorus.family)
-      expect(resolveStyleForSection(verse.id, 'chorus')).toBe(chorus.id)
-      expect(resolveStyleForSection(chorus.id, 'verse')).toBe(verse.id)
-      expect(resolveStyleForSection(chorus.id, 'interlude')).toBe(verse.id)
-    }
-  })
-
-  it('changes immediately to chorus A after an odd number of verse bars, then returns to verse A', () => {
-    for (const index of [0]) {
-      const verse = styles[index], chorus = styles[index + 1]
-      const returnBeat = 12 + chorus.cell!.lengthBeats
-      const endBeat = returnBeat + verse.cell!.lengthBeats
-      const chords = parseChordInput(Array(endBeat / 4).fill('Cm7').join(' ')).chords
-      const cellBreaks = sectionCellBreaks(verse.id, [{ startBeat: 0 }, { startBeat: 12 }, { startBeat: returnBeat }])
-      const events = renderPattern(voiceLeadTwoHands(chords), verse, {
-        beatsPerChord: 4, cellBreaks,
-        cellAt: beat => (beat >= 12 && beat < returnBeat ? chorus : verse).cell!,
-      })
-      expect(events.filter(e => e.hand === 'left' && e.startBeat >= 12 && e.startBeat < returnBeat)
-        .map(e => e.startBeat - 12)).toEqual(chorus.cell!.left.map(hit => hit.beat))
-      expect(events.filter(e => e.hand === 'left' && e.startBeat >= returnBeat)
-        .map(e => e.startBeat - returnBeat)).toEqual(verse.cell!.left.map(hit => hit.beat))
-      for (const event of events) {
-        const end = event.startBeat < 12 ? 12 : event.startBeat < returnBeat ? returnBeat : endBeat
-        expect(event.startBeat + event.durationBeats).toBeLessThanOrEqual(end)
-      }
-    }
   })
 
   it('keeps the reduced RH (including omitted melody/tie-stop) with CP chord colors in all keys', () => {
@@ -93,7 +65,6 @@ describe('CP ballad song-specific reductions', () => {
         }
       }
     }
-    expect(styles[1].cell!.right.some(hit => hit.beat === 4)).toBe(false)
   })
 
   it('retains slash bass and clips notes at short chord boundaries', () => {

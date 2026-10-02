@@ -21,8 +21,10 @@ import type { StylePattern } from './types'
  * có bản điệp khúc mà tự ghép bừa một điệu khác vào là đổi bài của người ta.
  */
 export const CHORUS_PAIRS: Readonly<Record<string, string>> = {
-  'ca-phao-ballad-co-em-cho': 'ca-phao-ballad-co-em-cho-chorus',
-  'ca-phao-ballad-de-em-roi-xa': 'ca-phao-ballad-de-em-roi-xa-chorus',
+  /*
+    Có Em Chờ, Để Em Rời Xa: BỎ tiết tấu điệp khúc (người dùng 2/10/2026: *"các tiết tấu đệm điệp khúc của để em rời xa và có em
+    chờ tôi thấy nên bỏ"*) — đoạn điệp của hai nút chơi như phiên. Cũ: `-chorus` (ô sheet 25–26 / 24–25), nằm ở commit 15b4b82.
+  */
   'slow-rock-la-thu-hai-tay': 'slow-rock-la-thu-hai-tay-chorus',
   // Slow Blues (id `blue-sun`, The House of the Rising Sun): tay trái lo trọn đệm; điệp thêm quãng tám ở bass phách 1.
   'blue-sun': 'blue-sun-chorus',
@@ -165,6 +167,12 @@ export function nghiDonRaTheoMoc(
   return out
 }
 
+/*
+  Có Em Chờ, Để Em: ô hai ô nhịp, đầu đoạn vẫn mở lại ô A như hồi còn bản điệp (bỏ 2/10/2026) — chỗ đổi duy nhất là đoạn điệp chơi
+  như phiên. Không có dòng này thì đoạn số ô lẻ làm đoạn sau vào giữa ô (nửa B).
+*/
+const MO_LAI_O_DAU_DOAN = new Set(['ca-phao-ballad-co-em-cho', 'ca-phao-ballad-de-em-roi-xa'])
+
 /** Các đầu đoạn cần mở lại mẫu đệm; độc lập với việc chọn biến thể điệu. */
 export function sectionCellBreaks(
   styleId: string,
@@ -173,7 +181,7 @@ export function sectionCellBreaks(
   // CP cải tiến có câu hai ô A–B nhưng không có biến thể điệp khúc.
   // Sau đoạn dài số ô lẻ phải mở lại A, không lấy nửa B của chu kỳ toàn bài.
   const restart = hasChorusVariant(styleId) || hasTonicVariant(styleId)
-    || laBossaCP(canonical(styleId))
+    || laBossaCP(canonical(styleId)) || MO_LAI_O_DAU_DOAN.has(canonical(styleId))
   return restart ? sections?.map(section => section.startBeat) ?? [] : []
 }
 

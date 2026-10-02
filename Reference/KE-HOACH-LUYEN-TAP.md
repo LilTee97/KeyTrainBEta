@@ -241,6 +241,7 @@ Người dùng trả lời theo số câu hỏi (1–4) rồi theo số bước 
    tập"*. **Số đo (2/10, so mốc gõ từng tay trong ô đệm):** Có em chờ — KHÁC cả hai tay (trái 10 vs 16 mốc, phải 10 vs 6) → 2 bài
    tập · Để em — KHÁC cả hai tay (trái 17 vs 11, phải 14 vs 15) → 2 bài tập · Slow Rock Lá thư hai tay — GIỐNG (điệp chỉ thêm
    quãng tám) → 1 bài tập · Slow Blues — GIỐNG tay trái (tay phải do bộ soạn) → 1 bài tập.
+   **2/10/2026, sau khi nghe bài điệp:** người dùng bỏ hẳn tiết tấu điệp của Có em chờ và Để em — mỗi nút một bài (9 bài).
 2. Slow Blues tay phải: **(a)** đóng băng một bản soạn của Bộ Soạn Blues rồi tập luôn — *"Hãy làm như bạn đề xuất"*.
 3. Giọng bậc 1–6: **Đô trưởng / La thứ** — *"Hãy làm như bạn đề xuất"*.
 4. Tempo 100 % = **tempo mặc định của nút** — *"Đúng vậy"*.
@@ -266,7 +267,7 @@ thuật đánh**, **Mục 3 = tab Học cách soạn câu**.
 
 | Trang | Tab Điệu (mục 1) | Tab Kỹ thuật đánh (mục 2) — nguồn | Tab Học cách soạn câu (mục 3) — nguồn |
 |---|---|---|---|
-| Cà Pháo | Bossa CP cải tiến · Có em chờ phiên · Có em chờ điệp · Để em phiên · Để em điệp · Ballad cứ đi — **6 bài** | CP Lick/Run (`cpPhrases.json`, 9 sheet) · câu fill CP · walking bass, hai tay đan (*Để Em Rời Xa*) | `teachers/ca-phao.md` (1 497 dòng) |
+| Cà Pháo | Ballad cứ đi · Để em · Có em chờ · Bossa CP cải tiến — **4 bài** (bài điệp bỏ 2/10) | CP Lick/Run (`cpPhrases.json`, 9 sheet) · câu fill CP · walking bass, hai tay đan (*Để Em Rời Xa*) | `teachers/ca-phao.md` (1 497 dòng) |
 | Linh Nhi | Slow Rock Lá thư hai tay — **1 bài** | Linh Run · rải hai tay · câu fill (7 sheet) | `teachers/linh-nhi-piano.md` (3 637) · `LUAT-SOAN-NOT.md` (1 387) |
 | Tuấn | Bolero Tuấn · Tango Tuấn — **2 bài, chưa nghe duyệt** | sheet Tuấn Lưu (PatternTester) | `teachers/tuan-luu-piano.md` (404) |
 | Blues | Slow Blues (tay phải: một bản soạn đóng băng) · Twist — **2 bài** | nốt láy, blue note, riff, câu chạy · bass boogie | `BLUES-CHON-HOP-AM-VA-NOT.md` (729) · `TWIST.md` (144) |
@@ -318,11 +319,10 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
   `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Còn: test
-  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. Riêng 2 bài **điệp khúc** (Có em chờ, Để em) sinh lại 2/10 — bản cũ chơi
-  tiết tấu phiên (lỗi app: bản điệp không bao giờ chơi ở thân đoạn) — **chờ nghe duyệt** tiết tấu điệp.
-- GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang: Cà Pháo
-  Ballad cứ đi → Để em điệp → Để em phiên → Có em chờ phiên → Có em chờ điệp → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow
-  Blues. Hai chỗ tay người không đánh được — người dùng duyệt đề xuất 2/10: quãng 10 tay trái Có em chờ điệp giữ nguyên, chấm bỏ
+  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. 2 bài **điệp khúc** (Có em chờ, Để em) sinh lại 2/10 rồi người dùng nghe
+  và **bỏ hẳn tiết tấu điệp** của hai nút ấy — còn 9 bài (`SO-TAY.md` "Bỏ tiết tấu đệm điệp khúc").
+- GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang (đo lại trên 9 bài): Cà
+  Pháo Ballad cứ đi → Để em → Có em chờ → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow Blues. Hai chỗ tay người không đánh được — người dùng duyệt đề xuất 2/10: quãng 10 tay trái Có em chờ điệp giữ nguyên, chấm bỏ
   quãng tám riêng cú vượt tầm tay; 8 nốt cuối câu chạy Slow Blues (dính đầu ô sau) thành nốt láy.
 - GĐ 1 bước 5 — thang 7 bậc trong tab Điệu: **xong 2/10/2026** (`KhungLoTrinh.tsx`, `loTrinh.ts`; nhật ký lượt tập IndexedDB `luotTap`).
   Ngưỡng do Claude quyết trong vai gia sư — chưa đo. Bậc 7 đã chấm bỏ quãng tám; kiểm bass + nốt sai để bước 7.

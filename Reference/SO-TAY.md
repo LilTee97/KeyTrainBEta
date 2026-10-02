@@ -5247,3 +5247,27 @@ Người dùng: *"2 chỗ này của bước 4 làm theo đề xuất của bạ
   đỏ trên bản cũ ("phách 5.95835 → 6: 27 ms" …), xanh trên bản mới. Sinh lại Slow Blues mà đỏ ở đây thì làm y như vậy.
 
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite **2 560 qua / 5 đỏ** (5 đỏ cũ).
+
+## Bước — Bỏ tiết tấu đệm điệp khúc của Có Em Chờ và Để Em Rời Xa (2/10/2026)
+
+**Người dùng** (sau khi nghe 2 bài điệp vừa sinh lại): *"các tiết tấu đệm điệp khúc của để em rời xa và có em chờ tôi thấy nên bỏ"*.
+
+- **Bỏ:** hai cặp trong `CHORUS_PAIRS`; hai khuôn điệp `coEmChoChorus` (ô sheet 25–26) và `deEmChorus` (cửa sổ 24–25, mốc DERX) ở
+  `caPhaoBalladSongs.ts`; hai bài tập điệp và hai dòng `BAI` trong `tools/sinhBaiTap.mjs`. Lấy lại: commit 15b4b82.
+- **Tab Tái hòa âm:** đoạn điệp của hai nút chơi như phiên. Đo trên bài 2 dòng, dòng 2 đánh dấu điệp (mốc gõ trái/phải mỗi ô): Có em
+  chờ 6/5 9/5 6/5 3/5 ‖ 6/5 9/5 6/5 7/5 · Để em 5/8 12/6 5/8 8/10 ‖ 5/8 12/6 5/8 12/6 — y hệt lần đo hành vi cũ sáng nay (trước khi
+  sửa lỗi "bản điệp không bao giờ chơi"). Slow Rock Lá thư hai tay, Slow Blues giữ bản điệp; phần sửa lỗi ấy (`diepKhuc`) giữ cho
+  hai nút này.
+- **Giữ mở lại ô A ở đầu đoạn** (`MO_LAI_O_DAU_DOAN`, `sectionStyles.ts`): trước đây hai nút có nhờ còn bản điệp
+  (`hasChorusVariant`); bỏ mà không giữ thì đoạn số ô lẻ làm đoạn sau vào giữa ô (nửa B). Triệu chứng để lùi: đầu đoạn mới nghe
+  hụt câu → kiểm dòng này.
+- **Test:** bỏ phần kiểm bản điệp của hai nút (`balladFamily`, `caPhaoBalladSongs` 2 chỗ, `caPhaoBalladDeEm` 5 chỗ, `baiTap`); test
+  cơ chế điệp chung chuyển sang cặp còn lại (`StylePicker`: Slow Rock Lá thư; `sectionStyles`: Slow Rock + Slow Blues — so cả nốt,
+  vì bản điệp hai điệu ấy chỉ thêm quãng tám, cùng mốc gõ); thêm test hai nút chơi phiên ở đoạn điệp và vẫn mở lại ô A. Không nới
+  phép kiểm bản phiên nào.
+- **Bài tập: 9** (Cà Pháo 4). Đo lại độ khó (cộng hạng đổi theo tập bài): Slow Rock 13,0 · Bolero 21,5 · Ballad cứ đi 23,5 · Tango
+  24,5 · Twist 31,0 · Để em 35,0 · Có em chờ 36,5 · Bossa 37,5 · Slow Blues 47,5; vòng kiểm cùng thứ tự (Bolero = Tango, Để em = Có
+  em chờ). Trang Cà Pháo: Ballad cứ đi → Để em → Có em chờ → Bossa CP. Để em và Có em chờ sát điểm — thứ tự giữa hai bài không chắc.
+
+**Kiểm:** `tsc` sạch · eslint các tệp sửa không thêm lỗi (lỗi `caPhaoBalladSongs.ts:307` có từ trước) · toàn suite **2 550 qua /
+5 đỏ** (5 đỏ cũ) · `vite build` qua.

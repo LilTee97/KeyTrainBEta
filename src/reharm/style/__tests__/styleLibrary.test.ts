@@ -56,7 +56,11 @@ describe('chín nút người dùng giữ (30/9/2026)', () => {
     // Khuôn ngầm cũng không được mở làm điệu đệm từ bài lưu.
     expect(styleIdOrDefault('bolero-linh-nhi-2')).toBe('ca-phao-ballad-cu-di')
     expect(styleIdOrDefault('twist')).toBe('twist')
-    expect(styleIdOrDefault('ca-phao-ballad-co-em-cho-chorus')).toBe('ca-phao-ballad-co-em-cho-chorus')
+    expect(styleIdOrDefault('blue-sun-chorus')).toBe('blue-sun-chorus')
+    // Bản điệp Có Em Chờ, Để Em đã bỏ 2/10/2026: bài lưu còn mang id ấy thì về điệu mặc định.
+    for (const id of ['ca-phao-ballad-co-em-cho-chorus', 'ca-phao-ballad-de-em-roi-xa-chorus']) {
+      expect(styleIdOrDefault(id), id).toBe('ca-phao-ballad-cu-di')
+    }
   })
 })
 
