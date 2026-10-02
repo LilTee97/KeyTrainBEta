@@ -4840,3 +4840,31 @@ thấy → nâng `PRESS_MIN_OPACITY` (0,15).
 
 **Chưa đo:** đường lực của Casio ("Touch Response" Light / Normal / Heavy đổi dải velocity gửi ra) — chưa biết chạm nhẹ của người
 dùng ra velocity bao nhiêu; ánh xạ tuyến tính là đoán. Tắt cảm ứng lực trên đàn thì mọi cú bấm cùng một lực.
+
+## Bước — Luyện đệm: khung rộng, bàn phím to, nút TOÀN MÀN HÌNH xoay ngang; số quãng tám mọi phím; lực nhấn đậm hơn (2/10/2026)
+
+Người dùng: *"chạm nhẹ quá mờ, chạm mạnh cũng mờ"* · *"các phím C đã có đánh số, hãy cho các phím còn lại cũng đánh số"* · *"khung
+phím đàn còn quá bé, có thể tăng diện tích hiển thị của cả tab Luyện đệm để tăng khung phím. Hãy làm cho khung phím nút fullscreen
+để hiển thị full màn và xoay ngang. Làm cho cả phần android cũng có thể fullscreen"*.
+
+- **Lực nhấn:** độ mờ lớp phủ = 0,45 + 0,55 × min(1, velocity / 96). **Cũ (cùng ngày):** 0,15 + 0,85 × velocity / 127. ĐOÁN —
+  `LuyenTap.json` chưa có lượt nào ghi lực (cột `phim` thêm sau các lượt người dùng tập). Lùi khi: nhẹ với mạnh trông như nhau.
+- **Số trên phím:** mọi phím tên kèm quãng tám. Phím trắng ≥ 20 px một dòng (D4), hẹp hơn chữ trên số dưới; phím đen ≥ 9 px chữ
+  trên số dưới (C# / 4). Cỡ chữ theo bề ngang phím (trắng 8–14 px, đen 7–12 px). **Cũ:** phím trắng hẹp chỉ chữ cái, phím đen
+  ≥ 13 px chỉ C#, chữ cố định 9 · 8 px.
+- **Khung rộng:** tab Luyện đệm rộng tối đa 1800 px (`AppShell`), tab khác giữ 768 px. Bàn phím cao theo bề ngang phím trắng ×
+  4,2, kẹp 110–240 px. **Cũ:** mọi tab 768 px, bàn phím 150 px.
+- **Toàn màn hình (`PracticeStage`, dùng ở cả hai chế độ):** nút ⛶ góc khung nốt rơi → Fullscreen API trên khung nốt rơi + bàn phím
+  + dòng hợp âm, rồi `screen.orientation.lock('landscape')` (Android chỉ cho khi đang toàn màn hình; máy tính từ chối — bỏ qua).
+  Lúc toàn màn hình: thanh nút gọn ở trên (Chờ đúng nốt: Phát cả bài · Bắt đầu / tiến độ / Nghe chặng / Bỏ qua / Dừng; Theo nhịp:
+  Bắt đầu / Dừng · kết quả lượt vừa chơi), nốt rơi lấp chỗ trống (`FallingNotes fill`, đo chiều cao thật bằng ResizeObserver),
+  bàn phím 38 % chiều cao màn (112–320 px). Thoát toàn màn hình thì trả chiều xoay về tự do. PWA giữ `display: standalone`.
+
+**Bẫy — khi chụp kiểm bằng Chrome chạy ngầm:** tab Tái hoà âm luôn được giữ ẩn trong cây (`hidden`), và nó cũng có một bàn phím
+ảo — `querySelector` tìm "phím E4" bắt phải phím của bàn phím ẩn (khung 0 × 0, toạ độ 0,0). Lọc `getClientRects().length > 0`.
+
+**Kiểm:** chụp bằng Chrome chạy ngầm qua giao thức DevTools (script trong thư mục nháp của phiên): máy tính 1600 × 1000 toàn màn
+hình, điện thoại ngang 800 × 360 toàn màn hình, điện thoại dọc 390 × 844 — bố cục lọt, phím bấm (bàn phím ảo, lực 90) hiện cam
+đậm, tên + số mọi phím. Toàn suite **2 534 qua / 5 đỏ** (đúng 5 đỏ cũ); `tsc`, `eslint` sạch; `vite build` qua.
+
+**Chưa đo:** chưa thử trên điện thoại thật (khoá xoay ngang chỉ kiểm được trên Android thật); lực nhấn thật của đàn người dùng.

@@ -20,6 +20,7 @@ import { readSetting, writeSetting } from '../../shared/persistence/localSetting
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import { FallingNotes } from './FallingNotes'
+import { PracticeStage } from './PracticeStage'
 import { buildGatedSteps, notesSoundingAt, type PracticeHand } from './noteGatedPlaybackEngine'
 import { usePracticeStore } from './practiceStore'
 import {
@@ -359,6 +360,41 @@ export function TimedPractice({
         : 'border-line bg-white/4 text-dim hover:bg-white/8'
     }`
 
+  /* Nút chính khi toàn màn hình — lúc ấy chỉ còn khung nốt rơi + bàn phím trên màn. */
+  const fullscreenBar = (
+    <>
+      {phase === 'playing' ? (
+        <>
+          <span className="text-cream">Đang chơi — đánh sai cứ đi tiếp.</span>
+          <button type="button" onClick={cancel} className={button(false)}>
+            Dừng
+          </button>
+        </>
+      ) : (
+        <button
+          type="button"
+          disabled={busy || latencyMs === null || expected.length === 0}
+          onClick={() => void begin()}
+          className="rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink disabled:opacity-40"
+        >
+          Bắt đầu ({practiceBpm} BPM)
+        </button>
+      )}
+      {phase === 'calibrating' && <span className="text-cream">Đang đo độ trễ — đã gõ {taps}</span>}
+      {latencyMs === null && phase === 'idle' && (
+        <span className="text-rose-300">Chưa đo độ trễ — thoát toàn màn hình để đo.</span>
+      )}
+      {score && phase === 'idle' && (
+        <span className="font-mono text-dim">
+          Đúng {score.hit}/{score.total} · lệch {score.medianAbsMs ?? '—'} ms ·{' '}
+          <span className={passes(score) ? 'text-teal-key' : 'text-rose-300'}>
+            {passes(score) ? 'Đạt' : 'Chưa đạt'}
+          </span>
+        </span>
+      )}
+    </>
+  )
+
   return (
     <div className="rounded-xl border border-line bg-black/25 p-4">
       <h3 className="mb-3 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">
@@ -496,24 +532,36 @@ export function TimedPractice({
         </div>
       )}
 
-      <FallingNotes
-        events={shown}
-        steps={steps}
-        index={0}
-        live={phase === 'playing' && looping}
-        lowNote={fallRange.low}
-        highNote={fallRange.high}
-        onSymbol={setNowSymbol}
-      />
-      <OnScreenPiano
-        lowNote={fallRange.low}
-        highNote={fallRange.high}
-        leftHandNotes={hitting.left}
-        rightHandNotes={hitting.right}
-      />
-      <div className="rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
-        <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
-      </div>
+      <PracticeStage bar={fullscreenBar}>
+        {(full) => (
+          <>
+            <div className={full ? 'min-h-0 flex-1' : ''}>
+              <FallingNotes
+                events={shown}
+                steps={steps}
+                index={0}
+                live={phase === 'playing' && looping}
+                lowNote={fallRange.low}
+                highNote={fallRange.high}
+                onSymbol={setNowSymbol}
+                fill={full}
+              />
+            </div>
+            <div className={full ? 'h-[38vh] max-h-80 min-h-28 shrink-0' : ''}>
+              <OnScreenPiano
+                lowNote={fallRange.low}
+                highNote={fallRange.high}
+                leftHandNotes={hitting.left}
+                rightHandNotes={hitting.right}
+                height={full ? '100%' : undefined}
+              />
+            </div>
+            <div className="shrink-0 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
+              <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
+            </div>
+          </>
+        )}
+      </PracticeStage>
     </div>
   )
 }

@@ -40,9 +40,17 @@ export function AppShell() {
     Lề hẹp lại trên màn nhỏ. Trên điện thoại mỗi điểm ảnh chiều ngang đều đáng
     giá cho bản nhạc và bàn phím đàn, mà lề rộng kiểu màn hình máy tính thì ăn
     mất gần một phần mười bề ngang.
+
+    Tab Luyện đệm rộng gần hết màn (tối đa 1800 px) — người dùng 2/10/2026: "khung phím đàn còn quá bé, có thể tăng
+    diện tích hiển thị của cả tab Luyện đệm". Bàn phím tự cao theo bề ngang phím. Tab khác giữ 768 px (max-w-3xl) cho
+    dòng chữ dễ đọc. Cũ: mọi tab 768 px.
   */
   return (
-    <div className="mx-auto flex min-h-full max-w-3xl flex-col px-3 py-4 sm:px-4 sm:py-8">
+    <div
+      className={`mx-auto flex min-h-full w-full flex-col px-3 py-4 sm:px-4 sm:py-8 ${
+        tab === 'practice' ? 'max-w-[1800px]' : 'max-w-3xl'
+      }`}
+    >
       <header className="mb-4 sm:mb-6">
         <p className="mb-2 font-mono text-[10.5px] tracking-[0.16em] text-amber-key uppercase">
           Luyện piano · Jazz &amp; Pop

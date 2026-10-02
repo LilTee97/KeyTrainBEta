@@ -15,6 +15,7 @@ import { PlaybackToolbar } from '../input/ChordOverview'
 import { usePracticeStore } from './practiceStore'
 import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { FallingNotes } from './FallingNotes'
+import { PracticeStage } from './PracticeStage'
 import { MidiConnect } from '../../shared/midi/MidiConnect'
 import { useMidiStore } from '../../shared/midi/midiStore'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
@@ -239,6 +240,66 @@ export function NoteGatedPractice({
   }
 
   const nowGam = nowSymbol ? scaleLabelForSymbol(nowSymbol) : null
+
+  /* Nút chính khi toàn màn hình — lúc ấy chỉ còn khung nốt rơi + bàn phím trên màn. */
+  const barButton = 'rounded-lg border border-line bg-white/6 px-3 py-1.5 text-cream hover:bg-white/12 disabled:opacity-40'
+  const fullscreenBar = (
+    <>
+      <button
+        type="button"
+        disabled={!transport}
+        onClick={() => (looping ? transport?.pause() : transport?.playAll())}
+        className={barButton}
+      >
+        {looping ? '■ Dừng phát' : '▶ Phát cả bài'}
+      </button>
+      {!audioReady ? (
+        <button
+          type="button"
+          onClick={() => void startAudio()}
+          className="rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink"
+        >
+          Bật âm thanh
+        </button>
+      ) : !active ? (
+        <button
+          type="button"
+          onClick={() => {
+            setSession(startGatedSession(steps))
+            setActive(true)
+          }}
+          className="rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink"
+        >
+          Bắt đầu luyện
+        </button>
+      ) : session.finished ? (
+        <>
+          <span className="font-semibold text-teal-key">Xong cả lượt</span>
+          <button type="button" onClick={() => setSession((current) => restart(current))} className={barButton}>
+            Luyện lại
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="font-mono text-dim">
+            {progress.done}/{progress.total} chặng
+          </span>
+          {session.attempts > 0 && <span className="font-mono text-rose-300">sai {session.attempts}</span>}
+          {step && (
+            <button type="button" onClick={() => playChord(step.notes)} className={barButton}>
+              ♪ Nghe chặng
+            </button>
+          )}
+          <button type="button" onClick={() => setSession((current) => advance(current))} className={barButton}>
+            Bỏ qua →
+          </button>
+          <button type="button" onClick={() => setActive(false)} className={barButton}>
+            Dừng
+          </button>
+        </>
+      )}
+    </>
+  )
 
   return (
     <div className="rounded-xl border border-line bg-black/25 p-4">
@@ -504,27 +565,39 @@ export function NoteGatedPractice({
           onBpm={setBpm}
         />
 
-        <FallingNotes
-          events={shown}
-          steps={steps}
-          index={session.currentIndex}
-          live={looping}
-          lowNote={fallRange.low}
-          highNote={fallRange.high}
-          onSymbol={setNowSymbol}
-        />
+        <PracticeStage bar={fullscreenBar}>
+          {(full) => (
+            <>
+              <div className={full ? 'min-h-0 flex-1' : ''}>
+                <FallingNotes
+                  events={shown}
+                  steps={steps}
+                  index={session.currentIndex}
+                  live={looping}
+                  lowNote={fallRange.low}
+                  highNote={fallRange.high}
+                  onSymbol={setNowSymbol}
+                  fill={full}
+                />
+              </div>
 
-        <OnScreenPiano
-          lowNote={fallRange.low}
-          highNote={fallRange.high}
-          leftHandNotes={hitting.left}
-          rightHandNotes={hitting.right}
-        />
+              <div className={full ? 'h-[38vh] max-h-80 min-h-28 shrink-0' : ''}>
+                <OnScreenPiano
+                  lowNote={fallRange.low}
+                  highNote={fallRange.high}
+                  leftHandNotes={hitting.left}
+                  rightHandNotes={hitting.right}
+                  height={full ? '100%' : undefined}
+                />
+              </div>
 
-        <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
-          <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
-          {nowGam ? <span className="font-sans text-xs text-cream/80">Gam: {nowGam}</span> : null}
-        </div>
+              <div className="flex shrink-0 flex-wrap items-baseline justify-center gap-x-3 gap-y-0.5 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
+                <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
+                {nowGam ? <span className="font-sans text-xs text-cream/80">Gam: {nowGam}</span> : null}
+              </div>
+            </>
+          )}
+        </PracticeStage>
 
         <div className="mt-2 flex flex-wrap items-center gap-4 font-mono text-[10px] text-dim">
           <span className="flex items-center gap-1.5">

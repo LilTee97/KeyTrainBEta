@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { MidiNote } from '../../shared/musicTheory/types'
 import { buildKeyboardLayout, keyPlacement } from '../../shared/midi/onScreenPiano/layout'
 import { midiToName } from '../../shared/musicTheory/pitch'
@@ -30,8 +30,9 @@ const GAP_PX = 2
 /** Khối đủ cao mới ghi tên nốt. */
 const LABEL_PX = 12
 
-/** Đỉnh khối: đáy (= lúc tiếng vào) cách vạch `away` phách. */
-const topOf = (away: number, height: number, pxPerBeat: number) => HEIGHT - away * pxPerBeat - height
+/** Đỉnh khối: đáy (= lúc tiếng vào) cách vạch (đáy khung, cao `frame` px) `away` phách. */
+const topOf = (away: number, height: number, pxPerBeat: number, frame: number) =>
+  frame - away * pxPerBeat - height
 /** Còn trong khung: chưa ở quá đỉnh khung, và đuôi (hết ngân) chưa qua vạch. */
 const shows = (away: number, duration: number, lookAhead: number) =>
   away <= lookAhead + 0.5 && away + duration >= 0
@@ -54,6 +55,8 @@ interface FallingNotesProps {
   lowNote: MidiNote
   highNote: MidiNote
   onSymbol?: (symbol: string) => void
+  /** Lấp chiều cao khung cha thay vì cao cố định — chế độ toàn màn hình. */
+  fill?: boolean
 }
 
 export function FallingNotes({
@@ -64,6 +67,7 @@ export function FallingNotes({
   lowNote,
   highNote,
   onSymbol,
+  fill = false,
 }: FallingNotesProps) {
   const layer = useRef<HTMLDivElement>(null)
   const bucketRef = useRef(0)
@@ -71,7 +75,22 @@ export function FallingNotes({
   const layout = buildKeyboardLayout(lowNote, highNote)
   const parked = steps[index]?.startBeat
   const pxPerBeat = useMemo(() => pxPerBeatFor(events), [events])
-  const lookAhead = HEIGHT / pxPerBeat
+
+  /* Lấp khung cha thì đo chiều cao thật (đổi theo xoay ngang/dọc); không thì cao cố định. */
+  const [measured, setMeasured] = useState(HEIGHT)
+  const frameRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (!el || !fill || typeof ResizeObserver === 'undefined') return
+      const update = () => setMeasured(Math.max(60, el.clientHeight))
+      update()
+      const observer = new ResizeObserver(update)
+      observer.observe(el)
+      return () => observer.disconnect()
+    },
+    [fill],
+  )
+  const frame = fill ? measured : HEIGHT
+  const lookAhead = frame / pxPerBeat
 
   useEffect(() => {
     if (!live) return
@@ -81,7 +100,7 @@ export function FallingNotes({
     bucketRef.current = start
     setBucket(start)
 
-    let frame = 0
+    let raf = 0
     const tick = () => {
       const now = getPlaybackBeats()
       const nextBucket = Math.max(0, Math.floor(now))
@@ -92,14 +111,14 @@ export function FallingNotes({
       for (const el of root.children) {
         if (!(el instanceof HTMLElement) || el.dataset.start === undefined) continue
         const away = Number(el.dataset.start) - now
-        el.style.transform = `translate3d(0,${topOf(away, Number(el.dataset.h), pxPerBeat)}px,0)`
+        el.style.transform = `translate3d(0,${topOf(away, Number(el.dataset.h), pxPerBeat, frame)}px,0)`
         el.hidden = !shows(away, Number(el.dataset.dur), lookAhead)
       }
-      frame = window.requestAnimationFrame(tick)
+      raf = window.requestAnimationFrame(tick)
     }
-    frame = window.requestAnimationFrame(tick)
-    return () => window.cancelAnimationFrame(frame)
-  }, [live, events, pxPerBeat, lookAhead])
+    raf = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(raf)
+  }, [live, events, pxPerBeat, lookAhead, frame])
 
   const origin = live ? bucket : (parked ?? 0)
   // Dựng sẵn khối sắp vào khung trong hai phách tới — `bucket` chỉ đổi mỗi phách một lần.
@@ -120,8 +139,9 @@ export function FallingNotes({
 
   return (
     <div
+      ref={frameRef}
       className="relative w-full overflow-hidden rounded-t-lg border border-b-0 border-line bg-black/40"
-      style={{ height: HEIGHT }}
+      style={{ height: fill ? '100%' : HEIGHT }}
       role="img"
       aria-label={symbol ? `Hợp âm ${symbol}` : 'Nốt sắp tới'}
     >
@@ -144,7 +164,7 @@ export function FallingNotes({
                   left: `${place.left}%`,
                   width: `${place.width}%`,
                   height,
-                  transform: `translate3d(0,${topOf(away, height, pxPerBeat)}px,0)`,
+                  transform: `translate3d(0,${topOf(away, height, pxPerBeat, frame)}px,0)`,
                 }}
                 className={`absolute top-0 flex items-end justify-center overflow-hidden rounded-sm pb-0.5 text-[9px] leading-none font-semibold ${
                   event.hand === 'left' ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'

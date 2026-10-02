@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { midiToName, pitchClassName, pitchClassOf } from '../../musicTheory/pitch'
+import { midiToName, octaveOf, pitchClassName, pitchClassOf } from '../../musicTheory/pitch'
 import type {
   AccidentalStyle,
   MidiNote,
@@ -36,21 +36,33 @@ const BLACK_KEY_STYLES = {
   Phím ĐANG BẤM phủ một lớp màu đậm theo LỰC NHẤN — người dùng 2/10/2026: đàn có cảm ứng lực, "khi chạm nhẹ thì phím
   hiển thị mờ và rõ dần khi mạnh hơn". Tuyến tính theo velocity MIDI 1–127; chạm nhẹ nhất vẫn còn thấy. Màu lớp phủ
   giữ nghĩa cũ: xanh ngọc = trúng nốt hợp âm, cam = không. Đàn tắt cảm ứng lực (Touch Response: Off) thì mọi cú bấm gửi
-  cùng một lực → đậm như nhau. Cũ: phím đang bấm tô màu đặc, không theo lực. Lùi khi: chạm nhẹ khó thấy → nâng
-  `PRESS_MIN_OPACITY` (cũ: không có).
+  cùng một lực → đậm như nhau. Cũ (trước 2/10): phím đang bấm tô màu đặc, không theo lực.
+
+  Lần 2 (2/10/2026): người dùng *"chạm nhẹ quá mờ, chạm mạnh cũng mờ"*. Cũ: sàn 0,15, đặc hẳn ở velocity 127. Nay sàn
+  0,45, đặc hẳn từ velocity 96. ĐOÁN — chưa đo lực đàn người dùng gửi ra (cột `phim` của `LuyenTap.json` sẽ có). Lùi
+  khi: nhẹ với mạnh trông như nhau → hạ `PRESS_MIN_OPACITY` hay nâng `PRESS_FULL_VELOCITY`.
 */
-const PRESS_MIN_OPACITY = 0.15
+const PRESS_MIN_OPACITY = 0.45
+const PRESS_FULL_VELOCITY = 96
 const pressOpacity = (velocity: number) =>
-  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * Math.min(1, Math.max(0, velocity) / 127)
+  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * Math.min(1, Math.max(0, velocity) / PRESS_FULL_VELOCITY)
 
 /*
-  Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt". Cũ: chỉ phím Đô (C3, C4 …).
-  Phím trắng rộng ≥ 20 px thì ghi đủ tên kèm quãng tám (D4), hẹp hơn (điện thoại) thì chỉ chữ cái — phím Đô vẫn
-  kèm quãng tám như cũ để còn mốc. Phím đen rộng ≥ 13 px mới ghi (C#); hẹp hơn thì chữ tràn ra ngoài phím.
+  Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt", rồi "các phím C đã có đánh số, hãy
+  cho các phím còn lại cũng đánh số". MỌI phím ghi tên kèm quãng tám: phím trắng rộng ≥ 20 px ghi một dòng (D4), hẹp hơn
+  thì chữ trên số dưới cho lọt; phím đen rộng ≥ 9 px ghi chữ trên số dưới (C# / 4), hẹp hơn chữ tràn ra ngoài phím.
+  Cũ: lần 1 phím trắng hẹp chỉ ghi chữ cái, phím đen ≥ 13 px chỉ ghi C#; trước nữa chỉ phím Đô.
 */
-const FULL_NAME_MIN_PX = 20
-const LETTER_MIN_PX = 9
-const BLACK_NAME_MIN_PX = 13
+const ONE_LINE_MIN_PX = 20
+const BLACK_NAME_MIN_PX = 9
+
+/**
+ * Chiều cao bàn phím theo bề ngang phím trắng (phím thật ~6,4 : 1, ở đây 4,2 : 1 cho đỡ chiếm chỗ), kẹp 110–240 px.
+ * Cũ: cố định 150 px — người dùng 2/10/2026 *"khung phím đàn còn quá bé"*.
+ */
+const KEY_HEIGHT_PER_WIDTH = 4.2
+const MIN_KEYBOARD_PX = 110
+const MAX_KEYBOARD_PX = 240
 
 export interface OnScreenPianoProps {
   /** Nốt thấp nhất hiển thị. Mặc định C3. */
@@ -86,6 +98,11 @@ export interface OnScreenPianoProps {
    */
   leftHandNotes?: readonly MidiNote[]
   rightHandNotes?: readonly MidiNote[]
+  /**
+   * Chiều cao bàn phím. Bỏ trống thì tự theo bề ngang phím trắng (`KEY_HEIGHT_PER_WIDTH`); `'100%'` thì lấp khung cha
+   * — chế độ toàn màn hình.
+   */
+  height?: number | string
 }
 
 /**
@@ -104,6 +121,7 @@ export function OnScreenPiano({
   chordTones,
   leftHandNotes,
   rightHandNotes,
+  height,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const velocities = useMidiStore((state) => state.velocities)
@@ -124,15 +142,27 @@ export function OnScreenPiano({
     return () => observer.disconnect()
   }, [])
   const whiteWidth = width / Math.max(1, whiteKeys.length)
+  const autoHeight =
+    width > 0
+      ? Math.round(Math.min(MAX_KEYBOARD_PX, Math.max(MIN_KEYBOARD_PX, whiteWidth * KEY_HEIGHT_PER_WIDTH)))
+      : 150
 
-  /** Tên ghi trên phím trắng. */
-  const whiteLabel = (note: MidiNote) => {
-    if (!showNoteNames) return ''
-    const isC = pitchClassOf(note) === 0
-    if (whiteWidth >= FULL_NAME_MIN_PX || isC) return midiToName(note, accidentalStyle)
-    return whiteWidth >= LETTER_MIN_PX ? pitchClassName(pitchClassOf(note), accidentalStyle) : ''
+  /** Tên nốt kèm quãng tám: một dòng (D4) khi đủ rộng, không thì chữ trên số dưới. */
+  const label = (note: MidiNote, oneLine: boolean) => {
+    const name = pitchClassName(pitchClassOf(note), accidentalStyle)
+    return oneLine ? (
+      `${name}${octaveOf(note)}`
+    ) : (
+      <>
+        <span>{name}</span>
+        <span>{octaveOf(note)}</span>
+      </>
+    )
   }
   const blackNamed = showNoteNames && whiteWidth * 0.62 >= BLACK_NAME_MIN_PX
+  // Chữ to theo bề ngang phím: phím to (toàn màn hình, màn rộng) thì chữ to, điện thoại thì nhỏ cho lọt. Cũ: 9 · 8 px.
+  const whiteFontPx = Math.round(Math.min(14, Math.max(8, whiteWidth * 0.3)))
+  const blackFontPx = Math.round(Math.min(12, Math.max(7, whiteWidth * 0.62 * 0.42)))
 
   /** Con trỏ đang được giữ — dùng để rê tay qua nhiều phím liền nhau. */
   const pointerDown = useRef(false)
@@ -243,7 +273,7 @@ export function OnScreenPiano({
     <div
       ref={root}
       className="relative w-full touch-none select-none"
-      style={{ height: 150 }}
+      style={{ height: height ?? autoHeight }}
       role="group"
       aria-label="Bàn phím piano ảo"
     >
@@ -260,7 +290,11 @@ export function OnScreenPiano({
             }`}
           >
             {pressLayer(note)}
-            <span className="relative">{whiteLabel(note)}</span>
+            {showNoteNames ? (
+              <span className="relative flex flex-col items-center leading-none" style={{ fontSize: whiteFontPx }}>
+                {label(note, whiteWidth >= ONE_LINE_MIN_PX)}
+              </span>
+            ) : null}
           </button>
         ))}
       </div>
@@ -282,13 +316,12 @@ export function OnScreenPiano({
         >
           {pressLayer(note)}
           {blackNamed ? (
-            // Lớp phủ đậm (bấm mạnh) thì chữ sáng trên phím đen khó đọc — đổi sang chữ tối.
+            // Đang bấm thì lớp phủ sáng màu — chữ sáng trên phím đen khó đọc, đổi sang chữ tối.
             <span
-              className={`relative ${
-                isHeld(note) && pressOpacity(velocities[note] ?? POINTER_VELOCITY) >= 0.5 ? 'text-ink/80' : ''
-              }`}
+              className={`relative flex flex-col items-center leading-none ${isHeld(note) ? 'text-ink/80' : ''}`}
+              style={{ fontSize: blackFontPx }}
             >
-              {pitchClassName(pitchClassOf(note), accidentalStyle)}
+              {label(note, false)}
             </span>
           ) : null}
         </button>
