@@ -3065,19 +3065,28 @@ export function ReharmHome() {
       graceDensity,
       noteSource,
       storeScales,
+      // Thiếu hai mục này thì ảnh chụp giữ giang tấu / gam câu CŨ khi chỉ hai thứ ấy đổi — lưu bài và trả bài sau khi dựng
+      // vòng (`dungVong`) đều mất thay đổi (eslint đã báo).
+      phraseScaleId,
+      interludeChords,
       chordsPerPhrase,
     ],
   )
 
   /*
-    Bộ sinh bài tập Lộ trình (`tools/sinhBaiTap.mjs`) lấy ảnh chụp bài mặc định ở đây rồi sửa hợp âm · điệu · giọng, nhờ
-    tab này dựng — bài tập vì thế đúng là thứ người dùng nghe ở tab Tái hòa âm, không phải một bản dựng thứ hai. Chỉ khi
-    chạy máy chủ dev; bản dựng tĩnh bỏ đi.
+    Đăng ảnh chụp bài đang mở ra kho dùng chung. Trang thầy (vòng tự tạo) và bộ sinh bài tập (`tools/sinhBaiTap.mjs`) sửa
+    hợp âm · điệu · giọng trên ảnh này rồi nhờ tab này dựng (`src/thay/dungVong.ts`) — bài tập vì thế đúng là thứ người dùng
+    nghe ở tab Tái hòa âm, không phải một bản dựng thứ hai.
   */
+  const setChupBai = usePracticeStore((state) => state.setChupBai)
   useEffect(() => {
-    if (!import.meta.env.DEV) return
-    ;(window as unknown as { __ktSnapshot?: () => SongSnapshot }).__ktSnapshot = snapshot
-  }, [snapshot])
+    setChupBai(() => ({
+      snapshot: snapshot(),
+      id: songId,
+      title: songTitle,
+      giu: { input, pastedSong, lineSolo, lockSongBpm, walkingBass, brainFills },
+    }))
+  }, [snapshot, songId, songTitle, input, pastedSong, lineSolo, lockSongBpm, walkingBass, brainFills, setChupBai])
 
   /**
    * Đặt lại toàn bộ trang theo một ảnh chụp đã lưu.
@@ -4102,6 +4111,15 @@ export function ReharmHome() {
     if (!openRequest) return
 
     applySnapshot(openRequest.snapshot)
+    // Trả lại bài cũ sau khi dựng vòng: đè phần ảnh chụp không ghi (applySnapshot vừa dựng lại từ `sourceText`).
+    if (openRequest.giu) {
+      setInput(openRequest.giu.input)
+      setPastedSong(openRequest.giu.pastedSong)
+      setLineSolo(openRequest.giu.lineSolo)
+      setLockSongBpm(openRequest.giu.lockSongBpm)
+      setWalkingBass(openRequest.giu.walkingBass)
+      setBrainFills(openRequest.giu.brainFills)
+    }
     setSongId(openRequest.id)
     setSongTitle(openRequest.title)
     clearOpenRequest()

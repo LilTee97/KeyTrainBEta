@@ -3,6 +3,7 @@ import type { SongSnapshot } from '../persistence/songSnapshot'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
 import type { TimelineEvent } from '../style/types'
 import type { PassingOption, TransitionOption } from '../input/SongSheetView'
+import type { ParsedSong } from '../input/songTextParser'
 
 /**
  * Bài đang mở, để tab **Luyện đệm** dùng chung với tab **Tái hoà âm**.
@@ -102,7 +103,25 @@ export interface OpenRequest {
   snapshot: SongSnapshot
   /** Khoá trong kho; rỗng khi bài mở từ file, chưa nằm trong kho. */
   id: string | null
-  title: string
+  /** `null` = bài chưa đặt tên. */
+  title: string | null
+  /** Chỉ có khi trả lại bài cũ sau một lần dựng vòng (`src/thay/dungVong.ts`) — xem `GiuNguyen`. */
+  giu?: GiuNguyen
+}
+
+/**
+ * Phần tab Tái hòa âm có mà ảnh chụp KHÔNG ghi — để dựng vòng xong trả lại ĐÚNG bài cũ. Thiếu thì (đo 2/10/2026, n=1)
+ * vòng mặc định `C Am F G` chưa dán bài trả về thành bài rỗng 0 tiếng; hợp âm đã xoá / nhân đôi trên bản nhạc thì
+ * `sourceText` không ghi, mở lại là mất.
+ */
+export interface GiuNguyen {
+  input: string
+  pastedSong: ParsedSong | null
+  lineSolo: boolean
+  lockSongBpm: boolean
+  /** Dựng vòng điệu không phải ballad thì tab ấy tắt hai công tắc này (rời họ ballad) — trả bài phải bật lại. */
+  walkingBass: boolean
+  brainFills: boolean
 }
 
 interface PracticeState {
@@ -118,6 +137,13 @@ interface PracticeState {
   requestOpen: (request: OpenRequest) => void
   /** Tab Tái hoà âm gọi sau khi đã nhận lời nhờ, để không dựng lại hai lần. */
   clearRequest: () => void
+
+  /**
+   * Lời nhờ mở lại ĐÚNG bài đang mở ở tab Tái hoà âm (do tab ấy đăng). Trang thầy dựng vòng tự tạo bằng cách sửa ảnh chụp
+   * trong đó rồi nhờ dựng (`src/thay/dungVong.ts`), xong gửi lại lời nhờ này — bài người dùng đang làm không mất.
+   */
+  chupBai: (() => OpenRequest) | null
+  setChupBai: (chupBai: (() => OpenRequest) | null) => void
 }
 
 export const usePracticeStore = create<PracticeState>((set) => ({
@@ -131,4 +157,7 @@ export const usePracticeStore = create<PracticeState>((set) => ({
   request: null,
   requestOpen: (request) => set({ request }),
   clearRequest: () => set({ request: null }),
+
+  chupBai: null,
+  setChupBai: (chupBai) => set({ chupBai }),
 }))

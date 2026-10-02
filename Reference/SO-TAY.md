@@ -4976,3 +4976,58 @@ trong vòng, giọng Đô trưởng / La thứ). Chụp kiểm: trang Cà Pháo 
 Toàn suite **2 540 qua / 5 đỏ** (5 đỏ cũ); `tsc` sạch; `vite build` qua.
 
 **Chưa đo:** người dùng CHƯA NGHE bộ bài tập — bước 3 (nghe duyệt) chặn bước sau. Đo độ khó → thứ tự: chưa làm.
+
+## Bước — Vòng tự tạo để tập đệm: chọn từng hợp âm · tự soạn từ hợp âm chủ (2/10/2026)
+
+**Người dùng:** *"hãy cho thêm tính năng tự tạo vòng hợp âm để tập đệm. Có 2 phương án -Chọn từng hợp âm thêm vào -Chọn một hợp âm
+chủ rồi app tự soạn vòng 4 hợp âm theo trưởng hoặc thứ"*.
+
+**Làm — tab Điệu của trang thầy, khung "Vòng tự tạo" (`TeacherPage` → `VongTuTao`):**
+- Chọn điệu (điệu của thầy ấy), rồi một trong hai cách:
+  - *Tự soạn từ hợp âm chủ*: hợp âm chủ (12 nốt) + Trưởng/Thứ → một vòng 4 ô trong KHO CỦA CHÍNH THẦY (`src/thay/vongThay.json`,
+    sinh cùng 11 bài: câu "đã ổn" trong `Nguon.json` cắt từng 4 ô mà ô nào cũng một hợp âm; Tuấn mượn kho Linh Nhi; Blues = 4 dòng
+    của khung 12 ô Bộ Soạn Blues), dịch từ Đô trưởng / La thứ sang giọng chọn — giọng giáng ghi tên giáng (Fa trưởng: Bb7, không
+    A#7). "↻ Soạn vòng khác" xoay sang vòng kế của kho. Kho: Cà Pháo trưởng 2 · thứ 12; Linh Nhi (= Tuấn) 2 · 4; Blues 4 · 4.
+  - *Chọn từng hợp âm*: nốt gốc (12) + loại (22 loại, `LOAI`) → "+ Thêm"; mỗi hợp âm một ô; bỏ từng hợp âm (×), "Xoá hết". Giọng
+    để app tự dò như khi dán bài.
+- "Dựng phần đệm để tập" → `dungVong` (`src/thay/dungVong.ts`) — CHÍNH đường sinh 11 bài: tab Tái hòa âm (luôn gắn ngầm) dựng
+  khung đệm của điệu trên vòng, cắt thân vòng, trả lại bài đang mở ở tab ấy. Nút khoá khi đang phát hay đang đo độ trễ (dựng = mở
+  bài khác ở tab Tái hòa âm → BPM chung đổi giữa chừng).
+- Khung tập bên dưới ("Đang tập: …") dùng CHÍNH hai khung của tab Luyện đệm, thêm prop `vongBpm`: có thì KHÔNG dùng bộ phát / BPM
+  chung / Tone của tab Tái hòa âm (là của bài khác) — tự phát vòng ở ♩ của điệu, tên hợp âm đọc thẳng `perBeat`.
+  - Chờ đúng nốt: một lượt vòng; "▶ Nghe vòng" phát một lượt (phát lặp thì đồng hồ chạy quá độ dài vòng, nốt rơi trống).
+  - Theo nhịp: HAI lượt vòng (`LUOT_THEO_NHIP` — đoán, chưa đo), 60 · 80 · 100% ♩ của điệu.
+- 11 bài đóng băng tập cùng khung ấy: nút "Tập vòng tập" / "Tập vòng kiểm" thay "▶ Nghe vòng" cũ.
+
+**Bẫy đã sập — trả bài ở tab Tái hòa âm KHÔNG y hệt.** Ảnh chụp bài (`SongSnapshot`) không ghi hết trạng thái tab ấy. Chạy thử lần
+đầu (n=1, trang mới mở): bài mặc định `C Am F G` (54 tiếng) trả về thành bài RỖNG 0 tiếng — ảnh chụp chỉ có `sourceText` (rỗng khi
+chưa dán bài), vòng gõ sẵn nằm ở `input`; chờ bài rỗng ấy "dựng xong" thêm 15 s (mỗi lần dựng 16 s). Soát `applySnapshot` thấy thêm:
+hợp âm đã xoá / nhân đôi trên bản nhạc chỉ sửa `input` + `pastedSong` (không sửa `sourceText`); `lineSolo` đọc mà không ghi; khoá
+BPM (`lockSongBpm`) bị bật; tên bài `null` thành chữ "Bài chưa đặt tên"; dựng vòng điệu ngoài họ ballad thì tab ấy tắt walking và
+câu lót Kingsley (effect "rời họ ballad").
+Sửa: tab Tái hòa âm đăng `chupBai` = LỜI NHỜ MỞ LẠI ĐẦY ĐỦ (`OpenRequest`: ảnh chụp + id + tên thô + `giu` = `input` · `pastedSong` ·
+`lineSolo` · `lockSongBpm` · `walkingBass` · `brainFills`). Mở lại có `giu` thì đè sau `applySnapshot`. Chờ trả bài = chờ bài vòng
+bị thay (bài cũ được phép rỗng). Kèm: `snapshot` thiếu `phraseScaleId`, `interludeChords` trong danh sách phụ thuộc (eslint đã báo)
+→ chỉ đổi hai thứ ấy thì ảnh chụp giữ giá trị CŨ, lưu bài cũng mất thay đổi — thêm vào.
+Còn mất (biết, để vậy): hợp âm đang chọn trên bản nhạc (`selectedIndex`, chỉ là chỗ đánh dấu) về trống.
+
+**Số đo sau sửa (2/10/2026):**
+- 22/22 lần dựng (11 điệu × 2 cách: tự soạn Rê thứ / Twist Sol trưởng · chọn tay Em7 A7 Dmaj7 Bm7 Gmaj7 F#7) xong, 1,3–1,6 s/lần,
+  không tiếng nào ngoài vòng; bài mặc định ở tab Tái hòa âm trả lại GIỐNG HỆT (`timeline` + `perBeat` + `voicings` + tên) 22/22.
+- Bài KHÔNG mặc định (dán lời, ballad Cà Pháo, tone +2, tắt fill ô 1, ♩70, bật walking, xoá một hợp âm trên bản nhạc): dựng Twist
+  (rời họ ballad) rồi Bossa → `chupBai()` (ảnh chụp + `giu` + id + tên) và bài đăng ra giống hệt trước khi dựng, 2/2.
+- `tools/sinhBaiTap.mjs` nay tự kiểm điều này sau 22 lần dựng ("trả lại y hệt" hoặc báo LỖI, mã thoát 1).
+
+**Sửa `tools/sinhBaiTap.mjs`:** gọi `dungVong` trong trang (bỏ móc DEV `window.__ktSnapshot`). Vòng chờ app lên từng import
+`practiceStore.ts` TRƯỚC khi app nạp nó → tạo bản mô-đun thứ hai (đường trơn, trong khi app dùng `?t=…` vì tệp vừa sửa) không bao
+giờ có `chupBai` — bẫy 4 ở bước trước, lần này do chính vòng chờ. Nay chỉ import khi mô-đun đã có trong danh sách tài nguyên, và
+lấy bản nạp SAU CÙNG. Sinh lại so với commit 13ac127: 10/11 bài giống hệt (vòng tập lẫn kiểm); Slow Blues vòng tập đổi tay phải
+(95 → 97 tiếng; bộ soạn sinh mới mỗi lần — lần chạy kiểm sau ra 100, không giữ). Bỏ trường thừa `catTuPhach`.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi (9 cảnh báo cũ ở `ReharmHome`) · `vongThay.test.ts` 5 test (kho đủ, dịch giọng, xoay vòng, tên
+giáng, 12 gốc × 22 loại đều đọc được) · toàn suite **2 545 qua / 5 đỏ** (5 đỏ cũ: phraseAcrossBar, daoTruongLinhNhi, sietHopAm,
+tuyenSolo ×2) · `vite build` qua. Chụp (Chrome mới tinh, không lỗi console): bảng tự soạn Rê thứ, vòng chọn tay đang phát có nốt
+rơi, Theo nhịp 66 BPM (= 60% ♩110), trang Blues rộng 390 px không tràn ngang.
+
+**Chưa đo:** người dùng chưa tập vòng tự tạo nào; hai lượt cho Theo nhịp là đoán. Kho Blues vòng 1 là `Am7 Am7 Am7 Am7` / `C7 C7 C7
+C7` (dòng đầu khung 12 ô) — đúng khung nhưng chỉ một hợp âm.

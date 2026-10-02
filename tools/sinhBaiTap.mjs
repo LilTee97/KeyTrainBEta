@@ -1,16 +1,19 @@
 // Sinh bài tập điệu cho Lộ trình tập — `Reference/KE-HOACH-LUYEN-TAP.md` mục 4c, GĐ 1 bước 2.
 //
-// CHẠY: máy chủ dev đang chạy (`npm run dev`, cổng 5173) rồi `node tools/sinhBaiTap.mjs`. Script mở Chrome chạy ngầm, nạp app,
-// và với từng bài: lấy ảnh chụp bài mặc định (`window.__ktSnapshot`, chỉ có trên máy chủ dev), thay hợp âm · điệu · giọng ·
-// nhịp độ, nhờ tab Tái hòa âm dựng (`practiceStore.requestOpen`) rồi chép dòng thời gian ra `src/thay/baiTap/<điệu>.json`.
-// Đi qua app nên bài tập đúng là thứ người dùng nghe ở tab Tái hòa âm — không có bản dựng thứ hai.
+// CHẠY: máy chủ dev đang chạy (`npm run dev`, cổng 5173) rồi `node tools/sinhBaiTap.mjs`. Script mở Chrome chạy ngầm, nạp app
+// và với từng bài gọi `dungVong` (`src/thay/dungVong.ts` — CHÍNH đường dựng vòng tự tạo ở trang thầy): sửa ảnh chụp bài đang
+// mở, nhờ tab Tái hòa âm dựng, cắt thân vòng. Ghi ra `src/thay/baiTap/<điệu>.json`. Đi qua app nên bài tập đúng là thứ người
+// dùng nghe ở tab Tái hòa âm — không có bản dựng thứ hai.
 //
-// VÒNG TẬP (người dùng 1/10: "vòng bạn soạn từ các bộ soạn của Cà Pháo, Linh Nhi và bộ soạn Blues"; 2/10: giọng Đô trưởng /
-// La thứ, Tuấn mượn hòa âm Linh Nhi): lấy từ câu dạo · giang · kết người dùng đã chấm "đã ổn" trong `Nguon.json` — bộ soạn
-// của thầy sinh, tai người dùng duyệt. `hopAm` trong sổ là danh sách hợp âm chứ không phải danh sách ô: hai hợp âm liền nhau
-// CÙNG GỐC (sus rồi về) thì chung một ô; tách xong không khớp số ô `soO` thì bỏ câu ấy, không đoán. Blues chưa có câu "đã
-// ổn" nào nên lấy thẳng khung giang tấu của Bộ Soạn Blues (`boSoanBlues.ts` KHUNG). Mỗi bài: vòng TẬP 4 ô (bậc 1–6) và vòng
-// KIỂM 8 ô (Blues 11 ô) chưa gặp, cho bậc 7.
+// Ghi thêm `src/thay/vongThay.json`: kho vòng 4 ô của từng thầy (Đô trưởng / La thứ) cho nút "Tự soạn từ hợp âm chủ".
+//
+// VÒNG (người dùng 1/10: "vòng bạn soạn từ các bộ soạn của Cà Pháo, Linh Nhi và bộ soạn Blues"; 2/10: giọng Đô trưởng / La
+// thứ, Tuấn mượn hòa âm Linh Nhi): lấy từ câu dạo · giang · kết người dùng đã chấm "đã ổn" trong `Nguon.json` — bộ soạn của thầy
+// sinh, tai người dùng duyệt. `hopAm` trong sổ là danh sách hợp âm chứ không phải ô (xem `thanhO`). Blues chưa có câu "đã ổn"
+// nào nên lấy khung giang tấu của Bộ Soạn Blues (`boSoanBlues.ts` KHUNG).
+//
+// LƯU Ý: tay phải Slow Blues do Bộ Soạn Blues sinh — mỗi lần chạy ra một bản khác. Bài đã được người dùng nghe duyệt thì đừng
+// chạy lại đè (hoặc chạy rồi chỉ giữ tệp của bài chưa duyệt).
 
 import { spawn, execSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs'
@@ -35,11 +38,11 @@ const giongOf = (text) => {
 
 /**
  * Danh sách hợp âm → các ô. Khớp số ô sẵn thì mỗi hợp âm một ô (hợp âm lặp = ngân nhiều ô, như `Bm7b5 Bm7b5` ở #984).
- * Thừa hợp âm thì hai hợp âm liền nhau CÙNG GỐC KHÁC KÝ HIỆU (sus rồi về: `D9sus4 D7`) chung một ô. Vẫn không khớp thì null.
+ * Thừa hợp âm thì hai hợp âm liền nhau CÙNG GỐC KHÁC KÝ HIỆU (sus rồi về: `D9sus4 D7`) chung một ô. Hợp âm "hút" (vào hát)
+ * chiếm một ô trong `soO` nhưng không vào vòng tập. Vẫn không khớp thì null — không đoán.
  */
 function thanhO(hopAm, soOCaHut) {
   const chords = hopAm.filter((c) => !/hút/.test(c))
-  // Hợp âm hút (vào hát) cũng chiếm một ô trong `soO` — bỏ nó khỏi vòng tập thì trừ ô của nó ra.
   const soO = soOCaHut - (hopAm.length - chords.length)
   if (chords.length === soO) return chords.map((c) => [c])
   const o = []
@@ -56,7 +59,7 @@ const cot = so.cau.cot
 const cau = so.cau.dong.map((d) => Object.fromEntries(cot.map((c, i) => [c, d[i]])))
 const daOn = new Map(cau.filter((r) => r.danhGia === 'on').map((r) => [r.stt, r]))
 
-/** Câu `stt` → các ô (dịch về Đô trưởng / La thứ làm ở trang, bằng `transposeSymbol` của app). */
+/** Câu `stt` → các ô + số nửa cung dịch về Đô trưởng / La thứ (dịch làm trong trang, bằng `transposeSymbol` của app). */
 function vongTu(stt, tuO, soO) {
   const r = daOn.get(stt)
   if (!r) throw new Error(`Nguon.json #${stt} không phải câu "đã ổn"`)
@@ -66,7 +69,7 @@ function vongTu(stt, tuO, soO) {
   return { o: o.slice(tuO, tuO + soO), dich: (g.minor ? 9 : 0) - g.tonic, nguon: `Nguon.json #${stt} (${r.dieu} · ${r.giong})` }
 }
 
-/** Khung giang tấu Bộ Soạn Blues (boSoanBlues.ts KHUNG) ở Đô trưởng / La thứ — mọi hợp âm một ô. */
+/** Khung giang tấu Bộ Soạn Blues (boSoanBlues.ts KHUNG) ở Đô trưởng / La thứ — mỗi hợp âm một ô. */
 const BLUES = {
   truong: { tap: ['C7', 'F7', 'C7', 'C7'], kiem: ['C7', 'C7', 'C7', 'C7', 'F7', 'F7', 'C7', 'C7', 'G7', 'F7', 'C7'] },
   thu: { tap: ['Am7', 'Dm7', 'Am7', 'Am7'], kiem: ['Am7', 'Am7', 'Am7', 'Am7', 'Dm7', 'Dm7', 'Am7', 'Am7', 'F7', 'E7', 'Am7'] },
@@ -87,6 +90,29 @@ const BAI = [
   ['blues', 'blue-sun', 'minor', blues(BLUES.thu.tap, 'Bộ Soạn Blues — KHUNG thứ, giang biến thể 2'), blues(BLUES.thu.kiem, 'Bộ Soạn Blues — KHUNG thứ, giang biến thể 1')],
   ['blues', 'twist', 'major', blues(BLUES.truong.tap, 'Bộ Soạn Blues — KHUNG trưởng, giang biến thể 2'), blues(BLUES.truong.kiem, 'Bộ Soạn Blues — KHUNG trưởng, giang biến thể 1')],
 ]
+
+/**
+ * Kho vòng 4 ô của từng thầy cho "Tự soạn từ hợp âm chủ": mọi câu "đã ổn" của thầy tách được thành ô, cửa sổ 4 ô liền nhau
+ * (ô 1–4, 5–8, …) mà ô nào cũng chỉ một hợp âm. Câu của Tuấn không vào kho — người dùng 2/10: Tuấn mượn hòa âm Linh Nhi.
+ */
+function khoVong() {
+  const thayCua = (dieu) =>
+    dieu.startsWith('ca-phao') ? 'ca-phao' : dieu.includes('linh-nhi') || dieu.startsWith('slow-rock-la-thu') ? 'linh-nhi' : null
+  const kho = []
+  for (const r of daOn.values()) {
+    const thay = thayCua(r.dieu)
+    const o = thay ? thanhO(r.hopAm, r.soO) : null
+    if (!o) continue
+    const g = giongOf(r.giong)
+    for (let tu = 0; tu + 4 <= o.length; tu += 4) {
+      const cua = o.slice(tu, tu + 4)
+      if (cua.every((one) => one.length === 1)) {
+        kho.push({ thay, che: g.minor ? 'thu' : 'truong', hopAm: cua.map((one) => one[0]), dich: (g.minor ? 9 : 0) - g.tonic, nguon: `#${r.stt} ô ${tu + 1}–${tu + 4}` })
+      }
+    }
+  }
+  return kho
+}
 
 // ---------- Chrome chạy ngầm qua giao thức DevTools ----------
 
@@ -115,110 +141,82 @@ const evaluate = async (expression) => {
   return r.result?.result?.value
 }
 
+/*
+  Nạp ĐÚNG bản mô-đun app đang dùng: tệp sửa trong lúc máy chủ dev chạy thì app nạp nó kèm `?t=…`; import đường trơn sẽ tạo
+  bản thứ hai với kho trạng thái riêng — gửi lời nhờ vào đó thì app không bao giờ nhận.
+*/
+const MOD = `const mod = (path) => import(performance.getEntriesByType('resource').map((e) => e.name).filter((n) => n.includes(path)).at(-1) ?? path)`
+
 await send('Runtime.enable')
 await send('Page.navigate', { url: APP })
-for (let i = 0; i < 80; i++) {
-  if (await evaluate('typeof window.__ktSnapshot === "function"')) break
-  await sleep(250)
+let sanSang = false
+for (let i = 0; i < 240 && !sanSang; i++) {
+  // Chỉ import khi app ĐÃ nạp mô-đun: import sớm (đường trơn) tạo bản thứ hai không bao giờ có `chupBai` (đo 2/10/2026).
+  sanSang = await evaluate(`(async () => {
+    const url = performance.getEntriesByType('resource').map((e) => e.name).filter((n) => n.includes('/src/reharm/playback/practiceStore.ts')).at(-1)
+    return !!url && typeof (await import(url)).usePracticeStore.getState().chupBai === 'function'
+  })()`)
+  if (!sanSang) await sleep(250)
 }
-if (!(await evaluate('typeof window.__ktSnapshot === "function"'))) throw new Error('App chưa có __ktSnapshot — máy chủ dev có đang chạy bản mới không?')
+if (!sanSang) throw new Error('App không lên sau 60 s — máy chủ dev có chạy ở cổng 5173 không?')
 
 const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim()
+
+/* Bài ở tab Tái hòa âm phải được trả lại Y HỆT sau mỗi lần dựng (`dungVong` gửi lại `chupBai()` kèm `giu`). */
+const chupTab = () =>
+  evaluate(`(async () => { ${MOD}; const s = (await mod('/src/reharm/playback/practiceStore.ts')).usePracticeStore.getState(); return JSON.stringify([s.chupBai(), s.song?.timeline]) })()`)
+const truocKhiDung = await chupTab()
 mkdirSync(OUT, { recursive: true })
 
-/** Nhờ app dựng một vòng ở một điệu; trả dòng thời gian + thế bấm + lưới hợp âm. */
-async function dung(styleId, giong, vong, title) {
-  const job = { styleId, giong, o: vong.o, dich: vong.dich, title }
-  return evaluate(`(async () => {
-    const job = ${JSON.stringify(job)}
-    /*
-      Nạp ĐÚNG bản mô-đun app đang dùng: tệp sửa trong lúc máy chủ dev chạy thì app nạp nó kèm \`?t=…\`; import đường trơn
-      sẽ tạo bản thứ hai với kho trạng thái riêng — gửi lời nhờ vào đó thì app không bao giờ nhận.
-    */
-    const mod = (path) => import(performance.getEntriesByType('resource').map((e) => e.name).find((n) => n.includes(path)) ?? path)
+/** Dịch các ô về Đô trưởng / La thứ rồi gọi `dungVong` trong trang. */
+const dung = (styleId, giong, vong) =>
+  evaluate(`(async () => {
+    ${MOD}
     const { transposeSymbol } = await mod('/src/reharm/transpose.ts')
-    const { getStyle } = await mod('/src/reharm/style/styleLibrary/index.ts')
-    const { usePracticeStore } = await mod('/src/reharm/playback/practiceStore.ts')
-    const style = getStyle(job.styleId)
-    if (!style) throw new Error('không có điệu ' + job.styleId)
-    const bar = style.beatsPerMeasure
-    const chords = job.o.flat().map((c) => transposeSymbol(c, job.dich))
-    const durations = job.o.flatMap((o) => o.map(() => bar / o.length))
-    /*
-      Nối thêm một ô (lặp ô đầu vòng) rồi chỉ giữ đúng độ dài vòng: câu chạy Bộ Soạn Blues chèn ở CUỐI ĐOẠN (\`sectionEnds\` —
-      Twist ô 4 bị thay cú chặn bằng A4 C5 A4 C5 …) rơi vào ô thừa và bị cắt; ô cuối vòng cũng nối sang đầu vòng như khi lặp.
-    */
-    const dau0 = job.o[0].map((c) => transposeSymbol(c, job.dich))
-    const chordsNoi = [...chords, ...dau0]
-    const durationsNoi = [...durations, ...job.o[0].map(() => bar / job.o[0].length)]
-    const base = window.__ktSnapshot()
-    const snapshot = { ...base,
-      /*
-        Twist: không có lời thì Bộ Soạn Blues coi mỗi 16 phách là hết một câu hát (\`chayTwistBlues\` → \`moc16\`) và chèn câu chạy
-        vào ô 4, ô 8 … Đưa hợp âm thành MỘT dòng lời (ChordPro) thì chỗ nghỉ duy nhất ở cuối dòng — rơi vào ô thừa, bị cắt.
-      */
-      sourceText: job.styleId === 'twist' ? chordsNoi.map((c) => '[' + c + ']la').join(' ') : chordsNoi.join(' '),
-      transpose: 0, manualKey: job.giong === 'minor' ? '9:minor' : '0:major',
-      sectionMarks: [], arrangement: null, transitionEdits: {}, pairedChords: [], mutedFills: [], extraFills: [], extraRuns: [],
-      fillRests: {}, colorEdits: {}, slashEdits: {}, acceptedPassing: [],
-      lickyFills: false, lickyRuns: false, cpLick: false, caPhaoFull: false, slowRockMotO: true, twistSinglePass: true,
-      bluesLickSR: false, bluesSoan6: false, bluesSoan12: false, bluesLuot: false,
-      styleId: job.styleId, beatsPerChord: bar, chordDurations: durationsNoi, bpm: style.bpm,
-      useSlashChords: false, varyOnRepeat: false, allowJazzColors: false, intensity: 'off', susDominant: false,
-    }
-    usePracticeStore.getState().requestOpen({ snapshot, id: null, title: job.title })
-    let last = '', same = 0
-    for (let i = 0; i < 120; i++) {
-      await new Promise((r) => setTimeout(r, 100))
-      const song = usePracticeStore.getState().song
-      if (!song || song.title !== job.title || song.timeline.length === 0) continue
-      const key = song.timeline.length + '|' + JSON.stringify(song.timeline[song.timeline.length - 1])
-      same = key === last ? same + 1 : 0
-      last = key
-      if (same < 5) continue
-      /*
-        Bossa CP, Bolero Tuấn, Slow Blues, Twist TỰ CHÈN dạo · giang · kết cả khi bài chỉ có hợp âm. Bài tập là khung đệm
-        của thân vòng: tìm phách (đã sắp) ứng với phách 0 của bài gốc (\`transport.sourceBeat\`), giữ đúng độ dài vòng, dời về 0.
-      */
-      const transport = usePracticeStore.getState().transport
-      const total = Math.max(...song.timeline.map((e) => e.startBeat + e.durationBeats))
-      const doDai = durations.reduce((a, b) => a + b, 0)
-      let dau = 0
-      for (let b = 0; b < total; b += 0.125) {
-        const s = transport?.sourceBeat?.(b)
-        if (s != null && Math.abs(s) < 1e-6) { dau = b; break }
-      }
-      const timeline = song.timeline
-        .filter((e) => e.startBeat >= dau - 1e-6 && e.startBeat < dau + doDai - 1e-6)
-        .map((e) => ({ ...e, startBeat: Math.round((e.startBeat - dau) * 1e6) / 1e6 }))
-      // \`hopAm\` = hợp âm app THẬT SỰ đánh (thế bấm) — Slow Blues tô màu riêng (Am7 → Am9, \`harmonyStyle: 'blue-sun'\`).
-      return { hopAm: song.voicings.slice(0, chords.length).map((v) => v.symbol), hopAmNhap: chords,
-        phach: durations, doDai, bpm: style.bpm, meter: song.meter, beatsPerChord: song.beatsPerChord,
-        perBeat: song.perBeat, catTuPhach: dau, timeline, voicings: song.voicings }
-    }
-    throw new Error('app không dựng xong ' + job.title)
+    const { dungVong } = await mod('/src/thay/dungVong.ts')
+    const o = ${JSON.stringify(vong.o)}.map((one) => one.map((c) => transposeSymbol(c, ${vong.dich})))
+    return dungVong({ styleId: ${JSON.stringify(styleId)}, o, giong: ${JSON.stringify(giong === 'minor' ? '9:minor' : '0:major')} })
   })()`)
-}
 
-const tomTat = []
 for (const [thay, styleId, giong, tap, kiem] of BAI) {
-  const tapOut = await dung(styleId, giong, tap, `bai-tap:${styleId}:tap`)
-  const kiemOut = await dung(styleId, giong, kiem, `bai-tap:${styleId}:kiem`)
-  const style = await evaluate(`(async () => {
-    const path = '/src/reharm/style/styleLibrary/index.ts'
-    const { getStyle } = await import(performance.getEntriesByType('resource').map((e) => e.name).find((n) => n.includes(path)) ?? path)
-    const s = getStyle(${JSON.stringify(styleId)})
-    return { ten: s.name, bpm: s.bpm, meter: s.beatsPerMeasure }
-  })()`)
+  const tapOut = await dung(styleId, giong, tap)
+  const kiemOut = await dung(styleId, giong, kiem)
+  const style = await evaluate(`(async () => { ${MOD}; const s = (await mod('/src/reharm/style/styleLibrary/index.ts')).getStyle(${JSON.stringify(styleId)}); return { ten: s.name, bpm: s.bpm } })()`)
   writeFileSync(
     join(OUT, `${styleId}.json`),
     `${JSON.stringify({ styleId, ten: style.ten, thay, giong: giong === 'minor' ? 'La thứ' : 'Đô trưởng', bpm: style.bpm,
       nguon: { tap: tap.nguon, kiem: kiem.nguon }, commit, tap: tapOut, kiem: kiemOut }, null, 1)}\n`,
   )
-  const dem = (o) => `${o.timeline.length} tiếng (trái ${o.timeline.filter((e) => e.hand === 'left').length}, phải ${o.timeline.filter((e) => e.hand === 'right').length}), dài ${Math.max(...o.timeline.map((e) => e.startBeat + e.durationBeats)).toFixed(2)} phách`
-  tomTat.push(`${styleId}: tập ${tapOut.hopAm.join(' ')} → ${dem(tapOut)} | kiểm → ${dem(kiemOut)}`)
-  console.log(tomTat[tomTat.length - 1])
+  const dem = (o) => `${o.timeline.length} tiếng (trái ${o.timeline.filter((e) => e.hand === 'left').length}, phải ${o.timeline.filter((e) => e.hand === 'right').length}), dài ${o.doDai} phách`
+  console.log(`${styleId}: tập ${tapOut.hopAm.join(' ')} → ${dem(tapOut)} | kiểm → ${dem(kiemOut)}`)
 }
+
+if ((await chupTab()) !== truocKhiDung) {
+  console.error('LỖI: bài ở tab Tái hòa âm KHÔNG được trả lại y hệt sau khi dựng — xem dungVong / OpenRequest.giu')
+  process.exitCode = 1
+} else console.log('Bài ở tab Tái hòa âm trả lại y hệt sau 22 lần dựng.')
+
+/* Kho vòng: dịch về Đô trưởng / La thứ trong trang, bỏ trùng. */
+const kho = await evaluate(`(async () => {
+  ${MOD}
+  const { transposeSymbol } = await mod('/src/reharm/transpose.ts')
+  const out = { 'ca-phao': { truong: [], thu: [] }, 'linh-nhi': { truong: [], thu: [] }, blues: { truong: [], thu: [] } }
+  const seen = new Set()
+  for (const v of ${JSON.stringify(khoVong())}) {
+    const hopAm = v.hopAm.map((c) => transposeSymbol(c, v.dich))
+    const key = v.thay + v.che + hopAm.join(' ')
+    if (seen.has(key)) continue
+    seen.add(key)
+    out[v.thay][v.che].push({ hopAm, nguon: 'Nguon.json ' + v.nguon })
+  }
+  out.blues.truong = [['C7', 'C7', 'C7', 'C7'], ['C7', 'F7', 'C7', 'C7'], ['F7', 'F7', 'C7', 'C7'], ['G7', 'F7', 'C7', 'C7']]
+    .map((hopAm) => ({ hopAm, nguon: 'Bộ Soạn Blues — KHUNG trưởng' }))
+  out.blues.thu = [['Am7', 'Am7', 'Am7', 'Am7'], ['Am7', 'Dm7', 'Am7', 'Am7'], ['Dm7', 'Dm7', 'Am7', 'Am7'], ['F7', 'E7', 'Am7', 'Am7']]
+    .map((hopAm) => ({ hopAm, nguon: 'Bộ Soạn Blues — KHUNG thứ' }))
+  return out
+})()`)
+writeFileSync(join(ROOT, 'src', 'thay', 'vongThay.json'), `${JSON.stringify(kho, null, 1)}\n`)
+for (const [thay, che] of Object.entries(kho)) console.log(`kho vòng ${thay}: trưởng ${che.truong.length} · thứ ${che.thu.length}`)
 
 ws.close()
 chrome.kill()

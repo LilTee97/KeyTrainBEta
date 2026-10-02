@@ -90,6 +90,11 @@ export interface TimedPracticeProps {
   beatsPerChord: number
   perBeat?: readonly string[]
   meter: 3 | 4
+  /**
+   * Vòng KHÔNG do tab Tái hòa âm dựng (trang thầy): nhịp 100% của vòng — thay BPM chung (là của bài ở tab ấy). Có thì tên
+   * hợp âm đọc thẳng `perBeat` (một vòng, lặp theo phách) thay vì qua bộ phát của tab ấy.
+   */
+  vongBpm?: number
 }
 
 /**
@@ -107,10 +112,13 @@ export function TimedPractice({
   beatsPerChord,
   perBeat = [],
   meter,
+  vongBpm,
 }: TimedPracticeProps) {
-  const bpm = useMetronomeStore((state) => state.bpm)
+  const storeBpm = useMetronomeStore((state) => state.bpm)
+  const bpm = vongBpm ?? storeBpm
   const looping = usePlaybackStore((state) => state.looping)
-  const transport = usePracticeStore((state) => state.transport)
+  const storeTransport = usePracticeStore((state) => state.transport)
+  const transport = vongBpm ? null : storeTransport
 
   useLiveSound()
   useComputerKeyboard(60)
@@ -163,6 +171,7 @@ export function TimedPractice({
         beatsPerChord,
         symbolAt: (beat) => {
           const at = beat - countIn
+          if (vongBpm) return perBeat[Math.max(0, Math.floor(at)) % Math.max(1, perBeat.length)] ?? ''
           const source = transport?.sourceBeat?.(at)
           if (source != null) {
             const name = perBeat[Math.max(0, Math.floor(source))]
@@ -171,7 +180,7 @@ export function TimedPractice({
           return perBeat[Math.max(0, Math.floor(at))] ?? ''
         },
       }),
-    [shifted, voicings, hand, beatsPerChord, transport, perBeat, countIn],
+    [shifted, voicings, hand, beatsPerChord, transport, perBeat, countIn, vongBpm],
   )
   const expected = useMemo(() => expectedNotesOf(shifted, hand), [shifted, hand])
 

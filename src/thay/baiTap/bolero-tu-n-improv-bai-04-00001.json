@@ -8,7 +8,7 @@
   "tap": "Nguon.json #182 (bolero-linh-nhi-2 · A thứ)",
   "kiem": "Nguon.json #1382 (slow-rock-la-thu · E thứ)"
  },
- "commit": "dcbfbe2",
+ "commit": "13ac127",
  "tap": {
   "hopAm": [
    "Am(add9)",
@@ -54,7 +54,6 @@
    "Am(add9)",
    "Am(add9)"
   ],
-  "catTuPhach": 36,
   "timeline": [
    {
     "notes": [
@@ -478,7 +477,6 @@
    "Am/C",
    "Am/C"
   ],
-  "catTuPhach": 36,
   "timeline": [
    {
     "notes": [

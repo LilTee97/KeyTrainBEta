@@ -8,7 +8,7 @@
   "tap": "Bộ Soạn Blues — KHUNG trưởng, giang biến thể 2",
   "kiem": "Bộ Soạn Blues — KHUNG trưởng, giang biến thể 1"
  },
- "commit": "dcbfbe2",
+ "commit": "13ac127",
  "tap": {
   "hopAm": [
    "C7",
@@ -54,7 +54,6 @@
    "C7",
    "C7"
   ],
-  "catTuPhach": 16,
   "timeline": [
    {
     "notes": [
@@ -618,7 +617,6 @@
    "C7",
    "C7"
   ],
-  "catTuPhach": 16,
   "timeline": [
    {
     "notes": [

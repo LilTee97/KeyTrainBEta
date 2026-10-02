@@ -8,7 +8,7 @@
   "tap": "Bộ Soạn Blues — KHUNG thứ, giang biến thể 2",
   "kiem": "Bộ Soạn Blues — KHUNG thứ, giang biến thể 1"
  },
- "commit": "dcbfbe2",
+ "commit": "13ac127",
  "tap": {
   "hopAm": [
    "Am9",
@@ -64,7 +64,6 @@
    "Am9",
    "Am9"
   ],
-  "catTuPhach": 24,
   "timeline": [
    {
     "notes": [
@@ -730,13 +729,30 @@
    },
    {
     "hand": "right",
-    "startBeat": 18,
-    "durationBeats": 1.5,
+    "startBeat": 18.08335,
+    "durationBeats": 0.29165,
     "notes": [
-     69,
-     72
+     88
     ],
-    "velocity": 74
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 18.375,
+    "durationBeats": 0.20835,
+    "notes": [
+     81
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 18.58335,
+    "durationBeats": 0.08335,
+    "notes": [
+     84
+    ],
+    "velocity": 66
    },
    {
     "notes": [
@@ -752,17 +768,34 @@
    },
    {
     "hand": "right",
-    "startBeat": 20.04165,
-    "durationBeats": 0.375,
+    "startBeat": 19.91665,
+    "durationBeats": 0.29165,
     "notes": [
-     69,
-     74
+     81
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 20.20835,
+    "durationBeats": 0.20835,
+    "notes": [
+     84
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 20.41665,
+    "durationBeats": 0.20835,
+    "notes": [
+     86
     ],
     "velocity": 66
    },
    {
     "notes": [
-     37
+     44
     ],
     "startBeat": 20.5,
     "durationBeats": 0.5,
@@ -772,17 +805,26 @@
    },
    {
     "hand": "right",
-    "startBeat": 20.5,
+    "startBeat": 20.625,
     "durationBeats": 0.33335,
     "notes": [
-     72
+     84
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 20.95835,
+    "durationBeats": 0.04165,
+    "notes": [
+     86
     ],
     "velocity": 66
    },
    {
     "notes": [
-     38,
-     48
+     45,
+     55
     ],
     "startBeat": 21,
     "durationBeats": 1.5,
@@ -791,96 +833,91 @@
    },
    {
     "hand": "right",
-    "startBeat": 21.04165,
+    "startBeat": 21,
+    "durationBeats": 0.16665,
+    "notes": [
+     69
+    ],
+    "velocity": 74
+   },
+   {
+    "hand": "right",
+    "startBeat": 21.41665,
+    "durationBeats": 0.08335,
+    "notes": [
+     74
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 21.5,
+    "durationBeats": 0.08335,
+    "notes": [
+     72
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 21.58335,
+    "durationBeats": 0.08335,
+    "notes": [
+     69
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 21.75,
+    "durationBeats": 0.16665,
+    "notes": [
+     72
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 21.91665,
+    "durationBeats": 0.08335,
+    "notes": [
+     74
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 22,
+    "durationBeats": 0.08335,
+    "notes": [
+     75
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 22.16665,
+    "durationBeats": 0.125,
+    "notes": [
+     76
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 22.29165,
     "durationBeats": 0.25,
     "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 21.29165,
-    "durationBeats": 0.16665,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 21.45835,
-    "durationBeats": 0.20835,
-    "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 21.66665,
-    "durationBeats": 0.16665,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 21.83335,
-    "durationBeats": 0.125,
-    "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 21.95835,
-    "durationBeats": 0.16665,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 22.125,
-    "durationBeats": 0.125,
-    "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 22.25,
-    "durationBeats": 0.20835,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 22.45835,
-    "durationBeats": 0.125,
-    "notes": [
-     86,
-     93
+     79
     ],
     "velocity": 66
    },
    {
     "notes": [
-     48,
-     50,
-     53,
-     57
+     55,
+     57,
+     60,
+     64
     ],
     "startBeat": 22.5,
     "durationBeats": 0.5,
@@ -889,58 +926,46 @@
    },
    {
     "hand": "right",
-    "startBeat": 22.58335,
+    "startBeat": 22.54165,
     "durationBeats": 0.16665,
+    "notes": [
+     80
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 22.70835,
+    "durationBeats": 0.25,
+    "notes": [
+     81
+    ],
+    "velocity": 66
+   },
+   {
+    "hand": "right",
+    "startBeat": 22.95835,
+    "durationBeats": 0.25,
     "notes": [
      84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 22.75,
-    "durationBeats": 0.125,
-    "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 22.875,
-    "durationBeats": 0.16665,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 23.04165,
-    "durationBeats": 0.16665,
-    "notes": [
-     86,
-     93
     ],
     "velocity": 66
    },
    {
     "hand": "right",
     "startBeat": 23.20835,
-    "durationBeats": 0.16665,
+    "durationBeats": 0.25,
     "notes": [
-     84
+     86
     ],
     "velocity": 66
    },
    {
     "hand": "right",
-    "startBeat": 23.375,
-    "durationBeats": 0.16665,
+    "startBeat": 23.45835,
+    "durationBeats": 0.20835,
     "notes": [
-     86,
-     93
+     86
     ],
     "velocity": 66
    },
@@ -956,27 +981,8 @@
    },
    {
     "hand": "right",
-    "startBeat": 23.54165,
-    "durationBeats": 0.04165,
-    "notes": [
-     84
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 23.75,
-    "durationBeats": 0.125,
-    "notes": [
-     86,
-     93
-    ],
-    "velocity": 66
-   },
-   {
-    "hand": "right",
-    "startBeat": 23.875,
-    "durationBeats": 0.125,
+    "startBeat": 23.66665,
+    "durationBeats": 0.25,
     "notes": [
      84
     ],
@@ -1164,7 +1170,6 @@
    "Am9",
    "Am9"
   ],
-  "catTuPhach": 24,
   "timeline": [
    {
     "notes": [

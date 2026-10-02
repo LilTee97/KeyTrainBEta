@@ -8,7 +8,7 @@
   "tap": "Nguon.json #992 (ca-phao-bossa-improved · A thứ)",
   "kiem": "Nguon.json #984 (ca-phao-bossa-improved · A thứ)"
  },
- "commit": "dcbfbe2",
+ "commit": "13ac127",
  "tap": {
   "hopAm": [
    "Am11",
@@ -54,7 +54,6 @@
    "Am11",
    "Am11"
   ],
-  "catTuPhach": 0,
   "timeline": [
    {
     "notes": [
@@ -809,7 +808,6 @@
    "Am",
    "Am"
   ],
-  "catTuPhach": 0,
   "timeline": [
    {
     "notes": [

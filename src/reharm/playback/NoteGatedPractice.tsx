@@ -7,6 +7,8 @@ import {
   playChord,
   setSyncOffsetMs,
   startAudio,
+  startTimelineLoop,
+  stopTimelineLoop,
   useAudioStore,
   usePlaybackStore,
 } from '../../shared/audio/audioEngine'
@@ -45,6 +47,11 @@ export interface NoteGatedPracticeProps {
   beatsPerChord: number
   /** Lưới hợp âm theo phách nguồn — để ghi tên hợp âm đúng khi bài đã sắp. */
   perBeat?: readonly string[]
+  /**
+   * Vòng KHÔNG do tab Tái hòa âm dựng (trang thầy): nhịp gốc của vòng. Có thì không dùng bộ phát của tab ấy (nó là của bài
+   * khác) — tự phát `timeline` một lượt dài `perBeat.length` phách, tên hợp âm đọc thẳng `perBeat` theo phách.
+   */
+  vongBpm?: number
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -65,12 +72,14 @@ export function NoteGatedPractice({
   voicings,
   beatsPerChord,
   perBeat = [],
+  vongBpm,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
   const bpm = useMetronomeStore((state) => state.bpm)
   const looping = usePlaybackStore((state) => state.looping)
-  const transport = usePracticeStore((state) => state.transport)
+  const storeTransport = usePracticeStore((state) => state.transport)
+  const transport = vongBpm ? null : storeTransport
 
   useLiveSound()
   useComputerKeyboard(60)
@@ -112,6 +121,7 @@ export function NoteGatedPractice({
         hand,
         beatsPerChord,
         symbolAt: (beat) => {
+          if (vongBpm) return perBeat[Math.max(0, Math.floor(beat)) % Math.max(1, perBeat.length)] ?? ''
           const src = transport?.sourceBeat?.(beat)
           if (src != null) {
             const name = perBeat[Math.max(0, Math.floor(src))]
@@ -121,7 +131,7 @@ export function NoteGatedPractice({
           return name ?? ''
         },
       }),
-    [timeline, voicings, hand, beatsPerChord, perBeat, transport],
+    [timeline, voicings, hand, beatsPerChord, perBeat, transport, vongBpm],
   )
 
   /** Dải phím dựa theo kích thước đàn MIDI thật người dùng đang cắm. */
@@ -243,16 +253,24 @@ export function NoteGatedPractice({
 
   /* Nút chính khi toàn màn hình — lúc ấy chỉ còn khung nốt rơi + bàn phím trên màn. */
   const barButton = 'rounded-lg border border-line bg-white/6 px-3 py-1.5 text-cream hover:bg-white/12 disabled:opacity-40'
+  const phatHayDung = () => {
+    if (looping) return vongBpm ? stopTimelineLoop() : transport?.pause()
+    if (!vongBpm) return transport?.playAll()
+    void startAudio().then(() => startTimelineLoop(timeline, vongBpm, perBeat.length || undefined, 0, true))
+  }
+  const playButton = (
+    <button
+      type="button"
+      disabled={vongBpm ? timeline.length === 0 : !transport}
+      onClick={phatHayDung}
+      className={barButton}
+    >
+      {looping ? '■ Dừng phát' : vongBpm ? '▶ Nghe vòng' : '▶ Phát cả bài'}
+    </button>
+  )
   const fullscreenBar = (
     <>
-      <button
-        type="button"
-        disabled={!transport}
-        onClick={() => (looping ? transport?.pause() : transport?.playAll())}
-        className={barButton}
-      >
-        {looping ? '■ Dừng phát' : '▶ Phát cả bài'}
-      </button>
+      {playButton}
       {!audioReady ? (
         <button
           type="button"
@@ -552,18 +570,23 @@ export function NoteGatedPractice({
           Nốt rơi dựng ngay trên bàn phím và dùng chung dải nốt với nó, nên nốt
           rơi thẳng hàng với đúng phím mà nó sẽ đáp xuống.
         */}
-        <PlaybackToolbar
-          canPlay={!!transport}
-          onPlay={() =>
-            looping ? transport?.pause() : transport?.playAll()
-          }
-          onPause={() => transport?.pause()}
-          onStop={() => transport?.stop()}
-          onTone={transport?.onTone}
-          toneLabel={transport?.toneLabel}
-          bpm={bpm}
-          onBpm={setBpm}
-        />
+        {/* Vòng riêng: không Tone, không BPM chung — hai nút ấy là của bài ở tab Tái hòa âm. */}
+        {vongBpm ? (
+          <div className="mb-2 text-xs">{playButton}</div>
+        ) : (
+          <PlaybackToolbar
+            canPlay={!!transport}
+            onPlay={() =>
+              looping ? transport?.pause() : transport?.playAll()
+            }
+            onPause={() => transport?.pause()}
+            onStop={() => transport?.stop()}
+            onTone={transport?.onTone}
+            toneLabel={transport?.toneLabel}
+            bpm={bpm}
+            onBpm={setBpm}
+          />
+        )}
 
         <PracticeStage bar={fullscreenBar}>
           {(full) => (

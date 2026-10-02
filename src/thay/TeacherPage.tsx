@@ -1,34 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  getPlaybackBeats,
-  startAudio,
-  startTimelineLoop,
-  stopTimelineLoop,
-  usePlaybackStore,
-  type ScheduledHit,
-} from '../shared/audio/audioEngine'
-import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
-import { getKeyboardRange } from '../shared/midi/onScreenPiano/layout'
-import type { MidiNote } from '../shared/musicTheory/types'
-import { readSetting } from '../shared/persistence/localSettings'
-import { FallingNotes } from '../reharm/playback/FallingNotes'
-import { PracticeStage } from '../reharm/playback/PracticeStage'
-import { buildGatedSteps, notesSoundingAt } from '../reharm/playback/noteGatedPlaybackEngine'
-import type { TimelineEvent } from '../reharm/style/types'
-import { taiBaiTap, type BaiTap } from './baiTap'
+import { stopTimelineLoop, usePlaybackStore } from '../shared/audio/audioEngine'
+import { useMetronomeStore } from '../shared/audio/metronome'
+import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
+import { TimedPractice } from '../reharm/playback/TimedPractice'
+import { taiBaiTap, type BaiTap, type VongBaiTap } from './baiTap'
+import { dungVong } from './dungVong'
 import type { Teacher } from './teachers'
+import { GOC, LOAI, soanVong, vongMau } from './vongThay'
 
-type Vong = 'tap' | 'kiem'
+/** Theo nhịp chấm trên hai lượt vòng — đoán, chưa đo: một lượt 4 ô (~13 giây ở ♩72) ít tiếng quá để chấm. */
+const LUOT_THEO_NHIP = 2
 
-/** Nghe: phát vòng hai lượt rồi dừng — đủ để nghe khuôn lặp, nốt rơi không phải dựng vô tận. */
-const LUOT_NGHE = 2
+/** Thứ đang tập ở khung dưới: vòng tập / vòng kiểm của một bài, hoặc vòng tự tạo. */
+interface Muc {
+  ten: string
+  vong: VongBaiTap
+}
+
+const nut = (on: boolean) =>
+  `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
+    on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-dim hover:bg-white/8'
+  }`
+
+const chonClass = 'rounded border border-line bg-white/6 px-1.5 py-1 text-cream'
+
+const laThu = (one: BaiTap) => one.giong.includes('thứ')
 
 /**
  * Trang một thầy — tab Điệu · Kỹ thuật đánh · Học cách soạn câu (`Reference/KE-HOACH-LUYEN-TAP.md` mục 4c).
  *
- * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E) — hiện chỉ tab Điệu có bài. Bước này (GĐ 1 bước 2–3) là NGHE DUYỆT
- * bộ bài tập: mỗi điệu một vòng tập 4 ô + một vòng kiểm, nghe kèm nốt rơi. Lộ trình 7 bậc (chờ đúng nốt · theo nhịp) gắn vào đây
- * ở bước sau, sau khi người dùng duyệt bài.
+ * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E) — hiện chỉ tab Điệu. Chọn một vòng (vòng tập, vòng kiểm của
+ * bài, hoặc vòng tự tạo) rồi tập ở khung dưới bằng Chờ đúng nốt hay Theo nhịp — cùng hai khung của tab Luyện đệm, chạy
+ * vòng riêng (`vongBpm`) chứ không qua bài đang mở ở tab Tái hòa âm.
  */
 export function TeacherPage({ teacher }: { teacher: Teacher }) {
   const [bai, setBai] = useState<BaiTap[] | null>(null)
@@ -42,87 +45,28 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
     }
   }, [teacher])
 
-  const [chon, setChon] = useState<{ styleId: string; vong: Vong } | null>(null)
-  const [dangNghe, setDangNghe] = useState(false)
-  const looping = usePlaybackStore((state) => state.looping)
-  useEffect(() => {
-    if (!looping) setDangNghe(false)
-  }, [looping])
-  // Rời trang đang nghe thì tắt tiếng.
+  const [chon, setChon] = useState<Muc | null>(null)
+  const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
+  // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
 
-  const baiChon = bai?.find((one) => one.styleId === chon?.styleId) ?? bai?.[0] ?? null
-  const vongChon = baiChon ? baiChon[chon?.vong ?? 'tap'] : null
-
-  /* Vòng lặp LUOT_NGHE lượt — để phát và để nốt rơi cùng một danh sách tiếng. */
-  const events = useMemo<TimelineEvent[]>(() => {
-    if (!vongChon) return []
-    return Array.from({ length: LUOT_NGHE }, (_, luot) =>
-      vongChon.timeline.map((event) => ({ ...event, startBeat: event.startBeat + luot * vongChon.doDai })),
-    ).flat()
-  }, [vongChon])
-
-  const steps = useMemo(
+  const muc = chon ?? (bai?.[0] ? { ten: `${bai[0].ten} · vòng tập`, vong: bai[0].tap } : null)
+  const vong = muc?.vong ?? null
+  /* Lưới hợp âm của MỘT vòng — lưới tab Tái hòa âm dựng còn kèm ô nối vòng. */
+  const motVong = useMemo(() => vong?.perBeat.slice(0, vong.doDai) ?? [], [vong])
+  const nhieuLuot = useMemo(
     () =>
-      vongChon
-        ? buildGatedSteps(events, vongChon.voicings, {
-            beatsPerChord: vongChon.beatsPerChord,
-            symbolAt: (beat) => vongChon.perBeat[Math.floor(beat % vongChon.doDai)] ?? '',
-          })
+      vong
+        ? Array.from({ length: LUOT_THEO_NHIP }, (_, luot) =>
+            vong.timeline.map((event) => ({ ...event, startBeat: event.startBeat + luot * vong.doDai })),
+          ).flat()
         : [],
-    [events, vongChon],
+    [vong],
   )
 
-  const range = useMemo(() => {
-    let { low, high } = getKeyboardRange(readSetting('midiKeyboardKeys'))
-    for (const event of events) {
-      for (const note of event.notes) {
-        low = Math.min(low, note) as MidiNote
-        high = Math.max(high, note) as MidiNote
-      }
-    }
-    return { low, high }
-  }, [events])
-
-  const [hitting, setHitting] = useState<{ left: MidiNote[]; right: MidiNote[] }>({ left: [], right: [] })
-  useEffect(() => {
-    if (!dangNghe || !looping) {
-      setHitting({ left: [], right: [] })
-      return
-    }
-    let raf = 0
-    let last = ''
-    const tick = () => {
-      const next = notesSoundingAt(events, getPlaybackBeats())
-      const key = `${next.left.join()}/${next.right.join()}`
-      if (key !== last) {
-        last = key
-        setHitting(next)
-      }
-      raf = window.requestAnimationFrame(tick)
-    }
-    raf = window.requestAnimationFrame(tick)
-    return () => window.cancelAnimationFrame(raf)
-  }, [dangNghe, looping, events])
-
-  const [nowSymbol, setNowSymbol] = useState('')
-
-  const nghe = async (one: BaiTap, vong: Vong) => {
-    setChon({ styleId: one.styleId, vong })
-    await startAudio()
+  const tap = (next: Muc) => {
     stopTimelineLoop()
-    const v = one[vong]
-    const hits: ScheduledHit[] = Array.from({ length: LUOT_NGHE }, (_, luot) =>
-      v.timeline.map((event) => ({
-        notes: event.notes,
-        startBeat: event.startBeat + luot * v.doDai,
-        durationBeats: event.durationBeats,
-        velocity: event.velocity,
-      })),
-    ).flat()
-    startTimelineLoop(hits, one.bpm, v.doDai * LUOT_NGHE, 0, true)
-    // Âm thanh chưa sẵn sàng thì bộ phát không chạy — đừng báo "đang nghe" khi chẳng có tiếng.
-    setDangNghe(usePlaybackStore.getState().looping)
+    setChon(next)
   }
 
   if (bai === null) return <p className="text-sm text-dim">Đang tải bài tập…</p>
@@ -136,9 +80,6 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
     )
   }
 
-  const dangChon = (one: BaiTap, vong: Vong) =>
-    baiChon?.styleId === one.styleId && (chon?.vong ?? 'tap') === vong
-
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-3">
@@ -150,8 +91,8 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
       </div>
 
       <p className="text-xs text-dim">
-        Nghe duyệt bộ bài tập: mỗi điệu một vòng tập 4 ô (bậc 1–6) và một vòng kiểm chưa gặp (bậc 7). Khung đệm không có câu
-        chèn; Slow Blues giữ tay phải của Bộ Soạn Blues. Lộ trình 7 bậc gắn vào sau khi bạn duyệt.
+        Chọn vòng rồi tập ở khung dưới: vòng tập 4 ô (bậc 1–6), vòng kiểm chưa gặp (bậc 7), hoặc vòng tự tạo. Khung đệm
+        không có câu chèn; Slow Blues giữ tay phải của Bộ Soạn Blues.
       </p>
 
       <ul className="flex flex-col gap-2">
@@ -168,82 +109,258 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
               <span className="text-dim"> — vòng kiểm {one.kiem.hopAm.length} hợp âm</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              {(['tap', 'kiem'] as const).map((vong) => (
+              {(['tap', 'kiem'] as const).map((loai) => (
                 <button
-                  key={vong}
+                  key={loai}
                   type="button"
-                  onClick={() => void nghe(one, vong)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs ${
-                    dangNghe && dangChon(one, vong)
-                      ? 'border-amber-key bg-amber-key/15 text-amber-key'
-                      : 'border-line bg-white/6 text-cream hover:bg-white/12'
-                  }`}
+                  onClick={() => tap({ ten: `${one.ten} · vòng ${loai === 'tap' ? 'tập' : 'kiểm'}`, vong: one[loai] })}
+                  className={nut(vong === one[loai])}
                 >
-                  ▶ Nghe vòng {vong === 'tap' ? 'tập' : 'kiểm'}
+                  Tập vòng {loai === 'tap' ? 'tập' : 'kiểm'}
                 </button>
               ))}
-              {dangNghe && baiChon?.styleId === one.styleId && (
-                <button
-                  type="button"
-                  onClick={() => stopTimelineLoop()}
-                  className="rounded-lg border border-line bg-white/4 px-3 py-1.5 text-xs text-dim hover:bg-white/8"
-                >
-                  ■ Dừng
-                </button>
-              )}
               <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
             </div>
           </li>
         ))}
       </ul>
 
-      {vongChon && (
-        <div className="rounded-xl border border-line bg-black/25 p-3">
-          <p className="mb-2 text-xs text-dim">
-            {baiChon?.ten} · vòng {(chon?.vong ?? 'tap') === 'tap' ? 'tập' : 'kiểm'} — bấm ▶ để nốt rơi chạy theo tiếng.
-          </p>
-          <PracticeStage
-            bar={
+      <VongTuTao teacher={teacher} bai={bai} onXong={tap} />
+
+      {muc && vong && (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-xs text-dim">Đang tập:</span>
+            <span className="font-semibold text-amber-key">{muc.ten}</span>
+            <span className="font-mono text-xs text-cream/80">{vong.hopAm.join(' · ')}</span>
+            <span className="text-xs text-dim">♩ {vong.bpm}</span>
+          </div>
+          <div className="flex gap-1">
+            {(
+              [
+                ['gated', 'Chờ đúng nốt'],
+                ['timed', 'Theo nhịp'],
+              ] as const
+            ).map(([value, label]) => (
               <button
+                key={value}
                 type="button"
-                onClick={() => (dangNghe ? stopTimelineLoop() : baiChon && void nghe(baiChon, chon?.vong ?? 'tap'))}
-                className="rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink"
+                onClick={() => {
+                  stopTimelineLoop()
+                  setCheDo(value)
+                }}
+                className={nut(cheDo === value)}
               >
-                {dangNghe ? '■ Dừng' : '▶ Nghe'}
+                {label}
               </button>
-            }
-          >
-            {(full) => (
-              <>
-                <div className={full ? 'min-h-0 flex-1' : ''}>
-                  <FallingNotes
-                    events={events}
-                    steps={steps}
-                    index={0}
-                    live={dangNghe && looping}
-                    lowNote={range.low}
-                    highNote={range.high}
-                    onSymbol={setNowSymbol}
-                    fill={full}
-                  />
-                </div>
-                <div className={full ? 'h-[38vh] max-h-80 min-h-28 shrink-0' : ''}>
-                  <OnScreenPiano
-                    lowNote={range.low}
-                    highNote={range.high}
-                    leftHandNotes={hitting.left}
-                    rightHandNotes={hitting.right}
-                    height={full ? '100%' : undefined}
-                  />
-                </div>
-                <div className="shrink-0 rounded-b-lg border border-t-0 border-line bg-black/50 px-2 py-1.5 text-center">
-                  <span className="font-sans text-lg font-bold text-amber-key">{nowSymbol || '—'}</span>
-                </div>
-              </>
-            )}
-          </PracticeStage>
+            ))}
+          </div>
+          {cheDo === 'gated' ? (
+            <NoteGatedPractice
+              key={muc.ten}
+              timeline={vong.timeline}
+              voicings={vong.voicings}
+              beatsPerChord={vong.beatsPerChord}
+              perBeat={motVong}
+              vongBpm={vong.bpm}
+            />
+          ) : (
+            <TimedPractice
+              key={muc.ten}
+              title={muc.ten}
+              timeline={nhieuLuot}
+              voicings={vong.voicings}
+              beatsPerChord={vong.beatsPerChord}
+              perBeat={motVong}
+              meter={vong.meter}
+              vongBpm={vong.bpm}
+            />
+          )}
         </div>
       )}
     </section>
+  )
+}
+
+/**
+ * Vòng tự tạo để tập đệm (người dùng 2/10/2026), hai cách:
+ * - Tự soạn từ hợp âm chủ: một vòng 4 ô trong kho của chính thầy (`vongThay.ts` — câu "đã ổn"; Tuấn mượn Linh Nhi, Blues
+ *   lấy khung Bộ Soạn Blues), dịch sang giọng chọn. Soạn lại thì ra vòng kế của kho.
+ * - Chọn từng hợp âm: nốt gốc + loại, mỗi hợp âm một ô; giọng để app tự dò như khi dán bài ở tab Tái hòa âm.
+ * Dựng bằng `dungVong`: chính tab Tái hòa âm dựng khung đệm của điệu chọn, như 11 bài đóng băng.
+ */
+function VongTuTao({
+  teacher,
+  bai,
+  onXong,
+}: {
+  teacher: Teacher
+  bai: readonly BaiTap[]
+  onXong: (muc: Muc) => void
+}) {
+  const looping = usePlaybackStore((state) => state.looping)
+  const clicking = useMetronomeStore((state) => state.running)
+  const [styleId, setStyleId] = useState(bai[0]!.styleId)
+  const [cach, setCach] = useState<'chu' | 'tung'>('chu')
+  const [chu, setChu] = useState(() => (laThu(bai[0]!) ? 9 : 0))
+  const [thu, setThu] = useState(() => laThu(bai[0]!))
+  const [lan, setLan] = useState(0)
+  const [goc, setGoc] = useState<string>('C')
+  const [loai, setLoai] = useState<string>('')
+  const [chon, setChon] = useState<string[]>([])
+  const [dang, setDang] = useState(false)
+  const [loi, setLoi] = useState('')
+
+  const dieu = bai.find((one) => one.styleId === styleId) ?? bai[0]!
+  const soan = soanVong(teacher.id, chu, thu, lan)
+  const soVong = vongMau(teacher.id, thu).length
+  const hopAm = cach === 'chu' ? (soan?.hopAm ?? []) : chon
+  // Dựng là mở bài khác ở tab Tái hòa âm (đổi BPM chung) — đang phát hay đang đo thì nhịp sẽ nhảy giữa chừng.
+  const ban = looping || clicking
+
+  const dung = async () => {
+    setDang(true)
+    setLoi('')
+    try {
+      const vong = await dungVong({
+        styleId: dieu.styleId,
+        o: hopAm.map((symbol) => [symbol]),
+        giong: cach === 'chu' ? `${chu}:${thu ? 'minor' : 'major'}` : '',
+      })
+      onXong({ ten: `Vòng tự tạo · ${dieu.ten} · ${hopAm.join(' ')}`, vong })
+    } catch (error) {
+      setLoi(error instanceof Error ? error.message : String(error))
+    } finally {
+      setDang(false)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-line bg-black/25 p-3">
+      <h3 className="mb-2 font-semibold text-cream">Vòng tự tạo</h3>
+
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+        <label className="flex items-center gap-1.5 text-dim">
+          Điệu
+          <select
+            value={dieu.styleId}
+            onChange={(event) => {
+              const next = bai.find((one) => one.styleId === event.target.value)
+              if (!next) return
+              setStyleId(next.styleId)
+              setThu(laThu(next))
+            }}
+            className={chonClass}
+          >
+            {bai.map((one) => (
+              <option key={one.styleId} value={one.styleId}>
+                {one.ten}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" onClick={() => setCach('chu')} className={nut(cach === 'chu')}>
+          Tự soạn từ hợp âm chủ
+        </button>
+        <button type="button" onClick={() => setCach('tung')} className={nut(cach === 'tung')}>
+          Chọn từng hợp âm
+        </button>
+      </div>
+
+      {cach === 'chu' ? (
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+          <label className="flex items-center gap-1.5 text-dim">
+            Hợp âm chủ
+            <select value={chu} onChange={(event) => setChu(Number(event.target.value))} className={chonClass}>
+              {GOC.map((name, tonic) => (
+                <option key={name} value={tonic}>
+                  {name}
+                  {thu ? 'm' : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" onClick={() => setThu(false)} className={nut(!thu)}>
+            Trưởng
+          </button>
+          <button type="button" onClick={() => setThu(true)} className={nut(thu)}>
+            Thứ
+          </button>
+          <button type="button" disabled={soVong < 2} onClick={() => setLan((n) => n + 1)} className={nut(false)}>
+            ↻ Soạn vòng khác
+          </button>
+          {soan && (
+            <span className="text-[11px] text-dim/80">
+              vòng {(lan % soVong) + 1}/{soVong} của {teacher.label} · {soan.nguon}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+          <select value={goc} onChange={(event) => setGoc(event.target.value)} className={chonClass}>
+            {GOC.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select value={loai} onChange={(event) => setLoai(event.target.value)} className={chonClass}>
+            {LOAI.map((one) => (
+              <option key={one.kyHieu} value={one.kyHieu}>
+                {one.ten}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={() => setChon((list) => [...list, goc + loai])} className={nut(false)}>
+            + Thêm {goc + loai}
+          </button>
+          {chon.length > 0 && (
+            <button type="button" onClick={() => setChon([])} className={nut(false)}>
+              Xoá hết
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="mb-2 flex flex-wrap items-center gap-1.5 font-mono text-sm">
+        {hopAm.length === 0 ? (
+          <span className="font-sans text-xs text-dim">
+            Chưa có hợp âm — chọn nốt gốc, loại rồi bấm Thêm. Mỗi hợp âm một ô.
+          </span>
+        ) : (
+          hopAm.map((symbol, index) => (
+            <span
+              key={index}
+              className="flex items-center gap-1 rounded-md border border-line bg-white/6 px-2 py-0.5 text-cream"
+            >
+              {symbol}
+              {cach === 'tung' && (
+                <button
+                  type="button"
+                  aria-label={`Bỏ ${symbol}`}
+                  onClick={() => setChon((list) => list.filter((_, at) => at !== index))}
+                  className="text-dim hover:text-rose-300"
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <button
+          type="button"
+          disabled={dang || ban || hopAm.length === 0}
+          onClick={() => void dung()}
+          className="rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink disabled:opacity-40"
+        >
+          {dang ? 'Đang dựng…' : 'Dựng phần đệm để tập'}
+        </button>
+        {ban && !dang && <span className="text-dim">Dừng phát trước khi dựng.</span>}
+        {loi && <span className="text-rose-300">{loi}</span>}
+      </div>
+    </div>
   )
 }

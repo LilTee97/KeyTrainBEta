@@ -1,0 +1,272 @@
+{
+ "ca-phao": {
+  "truong": [
+   {
+    "hopAm": [
+     "Cmaj7",
+     "Fmaj7",
+     "Em7",
+     "Dm7"
+    ],
+    "nguon": "Nguon.json #1350 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "C",
+     "Em7",
+     "Dm7",
+     "Gsus4"
+    ],
+    "nguon": "Nguon.json #1353 ô 1–4"
+   }
+  ],
+  "thu": [
+   {
+    "hopAm": [
+     "Am",
+     "Em7",
+     "Am11",
+     "G"
+    ],
+    "nguon": "Nguon.json #984 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "Bm7b5",
+     "Bm7b5",
+     "E7"
+    ],
+    "nguon": "Nguon.json #984 ô 5–8"
+   },
+   {
+    "hopAm": [
+     "Am9",
+     "Em7",
+     "Am7",
+     "Em7"
+    ],
+    "nguon": "Nguon.json #988 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Dm11",
+     "Cmaj7",
+     "E7b13",
+     "Am9"
+    ],
+    "nguon": "Nguon.json #988 ô 5–8"
+   },
+   {
+    "hopAm": [
+     "Am11",
+     "Em7",
+     "Bm7b5",
+     "E11"
+    ],
+    "nguon": "Nguon.json #992 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am9",
+     "G7",
+     "Bm7b5",
+     "E7"
+    ],
+    "nguon": "Nguon.json #995 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am11",
+     "Bm7b5",
+     "Em7b5",
+     "A7"
+    ],
+    "nguon": "Nguon.json #1001 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "Dm7",
+     "Em7b5",
+     "A11"
+    ],
+    "nguon": "Nguon.json #1004 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "Fmaj7",
+     "G",
+     "F"
+    ],
+    "nguon": "Nguon.json #1007 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "G",
+     "Em7b5",
+     "A7"
+    ],
+    "nguon": "Nguon.json #1007 ô 5–8"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "Bm7b5",
+     "Em7",
+     "Am7"
+    ],
+    "nguon": "Nguon.json #1010 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Em7",
+     "Am7",
+     "Em7b5",
+     "A11"
+    ],
+    "nguon": "Nguon.json #1010 ô 5–8"
+   }
+  ]
+ },
+ "linh-nhi": {
+  "truong": [
+   {
+    "hopAm": [
+     "C",
+     "Am",
+     "Em",
+     "G"
+    ],
+    "nguon": "Nguon.json #157 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "C",
+     "Em",
+     "C",
+     "G"
+    ],
+    "nguon": "Nguon.json #157 ô 5–8"
+   }
+  ],
+  "thu": [
+   {
+    "hopAm": [
+     "Am(add9)",
+     "Fadd2",
+     "Dm9",
+     "G9"
+    ],
+    "nguon": "Nguon.json #182 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "Cadd2",
+     "E9sus4",
+     "Am(add9)",
+     "E9sus4"
+    ],
+    "nguon": "Nguon.json #182 ô 5–8"
+   },
+   {
+    "hopAm": [
+     "Am/C",
+     "Fmaj7",
+     "Dm",
+     "Bm7b5"
+    ],
+    "nguon": "Nguon.json #1382 ô 1–4"
+   },
+   {
+    "hopAm": [
+     "E7",
+     "E7/D",
+     "Am",
+     "Bdim"
+    ],
+    "nguon": "Nguon.json #1382 ô 5–8"
+   }
+  ]
+ },
+ "blues": {
+  "truong": [
+   {
+    "hopAm": [
+     "C7",
+     "C7",
+     "C7",
+     "C7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG trưởng"
+   },
+   {
+    "hopAm": [
+     "C7",
+     "F7",
+     "C7",
+     "C7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG trưởng"
+   },
+   {
+    "hopAm": [
+     "F7",
+     "F7",
+     "C7",
+     "C7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG trưởng"
+   },
+   {
+    "hopAm": [
+     "G7",
+     "F7",
+     "C7",
+     "C7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG trưởng"
+   }
+  ],
+  "thu": [
+   {
+    "hopAm": [
+     "Am7",
+     "Am7",
+     "Am7",
+     "Am7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG thứ"
+   },
+   {
+    "hopAm": [
+     "Am7",
+     "Dm7",
+     "Am7",
+     "Am7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG thứ"
+   },
+   {
+    "hopAm": [
+     "Dm7",
+     "Dm7",
+     "Am7",
+     "Am7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG thứ"
+   },
+   {
+    "hopAm": [
+     "F7",
+     "E7",
+     "Am7",
+     "Am7"
+    ],
+    "nguon": "Bộ Soạn Blues — KHUNG thứ"
+   }
+  ]
+ }
+}

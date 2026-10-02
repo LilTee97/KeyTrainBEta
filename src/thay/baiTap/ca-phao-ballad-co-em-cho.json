@@ -8,7 +8,7 @@
   "tap": "Nguon.json #1350 (ca-phao-ballad-co-em-cho · G trưởng)",
   "kiem": "Nguon.json #1353 (ca-phao-ballad-co-em-cho · G trưởng)"
  },
- "commit": "dcbfbe2",
+ "commit": "13ac127",
  "tap": {
   "hopAm": [
    "Cmaj7",
@@ -54,7 +54,6 @@
    "Cmaj7",
    "Cmaj7"
   ],
-  "catTuPhach": 0,
   "timeline": [
    {
     "notes": [
@@ -655,7 +654,6 @@
    "C",
    "C"
   ],
-  "catTuPhach": 0,
   "timeline": [
    {
     "notes": [

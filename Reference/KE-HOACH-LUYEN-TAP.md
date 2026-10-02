@@ -311,8 +311,11 @@ C vòng tập của Tuấn lấy từ **hòa âm Linh Nhi** (không theo đề x
 **Tình trạng (2/10/2026):**
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập: **đã sinh 11 bài, CHỜ NGƯỜI DÙNG NGHE DUYỆT** (`tools/sinhBaiTap.mjs` → `src/thay/baiTap/*.json`; nghe ở
-  tab Điệu từng trang thầy). Vòng tập lấy từ câu "đã ổn" trong `Nguon.json` (Blues: khung Bộ Soạn Blues) — số câu nguồn ghi trong
-  từng bài. Đo độ khó → thứ tự: chưa làm (sau khi duyệt).
+  tab Điệu từng trang thầy: "Tập vòng tập / kiểm" → "▶ Nghe vòng"). Vòng tập lấy từ câu "đã ổn" trong `Nguon.json` (Blues: khung
+  Bộ Soạn Blues) — số câu nguồn ghi trong từng bài. Đo độ khó → thứ tự: chưa làm (sau khi duyệt).
+- Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
+  (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
+  **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.
 - Bước 3–6: chưa làm.
 
 ---
