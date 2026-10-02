@@ -3069,6 +3069,16 @@ export function ReharmHome() {
     ],
   )
 
+  /*
+    Bộ sinh bài tập Lộ trình (`tools/sinhBaiTap.mjs`) lấy ảnh chụp bài mặc định ở đây rồi sửa hợp âm · điệu · giọng, nhờ
+    tab này dựng — bài tập vì thế đúng là thứ người dùng nghe ở tab Tái hòa âm, không phải một bản dựng thứ hai. Chỉ khi
+    chạy máy chủ dev; bản dựng tĩnh bỏ đi.
+  */
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    ;(window as unknown as { __ktSnapshot?: () => SongSnapshot }).__ktSnapshot = snapshot
+  }, [snapshot])
+
   /**
    * Đặt lại toàn bộ trang theo một ảnh chụp đã lưu.
    *

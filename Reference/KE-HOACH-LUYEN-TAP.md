@@ -303,6 +303,18 @@ E. **Tab chưa có nội dung** — ẩn (khuyến nghị) hay hiện mờ "sắ
 F. **Tôn Hùng** — app có sẵn nút thầy Tôn Hùng (dạo · giang · kết) và `teachers/ton-hung.md` (375 dòng) nhưng không có trong danh
    sách trang. Để sau, hay làm trang luôn?
 
+**Người dùng trả lời (2/10/2026):** *"Hãy làm theo đề xuất của bạn"* · A làm trang Hôm nay · B trang gom tab cũ tên **"Tái Hòa Âm"** ·
+C vòng tập của Tuấn lấy từ **hòa âm Linh Nhi** (không theo đề xuất của Claude) · D Linh Nhi giữ 1 điệu · E tab chưa có nội dung thì
+ẩn · F *"Hãy xóa nút Tôn Hùng vì ko có điệu nào và cũng ko lấy kiến thức gì từ thầy đó"* → gỡ nút (mức 1; mã bên trong để nguyên —
+87 dòng ở 18 tệp, đan vào bộ soạn chung; gỡ mã cần chụp đầu ra trước/sau, chờ người dùng quyết).
+
+**Tình trạng (2/10/2026):**
+- Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
+- Bước 2 — dữ liệu bài tập: **đã sinh 11 bài, CHỜ NGƯỜI DÙNG NGHE DUYỆT** (`tools/sinhBaiTap.mjs` → `src/thay/baiTap/*.json`; nghe ở
+  tab Điệu từng trang thầy). Vòng tập lấy từ câu "đã ổn" trong `Nguon.json` (Blues: khung Bộ Soạn Blues) — số câu nguồn ghi trong
+  từng bài. Đo độ khó → thứ tự: chưa làm (sau khi duyệt).
+- Bước 3–6: chưa làm.
+
 ---
 
 ## 5. Chưa đo

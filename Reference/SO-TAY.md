@@ -4940,3 +4940,39 @@ có thật, không trùng thầy, 6 · 1 · 2 · 2.
 
 **Kiểm:** chụp bằng Chrome chạy ngầm — Hôm nay, Cà Pháo, Tái Hòa Âm → Luyện đệm (kho Luyện đệm nhận bài 54 tiếng từ tab Tái
 hòa âm đang ẩn). Toàn suite **2 537 qua / 5 đỏ** (5 đỏ cũ; +3 test mới); `tsc`, `eslint` sạch; `vite build` qua.
+
+## Bước — Sinh 11 bài tập điệu bằng chính app; tab Điệu nghe duyệt (bước 2 của mục 4c) (2/10/2026)
+
+**Cách sinh — `tools/sinhBaiTap.mjs`** (máy chủ dev đang chạy → `node tools/sinhBaiTap.mjs`): mở Chrome chạy ngầm, lấy ảnh chụp bài
+mặc định (`window.__ktSnapshot` — móc chỉ có khi DEV, thêm ở `ReharmHome`), thay hợp âm · điệu · giọng (`9:minor` / `0:major`) ·
+tempo mặc định · màu "Giữ nguyên" · tắt fill/lick, nhờ tab Tái hòa âm dựng (`practiceStore.requestOpen`), chép `song.timeline`
+ra `src/thay/baiTap/<điệu>.json` (ghi commit nguồn + câu nguồn). Tab Điệu của trang thầy nạp lười từng bài (11 bài ~300 KB).
+
+**Vòng:** câu "đã ổn" trong `Nguon.json` (54 câu / 1 787): Bossa CP #995 / kiểm #988 · Có em chờ #1350 / #1353 (Sol trưởng → Đô) ·
+Để em #992 / #984 · Ballad cứ đi #988 / #984 · Slow Rock Lá thư #1382 (Mi thứ → La) / #182 · Tuấn (hòa âm Linh Nhi) #182 / #1382 ·
+Blues: khung giang Bộ Soạn Blues (`KHUNG`, chưa câu Blues nào "đã ổn"). Tập 4 ô · kiểm 8 ô (Blues 11).
+
+**Bẫy đã sập khi sinh (đều sửa trong script):**
+1. `hopAm` trong `Nguon.json` là danh sách HỢP ÂM, không phải ô: #1350 8 ô mà 9 hợp âm (`D9sus4 D7` chung ô). Luật: khớp số ô thì
+   mỗi hợp âm một ô (hợp âm lặp = ngân nhiều ô, #984 `Bm7b5 Bm7b5`); thừa thì gộp hai hợp âm liền nhau cùng gốc KHÁC ký hiệu; hợp
+   âm "hút" chiếm một ô trong `soO` (#182). Không khớp thì bỏ câu, không đoán.
+2. Bossa CP, Bolero Tuấn, Slow Blues, Twist TỰ CHÈN dạo · giang · kết cả khi bài chỉ có hợp âm (dài 136 · 85 · 120 · 92 phách thay
+   vì 16–24). Cắt thân vòng bằng `transport.sourceBeat` (phách đã sắp → phách bài gốc).
+3. Twist không có lời thì Bộ Soạn Blues coi mỗi 16 phách là hết câu (`chayTwistBlues` → `moc16`), chèn câu chạy ô 4 · 8 (tay phải
+   A4 C5 … thay cú chặn). Đưa hợp âm thành MỘT dòng lời ChordPro → chỗ nghỉ duy nhất ở cuối dòng. Kèm: nối thêm một ô (lặp ô đầu)
+   rồi cắt — đuôi đoạn rơi vào ô thừa, ô cuối nối sang đầu vòng như khi lặp.
+4. Sửa tệp lúc máy chủ dev chạy → app nạp mô-đun kèm `?t=…`; `import()` đường trơn trong trang tạo BẢN MÔ-ĐUN THỨ HAI với kho
+   riêng (đo nhầm `looping: false` trong khi app đang phát). Tra đúng URL bằng `performance.getEntriesByType('resource')`.
+5. Slow Blues tô màu riêng (`harmonyStyle: 'blue-sun'`): nhập Am7 Dm7, app đánh Am9 Dm9 → `hopAm` ghi theo THẾ BẤM, vòng nhập để ở
+   `hopAmNhap`. Tay phải Slow Blues do bộ soạn sinh nên MỖI LẦN SINH LẠI KHÁC (97 · 100 · 95 tiếng ba lần chạy) — bản đã duyệt
+   phải giữ, đừng sinh lại đè.
+
+**Số đo bài tập (tập, tiếng / ô, đều — không còn câu chèn):** Bossa CP 8 · Có em chờ 11–14 · Để em 15–18 · Ballad cứ đi 20 · Lá thư
+8 (ô 6/8) · Bolero Tuấn 7 · Tango Tuấn 6 · Twist 10–11 · Slow Blues 21–29 (tay phải bộ soạn).
+
+**Tab Điệu (`TeacherPage`):** danh sách bài (tên, giọng, ♩, vòng tập, nguồn) · ▶ Nghe vòng tập / kiểm (2 lượt) · khung nốt rơi +
+bàn phím + toàn màn hình chạy theo tiếng. Test `thay/__tests__/baiTap.test.ts` (đủ bài cho mọi điệu, vòng tập = độ dài, mọi tiếng
+trong vòng, giọng Đô trưởng / La thứ). Chụp kiểm: trang Cà Pháo lúc nghe Bossa (nốt rơi chạy, phím G2 sáng), trang Blues.
+Toàn suite **2 540 qua / 5 đỏ** (5 đỏ cũ); `tsc` sạch; `vite build` qua.
+
+**Chưa đo:** người dùng CHƯA NGHE bộ bài tập — bước 3 (nghe duyệt) chặn bước sau. Đo độ khó → thứ tự: chưa làm.
