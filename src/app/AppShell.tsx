@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
 import { armAudioOnFirstGesture } from '../shared/audio/audioEngine'
+import { readSetting, writeSetting } from '../shared/persistence/localSettings'
 import { MetronomePanel } from '../earTraining/metronomePanel/MetronomePanel'
 import { ChordDrillHome } from '../reharm/chordDrill/ChordDrillHome'
 import { PracticeHome } from '../reharm/PracticeHome'
 import { ReharmHome } from '../reharm/ReharmHome'
 import { MrHaiPanel } from '../reharm/brain/MrHaiPanel'
+import { TeacherPage } from '../thay/TeacherPage'
+import { TodayPage } from '../thay/TodayPage'
+import { TEACHERS, type TeacherId } from '../thay/teachers'
 import { MidiDebugPanel } from './debug/MidiDebugPanel'
 
 /**
- * Các tab của app.
+ * Các tab của trang Tái Hòa Âm — sáu tab cũ của app, gom thành một trang (người dùng 2/10/2026).
  *
  * Phần luyện tai nghe hợp âm đã bỏ khỏi thanh tab — bốn tab *Luyện tai*, *Vòng
  * hợp âm*, *Ôn tập* và *Thống kê* vốn là một hệ khép kín: hai tab đầu nạp bài
@@ -30,8 +34,32 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
+/**
+ * Các trang — ý người dùng 2/10/2026 (`Reference/KE-HOACH-LUYEN-TAP.md` mục 4c): một trang mỗi thầy (Cà Pháo · Linh Nhi ·
+ * Tuấn · Blues), trang Hôm nay mở đầu, sáu tab cũ gom vào trang Tái Hòa Âm. Mở app luôn vào Hôm nay — buổi tập mỗi ngày bắt đầu
+ * bằng lượt nguội ở đó; trong trang Tái Hòa Âm thì nhớ tab mở lần cuối.
+ */
+type PageId = 'hom-nay' | TeacherId | 'tai-hoa-am'
+
+const PAGES: readonly { id: PageId; label: string }[] = [
+  { id: 'hom-nay', label: 'Hôm nay' },
+  ...TEACHERS.map(({ id, label }) => ({ id, label })),
+  { id: 'tai-hoa-am', label: 'Tái Hòa Âm' },
+]
+
+const savedTab = (): TabId => {
+  const id = readSetting('taiHoaAmTab')
+  return TABS.find((tab) => tab.id === id)?.id ?? 'reharm'
+}
+
 export function AppShell() {
-  const [tab, setTab] = useState<TabId>('reharm')
+  const [page, setPage] = useState<PageId>('hom-nay')
+  const [tab, setTab] = useState<TabId>(savedTab)
+  const openTab = (id: TabId) => {
+    setTab(id)
+    writeSetting('taiHoaAmTab', id)
+  }
+  const teacher = TEACHERS.find((one) => one.id === page)
 
   // Cú bấm đầu tiên vào bất cứ đâu cũng mở khoá tiếng, khỏi cần nút riêng.
   useEffect(armAudioOnFirstGesture, [])
@@ -41,14 +69,16 @@ export function AppShell() {
     giá cho bản nhạc và bàn phím đàn, mà lề rộng kiểu màn hình máy tính thì ăn
     mất gần một phần mười bề ngang.
 
-    Tab Luyện đệm rộng gần hết màn (tối đa 1800 px) — người dùng 2/10/2026: "khung phím đàn còn quá bé, có thể tăng
-    diện tích hiển thị của cả tab Luyện đệm". Bàn phím tự cao theo bề ngang phím. Tab khác giữ 768 px (max-w-3xl) cho
-    dòng chữ dễ đọc. Cũ: mọi tab 768 px.
+    Trang tập (Hôm nay, trang thầy) và tab Luyện đệm rộng gần hết màn (tối đa 1800 px) — người dùng 2/10/2026: "khung phím
+    đàn còn quá bé", "Mỗi một trang của từng thầy đều có khung nốt rơi ... kích cỡ như của tab Luyện đệm". Các tab chữ khác
+    giữ 768 px (max-w-3xl) cho dòng chữ dễ đọc.
   */
+  const wide = page !== 'tai-hoa-am' || tab === 'practice'
+
   return (
     <div
       className={`mx-auto flex min-h-full w-full flex-col px-3 py-4 sm:px-4 sm:py-8 ${
-        tab === 'practice' ? 'max-w-[1800px]' : 'max-w-3xl'
+        wide ? 'max-w-[1800px]' : 'max-w-3xl'
       }`}
     >
       <header className="mb-4 sm:mb-6">
@@ -58,16 +88,15 @@ export function AppShell() {
         <h1 className="text-3xl font-bold">KeyTrain</h1>
       </header>
 
-      <nav className="mb-5 flex flex-wrap gap-2 sm:mb-8">
-        {TABS.map(({ id, label }) => (
+      {/* Hàng trang — điện thoại hẹp thì vuốt ngang. */}
+      <nav className="mb-3 flex gap-2 overflow-x-auto pb-1">
+        {PAGES.map(({ id, label }) => (
           <button
             key={id}
             type="button"
-            onClick={() => setTab(id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === id
-                ? 'bg-amber-key text-ink'
-                : 'bg-white/7 text-dim hover:bg-white/12'
+            onClick={() => setPage(id)}
+            className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              page === id ? 'bg-amber-key text-ink' : 'bg-white/7 text-dim hover:bg-white/12'
             }`}
           >
             {label}
@@ -75,23 +104,49 @@ export function AppShell() {
         ))}
       </nav>
 
+      {page === 'tai-hoa-am' && (
+        <nav className="mb-5 flex flex-wrap gap-1.5 sm:mb-8">
+          {TABS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => openTab(id)}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                tab === id
+                  ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                  : 'border-line bg-white/4 text-dim hover:bg-white/8'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
+
       {/*
-        Tab Tái hoà âm **giữ nguyên trong cây** khi sang tab khác, chỉ ẩn đi.
+        Tab Tái hoà âm **giữ nguyên trong cây** khi sang tab hay trang khác, chỉ ẩn đi.
 
         Mọi tab còn lại tháo ra khi rời đi, và đó là đúng — chúng không giữ gì
         đáng tiếc. Nhưng tab này giữ cả bài đang dựng: lời đã dán, cách chia
         đoạn, thứ tự chơi, mốc chuyển đoạn. Tháo ra là mất sạch, mà người dùng
-        phải qua lại giữa nó và tab Luyện đệm suốt.
+        phải qua lại giữa nó và tab Luyện đệm suốt — và tab Luyện đệm nhờ nó dựng bài.
       */}
-      <div hidden={tab !== 'reharm'}>
+      <div hidden={!(page === 'tai-hoa-am' && tab === 'reharm')}>
         <ReharmHome />
       </div>
 
-      {tab === 'practice' && <PracticeHome />}
-      {tab === 'chords' && <ChordDrillHome />}
-      {tab === 'mr-hai' && <MrHaiPanel />}
-      {tab === 'metronome' && <MetronomePanel />}
-      {tab === 'debug' && <MidiDebugPanel />}
+      {page === 'hom-nay' && <TodayPage onOpen={setPage} />}
+      {teacher && <TeacherPage key={teacher.id} teacher={teacher} />}
+
+      {page === 'tai-hoa-am' && (
+        <>
+          {tab === 'practice' && <PracticeHome />}
+          {tab === 'chords' && <ChordDrillHome />}
+          {tab === 'mr-hai' && <MrHaiPanel />}
+          {tab === 'metronome' && <MetronomePanel />}
+          {tab === 'debug' && <MidiDebugPanel />}
+        </>
+      )}
     </div>
   )
 }

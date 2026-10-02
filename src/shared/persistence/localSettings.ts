@@ -49,6 +49,9 @@ export interface Settings {
    * nhịp trừ nó trước khi chấm. `null` = chưa đo: chưa cho tập theo nhịp. Đổi loa / tai nghe thì đo lại.
    */
   latencyMs: number | null
+
+  /** Tab mở lần cuối trong trang Tái Hòa Âm — vào lại trang là về đúng tab ấy. */
+  taiHoaAmTab: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -73,6 +76,8 @@ export const DEFAULT_SETTINGS: Settings = {
   syncOffsetMs: null,
 
   latencyMs: null,
+
+  taiHoaAmTab: 'reharm',
 }
 
 /**

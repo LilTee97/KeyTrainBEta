@@ -4926,3 +4926,17 @@ soạn dạo · giang · kết dùng chung với Cà Pháo và Linh Nhi (`tuyenS
 `ReharmHome`: lọc Tôn Hùng khỏi nút thầy (`SOLO_THAY_NUT` giữ nguyên), bỏ nút "Tôn Hùng" ở hàng mức tái hòa âm, bỏ ô "Câu Chiếc
 Lá" và ba nút giang Tôn Hùng (chỉ hiện khi chọn Tôn Hùng), bỏ logic khoá nút giọng trưởng của anh. Bài lưu mang `intensity:
 'tonHung'` → mở ra "Đậm". Toàn suite **2 534 qua / 5 đỏ** (đúng 5 đỏ cũ); `tsc` sạch; `eslint` 0 lỗi (9 cảnh báo cũ).
+
+## Bước — Khung điều hướng TRANG THEO THẦY (bước 1 của mục 4c) (2/10/2026)
+
+**Trang:** Hôm nay (mở app luôn vào đây) · Cà Pháo · Linh Nhi · Tuấn · Blues · **Tái Hòa Âm** (sáu tab cũ gom lại: Tái hòa âm ·
+Luyện đệm · Học hợp âm · Mr Hải · Nhịp · Gỡ lỗi; nhớ tab mở lần cuối — cài đặt `taiHoaAmTab`). Hàng trang vuốt ngang trên điện
+thoại, hàng tab con chỉ ở trang Tái Hòa Âm. Trang Hôm nay / trang thầy / tab Luyện đệm rộng 1800 px, tab chữ khác 768 px.
+
+**Mã:** `src/thay/teachers.ts` (bốn thầy + id điệu: Cà Pháo 6 bài, Linh Nhi 1, Tuấn 2, Blues 2), `TeacherPage.tsx` (chưa có bài tập
+→ chỉ kể tên điệu sẽ có; tab ẩn tới khi có nội dung — câu E), `TodayPage.tsx` (chưa có lộ trình → mở đường sang trang thầy).
+`AppShell`: tab Tái hòa âm **vẫn gắn ngầm** ở mọi trang (Luyện đệm nhờ nó dựng bài). Test `thay/__tests__/teachers.test.ts`: id điệu
+có thật, không trùng thầy, 6 · 1 · 2 · 2.
+
+**Kiểm:** chụp bằng Chrome chạy ngầm — Hôm nay, Cà Pháo, Tái Hòa Âm → Luyện đệm (kho Luyện đệm nhận bài 54 tiếng từ tab Tái
+hòa âm đang ẩn). Toàn suite **2 537 qua / 5 đỏ** (5 đỏ cũ; +3 test mới); `tsc`, `eslint` sạch; `vite build` qua.
