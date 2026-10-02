@@ -1785,6 +1785,23 @@ export function ReharmHome() {
     return clean.length > 0 ? clean : null
   }, [sheet, withPassing, chordBeats])
 
+  /*
+    Khoảng phách của các đoạn ĐIỆP KHÚC — để phần đệm đổi sang bản điệp khúc (`CHORUS_PAIRS`). Đọc thẳng `sectionChordRanges`,
+    KHÔNG qua `songSources` (gộp mọi đoạn có lời thành `verse`) — cùng bẫy với `hopAmChoDoan`. Cũ (22/8 → 2/10/2026): `kindAt`
+    đọc `songSources` nên bản điệp khúc KHÔNG BAO GIỜ chơi ở thân đoạn, chỉ ở hợp âm kết đoạn; lộ ra khi bài tập "điệp khúc"
+    Có em chờ, Để em ra giống hệt bài phiên từng byte. Triệu chứng để lùi: đoạn điệp của bài nghe khác hẳn trước → trả `kindAt`
+    về chỉ đọc `songSources`.
+  */
+  const diepKhuc = useMemo(() => {
+    if (!sheet) return []
+    const spans = mainChordSpans(withPassing, chordBeats)
+    return sectionChordRanges(sheet).flatMap((range) => {
+      const first = spans[range.from]
+      const last = spans[range.to]
+      return range.kind === 'chorus' && first && last ? [{ from: first.start, to: last.start + last.beats }] : []
+    })
+  }, [sheet, withPassing, chordBeats])
+
   /**
    * Dựng câu quay đầu cuối giang tấu, hút về đoạn ngay sau nó.
    *
@@ -1809,6 +1826,7 @@ export function ReharmHome() {
       tới bốn nhịp.
     */
     const kindAt = (beat: number): SectionKind => {
+      if (diepKhuc.some((doan) => beat >= doan.from - 0.001 && beat < doan.to - 0.001)) return 'chorus'
       const found = songSources?.find(
         (source) =>
           beat >= source.startBeat - 0.001 &&
@@ -1915,7 +1933,7 @@ export function ReharmHome() {
     if (!walk) return plan
 
     return { backing: [...played.filter((event) => event.hand !== 'left'), ...walk.events], protectedWindows: [] }
-  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, cpLick, reharm.key, transitions, nghiDonRa])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, diepKhuc, cpLick, reharm.key, transitions, nghiDonRa])
   const accompaniment = accompanimentPlan.backing
 
   /*

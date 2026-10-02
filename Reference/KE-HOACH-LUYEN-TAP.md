@@ -315,7 +315,12 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
   `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Còn: test
-  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. **Kế tiếp: GĐ 1 bước 4 — đo độ khó → đề xuất thứ tự điệu.**
+  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. Riêng 2 bài **điệp khúc** (Có em chờ, Để em) sinh lại 2/10 — bản cũ chơi
+  tiết tấu phiên (lỗi app: bản điệp không bao giờ chơi ở thân đoạn) — **chờ nghe duyệt** tiết tấu điệp.
+- GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang: Cà Pháo
+  Ballad cứ đi → Để em điệp → Để em phiên → Có em chờ phiên → Có em chờ điệp → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow
+  Blues. Hai chỗ tay người không đánh được (Có em chờ điệp quãng 10 tay trái; Slow Blues D6→A4 trong 27 ms) — chờ người dùng quyết.
+  **Kế tiếp: bước 5 — thang 7 bậc trong tab Điệu** (cửa đạt bậc 4–7 cần ngưỡng đạt từ lượt tập thật).
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

@@ -8,8 +8,7 @@
   "tap": "Nguon.json #992 (ca-phao-bossa-improved · A thứ)",
   "kiem": "Nguon.json #984 (ca-phao-bossa-improved · A thứ)"
  },
- "commit": "13ac127",
- "duyet": "2/10/2026",
+ "commit": "790549c",
  "tap": {
   "hopAm": [
    "Am11",
@@ -58,619 +57,489 @@
   "timeline": [
    {
     "notes": [
-     60
-    ],
-    "startBeat": 0,
-    "durationBeats": 1.75,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     64
-    ],
-    "startBeat": 0,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     45,
-     52,
-     55
-    ],
-    "startBeat": 0,
-    "durationBeats": 1.75,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
      64,
-     69
+     72
     ],
-    "startBeat": 1,
+    "startBeat": 0,
     "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     60,
-     69
+     45
     ],
-    "startBeat": 1.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 1.75,
+    "startBeat": 0,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 1.75,
-    "durationBeats": 0.75,
+    "startBeat": 0.5,
+    "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 44
    },
    {
     "notes": [
-     60,
-     64
+     64,
+     72
     ],
-    "startBeat": 2.25,
-    "durationBeats": 0.5,
+    "startBeat": 0.75,
+    "durationBeats": 0.5833333333333333,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     50
+     57
     ],
-    "startBeat": 2.5,
-    "durationBeats": 0.5,
+    "startBeat": 1,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      64,
      69
     ],
-    "startBeat": 2.75,
-    "durationBeats": 0.25,
+    "startBeat": 1.333333,
+    "durationBeats": 0.6666666666666666,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     60,
+     69
+    ],
+    "startBeat": 2,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     45
+    ],
+    "startBeat": 2,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 2.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 3,
+    "startBeat": 2.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     48
+     71,
+     64
     ],
     "startBeat": 3,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 3,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      60
     ],
     "startBeat": 3.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 3.5,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 3.75,
-    "durationBeats": 0.25,
+    "startBeat": 3.5,
+    "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     67,
-     71
+     64,
+     67
     ],
     "startBeat": 4,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     52
+     40
     ],
     "startBeat": 4,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 4.25,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
-     67,
-     74
+     64
     ],
     "startBeat": 4.5,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     67,
-     71
-    ],
-    "startBeat": 4.75,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     55
-    ],
-    "startBeat": 4.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     71,
-     64
-    ],
-    "startBeat": 5,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 5.25,
-    "durationBeats": 0.5,
+    "startBeat": 4.5,
+    "durationBeats": 1.25,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
+   },
+   {
+    "notes": [
+     64
+    ],
+    "startBeat": 4.75,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     71
+    ],
+    "startBeat": 5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      67
     ],
-    "startBeat": 5.5,
+    "startBeat": 5.25,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     48
-    ],
-    "startBeat": 5.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      67,
-     74
+     71
+    ],
+    "startBeat": 5.75,
+    "durationBeats": 1.5,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 5.75,
+    "durationBeats": 0.25,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     40
     ],
     "startBeat": 6,
-    "durationBeats": 2,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     47
-    ],
-    "startBeat": 6.25,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     52
-    ],
-    "startBeat": 6.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 6.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     55
+     40
     ],
     "startBeat": 7,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 7.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 7.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 7.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
      62
     ],
-    "startBeat": 8,
-    "durationBeats": 1.75,
+    "startBeat": 7.25,
+    "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     65
-    ],
-    "startBeat": 8,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     47,
-     53,
-     57
-    ],
-    "startBeat": 8,
-    "durationBeats": 1.75,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      65,
-     71
+     74
     ],
-    "startBeat": 9,
+    "startBeat": 8,
     "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     62,
-     71
+     47
     ],
-    "startBeat": 9.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     59
-    ],
-    "startBeat": 9.75,
+    "startBeat": 8,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
      53
     ],
-    "startBeat": 9.75,
-    "durationBeats": 0.75,
+    "startBeat": 8.5,
+    "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 44
    },
    {
     "notes": [
-     62,
-     65
+     65,
+     74
     ],
-    "startBeat": 10.25,
-    "durationBeats": 0.5,
+    "startBeat": 8.75,
+    "durationBeats": 0.5833333333333334,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     57
+     59
     ],
-    "startBeat": 10.5,
-    "durationBeats": 0.5,
+    "startBeat": 9,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      65,
      71
     ],
-    "startBeat": 10.75,
-    "durationBeats": 0.25,
+    "startBeat": 9.333333,
+    "durationBeats": 0.6666666666666661,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     62,
+     71
+    ],
+    "startBeat": 10,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     47
+    ],
+    "startBeat": 10,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     59,
+     53
+    ],
+    "startBeat": 10.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
    },
    {
     "notes": [
      71
     ],
-    "startBeat": 11,
+    "startBeat": 10.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     55
+     61,
+     65
     ],
     "startBeat": 11,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     59,
+     53
+    ],
+    "startBeat": 11,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      62
     ],
     "startBeat": 11.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     54
+     71
     ],
     "startBeat": 11.5,
     "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     71
-    ],
-    "startBeat": 11.75,
-    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     69,
-     71
+     64,
+     69
     ],
     "startBeat": 12,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 12,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     64
+    ],
+    "startBeat": 12.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 12,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 12.25,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     69,
-     74
-    ],
     "startBeat": 12.5,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     69,
-     71
-    ],
-    "startBeat": 12.75,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 12.75,
-    "durationBeats": 0.5,
+    "durationBeats": 1.25,
     "hand": "left",
-    "velocity": 54
+    "velocity": 44
    },
    {
     "notes": [
-     71,
      64
     ],
-    "startBeat": 13,
-    "durationBeats": 0.5,
+    "startBeat": 12.75,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     53
+     71
     ],
-    "startBeat": 13.25,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "startBeat": 13,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 13.5,
+    "startBeat": 13.25,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     49
-    ],
-    "startBeat": 13.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      69,
-     74
+     71
+    ],
+    "startBeat": 13.75,
+    "durationBeats": 1.5,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 13.75,
+    "durationBeats": 0.25,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     40
     ],
     "startBeat": 14,
-    "durationBeats": 2,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     47
-    ],
-    "startBeat": 14.25,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     52
-    ],
-    "startBeat": 14.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 14.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     57
+     40
     ],
     "startBeat": 15,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     54
+     62
     ],
     "startBeat": 15.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 15.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 15.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
    }
   ],
   "voicings": [
@@ -812,1234 +681,975 @@
   "timeline": [
    {
     "notes": [
-     60
+     64,
+     72
     ],
     "startBeat": 0,
-    "durationBeats": 1.75,
+    "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     64
+     45
     ],
     "startBeat": 0,
     "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "hand": "left",
+    "velocity": 58
    },
    {
     "notes": [
-     45,
      52
     ],
-    "startBeat": 0,
-    "durationBeats": 1.75,
+    "startBeat": 0.5,
+    "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      64,
-     69
+     72
     ],
-    "startBeat": 1,
-    "durationBeats": 0.75,
+    "startBeat": 0.75,
+    "durationBeats": 0.5833333333333333,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     60,
-     69
-    ],
-    "startBeat": 1.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
      57
     ],
-    "startBeat": 1.75,
-    "durationBeats": 0.5,
+    "startBeat": 1,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 1.75,
-    "durationBeats": 0.75,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     60,
-     64
-    ],
-    "startBeat": 2.25,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 2.5,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      64,
      69
     ],
-    "startBeat": 2.75,
-    "durationBeats": 0.25,
+    "startBeat": 1.333333,
+    "durationBeats": 0.6666666666666666,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     60,
+     69
+    ],
+    "startBeat": 2,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     45
+    ],
+    "startBeat": 2,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 2.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 3,
+    "startBeat": 2.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     48
+     71,
+     64
     ],
     "startBeat": 3,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 3,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      60
     ],
     "startBeat": 3.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 3.5,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 3.75,
-    "durationBeats": 0.25,
+    "startBeat": 3.5,
+    "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     67,
-     71
+     64,
+     67
     ],
     "startBeat": 4,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 4,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     64
+    ],
+    "startBeat": 4.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 4,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 4.25,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     67,
-     74
-    ],
     "startBeat": 4.5,
+    "durationBeats": 1.25,
+    "hand": "left",
+    "velocity": 44
+   },
+   {
+    "notes": [
+     64
+    ],
+    "startBeat": 4.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     71
+    ],
+    "startBeat": 5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     67
+    ],
+    "startBeat": 5.25,
+    "durationBeats": 0.5,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      67,
      71
     ],
-    "startBeat": 4.75,
-    "durationBeats": 0.25,
+    "startBeat": 5.75,
+    "durationBeats": 1.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     55
+     40
     ],
-    "startBeat": 4.75,
+    "startBeat": 5.75,
+    "durationBeats": 0.25,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 6,
+    "durationBeats": 1,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 7,
+    "durationBeats": 1,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     62
+    ],
+    "startBeat": 7.25,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     64,
+     72
+    ],
+    "startBeat": 8,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     45
+    ],
+    "startBeat": 8,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
+   },
+   {
+    "notes": [
+     52
+    ],
+    "startBeat": 8.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
+   },
+   {
+    "notes": [
+     64,
+     72
+    ],
+    "startBeat": 8.75,
+    "durationBeats": 0.5833333333333334,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     57
+    ],
+    "startBeat": 9,
+    "durationBeats": 1,
+    "hand": "left",
+    "velocity": 44
+   },
+   {
+    "notes": [
+     64,
+     69
+    ],
+    "startBeat": 9.333333,
+    "durationBeats": 0.6666666666666661,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     60,
+     69
+    ],
+    "startBeat": 10,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     45
+    ],
+    "startBeat": 10,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 10.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
+   },
+   {
+    "notes": [
+     69
+    ],
+    "startBeat": 10.75,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      71,
      64
     ],
-    "startBeat": 5,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 5.25,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     67
-    ],
-    "startBeat": 5.5,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     48
-    ],
-    "startBeat": 5.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     67,
-     74
-    ],
-    "startBeat": 6,
-    "durationBeats": 2,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     47
-    ],
-    "startBeat": 6.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 6.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 6.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     55
-    ],
-    "startBeat": 7,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 7.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 7.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 7.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     60
-    ],
-    "startBeat": 8,
-    "durationBeats": 1.75,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     64
-    ],
-    "startBeat": 8,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     45,
-     52,
-     55
-    ],
-    "startBeat": 8,
-    "durationBeats": 1.75,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     64,
-     69
-    ],
-    "startBeat": 9,
-    "durationBeats": 0.75,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     60,
-     69
-    ],
-    "startBeat": 9.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 9.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 9.75,
-    "durationBeats": 0.75,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     60,
-     64
-    ],
-    "startBeat": 10.25,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 10.5,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     64,
-     69
-    ],
-    "startBeat": 10.75,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     69
-    ],
     "startBeat": 11,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
+     57,
      52
     ],
     "startBeat": 11,
-    "durationBeats": 0.5,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      60
     ],
     "startBeat": 11.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     53
-    ],
-    "startBeat": 11.5,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 11.75,
-    "durationBeats": 0.25,
+    "startBeat": 11.5,
+    "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     71,
-     62
+     67,
+     71
     ],
     "startBeat": 12,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     55
+     43
     ],
     "startBeat": 12,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 12.25,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
-     71,
-     62
+     67
     ],
     "startBeat": 12.5,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     71,
-     62
-    ],
-    "startBeat": 12.75,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     59
-    ],
-    "startBeat": 12.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     62,
-     67
-    ],
-    "startBeat": 13,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
      55
     ],
-    "startBeat": 13.25,
-    "durationBeats": 0.5,
+    "startBeat": 12.5,
+    "durationBeats": 1.25,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
+   },
+   {
+    "notes": [
+     67
+    ],
+    "startBeat": 12.75,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     62
+    ],
+    "startBeat": 13,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      71
     ],
-    "startBeat": 13.5,
+    "startBeat": 13.25,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 13.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      71,
      62
     ],
-    "startBeat": 14,
-    "durationBeats": 2,
+    "startBeat": 13.75,
+    "durationBeats": 1.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     50
+     43
     ],
-    "startBeat": 14.25,
+    "startBeat": 13.75,
     "durationBeats": 0.25,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     55
+     43
     ],
-    "startBeat": 14.5,
-    "durationBeats": 0.25,
+    "startBeat": 14,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     57
-    ],
-    "startBeat": 14.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     59
+     43
     ],
     "startBeat": 15,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     57
+     62
     ],
     "startBeat": 15.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     55
-    ],
-    "startBeat": 15.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 15.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     60
-    ],
-    "startBeat": 16,
-    "durationBeats": 1.75,
+    "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     64
-    ],
-    "startBeat": 16,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     45,
-     52,
-     55
-    ],
-    "startBeat": 16,
-    "durationBeats": 1.75,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      64,
-     69
+     72
     ],
-    "startBeat": 17,
+    "startBeat": 16,
     "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     60,
-     69
+     45
     ],
-    "startBeat": 17.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 17.75,
+    "startBeat": 16,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 17.75,
-    "durationBeats": 0.75,
+    "startBeat": 16.5,
+    "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 44
    },
    {
     "notes": [
-     60,
-     64
+     64,
+     72
     ],
-    "startBeat": 18.25,
-    "durationBeats": 0.5,
+    "startBeat": 16.75,
+    "durationBeats": 0.5833333333333321,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     55
+     57
     ],
-    "startBeat": 18.5,
-    "durationBeats": 0.5,
+    "startBeat": 17,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      64,
      69
     ],
-    "startBeat": 18.75,
-    "durationBeats": 0.25,
+    "startBeat": 17.333333,
+    "durationBeats": 0.6666666666666666,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     60,
+     69
+    ],
+    "startBeat": 18,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     45
+    ],
+    "startBeat": 18,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 18.5,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 44
    },
    {
     "notes": [
      69
     ],
-    "startBeat": 19,
+    "startBeat": 18.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     53
+     71,
+     64
     ],
     "startBeat": 19,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     57,
+     52
+    ],
+    "startBeat": 19,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      60
     ],
     "startBeat": 19.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     57
+     69
     ],
     "startBeat": 19.5,
     "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     69
-    ],
-    "startBeat": 19.75,
-    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     62,
-     65
+     71,
+     74
     ],
     "startBeat": 20,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     59
+     47
     ],
     "startBeat": 20,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     49
-    ],
-    "startBeat": 20.25,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
-     62,
-     69
+     71
     ],
     "startBeat": 20.5,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     62,
-     65
+     59
+    ],
+    "startBeat": 20.5,
+    "durationBeats": 1.25,
+    "hand": "left",
+    "velocity": 44
+   },
+   {
+    "notes": [
+     71
     ],
     "startBeat": 20.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     50
-    ],
-    "startBeat": 20.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     65,
-     71
+     65
     ],
     "startBeat": 21,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     52
+     74
     ],
     "startBeat": 21.25,
     "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     62
-    ],
-    "startBeat": 21.5,
-    "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 21.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      62,
-     69
+     65
+    ],
+    "startBeat": 21.75,
+    "durationBeats": 1.5,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     47
+    ],
+    "startBeat": 21.75,
+    "durationBeats": 0.25,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     47
     ],
     "startBeat": 22,
-    "durationBeats": 2,
+    "durationBeats": 1,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     47
+    ],
+    "startBeat": 23,
+    "durationBeats": 1,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     69
+    ],
+    "startBeat": 23.25,
+    "durationBeats": 0.75,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
+   },
+   {
+    "notes": [
+     65,
+     74
+    ],
+    "startBeat": 24,
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     47
+    ],
+    "startBeat": 24,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
    },
    {
     "notes": [
      53
     ],
-    "startBeat": 22.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     59
-    ],
-    "startBeat": 22.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     49
-    ],
-    "startBeat": 22.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 23,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     49
-    ],
-    "startBeat": 23.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     59
-    ],
-    "startBeat": 23.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     57
-    ],
-    "startBeat": 23.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     62
-    ],
-    "startBeat": 24,
-    "durationBeats": 1.75,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     65
-    ],
-    "startBeat": 24,
+    "startBeat": 24.5,
     "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "hand": "left",
+    "velocity": 44
    },
    {
     "notes": [
-     47,
-     53,
-     57
+     65,
+     74
     ],
-    "startBeat": 24,
-    "durationBeats": 1.75,
+    "startBeat": 24.75,
+    "durationBeats": 0.5833333333333321,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     59
+    ],
+    "startBeat": 25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      65,
      71
     ],
-    "startBeat": 25,
-    "durationBeats": 0.75,
+    "startBeat": 25.333333,
+    "durationBeats": 0.6666666666666666,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
      62,
      71
     ],
-    "startBeat": 25.75,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     59
-    ],
-    "startBeat": 25.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     53
-    ],
-    "startBeat": 25.75,
+    "startBeat": 26,
     "durationBeats": 0.75,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     62,
-     65
-    ],
-    "startBeat": 26.25,
-    "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     57
+     47
+    ],
+    "startBeat": 26,
+    "durationBeats": 0.5,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     59,
+     53
     ],
     "startBeat": 26.5,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
-     65,
      71
     ],
     "startBeat": 26.75,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     71
+     61,
+     65
     ],
     "startBeat": 27,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     55
+     59,
+     53
     ],
     "startBeat": 27,
-    "durationBeats": 0.5,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
    },
    {
     "notes": [
      62
     ],
     "startBeat": 27.25,
-    "durationBeats": 0.5,
+    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     54
+     71
     ],
     "startBeat": 27.5,
     "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     71
-    ],
-    "startBeat": 27.75,
-    "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
-     68,
-     71
+     64,
+     68
     ],
     "startBeat": 28,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 72
+    "velocity": 52
    },
    {
     "notes": [
-     52
+     40
     ],
     "startBeat": 28,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 61
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 28.25,
     "durationBeats": 0.5,
     "hand": "left",
-    "velocity": 54
+    "velocity": 58
    },
    {
     "notes": [
-     68,
-     74
+     64
     ],
     "startBeat": 28.5,
     "durationBeats": 0.25,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     68,
-     71
-    ],
-    "startBeat": 28.75,
-    "durationBeats": 0.25,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     56
-    ],
-    "startBeat": 28.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 54
-   },
-   {
-    "notes": [
-     71,
-     64
-    ],
-    "startBeat": 29,
-    "durationBeats": 0.5,
-    "hand": "right",
-    "velocity": 64
+    "velocity": 52
    },
    {
     "notes": [
      52
     ],
-    "startBeat": 29.25,
-    "durationBeats": 0.5,
+    "startBeat": 28.5,
+    "durationBeats": 1.25,
     "hand": "left",
-    "velocity": 61
+    "velocity": 44
+   },
+   {
+    "notes": [
+     64
+    ],
+    "startBeat": 28.75,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     71
+    ],
+    "startBeat": 29,
+    "durationBeats": 0.25,
+    "hand": "right",
+    "velocity": 52
    },
    {
     "notes": [
      68
     ],
-    "startBeat": 29.5,
+    "startBeat": 29.25,
     "durationBeats": 0.5,
     "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     48
-    ],
-    "startBeat": 29.75,
-    "durationBeats": 0.5,
-    "hand": "left",
-    "velocity": 61
+    "velocity": 52
    },
    {
     "notes": [
      68,
-     74
+     71
+    ],
+    "startBeat": 29.75,
+    "durationBeats": 1.5,
+    "hand": "right",
+    "velocity": 52
+   },
+   {
+    "notes": [
+     40
+    ],
+    "startBeat": 29.75,
+    "durationBeats": 0.25,
+    "hand": "left",
+    "velocity": 58
+   },
+   {
+    "notes": [
+     40
     ],
     "startBeat": 30,
-    "durationBeats": 2,
-    "hand": "right",
-    "velocity": 64
-   },
-   {
-    "notes": [
-     47
-    ],
-    "startBeat": 30.25,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     52
-    ],
-    "startBeat": 30.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     54
-    ],
-    "startBeat": 30.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     56
+     40
     ],
     "startBeat": 31,
-    "durationBeats": 0.25,
+    "durationBeats": 1,
     "hand": "left",
-    "velocity": 44
+    "velocity": 58
    },
    {
     "notes": [
-     54
+     62
     ],
     "startBeat": 31.25,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     52
-    ],
-    "startBeat": 31.5,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
-   },
-   {
-    "notes": [
-     50
-    ],
-    "startBeat": 31.75,
-    "durationBeats": 0.25,
-    "hand": "left",
-    "velocity": 44
+    "durationBeats": 0.75,
+    "hand": "right",
+    "velocity": 52
    }
   ],
   "voicings": [

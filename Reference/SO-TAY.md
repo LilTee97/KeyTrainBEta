@@ -5093,3 +5093,71 @@ Người dùng: *"Tôn Hùng có cần xóa mức 2 ko nếu cần thì làm"*. 
 - Muốn Tuấn thôi mượn: bỏ `'ton-hung'` khỏi vòng xoay `THAY` (`minorSoloSource.ts`) và khỏi vốn giang gộp → dạo Bolero Tuấn thứ
   xoay hai thầy → nghe duyệt lại → khi ấy mới xoá mức 2 (ao `'ton-hung'` của câu fill đổi TÊN thành ao trung tính, giữ thứ tự,
   để tiếng không đổi).
+
+## Bước — GĐ 1 bước 4: đo độ khó → thứ tự tập; điệp khúc chưa từng chơi ở thân đoạn (2/10/2026)
+
+### Bản điệp khúc KHÔNG BAO GIỜ chơi ở thân đoạn — đã sửa (2/10/2026)
+
+- **Lộ ra khi đo độ khó:** hai bài "điệp khúc" (Có em chờ, Để em) giống hệt bài phiên từng byte, cả vòng tập lẫn vòng kiểm.
+- **Gốc:** `accompanimentPlan.kindAt` đọc `songSources`, mà `songSources` gộp mọi đoạn có lời thành `verse` (f25c028, 15/8). Nên từ
+  khi có `CHORUS_PAIRS` (73817ac, 22/8), thân đoạn điệp khúc luôn chơi bản phiên; chỉ hợp âm kết đoạn dùng bản điệp. Test
+  `sectionStyles.test.ts` tự dựng đoạn `'chorus'` nên không bắt được. Cùng bẫy mà `hopAmChoDoan` đã né (đọc thẳng
+  `sectionChordRanges`).
+- **Sửa (`ReharmHome`):** `diepKhuc` đọc thẳng `sectionChordRanges(sheet)`; `kindAt` hỏi nó trước. `songSources` để nguyên — thứ
+  tự chơi, chèn giang tấu… không đổi. **Triệu chứng để lùi:** đoạn điệp nghe lạ hẳn → bỏ dòng `diepKhuc` trong `kindAt`.
+- **`dungVong`:** điệu điệp dựng bằng điệu phiên + đánh dấu cả vòng là điệp khúc, như người dùng làm ở tab Tái hòa âm.
+- **Số đo** (bài 2 dòng, dòng 2 đánh dấu điệp; mốc gõ trái/phải mỗi ô, 8 ô):
+  - Có em chờ — cũ: ô điệp 6/5 9/5 6/5 7/5 (= phiên); mới: 11/5 9/2 11/4 7/2.
+  - Để em — cũ: 5/8 12/6 5/8 12/6 (= phiên); mới: 6/8 5/7 6/8 5/7.
+  - Ba ô phiên đầu giữ nguyên ở cả hai. Ô cuối phiên (trước điệp): Có em chờ 3/5 → 6/10 (tay phải có câu chạy C4→C5 vào
+    điệp); Để em giữ 8/10.
+- **Ảnh hưởng tab Tái hòa âm:** bài có đoạn điệp khúc (nhãn ĐK khi dán lời, hay đánh dấu tay) ở bốn nút có bản điệp — Có em chờ,
+  Để em, Slow Rock Lá thư hai tay, Slow Blues — nay chơi bản điệp ở thân đoạn. Bản điệp Có em chờ ghi "đã nghe duyệt 25/09/2026".
+- **Sinh lại 2 bài điệp** (bỏ `duyet` — tiết tấu mới, chờ người dùng nghe duyệt): Có em chờ điệp, vòng tập 52 tiếng (trái 40,
+  phải 12) — cũ 50 (30/20); Để em điệp 52 (22/30) — cũ 66 (36/30). Khớp số đo ô sheet 2/10: Để em trái 17 → 11, phải 14 → 15
+  mốc mỗi ô 8 phách (= 8,5 → 5,5 và 7 → 7,5 mỗi ô nhịp); Có em chờ phải 10 → 6.
+- Test mới (`baiTap.test.ts`): bài điệp khác bài phiên — đỏ trên bản cũ, xanh trên bản mới.
+
+### Đo độ khó 11 bài → thứ tự tập (2/10/2026)
+
+Công cụ `tools/doKhoBaiTap.mjs` (có tự kiểm trên một vòng dựng tay). Đo vòng tập ở ♩ 100 %. **Cú** = các tiếng cùng tay vào cùng
+lúc; nốt láy không tính. Sáu chỉ số: cú/giây hai tay · hai cú sát nhất · nốt/cú tối đa · độ giãn một cú · dời thế tay (hai cú
+liền nhau phủ quá 12 nửa cung) · nghịch phách (vào lệch phách, ngân qua phách kế mà chính tay ấy không đánh). Điểm = cộng hạng
+sáu chỉ số, ngang trọng số (**suy luận của Claude**). Chỉ số "lúc một tay" đã thử rồi bỏ: Slow Rock, Bolero tay trái/phải thay
+nhau rất dễ mà lại lên hạng khó.
+
+| Bài | ♩ | cú/giây T · P | sát nhất T · P (ms) | nốt/cú T · P | giãn T · P | dời tay T · P | nghịch phách T · P | điểm tập | điểm kiểm |
+|---|---|---|---|---|---|---|---|---|---|
+| Slow Rock Lá thư | 86 | 1,4 · 1,4 | 349 · 349 | 1 · 1 | 0 · 0 | 2 · 0 | 0/24 · 0/24 | 13,5 | 12,5 |
+| Bolero Tuấn | 100 | 1,3 · 1,7 | 600 · 600 | 2 · 3 | 12 · 9 | 0 · 0 | 0/12 · 0/16 | 24,5 | 28,5 |
+| Tango Tuấn | 100 | 0,8 · 1,7 | 300 · 600 | 2 · 3 | 12 · 11 | 2 · 0 | 0/8 · 0/16 | 28,0 | 28,5 |
+| Ballad cứ đi | 63 | 2,6 · 2,6 | 238 · 238 | 1 · 2 | 0 · 4 | 6 · 0 | 0/40 · 0/40 | 28,5 | 30,0 |
+| Để em điệp | 85 | 1,9 · 2,7 | 176 · 176 | 2 · 2 | 6 · 9 | 2 · 0 | 2/22 · 4/30 | 34,5 | 31,5 |
+| Twist | 140 | 4,7 · 1,2 | 143 · 571 | 1 · 3 | 0 · 6 | 0 · 0 | 0/32 · 4/8 | 37,0 | 38,5 |
+| Có em chờ phiên | 75 | 2,3 · 1,6 | 200 · 200 | 1 · 3 | 0 · 8 | 8 · 0 | 4/30 · 6/20 | 42,0 | 40,0 |
+| Để em phiên | 85 | 3,0 · 2,5 | 176 · 176 | 3 · 2 | 10 · 9 | 0 · 1 | 6/34 · 2/28 | 42,5 | 41,5 |
+| Có em chờ điệp | 75 | 3,1 · 0,9 | 200 · 400 | 2 · 2 | 16 · 5 | 4 · 0 | 4/40 · 8/12 | 43,5 | 43,5 |
+| Bossa CP cải tiến | 110 | 2,3 · 1,4 | 273 · 545 | 3 · 3 | 12 · 9 | 7 · 0 | 4/20 · 4/12 | 44,5 | 45,0 |
+| Slow Blues | 92 | 1,3 · 4,9 | 326 · 27 | 4 · 2 | 10 · 7 | 16 · 7 | 0/21 · 12/76 | 57,5 | 56,5 |
+
+- **Vững:** vòng kiểm ra cùng thứ tự 11/11 (Bolero = Tango bằng điểm). Nhóm giữa sát điểm nhau (Có em chờ phiên 42,0 · Để em phiên
+  42,5 · Có em chờ điệp 43,5 · Bossa 44,5) — thứ tự trong nhóm ấy không chắc.
+- **Áp vào `teachers.ts`** (thứ tự trên trang = thứ tự tập): Cà Pháo — Ballad cứ đi → Để em điệp → Để em phiên → Có em chờ phiên
+  → Có em chờ điệp → Bossa CP (Để em phiên 42,5 đặt trước Có em chờ phiên 42,0 để hai bài cùng bài hát liền nhau); Tuấn — Bolero
+  → Tango (như cũ); Blues — Twist → Slow Blues (cũ: ngược lại); Linh Nhi một bài.
+- **Gợi ý cả app** (cho trang Hôm nay, bước 8): Slow Rock → Bolero → Tango → Ballad cứ đi → Để em điệp → Twist → Có em chờ phiên →
+  Để em phiên → Có em chờ điệp → Bossa → Slow Blues.
+
+### Hai chỗ tay người không đánh được — chờ người dùng quyết
+
+1. **Có em chờ điệp, tay trái:** C2+E3 (16 nửa cung) và D2+F3 / E2+G3 (15), một lần mỗi ô 8 phách — khuôn điệp
+   `hit(2, .25, [tone(0), tone(1, 12)])` (sheet ô 25–26, đã nghe duyệt 25/9). Vượt luật "một cú ≤ quãng tám". Tập được ngay bằng
+   ô "Bỏ qua quãng tám" (bấm C3+E3).
+2. **Slow Blues, tay phải:** D6 (ngân 1/24 phách) rồi A4 (·C5) 27 ms sau, ở phách 6 và 21 vòng tập — nhảy 17 nửa cung. Cuối câu
+   chạy ô trước dính đầu câu ô sau. Bài đã duyệt nên chưa sửa.
+
+### Vẽ nốt rơi: một tiếng mang cùng nốt hai lần
+
+Một số tiếng có cùng nốt hai lần (Bolero, Tango Tuấn tay trái `[A2, A2]`; Có em chờ tay phải `[64, 67, 67]`) — bộ dựng khuôn gập
+quãng tám ra trùng. `FallingNotes` vẽ hai khối trùng khoá (React cảnh báo "two children with the same key" ở trang Tuấn) → nay
+bỏ trùng khi vẽ. Tiếng không đụng: gộp nốt đôi đổi âm lượng tiếng đã duyệt.

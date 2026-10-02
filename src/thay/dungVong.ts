@@ -1,5 +1,6 @@
 import type { SongSnapshot } from '../reharm/persistence/songSnapshot'
 import { usePracticeStore, type PracticeSong } from '../reharm/playback/practiceStore'
+import { CHORUS_PAIRS } from '../reharm/style/sectionStyles'
 import { getStyle } from '../reharm/style/styleLibrary'
 import type { VongBaiTap } from './baiTap'
 
@@ -15,6 +16,9 @@ import type { VongBaiTap } from './baiTap'
  * - Bossa CP, Bolero Tuấn, Slow Blues, Twist tự chèn dạo · giang · kết: cắt thân vòng bằng `transport.sourceBeat`.
  * - Tắt câu fill ở mọi hợp âm (`mutedFills`) — nút thầy ở tab Tái hòa âm (Linh Nhi bật câu fill/chạy của chị) không nằm
  *   trong ảnh chụp, tắt hết thì khung đệm không phụ thuộc nó. Trừ Slow Blues: tay phải Bộ Soạn Blues CHÍNH LÀ phần đệm.
+ * - Điệu ĐIỆP KHÚC (`CHORUS_PAIRS`) chỉ chơi ở đoạn đánh dấu điệp khúc (`resolveStyleForSection`): dựng bằng điệu phiên + đánh
+ *   dấu cả vòng là điệp khúc, như người dùng làm ở tab Tái hòa âm. Cũ (tới 2/10/2026): đưa thẳng id điệp, không đánh dấu đoạn →
+ *   bài "điệp khúc" Có em chờ, Để em giống hệt bài phiên từng byte.
  */
 export interface YeuCauVong {
   styleId: string
@@ -67,13 +71,14 @@ async function dungMot({ styleId, o, giong }: YeuCauVong): Promise<VongBaiTap> {
   const durationsNoi = [...durations, ...o[0]!.map(() => bar / o[0]!.length)]
   const doDai = durations.reduce((a, b) => a + b, 0)
   const title = `vong:${styleId}:${Date.now()}`
+  const dieuPhien = Object.keys(CHORUS_PAIRS).find((phien) => CHORUS_PAIRS[phien] === styleId)
 
   const snapshot: SongSnapshot = {
     ...cu.snapshot,
     sourceText: styleId === 'twist' ? chordsNoi.map((c) => `[${c}]la`).join(' ') : chordsNoi.join(' '),
     transpose: 0,
     manualKey: giong,
-    sectionMarks: [],
+    sectionMarks: dieuPhien ? [{ from: 0, to: 10_000, kind: 'chorus' }] : [],
     arrangement: null,
     transitionEdits: {},
     pairedChords: [],
@@ -94,7 +99,7 @@ async function dungMot({ styleId, o, giong }: YeuCauVong): Promise<VongBaiTap> {
     bluesSoan6: false,
     bluesSoan12: false,
     bluesLuot: false,
-    styleId,
+    styleId: dieuPhien ?? styleId,
     beatsPerChord: bar,
     chordDurations: durationsNoi,
     bpm: style.bpm,

@@ -147,7 +147,8 @@ export function FallingNotes({
     >
       <div ref={layer} className="absolute inset-0">
         {upcoming.map(({ event, at }) =>
-          event.notes.map((note) => {
+          // Một tiếng có thể mang cùng nốt hai lần (bộ dựng khuôn gập quãng tám: Bolero Tuấn tay trái [A2, A2]) — vẽ một khối.
+          [...new Set(event.notes)].map((note) => {
             const place = keyPlacement(layout, note)
             if (!place) return null
             const away = event.startBeat - origin
