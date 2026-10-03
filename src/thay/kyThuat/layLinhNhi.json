@@ -1,0 +1,1271 @@
+{
+ "nguon": {
+  "file": "Biển Tình — Linh Nhi, bản chép tay MuseScore (PianoBrain video/Linh_Nhi)",
+  "sha256": "af2791971083",
+  "script": "scripts/lay_linh_nhi.py"
+ },
+ "bpm": 66,
+ "meter": 4,
+ "bai": [
+  {
+   "id": "o44",
+   "ten": "Ô 44 · phiên 2",
+   "o": [
+    44
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 1.5,
+   "ghiChu": "1 nốt láy, 1 láy quãng 3: B4 → D5",
+   "events": [
+    {
+     "notes": [
+      33,
+      45
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 2.0,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69,
+      73,
+      81
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 2.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      69
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 3.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      74
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o10",
+   "ten": "Ô 10 · phiên",
+   "o": [
+    10
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 1.75,
+   "ghiChu": "2 nốt láy, 1 láy quãng 3: B3 → D4",
+   "events": [
+    {
+     "notes": [
+      33,
+      45
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 1.0,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69,
+      73,
+      76,
+      81
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      56
+     ],
+     "startBeat": 1.9375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      57
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 3.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o17",
+   "ten": "Ô 17–18 · phiên",
+   "o": [
+    17,
+    18
+   ],
+   "doDai": 8.0,
+   "cuMoiPhach": 3.0,
+   "ghiChu": "2 nốt láy, 2 láy quãng 3: F#4 → A4 · B4 → D5",
+   "events": [
+    {
+     "notes": [
+      35
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      66
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      66
+     ],
+     "startBeat": 0.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      42
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 0.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      66
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      40
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      64
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 2.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      52
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      57
+     ],
+     "startBeat": 3.25,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 3.75,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      33,
+      45
+     ],
+     "startBeat": 4.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      52,
+      57,
+      64
+     ],
+     "startBeat": 4.0,
+     "durationBeats": 2.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      33,
+      45
+     ],
+     "startBeat": 5.0,
+     "durationBeats": 1.0,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69
+     ],
+     "startBeat": 6.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 6.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 7.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      74
+     ],
+     "startBeat": 7.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o12",
+   "ten": "Ô 12 · phiên",
+   "o": [
+    12
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 3.25,
+   "ghiChu": "1 nốt láy, 1 láy quãng 3: B3 → D4",
+   "events": [
+    {
+     "notes": [
+      35
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      66
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 2.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      42
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 0.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 1.0,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      57
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 3.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      42
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o20",
+   "ten": "Ô 20 · phiên",
+   "o": [
+    20
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 3.5,
+   "ghiChu": "1 nốt láy, 1 láy quãng 3: B4 → D5",
+   "events": [
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 2.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 0.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 3.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      74
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o64",
+   "ten": "Ô 64 · điệp kết",
+   "o": [
+    64
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 3.5,
+   "ghiChu": "1 nốt láy, 1 láy quãng 3: B5 → D6",
+   "events": [
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      74,
+      79,
+      83
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 1.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 1.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 1.0,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      86
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      74
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      81
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 3.75,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o30",
+   "ten": "Ô 30–31 · điệp",
+   "o": [
+    30,
+    31
+   ],
+   "doDai": 8.0,
+   "cuMoiPhach": 4.0,
+   "ghiChu": "4 nốt láy, 4 láy quãng 3: B5 → D6 · B5 → D6 · B5 → D6 · B5 → D6",
+   "events": [
+    {
+     "notes": [
+      42
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      49
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      81
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 1.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 0.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      57
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 1.9375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      43
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      86
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      55
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 3.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      86
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      40
+     ],
+     "startBeat": 4.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 4.0,
+     "durationBeats": 0.75,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 4.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      81
+     ],
+     "startBeat": 4.75,
+     "durationBeats": 0.25,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      52
+     ],
+     "startBeat": 5.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      79
+     ],
+     "startBeat": 5.0,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 5.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 5.9375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      43
+     ],
+     "startBeat": 6.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      86
+     ],
+     "startBeat": 6.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 6.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 6.5,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      55
+     ],
+     "startBeat": 7.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      83
+     ],
+     "startBeat": 7.4375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      50
+     ],
+     "startBeat": 7.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      86
+     ],
+     "startBeat": 7.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  },
+  {
+   "id": "o6",
+   "ten": "Ô 6 · dạo",
+   "o": [
+    6
+   ],
+   "doDai": 4.0,
+   "cuMoiPhach": 4.0,
+   "ghiChu": "1 nốt láy, 1 láy quãng 3: F#5 → A5",
+   "events": [
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      66,
+      71,
+      78
+     ],
+     "startBeat": 0.0,
+     "durationBeats": 1.0,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 0.5,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 0.75,
+     "durationBeats": 0.25,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 0.9375,
+     "durationBeats": 0.0625,
+     "hand": "right",
+     "velocity": 64,
+     "grace": true
+    },
+    {
+     "notes": [
+      62
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      81
+     ],
+     "startBeat": 1.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 1.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 2.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      59
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      69
+     ],
+     "startBeat": 2.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      47
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      71
+     ],
+     "startBeat": 3.0,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    },
+    {
+     "notes": [
+      54
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "left",
+     "velocity": 70
+    },
+    {
+     "notes": [
+      78
+     ],
+     "startBeat": 3.5,
+     "durationBeats": 0.5,
+     "hand": "right",
+     "velocity": 76
+    }
+   ]
+  }
+ ]
+}

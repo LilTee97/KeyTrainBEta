@@ -18,6 +18,7 @@ export const CHAY_TRAI_LINH_NHI: KyThuat = {
   bpm: data.bpm,
   meter: 3,
   chamNhac: false,
+  chamLay: false,
   bac: thang4('left', [
     'Tách tay trái, chậm: ba nốt chạy đều, nốt thứ tư rơi đúng vạch — tai nghe đó là chỗ đổi hợp âm. Đừng vội ở nốt cuối.',
     'Đúng nhịp sheet: câu chạy vẫn phải chạm vạch đúng lúc, không chạy trước.',

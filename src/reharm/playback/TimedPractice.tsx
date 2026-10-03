@@ -28,6 +28,7 @@ import {
   PASS_HIT_RATIO,
   PASS_MEDIAN_ABS_MS,
   chamHopAm,
+  chamLay,
   chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
@@ -37,6 +38,7 @@ import {
   passes,
   scoreTimed,
   type ChamHopAm,
+  type ChamLay,
   type ChamNhac,
   type LatencyMeasure,
   type PlayedNote,
@@ -122,7 +124,14 @@ export interface TimedPracticeProps {
     theoHopAm: boolean
     /** Chấm cả lúc nhấc phím — nốt giật nhấc sớm, nốt ngân giữ đủ (`chamNhacPhim`; tab Kỹ thuật đánh). */
     chamNhac?: boolean
-    onXong: (score: TimedScore, hopAm: ChamHopAm | null, nhac: ChamNhac | null) => { dat: boolean; tomTat: string }
+    /** Chấm nốt láy — bấm sát trước nốt chính, láy chồng bấm đủ hai nốt (`chamLay`; tab Kỹ thuật đánh). */
+    chamLay?: boolean
+    onXong: (
+      score: TimedScore,
+      hopAm: ChamHopAm | null,
+      nhac: ChamNhac | null,
+      lay: ChamLay | null,
+    ) => { dat: boolean; tomTat: string }
   }
 }
 
@@ -234,6 +243,7 @@ export function TimedPractice({
     score: TimedScore
     bpm: number
     nhac: ChamNhac | null
+    lay: ChamLay | null
     ketQua: { dat: boolean; tomTat: string } | null
   } | null>(null)
   const [nowSymbol, setNowSymbol] = useState('')
@@ -383,11 +393,15 @@ export function TimedPractice({
 
     const theoHopAm = bacRef.current?.theoHopAm === true
     const msPerBeat = 60000 / practiceBpm
-    const score = scoreTimed(theoHopAm ? gopLopCaoDo(expected) : expected, presses.current, {
-      msPerBeat,
-      latencyMs: latencyMs ?? 0,
-      ignoreOctave,
-    })
+    const opts = { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave }
+    /* Nốt láy chấm riêng; phím đã dùng để láy không còn là phím thừa. */
+    const lay = bacRef.current?.chamLay ? chamLay(shifted, expected, presses.current, opts) : null
+    const daLay = new Set(lay?.phimLay ?? [])
+    const score = scoreTimed(
+      theoHopAm ? gopLopCaoDo(expected) : expected,
+      presses.current.filter((_, i) => !daLay.has(i)),
+      opts,
+    )
     const hopAm = theoHopAm
       ? chamHopAm(shifted, presses.current, score.extra, {
           msPerBeat,
@@ -398,7 +412,7 @@ export function TimedPractice({
     const nhac = bacRef.current?.chamNhac
       ? chamNhacPhim(shifted, expected, presses.current, { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave })
       : null
-    setResult({ score, bpm: practiceBpm, nhac, ketQua: bacRef.current?.onXong(score, hopAm, nhac) ?? null })
+    setResult({ score, bpm: practiceBpm, nhac, lay, ketQua: bacRef.current?.onXong(score, hopAm, nhac, lay) ?? null })
     ghi('luot', {
       bai: title,
       tay: hand,
@@ -421,6 +435,7 @@ export function TimedPractice({
         press.offBeat === undefined ? null : round2(press.offBeat - countIn),
       ]),
       ...(nhac ? { nhac } : {}),
+      ...(lay ? { lay: { tong: lay.layTong, dung: lay.layDung } } : {}),
       xuLyMs: handling.current.map(Math.round),
     })
   }, [phase, looping, expected, shifted, perBeat, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
@@ -668,6 +683,11 @@ export function TimedPractice({
             )}
           </p>
           <p>Phím thừa hoặc sai: {score.extra.length}</p>
+          {result?.lay && (
+            <p>
+              Láy đúng: <b>{result.lay.layDung}</b>/{result.lay.layTong}
+            </p>
+          )}
           {result?.nhac && (
             <p>
               Giật đúng (nhấc sớm): <b>{result.nhac.giatDung}</b>/{result.nhac.giatTong} · Ngân đủ (giữ phím):{' '}

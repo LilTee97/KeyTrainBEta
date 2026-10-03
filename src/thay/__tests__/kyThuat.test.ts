@@ -5,6 +5,8 @@ import { KY_THUAT, kyThuatCua } from '../kyThuat'
 import { CHAY_TRAI_LINH_NHI } from '../kyThuat/chayTraiLinhNhi'
 import { GIAT_CA_PHAO } from '../kyThuat/giatCaPhao'
 import { boGiat, chamKyThuat, khoaKyThuat, lapDoan, trangThaiKyThuat } from '../kyThuat/kyThuat'
+import { LAY_BLUES } from '../kyThuat/layBlues'
+import { LAY_LINH_NHI } from '../kyThuat/layLinhNhi'
 import { LICK_BE_BLUES } from '../kyThuat/lickBeBlues'
 
 const score = (hit: number, total: number, medianAbsMs: number, extra = 0): TimedScore => ({
@@ -20,8 +22,8 @@ const score = (hit: number, total: number, medianAbsMs: number, extra = 0): Time
 describe('tab Kỹ thuật đánh — mọi kỹ thuật', () => {
   it('mỗi thầy có sheet một kỹ thuật; Tuấn chưa có (không có sheet)', () => {
     expect(kyThuatCua('ca-phao').map((kt) => kt.id)).toEqual(['giat-cp'])
-    expect(kyThuatCua('linh-nhi').map((kt) => kt.id)).toEqual(['chay-trai-ln'])
-    expect(kyThuatCua('blues').map((kt) => kt.id)).toEqual(['lick-be-blues'])
+    expect(kyThuatCua('linh-nhi').map((kt) => kt.id)).toEqual(['chay-trai-ln', 'lay-ln'])
+    expect(kyThuatCua('blues').map((kt) => kt.id)).toEqual(['lick-be-blues', 'lay-blues'])
     expect(kyThuatCua('tuan')).toEqual([])
   })
 
@@ -113,5 +115,46 @@ describe('chamKyThuat — thang 4 bậc', () => {
     expect(trangThaiKyThuat([], CHAY_TRAI_LINH_NHI, doan)).toEqual(['mo', 'khoa', 'khoa', 'khoa'])
     expect(trangThaiKyThuat([luot(1, true), luot(2, false)], CHAY_TRAI_LINH_NHI, doan)).toEqual(['qua', 'mo', 'khoa', 'khoa'])
     expect(trangThaiKyThuat([luot(1, true, `giat-cp:${doan}`)], CHAY_TRAI_LINH_NHI, doan)).toEqual(['mo', 'khoa', 'khoa', 'khoa'])
+  })
+})
+
+describe('Luyến láy — Linh Nhi (Biển Tình) · Blues (Boogie, Rockhouse)', () => {
+  const coLay = (events: readonly { grace?: boolean; hand: string; notes: number[] }[]) =>
+    events.some(
+      (event) =>
+        event.grace ||
+        (event.hand === 'right' && [...event.notes].sort((a, b) => a - b).some((note, i, all) => i > 0 && note - all[i - 1]! === 1)),
+    )
+
+  it('đoạn nào cũng có nốt láy để chấm; chấm láy bật, chấm nhấc phím tắt', () => {
+    for (const kt of [LAY_LINH_NHI, LAY_BLUES]) {
+      expect(kt.chamLay).toBe(true)
+      expect(kt.chamNhac).toBe(false)
+      expect(kt.bai.length).toBeGreaterThanOrEqual(5)
+      for (const doan of kt.bai) expect(coLay(doan.events)).toBe(true)
+    }
+  })
+
+  it('Linh Nhi: đoạn nào cũng có ít nhất một nốt láy quãng 3 thứ dưới nốt chính', () => {
+    for (const doan of LAY_LINH_NHI.bai) {
+      const that = doan.events.filter((event) => !event.grace && event.hand === 'right')
+      const q3 = doan.events.filter((event) => {
+        if (!event.grace) return false
+        const chinh = that.find((one) => one.startBeat >= event.startBeat - 1e-6)
+        return chinh !== undefined && Math.max(...chinh.notes) - event.notes[0]! === 3
+      })
+      expect(q3.length).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('Blues: đoạn Boogie chạy ♩ 140 như nút Twist, đoạn Rockhouse theo sheet', () => {
+    for (const doan of LAY_BLUES.bai) expect(doan.bpm ?? LAY_BLUES.bpm).toBe(doan.id.startsWith('boogie') ? 140 : 88)
+  })
+
+  it('cột láy: thiếu nốt láy hay láy dưới ngưỡng là chưa đạt', () => {
+    const bac1 = LAY_LINH_NHI.bac[0]!
+    expect(chamKyThuat(bac1, score(17, 20, 50), null, { layTong: 10, layDung: 7, phimLay: [] }).dat).toBe(true)
+    expect(chamKyThuat(bac1, score(17, 20, 50), null, { layTong: 10, layDung: 6, phimLay: [] }).dat).toBe(false)
+    expect(chamKyThuat(bac1, score(17, 20, 50), null, null).dat).toBe(false)
   })
 })

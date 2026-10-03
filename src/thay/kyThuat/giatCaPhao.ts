@@ -26,6 +26,7 @@ export const GIAT_CA_PHAO: KyThuat<DoanGiat> = {
   bpm: data.bpm,
   meter: 4,
   chamNhac: true,
+  chamLay: false,
   bac: thang4(
     'right',
     [

@@ -16,6 +16,7 @@ import json
 import sys
 
 from audit_ca_phao import audit
+from cat_doan import noi_o, su_kien
 
 SOURCE = 'D:/PianoBrain/video/Ca_Phao/nguoihayquenemdi.mxl'
 OUT = 'src/thay/kyThuat/giatCaPhao.json'
@@ -26,65 +27,10 @@ DOAN = [('dạo', 1, 8), ('phiên', 9, 24), ('điệp', 25, 40), ('giang tấu',
 # Đoạn có ≥ 3 cú giật (đếm trên sheet), gộp ô liền nhau thành đoạn 2 ô.
 DOAN_TAP = [[8], [16], [24, 25], [29], [43, 44], [45, 46], [70], [79, 80], [96, 97]]
 VELOCITY = {1: 76, 2: 68}
-GRACE_STEP = 0.0625  # nốt láy đặt sát trước nốt chính, mỗi nốt một móc kép đôi
 
 
 def ten_doan(bar):
     return next(ten for ten, a, b in DOAN if a <= bar <= b)
-
-
-def doan_tap(data, bars):
-    """Nốt của các ô liền nhau, phách tính từ đầu ô đầu; gộp nốt nối (kể cả qua vạch ô)."""
-    notes, offset = [], 0.0
-    for bar in bars:
-        info = data[str(bar)]
-        for n in info['attacks']:
-            notes.append(dict(n, at=round(offset + n['at'], 6)))
-        offset += info['length']
-    joined, active = [], {}
-    for n in sorted(notes, key=lambda n: (n['at'], n['grace'] is False)):
-        key = (n['hand'], n['voice'], n['midi'])
-        prev = active.get(key)
-        if 'stop' in n['ties'] and not n['grace']:
-            if prev is not None and abs(prev['at'] + prev['dur'] - n['at']) < 1e-6:
-                prev['dur'] = round(prev['dur'] + n['dur'], 6)
-            # Nối từ ô trước đoạn: tiếng ấy không gõ trong đoạn — bỏ.
-        else:
-            prev = dict(n)
-            joined.append(prev)
-        if 'start' in n['ties'] and not n['grace']:
-            active[key] = prev
-        else:
-            active.pop(key, None)
-    return joined, offset
-
-
-def su_kien(notes):
-    """Gom thành tiếng của app: cùng tay · cùng lúc · cùng trường độ ghi → một tiếng. Dấu giật lan ra cả cú."""
-    giat_cu = {(n['hand'], n['at']) for n in notes if not n['grace']
-               and any(a in ('staccato', 'staccatissimo', 'strong-accent') for a in n['articulations'])}
-    nhom = {}
-    for n in notes:
-        if n['grace']:
-            continue
-        giat = (n['hand'], n['at']) in giat_cu
-        nhom.setdefault((n['hand'], n['at'], n['dur'], giat), []).append(n['midi'])
-    out = []
-    for (hand, at, dur, giat), midis in nhom.items():
-        e = dict(notes=sorted(set(midis)), startBeat=at, durationBeats=round(dur / 2, 6) if giat else dur,
-                 hand='right' if hand == 1 else 'left', velocity=VELOCITY[hand])
-        if giat:
-            e.update(giat=True, ghiBeats=dur)
-        out.append(e)
-    # Nốt láy: sát trước nốt chính cùng tay (nốt thật đầu tiên ở hoặc sau nó).
-    graces = [n for n in notes if n['grace']]
-    for i, g in enumerate(graces):
-        cung_cum = [x for x in graces if x['hand'] == g['hand'] and x['at'] == g['at']]
-        k = cung_cum.index(g)
-        out.append(dict(notes=[g['midi']], startBeat=round(g['at'] - (len(cung_cum) - k) * GRACE_STEP, 6),
-                        durationBeats=GRACE_STEP, hand='right' if g['hand'] == 1 else 'left', velocity=VELOCITY[g['hand']] - 12,
-                        grace=True))
-    return sorted(out, key=lambda e: (e['startBeat'], e['hand'], e['notes']))
 
 
 def main():
@@ -92,8 +38,8 @@ def main():
     sha = hashlib.sha256(open(SOURCE, 'rb').read()).hexdigest()[:12]
     bai = []
     for bars in DOAN_TAP:
-        notes, length = doan_tap(data, bars)
-        events = su_kien(notes)
+        notes, length = noi_o(data, bars)
+        events = su_kien(notes, velocity=VELOCITY)
         cu = {(e['hand'], e['startBeat']) for e in events if not e.get('grace')}
         cu_giat = {(e['hand'], e['startBeat']) for e in events if e.get('giat')}
         phai = [k for k in cu if k[0] == 'right']

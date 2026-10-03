@@ -18,6 +18,7 @@ export const LICK_BE_BLUES: KyThuat = {
   bpm: data.bpm,
   meter: 4,
   chamNhac: false,
+  chamLay: false,
   bac: thang4('right', [
     'Tách tay phải, chậm: giữ hai ngón đúng khoảng bè (quãng 3 hay quãng 6) khi tay di chuyển. Câu hay vào ở ⅓ hay ⅔ phách — nghe chùm ba trong đầu.',
     'Đúng nhịp sheet: câu ngắn, gọn, đáp vào phách chính.',

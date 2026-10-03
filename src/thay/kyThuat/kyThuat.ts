@@ -1,5 +1,5 @@
 import type { PracticeHand } from '../../reharm/playback/noteGatedPlaybackEngine'
-import type { ChamNhac, TimedScore } from '../../reharm/playback/timedScoring'
+import type { ChamLay, ChamNhac, TimedScore } from '../../reharm/playback/timedScoring'
 import type { TimelineEvent } from '../../reharm/style/types'
 import type { LuotTap } from '../../shared/persistence/db'
 import type { TeacherId } from '../teachers'
@@ -19,6 +19,8 @@ export interface DoanTap {
   /** Số lúc gõ (mọi tay) mỗi phách — thước dễ/khó đơn giản; các đoạn xếp dễ trước theo số này. */
   cuMoiPhach: number
   ghiChu: string
+  /** Nhịp độ riêng của đoạn khi khác `KyThuat.bpm` (kỹ thuật lấy đoạn từ nhiều sheet). */
+  bpm?: number
   events: TimelineEvent[]
 }
 
@@ -38,6 +40,8 @@ export interface BacKyThuat {
   giatToiThieu: number | null
   /** Đánh giật: tỉ lệ nốt ngân giữ đủ lâu; `null` = không chấm. */
   nganToiThieu: number | null
+  /** Luyến láy: tỉ lệ nốt láy đúng (`chamLay`); `null` = không chấm. */
+  layToiThieu: number | null
   viSao: string
 }
 
@@ -54,6 +58,8 @@ export interface KyThuat<D extends DoanTap = DoanTap> {
   meter: 3 | 4
   /** Chấm cả lúc nhấc phím (`chamNhacPhim`) — chỉ đánh giật. */
   chamNhac: boolean
+  /** Chấm nốt láy (`chamLay`) — chỉ bài luyến láy. */
+  chamLay: boolean
   bac: readonly BacKyThuat[]
   bai: readonly D[]
 }
@@ -78,6 +84,7 @@ export function thang4(
   tay: 'left' | 'right',
   viSao: readonly [string, string, string, string],
   giat: { giatToiThieu: [number, number]; nganToiThieu: [number, number] } | null = null,
+  lay: [number, number] | null = null,
 ): BacKyThuat[] {
   const tenTay = tay === 'left' ? 'Tay trái' : 'Tay phải'
   const cham = (nhanh: boolean) => ({
@@ -86,6 +93,7 @@ export function thang4(
     thuaToiDa: nhanh ? 0.1 : 0.15,
     giatToiThieu: giat ? giat.giatToiThieu[nhanh ? 1 : 0] : null,
     nganToiThieu: giat ? giat.nganToiThieu[nhanh ? 1 : 0] : null,
+    layToiThieu: lay ? lay[nhanh ? 1 : 0] : null,
   })
   return [
     { so: 1, ten: `${tenTay} · 60 %`, tay, tempo: 60, ...cham(false), viSao: viSao[0] },
@@ -101,6 +109,7 @@ export function chamKyThuat(
   bac: BacKyThuat,
   score: TimedScore,
   nhac: ChamNhac | null,
+  lay: ChamLay | null = null,
 ): { dat: boolean; tomTat: string } {
   const dung = score.total > 0 ? score.hit / score.total : 0
   const thua = score.total > 0 ? score.extra.length / score.total : 0
@@ -108,12 +117,15 @@ export function chamKyThuat(
   /* Không có nốt giật nào bấm trúng để chấm thì cột giật không đạt — chưa chứng minh được. Không có nốt ngân thì bỏ cột ngân. */
   const giat = nhac && nhac.giatTong > 0 ? nhac.giatDung / nhac.giatTong : null
   const ngan = nhac && nhac.nganTong > 0 ? nhac.nganDung / nhac.nganTong : null
+  /* Không có nốt láy nào để chấm thì cột láy không đạt — bài láy đoạn nào cũng có nốt láy. */
+  const layTiLe = lay && lay.layTong > 0 ? lay.layDung / lay.layTong : null
   const ok = [
     dung >= bac.dungToiThieu - 1e-9,
     lech !== null && lech <= bac.lechToiDa,
     thua <= bac.thuaToiDa + 1e-9,
     bac.giatToiThieu === null || (giat !== null && giat >= bac.giatToiThieu - 1e-9),
     bac.nganToiThieu === null || ngan === null || ngan >= bac.nganToiThieu - 1e-9,
+    bac.layToiThieu === null || (layTiLe !== null && layTiLe >= bac.layToiThieu - 1e-9),
   ]
   const tomTat = [
     `đúng ${phanTram(dung)} % (cần ≥ ${phanTram(bac.dungToiThieu)})`,
@@ -125,6 +137,9 @@ export function chamKyThuat(
     ...(bac.nganToiThieu === null
       ? []
       : [`ngân ${ngan === null ? '—' : `${phanTram(ngan)} %`} (cần ≥ ${phanTram(bac.nganToiThieu)})`]),
+    ...(bac.layToiThieu === null
+      ? []
+      : [`láy ${layTiLe === null ? '—' : `${phanTram(layTiLe)} %`} (cần ≥ ${phanTram(bac.layToiThieu)})`]),
   ].join(' · ')
   return { dat: score.total > 0 && ok.every(Boolean), tomTat }
 }

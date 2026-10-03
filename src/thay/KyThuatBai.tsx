@@ -88,7 +88,8 @@ function BacDoan({
   const [chon, setChon] = useState(() => bacKeTiepKyThuat(trangThai))
   const bac = kt.bac[chon - 1]!
   const timeline = useMemo(() => lapDoan(doan), [doan])
-  const bpm = Math.round((kt.bpm * bac.tempo) / 100)
+  const bpmGoc = doan.bpm ?? kt.bpm
+  const bpm = Math.round((bpmGoc * bac.tempo) / 100)
 
   const nghe = async (coGiat: boolean) => {
     await startAudio()
@@ -100,7 +101,7 @@ function BacDoan({
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-xs text-dim">Đang tập:</span>
         <span className="font-semibold text-amber-key">{doan.ten}</span>
-        <span className="text-xs text-dim">♩ {kt.bpm} theo sheet</span>
+        <span className="text-xs text-dim">♩ {bpmGoc}</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -152,7 +153,8 @@ function BacDoan({
           Đạt khi: đúng nốt ≥ {phanTram(bac.dungToiThieu)} % · lệch nhịp ≤ {bac.lechToiDa} ms · phím thừa ≤{' '}
           {phanTram(bac.thuaToiDa)} %
           {bac.giatToiThieu !== null && ` · nốt giật nhấc sớm ≥ ${phanTram(bac.giatToiThieu)} %`}
-          {bac.nganToiThieu !== null && ` · nốt ngân giữ đủ ≥ ${phanTram(bac.nganToiThieu)} %`}.
+          {bac.nganToiThieu !== null && ` · nốt ngân giữ đủ ≥ ${phanTram(bac.nganToiThieu)} %`}
+          {bac.layToiThieu !== null && ` · nốt láy đúng ≥ ${phanTram(bac.layToiThieu)} %`}.
         </p>
       </div>
 
@@ -164,7 +166,7 @@ function BacDoan({
         beatsPerChord={4}
         perBeat={[]}
         meter={kt.meter}
-        vongBpm={kt.bpm}
+        vongBpm={bpmGoc}
         bac={{
           tay: bac.tay,
           tempo: bac.tempo,
@@ -172,8 +174,9 @@ function BacDoan({
           anNotRoi: false,
           theoHopAm: false,
           chamNhac: kt.chamNhac,
-          onXong: (score, _hopAm, nhac) => {
-            const ketQua = chamKyThuat(bac, score, nhac)
+          chamLay: kt.chamLay,
+          onXong: (score, _hopAm, nhac, lay) => {
+            const ketQua = chamKyThuat(bac, score, nhac, lay)
             onGhi({
               timestamp: Date.now(),
               styleId: khoaKyThuat(kt, doan.id),
@@ -185,6 +188,7 @@ function BacDoan({
                 thua: score.extra.length,
                 lechMs: score.medianAbsMs ?? -1,
                 ...(nhac ?? {}),
+                ...(lay ? { layTong: lay.layTong, layDung: lay.layDung } : {}),
               },
             })
             return ketQua

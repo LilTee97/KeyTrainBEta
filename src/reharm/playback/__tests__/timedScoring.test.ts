@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { TimelineEvent } from '../../style/types'
 import {
   chamHopAm,
+  chamLay,
   chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
@@ -204,5 +205,36 @@ describe('chamNhacPhim — chấm lúc nhấc phím (đánh giật, 3/10/2026)',
   it('ghepCap không đổi cách chấm cũ: scoreTimed vẫn ra như trước', () => {
     const score = scoreTimed(expected, [bam(60, 0), bam(64, 0.1), bam(67, 1), bam(72, 2)], opts)
     expect([score.hit, score.errorsMs]).toEqual([4, [0, 50, 0, 0]])
+  })
+})
+
+describe('chamLay — chấm nốt láy (GĐ 2 mục b, 3/10/2026)', () => {
+  // ♩ = 120: 500 ms mỗi phách. Nốt láy B4 sát trước nốt chính D5 ở phách 1; láy đôi A5 → B5 → A5 ở phách 2.
+  const events: TimelineEvent[] = [
+    { notes: [71], startBeat: 0.9375, durationBeats: 0.0625, hand: 'right', velocity: 60, grace: true },
+    { notes: [74], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 80 },
+    { notes: [81], startBeat: 1.875, durationBeats: 0.0625, hand: 'right', velocity: 60, grace: true },
+    { notes: [83], startBeat: 1.9375, durationBeats: 0.0625, hand: 'right', velocity: 60, grace: true },
+    { notes: [81], startBeat: 2, durationBeats: 1, hand: 'right', velocity: 80 },
+    { notes: [63, 64], startBeat: 3, durationBeats: 0.5, hand: 'right', velocity: 80 },
+  ]
+  const expected = expectedNotesOf(events, 'right')
+  const bam = (note: number, beat: number): PlayedNote => ({ note, beat, velocity: 80 })
+
+  it('láy sát trước nốt chính thì đúng — kể cả láy cùng phím với nốt chính; láy chồng bấm đủ hai nốt', () => {
+    const played = [bam(71, 0.95), bam(74, 1), bam(81, 1.88), bam(83, 1.94), bam(81, 2), bam(63, 3), bam(64, 3)]
+    const lay = chamLay(events, expected, played, opts)
+    expect([lay.layTong, lay.layDung]).toEqual([4, 4])
+    expect(lay.phimLay.sort()).toEqual([0, 2, 3])
+    // Phím láy bỏ ra thì không còn phím thừa.
+    expect(scoreTimed(expected, played.filter((_, i) => !lay.phimLay.includes(i)), opts).extra).toEqual([])
+  })
+
+  it('láy sau nốt chính, láy xa quá 300 ms, thiếu một nốt láy chồng — đều sai', () => {
+    // Bấm gần như cùng lúc (≤ 30 ms sau nốt chính) vẫn tính là láy — kiểu láy chồng; 60 ms sau là láy muộn.
+    expect(chamLay(events, expected, [bam(74, 1), bam(71, 1.05)], opts).layDung).toBe(1)
+    expect(chamLay(events, expected, [bam(74, 1), bam(71, 1.12)], opts).layDung).toBe(0)
+    expect(chamLay(events, expected, [bam(71, 0.3), bam(74, 1)], opts).layDung).toBe(0)
+    expect(chamLay(events, expected, [bam(63, 3)], opts).layDung).toBe(0)
   })
 })

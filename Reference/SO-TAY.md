@@ -5457,3 +5457,33 @@ Linh Nhi solo nốt đơn 67–77 %, cụm ≥ 3 nốt 4–6 % · Cà Pháo ball
 
 **Chưa đo:** mọi ngưỡng; tay chia theo bản máy chép (Lá Thư, Rockhouse) — có chỗ hai tay chạm cùng phím cách ¼ phách (Lá Thư ô 30, tay trái
 G3+Bb3+D4 rồi tay phải G3+Bb3+D4+G4); cái "đặc trưng" của câu chạy tay trái chưa so cùng cách với Cà Pháo, Blues.
+
+## Bước — GĐ 2 mục (b): chấm nốt láy · Linh Nhi láy quãng 3 · Blues láy nốt blue (3/10/2026)
+
+**Người dùng:** *"tiếp tục đi"* — sau khi đồng ý làm mục (a) trước, mục (b) sau khi có phần chấm nốt láy. Giữa chừng hỏi *"làm đến đâu
+của lộ trình rồi"* — đã trả lời bằng bảng GĐ 0–3 (GĐ 0, GĐ 1 xong; GĐ 2 đang làm; GĐ 3 chưa).
+
+- **Chấm nốt láy** `chamLay` (`timedScoring.ts`): nốt láy ghi riêng (tiếng `grace`) đúng khi phím ấy bấm trong [nốt chính − 300 ms, nốt
+  chính + 50 ms] và không muộn hơn lần bấm nốt chính quá 30 ms (bấm gần như cùng lúc vẫn là láy — kiểu láy chồng); láy CHỒNG (hai nốt cách
+  nửa cung trong một tiếng thật — Rockhouse) đúng khi cả hai nốt bấm trúng. Nốt chính và mọi nốt khác ghép trước (`ghepCap`) nên phím của
+  chúng không bị lấy làm nốt láy — kể cả láy cùng phím nốt chính (La → Si → La). Phím đã dùng cho nốt láy **không còn tính là phím thừa**
+  (trước đây bấm nốt láy là bị trừ điểm thừa). Ngưỡng: Claude, chưa đo.
+- `TimedPractice`: `bac.chamLay` → "Láy đúng a/b"; `onXong(score, hopAm, nhac, lay)`; `LuyenTap.json` ghi cả láy.
+- Khung kỹ thuật: cột `layToiThieu` (60 %: ≥ 70 % · 100 %: ≥ 80 %), cờ `chamLay`, nhịp độ riêng từng đoạn `DoanTap.bpm`. Hàm cắt ô kèm
+  nốt láy (`noi_o`, `su_kien`) dời từ `giat_ca_phao.py` sang `scripts/cat_doan.py` — sinh lại dữ liệu đánh giật: không đổi một byte.
+- **Linh Nhi — láy quãng 3 theo ngũ cung** (`scripts/lay_linh_nhi.py` → `layLinhNhi.json`): 8 đoạn từ *Biển Tình* (bản chép tay duy nhất
+  của chị có nốt láy) — ô có ít nhất một nốt láy quãng 3 thứ dưới (Si → Rê, Fa♯ → La); hai ô liền gộp một đoạn; điệp hát lại (ô 39–40 =
+  30–31) giữ một. **♩ 66: sheet không ghi nhịp độ — Claude chọn theo md "chị chơi bolero 60–70 BPM"**. Tay phải 60 → 100 % → hai tay.
+- **Blues — láy nốt blue** (`scripts/lay_blues.py` → `layBlues.json`): 4 đoạn *Boogie Woogie Basics* (nốt láy ghi riêng Mi♭ → Mi, Mi♭ +
+  Fa♯ → Mi + Sol; ô 19 = 3 và 29 = 25 gộp) ở ♩ 140 như nút Twist + 5 câu *Rockhouse* có láy chồng (Mi♭+Mi = ♭6 chồng 6; Đô+Đô♯,
+  Đô♯+Rê = láy vào ♭5) ở ♩ 88.
+- Trang Linh Nhi và Blues nay mỗi trang hai kỹ thuật — nút chọn ở đầu tab.
+
+**Chạy thử (Chrome, n = 1 mỗi việc):** Linh Nhi láy ô 44 bậc 1 (40 BPM): đúng 24/24, láy 4/4, thừa 0 % → Đạt · Blues láy Boogie ô 1–2
+bậc 1 (84 BPM): 52/52, láy 4/4 → Đạt · câu chạy tay trái vẫn chạy (54/54) · nhật ký đúng khoá.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 6 (chấm láy 2 — có ca láy muộn 60 ms, láy xa 300 ms, thiếu một nốt láy chồng; bài láy 4) ·
+toàn suite **2 586 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+**Chưa đo:** mọi ngưỡng láy (300 ms · 50 ms · 30 ms · 70/80 %); ♩ 66 của Biển Tình là số chọn; láy của Cà Pháo vào bậc nào chưa đo — nên chưa
+nói được "láy vào nốt blue" là riêng Blues hay không; lực nhấn nốt láy (nhẹ hơn nốt chính) chưa chấm.

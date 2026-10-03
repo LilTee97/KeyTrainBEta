@@ -329,6 +329,90 @@ export function chamNhacPhim(
   return cham
 }
 
+/**
+ * Chấm NỐT LÁY (GĐ 2 mục b, 3/10/2026 — bài láy quãng 3 của Linh Nhi, láy nốt blue của Blues). Hai dạng:
+ * - Nốt láy ghi riêng (tiếng `grace`): đúng khi phím ấy được bấm trong khoảng [nốt chính − `LAY_TRUOC_MS`, nốt chính + `LAY_SAU_MS`]
+ *   (đã trừ độ trễ) và không muộn hơn lần bấm nốt chính. Nốt chính = tiếng thật đầu tiên cùng tay, từ lúc nốt láy trở đi.
+ * - Láy CHỒNG — hai nốt cách nửa cung trong cùng một tiếng (bản chép từ MIDI ghi láy như vậy, vd Rockhouse): đúng khi cả hai nốt
+ *   cùng được bấm trúng.
+ * Nốt chính và mọi nốt khác ghép trước (`ghepCap`) nên phím của chúng không bị lấy làm nốt láy. `phimLay`: chỉ số các phím đã dùng
+ * cho nốt láy — bên gọi bỏ chúng ra trước khi chấm phím thừa. Ngưỡng — Claude trong vai gia sư, CHƯA ĐO.
+ */
+export const LAY_TRUOC_MS = 300
+export const LAY_SAU_MS = 50
+
+export interface ChamLay {
+  layTong: number
+  layDung: number
+  phimLay: number[]
+}
+
+export function chamLay(
+  events: readonly TimelineEvent[],
+  expected: readonly ExpectedNote[],
+  played: readonly PlayedNote[],
+  options: TimedScoreOptions,
+): ChamLay {
+  const { msPerBeat, latencyMs, ignoreOctave = false } = options
+  const byWant = ghepCap(expected, played, options)
+  const used = new Set([...byWant.values()].map(({ got }) => got))
+  const khoa = (hand: string, beat: number, note: number) => `${hand}@${Math.round(beat * 1000)}:${note}`
+  const pressOf = new Map<string, number>()
+  expected.forEach((want, i) => {
+    const pair = byWant.get(i)
+    if (pair) pressOf.set(khoa(want.hand, want.beat, want.note), pair.got)
+  })
+  const cham: ChamLay = { layTong: 0, layDung: 0, phimLay: [] }
+
+  /* Láy chồng: cặp nốt cách nửa cung trong một tiếng thật. */
+  for (const event of events) {
+    if (event.grace) continue
+    const notes = [...event.notes].sort((a, b) => a - b)
+    for (let i = 1; i < notes.length; i++) {
+      if (notes[i]! - notes[i - 1]! !== 1) continue
+      cham.layTong += 1
+      if (pressOf.has(khoa(event.hand, event.startBeat, notes[i - 1]!)) && pressOf.has(khoa(event.hand, event.startBeat, notes[i]!))) {
+        cham.layDung += 1
+      }
+    }
+  }
+
+  /* Nốt láy ghi riêng. */
+  const that = events.filter((event) => !event.grace).sort((a, b) => a.startBeat - b.startBeat)
+  const same = (want: number, got: number) => (ignoreOctave ? pitchClassOf(want) === pitchClassOf(got) : want === got)
+  for (const grace of events) {
+    if (!grace.grace) continue
+    const chinh = that.find((event) => event.hand === grace.hand && event.startBeat >= grace.startBeat - 1e-6)
+    if (!chinh) continue
+    const bamChinh = chinh.notes
+      .map((note) => pressOf.get(khoa(chinh.hand, chinh.startBeat, note)))
+      .filter((got): got is number => got !== undefined)
+      .map((got) => played[got]!.beat)
+    const muonNhat = bamChinh.length > 0 ? Math.min(...bamChinh) + 30 / msPerBeat : Infinity
+    for (const note of grace.notes) {
+      cham.layTong += 1
+      let best = -1
+      let bestErr = Infinity
+      played.forEach((press, i) => {
+        if (used.has(i) || !same(note, press.note)) return
+        const lechChinh = (press.beat - chinh.startBeat) * msPerBeat - latencyMs
+        if (lechChinh < -LAY_TRUOC_MS || lechChinh > LAY_SAU_MS || press.beat > muonNhat) return
+        const err = Math.abs((press.beat - grace.startBeat) * msPerBeat - latencyMs)
+        if (err < bestErr) {
+          best = i
+          bestErr = err
+        }
+      })
+      if (best >= 0) {
+        used.add(best)
+        cham.layDung += 1
+        cham.phimLay.push(best)
+      }
+    }
+  }
+  return cham
+}
+
 /** Đạt ngưỡng tạm chưa. */
 export function passes(score: TimedScore): boolean {
   return (
