@@ -28,6 +28,7 @@ import {
   PASS_HIT_RATIO,
   PASS_MEDIAN_ABS_MS,
   chamHopAm,
+  chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
   hopAmTheoPhach,
@@ -36,6 +37,7 @@ import {
   passes,
   scoreTimed,
   type ChamHopAm,
+  type ChamNhac,
   type LatencyMeasure,
   type PlayedNote,
   type TimedScore,
@@ -74,10 +76,18 @@ function ghi(bang: 'luot' | 'do-tre', than: Record<string, unknown>): void {
  * trình duyệt. Đoạn phím → USB → Windows → trình duyệt thì phần mềm không đo được. Phép chấm không dính phần này
  * (chấm theo `timeStamp`), nhưng tiếng phím bấm thì phát lúc xử lý — nên đo để biết nó có góp vào trễ nghe không.
  */
-function listenPresses(onPress: (press: PlayedNote, handlingMs: number) => void): () => void {
+function listenPresses(
+  onPress: (press: PlayedNote, handlingMs: number) => void,
+  /** Lúc nhấc phím — để chấm đánh giật (`chamNhacPhim`). */
+  onRelease?: (note: MidiNote, beat: number) => void,
+): () => void {
   return useMidiStore.subscribe((state, previous) => {
     const event = state.lastEvent
-    if (!event || event === previous.lastEvent || event.velocity === 0) return
+    if (!event || event === previous.lastEvent) return
+    if (event.velocity === 0) {
+      onRelease?.(event.note, beatAtPerformanceTime(event.time))
+      return
+    }
     onPress(
       { note: event.note, beat: beatAtPerformanceTime(event.time), velocity: event.velocity },
       performance.now() - event.time,
@@ -110,7 +120,9 @@ export interface TimedPracticeProps {
     anNotRoi: boolean
     /** Bậc 7 — chấm (b): gộp nốt cùng tên trong một lúc, kiểm bass và nốt ngoài hợp âm (`chamHopAm`). */
     theoHopAm: boolean
-    onXong: (score: TimedScore, hopAm: ChamHopAm | null) => { dat: boolean; tomTat: string }
+    /** Chấm cả lúc nhấc phím — nốt giật nhấc sớm, nốt ngân giữ đủ (`chamNhacPhim`; tab Kỹ thuật đánh). */
+    chamNhac?: boolean
+    onXong: (score: TimedScore, hopAm: ChamHopAm | null, nhac: ChamNhac | null) => { dat: boolean; tomTat: string }
   }
 }
 
@@ -221,6 +233,7 @@ export function TimedPractice({
   const [result, setResult] = useState<{
     score: TimedScore
     bpm: number
+    nhac: ChamNhac | null
     ketQua: { dat: boolean; tomTat: string } | null
   } | null>(null)
   const [nowSymbol, setNowSymbol] = useState('')
@@ -338,10 +351,22 @@ export function TimedPractice({
     handling.current = []
     setResult(null)
     stopListening()
-    unlisten.current = listenPresses((press, handlingMs) => {
-      presses.current.push(press)
-      handling.current.push(handlingMs)
-    })
+    unlisten.current = listenPresses(
+      (press, handlingMs) => {
+        presses.current.push(press)
+        handling.current.push(handlingMs)
+      },
+      (note, beat) => {
+        // Nhấc phím: gắn vào lần bấm gần nhất của chính phím ấy còn đang giữ.
+        for (let i = presses.current.length - 1; i >= 0; i--) {
+          const press = presses.current[i]!
+          if (press.note === note && press.offBeat === undefined) {
+            press.offBeat = beat
+            break
+          }
+        }
+      },
+    )
     startTimelineLoop(backing, practiceBpm, undefined, 0, true)
     // Sau vòng phát: vòng phát đặt đồng hồ về phách 0, tiếng click bám theo từ đó.
     await startMetronome(practiceBpm)
@@ -370,7 +395,10 @@ export function TimedPractice({
           hopAmAt: hopAmTheoPhach(perBeat, countIn),
         })
       : null
-    setResult({ score, bpm: practiceBpm, ketQua: bacRef.current?.onXong(score, hopAm) ?? null })
+    const nhac = bacRef.current?.chamNhac
+      ? chamNhacPhim(shifted, expected, presses.current, { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave })
+      : null
+    setResult({ score, bpm: practiceBpm, nhac, ketQua: bacRef.current?.onXong(score, hopAm, nhac) ?? null })
     ghi('luot', {
       bai: title,
       tay: hand,
@@ -386,7 +414,13 @@ export function TimedPractice({
       truot: score.missed.map((note) => [round2(note.beat - countIn), note.note]),
       phimThua: score.extra.map((note) => [round2(note.beat - countIn), note.note]),
       // Mọi phím đã bấm, kể cả ngoài lúc bài chạy — để soi lại một lượt mà không phải đoán.
-      phim: presses.current.map((press) => [round2(press.beat - countIn), press.note, press.velocity]),
+      phim: presses.current.map((press) => [
+        round2(press.beat - countIn),
+        press.note,
+        press.velocity,
+        press.offBeat === undefined ? null : round2(press.offBeat - countIn),
+      ]),
+      ...(nhac ? { nhac } : {}),
       xuLyMs: handling.current.map(Math.round),
     })
   }, [phase, looping, expected, shifted, perBeat, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
@@ -634,6 +668,12 @@ export function TimedPractice({
             )}
           </p>
           <p>Phím thừa hoặc sai: {score.extra.length}</p>
+          {result?.nhac && (
+            <p>
+              Giật đúng (nhấc sớm): <b>{result.nhac.giatDung}</b>/{result.nhac.giatTong} · Ngân đủ (giữ phím):{' '}
+              <b>{result.nhac.nganDung}</b>/{result.nhac.nganTong}
+            </p>
+          )}
           {result?.ketQua ? (
             <p className="mt-1 text-xs text-dim">
               Ngưỡng của bậc: {result.ketQua.tomTat} →{' '}

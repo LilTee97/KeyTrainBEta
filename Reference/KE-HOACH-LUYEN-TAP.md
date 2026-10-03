@@ -332,8 +332,13 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   âm), nốt ngoài hợp âm; ngưỡng bass ≥ 90 %, ngoài hợp âm ≤ 10 % (vai gia sư, chưa đo). Kèm sửa lỗi app quên độ trễ đã đo.
 - GĐ 1 bước 8 — trang Hôm nay: **xong 3/10/2026** (`homNay.ts`, `TodayPage`): lượt nguội → đang học → bài mới (học song song tối đa 2
   bài chưa qua bậc 6 — vai gia sư) → toàn bộ lộ trình 9 bài; bấm "Tập" mở thẳng đúng bài, đúng bậc. **GĐ 1 xong cả 8 bước.**
-- **Kế tiếp: GĐ 2 — tab Kỹ thuật đánh.** Theo quy trình: bàn chi tiết với người dùng trước khi dựng (mục 3, GĐ 2). Còn của GĐ 0:
-  chấm tiếng nhấn (lực) · thử trên Android thật.
+- **GĐ 2 — tab Kỹ thuật đánh, bàn riêng từng thầy (3/10/2026).** Người dùng: "đánh giật" = giật ngón (staccato) · *"tôi chỉ muốn
+  học đánh giật kiểu Cà Pháo, các thầy khác thì hãy tìm những kỹ thuật đặc trưng của họ"*.
+  - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatGiat.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
+    (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Kèm ô tick nghe thử giật CHÁT 11 ở
+    Bossa CP. Chi tiết `SO-TAY.md` cùng ngày.
+  - **Linh Nhi · Tuấn · Blues — kỹ thuật đặc trưng: đang tìm**, bàn với người dùng trước khi dựng.
+  - Còn của GĐ 0: chấm tiếng nhấn (lực) · thử trên Android thật.
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

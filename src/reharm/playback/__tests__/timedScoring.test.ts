@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { TimelineEvent } from '../../style/types'
 import {
   chamHopAm,
+  chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
   hopAmTheoPhach,
@@ -168,5 +169,40 @@ describe('latencyFromTaps', () => {
 
   it('ít hơn tám lần gõ thì không tin', () => {
     expect(latencyFromTaps([4.2, 5.2, 6.2], MS80)).toBeNull()
+  })
+})
+
+describe('chamNhacPhim — chấm lúc nhấc phím (đánh giật, 3/10/2026)', () => {
+  // ♩ = 120: 500 ms mỗi phách. Nốt giật ghi móc đơn (½ phách = 250 ms) → phải nhấc trong 150 ms (60 %, sàn 150 ms).
+  const events: TimelineEvent[] = [
+    { notes: [60, 64], startBeat: 0, durationBeats: 0.25, hand: 'right', velocity: 80, giat: true, ghiBeats: 0.5 },
+    { notes: [67], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 80 },
+    { notes: [72], startBeat: 2, durationBeats: 0.25, hand: 'right', velocity: 80 },
+  ]
+  const expected = expectedNotesOf(events, 'right')
+  const bam = (note: number, beat: number, offBeat?: number): PlayedNote => ({ note, beat, velocity: 80, offBeat })
+
+  it('giật nhấc sớm thì đúng, giữ lâu thì sai; ngân giữ đủ thì đúng; nốt ngắn không dấu không chấm', () => {
+    const nhac = chamNhacPhim(events, expected, [bam(60, 0, 0.2), bam(64, 0, 0.45), bam(67, 1, 1.8), bam(72, 2, 2.1)], opts)
+    expect(nhac).toEqual({ giatTong: 2, giatDung: 1, nganTong: 1, nganDung: 1 })
+  })
+
+  it('ngân mà nhấc sớm là sai; chưa nhấc khi hết lượt: ngân đủ, giật sai', () => {
+    expect(chamNhacPhim(events, expected, [bam(67, 1, 1.3)], opts)).toEqual({ giatTong: 0, giatDung: 0, nganTong: 1, nganDung: 0 })
+    expect(chamNhacPhim(events, expected, [bam(60, 0), bam(67, 1)], opts)).toEqual({
+      giatTong: 1,
+      giatDung: 0,
+      nganTong: 1,
+      nganDung: 1,
+    })
+  })
+
+  it('chỉ chấm nốt bấm trúng — phím sai không tính', () => {
+    expect(chamNhacPhim(events, expected, [bam(61, 0, 0.1)], opts)).toEqual({ giatTong: 0, giatDung: 0, nganTong: 0, nganDung: 0 })
+  })
+
+  it('ghepCap không đổi cách chấm cũ: scoreTimed vẫn ra như trước', () => {
+    const score = scoreTimed(expected, [bam(60, 0), bam(64, 0.1), bam(67, 1), bam(72, 2)], opts)
+    expect([score.hit, score.errorsMs]).toEqual([4, [0, 50, 0, 0]])
   })
 })

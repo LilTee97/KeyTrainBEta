@@ -304,4 +304,11 @@ export interface TimelineEvent {
    * gốc A · Bb · B lên C#4 · D4 · D#4; sheet Cà Pháo ô 14 tay trái Db4). Xem `StylePattern.tayTraiLenCao`.
    */
   giuTay?: boolean
+  /**
+   * Tiếng có dấu giật (staccato) trên sheet — "đánh giật" của người dùng là giật ngón: bấm rồi nhấc ngón ngay (3/10/2026).
+   * `durationBeats` là độ VANG (đã ngắn lại); trường độ GHI nằm ở `ghiBeats`. Bộ chấm lúc nhấc phím (`chamNhacPhim`) đọc hai cờ này.
+   */
+  giat?: boolean
+  /** Trường độ ghi trên sheet khi khác độ vang (tiếng giật). Bỏ trống = bằng `durationBeats`. */
+  ghiBeats?: number
 }

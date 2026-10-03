@@ -7,6 +7,7 @@ import { TimedPractice } from '../reharm/playback/TimedPractice'
 import { taiBaiTap, type BaiTap, type VongBaiTap } from './baiTap'
 import { dungVong } from './dungVong'
 import { LoTrinh } from './KhungLoTrinh'
+import { KyThuatGiat } from './KyThuatGiat'
 import { tienDoBai } from './loTrinh'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
@@ -35,7 +36,8 @@ const laThu = (one: BaiTap) => one.giong.includes('thứ')
 /**
  * Trang một thầy — tab Điệu · Kỹ thuật đánh · Học cách soạn câu (`Reference/KE-HOACH-LUYEN-TAP.md` mục 4c).
  *
- * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E) — hiện chỉ tab Điệu. Mỗi bài có LỘ TRÌNH 7 bậc (`LoTrinh.tsx`, GĐ 1
+ * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E). Tab Kỹ thuật đánh mới có ở Cà Pháo: đánh giật (`KyThuatGiat`, GĐ 2,
+ * 3/10/2026). Mỗi bài tab Điệu có LỘ TRÌNH 7 bậc (`LoTrinh.tsx`, GĐ 1
  * bước 5) và nút tập tự do trên vòng tập; vòng tự tạo cũng tập tự do. Vòng kiểm để dành cho bậc 7 — không mở cho tập tự do, tập
  * trước thì bậc 7 hết là bài lạ.
  */
@@ -85,6 +87,9 @@ export function TeacherPage({
     moTuNgoai ? { kieu: 'lo-trinh', styleId: moTuNgoai.styleId } : null,
   )
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
+  const [tab, setTab] = useState<'dieu' | 'ky-thuat'>('dieu')
+  /* Tab Kỹ thuật đánh: hiện chỉ Cà Pháo có bài (đánh giật). Thầy khác ẩn — câu E. */
+  const coKyThuat = teacher.id === 'ca-phao'
   // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
 
@@ -125,124 +130,148 @@ export function TeacherPage({
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-lg font-semibold">{teacher.label}</h2>
         {/* Chỉ tab có nội dung — Kỹ thuật đánh, Học cách soạn câu hiện ra khi có bài (câu E). */}
-        <span className="rounded-lg border border-amber-key bg-amber-key/15 px-3 py-1 text-xs font-semibold text-amber-key">
-          Điệu
-        </span>
+        {(coKyThuat ? (['dieu', 'ky-thuat'] as const) : (['dieu'] as const)).map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => {
+              stopTimelineLoop()
+              setTab(value)
+            }}
+            className={`rounded-lg border px-3 py-1 text-xs font-semibold ${
+              tab === value
+                ? 'border-amber-key bg-amber-key/15 text-amber-key'
+                : 'border-line bg-white/4 text-dim hover:bg-white/8'
+            }`}
+          >
+            {value === 'dieu' ? 'Điệu' : 'Kỹ thuật đánh'}
+          </button>
+        ))}
       </div>
 
-      <p className="text-xs text-dim">
-        Bài xếp từ dễ đến khó. Mỗi bài có lộ trình 7 bậc: tách tay chờ đúng nốt → hai tay → theo nhịp 60 · 80 · 100 % → chỉ nhìn
-        tên hợp âm ở giọng lạ. Qua bậc trước mới mở bậc sau; tiến độ lưu trên máy này. Tập tự do: chọn tay, tempo tuỳ ý trên vòng
-        tập, hoặc vòng tự tạo ở dưới.
-      </p>
-
-      <ul className="flex flex-col gap-2">
-        {bai.map((one) => {
-          const tienDo = tienDoBai(luot, one.styleId, dayKeyOf(new Date()))
-          const qua = tienDo.trangThai.filter((tt) => tt === 'qua' || tt === 'thuoc').length
-          return (
-            <li key={one.styleId} className="rounded-xl border border-line bg-black/25 p-3">
-              <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-semibold text-cream">{one.ten}</span>
-                <span className="text-xs text-dim">
-                  {one.giong} · ♩ {one.bpm}
-                </span>
-                {!one.duyet && <span className="text-[11px] text-rose-300">chờ nghe duyệt</span>}
-              </div>
-              <p className="mb-2 font-mono text-xs text-cream/80">Vòng tập: {one.tap.hopAm.join(' · ')}</p>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
-                  className={nut(baiLoTrinh?.styleId === one.styleId)}
-                >
-                  Lộ trình · {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
-                </button>
-                {tienDo.bacNguoi !== null && (
-                  <span className="text-[11px] text-amber-key">
-                    {tienDo.bacNguoi > tienDo.thuocCaoNhat ? 'lượt nguội' : 'kiểm lại'} hôm nay: bậc {tienDo.bacNguoi}
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => doi({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })}
-                  className={nut(vong === one.tap)}
-                >
-                  Tập tự do
-                </button>
-                <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-
-      <VongTuTao teacher={teacher} bai={bai} onXong={(m) => doi({ kieu: 'tu-do', muc: m })} />
-
-      {baiLoTrinh &&
-        (daTaiLuot ? (
-          <LoTrinh
-            key={baiLoTrinh.styleId}
-            bai={baiLoTrinh}
-            luot={luot}
-            onGhi={ghi}
-            bacMo={moTuNgoai?.styleId === baiLoTrinh.styleId ? moTuNgoai.bac : undefined}
-            cuonToi={moTuNgoai?.styleId === baiLoTrinh.styleId}
-          />
+      {tab === 'ky-thuat' ? (
+        daTaiLuot ? (
+          <KyThuatGiat luot={luot} onGhi={ghi} />
         ) : (
           <p className="text-sm text-dim">Đang tải tiến độ…</p>
-        ))}
+        )
+      ) : (
+        <>
+          <p className="text-xs text-dim">
+            Bài xếp từ dễ đến khó. Mỗi bài có lộ trình 7 bậc: tách tay chờ đúng nốt → hai tay → theo nhịp 60 · 80 · 100 % → chỉ nhìn
+            tên hợp âm ở giọng lạ. Qua bậc trước mới mở bậc sau; tiến độ lưu trên máy này. Tập tự do: chọn tay, tempo tuỳ ý trên vòng
+            tập, hoặc vòng tự tạo ở dưới.
+          </p>
 
-      {muc && vong && (
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-xs text-dim">Đang tập:</span>
-            <span className="font-semibold text-amber-key">{muc.ten}</span>
-            <span className="font-mono text-xs text-cream/80">{vong.hopAm.join(' · ')}</span>
-            <span className="text-xs text-dim">♩ {vong.bpm}</span>
-          </div>
-          <div className="flex gap-1">
-            {(
-              [
-                ['gated', 'Chờ đúng nốt'],
-                ['timed', 'Theo nhịp'],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  stopTimelineLoop()
-                  setCheDo(value)
-                }}
-                className={nut(cheDo === value)}
-              >
-                {label}
-              </button>
+          <ul className="flex flex-col gap-2">
+            {bai.map((one) => {
+              const tienDo = tienDoBai(luot, one.styleId, dayKeyOf(new Date()))
+              const qua = tienDo.trangThai.filter((tt) => tt === 'qua' || tt === 'thuoc').length
+              return (
+                <li key={one.styleId} className="rounded-xl border border-line bg-black/25 p-3">
+                  <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="font-semibold text-cream">{one.ten}</span>
+                    <span className="text-xs text-dim">
+                      {one.giong} · ♩ {one.bpm}
+                    </span>
+                    {!one.duyet && <span className="text-[11px] text-rose-300">chờ nghe duyệt</span>}
+                  </div>
+                  <p className="mb-2 font-mono text-xs text-cream/80">Vòng tập: {one.tap.hopAm.join(' · ')}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
+                      className={nut(baiLoTrinh?.styleId === one.styleId)}
+                    >
+                      Lộ trình · {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
+                    </button>
+                    {tienDo.bacNguoi !== null && (
+                      <span className="text-[11px] text-amber-key">
+                        {tienDo.bacNguoi > tienDo.thuocCaoNhat ? 'lượt nguội' : 'kiểm lại'} hôm nay: bậc {tienDo.bacNguoi}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => doi({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })}
+                      className={nut(vong === one.tap)}
+                    >
+                      Tập tự do
+                    </button>
+                    <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
+          <VongTuTao teacher={teacher} bai={bai} onXong={(m) => doi({ kieu: 'tu-do', muc: m })} />
+
+          {baiLoTrinh &&
+            (daTaiLuot ? (
+              <LoTrinh
+                key={baiLoTrinh.styleId}
+                bai={baiLoTrinh}
+                luot={luot}
+                onGhi={ghi}
+                bacMo={moTuNgoai?.styleId === baiLoTrinh.styleId ? moTuNgoai.bac : undefined}
+                cuonToi={moTuNgoai?.styleId === baiLoTrinh.styleId}
+              />
+            ) : (
+              <p className="text-sm text-dim">Đang tải tiến độ…</p>
             ))}
-          </div>
-          {cheDo === 'gated' ? (
-            <NoteGatedPractice
-              key={muc.ten}
-              timeline={vong.timeline}
-              voicings={vong.voicings}
-              beatsPerChord={vong.beatsPerChord}
-              perBeat={motVong}
-              vongBpm={vong.bpm}
-            />
-          ) : (
-            <TimedPractice
-              key={muc.ten}
-              title={muc.ten}
-              timeline={nhieuLuot}
-              voicings={vong.voicings}
-              beatsPerChord={vong.beatsPerChord}
-              perBeat={motVong}
-              meter={vong.meter}
-              vongBpm={vong.bpm}
-            />
+
+          {muc && vong && (
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-xs text-dim">Đang tập:</span>
+                <span className="font-semibold text-amber-key">{muc.ten}</span>
+                <span className="font-mono text-xs text-cream/80">{vong.hopAm.join(' · ')}</span>
+                <span className="text-xs text-dim">♩ {vong.bpm}</span>
+              </div>
+              <div className="flex gap-1">
+                {(
+                  [
+                    ['gated', 'Chờ đúng nốt'],
+                    ['timed', 'Theo nhịp'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      stopTimelineLoop()
+                      setCheDo(value)
+                    }}
+                    className={nut(cheDo === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {cheDo === 'gated' ? (
+                <NoteGatedPractice
+                  key={muc.ten}
+                  timeline={vong.timeline}
+                  voicings={vong.voicings}
+                  beatsPerChord={vong.beatsPerChord}
+                  perBeat={motVong}
+                  vongBpm={vong.bpm}
+                />
+              ) : (
+                <TimedPractice
+                  key={muc.ten}
+                  title={muc.ten}
+                  timeline={nhieuLuot}
+                  voicings={vong.voicings}
+                  beatsPerChord={vong.beatsPerChord}
+                  perBeat={motVong}
+                  meter={vong.meter}
+                  vongBpm={vong.bpm}
+                />
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
     </section>
   )

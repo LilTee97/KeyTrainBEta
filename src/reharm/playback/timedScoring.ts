@@ -28,6 +28,8 @@ export interface PlayedNote {
   note: MidiNote
   beat: number
   velocity: number
+  /** Lúc nhấc phím, cùng đồng hồ với `beat`. Chưa nhấc khi hết lượt (hay không nghe được nhấc) thì bỏ trống. */
+  offBeat?: number
 }
 
 export interface TimedScoreOptions {
@@ -99,11 +101,17 @@ export function median(values: readonly number[]): number | null {
   return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
 }
 
-export function scoreTimed(
+/**
+ * Ghép phím bấm với nốt phải đánh: nốt (chỉ số trong `expected`) → phím (chỉ số trong `played`) và lệch có dấu, mili giây.
+ *
+ * Ghép cặp lệch ÍT NHẤT trước. Ghép lần lượt theo thời gian thì hai nốt cùng phím đứng sát nhau (móc kép lặp) có thể giành nhau
+ * một phím bấm: nốt trước lấy mất phím vốn đánh cho nốt sau.
+ */
+export function ghepCap(
   expected: readonly ExpectedNote[],
   played: readonly PlayedNote[],
   options: TimedScoreOptions,
-): TimedScore {
+): Map<number, { got: number; error: number }> {
   const { msPerBeat, latencyMs, windowMs = MATCH_WINDOW_MS, ignoreOctave = false } = options
   const same = (want: ExpectedNote, got: PlayedNote) =>
     ignoreOctave || want.tuDoQuangTam ? pitchClassOf(want.note) === pitchClassOf(got.note) : want.note === got.note
@@ -111,10 +119,6 @@ export function scoreTimed(
   const errorOf = (want: ExpectedNote, got: PlayedNote) =>
     Math.round((got.beat - want.beat) * msPerBeat - latencyMs)
 
-  /*
-    Ghép cặp lệch ÍT NHẤT trước. Ghép lần lượt theo thời gian thì hai nốt cùng phím đứng sát nhau (móc kép
-    lặp) có thể giành nhau một phím bấm: nốt trước lấy mất phím vốn đánh cho nốt sau.
-  */
   const pairs: { want: number; got: number; error: number }[] = []
   expected.forEach((want, wantIndex) => {
     played.forEach((got, gotIndex) => {
@@ -125,13 +129,25 @@ export function scoreTimed(
   })
   pairs.sort((a, b) => Math.abs(a.error) - Math.abs(b.error))
 
-  const errorByWant = new Map<number, number>()
+  const byWant = new Map<number, { got: number; error: number }>()
   const usedGot = new Set<number>()
   for (const pair of pairs) {
-    if (errorByWant.has(pair.want) || usedGot.has(pair.got)) continue
-    errorByWant.set(pair.want, pair.error)
+    if (byWant.has(pair.want) || usedGot.has(pair.got)) continue
+    byWant.set(pair.want, { got: pair.got, error: pair.error })
     usedGot.add(pair.got)
   }
+  return byWant
+}
+
+export function scoreTimed(
+  expected: readonly ExpectedNote[],
+  played: readonly PlayedNote[],
+  options: TimedScoreOptions,
+): TimedScore {
+  const { msPerBeat, latencyMs, windowMs = MATCH_WINDOW_MS } = options
+  const byWant = ghepCap(expected, played, options)
+  const errorByWant = new Map([...byWant].map(([want, { error }]) => [want, error]))
+  const usedGot = new Set([...byWant.values()].map(({ got }) => got))
 
   /* Phím thừa chỉ tính trong lúc bài chạy — dạo phím lúc đếm vào hay sau khi hết bài thì không. */
   const first = expected[0]?.beat ?? 0
@@ -254,6 +270,63 @@ export function chamHopAm(
     return hopAm !== null && !hopAm.lop.has(pitchClassOf(press.note))
   }).length
   return { bassTong, bassDung, notSai }
+}
+
+/**
+ * Chấm LÚC NHẤC PHÍM — đánh giật. "Đánh giật" của người dùng là giật ngón: bấm rồi nhấc ngón ngay (3/10/2026).
+ *
+ * - Nốt GIẬT (tiếng `giat`): nhấc trước khi hết `NHAC_GIAT_TI_LE` trường độ ghi, sàn `NHAC_GIAT_SAN_MS` — nốt móc kép nhanh thì bấm
+ *   nhả bình thường đã là giật.
+ * - Nốt NGÂN (không có dấu, ghi từ `NGAN_TU_PHACH` phách trở lên): giữ ít nhất `NGAN_TI_LE` trường độ ghi — giật nhầm chỗ phải ngân
+ *   cũng là sai. Nốt ngắn hơn không chấm.
+ *
+ * Chỉ chấm nốt đã bấm trúng (`ghepCap`). Phím chưa nhấc khi hết lượt: ngân thì đủ, giật thì sai. Độ trễ không trừ: bấm và nhấc cùng
+ * đi qua một đường. Các ngưỡng — quyết định của Claude trong vai gia sư, CHƯA ĐO. Chỉnh khi: đánh giật rõ tai mà vẫn bị chấm sai
+ * (nới tỉ lệ), hay nhấc lững lờ mà vẫn được (siết).
+ */
+export const NHAC_GIAT_TI_LE = 0.6
+export const NHAC_GIAT_SAN_MS = 150
+export const NGAN_TI_LE = 0.6
+export const NGAN_TU_PHACH = 0.5
+
+export interface ChamNhac {
+  giatTong: number
+  giatDung: number
+  nganTong: number
+  nganDung: number
+}
+
+export function chamNhacPhim(
+  events: readonly TimelineEvent[],
+  expected: readonly ExpectedNote[],
+  played: readonly PlayedNote[],
+  options: TimedScoreOptions,
+): ChamNhac {
+  const khoa = (hand: string, beat: number, note: number) => `${hand}@${Math.round(beat * 1000)}:${note}`
+  const loai = new Map<string, { giat: boolean; ghi: number }>()
+  for (const event of events) {
+    if (event.grace) continue
+    for (const note of event.notes) {
+      loai.set(khoa(event.hand, event.startBeat, note), { giat: !!event.giat, ghi: event.ghiBeats ?? event.durationBeats })
+    }
+  }
+  const cham: ChamNhac = { giatTong: 0, giatDung: 0, nganTong: 0, nganDung: 0 }
+  for (const [wantIndex, { got }] of ghepCap(expected, played, options)) {
+    const want = expected[wantIndex]!
+    const one = loai.get(khoa(want.hand, want.beat, want.note))
+    if (!one) continue
+    const press = played[got]!
+    const giuMs = press.offBeat === undefined ? Infinity : (press.offBeat - press.beat) * options.msPerBeat
+    const ghiMs = one.ghi * options.msPerBeat
+    if (one.giat) {
+      cham.giatTong += 1
+      if (giuMs <= Math.max(NHAC_GIAT_TI_LE * ghiMs, NHAC_GIAT_SAN_MS)) cham.giatDung += 1
+    } else if (one.ghi >= NGAN_TU_PHACH - 1e-9) {
+      cham.nganTong += 1
+      if (giuMs >= NGAN_TI_LE * ghiMs) cham.nganDung += 1
+    }
+  }
+  return cham
 }
 
 /** Đạt ngưỡng tạm chưa. */

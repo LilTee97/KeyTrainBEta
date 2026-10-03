@@ -5377,3 +5377,50 @@ khung lộ trình ở đầu màn hình. Điện thoại 390 px không tràn.
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite **2 566 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
 
 **GĐ 1 (mục Điệu) xong cả 8 bước.** Chưa đo: mọi ngưỡng và luật gia sư (bậc, lượt nguội, giới hạn 2 bài) chưa đo trên tay người dùng.
+
+## Bước — GĐ 2: tab Kỹ thuật đánh · Cà Pháo — đánh giật; chấm lúc nhấc phím; ô tick giật Bossa CP (3/10/2026)
+
+**Người dùng:** nghe trang ví dụ rồi chốt *"đánh giật là ví dụ 1 đến 3"* — tức **giật ngón** (bấm rồi nhấc ngón ngay, dấu staccato),
+không phải bấm lệch phách · *"tôi chỉ muốn học đánh giật kiểu Cà Pháo, các thầy khác thì hãy tìm những kỹ thuật đặc trưng của họ"* ·
+*"Tại sao tôi phải chọn 1 trong 3"* (ba việc không loại trừ nhau — làm cả hai việc Cà Pháo, bỏ việc Tuấn) · Hồng Kông 1: *"có kỹ
+thuật đánh giật giống trong Người hãy quên em đi ko, nếu ko thì khỏi tìm"* → không có, bỏ.
+
+**Số đo** (PianoBrain `tools/sheet/giat_lay.py`, 22 sheet các thầy): 17/22 bản không có một nốt láy hay dấu staccato nào — 15 là bản
+xuất qua music21, tựa đề là tên video YouTube (suy đoán của Claude: bản máy chép từ tiếng đàn, không ghi được dấu). Hồng Kông 1: cả
+4 file MXL lẫn PDF 5 trang 0 staccato, pedal 208 dấu. Chỉ *Người hãy quên em đi* (bản chép tay) mang dấu: 98 staccato + 1 nhấn
+mạnh; lúc hát anh giật 40/218 cú hợp âm tay phải (18 %) — phách 4: 9/17 · phách 2: 10/32 · 3&: 12/46; KHÔNG BAO GIỜ phách 1 (0/15) ·
+2& (0/32) · 4& (0/47). Tay trái nốt đơn giật 20/356.
+
+- **Dữ liệu:** `scripts/giat_ca_phao.py` (đọc bằng `audit_ca_phao.py`, dấu staccato từng nốt) → `src/thay/kyThuat/giatCaPhao.json`:
+  9 đoạn 1–2 ô có ≥ 3 cú giật (ô 8 · 16 · 24–25 · 29 · 43–44 · 45–46 · 70 · 79–80 · 96–97), **66 cú giật**; chép nguyên hai tay, cả
+  nốt láy và nốt nối qua vạch. Nốt giật vang ½ trường độ ghi (cách đọc của Claude — như bộ soạn solo CP, gate × .5), `ghiBeats` giữ
+  trường độ ghi. Xếp dễ trước theo số cú mỗi phách (đo đơn giản, chưa so với cách đo độ khó tab Điệu).
+- **`TimelineEvent.giat` / `ghiBeats`** (`style/types.ts`).
+- **`timedScoring.ts`:** `ghepCap` tách từ `scoreTimed` (kết quả chấm cũ không đổi — test cũ giữ nguyên); `chamNhacPhim`: nốt giật
+  nhấc ≤ 60 % trường độ ghi (sàn 150 ms), nốt ngân (ghi ≥ ½ phách) giữ ≥ 60 %; chỉ chấm nốt bấm trúng; chưa nhấc khi hết lượt — ngân
+  đủ, giật sai. Ngưỡng: Claude trong vai gia sư, **chưa đo**. Lùi/chỉnh khi giật rõ tai mà vẫn trượt (nới) hay nhấc lững lờ vẫn qua (siết).
+- **`TimedPractice`:** nghe cả lúc nhấc phím (đàn vốn gửi note-off vào `midiStore`, trước nay bộ chấm bỏ qua) — gắn `offBeat` vào lần
+  bấm gần nhất của phím ấy; `bac.chamNhac` → `onXong(score, hopAm, nhac)`; hiện "Giật đúng · Ngân đủ"; `LuyenTap.json` ghi cả lúc nhấc.
+- **Tab Kỹ thuật đánh** trên trang Cà Pháo (thầy khác vẫn ẩn — câu E): `KyThuatGiat.tsx` — 9 đoạn, nghe mẫu *có giật* / *bỏ giật*
+  để so, thang 4 bậc (tay phải 60 % → tay phải 100 % → hai tay 60 % → hai tay 100 %; ngưỡng ở `kyThuat/giatCaPhao.ts`, vai gia sư,
+  chưa đo), nhật ký `luotTap` khoá `giat-cp:<đoạn>` (trang Hôm nay không đọc khoá này).
+- **Ô tick nghe thử Bossa CP "giật CHÁT 11 kiểu Cà Pháo"** (`giatKieuCaPhao`, `caPhaoBossa.ts`; cờ `giatCP` lưu theo bài, tắt sẵn):
+  CHÁT 11 (tay phải, phách 4 ô B) vang .5 → .25 phách. 1/6 cú hợp âm tay phải của ô đệm = 17 % ≈ 18 % của sheet, đúng vị trí anh hay
+  giật nhất. Giá trị cũ .5; lùi khi nghe CHÁT 11 cụt. Người dùng nghe ổn thì đặt mặc định — đừng tự xoá ô tick.
+- **Phát hiện:** dạo · giang · kết của Bossa CP đã giật từ trước — bộ soạn solo CP đọc staccato của sheet (gate × .5). Chỉ ô đệm lúc
+  hát là chưa giật.
+- **Đính chính ở PianoBrain (chưa commit):** `ca-phao.md` mục 5 đổi tên "Nhịp lệch… giật nhịp" — trước gọi nhầm là "Đánh giật"; lượt 2
+  solo Ballad Để em (26/9) đã hiểu "những chỗ đánh giật" thành nhịp lệch, giật ngón chưa từng vào câu solo · `LUAT-SOAN-NOT.md`: suy
+  luận "Có Em Chờ không có nốt hoa mỹ ⇒ cặp F+Gb là bấm thật" không đứng · mục mới "Đánh giật bằng ngón và luyến láy" (md Cà Pháo),
+  13j (md Linh Nhi).
+
+**Chạy thử (Chrome, n = 1 mỗi việc):** tab Kỹ thuật đánh hiện 9 đoạn. Ô 96–97 bậc 1 (64 BPM), bấm đúng nốt, nốt giật nhấc ở 30 %
+trường độ → đúng 50/50 · giật 34/34 · ngân 16/16 → Đạt, bậc 2 mở; nốt giật giữ 85 % → giật 0/34 → Chưa đạt; nhật ký ghi đủ hai lượt.
+Ô tick Bossa CP hiện khi chọn Bossa CP cải tiến; bật lên thì bài mẫu đổi đúng 1 tiếng ½ → ¼ phách (CHÁT 11 ở phách 23 — bài mẫu chỉ còn
+một chỗ CHÁT 11 trong phần đệm; vì sao các chỗ kia không còn — chưa kiểm).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 11 (bộ chấm nhấc phím 4, đánh giật 5, Bossa 2) · toàn suite **2 577 qua / 5 đỏ** (5 đỏ
+cũ) · `vite build` qua.
+
+**Chưa đo:** mọi ngưỡng giật/ngân và độ vang ½; chưa thử trên đàn thật (độ trễ nhấc phím của từng đàn); giật ở ballad Cà Pháo (sheet
+không mang dấu); đàn có pedal vang thì nhấc ngón sớm không ngắn tiếng — bộ chấm chỉ chấm ngón.

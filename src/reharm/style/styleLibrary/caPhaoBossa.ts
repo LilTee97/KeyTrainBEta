@@ -113,6 +113,29 @@ export function laBossaCP(style: { id?: string } | string | null | undefined): b
   return id !== undefined && BOSSA_CP_IDS.has(id)
 }
 
+/**
+ * Ô tick nghe thử "giật kiểu Cà Pháo" (3/10/2026): CHÁT 11 — cú hợp âm tay phải ở phách 4 ô B — giật, vang một nửa trường độ.
+ *
+ * "Đánh giật" của người dùng = giật ngón: bấm rồi nhấc ngón ngay (3/10/2026, sau khi nghe ví dụ). Số đo — bản chép tay *Người
+ * hãy quên em đi*, phần hát, cú hợp âm tay phải (`PianoBrain/tools/sheet/giat_lay.py`): anh giật 40/218 cú (18%), nhiều nhất ở
+ * phách 4 (9/17); KHÔNG BAO GIỜ ở phách 1 (0/15), 2& (0/32), 4& (0/47). Ô đệm có 6 cú hợp âm tay phải; giật đúng cú phách 4 là
+ * 1/6 = 17%, khớp mật độ của sheet. Vang một nửa trường độ ghi là cách đọc dấu staccato của Claude — cùng cách bộ soạn solo CP
+ * đọc (gate × .5), chưa đo.
+ *
+ * Giá trị cũ: CHÁT 11 vang .5 phách. Lùi khi: nghe CHÁT 11 cụt, mất tiếng nhấn cuối khung.
+ * Người dùng nghe ổn thì đặt làm mặc định; đừng tự xoá ô tick khi người dùng chưa bảo.
+ */
+export function giatKieuCaPhao(style: StylePattern): StylePattern {
+  if (!laBossaCP(style) || !style.cell) return style
+  return {
+    ...style,
+    cell: {
+      ...style.cell,
+      right: style.cell.right.map((hit) => (hit.beat === 7 ? { ...hit, durationBeats: hit.durationBeats / 2 } : hit)),
+    },
+  }
+}
+
 /** CP cải tiến: giữ nguyên cả câu fill chỉ khi nó vừa khe của tay chơi.
  * Nếu cắt từng nốt fill sẽ thủng câu; nếu chuyển chát sang LH sẽ mất nhịp đã chốt.
  */
