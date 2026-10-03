@@ -102,6 +102,9 @@ def main():
                         soCu=len(cu), soCuGiat=len(cu_giat), giatPhai=sum(1 for k in cu_giat if k[0] == 'right'),
                         cuMoiPhach=round(len(cu) / length, 2), soNotLay=sum(1 for e in events if e.get('grace')),
                         events=events, _phai=len(phai)))
+        b = bai[-1]
+        b['ghiChu'] = (f"{b['soCuGiat']}/{b['soCu']} cú giật · {b['cuMoiPhach']} cú/phách"
+                       + (f" · {b['soNotLay']} nốt láy" if b['soNotLay'] else ''))
     # Dễ trước: ít cú mỗi phách trước (đo đơn giản — chưa so với cách đo độ khó của tab Điệu).
     bai.sort(key=lambda b: (b['cuMoiPhach'], b['soNotLay']))
     print(f'{"đoạn":24} cú  giật(phải)  cú/phách  nốt láy')

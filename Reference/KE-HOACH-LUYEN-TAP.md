@@ -337,7 +337,9 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatGiat.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
     (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Kèm ô tick nghe thử giật CHÁT 11 ở
     Bossa CP. Chi tiết `SO-TAY.md` cùng ngày.
-  - **Linh Nhi · Tuấn · Blues — kỹ thuật đặc trưng: đang tìm**, bàn với người dùng trước khi dựng.
+  - **Linh Nhi — câu chạy tay trái dẫn vào hợp âm sau · Blues — câu lick bè 3/6: xong 3/10/2026** (người dùng: *"làm theo bạn đề
+    nghị"*): 7 đoạn từ *Lá Thư Trần Thế*, 6 câu từ *Rockhouse*, khung chung `kyThuat/kyThuat.ts`. Để sau (cần chấm nốt láy): láy quãng 3
+    ngũ cung (Linh Nhi, *Biển Tình*) · láy nốt blue (Blues). **Tuấn:** không có sheet — ẩn tab.
   - Còn của GĐ 0: chấm tiếng nhấn (lực) · thử trên Android thật.
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.

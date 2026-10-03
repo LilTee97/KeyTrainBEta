@@ -5424,3 +5424,36 @@ cũ) · `vite build` qua.
 
 **Chưa đo:** mọi ngưỡng giật/ngân và độ vang ½; chưa thử trên đàn thật (độ trễ nhấc phím của từng đàn); giật ở ballad Cà Pháo (sheet
 không mang dấu); đàn có pedal vang thì nhấc ngón sớm không ngắn tiếng — bộ chấm chỉ chấm ngón.
+
+## Bước — GĐ 2: Linh Nhi câu chạy tay trái · Blues lick bè 3/6; khung tab Kỹ thuật đánh dùng chung (3/10/2026)
+
+**Người dùng:** *"làm theo bạn đề nghị"* — đề nghị của Claude: mục (a) mỗi thầy trước — Linh Nhi câu chạy tay trái dẫn bè trầm vào hợp âm
+sau, Blues câu lick bè 3/6; để sau mục (b) láy quãng 3 ngũ cung (Linh Nhi) và láy nốt blue (Blues) vì app chưa chấm nốt láy. Tuấn: không
+có sheet — giữ ẩn tab.
+
+**Kỹ thuật đặc trưng — số đo cùng một cách trên mọi sheet** (PianoBrain `tools/sheet/giat_lay.py --cu`, cú tay phải, ghi ở md từng thầy):
+Linh Nhi solo nốt đơn 67–77 %, cụm ≥ 3 nốt 4–6 % · Cà Pháo ballad solo 58 % · 18 %, bè quãng 4/5 38 % cú hai nốt · Blues slow blues 52 % ·
+23 %, bè 3/6 51 %. Câu chạy tay trái của Linh Nhi (42/48 câu chạy lúc hát) — chưa đo cùng cách trên thầy khác.
+
+- **Khung chung** `src/thay/kyThuat/kyThuat.ts`: `DoanTap`, `BacKyThuat`, `KyThuat<D>`, `thang4` (tách tay tập trung 60 → 100 %, rồi hai tay
+  60 → 100 %; ngưỡng 60 %: đúng ≥ 85 % · lệch ≤ 60 ms · thừa ≤ 15 %; 100 %: ≥ 90 % · ≤ 45 ms · ≤ 10 % — vai gia sư, chưa đo), `chamKyThuat`
+  (cột giật/ngân chỉ khi kỹ thuật chấm nhấc phím), khoá nhật ký `<kỹ thuật>:<đoạn>`. Danh sách `kyThuat/index.ts`; component
+  `KyThuatBai.tsx` (thay `KyThuatGiat.tsx`); trang thầy hiện tab Kỹ thuật đánh khi thầy có kỹ thuật, nhiều kỹ thuật thì có nút chọn.
+- **`scripts/cat_doan.py`** dùng chung: gộp nốt nối (kể cả qua vạch ô), cắt [a, b) — nốt nối từ trước bỏ, ngân quá cắt ở b, nhóm tiếng.
+- **Linh Nhi** `scripts/chay_trai_linh_nhi.py` → `chayTraiLinhNhi.json`: khuôn "dẫn vào hợp âm sau" của `tools/chay_ngon_slow_rock.py`
+  (tay trái, phần hát, ≥ 3 nốt trước vạch ô 6/8 + nốt đáp ở vạch), chỉ *Lá Thư Trần Thế* (bài gốc điệu Slow Rock Lá thư; *Một Cõi* chép
+  hỏng nhịp). Mỗi đoạn hai ô 6/8 (6 phách), câu hát lại ở phiên sau giữ một → **7 đoạn**; ♩ 86 (như bài tập Lá thư tab Điệu), đếm vào 3
+  phách; thang tay trái 60 → 100 % → hai tay.
+- **Blues** `scripts/lick_be_blues.py` → `lickBeBlues.json`: câu lick của `phan_tich_blues_lick.py` ở *Rockhouse* có ≥ 4 cú, ≥ một nửa
+  là bè 3/6, không láy chồng → **6 câu** (Rockhouse chỉ có 6 câu đủ điều kiện — đề nghị cũ "8–10 câu" là đoán). Đoạn = từ phách có nốt đầu
+  câu tới hết phách có nốt cuối, ≥ 4 phách; ♩ 88; thang tay phải 60 → 100 % → hai tay.
+- Đánh giật Cà Pháo chuyển sang khung chung — khoá `giat-cp:<đoạn>` giữ nguyên; JSON thêm dòng ghi chú.
+
+**Chạy thử (Chrome, n = 1 mỗi việc):** Linh Nhi ô 99 bậc 1 (tay trái, 52 BPM) đúng 54/54, lệch 24 ms → Đạt · Blues ô 10–11 bậc 1 (tay phải,
+53 BPM) 64/64 → Đạt · Cà Pháo vẫn giật 34/34 → Đạt · nhật ký đúng khoá · trang Tuấn không có tab Kỹ thuật đánh.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test `kyThuat.test.ts` 8 (thay `giatCaPhao.test.ts` 5) · toàn suite **2 580 qua / 5 đỏ** (5 đỏ cũ) ·
+`vite build` qua.
+
+**Chưa đo:** mọi ngưỡng; tay chia theo bản máy chép (Lá Thư, Rockhouse) — có chỗ hai tay chạm cùng phím cách ¼ phách (Lá Thư ô 30, tay trái
+G3+Bb3+D4 rồi tay phải G3+Bb3+D4+G4); cái "đặc trưng" của câu chạy tay trái chưa so cùng cách với Cà Pháo, Blues.

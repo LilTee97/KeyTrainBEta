@@ -183,7 +183,8 @@
      "hand": "left",
      "velocity": 68
     }
-   ]
+   ],
+   "ghiChu": "5/15 cú giật · 1.88 cú/phách"
   },
   {
    "id": "o8",
@@ -293,7 +294,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "4/9 cú giật · 2.25 cú/phách"
   },
   {
    "id": "o24",
@@ -521,7 +523,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "9/20 cú giật · 2.5 cú/phách"
   },
   {
    "id": "o70",
@@ -648,7 +651,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "3/10 cú giật · 2.5 cú/phách · 1 nốt láy"
   },
   {
    "id": "o29",
@@ -771,7 +775,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "3/11 cú giật · 2.75 cú/phách"
   },
   {
    "id": "o43",
@@ -1040,7 +1045,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "14/23 cú giật · 2.88 cú/phách"
   },
   {
    "id": "o45",
@@ -1304,7 +1310,8 @@
      "giat": true,
      "ghiBeats": 0.5
     }
-   ]
+   ],
+   "ghiChu": "9/23 cú giật · 2.88 cú/phách"
   },
   {
    "id": "o79",
@@ -1565,7 +1572,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "11/23 cú giật · 2.88 cú/phách"
   },
   {
    "id": "o16",
@@ -1707,7 +1715,8 @@
      "hand": "right",
      "velocity": 76
     }
-   ]
+   ],
+   "ghiChu": "8/12 cú giật · 3.0 cú/phách"
   }
  ]
 }

@@ -7,7 +7,8 @@ import { TimedPractice } from '../reharm/playback/TimedPractice'
 import { taiBaiTap, type BaiTap, type VongBaiTap } from './baiTap'
 import { dungVong } from './dungVong'
 import { LoTrinh } from './KhungLoTrinh'
-import { KyThuatGiat } from './KyThuatGiat'
+import { kyThuatCua } from './kyThuat'
+import { KyThuatBai } from './KyThuatBai'
 import { tienDoBai } from './loTrinh'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
@@ -36,8 +37,8 @@ const laThu = (one: BaiTap) => one.giong.includes('thứ')
 /**
  * Trang một thầy — tab Điệu · Kỹ thuật đánh · Học cách soạn câu (`Reference/KE-HOACH-LUYEN-TAP.md` mục 4c).
  *
- * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E). Tab Kỹ thuật đánh mới có ở Cà Pháo: đánh giật (`KyThuatGiat`, GĐ 2,
- * 3/10/2026). Mỗi bài tab Điệu có LỘ TRÌNH 7 bậc (`LoTrinh.tsx`, GĐ 1
+ * Tab chưa có nội dung thì ẩn (người dùng 2/10/2026, câu E). Tab Kỹ thuật đánh (GĐ 2, 3/10/2026): kỹ thuật của thầy ở `kyThuat/` —
+ * Cà Pháo đánh giật, Linh Nhi câu chạy tay trái, Blues lick bè 3/6; Tuấn chưa có (không có sheet). Mỗi bài tab Điệu có LỘ TRÌNH 7 bậc (`LoTrinh.tsx`, GĐ 1
  * bước 5) và nút tập tự do trên vòng tập; vòng tự tạo cũng tập tự do. Vòng kiểm để dành cho bậc 7 — không mở cho tập tự do, tập
  * trước thì bậc 7 hết là bài lạ.
  */
@@ -88,8 +89,11 @@ export function TeacherPage({
   )
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
   const [tab, setTab] = useState<'dieu' | 'ky-thuat'>('dieu')
-  /* Tab Kỹ thuật đánh: hiện chỉ Cà Pháo có bài (đánh giật). Thầy khác ẩn — câu E. */
-  const coKyThuat = teacher.id === 'ca-phao'
+  /* Tab Kỹ thuật đánh: thầy không có kỹ thuật nào thì ẩn — câu E. */
+  const dsKyThuat = useMemo(() => kyThuatCua(teacher.id), [teacher.id])
+  const coKyThuat = dsKyThuat.length > 0
+  const [ktId, setKtId] = useState<string | null>(null)
+  const kt = dsKyThuat.find((one) => one.id === ktId) ?? dsKyThuat[0] ?? null
   // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
 
@@ -150,8 +154,27 @@ export function TeacherPage({
       </div>
 
       {tab === 'ky-thuat' ? (
-        daTaiLuot ? (
-          <KyThuatGiat luot={luot} onGhi={ghi} />
+        daTaiLuot && kt ? (
+          <>
+            {dsKyThuat.length > 1 && (
+              <div className="flex flex-wrap gap-1">
+                {dsKyThuat.map((one) => (
+                  <button
+                    key={one.id}
+                    type="button"
+                    onClick={() => {
+                      stopTimelineLoop()
+                      setKtId(one.id)
+                    }}
+                    className={nut(one.id === kt.id)}
+                  >
+                    {one.ten}
+                  </button>
+                ))}
+              </div>
+            )}
+            <KyThuatBai key={kt.id} kt={kt} luot={luot} onGhi={ghi} />
+          </>
         ) : (
           <p className="text-sm text-dim">Đang tải tiến độ…</p>
         )
