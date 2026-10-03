@@ -5487,3 +5487,11 @@ toàn suite **2 586 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
 
 **Chưa đo:** mọi ngưỡng láy (300 ms · 50 ms · 30 ms · 70/80 %); ♩ 66 của Biển Tình là số chọn; láy của Cà Pháo vào bậc nào chưa đo — nên chưa
 nói được "láy vào nốt blue" là riêng Blues hay không; lực nhấn nốt láy (nhẹ hơn nốt chính) chưa chấm.
+
+## Ghi — Tôn Hùng chọn A: giữ nguyên; sửa dòng cũ trong kế hoạch (3/10/2026)
+
+- Người dùng: *"3 chọn A"* — sau khi Claude giải thích A (giữ nguyên) và B (Tuấn thôi mượn câu Tôn Hùng, nghe lại, rồi xoá mức 2). **Giữ
+  nguyên:** Bolero Tuấn giọng thứ vẫn xoay câu dạo của Tôn Hùng (2/6 lượt đo 2/10), kho giang gộp vẫn có giang của anh, câu fill vẫn xếp
+  nốt đáp theo ao `'ton-hung'`. Không xoá mức 2 (113 dòng · 19 tệp nguồn, 77 dòng · 25 tệp test). Khuyến nghị cũ của Claude là B.
+- `KE-HOACH-LUYEN-TAP.md`: tình trạng đổi ngày 3/10; `KyThuatGiat.tsx` → `KyThuatBai.tsx`; dòng "Bước 3–6: chưa làm" → bước 3–5 xong,
+  bước 6 (tab Học cách soạn câu, GĐ 3) chưa làm.

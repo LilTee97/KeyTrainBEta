@@ -314,8 +314,9 @@ C vòng tập của Tuấn lấy từ **hòa âm Linh Nhi** (không theo đề x
 **Mức 2 — không xoá (2/10/2026):** đếm lại 113 dòng / 19 tệp nguồn + 77 dòng / 25 tệp test (87/18 là đếm thiếu). Tôn Hùng không
 phải mã chết: Bolero Tuấn giọng thứ lấy câu dạo của anh 2/6 lượt (đo trong app), giang Tuấn gộp ô giang ba thầy, nốt đáp câu fill
 theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người dùng quyết Tuấn có thôi mượn không (`SO-TAY.md`, cùng ngày).
+**Người dùng chọn A (3/10/2026): giữ nguyên** — Bolero Tuấn vẫn mượn câu dạo, giang tấu của Tôn Hùng; mã Tôn Hùng giữ, không xoá mức 2.
 
-**Tình trạng (2/10/2026):**
+**Tình trạng (3/10/2026):**
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
   `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Còn: test
@@ -334,7 +335,7 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   bài chưa qua bậc 6 — vai gia sư) → toàn bộ lộ trình 9 bài; bấm "Tập" mở thẳng đúng bài, đúng bậc. **GĐ 1 xong cả 8 bước.**
 - **GĐ 2 — tab Kỹ thuật đánh, bàn riêng từng thầy (3/10/2026).** Người dùng: "đánh giật" = giật ngón (staccato) · *"tôi chỉ muốn
   học đánh giật kiểu Cà Pháo, các thầy khác thì hãy tìm những kỹ thuật đặc trưng của họ"*.
-  - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatGiat.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
+  - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatBai.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
     (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Kèm ô tick nghe thử giật CHÁT 11 ở
     Bossa CP. Chi tiết `SO-TAY.md` cùng ngày.
   - **Linh Nhi — câu chạy tay trái dẫn vào hợp âm sau · Blues — câu lick bè 3/6: xong 3/10/2026** (người dùng: *"làm theo bạn đề
@@ -345,7 +346,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.
-- Bước 3–6: chưa làm.
+- Bước 3–5 (tab Điệu · trang Hôm nay · tab Kỹ thuật đánh): **xong** — GĐ 1 bước 5–8 và GĐ 2 ở trên. Bước 6 — tab Học cách soạn câu
+  (GĐ 3): **chưa làm**, bàn với người dùng trước khi dựng.
 
 ---
 
