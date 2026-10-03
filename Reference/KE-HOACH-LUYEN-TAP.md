@@ -319,8 +319,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 **Tình trạng (3/10/2026):**
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
-  `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Còn: test
-  báo khi điệu đổi so với bản duyệt (mục 1.6) — chưa làm. 2 bài **điệp khúc** (Có em chờ, Để em) sinh lại 2/10 rồi người dùng nghe
+  `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Test báo
+  khi điệu đổi so với bản duyệt (mục 1.6): **xong 3/10/2026** — ảnh chụp dữ liệu nhạc 9 điệu (`baiTapDuyet.test.ts`). 2 bài **điệp khúc** (Có em chờ, Để em) sinh lại 2/10 rồi người dùng nghe
   và **bỏ hẳn tiết tấu điệp** của hai nút ấy — còn 9 bài (`SO-TAY.md` "Bỏ tiết tấu đệm điệp khúc").
 - GĐ 1 bước 4 — đo độ khó → thứ tự: **xong 2/10/2026** (`tools/doKhoBaiTap.mjs`; bảng ở `SO-TAY.md`). Thứ tự trong trang (đo lại trên 9 bài): Cà
   Pháo Ballad cứ đi → Để em → Có em chờ → Bossa CP · Tuấn Bolero → Tango · Blues Twist → Slow Blues. Hai chỗ tay người không đánh được — người dùng duyệt đề xuất 2/10: quãng 10 tay trái Có em chờ điệp giữ nguyên, chấm bỏ
@@ -336,13 +336,13 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - **GĐ 2 — tab Kỹ thuật đánh, bàn riêng từng thầy (3/10/2026).** Người dùng: "đánh giật" = giật ngón (staccato) · *"tôi chỉ muốn
   học đánh giật kiểu Cà Pháo, các thầy khác thì hãy tìm những kỹ thuật đặc trưng của họ"*.
   - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatBai.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
-    (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Kèm ô tick nghe thử giật CHÁT 11 ở
-    Bossa CP. Chi tiết `SO-TAY.md` cùng ngày.
+    (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Ô tick nghe thử giật CHÁT 11 ở Bossa
+    CP: dựng rồi BỎ cùng ngày (người dùng: *"bỏ ô tick đó đi"*) — điệu về đúng bản đã duyệt. Chi tiết `SO-TAY.md` cùng ngày.
   - **Linh Nhi — câu chạy tay trái dẫn vào hợp âm sau · Blues — câu lick bè 3/6: xong 3/10/2026** (người dùng: *"làm theo bạn đề
     nghị"*): 7 đoạn từ *Lá Thư Trần Thế*, 6 câu từ *Rockhouse*, khung chung `kyThuat/kyThuat.ts`. **Mục (b) xong 3/10/2026** (người dùng: *"tiếp tục
     đi"*): chấm nốt láy (`chamLay`) · láy quãng 3 ngũ cung (Linh Nhi, 8 đoạn *Biển Tình*) · láy nốt blue (Blues, 4 đoạn Boogie + 5 câu
     Rockhouse). **Tuấn:** không có sheet — ẩn tab. Còn của GĐ 2: chờ người dùng tập thử bằng đàn, chỉnh ngưỡng theo số đo thật.
-  - Còn của GĐ 0: chấm tiếng nhấn (lực) · thử trên Android thật.
+  - GĐ 0: nhận xét lực nhấn **xong 3/10/2026** (`chamLuc` — chỉ nhận xét, không chặn qua bậc). Còn: thử trên Android thật.
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

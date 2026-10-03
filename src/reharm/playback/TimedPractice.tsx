@@ -24,11 +24,13 @@ import { PracticeStage } from './PracticeStage'
 import { buildGatedSteps, notesSoundingAt, type PracticeHand } from './noteGatedPlaybackEngine'
 import { usePracticeStore } from './practiceStore'
 import {
+  LUC_RO,
   MIN_TAPS,
   PASS_HIT_RATIO,
   PASS_MEDIAN_ABS_MS,
   chamHopAm,
   chamLay,
+  chamLuc,
   chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
@@ -39,6 +41,7 @@ import {
   scoreTimed,
   type ChamHopAm,
   type ChamLay,
+  type ChamLuc,
   type ChamNhac,
   type LatencyMeasure,
   type PlayedNote,
@@ -131,6 +134,8 @@ export interface TimedPracticeProps {
       hopAm: ChamHopAm | null,
       nhac: ChamNhac | null,
       lay: ChamLay | null,
+      /** Nhận xét lực nhấn — chỉ để ghi nhật ký, không tính vào đạt. */
+      luc: ChamLuc | null,
     ) => { dat: boolean; tomTat: string }
   }
 }
@@ -244,6 +249,7 @@ export function TimedPractice({
     bpm: number
     nhac: ChamNhac | null
     lay: ChamLay | null
+    luc: ChamLuc | null
     ketQua: { dat: boolean; tomTat: string } | null
   } | null>(null)
   const [nowSymbol, setNowSymbol] = useState('')
@@ -412,7 +418,8 @@ export function TimedPractice({
     const nhac = bacRef.current?.chamNhac
       ? chamNhacPhim(shifted, expected, presses.current, { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave })
       : null
-    setResult({ score, bpm: practiceBpm, nhac, lay, ketQua: bacRef.current?.onXong(score, hopAm, nhac, lay) ?? null })
+    const luc = chamLuc(shifted, expected, presses.current, opts)
+    setResult({ score, bpm: practiceBpm, nhac, lay, luc, ketQua: bacRef.current?.onXong(score, hopAm, nhac, lay, luc) ?? null })
     ghi('luot', {
       bai: title,
       tay: hand,
@@ -436,6 +443,7 @@ export function TimedPractice({
       ]),
       ...(nhac ? { nhac } : {}),
       ...(lay ? { lay: { tong: lay.layTong, dung: lay.layDung } } : {}),
+      ...(luc ? { luc } : {}),
       xuLyMs: handling.current.map(Math.round),
     })
   }, [phase, looping, expected, shifted, perBeat, practiceBpm, latencyMs, ignoreOctave, title, hand, tempo, countIn])
@@ -683,6 +691,17 @@ export function TimedPractice({
             )}
           </p>
           <p>Phím thừa hoặc sai: {score.extra.length}</p>
+          {result?.luc && (
+            <p>
+              Lực nhấn: tiếng nhấn <b>{result.luc.nhanTB}</b> · tiếng thường <b>{result.luc.thuongTB}</b> →{' '}
+              {result.luc.chenh >= LUC_RO
+                ? `nhấn rõ (+${result.luc.chenh})`
+                : result.luc.chenh > 0
+                  ? `nhấn chưa rõ (+${result.luc.chenh})`
+                  : `tiếng nhấn chưa mạnh hơn tiếng thường (${result.luc.chenh})`}{' '}
+              <span className="text-xs text-dim">— chỉ nhận xét, không tính vào đạt</span>
+            </p>
+          )}
           {result?.lay && (
             <p>
               Láy đúng: <b>{result.lay.layDung}</b>/{result.lay.layTong}

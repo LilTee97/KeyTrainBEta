@@ -133,7 +133,7 @@ import { cueStrike, tamBao } from './style/phraseCue'
 import { buildPhraseSection } from './style/phraseSection'
 import { noiCauVaoSolo } from './style/twistSolo'
 import { createPhraseTakeSequence } from './playback/phraseTakes'
-import { bossaFillsInGaps, giatKieuCaPhao, laBossaCP } from './style/styleLibrary/caPhaoBossa'
+import { bossaFillsInGaps, laBossaCP } from './style/styleLibrary/caPhaoBossa'
 import { planCpBalladBacking } from './style/cpBalladConnections'
 import { bossaBackingSteps, bossaSoloSteps, buildBossaRhythmOnly, buildBossaSoloSong } from './playback/bossaRhythmOnly'
 import {
@@ -613,8 +613,6 @@ export function ReharmHome() {
     (lượt 5 đã thử và bị bác 26/9: "ko hay như lượt 4").
   */
   const [cpBalladThu, setCpBalladThu] = useState(true)
-  /* Ô tick nghe thử Bossa CP — giật CHÁT 11 kiểu Cà Pháo (`giatKieuCaPhao`, 3/10/2026). Tắt sẵn, lưu theo bài. */
-  const [giatCP, setGiatCP] = useState(false)
   const [caPhaoFullSource, setCaPhaoFullSource] = useState('')
   const [caPhaoKeyboardRange, setCaPhaoKeyboardRange] = useState({ low: 36, high: 96 })
   const [lickyRuns, setLickyRuns] = useState(false)
@@ -1908,12 +1906,11 @@ export function ReharmHome() {
       ...sauNghi,
     ]
 
-    const styleDem = giatCP ? giatKieuCaPhao(style) : style
-    const rawBacking = renderPattern(twoHands, styleDem, {
+    const rawBacking = renderPattern(twoHands, style, {
       beatsPerChord: chordBeats,
       beatsEach,
       muteWindows: laBossaCP(style) || cpLick ? [] : muteWindows,
-      ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? styleDem.cell! } : {}),
+      ...(swaps ? { cellAt: (beat: number) => cellFor(beat) ?? style.cell! } : {}),
       ...(breaks.length > 0 ? { cellBreaks: breaks } : {}),
     })
     const plan = planCpBalladBacking(rawBacking, withPassing, {
@@ -1936,7 +1933,7 @@ export function ReharmHome() {
     if (!walk) return plan
 
     return { backing: [...played.filter((event) => event.hand !== 'left'), ...walk.events], protectedWindows: [] }
-  }, [twoHands, style, giatCP, chordBeats, withPassing, muteWindows, walkingOn, songSources, diepKhuc, cpLick, reharm.key, transitions, nghiDonRa])
+  }, [twoHands, style, chordBeats, withPassing, muteWindows, walkingOn, songSources, diepKhuc, cpLick, reharm.key, transitions, nghiDonRa])
   const accompaniment = accompanimentPlan.backing
 
   /*
@@ -2996,7 +2993,6 @@ export function ReharmHome() {
       caPhaoFull,
       caPhaoSoloMode,
       cpBalladThu,
-      giatCP,
       slowRockMotO,
       twistSinglePass,
       bluesLickSR,
@@ -3059,7 +3055,6 @@ export function ReharmHome() {
       caPhaoFull,
       caPhaoSoloMode,
       cpBalladThu,
-      giatCP,
       slowRockMotO,
       twistSinglePass,
       bluesLickSR,
@@ -3142,7 +3137,6 @@ export function ReharmHome() {
     setCaPhaoFull(saved.caPhaoFull ?? false)
     setCaPhaoSoloMode(saved.caPhaoSoloMode === 'simulate' ? 'simulate' : 'compose')
     setCpBalladThu(saved.cpBalladThu ?? true)
-    setGiatCP(saved.giatCP ?? false)
     setSlowRockMotO(saved.slowRockMotO ?? true)
     setBluesLickSR(saved.bluesLickSR ?? false)
     setBluesSoan6(saved.bluesSoan6 ?? false)
@@ -4976,12 +4970,6 @@ export function ReharmHome() {
                 <option value={2}>nửa ô nhịp</option>
                 <option value={1}>1 phách</option>
               </select>
-            </label>
-          )}
-          {laBossaCP(style) && (
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs text-dim">
-              <input type="checkbox" checked={giatCP} onChange={(event) => { stopPlay(); setGiatCP(event.target.checked) }} />
-              Bossa CP: giật CHÁT 11 kiểu Cà Pháo — nhấc ngón sớm, vang ¼ phách (nghe thử)
             </label>
           )}
           {laSlowRock && (

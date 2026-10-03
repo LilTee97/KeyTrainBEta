@@ -1,0 +1,2268 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > blue-sun 1`] = `
+{
+  "beatsPerMeasure": 6,
+  "bpm": 92,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 3,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "optional": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 1.2,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "optional": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 1.05,
+      },
+      {
+        "beat": 5,
+        "durationBeats": 1,
+        "requireNextChord": true,
+        "som": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": -1,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.75,
+      },
+    ],
+    "lengthBeats": 6,
+    "right": [],
+  },
+  "family": "blue-sun",
+  "feel": "straight-block-chord",
+  "fillBassChance": 0,
+  "fillBeats": 3,
+  "gridUnit": 0.5,
+  "id": "blue-sun",
+  "leftHandTop": 66,
+  "releaseRatio": 1,
+  "rightHandRegister": {
+    "high": 76,
+    "low": 55,
+    "rootFloor": 55,
+  },
+  "timeSignature": "6/8",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > bolero-tu-n-improv-bai-04-00001 1`] = `
+{
+  "beatsPerMeasure": 4,
+  "bpm": 100,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1,
+        "voice": "bottom",
+      },
+      {
+        "beat": 2,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.9,
+        "voice": "bottom",
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.7,
+        "voice": "bottom",
+      },
+    ],
+    "lengthBeats": 4,
+    "right": [
+      {
+        "beat": 0.5,
+        "durationBeats": 0.5,
+        "velocityScale": 0.7,
+        "voice": "chord",
+      },
+      {
+        "beat": 2.5,
+        "durationBeats": 0.5,
+        "velocityScale": 0.7,
+        "voice": "chord",
+      },
+      {
+        "beat": 3.5,
+        "durationBeats": 0.5,
+        "velocityScale": 0.7,
+        "voice": "chord",
+      },
+      {
+        "beat": 1.5,
+        "durationBeats": 0.5,
+        "velocityScale": 0.7,
+        "voice": "chord",
+      },
+    ],
+  },
+  "family": "bolero-tu-n",
+  "feel": "syncopated-3-3-2",
+  "id": "bolero-tu-n-improv-bai-04-00001",
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > ca-phao-ballad-co-em-cho 1`] = `
+{
+  "beatsPerMeasure": 4,
+  "bpm": 75,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 2.25,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 5,
+        "durationBeats": 0.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 5.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 6.25,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 6.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 6.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+    ],
+    "lengthBeats": 8,
+    "right": [
+      {
+        "beat": 0,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 1.25,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 4.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 4.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 5.25,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 5.75,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+    ],
+  },
+  "cpBalladChordLeads": true,
+  "cpSoloSong": "Co Em Cho",
+  "family": "ca-phao-ballad-co-em-cho",
+  "feel": "straight-block-chord",
+  "id": "ca-phao-ballad-co-em-cho",
+  "leftHandTop": 67,
+  "releaseRatio": 1,
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > ca-phao-ballad-cu-di 1`] = `
+{
+  "beatsPerMeasure": 4,
+  "bpm": 63,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1,
+      },
+      {
+        "beat": 0.25,
+        "durationBeats": 1.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 0.5,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 0.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.5,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 1,
+      },
+    ],
+    "lengthBeats": 2,
+    "right": [
+      {
+        "beat": 0,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 1.25,
+        "durationBeats": 0.75,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 1.5,
+        "durationBeats": 0.5,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.25,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+    ],
+  },
+  "cpDanSong": true,
+  "cpSoloOwnRhythm": true,
+  "cpSoloSheetTexture": true,
+  "cpSoloSong": "Anh Cu Di Di",
+  "family": "ca-phao-ballad-cu-di",
+  "feel": "straight-block-chord",
+  "giuTamTay": true,
+  "id": "ca-phao-ballad-cu-di",
+  "leftHandTop": 67,
+  "releaseRatio": 1,
+  "rightHandRegister": {
+    "high": 84,
+    "low": 48,
+    "rootFloor": 48,
+  },
+  "soloCell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1,
+      },
+      {
+        "beat": 0.25,
+        "durationBeats": 1.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 0.5,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 0.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.5,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 1,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1,
+      },
+      {
+        "beat": 2.25,
+        "durationBeats": 1.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 2.5,
+        "durationBeats": 0.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 2.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.5,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 1,
+      },
+      {
+        "beat": 3.25,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 3.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 3.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 1,
+      },
+    ],
+    "lengthBeats": 4,
+    "right": [],
+  },
+  "tayTraiLenCao": true,
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > ca-phao-ballad-de-em-roi-xa 1`] = `
+{
+  "autoFills": false,
+  "beatsPerMeasure": 4,
+  "bpm": 85,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 1.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "optional": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 2.5,
+        "danVao": true,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 3,
+        "danVao": true,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 3.5,
+        "danVao": true,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 4.25,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 4.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 5.25,
+        "danVao": true,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 5.75,
+        "danVao": true,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 6.25,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 6.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 6.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7.25,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 14,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+    ],
+    "lengthBeats": 8,
+    "right": [
+      {
+        "beat": 0,
+        "durationBeats": 1.75,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 0,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.75,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 1.75,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 2.25,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 2.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 3.25,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 3.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 4.5,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 4.75,
+        "durationBeats": 0.25,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 5.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 6,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fallbackInterval": 5,
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 3,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+    ],
+  },
+  "cpSoloOwnRhythm": true,
+  "cpSoloSheetTexture": true,
+  "cpSoloSong": "Để Em Rời Xa",
+  "family": "ca-phao-ballad-de-em-roi-xa",
+  "feel": "straight-block-chord",
+  "id": "ca-phao-ballad-de-em-roi-xa",
+  "leftHandTop": 59,
+  "releaseRatio": 1,
+  "rightHandRegister": {
+    "high": 74,
+    "low": 60,
+    "rootFloor": 55,
+  },
+  "soloCell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 0.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 2.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 3.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 4.5,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 6.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 7,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+    ],
+    "lengthBeats": 8,
+    "right": [],
+  },
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > ca-phao-bossa-improved 1`] = `
+{
+  "beatsPerMeasure": 4,
+  "bpm": 110,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+      {
+        "beat": 1.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": -1,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.75,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 2.5,
+        "durationBeats": 1.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.5,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 5.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.65,
+      },
+      {
+        "beat": 4.5,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.45,
+      },
+      {
+        "beat": 6,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.45,
+      },
+      {
+        "beat": 7.5,
+        "durationBeats": 0.5,
+        "requireNextChord": true,
+        "som": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 1,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.45,
+      },
+    ],
+    "lengthBeats": 8,
+    "right": [
+      {
+        "beat": 1,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+          {
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.85,
+      },
+      {
+        "beat": 2.5,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+          {
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.72,
+      },
+      {
+        "beat": 3.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+          {
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 4.5,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.6,
+      },
+      {
+        "beat": 6,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.6,
+      },
+      {
+        "beat": 7,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "toneIndex": 0,
+          },
+          {
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.9,
+      },
+    ],
+  },
+  "family": "ca-phao-bossa-improved",
+  "feel": "syncopated-3-3-2",
+  "id": "ca-phao-bossa-improved",
+  "leftHandTop": 67,
+  "releaseRatio": 1,
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > slow-rock-la-thu-hai-tay 1`] = `
+{
+  "beatsPerMeasure": 6,
+  "bpm": 86,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 6,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.84,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.52,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.6,
+      },
+      {
+        "beat": 6,
+        "durationBeats": 6,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 7,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.52,
+      },
+      {
+        "beat": 8,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.6,
+      },
+    ],
+    "lengthBeats": 12,
+    "right": [
+      {
+        "beat": 3,
+        "durationBeats": 3,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.75,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 2,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.56,
+      },
+      {
+        "beat": 5,
+        "durationBeats": 1,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.58,
+      },
+      {
+        "beat": 9,
+        "durationBeats": 3,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 0.72,
+      },
+      {
+        "beat": 10,
+        "durationBeats": 2,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+        "velocityScale": 0.55,
+      },
+      {
+        "beat": 11,
+        "durationBeats": 1,
+        "raiNoi": true,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.5,
+      },
+    ],
+  },
+  "family": "slow-rock-la-thu-hai-tay",
+  "feel": "straight-block-chord",
+  "fillCell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.96,
+      },
+      {
+        "beat": 1,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.79,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.86,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 1,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.96,
+      },
+      {
+        "beat": 4,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+        "velocityScale": 1.05,
+      },
+      {
+        "beat": 5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1.14,
+      },
+    ],
+    "lengthBeats": 6,
+    "right": [
+      {
+        "beat": 1,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.84,
+      },
+      {
+        "beat": 1.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.8,
+      },
+      {
+        "beat": 2,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.89,
+      },
+      {
+        "beat": 3,
+        "durationBeats": 2,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1.13,
+      },
+    ],
+  },
+  "gridUnit": 0.5,
+  "id": "slow-rock-la-thu-hai-tay",
+  "leftHandTop": 67,
+  "raiHopAmChiaDoi": true,
+  "releaseRatio": 1,
+  "rightHandRegister": {
+    "high": 79,
+    "low": 48,
+    "rootFloor": 48,
+  },
+  "timeSignature": "6/8",
+  "variant": 3,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > tango-tu-n-improv-bai-04-00004 1`] = `
+{
+  "beatsPerMeasure": 4,
+  "bpm": 100,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 0.7,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 1,
+        "voice": "bottom",
+      },
+      {
+        "beat": 3.5,
+        "durationBeats": 0.5,
+        "tones": [
+          {
+            "fromRoot": true,
+            "toneIndex": 0,
+          },
+          {
+            "fromRoot": true,
+            "semitones": 12,
+            "toneIndex": 0,
+          },
+        ],
+        "velocityScale": 0.7,
+        "voice": "bottom",
+      },
+    ],
+    "lengthBeats": 4,
+    "right": [
+      {
+        "beat": 0,
+        "durationBeats": 0.7,
+        "velocityScale": 1,
+        "voice": "chord",
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.7,
+        "velocityScale": 0.45,
+        "voice": "chord",
+      },
+      {
+        "beat": 2,
+        "durationBeats": 0.7,
+        "velocityScale": 0.45,
+        "voice": "chord",
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.7,
+        "velocityScale": 0.45,
+        "voice": "chord",
+      },
+    ],
+  },
+  "family": "tango-tu-n",
+  "feel": "straight-block-chord",
+  "id": "tango-tu-n-improv-bai-04-00004",
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;
+
+exports[`bài tập đã duyệt — điệu chưa bị sửa (mục 1.6) > twist 1`] = `
+{
+  "autoFills": false,
+  "beatsPerMeasure": 4,
+  "bpm": 140,
+  "cell": {
+    "left": [
+      {
+        "beat": 0,
+        "durationBeats": 0.6666666666666666,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+      },
+      {
+        "beat": 0.6666666666666666,
+        "durationBeats": 0.3333333333333333,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+      },
+      {
+        "beat": 1,
+        "durationBeats": 0.6666666666666666,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": -1,
+            "toneIndex": 1,
+          },
+        ],
+      },
+      {
+        "beat": 1.6666666666666665,
+        "durationBeats": 0.3333333333333333,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 1,
+          },
+        ],
+      },
+      {
+        "beat": 2,
+        "durationBeats": 0.6666666666666666,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+      },
+      {
+        "beat": 2.6666666666666665,
+        "durationBeats": 0.3333333333333333,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 0,
+          },
+        ],
+      },
+      {
+        "beat": 3,
+        "durationBeats": 0.6666666666666666,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 9,
+            "toneIndex": 0,
+          },
+        ],
+      },
+      {
+        "beat": 3.6666666666666665,
+        "durationBeats": 0.3333333333333333,
+        "tones": [
+          {
+            "fromRoot": true,
+            "semitones": 0,
+            "toneIndex": 2,
+          },
+        ],
+      },
+    ],
+    "lengthBeats": 4,
+    "right": [
+      {
+        "beat": 0,
+        "durationBeats": 1,
+      },
+      {
+        "beat": 2.6666666666666665,
+        "durationBeats": 0.3333333333333333,
+      },
+    ],
+  },
+  "family": "twist",
+  "feel": "swing",
+  "id": "twist",
+  "leftHandTop": 60,
+  "releaseRatio": 1,
+  "soloMaxStrikes": 8,
+  "timeSignature": "4/4",
+  "variant": 1,
+}
+`;

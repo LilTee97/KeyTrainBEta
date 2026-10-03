@@ -224,7 +224,7 @@ export function LoTrinh({
             boQuaQuangTam: bac.kiem,
             anNotRoi: bac.kiem,
             theoHopAm: bac.kiem,
-            onXong: (score, hopAm) => {
+            onXong: (score, hopAm, _nhac, _lay, luc) => {
               const ketQua = chamTimed(bac, score, hopAm)
               ghi(ketQua.dat, {
                 tong: score.total,
@@ -234,6 +234,7 @@ export function LoTrinh({
                 bpm: Math.round((vong.bpm * bac.tempo) / 100),
                 ...(bac.kiem ? { dich } : {}),
                 ...(hopAm ? { bassTong: hopAm.bassTong, bassDung: hopAm.bassDung, notSai: hopAm.notSai } : {}),
+                ...(luc ? { lucNhan: luc.nhanTB, lucThuong: luc.thuongTB } : {}),
               })
               return ketQua
             },

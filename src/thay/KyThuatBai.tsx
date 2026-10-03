@@ -175,7 +175,7 @@ function BacDoan({
           theoHopAm: false,
           chamNhac: kt.chamNhac,
           chamLay: kt.chamLay,
-          onXong: (score, _hopAm, nhac, lay) => {
+          onXong: (score, _hopAm, nhac, lay, luc) => {
             const ketQua = chamKyThuat(bac, score, nhac, lay)
             onGhi({
               timestamp: Date.now(),
@@ -189,6 +189,7 @@ function BacDoan({
                 lechMs: score.medianAbsMs ?? -1,
                 ...(nhac ?? {}),
                 ...(lay ? { layTong: lay.layTong, layDung: lay.layDung } : {}),
+                ...(luc ? { lucNhan: luc.nhanTB, lucThuong: luc.thuongTB } : {}),
               },
             })
             return ketQua

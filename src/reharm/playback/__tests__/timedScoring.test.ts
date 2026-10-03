@@ -3,6 +3,7 @@ import type { TimelineEvent } from '../../style/types'
 import {
   chamHopAm,
   chamLay,
+  chamLuc,
   chamNhacPhim,
   expectedNotesOf,
   gopLopCaoDo,
@@ -236,5 +237,27 @@ describe('chamLay — chấm nốt láy (GĐ 2 mục b, 3/10/2026)', () => {
     expect(chamLay(events, expected, [bam(74, 1), bam(71, 1.12)], opts).layDung).toBe(0)
     expect(chamLay(events, expected, [bam(71, 0.3), bam(74, 1)], opts).layDung).toBe(0)
     expect(chamLay(events, expected, [bam(63, 3)], opts).layDung).toBe(0)
+  })
+})
+
+describe('chamLuc — nhận xét lực nhấn (GĐ 0, chỉ nhận xét)', () => {
+  const events: TimelineEvent[] = [
+    { notes: [48], startBeat: 0, durationBeats: 1, hand: 'left', velocity: 110 },
+    { notes: [64, 67], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 80 },
+    { notes: [48], startBeat: 2, durationBeats: 1, hand: 'left', velocity: 110 },
+    { notes: [64, 67], startBeat: 3, durationBeats: 1, hand: 'right', velocity: 80 },
+  ]
+  const expected = expectedNotesOf(events, 'both')
+  const bam = (note: number, beat: number, velocity: number): PlayedNote => ({ note, beat, velocity })
+
+  it('so lực người tập bấm ở tiếng nhấn với tiếng thường, chỉ trên nốt bấm trúng', () => {
+    const played = [bam(48, 0, 100), bam(64, 1, 70), bam(67, 1, 72), bam(48, 2, 96), bam(64, 3, 68), bam(67, 3, 70), bam(61, 3.5, 127)]
+    expect(chamLuc(events, expected, played, opts)).toEqual({ nhanTB: 98, thuongTB: 70, chenh: 28, nhan: 2, thuong: 4 })
+  })
+
+  it('bài không có chênh lực, hay không bấm trúng tiếng nhấn nào, thì không nhận xét', () => {
+    const phang = events.map((event) => ({ ...event, velocity: 90 }))
+    expect(chamLuc(phang, expectedNotesOf(phang, 'both'), [bam(48, 0, 100)], opts)).toBeNull()
+    expect(chamLuc(events, expected, [bam(64, 1, 70), bam(67, 1, 72)], opts)).toBeNull()
   })
 })

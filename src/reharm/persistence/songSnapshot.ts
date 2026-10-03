@@ -57,8 +57,6 @@ export interface SongSnapshot {
   caPhaoSoloMode?: 'compose' | 'simulate'
   /** Ô tick solo lượt 4 (điệu khai `cpSoloOwnRhythm`). Bài cũ không có trường này → bật (người dùng đã duyệt 26/9/2026). */
   cpBalladThu?: boolean
-  /** Bossa CP: ô tick nghe thử "giật CHÁT 11 kiểu Cà Pháo" (`giatKieuCaPhao`). Bài cũ → tắt. */
-  giatCP?: boolean
   /** Slow rock: mỗi hợp âm một ô 6 phách rồi chuyển (không phải 2 lần 6 phách). Bài cũ → bật (mặc định từ 30/9/2026; trước: tắt). */
   slowRockMotO?: boolean
   /** Slow rock: chêm lick Blues (chép từ Rockhouse) ở chỗ fill — ô tick nghe thử. Bài cũ → tắt. */

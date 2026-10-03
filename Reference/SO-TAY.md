@@ -5495,3 +5495,26 @@ nói được "láy vào nốt blue" là riêng Blues hay không; lực nhấn n
   nốt đáp theo ao `'ton-hung'`. Không xoá mức 2 (113 dòng · 19 tệp nguồn, 77 dòng · 25 tệp test). Khuyến nghị cũ của Claude là B.
 - `KE-HOACH-LUYEN-TAP.md`: tình trạng đổi ngày 3/10; `KyThuatGiat.tsx` → `KyThuatBai.tsx`; dòng "Bước 3–6: chưa làm" → bước 3–5 xong,
   bước 6 (tab Học cách soạn câu, GĐ 3) chưa làm.
+
+## Bước — Bỏ ô tick giật CHÁT 11 Bossa CP · mục 1.6 báo điệu đổi · GĐ 0 nhận xét lực nhấn (3/10/2026)
+
+**Người dùng:** *"bỏ ô tick đó đi"* (sau khi Claude nói thẳng ô tick không cần cho việc học đánh giật, bật lên đổi một tiếng của điệu đã
+duyệt) · *"tiếp tục làm theo lộ trình"*.
+
+- **Bỏ ô tick "giật CHÁT 11"**: gỡ `giatKieuCaPhao`, cờ `giatCP` (ReharmHome, songSnapshot), ô tick, test. `ReharmHome.tsx`,
+  `songSnapshot.ts`, `caPhaoBossa.ts` giống từng byte bản trước khi thêm ô tick (`git diff b71167d^`). Bài cũ có trường `giatCP` trong bộ
+  nhớ thì bị bỏ qua, vô hại.
+- **Mục 1.6 — báo khi điệu của bài đã duyệt bị sửa** (`src/thay/__tests__/baiTapDuyet.test.ts`): ảnh chụp vitest phần NHẠC của 9 điệu
+  (ô đệm, nhịp độ, nhịp, cờ — bỏ chữ mô tả). Đỏ → nghe lại, `node tools/sinhBaiTap.mjs --ghi-de`, người dùng duyệt lại, rồi
+  `npx vitest run -u`. Thử phá: đổi CHÁT 11 của Bossa CP .5 → .25 thì test đỏ đúng điệu ấy, chỉ rõ dòng đổi. Không chọn "dựng lại trong
+  Chrome rồi so": tay phải Slow Blues mỗi lần dựng một bản khác. Trần: sửa MÁY DỰNG (renderPattern, voicing, bộ soạn) không bắt được.
+- **GĐ 0 — nhận xét lực nhấn** `chamLuc` (`timedScoring.ts`): so TƯƠNG ĐỐI lực người tập bấm ở tiếng nhấn với tiếng thường của chính lượt
+  ấy (tiếng nhấn = lực ghi ≥ trung điểm, khi bài chênh lực ≥ 8); "nhấn rõ" khi chênh ≥ 8 — đoán, chưa đo dải lực đàn người dùng. Hiện
+  dưới kết quả mọi lượt theo nhịp: *"chỉ nhận xét, không tính vào đạt"* (câu 5 chưa trả lời → mặc định của Claude). Ghi `LuyenTap.json`
+  và `soDo` của nhật ký lộ trình (`lucNhan`, `lucThuong`) — để sau này có số đo lực thật mà chốt.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test: ảnh chụp 9, lực nhấn 2 (bỏ 2 test của ô tick) · toàn suite **2 595 qua / 5 đỏ** (5 đỏ cũ) ·
+`vite build` qua.
+
+**Sơ suất đã sửa trong lúc làm:** thử phá xong trả tệp bằng `git checkout` — kéo lại cả hàm ô tick vừa gỡ (phần gỡ chưa commit); lấy lại
+từ bản sao lưu chép trước khi thử, kiểm `git diff b71167d^` = 0.

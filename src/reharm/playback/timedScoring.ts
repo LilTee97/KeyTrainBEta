@@ -413,6 +413,52 @@ export function chamLay(
   return cham
 }
 
+/**
+ * NHẬN XÉT LỰC NHẤN (GĐ 0 mục 2). Người dùng chưa trả lời câu 5 → mặc định của Claude: chỉ nhận xét, KHÔNG chặn qua bậc, tới khi có
+ * số đo lực thật. So TƯƠNG ĐỐI tiếng nhấn với tiếng thường của chính lượt ấy — mỗi đàn một đường cong lực nên không chấm lực tuyệt đối.
+ * Tiếng nhấn = nốt có lực ghi trong bài ≥ trung điểm (thấp nhất + cao nhất) / 2, khi bài chênh lực ít nhất `LUC_CO_NHAN` (dưới đó bài không
+ * có nhấn để so → `null`). Chỉ dùng nốt bấm trúng. "Nhấn rõ" khi chênh ≥ `LUC_RO` — đoán, chưa đo dải lực đàn người dùng.
+ */
+export const LUC_CO_NHAN = 8
+export const LUC_RO = 8
+
+export interface ChamLuc {
+  /** Lực trung bình (0–127) người tập bấm ở tiếng nhấn · ở tiếng thường. */
+  nhanTB: number
+  thuongTB: number
+  chenh: number
+  nhan: number
+  thuong: number
+}
+
+export function chamLuc(
+  events: readonly TimelineEvent[],
+  expected: readonly ExpectedNote[],
+  played: readonly PlayedNote[],
+  options: TimedScoreOptions,
+): ChamLuc | null {
+  const khoa = (hand: string, beat: number, note: number) => `${hand}@${Math.round(beat * 1000)}:${note}`
+  const lucGhi = new Map<string, number>()
+  for (const event of events) {
+    if (event.grace) continue
+    for (const note of event.notes) lucGhi.set(khoa(event.hand, event.startBeat, note), event.velocity)
+  }
+  const ghi = [...lucGhi.values()]
+  if (ghi.length === 0 || Math.max(...ghi) - Math.min(...ghi) < LUC_CO_NHAN) return null
+  const giua = (Math.max(...ghi) + Math.min(...ghi)) / 2
+  const nhan: number[] = []
+  const thuong: number[] = []
+  for (const [wantIndex, { got }] of ghepCap(expected, played, options)) {
+    const want = expected[wantIndex]!
+    const luc = lucGhi.get(khoa(want.hand, want.beat, want.note))
+    if (luc === undefined) continue
+    ;(luc >= giua ? nhan : thuong).push(played[got]!.velocity)
+  }
+  if (nhan.length === 0 || thuong.length === 0) return null
+  const tb = (xs: readonly number[]) => Math.round(xs.reduce((sum, x) => sum + x, 0) / xs.length)
+  return { nhanTB: tb(nhan), thuongTB: tb(thuong), chenh: tb(nhan) - tb(thuong), nhan: nhan.length, thuong: thuong.length }
+}
+
 /** Đạt ngưỡng tạm chưa. */
 export function passes(score: TimedScore): boolean {
   return (
