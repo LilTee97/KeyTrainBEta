@@ -39,7 +39,14 @@ const laThu = (one: BaiTap) => one.giong.includes('thứ')
  * bước 5) và nút tập tự do trên vòng tập; vòng tự tạo cũng tập tự do. Vòng kiểm để dành cho bậc 7 — không mở cho tập tự do, tập
  * trước thì bậc 7 hết là bài lạ.
  */
-export function TeacherPage({ teacher }: { teacher: Teacher }) {
+export function TeacherPage({
+  teacher,
+  moBai = null,
+}: {
+  teacher: Teacher
+  /** Mở từ trang Hôm nay: lộ trình của bài này, ở bậc này (bỏ trống = bậc app tự chọn). */
+  moBai?: { styleId: string; bac?: number } | null
+}) {
   const [bai, setBai] = useState<BaiTap[] | null>(null)
   useEffect(() => {
     let alive = true
@@ -73,7 +80,10 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
     void ghiLuotTap(moi).catch(() => {})
   }
 
-  const [che, setChe] = useState<Che | null>(null)
+  const moTuNgoai = moBai && teacher.styleIds.includes(moBai.styleId) ? moBai : null
+  const [che, setChe] = useState<Che | null>(() =>
+    moTuNgoai ? { kieu: 'lo-trinh', styleId: moTuNgoai.styleId } : null,
+  )
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
   // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
@@ -171,7 +181,14 @@ export function TeacherPage({ teacher }: { teacher: Teacher }) {
 
       {baiLoTrinh &&
         (daTaiLuot ? (
-          <LoTrinh key={baiLoTrinh.styleId} bai={baiLoTrinh} luot={luot} onGhi={ghi} />
+          <LoTrinh
+            key={baiLoTrinh.styleId}
+            bai={baiLoTrinh}
+            luot={luot}
+            onGhi={ghi}
+            bacMo={moTuNgoai?.styleId === baiLoTrinh.styleId ? moTuNgoai.bac : undefined}
+            cuonToi={moTuNgoai?.styleId === baiLoTrinh.styleId}
+          />
         ) : (
           <p className="text-sm text-dim">Đang tải tiến độ…</p>
         ))}

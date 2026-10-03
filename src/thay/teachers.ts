@@ -33,3 +33,20 @@ export const TEACHERS: readonly Teacher[] = [
   { id: 'tuan', label: 'Tuấn', styleIds: ['bolero-tu-n-improv-bai-04-00001', 'tango-tu-n-improv-bai-04-00004'] },
   { id: 'blues', label: 'Blues', styleIds: ['twist', 'blue-sun'] },
 ]
+
+/**
+ * Thứ tự tập CẢ APP, dễ trước — đo độ khó 2/10/2026 trên 9 bài (`tools/doKhoBaiTap.mjs`, `SO-TAY.md`): Slow Rock 13,0 · Bolero
+ * 21,5 · Ballad cứ đi 23,5 · Tango 24,5 · Twist 31,0 · Để em 35,0 · Có em chờ 36,5 · Bossa 37,5 · Slow Blues 47,5. Trang Hôm nay mở
+ * bài mới theo thứ tự này.
+ */
+export const THU_TU_TAP: readonly string[] = [
+  'slow-rock-la-thu-hai-tay',
+  'bolero-tu-n-improv-bai-04-00001',
+  'ca-phao-ballad-cu-di',
+  'tango-tu-n-improv-bai-04-00004',
+  'twist',
+  'ca-phao-ballad-de-em-roi-xa',
+  'ca-phao-ballad-co-em-cho',
+  'ca-phao-bossa-improved',
+  'blue-sun',
+]

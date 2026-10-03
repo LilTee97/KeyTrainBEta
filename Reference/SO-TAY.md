@@ -5347,3 +5347,33 @@ Lần chạy trước khi có game: 2 550 qua / 5 đỏ cũ.
 **Kiểm:** `tsc` sạch · eslint 0 lỗi mới · toàn suite **2 560 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
 
 **Chưa đo:** ngưỡng bậc 7 chưa đo trên tay người dùng; bộ chấm bậc 7 mới thử bằng phím giả theo đồng hồ, chưa thử với đàn MIDI thật.
+
+## Bước — GĐ 1 bước 8: trang Hôm nay — lượt nguội trước, rồi đang học, rồi bài mới (3/10/2026)
+
+**Người dùng:** *"tiếp tục làm theo lộ trình"*. Bước 8 trong kế hoạch: buổi tập hôm nay gom mọi thầy, lượt nguội đi trước bậc đang học
+(mục 1.7); người dùng đã chọn trang Hôm nay làm trang mở đầu (câu A, 2/10).
+
+- **`src/thay/homNay.ts`** — `keHoachHomNay(luot, homNay)`, hàm thuần đọc nhật ký:
+  - *Lượt nguội* — bài có `bacNguoi` (xác nhận Đã thuộc / kiểm lại đến hạn), xếp theo thứ tự tập; và lượt nguội đã làm hôm nay.
+  - *Đang học* — bài đã có lượt tập, chưa qua hết 7 bậc → bậc kế tiếp; bài còn lượt nguội thì ghi "làm lượt nguội trước".
+  - *Bài mới* — bài dễ nhất chưa tập, chỉ khi số bài đang học CHƯA QUA BẬC 6 dưới `HOC_TOI_DA` = 2 (Claude trong vai gia sư, chưa
+    đo: học dồn nhiều bài một lúc thì bài nào cũng chậm thuộc). Qua bậc 6 rồi thì bài ấy không tính vào giới hạn.
+  - `tenBai` = tên nút trên bảng chọn (`familyName`: "Bolero Tuấn"), không phải tên video nguồn.
+- **`teachers.ts`** — `THU_TU_TAP`: thứ tự tập cả app theo đo độ khó 9 bài (Slow Rock → Bolero → Ballad cứ đi → Tango → Twist → Để
+  em → Có em chờ → Bossa → Slow Blues). Test: đủ mọi bài, và thứ tự trong từng trang khớp thứ tự cả app.
+- **`TodayPage`** — bốn khung: 1. Lượt nguội — làm trước tiên · 2. Đang học · 3. Bài mới · Toàn bộ lộ trình 9 bài (tiến độ x/7 · ★).
+  Bấm "Tập" → `AppShell` nhớ `moBai` → trang thầy mở lộ trình đúng bài, đúng bậc (`bacMo`), cuộn tới khung lộ trình (`cuonToi`).
+  Bấm hàng trang thì bỏ `moBai`.
+- Test `homNay.test.ts` (5): chưa tập gì → mở bài dễ nhất; qua bậc hôm qua → lượt nguội xác nhận + đang học bậc kế + còn chỗ mở bài
+  mới; đủ 2 bài chưa qua bậc 6 → chưa mở bài mới, qua bậc 6 thì không tính; lượt nguội đã làm sang danh sách đã làm; tên bài.
+
+**Chạy thử (Chrome, n = 1 mỗi việc):** chưa tập gì → "Bài mới: Slow Rock Lá thư hai tay (Linh Nhi) — Bắt đầu bậc 1". Gieo nhật ký
+(Twist qua bậc 1–2 hôm qua; Ballad cứ đi thuộc bậc 1, đến hạn) → lượt nguội Ballad cứ đi bậc 1 kiểm lại (hộp 1/5) + Twist bậc 2 xác
+nhận; đang học 2 bài "làm lượt nguội trước"; bài mới: "Đang học 2 bài chưa tới tempo thật …". Bấm "Tập" ở Twist → trang Blues, bậc 2,
+khung lộ trình ở đầu màn hình. Điện thoại 390 px không tràn.
+
+**Ghi chú môi trường:** máy chủ dev của người dùng (cổng 5173) đã tắt từ hôm qua; Claude bật tạm một máy chủ để thử rồi tắt.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite **2 566 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+**GĐ 1 (mục Điệu) xong cả 8 bước.** Chưa đo: mọi ngưỡng và luật gia sư (bậc, lượt nguội, giới hạn 2 bài) chưa đo trên tay người dùng.

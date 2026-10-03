@@ -54,6 +54,12 @@ const savedTab = (): TabId => {
 
 export function AppShell() {
   const [page, setPage] = useState<PageId>('hom-nay')
+  /* Trang Hôm nay bấm "Tập" → mở trang thầy đúng bài, đúng bậc. Bấm hàng trang thì bỏ. */
+  const [moBai, setMoBai] = useState<{ styleId: string; bac?: number } | null>(null)
+  const moTrang = (id: PageId) => {
+    setPage(id)
+    setMoBai(null)
+  }
   const [tab, setTab] = useState<TabId>(savedTab)
   const openTab = (id: TabId) => {
     setTab(id)
@@ -94,7 +100,7 @@ export function AppShell() {
           <button
             key={id}
             type="button"
-            onClick={() => setPage(id)}
+            onClick={() => moTrang(id)}
             className={`shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
               page === id ? 'bg-amber-key text-ink' : 'bg-white/7 text-dim hover:bg-white/12'
             }`}
@@ -135,8 +141,15 @@ export function AppShell() {
         <ReharmHome />
       </div>
 
-      {page === 'hom-nay' && <TodayPage onOpen={setPage} />}
-      {teacher && <TeacherPage key={teacher.id} teacher={teacher} />}
+      {page === 'hom-nay' && (
+        <TodayPage
+          onTap={(thay, styleId, bac) => {
+            setMoBai({ styleId, bac })
+            setPage(thay)
+          }}
+        />
+      )}
+      {teacher && <TeacherPage key={teacher.id} teacher={teacher} moBai={moBai} />}
 
       {page === 'tai-hoa-am' && (
         <>

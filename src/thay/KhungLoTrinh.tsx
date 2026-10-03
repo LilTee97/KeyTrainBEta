@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { stopTimelineLoop } from '../shared/audio/audioEngine'
 import { dayKeyOf, type LuotTap } from '../shared/persistence/db'
 import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
@@ -41,16 +41,26 @@ export function LoTrinh({
   bai,
   luot,
   onGhi,
+  bacMo,
+  cuonToi = false,
 }: {
   bai: BaiTap
   luot: readonly LuotTap[]
   onGhi: (luot: Omit<LuotTap, 'id' | 'day'>) => void
+  /** Mở sẵn bậc này (từ trang Hôm nay). */
+  bacMo?: number
+  /** Cuộn tới khung lộ trình khi mở (từ trang Hôm nay — danh sách bài nằm trên). */
+  cuonToi?: boolean
 }) {
   const homNay = dayKeyOf(new Date())
   const tienDo = tienDoBai(luot, bai.styleId, homNay)
   const trangThai = tienDo.trangThai
   // Ngày mới: mở sẵn bậc cần làm lượt nguội (xác nhận Đã thuộc / kiểm lại) — tập bậc khác trước là mất nguội.
-  const [chon, setChon] = useState(() => tienDo.bacNguoi ?? bacKeTiep(trangThai))
+  const [chon, setChon] = useState(() => bacMo ?? tienDo.bacNguoi ?? bacKeTiep(trangThai))
+  const goc = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (cuonToi) goc.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [cuonToi])
   const bac = BAC[chon - 1]!
   const thu = laThu(bai)
   const kiem = bac.cheDo === 'timed' && bac.kiem
@@ -72,7 +82,7 @@ export function LoTrinh({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={goc} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-xs text-dim">Lộ trình:</span>
         <span className="font-semibold text-amber-key">{bai.ten}</span>
