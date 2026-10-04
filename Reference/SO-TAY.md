@@ -5659,3 +5659,16 @@ do (bước 3); bấm nghe còn dùng thế bấm mộc. **Chưa đo:** ba mốc
   bàn phím (Nhớ vòng, Chọn nốt solo, Tập solo) quên gọi. Gắn vào cả ba — mỗi lúc chỉ một phần mở, không kêu đôi.
 - Kiểm (Chrome headless, đếm nguồn âm trình duyệt tạo ra khi bấm phím ảo, n = 1 mỗi phần): đối chứng tab Kỹ thuật đánh 2 phím → 2 nguồn ·
   Tập solo · Nhớ vòng · Chọn nốt solo mỗi phần 2 → 2. Thử phá: gỡ `useLiveSound` khỏi Tập solo → 0 nguồn (im) — đúng nguyên nhân.
+
+## Ghi — GĐ 3: thêm 5 ý người dùng sau bản thử vào kế hoạch (4/10/2026)
+
+**Người dùng** (sau khi dùng thử bản Linh Nhi): ý 1 phím không ra tiếng — *"còn ý 1 làm ngay"* (đã sửa, mục trên); ý 2–6 — *"hãy tổng kết
+những ý từ 2 đến 6 vào lộ trình dựng GĐ 3. Nếu ý nào có đang trùng với dự định bạn đang làm thì hãy làm như kế hoạch của bạn"*.
+
+- `KE-HOACH-LUYEN-TAP.md` mục GĐ 3: tab thành 5 phần (hợp âm theo bậc → nhớ vòng và chuyển hợp âm → chọn nốt solo → gam và hợp âm rải →
+  tập solo); mục mới "Bổ sung sau bản thử": ý 2 tự do mặc định + ô "Vào tập luyện" · ý 3 thẻ giải thích từng bậc (lý thuyết · thầy) +
+  thuật ngữ, viết mẫu duyệt văn phong trước · ý 4 gam và hợp âm rải chọn theo số đo của thầy · ý 5 quiz trả lời bằng chạm / gõ tên ·
+  ý 6 chuyển hợp âm theo thế bấm và đường chuyển đo từ sheet. Thứ tự dựng mới (sửa nhanh ý 2 + 5 trước). Q4: ý 2 có áp cho tab Điệu và
+  Kỹ thuật đánh không — chờ trả lời.
+- Số ngón: đếm dấu `<fingering>` trên 29 sheet — chỉ Boogie Woogie có (37 dấu; hai bản cùng một sheet). Sheet Cà Pháo, Linh Nhi và các
+  sheet Blues khác không ghi ngón → ngón trong app theo lối dạy chuẩn, ghi rõ không phải của thầy.
