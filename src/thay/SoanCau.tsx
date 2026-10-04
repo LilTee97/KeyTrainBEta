@@ -6,12 +6,12 @@ import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { LuotTap } from '../shared/persistence/db'
+import { GIOI_THIEU, giaiThichLyThuyet, giaiThichThay, THUAT_NGU } from './soanCau/giaiThich'
 import {
   bacThay,
   chuyenThay,
   dungHopAm,
   GHI_CHU_THAY,
-  khacLyThuyet,
   LOAI_BAC1,
   lyThuyetBac,
   phanBoNot,
@@ -22,6 +22,7 @@ import {
   vongCuaThay,
   vongLyThuyet,
   xepNot,
+  type DongThay,
   type DuLieuSoanCau,
 } from './soanCau/soanCau'
 import { TapSolo } from './TapSolo'
@@ -136,110 +137,138 @@ export function SoanCau({
   )
 }
 
+/**
+ * Phần 1 — THẺ GIẢI THÍCH từng bậc (ý 3, người dùng 4/10/2026): bên trái lý thuyết piano (vì sao bậc ấy mang hợp âm ấy), bên phải
+ * lựa chọn của thầy ở CÙNG gốc hợp âm (số đo từ sheet, có nhãn nguồn). Hợp âm thầy đặt ngoài gam gom một thẻ. Lời: `giaiThich.ts`.
+ */
 function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du: DuLieuSoanCau; tonic: number; thu: boolean; loai: string }) {
   const lt = lyThuyetBac(tonic, thu, loai)
   const vongLt = vongLyThuyet(tonic, thu, loai === 'maj7' || loai === 'm7')
   const thay = bacThay(du, tonic, thu)
-  const khac = khacLyThuyet(du, tonic, thu)
   const chuyen = chuyenThay(du, tonic, thu)
   const vongT = vongCuaThay(du, tonic, thu)
   const ghiChu = GHI_CHU_THAY[teacher.id]?.[thu ? 'thu' : 'truong'] ?? []
+  const gocLt = new Set(lt.dong.map((d) => d.goc))
+  const cacBac = [1, 2, 3, 4, 5, 6, 7].map((so) => {
+    const dong = lt.dong.filter((d) => d.bac === so)
+    return { so, dong, thay: thay.filter((r) => r.goc === dong[0]!.goc) }
+  })
+  const ngoaiGam = thay.filter((r) => !gocLt.has(r.goc))
+
+  const theThay = (r: DongThay) => (
+    <div key={r.khoa} className="mb-3 last:mb-0">
+      <button type="button" onClick={() => void nghe(r.pcs)} className="font-semibold text-amber-key hover:underline">
+        ▶ {r.laMa} · {r.hopAm}
+      </button>
+      {giaiThichThay(du, teacher.id, tonic, thu, r).map((cau) => (
+        <p key={cau} className={`mt-1 text-xs ${cau.startsWith('Lưu ý số đo') ? 'text-rose-300' : 'text-cream/85'}`}>
+          {cau}
+        </p>
+      ))}
+    </div>
+  )
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="flex flex-col gap-4">
       <div className={the}>
-        <h4 className="mb-1 font-semibold text-cream">Lý thuyết piano</h4>
-        <p className="mb-3 text-xs text-dim">{lt.moTa}</p>
-        <table className="mb-4 w-full text-left text-xs">
-          <tbody>
-            {lt.dong.map((d) => (
-              <tr key={d.laMa} className="border-t border-line/60">
-                <td className="py-1 pr-2 font-mono text-dim">{d.laMa}</td>
-                <td className="py-1 pr-2">
-                  <button type="button" onClick={() => void nghe(d.pcs)} className="font-semibold text-amber-key hover:underline">
-                    ▶ {d.hopAm}
-                  </button>
-                </td>
-                <td className="py-1 text-dim">{d.chucNang}</td>
-              </tr>
+        <h4 className="mb-1 font-semibold text-cream">Hợp âm theo bậc — đọc thế nào</h4>
+        <p className="mb-2 text-xs text-cream/85">{GIOI_THIEU}</p>
+        <p className="mb-2 text-xs text-dim">{lt.moTa}</p>
+        <details className="text-xs">
+          <summary className="cursor-pointer text-amber-key">Thuật ngữ — bấm để mở</summary>
+          <dl className="mt-2 grid gap-x-4 gap-y-1 md:grid-cols-2">
+            {THUAT_NGU.map((t) => (
+              <div key={t.tu}>
+                <dt className="font-semibold text-cream">{t.tu}</dt>
+                <dd className="text-dim">{t.nghia}</dd>
+              </div>
             ))}
-          </tbody>
-        </table>
-        <h5 className="mb-1 text-xs font-semibold text-cream">Vòng phổ biến (lý thuyết)</h5>
-        <ul className="flex flex-col gap-1.5 text-xs">
-          {vongLt.map((v) => (
-            <li key={v.id}>
-              <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
-                ▶ {v.ten}
-              </button>{' '}
-              <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span>
-              <span className="block text-dim">{v.ghiChu}</span>
-            </li>
-          ))}
-        </ul>
+          </dl>
+        </details>
       </div>
 
-      <div className={the}>
-        <h4 className="mb-1 font-semibold text-cream">{teacher.label} — số đo từ sheet</h4>
-        <p className="mb-3 text-xs text-dim">
-          Phần hát 8 bài (3 trưởng, 5 thứ), loại hợp âm lấy từ nốt đệm thật. Mỗi bậc: bao nhiêu đoạn, bao nhiêu bài, để trơn bao nhiêu;
-          "có 9: 38" = 38 đoạn có nốt 9 — một hợp âm có thể mang hai màu. Chỉ bậc có ≥ 5 đoạn ở ≥ 2 bài.
-        </p>
-        <table className="mb-4 w-full text-left text-xs">
-          <tbody>
-            {thay.map((d) => (
-              <tr key={d.laMa} className="border-t border-line/60 align-top">
-                <td className="py-1 pr-2 font-mono text-dim">{d.laMa}</td>
-                <td className="py-1 pr-2">
+      {cacBac.map((c) => (
+        <div key={c.so} className={the}>
+          <h4 className="mb-2 font-semibold text-cream">
+            Bậc {c.so} · {c.dong.map((d) => `${d.laMa} ${d.hopAm}`).join(' / ')}
+          </h4>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div>
+              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">Lý thuyết piano</h5>
+              {c.dong.map((d) => (
+                <div key={d.laMa} className="mb-3 last:mb-0">
                   <button type="button" onClick={() => void nghe(d.pcs)} className="font-semibold text-amber-key hover:underline">
-                    ▶ {d.hopAm}
+                    ▶ {d.laMa} · {d.hopAm} <span className="font-normal text-dim">— {d.chucNang}</span>
                   </button>
-                </td>
-                <td className="py-1 pr-2 text-dim">
-                  {d.n} đoạn · {d.bai} bài
-                </td>
-                <td className="py-1 text-cream/85">
-                  trơn {d.tron}/{d.n}
-                  {d.mau.length > 0 && ` · có ${d.mau.map(([m, k]) => `${m}: ${k}`).join(' · ')}`}
-                  {d.nghi && <span className="block text-rose-300">{d.nghi}</span>}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <h5 className="mb-1 text-xs font-semibold text-cream">Khác lý thuyết ở đâu</h5>
-        <ul className="mb-4 list-disc pl-4 text-xs text-cream/85">
-          {khac.length ? khac.map((s) => <li key={s}>{s}</li>) : <li className="text-dim">Các bậc chính đều đúng chất của gam.</li>}
-        </ul>
-
-        <h5 className="mb-1 text-xs font-semibold text-cream">Bước chuyển hay gặp (≥ 2 bài)</h5>
-        <p className="mb-4 text-xs text-cream/85">
-          {chuyen.map((c) => `${c.tu} → ${c.den}: ${c.n} lần, ${c.bai} bài`).join(' · ')}
-        </p>
-
-        <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet</h5>
-        <ul className="mb-4 flex flex-col gap-1 text-xs">
-          {vongT.map((v) => (
-            <li key={v.id}>
-              <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
-                ▶ {v.ten}
-              </button>{' '}
-              <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span> <span className="text-dim">({v.dieu})</span>
-            </li>
-          ))}
-        </ul>
-
-        {ghiChu.length > 0 && (
-          <>
-            <h5 className="mb-1 text-xs font-semibold text-cream">Ghi chú (số đo md của chị)</h5>
-            <ul className="list-disc pl-4 text-xs text-dim">
-              {ghiChu.map((s) => (
-                <li key={s}>{s}</li>
+                  {giaiThichLyThuyet(tonic, thu, d).map((cau) => (
+                    <p key={cau} className="mt-1 text-xs text-cream/85">
+                      {cau}
+                    </p>
+                  ))}
+                </div>
               ))}
-            </ul>
-          </>
-        )}
+            </div>
+            <div>
+              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">{teacher.label} — số đo từ sheet</h5>
+              {c.thay.length > 0 ? (
+                c.thay.map(theThay)
+              ) : (
+                <p className="text-xs text-dim">Trên bậc này chị không đặt hợp âm nào đủ ≥ 5 đoạn ở ≥ 2 bài.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {ngoaiGam.length > 0 && (
+        <div className={the}>
+          <h4 className="mb-2 font-semibold text-cream">Hợp âm chị đặt ngoài gam</h4>
+          <div className="grid gap-4 lg:grid-cols-2">{ngoaiGam.map(theThay)}</div>
+        </div>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={the}>
+          <h5 className="mb-1 text-xs font-semibold text-cream">Vòng phổ biến (lý thuyết)</h5>
+          <ul className="flex flex-col gap-1.5 text-xs">
+            {vongLt.map((v) => (
+              <li key={v.id}>
+                <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
+                  ▶ {v.ten}
+                </button>{' '}
+                <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span>
+                <span className="block text-dim">{v.ghiChu}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={the}>
+          <h5 className="mb-1 text-xs font-semibold text-cream">Bước chuyển hay gặp của chị (≥ 2 bài)</h5>
+          <p className="mb-3 text-xs text-cream/85">
+            {chuyen.map((c) => `${c.tu} → ${c.den}: ${c.n} lần, ${c.bai} bài`).join(' · ')}
+          </p>
+          <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet</h5>
+          <ul className="mb-3 flex flex-col gap-1 text-xs">
+            {vongT.map((v) => (
+              <li key={v.id}>
+                <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
+                  ▶ {v.ten}
+                </button>{' '}
+                <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span> <span className="text-dim">({v.dieu})</span>
+              </li>
+            ))}
+          </ul>
+          {ghiChu.length > 0 && (
+            <>
+              <h5 className="mb-1 text-xs font-semibold text-cream">Ghi chú (số đo md của chị)</h5>
+              <ul className="list-disc pl-4 text-xs text-dim">
+                {ghiChu.map((g) => (
+                  <li key={g}>{g}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

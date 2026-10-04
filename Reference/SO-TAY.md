@@ -5702,3 +5702,32 @@ giây ở 52 BPM); bấm La4 → "Dm · A — 5: chị dùng 33 % (hay dùng)"; 
 
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 2 (trả lời bằng tên; hợp âm đang vang theo phách) · toàn suite **2 617 qua / 5 đỏ** (5 đỏ
 cũ) · `vite build` qua.
+
+## Bước — GĐ 3 bước 3: thẻ giải thích từng bậc + thuật ngữ — mẫu Linh Nhi, chờ duyệt văn phong (4/10/2026)
+
+**Người dùng:** ý 3 *"khi chọn tone chủ và bậc 1 thì sẽ đưa ra các bậc còn lại và giải thích tại sao chọn hợp âm đó vào các bậc đó … bên
+phần của các thầy thì cũng sẽ giải thích về lựa chọn đặt hợp âm của các thầy … trong vai một thầy dạy Piano chuyên nghiệp … người mới
+biết cơ bản về Piano cũng có thể hiểu được … dùng từ ngữ chuyên môn nhưng phải giải thích các từ đó khi dùng"* · *"làm tiếp phần kế"*.
+
+- `src/thay/soanCau/giaiThich.ts`: `giaiThichLyThuyet` sinh lời cho MỖI hợp âm từ chính nốt của nó — nốt (chữ + tên Việt), chồng quãng
+  ba, số nửa cung → vì sao trưởng / thứ / giảm, "vì sao bậc này mang hợp âm này: gam quyết định" (kèm bảy nốt của gam, gọi đúng chữ ở giọng
+  có dấu), bậc 7 thêm vào, nốt màu gọi theo quãng thật (13 không thành 6), V của gam thứ hòa âm, chức năng (chủ · chủ thay thế với nốt
+  chung · hạ át · át có / không nốt cảm âm), hay đi tới đâu (thói quen chung, sách hòa âm). `giaiThichThay`: thầy đặt gì (số đoạn, số bài,
+  trơn, màu ≥ 15 % — mỗi màu một câu nghe ra sao), so với lý thuyết (khớp; V trưởng của gam thứ hòa âm; I7 át phụ của iv; II7 át phụ của
+  V; ngoài gam), ghi chú md theo bậc (nguồn 13c · 13d; câu suy luận ghi rõ), bước chuyển hay gặp từ hợp âm ấy, cảnh báo số đo đáng ngờ.
+  `GIOI_THIEU` (đọc trước) · `THUAT_NGU` (15 mục).
+- Phần 1 (`SoanCau.tsx`) dựng lại: thẻ "Hợp âm theo bậc — đọc thế nào" + thuật ngữ mở ra được; mỗi bậc một thẻ — lý thuyết bên trái,
+  chị bên phải CÙNG gốc hợp âm (giọng thứ bậc 5 có cả v và V); hợp âm chị đặt ngoài gam gom một thẻ; vòng lý thuyết, bước chuyển, vòng thật
+  ở cuối. Bỏ hai bảng sơ sài cũ.
+- `soanCau.ts`: dòng lý thuyết mang `bac`, `chat`; dòng thầy mang `khoa`, `mauKhoa`; v và ♭VII giọng thứ ghi "át (yếu)" — không có nốt
+  cảm âm.
+
+**Chạy thử (Chrome, n = 1):** La thứ 7 thẻ bậc + thẻ ngoài gam, 127 đoạn giải thích; La trưởng thẻ bậc 2 so ii (Bm) với II7 của chị.
+Ảnh chụp bố cục ổn; thuật ngữ mở ra hai cột.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 9 (`giaiThich.test.ts`: nốt, nửa cung, loại, gam quyết định, nốt cảm âm, 13 ≠ 6, gam gọi
+đúng chữ; Linh Nhi V 17/24, II7 10/10, ♭VI 13/21 có nhãn nguồn, số đo đáng ngờ) · toàn suite **2 626 qua / 5 đỏ** (5 đỏ cũ) · `vite build`
+qua. Sổ `LuyenTap.json`, `Nguon.json` không đổi.
+
+**Chưa đo / chờ:** văn phong — người dùng duyệt mẫu rồi mới làm cho thầy khác; câu "nghe ra sao" là mô tả thông thường của sách, không
+phải số đo; "hay đi tới" là thói quen chung, chưa so với từng thầy (cột thầy đã có bước chuyển đo được).

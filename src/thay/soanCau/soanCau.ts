@@ -78,7 +78,8 @@ export const LOAI_BAC1: Record<'truong' | 'thu', readonly { id: string; kyHieu: 
 
 const CHUC_NANG = {
   truong: ['chủ', 'hạ át', 'chủ', 'hạ át', 'át', 'chủ', 'át'],
-  thu: ['chủ', 'hạ át', 'chủ', 'hạ át', 'át', 'hạ át', 'át'],
+  /* v và ♭VII của gam thứ tự nhiên không có nốt cảm âm — át YẾU; V của gam thứ hòa âm mới là át đủ lực. */
+  thu: ['chủ', 'hạ át', 'chủ', 'hạ át', 'át (yếu)', 'hạ át', 'át (yếu)'],
 }
 
 /**
@@ -96,8 +97,12 @@ function laMa(bac: number, nuaCung: number, q: ChordQuality): string {
 }
 
 export interface DongLyThuyet {
+  /** Bậc trong gam, 1–7 (V của gam thứ hòa âm cũng là bậc 5). */
+  bac: number
   laMa: string
   hopAm: string
+  /** Hậu tố hợp âm (ký hiệu chất) — để giải thích cấu tạo. */
+  chat: string
   chucNang: string
   goc: number
   pcs: number[]
@@ -127,11 +132,29 @@ export function lyThuyetBac(tonic: number, thu: boolean, loai: string): { dong: 
       : chordAtDegree(tonic, scale, bac, { accidentalStyle, useSevenths: bay })
     const x = c ?? chord
     const goc = pc(x.root - tonic)
-    return { laMa: laMa(bac, goc, x.quality), hopAm: x.symbol, chucNang: CHUC_NANG[giong(thu)][i]!, goc, pcs: chordPitchClasses(x.root, x.quality) }
+    return {
+      bac,
+      laMa: laMa(bac, goc, x.quality),
+      hopAm: x.symbol,
+      chat: x.quality.symbol,
+      chucNang: CHUC_NANG[giong(thu)][i]!,
+      goc,
+      pcs: chordPitchClasses(x.root, x.quality),
+    }
   })
   if (thu) {
     const v = chordAtDegree(tonic, scale, 5, { accidentalStyle, qualityOverride: bay ? '7' : 'maj' })
-    if (v) dong.splice(5, 0, { laMa: laMa(5, 7, v.quality), hopAm: v.symbol, chucNang: 'át (gam thứ hòa âm)', goc: 7, pcs: chordPitchClasses(v.root, v.quality) })
+    if (v) {
+      dong.splice(5, 0, {
+        bac: 5,
+        laMa: laMa(5, 7, v.quality),
+        hopAm: v.symbol,
+        chat: v.quality.symbol,
+        chucNang: 'át (gam thứ hòa âm)',
+        goc: 7,
+        pcs: chordPitchClasses(v.root, v.quality),
+      })
+    }
   }
   const option = MAJOR_COLOR_OPTIONS.find((one) => one.id === loai)
   const moTa = palette
@@ -171,6 +194,8 @@ const TEN_MAU: Record<string, string> = {
 }
 
 export interface DongThay {
+  /** Ký hiệu bậc như trong dữ liệu ('bVI', 'ii°') — khoá để tra bước chuyển, ghi chú. */
+  khoa: string
   laMa: string
   hopAm: string
   goc: number
@@ -181,6 +206,8 @@ export interface DongThay {
   bai: number
   tron: number
   mau: [string, number][]
+  /** Như `mau` nhưng giữ khoá gốc ('b7', '9' …) — để giải thích từng màu. */
+  mauKhoa: [string, number][]
   /** Cảnh báo về chất lượng số đo — vd hợp âm giảm đọc từ tay trái thiếu gốc. */
   nghi?: string
 }
@@ -190,6 +217,7 @@ export function bacThay(du: DuLieuSoanCau, tonic: number, thu: boolean): DongTha
   return Object.entries(du.hopAm[giong(thu)].bac)
     .filter(([, b]) => b.n >= 5 && b.bai >= 2)
     .map(([r, b]) => ({
+      khoa: r,
       laMa: dep(r),
       hopAm: tenHopAm(tonic, thu, b.goc, b.chat),
       goc: b.goc,
@@ -201,6 +229,7 @@ export function bacThay(du: DuLieuSoanCau, tonic: number, thu: boolean): DongTha
       mau: Object.entries(b.mau)
         .sort((x, y) => y[1] - x[1])
         .map(([m, k]): [string, number] => [TEN_MAU[m] ?? m, k]),
+      mauKhoa: Object.entries(b.mau).sort((x, y) => y[1] - x[1]),
       ...(b.dao > b.n / 2
         ? { nghi: `${b.dao}/${b.n} đoạn có bass khác gốc — nhiều khả năng là hợp âm thiếu gốc đọc từ tay trái, chưa kiểm tay` }
         : {}),
