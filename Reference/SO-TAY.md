@@ -5584,3 +5584,19 @@ hợp âm mà các thầy đặt trong các sheet"*.
 - `LuyenTap.json` (git không theo dõi): gỡ 20/28 dòng là lượt máy-bấm khi Claude chạy thử 2/10–4/10 (độ trễ 0, trúng 100 % / 0 %);
   còn 8 dòng — 7 lượt thật 2/10 và dòng "THU" 1/10 chưa rõ nguồn. Bản đủ sao lưu ở scratchpad phiên. Từ nay chạy thử thì sao lưu
   file rồi trả lại. `Nguon.json` không bị lẫn.
+
+## Ghi — Kế hoạch GĐ 3 sửa theo ý người dùng: thêm lớp lý thuyết căn bản, chọn nốt bám sheet thầy; Q1 Linh Nhi, Q2 ẩn Tuấn (4/10/2026)
+
+**Người dùng:** *"Khi biết tone chủ và hợp âm bậc 1 rồi thì bạn hãy dựng cả những vòng hợp âm theo lý thuyết Piano, bên cạnh việc dựng
+theo các thầy thì tôi cũng muốn học Piano căn bản"* · *"Chọn nốt solo thì hãy bám theo sheet của các thầy chứ ko phải đúng sai tuyệt
+đối"* · *"Q1 và Q2 làm theo đề xuất của bạn"*.
+
+- Mục GĐ 3 của `KE-HOACH-LUYEN-TAP.md` viết lại: **hai lớp học cùng bốn phần** — Căn bản (lý thuyết piano, chấm theo loại nốt lý
+  thuyết) và từng thầy (số đo từ sheet, chấm theo độ giống thầy). Phần 1 hai cột lý thuyết / thầy + dòng "thầy khác lý thuyết ở đâu".
+- Lý thuyết dùng lại thứ đã có: `diatonicChords` (`shared/musicTheory/scales.ts`), 11 vòng của `progressionGenerator.ts`,
+  `PALETTE_BY_TONIC_COLOR`. Mọi điệu đệm hiện có đều thuộc một thầy → Căn bản cần đệm cơ bản dựng mới (nhỏ).
+- Chọn nốt trang thầy: hiện thầy đánh nốt nào bao nhiêu phần trăm trong đúng ngữ cảnh, kèm n — "thầy hay dùng · có dùng · chưa gặp
+  trong sheet"; không gọi là sai. Thang 7 bậc trang thầy lấy tập nốt từ phân bố của thầy (3 bậc nhiều nhất → nhóm ~70 % → ~85 % →
+  cả phân bố; số Claude chọn, chưa đo); Căn bản theo loại nốt lý thuyết.
+- Q1 Linh Nhi · Q2 ẩn Tuấn — người dùng chọn. Q3 (trang riêng "Căn bản" hay đặt trong tab từng thầy) chờ trả lời.
+- Thứ tự dựng: làm thử Linh Nhi → Căn bản → Linh Nhi bậc 4–7 → đo rồi dựng Cà Pháo → Blues → ngưỡng.

@@ -199,7 +199,7 @@ Mỗi bước: test + người dùng tập thử, xong mới sang bước sau. B
   (*Để Em Rời Xa*) · Linh Nhi — lấy từ 7 sheet trong PianoBrain (trong chín nút chỉ còn Slow Rock Lá thư của chị; Bolero
   Linh Nhi đã xoá 30/9) · Blues: nốt láy, blue note, riff, câu chạy · Twist: bass boogie 1–1–♭3–3–5–1–6–5, cú chặn swing.
 
-### GĐ 3 — tab Học cách soạn câu: kế hoạch dựng (viết 4/10/2026 — chờ người dùng duyệt)
+### GĐ 3 — Học cách soạn câu: kế hoạch dựng (viết 4/10/2026, sửa cùng ngày theo ý người dùng — chờ Q3)
 
 **Ý người dùng (4/10/2026, tóm sát chữ):** làm theo từng thầy và theo màu hợp âm của từng thầy.
 1. Nhập giọng (tone chủ) của bài và hợp âm bậc 1 → app đưa ra hợp âm các bậc còn lại, giải thích vì sao đặt như vậy.
@@ -208,34 +208,50 @@ Mỗi bước: test + người dùng tập thử, xong mới sang bước sau. B
 4. Tính năng tập: app đưa vòng, người dùng chọn nốt solo trên từng hợp âm — đánh bằng đàn MIDI, chuột, bàn phím máy hoặc chạm;
    có backing track trên vòng; có chờ đúng nốt, chấm điểm, học tự do và học theo bậc từ dễ đến khó.
 
-Người dùng nói rõ thêm (cùng ngày): *"màu hợp âm ko phải chỉ nói về hợp âm màu mà nói về phong cách đặt hợp âm của từng thầy, tính
-cả hợp âm cơ bản và màu và tất cả các loại hợp âm mà các thầy đặt trong các sheet của mình"*.
+Người dùng nói rõ thêm cùng ngày:
+- *"màu hợp âm ko phải chỉ nói về hợp âm màu mà nói về phong cách đặt hợp âm của từng thầy, tính cả hợp âm cơ bản và màu và tất cả
+  các loại hợp âm mà các thầy đặt trong các sheet của mình"*.
+- *"Khi biết tone chủ và hợp âm bậc 1 rồi thì bạn hãy dựng cả những vòng hợp âm theo lý thuyết Piano, bên cạnh việc dựng theo các
+  thầy thì tôi cũng muốn học Piano căn bản"*.
+- *"Chọn nốt solo thì hãy bám theo sheet của các thầy chứ ko phải đúng sai tuyệt đối"*.
+- *"Q1 và Q2 làm theo đề xuất của bạn"* → làm thử với **Linh Nhi**; trang **Tuấn ẩn** phần này.
 
-**Giữ từ khung cũ:** nguồn là PianoBrain `knowledge/` — `teachers/ca-phao.md` · `teachers/linh-nhi-piano.md` ·
+**Giữ từ khung cũ:** nguồn thầy là PianoBrain `knowledge/` — `teachers/ca-phao.md` · `teachers/linh-nhi-piano.md` ·
 `BLUES-CHON-HOP-AM-VA-NOT.md` · `LUAT-SOAN-NOT.md` · `TWIST.md`, viết cho agent đọc → phải viết lại thành bài. Mỗi câu "vì sao"
-gắn nhãn **số đo (n)** · **suy luận của Claude** · **ý người dùng**; không dạy suy luận như sự thật. Không dựng hệ quản lý bài
-học, không lớp game (mục 1.2).
+gắn nhãn **số đo (n)** · **lý thuyết** · **suy luận của Claude** · **ý người dùng**; không dạy suy luận như sự thật. Không dựng hệ
+quản lý bài học, không lớp game (mục 1.2).
 
-**Vòng học của một thầy (Claude trong vai gia sư): Hiểu → Nhớ → Nghe → Làm.** Tab có bốn phần theo đúng thứ tự ấy; phần sau dùng
-dữ liệu của phần trước.
+**Hai lớp học (Claude trong vai gia sư):**
+- **Căn bản — lý thuyết piano:** không gắn thầy nào; học cái chuẩn trước. Chỗ đặt: Q3.
+- **Từng thầy — bám sheet:** tab Học cách soạn câu ở trang Linh Nhi · Cà Pháo · Blues — thầy làm gì, bao nhiêu lần, khác lý thuyết
+  ở đâu.
+
+Hai lớp đi cùng một vòng **Hiểu → Nhớ → Nghe → Làm**, cùng bốn phần; phần sau dùng dữ liệu của phần trước. Khác nhau duy nhất là
+**nguồn**: Căn bản lấy lý thuyết và chấm theo loại nốt lý thuyết; trang thầy lấy số đo từ sheet và chấm theo độ giống thầy.
 
 | phần | việc | yêu cầu |
 |---|---|---|
-| 1. Cách đặt hợp âm của thầy | giọng + hợp âm bậc 1 → hợp âm mọi bậc, cách nối, kèm vì sao, nghe được | 1 |
+| 1. Hợp âm theo bậc và vòng | giọng + hợp âm bậc 1 → hợp âm mọi bậc, vòng, cách nối, vì sao, nghe được | 1 |
 | 2. Nhớ vòng | quiz điền ô trống · bậc → hợp âm · bước chuyển · chọn lý do · nghe rồi điền | 2 |
-| 3. Chọn nốt solo | giải thích từng hợp âm của một vòng + bài đọc + quiz | 3 |
+| 3. Chọn nốt solo | từng hợp âm của một vòng: nốt nào, vì sao; bài đọc; quiz | 3 |
 | 4. Tập solo trên backing | chọn nốt trên từng hợp âm; chờ đúng nốt / theo nhịp; chấm; tự do và theo bậc | 4 |
 
-#### Phần 1 — Cách đặt hợp âm của thầy
-- "Màu hợp âm" ở đây = **phong cách đặt hợp âm** (người dùng 4/10/2026): MỌI loại hợp âm thầy đặt trong sheet — hợp âm ba trơn,
-  hợp âm bảy, hợp âm màu (add9 · maj7 · 9 · 11 · 13 · sus), giảm, đảo bass, hợp âm mượn, át phụ, hợp âm lướt — và cách thầy nối
-  chúng: bước chuyển bậc → bậc, vòng hay dùng, cách dẫn vào hát và đóng kết, nhịp đổi hợp âm, khác nhau giữa đoạn hát và đoạn đàn.
-- Vào: giọng (12 chủ âm × trưởng / thứ) và hợp âm bậc 1. Ra:
-  - mỗi bậc một dòng — các loại hợp âm thầy đặt ở bậc ấy, **kể cả trơn**, mỗi loại bao nhiêu lần (n) · vì sao · ▶ nghe bằng thế bấm
-    của thầy; thêm các bậc mượn, át phụ của thầy (vd Linh Nhi: II7 ở trưởng; V7, ii°, I7 → iv ở thứ);
-  - **thầy nối hợp âm thế nào** — bước chuyển hay gặp (kèm n), vòng hay dùng ở giọng ấy, dẫn vào hát, đóng kết, hợp âm lướt / chen,
-    nhịp đổi hợp âm; nút sang phần 2 và phần 4.
-- Dữ liệu:
+#### Phần 1 — Hợp âm theo bậc và vòng
+- Vào: giọng (12 chủ âm × trưởng / thứ) và hợp âm bậc 1. Ra hai cột cạnh nhau, ▶ nghe từng hợp âm, nút sang phần 2 và phần 4:
+  - **Lý thuyết piano:** hợp âm từng bậc theo gam (`diatonicChords` — hợp âm ba hoặc hợp âm bảy theo loại hợp âm bậc 1 đã nhập;
+    giọng thứ thêm V7 của gam thứ hòa âm); hợp âm bậc 1 có màu thì cả bộ màu theo bảng `PALETTE_BY_TONIC_COLOR` (tài liệu đệm hát +
+    nguồn jazz, `SO-TAY.md`); các vòng phổ biến ở giọng ấy — 11 vòng có sẵn trong `progressionGenerator.ts`: ii–V–I · ii–V–I–vi ·
+    I–V–vi–IV · vi–IV–I–V · I–vi–ii–V · I–vi–IV–V · I–IV–V · vòng Canon · iiø–V7–i · i–VI–III–VII · i–iv–V7 — mỗi vòng kèm chức
+    năng (chủ · hạ át · át) và vì sao nó chạy.
+  - **Thầy — phong cách đặt hợp âm:** MỌI loại hợp âm thầy đặt trong sheet (hợp âm ba trơn, hợp âm bảy, hợp âm màu, giảm, đảo bass,
+    mượn, át phụ, lướt): mỗi bậc các loại thầy đặt, **kể cả trơn**, kèm n; bước chuyển hay gặp; vòng hay dùng; dẫn vào hát, đóng
+    kết; nhịp đổi hợp âm; khác nhau giữa đoạn hát và đoạn đàn.
+  - Dòng **"thầy khác lý thuyết ở đâu"**: vd Cà Pháo đặt bậc v giọng thứ là vm7, V7 → i chỉ ở cuối kết Anh Cứ Đi Đi; Linh Nhi đặt
+    V7 ở 17/24 chỗ bậc V giọng thứ; Blues đặt I7 · IV7 · V7 thay cho Imaj7 · IVmaj7 · V7 của gam.
+- Cột lý thuyết: loại hợp âm bậc 1 quyết định cả bảng. Cột thầy: mỗi bậc là một phân bố đo được, và chuyện loại hợp âm bậc 1 kéo
+  theo bậc khác chưa đo được (Linh Nhi chỉ 3 bài trưởng) — app lọc theo hợp âm bậc 1 chỉ khi ≥ 2 bài của thầy đặt đúng loại ấy;
+  loại thầy không đặt ở bậc 1 (0/n) thì nói thẳng, đưa loại gần nhất thầy có — không bịa.
+- Dữ liệu thầy:
   - **Linh Nhi — có sẵn**: md 13d (`tools/hop_am_linh_nhi.py`; phần hát 8 bài: 3 trưởng, 5 thứ; loại hợp âm lấy từ nốt đệm thật,
     không từ ký hiệu). Theo bậc, kể cả trơn — vd thứ: i n = 101 (trơn 41 · add9 38 · ♭7 21), ♭VI n = 46 (maj7 21; điệp khúc
     13/21); trưởng: trơn là loại hay gặp nhất ở mọi bậc, II7 đứng vững (10/10). Bước chuyển — trưởng I→vi 25 · V→I 24 · ii→V 14;
@@ -247,104 +263,117 @@ dữ liệu của phần trước.
     thật) trên khoảng 10 sheet, trước khi dựng.
   - **Blues**: khung 12 ô, I7 · IV7 · V7; Ray giữ hợp âm 2–4 ô 6/8 và đi V → IV, Robert và Rising Sun đổi mỗi ô; thứ (Rising Sun):
     mọi hợp âm ngoài i là hợp âm bảy.
-  - **Tuấn**: không có sheet — câu hỏi Q2.
-- Hợp âm bậc 1 **không kéo theo cả bảng** như bảng màu chung `PALETTE_BY_TONIC_COLOR` (lý thuyết pop/jazz của tab Tái hòa âm). Ở
-  thầy, mỗi bậc là một phân bố đo được, và chuyện loại hợp âm bậc 1 kéo theo bậc khác chưa đo được (Linh Nhi chỉ 3 bài trưởng). App
-  lọc theo hợp âm bậc 1 chỉ khi ≥ 2 bài của thầy đặt đúng loại ấy; ít hơn thì dùng bảng chung của thầy và nói rõ. Loại thầy không
-  đặt ở bậc 1 (0/n) thì nói thẳng và đưa loại gần nhất thầy có — không bịa.
+  - **Tuấn**: không có sheet — ẩn (người dùng chọn 4/10).
 
 #### Phần 2 — Nhớ vòng (quiz)
-- Dạng câu: (a) **điền ô trống** — vòng của thầy ẩn 1 ô → 2 ô → chỉ còn bậc 1; (b) **bậc → hợp âm**, mọi loại kể cả trơn ("Linh
-  Nhi, La thứ, điệp khúc: ♭VI là?"); (c) **bước chuyển** ("sau i, chị hay đi đâu?"); (d) **chọn lý do đúng** cho một hợp âm; (e)
-  **nghe backing của vòng rồi điền ô trống** — đề xuất thêm của Claude (luyện tai trên chính vòng của thầy).
+- Dạng câu: (a) **điền ô trống** — vòng ẩn 1 ô → 2 ô → chỉ còn bậc 1; (b) **bậc → hợp âm**; (c) **bước chuyển** ("sau i, chị hay
+  đi đâu?"); (d) **chọn lý do đúng** cho một hợp âm; (e) **nghe backing của vòng rồi điền ô trống** — đề xuất thêm của Claude.
+  Căn bản hỏi theo lý thuyết ("I–V–vi–IV ở Rê trưởng: ô 3 là?"); trang thầy hỏi theo thầy, chỉ hỏi loại hay đặt nhất.
 - Trả lời bằng tay khi được: bấm hợp âm trên đàn / chuột / bàn phím máy / chạm — chấm theo tên nốt, bỏ quãng tám (dùng lại cách
   chấm hợp âm của `earTraining/progressionTrainer`); dạng (d) chọn 1 trong 4.
 - Lịch ôn thẻ nhớ `srsEngine` (tab Điệu đang dùng): mỗi câu một thẻ, sai về hộp 0. Thuộc ở giọng gốc rồi mới mở giọng khác.
 
 #### Phần 3 — Chọn nốt solo trên từng hợp âm (bài đọc + quiz)
-- Cho một vòng của thầy, mỗi hợp âm giải thích theo bốn loại nốt: **nốt chính** · **nốt tô màu (9 · 11 · 13 …) thầy hay dùng** ·
-  **nốt lướt** (phách yếu, đi liền bậc về nốt chính) · **nốt tránh** — loại nào cũng kèm số đo của thầy và lý do; ví dụ nghe cắt
+- **Trang thầy — bám sheet, không đúng/sai tuyệt đối** (người dùng 4/10): mỗi hợp âm của vòng hiện **thầy đánh nốt nào, bao nhiêu
+  phần trăm** trong đúng ngữ cảnh (chất hợp âm hoặc chức năng · phách mạnh / nhẹ · điệu), kèm n, xếp từ nhiều tới ít: *thầy hay
+  dùng* · *thầy có dùng* · *chưa gặp trong sheet (0/n)*. Nốt thầy không dùng chỉ là "khác thầy", không gọi là sai. Ví dụ nghe cắt
   từ sheet (bài, ô), nốt sáng trên phím, nút sang phần 4 hoặc tab Kỹ thuật đánh.
-- **Luật mỗi thầy một khác, nên dạy khác** (số đo, soát 4/10/2026):
-  - **Cà Pháo — neo hợp âm đang vang:** nốt đỉnh là nốt hợp âm 63 % (247/395 đúng phách · 498/785 giữa phách). Bậc so với gốc
-    hợp âm (đúng phách): 5 17 % · 9 16 % · b7 12 % · 3, 1, b3, 11 mỗi bậc 10 % · 7 7 % · 13 5 % · #11, b13, b9 ≤ 3 %. Nốt ngoài
-    hợp âm phần lớn là nốt tô màu rời bằng bước nhảy, không phải nốt lướt phải giải liền bậc.
-  - **Linh Nhi — mức bám hợp âm tùy điệu** (md 13e, 23 đoạn solo · 8 bài): nốt hợp âm ở phách mạnh · phách nhẹ — slow rock thứ
-    83 % · 85 % (6 đoạn, 49 ô), bolero trưởng 82 % · 60 %, bolero thứ 64 % · 56 %. Ở bolero thứ chị neo giọng bài nhiều hơn
-    (Đừng Xa ô 5: hợp âm Gm mà chị đánh Bb A — ♭6 và 5 của Rê thứ). Thứ dùng ♭3 · ♭7 · 11; trưởng dùng 13 và 3, gần như bỏ ♭3, 11.
-  - **Blues — neo âm giai của chủ:** ngũ cung trưởng của chủ thêm b3 (81 % của 503 nốt, Rockhouse); sang IV thì 3 thành b3
-    (Rockhouse 3 lần so với 31, Robert 0 so với 25); phách mạnh — I: 1 · 6 · 3, IV: 6 · 1 · b3, V: 5 · 1 · 6 (810 + 330 nốt).
-- 15 bài đọc, 5 bài mỗi thầy (đề xuất 3/10; soát 4/10 — Linh Nhi bài 1 và 5 sửa, Linh Nhi bài 2 và Blues bài 4 viết lại cho chính
-  xác) làm phần "vì sao" của phần 1 và phần 3; mỗi bài có quiz vào lịch ôn.
-- **Một nguồn luật:** hàm thuần (thầy, giọng, hợp âm, vị trí phách) → loại nốt + lý do, có test. Bài đọc, quiz và bộ chấm phần 4
-  cùng gọi nó.
+- Ngữ cảnh đo theo đúng cách mỗi thầy chọn nốt (số đo, soát 4/10/2026):
+  - **Cà Pháo — so với gốc hợp âm đang vang:** nốt đỉnh là nốt hợp âm 63 % (247/395 đúng phách · 498/785 giữa phách); đúng phách:
+    5 17 % · 9 16 % · b7 12 % · 3, 1, b3, 11 mỗi bậc 10 % · 7 7 % · 13 5 % · #11, b13, b9 ≤ 3 %. Hiện gộp mọi chất hợp âm → đo
+    tách theo chất hợp âm cùng lúc đo cách đặt hợp âm.
+  - **Linh Nhi — tùy điệu và chất hợp âm:** nốt hợp âm ở phách mạnh · nhẹ (md 13e, 23 đoạn solo · 8 bài) — slow rock thứ 83 % ·
+    85 % (6 đoạn, 49 ô), bolero trưởng 82 % · 60 %, bolero thứ 64 % · 56 %. Theo chất hợp âm (md 6b): trên hợp âm trưởng, bài
+    trưởng 1 · 3 · 5 chiếm 75 % (n = 155), bài thứ 53 % — rải sang 9 · 13 (n = 150); trên hợp âm thứ, bài trưởng 67 % (n = 207),
+    bài thứ 54 % (n = 355).
+  - **Blues — so với chủ âm, theo chức năng I · IV · V:** ngũ cung trưởng của chủ thêm b3 (81 % của 503 nốt, Rockhouse); sang IV
+    thì 3 thành b3 (Rockhouse 3 lần so với 31, Robert 0 so với 25); phách mạnh — I: 1 · 6 · 3, IV: 6 · 1 · b3, V: 5 · 1 · 6 (810 +
+    330 nốt).
+- **Căn bản — theo lý thuyết:** nốt hợp âm · nốt căng (9 · 11 · 13) · nốt lướt · nốt tránh; gam theo hợp âm, ngũ cung, gam blues;
+  nhắm nốt hợp âm ở chỗ đổi hợp âm. Đây là chỗ duy nhất xếp nốt theo loại nốt lý thuyết.
+- Bài đọc: 15 bài của ba thầy (đề xuất 3/10, soát 4/10 — Linh Nhi bài 1 và 5 sửa, Linh Nhi bài 2 và Blues bài 4 viết lại cho chính
+  xác) cho trang thầy; 7 bài căn bản (dưới) cho Căn bản; mỗi bài có quiz vào lịch ôn.
+- **Một nguồn số đo:** bảng phân bố nốt của từng thầy (JSON xuất từ bộ đo có sẵn — `tools/quy_luat_not_linh_nhi.py`,
+  `scripts/phan_tich_blues_giai_dieu.py`; Cà Pháo đo mới). Bài đọc, quiz và bộ chấm phần 4 cùng đọc nó. Căn bản: một hàm thuần xếp
+  loại nốt theo lý thuyết, có test.
 
 #### Phần 4 — Tập solo trên backing
-- Chọn vòng (của thầy, hoặc tự chọn) → giọng → backing là **điệu đã duyệt của chính thầy**, dựng bằng `dungVong` (Linh Nhi: Slow
-  Rock Lá thư; Cà Pháo: Ballad cứ đi, Bossa CP; Blues: Twist) — không soạn backing mới, khỏi duyệt lại; tắt câu fill như `dungVong`
-  đang làm để chừa chỗ cho câu solo. Blues: Twist còn chèn câu chạy ở ô 4, 8 … — phải tắt; chốt lúc tới Blues.
+- Backing: trang thầy — **điệu đã duyệt của chính thầy**, dựng bằng `dungVong` (Linh Nhi: Slow Rock Lá thư; Cà Pháo: Ballad cứ đi,
+  Bossa CP; Blues: Twist), tắt câu fill như `dungVong` đang làm để chừa chỗ cho câu solo (Twist còn chèn câu chạy ở ô 4, 8 … —
+  phải tắt; chốt lúc tới Blues). Căn bản — **đệm cơ bản** không theo thầy nào (tay trái gốc, tay phải hợp âm khối hoặc rải đơn;
+  dựng mới, nhỏ), đổi được sang điệu của một thầy.
 - Nhập: đàn MIDI · chuột · bàn phím máy (`useComputerKeyboard`) · chạm (`OnScreenPiano`) — đều có sẵn.
-- **Chờ đúng nốt:** backing giữ hợp âm, chờ tới khi bấm một nốt thuộc **tập nốt bậc ấy cho phép** rồi sang hợp âm sau; phím bấm
-  sáng màu theo loại nốt. Cần thêm kiểu bước "một nốt bất kỳ trong tập" — bước chờ hiện chỉ nhận nốt cố định (`isStepMatched`).
-  Chấm: tỉ lệ đúng ngay lần đầu.
-- **Theo nhịp:** backing chạy liên tục; chấm (1) **nốt đáp** — mỗi lần đổi hợp âm, nốt đầu tiên quanh phách 1 phải là nốt chính
-  (bậc cao: chính hoặc tô màu); (2) tỉ lệ nốt thuộc tập cho phép; (3) số nốt tránh.
-- **Tập tự do:** chọn vòng, giọng, BPM, tập nốt (chỉ nốt hợp âm / thêm nốt tô màu / luật đầy đủ của thầy); có chấm, không vào
-  thang, không lưu tiến độ — như tab Kỹ thuật đánh.
+- **Chờ đúng nốt:** backing giữ hợp âm, chờ tới khi bấm một nốt thuộc **tập nốt bậc ấy nhận** rồi sang hợp âm sau; phím bấm sáng
+  theo mức thầy dùng (trang thầy: nhiều · ít · chưa gặp) hoặc theo loại nốt (Căn bản). Cần thêm kiểu bước "một nốt bất kỳ trong
+  tập" — bước chờ hiện chỉ nhận nốt cố định (`isStepMatched`). Chấm: tỉ lệ đúng ngay lần đầu.
+- **Theo nhịp:** backing chạy liên tục. Trang thầy chấm **độ giống thầy**: (1) nốt đáp ở chỗ đổi hợp âm so với nhóm phách mạnh của
+  thầy; (2) tỉ lệ nốt thuộc nhóm thầy hay dùng; (3) số nốt chưa gặp trong sheet — báo, không gọi là sai. Căn bản chấm theo loại nốt
+  lý thuyết.
+- **Tập tự do:** chọn vòng, giọng, BPM, tập nốt được nhận; có chấm, không vào thang, không lưu tiến độ — như tab Kỹ thuật đánh.
 - **Theo bậc** — thang 7 bậc, qua bậc trước mới mở bậc sau, ghi nhật ký `luotTap`. Thang và ngưỡng: Claude trong vai gia sư,
   CHƯA ĐO.
 
-| bậc | vòng | chế độ | nốt được nhận | gợi ý trên phím |
-|---|---|---|---|---|
-| 1 | một hợp âm (bậc 1) | chờ đúng nốt | nốt hợp âm 1 · 3 · 5 | sáng |
-| 2 | hai hợp âm đầu của một vòng của thầy | chờ đúng nốt | nốt hợp âm, thêm 7 | sáng |
-| 3 | cả vòng (Blues 12 ô) | chờ đúng nốt | nốt hợp âm | tắt |
-| 4 | cả vòng | chờ đúng nốt | thêm nốt tô màu của thầy; nốt đầu mỗi hợp âm vẫn là nốt chính | tắt |
-| 5 | cả vòng | theo nhịp 60 % | phách mạnh: chính hoặc tô màu; phách yếu: trong giọng | tắt |
-| 6 | cả vòng | theo nhịp 100 % | thêm nốt lướt (phải đi liền bậc về nốt chính); nốt tránh bị trừ | tắt |
-| 7 | vòng ở giọng lạ, đổi mỗi lượt | theo nhịp 100 % | luật đầy đủ của thầy | tắt cả nốt rơi |
+| bậc | vòng | chế độ | nốt được nhận — trang thầy (bám sheet) | nốt được nhận — Căn bản (lý thuyết) | gợi ý |
+|---|---|---|---|---|---|
+| 1 | một hợp âm (bậc 1) | chờ đúng nốt | 3 bậc thầy dùng nhiều nhất trên hợp âm ấy | 1 · 3 · 5 | phím sáng |
+| 2 | hai hợp âm | chờ đúng nốt | 3 bậc nhiều nhất, mỗi hợp âm | nốt hợp âm, thêm 7 | phím sáng |
+| 3 | cả vòng | chờ đúng nốt | nhóm chiếm ~70 % số nốt của thầy ở ngữ cảnh ấy | nốt hợp âm | tắt |
+| 4 | cả vòng | chờ đúng nốt | nhóm ~85 % | thêm nốt căng 9 · 11 · 13 | tắt |
+| 5 | cả vòng | theo nhịp 60 % | phách mạnh / nhẹ theo nhóm riêng của thầy | phách mạnh: nốt hợp âm hoặc căng | tắt |
+| 6 | cả vòng | theo nhịp 100 % | so cả phân bố | thêm nốt lướt; nốt tránh bị trừ | tắt |
+| 7 | giọng lạ, đổi mỗi lượt | theo nhịp 100 % | như bậc 6 | như bậc 6 | tắt cả nốt rơi |
 
-Bậc 1–4 tập vị trí nốt (chờ đúng nốt); bậc 5–7 tập cảm giác câu (theo nhịp) — như thang tab Điệu. Từ bậc 4, "nốt được nhận" theo
-luật của thầy: Blues tính theo âm giai của chủ; Linh Nhi theo điệu — slow rock theo hợp âm, bolero thứ thêm nốt của giọng.
+~70 % · ~85 % là số Claude chọn, chưa đo. Cùng lối thang tab Điệu: chờ đúng nốt trước, theo nhịp sau, bậc cuối ở giọng lạ (tab
+Điệu chờ đúng nốt 3 bậc, ở đây 4).
+
+#### Căn bản — giáo trình lý thuyết piano (nhãn **lý thuyết**, không phải số đo)
+1. Gam trưởng, gam thứ (tự nhiên · hòa âm · giai điệu); bậc và tên bậc.
+2. Hợp âm ba và hợp âm bảy trên từng bậc: trưởng · thứ · giảm; maj7 · m7 · 7 · m7♭5.
+3. Chức năng chủ · hạ át · át; các kiểu kết: chính, plagal, nửa, lừa.
+4. Vòng phổ biến (11 vòng có sẵn): vì sao nó chạy; nghe; tập ở 12 giọng.
+5. Thế đảo và nối hợp âm gần: giữ nốt chung, đi đường ngắn nhất.
+6. Hợp âm màu theo lý thuyết (6 · maj7 · add9 · 9 · sus4 · 13) và nốt tránh (11 trên hợp âm trưởng).
+7. Chọn nốt solo theo lý thuyết: nốt hợp âm, nốt căng, nốt tránh, gam theo hợp âm, ngũ cung, gam blues; nhắm nốt hợp âm ở chỗ đổi
+   hợp âm.
+
+Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của trang thầy.
 
 #### Dùng lại · dựng mới
 - Dùng lại: `TimedPractice` (theo nhịp, chấm, nhật ký) · `noteGatedPlaybackEngine` (chờ đúng nốt) · `OnScreenPiano` +
-  `useComputerKeyboard` + `midiStore` · `dungVong` · `srsEngine` · cách chấm hợp âm của `progressionTrainer` · lối đặt hợp âm Linh
-  Nhi (`linhNhiHarmony.ts`) · kho `vongThay.json` · lối "Lộ trình bậc / Tập tự do" của `KyThuatBai`.
-- Dựng mới: script đo cách đặt hợp âm của Cà Pháo · hàm luật nốt từng thầy · kiểu bước "tập nốt" cho chờ đúng nốt · bộ chấm chọn nốt
-  theo nhịp · giao diện bốn phần.
+  `useComputerKeyboard` + `midiStore` · `dungVong` · `srsEngine` · cách chấm hợp âm của `progressionTrainer` · `diatonicChords`
+  (`shared/musicTheory/scales.ts`) · `progressionGenerator.ts` (11 vòng, lối đi qua các giọng) · `PALETTE_BY_TONIC_COLOR` · lối đặt
+  hợp âm Linh Nhi (`linhNhiHarmony.ts`) · kho `vongThay.json` · lối "Lộ trình bậc / Tập tự do" của `KyThuatBai`.
+- Dựng mới: bảng phân bố nốt từng thầy (JSON từ bộ đo) · hàm xếp loại nốt theo lý thuyết · script đo Cà Pháo · kiểu bước "tập nốt"
+  cho chờ đúng nốt · bộ chấm chọn nốt theo nhịp · đệm cơ bản · giao diện bốn phần · nội dung 7 bài căn bản.
 
 #### Thứ tự dựng — mỗi bước người dùng dùng thử rồi mới sang bước sau
-1. **Làm thử trọn bốn phần cho một thầy, cỡ nhỏ** (khuyến nghị Linh Nhi — Q1): cách đặt hợp âm · quiz điền ô trống · bài chọn nốt
-   cho một vòng thứ của chị + 2–3 bài đọc · tập solo bậc 1–3 trên backing Slow Rock Lá thư.
-2. Thầy ấy: bậc 4–7, tập tự do, các dạng quiz còn lại.
-3. **Đo cách đặt hợp âm của Cà Pháo** — mọi loại theo bậc, bước chuyển, nhịp đổi hợp âm (cùng cách đo Linh Nhi) — rồi dựng Cà Pháo.
-4. Blues (luật gọn nhất, dựng nhanh).
-5. Chỉnh ngưỡng theo số đo thật khi người dùng đã tập.
+1. **Làm thử với Linh Nhi** (người dùng chọn 4/10): xuất bảng phân bố nốt solo của chị từ bộ đo có sẵn; phần 1 hai cột (lý thuyết +
+   Linh Nhi) · quiz điền ô trống · chọn nốt bám sheet trên một vòng thứ của chị · tập solo bậc 1–3 trên backing Slow Rock Lá thư.
+2. **Căn bản** dùng lại khung vừa làm thử: 7 bài lý thuyết, quiz, tập solo chấm theo lý thuyết, đệm cơ bản.
+3. Linh Nhi: bậc 4–7, tập tự do, các dạng quiz còn lại.
+4. **Đo Cà Pháo** — cách đặt hợp âm theo bậc, bước chuyển, nhịp đổi hợp âm, phân bố nốt solo theo chất hợp âm (cùng cách đo Linh
+   Nhi) — rồi dựng Cà Pháo.
+5. Blues.
+6. Chỉnh ngưỡng theo số đo thật khi người dùng đã tập.
 
 #### Lo ngại của Claude — nói trước khi dựng
-1. "Hợp âm bậc 1 → các bậc còn lại" ở thầy không ra một đáp án duy nhất: mỗi bậc là một phân bố trên mọi loại hợp âm (kể cả trơn),
-   và chuyện loại hợp âm bậc 1 kéo theo bậc khác chưa đo được. App đưa loại hay đặt nhất + phương án 2, kèm số lần; quiz chỉ hỏi
-   loại hay đặt nhất.
-2. Chấm chọn nốt solo không có đúng/sai tuyệt đối: 37 % nốt đỉnh của Cà Pháo nằm ngoài hợp âm mà vẫn là lối của anh. "Chỉ nhận nốt
-   hợp âm" ở bậc thấp là ràng buộc để tập, không phải luật nhạc — app ghi rõ.
-3. Mỗi thầy một luật chọn nốt (Cà Pháo neo hợp âm đang vang; Linh Nhi tùy điệu; Blues neo âm giai của chủ): cùng một tính năng
-   nhưng phần giải thích và tập nốt được nhận phải theo từng thầy — không gộp làm một luật chung.
-4. Khối lượng 4 phần × 3 thầy: làm thử trọn một thầy trước để người dùng duyệt hình thức.
+1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
+   chưa đo) → đưa loại hay đặt nhất + phương án 2, kèm số lần. Cột lý thuyết thì ra một đáp án.
+2. Lý thuyết và thầy có thể ngược nhau (vd lý thuyết cho V7 ở giọng thứ, Cà Pháo đặt vm7) → luôn ghi rõ đâu là lý thuyết, đâu là
+   thầy; không trộn hai nguồn trong một câu trả lời.
+3. Bám sheet thì vài ngữ cảnh ít dữ liệu (vd solo bossa Cà Pháo chỉ 127 cú tay phải) → luôn hiện n; n nhỏ thì gộp sang ngữ cảnh
+   rộng hơn và nói rõ đã gộp.
+4. Khối lượng: Căn bản + 3 thầy × 4 phần → làm thử trọn Linh Nhi trước để người dùng duyệt hình thức.
 
-#### Câu hỏi chờ trả lời
-- **Q1. Làm thử với thầy nào?** Khuyến nghị **Linh Nhi** — đổi so với khuyến nghị Cà Pháo ngày 3/10, vì yêu cầu nay xoay quanh cách
-  đặt hợp âm theo bậc và tập solo: bảng đặt hợp âm theo bậc và bước chuyển mới chỉ Linh Nhi đo xong (8 bài); backing Slow Rock Lá
-  thư đã duyệt và là bài đầu tiên lộ trình xếp cho người dùng (dễ nhất trong 9 bài theo đo độ khó); câu solo slow rock thứ của chị
-  bám hợp âm rất chặt (83 % · 85 %, 6 đoạn) — luật dễ tập nhất cho người mới solo, trong khi Cà Pháo chỉ 63 % và nhiều nốt tô màu
-  rời bằng bước nhảy. Lý do không nên: Cà Pháo có nhiều vật liệu nhất trong app (4 điệu, 4 kỹ thuật); giọng trưởng của Linh Nhi chỉ
-  đo trên 3 bài.
-- **Q2. Tuấn** (không có sheet; vòng tập mượn hòa âm Linh Nhi theo quyết định 2/10): ẩn tab Học cách soạn câu (khuyến nghị — mượn
-  thì chỉ lặp lại trang Linh Nhi) hay hiện bảng Linh Nhi có ghi "mượn"?
+#### Quyết định
+- **Người dùng chọn (4/10/2026):** Q1 làm thử với Linh Nhi · Q2 ẩn phần này ở trang Tuấn.
+- **Q3 (chờ trả lời): Căn bản để ở một trang riêng "Căn bản"** (khuyến nghị — lý thuyết giống nhau cho mọi thầy, để ở ba trang thầy
+  thì lặp ba lần; học cái chuẩn trước rồi mới so thầy) **hay đặt trong tab Học cách soạn câu của từng thầy?** Lý do không nên trang
+  riêng: thêm một nút trên thanh trang — điện thoại phải cuộn ngang thêm.
 
-**Chưa đo:** cách đặt hợp âm theo bậc và bước chuyển của Cà Pháo · loại hợp âm bậc 1 có kéo theo bậc khác không · thang 7 bậc
-tập solo và mọi ngưỡng · tập nốt được nhận ở từng bậc có giúp người dùng chơi hay hơn không — chỉ biết khi có lượt tập · Tuấn không
-có dữ liệu.
+**Chưa đo:** cách đặt hợp âm theo bậc, bước chuyển và phân bố nốt solo theo chất hợp âm của Cà Pháo · loại hợp âm bậc 1 có kéo theo
+bậc khác không · thang 7 bậc tập solo, ~70 % / ~85 % và mọi ngưỡng · tập nốt được nhận ở từng bậc có giúp người dùng chơi hay hơn
+không — chỉ biết khi có lượt tập · Tuấn không có dữ liệu.
 
 ---
 
@@ -489,7 +518,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.
 - Bước 3–5 (tab Điệu · trang Hôm nay · tab Kỹ thuật đánh): **xong** — GĐ 1 bước 5–8 và GĐ 2 ở trên. Bước 6 — tab Học cách soạn câu
-  (GĐ 3): **kế hoạch dựng viết 4/10/2026 theo yêu cầu người dùng — chờ duyệt** (mục GĐ 3 ở trên).
+  (GĐ 3): **kế hoạch dựng viết và sửa 4/10/2026 theo ý người dùng** (Q1 Linh Nhi, Q2 ẩn Tuấn) — chờ Q3 rồi dựng bước 1
+  (mục GĐ 3 ở trên).
 
 ---
 
