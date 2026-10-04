@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PracticeStage } from '../reharm/playback/PracticeStage'
 import { startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
+import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
@@ -54,6 +55,8 @@ export function TapSolo({
   luot: readonly LuotTap[]
   onGhi: (luot: Omit<LuotTap, 'id' | 'day'>) => void
 }) {
+  // Phím bấm phải ra tiếng (người dùng 4/10/2026: "click vào phím đàn mà ko nghe tiếng khi bật tab tập solo") — quên gắn ở bản đầu.
+  useLiveSound()
   useComputerKeyboard(60)
   const ds = vongCuaThay(du, tonic, thu)
   const [vongId, setVongId] = useState<string | null>(null)

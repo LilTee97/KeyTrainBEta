@@ -5650,3 +5650,12 @@ Dm "chị hay dùng 5 33 % · ♭3 32 % · 1 17 %", Bdim gộp mọi điệu gi�
 **Chưa làm trong bản thử:** lịch ôn thẻ nhớ cho quiz; quiz dạng (b)–(e); ví dụ nghe cắt từ sheet ở phần 3; theo nhịp, bậc 4–7, tập tự
 do (bước 3); bấm nghe còn dùng thế bấm mộc. **Chưa đo:** ba mốc 20 nốt · 70 % · 80 %; slow rock giọng thứ chỉ 2 bài, vài nhóm ít nốt
 (giảm 9, m7♭5 12, maj7 9, sus4 12) — phải gộp.
+
+## Sửa — GĐ 3: bấm phím ở tab Học cách soạn câu không ra tiếng (4/10/2026)
+
+**Người dùng:** *"sao tôi click vào phím đàn mà ko nghe tiếng khi bật tab tập solo"* · *"còn ý 1 làm ngay"*.
+
+- Nguyên nhân: tiếng phím bấm do `useLiveSound()` phát (theo dõi kho MIDI); `TimedPractice`, `NoteGatedPractice` có gọi, ba phần mới có
+  bàn phím (Nhớ vòng, Chọn nốt solo, Tập solo) quên gọi. Gắn vào cả ba — mỗi lúc chỉ một phần mở, không kêu đôi.
+- Kiểm (Chrome headless, đếm nguồn âm trình duyệt tạo ra khi bấm phím ảo, n = 1 mỗi phần): đối chứng tab Kỹ thuật đánh 2 phím → 2 nguồn ·
+  Tập solo · Nhớ vòng · Chọn nốt solo mỗi phần 2 → 2. Thử phá: gỡ `useLiveSound` khỏi Tập solo → 0 nguồn (im) — đúng nguyên nhân.

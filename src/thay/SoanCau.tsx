@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { playChord, playChordSequence, startAudio, stopTimelineLoop } from '../shared/audio/audioEngine'
+import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
@@ -245,6 +246,8 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
 
 /** Quiz điền ô trống: một ô của vòng bị ẩn, bấm hợp âm ấy trên đàn (đàn MIDI · chuột · bàn phím máy · chạm). */
 function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; thu: boolean; bay: boolean }) {
+  // Phím bấm phải ra tiếng — người dùng 4/10/2026: "click vào phím đàn mà ko nghe tiếng". Mỗi lúc chỉ một phần mở, không kêu đôi.
+  useLiveSound()
   useComputerKeyboard(60)
   const [nguon, setNguon] = useState<'thay' | 'ly-thuyet'>('thay')
   const ds = useMemo(
@@ -367,6 +370,8 @@ function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; th
 
 /** Chọn nốt solo — bám sheet: trên từng hợp âm của một vòng, chị đánh nốt nào bao nhiêu phần trăm. */
 function ChonNot({ teacher, du, tonic, thu }: { teacher: Teacher; du: DuLieuSoanCau; tonic: number; thu: boolean }) {
+  useLiveSound()
+  useComputerKeyboard(60)
   const ds = vongCuaThay(du, tonic, thu)
   const [vongId, setVongId] = useState<string | null>(null)
   const [phach, setPhach] = useState<'ca' | 'manh' | 'nhe'>('ca')
