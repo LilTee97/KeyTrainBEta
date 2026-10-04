@@ -10,6 +10,8 @@ import { LoTrinh } from './KhungLoTrinh'
 import { kyThuatCua } from './kyThuat'
 import { KyThuatBai } from './KyThuatBai'
 import { tienDoBai } from './loTrinh'
+import { SoanCau } from './SoanCau'
+import { duLieuSoanCau } from './soanCau/soanCau'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
 
@@ -88,10 +90,17 @@ export function TeacherPage({
     moTuNgoai ? { kieu: 'lo-trinh', styleId: moTuNgoai.styleId } : null,
   )
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
-  const [tab, setTab] = useState<'dieu' | 'ky-thuat'>('dieu')
+  const [tab, setTab] = useState<'dieu' | 'ky-thuat' | 'soan-cau'>('dieu')
   /* Tab Kỹ thuật đánh: thầy không có kỹ thuật nào thì ẩn — câu E. */
   const dsKyThuat = useMemo(() => kyThuatCua(teacher.id), [teacher.id])
   const coKyThuat = dsKyThuat.length > 0
+  /* Tab Học cách soạn câu (GĐ 3): thầy chưa có số đo thì ẩn — Tuấn không có sheet (người dùng chọn Q2, 4/10/2026). */
+  const duSoanCau = useMemo(() => duLieuSoanCau(teacher.id), [teacher.id])
+  const dsTab = [
+    ['dieu', 'Điệu'],
+    ...(coKyThuat ? [['ky-thuat', 'Kỹ thuật đánh'] as const] : []),
+    ...(duSoanCau ? [['soan-cau', 'Học cách soạn câu'] as const] : []),
+  ] as const
   const [ktId, setKtId] = useState<string | null>(null)
   const kt = dsKyThuat.find((one) => one.id === ktId) ?? dsKyThuat[0] ?? null
   // Rời trang đang phát thì tắt tiếng.
@@ -134,7 +143,7 @@ export function TeacherPage({
       <div className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-lg font-semibold">{teacher.label}</h2>
         {/* Chỉ tab có nội dung — Kỹ thuật đánh, Học cách soạn câu hiện ra khi có bài (câu E). */}
-        {(coKyThuat ? (['dieu', 'ky-thuat'] as const) : (['dieu'] as const)).map((value) => (
+        {dsTab.map(([value, ten]) => (
           <button
             key={value}
             type="button"
@@ -148,12 +157,18 @@ export function TeacherPage({
                 : 'border-line bg-white/4 text-dim hover:bg-white/8'
             }`}
           >
-            {value === 'dieu' ? 'Điệu' : 'Kỹ thuật đánh'}
+            {ten}
           </button>
         ))}
       </div>
 
-      {tab === 'ky-thuat' ? (
+      {tab === 'soan-cau' && duSoanCau ? (
+        daTaiLuot ? (
+          <SoanCau teacher={teacher} du={duSoanCau} luot={luot} onGhi={ghi} />
+        ) : (
+          <p className="text-sm text-dim">Đang tải tiến độ…</p>
+        )
+      ) : tab === 'ky-thuat' ? (
         daTaiLuot && kt ? (
           <>
             {dsKyThuat.length > 1 && (

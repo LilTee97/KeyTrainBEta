@@ -5600,3 +5600,53 @@ theo các thầy thì tôi cũng muốn học Piano căn bản"* · *"Chọn n�
   cả phân bố; số Claude chọn, chưa đo); Căn bản theo loại nốt lý thuyết.
 - Q1 Linh Nhi · Q2 ẩn Tuấn — người dùng chọn. Q3 (trang riêng "Căn bản" hay đặt trong tab từng thầy) chờ trả lời.
 - Thứ tự dựng: làm thử Linh Nhi → Căn bản → Linh Nhi bậc 4–7 → đo rồi dựng Cà Pháo → Blues → ngưỡng.
+
+## Bước — GĐ 3 bước 1: tab Học cách soạn câu, làm thử với Linh Nhi (4/10/2026)
+
+**Người dùng:** Q1 làm thử với Linh Nhi · Q2 ẩn ở trang Tuấn · *"làm q3 theo bạn đề xuất"* (trang riêng Căn bản — bước 2) · *"tiếp tục"*.
+Kế hoạch: `KE-HOACH-LUYEN-TAP.md` mục GĐ 3.
+
+**Dữ liệu** — `tools/soan_cau_linh_nhi.py --ghi` → `src/thay/soanCau/linhNhi.json` (14 KB), xuất từ CHÍNH các bộ đo có sẵn:
+- `hopAm`: chị đặt hợp âm phần hát thế nào (`tools/hop_am_linh_nhi.py`, 8 bài: 3 trưởng, 5 thứ) — mỗi bậc số đoạn · số bài · trơn ·
+  có màu gì · đảo bass; bước chuyển kèm số bài.
+- `not_`: chị đánh nốt gì trên từng loại hợp âm ở đoạn solo (dữ liệu của `tools/quy_luat_not_linh_nhi.py`, 23 đoạn) — nốt cao nhất mỗi cú
+  tay phải, bậc so với GỐC hợp âm đang vang, tách điệu · giọng · nhóm hợp âm · phách mạnh/nhẹ. Kiểm khớp số md 13e từng con số (slow
+  rock thứ 67/81 · 165/194; bolero thứ 129/201 · 138/247; bolero trưởng 137/167 · 131/220) — script dừng nếu lệch.
+- `vong`: 16 vòng 4 ô THẬT từ đoạn solo (9 thứ, 7 trưởng), mỗi ô một hợp âm, ≥ 3 hợp âm khác nhau; slow rock xếp trước (backing của chị).
+
+**Logic** — `src/thay/soanCau/soanCau.ts` (hàm thuần, 14 test): cột lý thuyết (`diatonicChords`; hợp âm bậc 1 quyết định cả bảng: ba ·
+bảy · bộ màu `PALETTE_BY_TONIC_COLOR`; giọng thứ thêm V của gam thứ hòa âm) · 11 vòng `PROGRESSION_TEMPLATES` · cột thầy (bậc ≥ 5 đoạn
+ở ≥ 2 bài; cờ nghi khi > nửa số đoạn có bass khác gốc — iii°, vi° giọng thứ) · "khác lý thuyết" (≥ 10 đoạn ở ≥ 3 bài, bỏ bậc nghi) ·
+bước chuyển (≥ 2 bài) · phân bố nốt (ngữ cảnh < `N_TOI_THIEU` = 20 nốt thì gộp: mọi điệu cùng giọng → cả hai giọng → nhóm hợp âm gần) ·
+xếp nốt "hay dùng" (gộp tới `PHU_HAY_DUNG` = 70 %) · "có dùng" · "chưa gặp trong sheet" · tập nốt được nhận theo bậc (bậc 1–2: 3 nốt
+nhiều nhất; bậc 3: nhóm hay dùng) · qua bậc khi `DAT_SOLO` = 80 % lần bấm thuộc tập · `oDem` cắt ô backing · tên nốt theo chữ của bậc.
+Ba mốc 20 · 70 % · 80 % là Claude chọn, CHƯA ĐO.
+
+**Giao diện** — tab thứ ba "Học cách soạn câu" ở trang thầy có dữ liệu (nay chỉ Linh Nhi; Tuấn · Cà Pháo · Blues không có tab):
+`SoanCau.tsx` — chọn giọng + hợp âm bậc 1; (1) hai cột lý thuyết | Linh Nhi, khác lý thuyết, bước chuyển, vòng thật, ghi chú số đo
+md 13d; (2) quiz điền ô trống — bấm hợp âm trên đàn / chuột / bàn phím máy / chạm, chấm theo tên nốt; (3) chọn nốt bám sheet, chọn
+mọi phách / phách mạnh / phách nhẹ, phím sáng nhóm hay dùng. `TapSolo.tsx` — (4) chờ đúng nốt bậc 1–3: backing dựng bằng `dungVong`
+(điệu Slow Rock Lá thư hai tay đã duyệt, câu fill tắt), ô của hợp âm đang tập lặp tới khi đánh đủ số nốt khác nhau thuộc tập nhận;
+mỗi lần bấm báo bậc và phần trăm chị dùng; nhật ký `luotTap` khoá `soan-cau:<thầy>:<vòng>`.
+
+**Lỗi bắt được khi chạy thử (đã sửa):**
+1. Backing im: `VongBaiTap.phach` là SỐ PHÁCH mỗi hợp âm (`[6, 6, 6, 6]`), đọc nhầm là phách bắt đầu → ô rỗng → `startTimelineLoop`
+   bỏ qua lặng lẽ (`looping` false suốt 12 giây). Sửa `oDem` + test; thử phá ngược thì test đỏ.
+2. Qua bậc là nhảy ngay sang bậc sau, che mất kết quả → giữ bậc đang tập, người tập tự bấm sang.
+3. Số La Mã hai cột lệch (app ghi "iidim", "III"; md ghi "ii°", "♭III") → cột lý thuyết ghi như md.
+4. Tên nốt theo dấu của giọng ("♭9 (D#)", "11 (A#)" ở La thứ) → gọi theo chữ của bậc (Mi♭, Si♭).
+
+**Sửa lời Claude đã nói:** "backing dựng từ bản hai tay sẽ chỉ còn tay trái" là SAI — Slow Rock Lá thư hai tay rải cả tay phải trong
+thân bài (đo trên Dm F Bdim E7: tay phải Rê3–Fa4, 24/48 tiếng). Giữ cả hai tay — bỏ tay phải là đổi tiếng so với bản đã duyệt.
+
+**Chạy thử (Chrome headless, n = 1 mỗi việc; `LuyenTap.json`, `Nguon.json` sao lưu trước — chạy xong giống từng byte):** phần 1 La
+thứ: lý thuyết Am Bdim C Dm Em E F G; bấm Am7 → hợp âm bảy; trưởng + A6 → bộ màu "Cổ điển, bossa"; cột chị i 101 đoạn · 5 bài · trơn
+41/101; khác lý thuyết 2 dòng (V 17/24 có ♭7; I 6/10 có ♭7) · phần 2: bấm C E G → "chưa đúng 1 lần", bấm D F A → "Đúng — Dm" · phần 3:
+Dm "chị hay dùng 5 33 % · ♭3 32 % · 1 17 %", Bdim gộp mọi điệu giọng thứ (n = 46) · phần 4: backing chạy (phách tăng 1,16 trong
+0,8 giây); bậc 1 bấm G# rồi A F D → 3/4 (75 %) chưa đạt, làm lại 3/3 đạt; bậc 2 6/6; bậc 3 8/8; nhật ký 4 lượt.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 14 · toàn suite **2 615 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua.
+
+**Chưa làm trong bản thử:** lịch ôn thẻ nhớ cho quiz; quiz dạng (b)–(e); ví dụ nghe cắt từ sheet ở phần 3; theo nhịp, bậc 4–7, tập tự
+do (bước 3); bấm nghe còn dùng thế bấm mộc. **Chưa đo:** ba mốc 20 nốt · 70 % · 80 %; slow rock giọng thứ chỉ 2 bài, vài nhóm ít nốt
+(giảm 9, m7♭5 12, maj7 9, sus4 12) — phải gộp.

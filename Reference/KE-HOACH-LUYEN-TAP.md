@@ -199,7 +199,7 @@ Mỗi bước: test + người dùng tập thử, xong mới sang bước sau. B
   (*Để Em Rời Xa*) · Linh Nhi — lấy từ 7 sheet trong PianoBrain (trong chín nút chỉ còn Slow Rock Lá thư của chị; Bolero
   Linh Nhi đã xoá 30/9) · Blues: nốt láy, blue note, riff, câu chạy · Twist: bass boogie 1–1–♭3–3–5–1–6–5, cú chặn swing.
 
-### GĐ 3 — Học cách soạn câu: kế hoạch dựng (viết 4/10/2026, sửa cùng ngày theo ý người dùng — chờ Q3)
+### GĐ 3 — Học cách soạn câu: kế hoạch dựng (viết và sửa 4/10/2026 theo ý người dùng; Q1–Q3 đã chọn; bước 1 dựng xong)
 
 **Ý người dùng (4/10/2026, tóm sát chữ):** làm theo từng thầy và theo màu hợp âm của từng thầy.
 1. Nhập giọng (tone chủ) của bài và hợp âm bậc 1 → app đưa ra hợp âm các bậc còn lại, giải thích vì sao đặt như vậy.
@@ -349,6 +349,9 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 #### Thứ tự dựng — mỗi bước người dùng dùng thử rồi mới sang bước sau
 1. **Làm thử với Linh Nhi** (người dùng chọn 4/10): xuất bảng phân bố nốt solo của chị từ bộ đo có sẵn; phần 1 hai cột (lý thuyết +
    Linh Nhi) · quiz điền ô trống · chọn nốt bám sheet trên một vòng thứ của chị · tập solo bậc 1–3 trên backing Slow Rock Lá thư.
+   **Dựng xong 4/10/2026 — chờ người dùng dùng thử** (`SO-TAY.md` cùng ngày). Khác kế hoạch: backing giữ CẢ HAI TAY của điệu đã duyệt
+   (tay phải rải Rê3–Fa4 — Claude từng nói nhầm là chỉ còn tay trái); quiz mới có dạng (a) điền ô trống + nghe vòng; chưa có lịch
+   ôn, chưa có ví dụ nghe cắt từ sheet ở phần 3, bấm nghe dùng thế bấm mộc (chưa phải thế bấm của thầy) — để bước 3.
 2. **Căn bản** dùng lại khung vừa làm thử: 7 bài lý thuyết, quiz, tập solo chấm theo lý thuyết, đệm cơ bản.
 3. Linh Nhi: bậc 4–7, tập tự do, các dạng quiz còn lại.
 4. **Đo Cà Pháo** — cách đặt hợp âm theo bậc, bước chuyển, nhịp đổi hợp âm, phân bố nốt solo theo chất hợp âm (cùng cách đo Linh
@@ -366,10 +369,9 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 4. Khối lượng: Căn bản + 3 thầy × 4 phần → làm thử trọn Linh Nhi trước để người dùng duyệt hình thức.
 
 #### Quyết định
-- **Người dùng chọn (4/10/2026):** Q1 làm thử với Linh Nhi · Q2 ẩn phần này ở trang Tuấn.
-- **Q3 (chờ trả lời): Căn bản để ở một trang riêng "Căn bản"** (khuyến nghị — lý thuyết giống nhau cho mọi thầy, để ở ba trang thầy
-  thì lặp ba lần; học cái chuẩn trước rồi mới so thầy) **hay đặt trong tab Học cách soạn câu của từng thầy?** Lý do không nên trang
-  riêng: thêm một nút trên thanh trang — điện thoại phải cuộn ngang thêm.
+- **Người dùng chọn (4/10/2026):** Q1 làm thử với Linh Nhi · Q2 ẩn phần này ở trang Tuấn · Q3 (*"làm q3 theo bạn đề xuất"*) Căn bản
+  ở một **trang riêng "Căn bản"** — lý thuyết giống nhau cho mọi thầy, để ở ba trang thầy thì lặp ba lần; học cái chuẩn trước rồi mới
+  so thầy. Cái giá: thêm một nút trên thanh trang — điện thoại phải cuộn ngang thêm.
 
 **Chưa đo:** cách đặt hợp âm theo bậc, bước chuyển và phân bố nốt solo theo chất hợp âm của Cà Pháo · loại hợp âm bậc 1 có kéo theo
 bậc khác không · thang 7 bậc tập solo, ~70 % / ~85 % và mọi ngưỡng · tập nốt được nhận ở từng bậc có giúp người dùng chơi hay hơn
@@ -518,8 +520,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.
 - Bước 3–5 (tab Điệu · trang Hôm nay · tab Kỹ thuật đánh): **xong** — GĐ 1 bước 5–8 và GĐ 2 ở trên. Bước 6 — tab Học cách soạn câu
-  (GĐ 3): **kế hoạch dựng viết và sửa 4/10/2026 theo ý người dùng** (Q1 Linh Nhi, Q2 ẩn Tuấn) — chờ Q3 rồi dựng bước 1
-  (mục GĐ 3 ở trên).
+  (GĐ 3): kế hoạch viết và sửa 4/10/2026 theo ý người dùng (Q1 Linh Nhi · Q2 ẩn Tuấn · Q3 trang riêng Căn bản). **Bước 1 — làm thử
+  với Linh Nhi: dựng xong 4/10/2026, chờ người dùng dùng thử**; bước 2 (trang Căn bản) chưa làm (mục GĐ 3 ở trên).
 
 ---
 
