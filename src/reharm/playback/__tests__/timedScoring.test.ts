@@ -217,18 +217,25 @@ describe('chamLay — chấm nốt láy (GĐ 2 mục b, 3/10/2026)', () => {
     { notes: [81], startBeat: 1.875, durationBeats: 0.0625, hand: 'right', velocity: 60, grace: true },
     { notes: [83], startBeat: 1.9375, durationBeats: 0.0625, hand: 'right', velocity: 60, grace: true },
     { notes: [81], startBeat: 2, durationBeats: 1, hand: 'right', velocity: 80 },
-    { notes: [63, 64], startBeat: 3, durationBeats: 0.5, hand: 'right', velocity: 80 },
   ]
   const expected = expectedNotesOf(events, 'right')
+  // Bản chép từ MIDI (không có nốt láy ghi riêng): láy chồng Mi♭ + Mi ở phách 3.
+  const chong: TimelineEvent[] = [
+    { notes: [74], startBeat: 1, durationBeats: 1, hand: 'right', velocity: 80 },
+    { notes: [63, 64], startBeat: 3, durationBeats: 0.5, hand: 'right', velocity: 80 },
+  ]
+  const expectedChong = expectedNotesOf(chong, 'right')
   const bam = (note: number, beat: number): PlayedNote => ({ note, beat, velocity: 80 })
 
   it('láy sát trước nốt chính thì đúng — kể cả láy cùng phím với nốt chính; láy chồng bấm đủ hai nốt', () => {
-    const played = [bam(71, 0.95), bam(74, 1), bam(81, 1.88), bam(83, 1.94), bam(81, 2), bam(63, 3), bam(64, 3)]
+    const played = [bam(71, 0.95), bam(74, 1), bam(81, 1.88), bam(83, 1.94), bam(81, 2)]
     const lay = chamLay(events, expected, played, opts)
-    expect([lay.layTong, lay.layDung]).toEqual([4, 4])
+    expect([lay.layTong, lay.layDung]).toEqual([3, 3])
     expect(lay.phimLay.sort()).toEqual([0, 2, 3])
     // Phím láy bỏ ra thì không còn phím thừa.
     expect(scoreTimed(expected, played.filter((_, i) => !lay.phimLay.includes(i)), opts).extra).toEqual([])
+    const layChong = chamLay(chong, expectedChong, [bam(74, 1), bam(63, 3), bam(64, 3)], opts)
+    expect([layChong.layTong, layChong.layDung]).toEqual([1, 1])
   })
 
   it('láy sau nốt chính, láy xa quá 300 ms, thiếu một nốt láy chồng — đều sai', () => {
@@ -236,7 +243,25 @@ describe('chamLay — chấm nốt láy (GĐ 2 mục b, 3/10/2026)', () => {
     expect(chamLay(events, expected, [bam(74, 1), bam(71, 1.05)], opts).layDung).toBe(1)
     expect(chamLay(events, expected, [bam(74, 1), bam(71, 1.12)], opts).layDung).toBe(0)
     expect(chamLay(events, expected, [bam(71, 0.3), bam(74, 1)], opts).layDung).toBe(0)
-    expect(chamLay(events, expected, [bam(63, 3)], opts).layDung).toBe(0)
+    expect(chamLay(chong, expectedChong, [bam(74, 1), bam(63, 3)], opts).layDung).toBe(0)
+  })
+
+  it('bản đã ghi nốt láy riêng: cặp nửa cung trong hợp âm là thế bấm, không phải láy chồng', () => {
+    // Đô–Mi–Fa–La (Mi–Fa cách nửa cung) như hợp âm tay phải Bossa Cà Pháo ô 57.
+    const coHopAm: TimelineEvent[] = [...events, { notes: [60, 64, 65, 69], startBeat: 3, durationBeats: 0.5, hand: 'right', velocity: 80 }]
+    expect(chamLay(coHopAm, expectedNotesOf(coHopAm, 'right'), [], opts).layTong).toBe(3)
+  })
+
+  it('chỉ chấm nốt láy của tay đang tập — láy tay trái không tính khi tập tay phải', () => {
+    const haiTay: TimelineEvent[] = [
+      ...events,
+      { notes: [44], startBeat: 2.9375, durationBeats: 0.0625, hand: 'left', velocity: 60, grace: true },
+      { notes: [45], startBeat: 3, durationBeats: 1, hand: 'left', velocity: 80 },
+    ]
+    const played = [bam(71, 0.95), bam(74, 1), bam(81, 1.88), bam(83, 1.94), bam(81, 2)]
+    const phai = chamLay(haiTay, expectedNotesOf(haiTay, 'right'), played, opts)
+    expect([phai.layTong, phai.layDung]).toEqual([3, 3])
+    expect(chamLay(haiTay, expectedNotesOf(haiTay, 'both'), played, opts).layTong).toBe(4)
   })
 })
 

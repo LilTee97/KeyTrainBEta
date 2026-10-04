@@ -334,7 +334,10 @@ export function chamNhacPhim(
  * - Nốt láy ghi riêng (tiếng `grace`): đúng khi phím ấy được bấm trong khoảng [nốt chính − `LAY_TRUOC_MS`, nốt chính + `LAY_SAU_MS`]
  *   (đã trừ độ trễ) và không muộn hơn lần bấm nốt chính. Nốt chính = tiếng thật đầu tiên cùng tay, từ lúc nốt láy trở đi.
  * - Láy CHỒNG — hai nốt cách nửa cung trong cùng một tiếng (bản chép từ MIDI ghi láy như vậy, vd Rockhouse): đúng khi cả hai nốt
- *   cùng được bấm trúng.
+ *   cùng được bấm trúng. Chỉ tìm ở bản KHÔNG có nốt láy ghi riêng: sheet chép tay đã ghi láy bằng nốt láy thì cặp nửa cung trong hợp âm
+ *   là thế bấm (vd Đô–Mi–Fa–La của Bossa Cà Pháo), không phải láy (4/10/2026).
+ * Chỉ chấm láy của tay đang tập (theo `expected`) — tập riêng tay phải thì nốt láy tay trái do máy đánh không tính (4/10/2026: trước đó
+ * đoạn láy Cà Pháo ô 70–71 tối đa 2/3 nốt láy ở bậc tay phải, không bao giờ qua ngưỡng 70 %).
  * Nốt chính và mọi nốt khác ghép trước (`ghepCap`) nên phím của chúng không bị lấy làm nốt láy. `phimLay`: chỉ số các phím đã dùng
  * cho nốt láy — bên gọi bỏ chúng ra trước khi chấm phím thừa. Ngưỡng — Claude trong vai gia sư, CHƯA ĐO.
  */
@@ -363,9 +366,12 @@ export function chamLay(
     if (pair) pressOf.set(khoa(want.hand, want.beat, want.note), pair.got)
   })
   const cham: ChamLay = { layTong: 0, layDung: 0, phimLay: [] }
+  const tay = new Set(expected.map((want) => want.hand))
+  const cuaTay = events.filter((event) => tay.has(event.hand))
 
-  /* Láy chồng: cặp nốt cách nửa cung trong một tiếng thật. */
-  for (const event of events) {
+  /* Láy chồng: cặp nốt cách nửa cung trong một tiếng thật — chỉ ở bản không ghi nốt láy riêng. */
+  const coLayRieng = events.some((event) => event.grace)
+  for (const event of coLayRieng ? [] : cuaTay) {
     if (event.grace) continue
     const notes = [...event.notes].sort((a, b) => a - b)
     for (let i = 1; i < notes.length; i++) {
@@ -378,9 +384,9 @@ export function chamLay(
   }
 
   /* Nốt láy ghi riêng. */
-  const that = events.filter((event) => !event.grace).sort((a, b) => a.startBeat - b.startBeat)
+  const that = cuaTay.filter((event) => !event.grace).sort((a, b) => a.startBeat - b.startBeat)
   const same = (want: number, got: number) => (ignoreOctave ? pitchClassOf(want) === pitchClassOf(got) : want === got)
-  for (const grace of events) {
+  for (const grace of cuaTay) {
     if (!grace.grace) continue
     const chinh = that.find((event) => event.hand === grace.hand && event.startBeat >= grace.startBeat - 1e-6)
     if (!chinh) continue

@@ -316,7 +316,7 @@ phải mã chết: Bolero Tuấn giọng thứ lấy câu dạo của anh 2/6 l�
 theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người dùng quyết Tuấn có thôi mượn không (`SO-TAY.md`, cùng ngày).
 **Người dùng chọn A (3/10/2026): giữ nguyên** — Bolero Tuấn vẫn mượn câu dạo, giang tấu của Tôn Hùng; mã Tôn Hùng giữ, không xoá mức 2.
 
-**Tình trạng (3/10/2026):**
+**Tình trạng (4/10/2026):**
 - Bước 1 — khung điều hướng: **xong** (`AppShell`, `src/thay/`).
 - Bước 2 — dữ liệu bài tập (GĐ 1 bước 1–3): **xong — người dùng duyệt 2/10/2026** (*"các vòng hợp âm đã ổn"*). 11 bài
   `src/thay/baiTap/*.json` mang `duyet`; `tools/sinhBaiTap.mjs` giữ, không sinh đè. Bảng vòng: `SO-TAY.md` cùng ngày. Test báo
@@ -338,6 +338,10 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
   - **Cà Pháo — đánh giật: xong 3/10/2026** (`KyThuatBai.tsx`, `kyThuat/giatCaPhao.ts`): 9 đoạn cắt nguyên từ *Người hãy quên em đi*
     (sheet duy nhất của anh có dấu giật), thang 4 bậc, chấm cả lúc nhấc phím (`chamNhacPhim`). Ô tick nghe thử giật CHÁT 11 ở Bossa
     CP: dựng rồi BỎ cùng ngày (người dùng: *"bỏ ô tick đó đi"*) — điệu về đúng bản đã duyệt. Chi tiết `SO-TAY.md` cùng ngày.
+  - **Cà Pháo — bè quãng 4/5 · láy nửa cung · câu fill 7 kiểu: xong 4/10/2026** (người dùng: *"các kỹ thuật đặc trưng khác của anh
+    đâu"* — Claude đã hiểu nhầm câu 3/10 thành "Cà Pháo chỉ học giật"). Mọi kỹ thuật có thêm **Tập tự do**: chỉnh BPM, chọn tay, vẫn
+    chấm, không vào thang, không lưu tiến độ. Sửa 2 lỗi chấm láy (chấm nhầm tay không tập; hợp âm có cặp nửa cung bị coi là láy).
+    Chi tiết `SO-TAY.md` 4/10.
   - **Linh Nhi — câu chạy tay trái dẫn vào hợp âm sau · Blues — câu lick bè 3/6: xong 3/10/2026** (người dùng: *"làm theo bạn đề
     nghị"*): 7 đoạn từ *Lá Thư Trần Thế*, 6 câu từ *Rockhouse*, khung chung `kyThuat/kyThuat.ts`. **Mục (b) xong 3/10/2026** (người dùng: *"tiếp tục
     đi"*): chấm nốt láy (`chamLay`) · láy quãng 3 ngũ cung (Linh Nhi, 8 đoạn *Biển Tình*) · láy nốt blue (Blues, 4 đoạn Boogie + 5 câu

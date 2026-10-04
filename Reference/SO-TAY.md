@@ -5518,3 +5518,46 @@ duyệt) · *"tiếp tục làm theo lộ trình"*.
 
 **Sơ suất đã sửa trong lúc làm:** thử phá xong trả tệp bằng `git checkout` — kéo lại cả hàm ô tick vừa gỡ (phần gỡ chưa commit); lấy lại
 từ bản sao lưu chép trước khi thử, kiểm `git diff b71167d^` = 0.
+
+## Bước — GĐ 2: Cà Pháo thêm bè quãng 4/5 · láy nửa cung · câu fill · Tập tự do chỉnh BPM · sửa chấm láy (4/10/2026)
+
+**Người dùng:** *"Ở phần kỹ thuật đánh tại sao Cà Pháo chỉ có phần đánh giật thôi, các kỹ thuật đặc trưng khác của anh đâu / Phần Kỹ
+thuật đánh hãy cho thêm lựa chọn đánh tự do theo các kỹ thuật (có thể điều chỉnh BPM) chứ đừng chỉ có đánh theo level."*
+
+**Vì sao trước chỉ có giật:** Claude hiểu nhầm câu 3/10 *"tôi chỉ muốn học đánh giật kiểu Cà Pháo, các thầy khác thì hãy tìm những kỹ
+thuật đặc trưng của họ"* thành "với Cà Pháo chỉ học giật".
+
+- **3 kỹ thuật mới của Cà Pháo** (`scripts/ky_thuat_ca_phao.py --ghi` → `fillCaPhao` · `beQuang4CaPhao` · `layCaPhao.json`; đoạn cắt
+  NGUYÊN, nhịp độ của bài gốc). Trang Cà Pháo xếp dễ trước: bè 4/5 → láy → giật → fill.
+  - **Bè quãng 4 · quãng 5** (`be4-cp`): 7 đoạn hai ô từ 5 sheet ballad — ô đoạn đàn có ≥ 4 cú tay phải hai nốt cách 5/7 nửa cung, mỗi
+    bài ≤ 2. Căn cứ (PianoBrain `giat_lay.py --cu`, cùng một cách đo: % số cú hai nốt tay phải ở đoạn đàn): ballad của anh 38 %, nhiều
+    nhất trong các loại bè ở đó (3/6 31 % · quãng 2 15 % · quãng 8 13 %; 1530 cú tay phải); Linh Nhi 12–24 %, Blues 17–25 %.
+  - **Láy nửa cung** (`lay-cp`, chấm láy bật): 8 đoạn *Người hãy quên em đi*, ♩ 107. Căn cứ (n = 1 bài, 35 chỗ láy): láy một nốt nửa cung
+    dưới 14 · vuốt lên 6 · vuốt xuống 8; láy một nốt từ quãng 3 thứ dưới kiểu Linh Nhi 0/35 (Biển Tình 21/46).
+  - **Câu fill lúc hát — 7 kiểu** (`fill-cp`): 8 đoạn đúng các chỗ nguồn của bảng "Bảy kỹ thuật" (md Cà Pháo; bộ fill người dùng duyệt
+    30/9 ở Ballad cứ đi). Đoạn "tay trái dẫn" và "bass đi nửa cung" tập TAY TRÁI ở bậc tách tay: trường mới `DoanTap.tay` + `bacCuaDoan`
+    (chỉ đổi tay và nhãn, ngưỡng giữ nguyên).
+- **Nốt láy trùng nốt chính:** sheet ghi 2/35 chỗ (ô 37 Đô5 Si♭4 → Si♭4, ô 58 La5 Sol5 → Sol5); đoạn chọn dính ô 58 → bỏ nốt láy Sol5,
+  giữ La5 — bấm lại cùng phím trong ~35 ms tay không làm được, `chamLay` lại đòi hai lần bấm. Test: không bài láy nào còn nốt láy trùng.
+- **Tập tự do** (`KyThuatBai`): nút "Lộ trình 4 bậc · Tập tự do" ở mọi kỹ thuật, mọi thầy. Tự do: thanh nhịp độ 30 → 1,5 × nhịp bài (mở
+  ở 60 %), nút nhanh 60 · 80 · 100 %, chọn tay ở khung tập; vẫn chấm như bậc (cả láy, giật nếu kỹ thuật có) nhưng không vào thang, không
+  ghi nhật ký. `TimedPractice` thêm `chamNhac` · `chamLay` (chấm khi không có bậc) và `anTempo` (ẩn nút % của khung khi bên gọi tự đặt BPM).
+- **Sửa hai lỗi `chamLay`** (lộ ra khi soi đoạn láy Cà Pháo):
+  1. Chấm cả nốt láy của tay KHÔNG tập: đoạn ô 70–71 (láy tay trái La♭2 → La2) ở bậc tay phải tối đa 2/3 = 67 % < ngưỡng 70 % → không bao
+     giờ qua. Nay chỉ chấm tay đang tập (theo `expected`).
+  2. Láy chồng đếm cả thế bấm hợp âm: Đô–Mi–Fa–La của Bossa thành "láy". Nay chỉ tìm láy chồng ở bản KHÔNG ghi nốt láy riêng (bản chép từ
+     MIDI như Rockhouse). Láy Linh Nhi · Blues không đổi: không có nốt láy tay trái; láy chồng Blues chỉ nằm ở đoạn Rockhouse.
+  Thử phá: trả code cũ thì đúng 2 test mới đỏ.
+- **Sửa lời:** "*Người hãy quên em đi* là sheet duy nhất của anh có nốt láy" là SAI — Hồng Kông 1 có 2 chỗ; "anh hay vút bè quãng 4 ở câu
+  đóng dạo" là số đo của riêng Để Em Rời Xa (n = 1) — đã ghi lại đúng trong lời giới thiệu.
+
+**Chạy thử (Chrome headless, phím giả theo đồng hồ của bộ chấm, độ trễ 0; n = 1 mỗi việc; dùng vite người dùng đang mở ở cổng 5173,
+Chrome hồ sơ riêng):** trang Cà Pháo đủ 4 nút kỹ thuật · bè 4/5 *Chúng Ta* ô 34–35 bậc 1 (62 BPM): 32/32 → Đạt · láy ô 70–71 bậc 1 tay
+phải (64 BPM): 36/36, láy 4/4 → Đạt · fill "tay trái dẫn" bậc 1 nhãn "Tay trái · 60 %" (38 BPM): 48/48 → Đạt · Tập tự do láy ô 1: nút
+80 % → 86 BPM, kéo thanh về 50 → "Bắt đầu (50 BPM", tay phải 36/36, láy 12/12 → Đạt (ngưỡng tạm), nhật ký không đổi.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 6 (chấm láy 2, kỹ thuật Cà Pháo 4) · toàn suite **2 601 qua / 5 đỏ** (5 đỏ cũ) ·
+`vite build` qua.
+
+**Chưa đo:** ngưỡng mọi bậc của 3 kỹ thuật mới (Claude đặt); cận 30 BPM và 1,5 × nhịp bài của thanh tự do là số chọn; lời bậc 3 của bè
+4/5 dựa trên một bài (Để Em dạo: 21/32 cú tay phải trên bass đang ngân); chưa có lượt tập thật nào trên đàn.

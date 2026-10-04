@@ -138,6 +138,11 @@ export interface TimedPracticeProps {
       luc: ChamLuc | null,
     ) => { dat: boolean; tomTat: string }
   }
+  /** Tập tự do ở tab Kỹ thuật đánh: chấm nhấc phím / nốt láy dù không có bậc (có bậc thì theo cờ của bậc). */
+  chamNhac?: boolean
+  chamLay?: boolean
+  /** Bên gọi tự chọn BPM (`vongBpm` = nhịp tập): ẩn nút 60 · 80 · 100 %, chơi đúng `vongBpm`. */
+  anTempo?: boolean
 }
 
 /** Bậc 7 — chỉ tên hợp âm: hợp âm đang chơi và hợp âm kế (đọc trước, như đọc bảng hợp âm khi đệm hát). */
@@ -221,6 +226,9 @@ export function TimedPractice({
   meter,
   vongBpm,
   bac,
+  chamNhac: chamNhacTuDo = false,
+  chamLay: chamLayTuDo = false,
+  anTempo = false,
 }: TimedPracticeProps) {
   const storeBpm = useMetronomeStore((state) => state.bpm)
   const bpm = vongBpm ?? storeBpm
@@ -234,12 +242,15 @@ export function TimedPractice({
   const [handTuDo, setHand] = useState<PracticeHand>('both')
   const hand = bac?.tay ?? handTuDo
   const [tempoTuDo, setTempo] = useState<TempoStep>(60)
-  const tempo = bac?.tempo ?? tempoTuDo
+  const tempo = bac?.tempo ?? (anTempo ? 100 : tempoTuDo)
   const [ignoreOctaveTuDo, setIgnoreOctave] = useState(false)
   const ignoreOctave = bac?.boQuaQuangTam ?? ignoreOctaveTuDo
   const anNotRoi = bac?.anNotRoi ?? false
   const bacRef = useRef(bac)
   bacRef.current = bac
+  /* Chấm nhấc phím / nốt láy: theo bậc nếu có, không thì theo cờ tập tự do. */
+  const chamRef = useRef({ nhac: false, lay: false })
+  chamRef.current = { nhac: bac?.chamNhac ?? chamNhacTuDo, lay: bac?.chamLay ?? chamLayTuDo }
   const [phase, setPhase] = useState<Phase>('idle')
   const [latencyMs, setLatencyMs] = useState(() => readSetting('latencyMs'))
   const [calibration, setCalibration] = useState<LatencyMeasure | 'few' | null>(null)
@@ -401,7 +412,7 @@ export function TimedPractice({
     const msPerBeat = 60000 / practiceBpm
     const opts = { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave }
     /* Nốt láy chấm riêng; phím đã dùng để láy không còn là phím thừa. */
-    const lay = bacRef.current?.chamLay ? chamLay(shifted, expected, presses.current, opts) : null
+    const lay = chamRef.current.lay ? chamLay(shifted, expected, presses.current, opts) : null
     const daLay = new Set(lay?.phimLay ?? [])
     const score = scoreTimed(
       theoHopAm ? gopLopCaoDo(expected) : expected,
@@ -415,7 +426,7 @@ export function TimedPractice({
           hopAmAt: hopAmTheoPhach(perBeat, countIn),
         })
       : null
-    const nhac = bacRef.current?.chamNhac
+    const nhac = chamRef.current.nhac
       ? chamNhacPhim(shifted, expected, presses.current, { msPerBeat, latencyMs: latencyMs ?? 0, ignoreOctave })
       : null
     const luc = chamLuc(shifted, expected, presses.current, opts)
@@ -587,7 +598,7 @@ export function TimedPractice({
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
+        <div className={`flex gap-1 ${anTempo ? 'hidden' : ''}`}>
           {TEMPO_STEPS.map((value) => (
             <button
               key={value}

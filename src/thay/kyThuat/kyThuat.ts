@@ -21,6 +21,8 @@ export interface DoanTap {
   ghiChu: string
   /** Nhịp độ riêng của đoạn khi khác `KyThuat.bpm` (kỹ thuật lấy đoạn từ nhiều sheet). */
   bpm?: number
+  /** Tay tập ở các bậc tách tay khi khác tay của thang (vd câu fill "tay trái dẫn"). */
+  tay?: 'left' | 'right'
   events: TimelineEvent[]
 }
 
@@ -79,6 +81,8 @@ export function boGiat(events: readonly TimelineEvent[]): TimelineEvent[] {
   return events.map(({ giat, ghiBeats, ...event }) => (giat ? { ...event, durationBeats: ghiBeats ?? event.durationBeats } : event))
 }
 
+const TEN_TAY = { left: 'Tay trái', right: 'Tay phải' } as const
+
 /** Thang 4 bậc: tách tay tập trung (60 % → 100 %) rồi ghép hai tay (60 % → 100 %). Ngưỡng giật/ngân chỉ cho đánh giật. */
 export function thang4(
   tay: 'left' | 'right',
@@ -86,7 +90,7 @@ export function thang4(
   giat: { giatToiThieu: [number, number]; nganToiThieu: [number, number] } | null = null,
   lay: [number, number] | null = null,
 ): BacKyThuat[] {
-  const tenTay = tay === 'left' ? 'Tay trái' : 'Tay phải'
+  const tenTay = TEN_TAY[tay]
   const cham = (nhanh: boolean) => ({
     dungToiThieu: nhanh ? 0.9 : 0.85,
     lechToiDa: nhanh ? 45 : 60,
@@ -101,6 +105,15 @@ export function thang4(
     { so: 3, ten: 'Hai tay · 60 %', tay: 'both', tempo: 60, ...cham(false), viSao: viSao[2] },
     { so: 4, ten: 'Hai tay · 100 %', tay: 'both', tempo: 100, ...cham(true), viSao: viSao[3] },
   ]
+}
+
+/** Thang của một đoạn: đoạn có `tay` riêng thì các bậc tách tay tập tay ấy (ngưỡng giữ nguyên). */
+export function bacCuaDoan(kt: KyThuat, doan: DoanTap): readonly BacKyThuat[] {
+  const tay = doan.tay
+  if (!tay) return kt.bac
+  return kt.bac.map((bac) =>
+    bac.tay === 'both' || bac.tay === tay ? bac : { ...bac, tay, ten: bac.ten.replace(TEN_TAY[bac.tay], TEN_TAY[tay]) },
+  )
 }
 
 const phanTram = (x: number) => Math.round(x * 100)

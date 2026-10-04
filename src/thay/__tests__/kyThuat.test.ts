@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest'
 import type { TimedScore } from '../../reharm/playback/timedScoring'
 import type { LuotTap } from '../../shared/persistence/db'
 import { KY_THUAT, kyThuatCua } from '../kyThuat'
+import { BE_QUANG_4_CA_PHAO } from '../kyThuat/beQuang4CaPhao'
 import { CHAY_TRAI_LINH_NHI } from '../kyThuat/chayTraiLinhNhi'
+import { FILL_CA_PHAO } from '../kyThuat/fillCaPhao'
 import { GIAT_CA_PHAO } from '../kyThuat/giatCaPhao'
-import { boGiat, chamKyThuat, khoaKyThuat, lapDoan, trangThaiKyThuat } from '../kyThuat/kyThuat'
+import { bacCuaDoan, boGiat, chamKyThuat, khoaKyThuat, lapDoan, trangThaiKyThuat, type DoanTap } from '../kyThuat/kyThuat'
 import { LAY_BLUES } from '../kyThuat/layBlues'
+import { LAY_CA_PHAO } from '../kyThuat/layCaPhao'
 import { LAY_LINH_NHI } from '../kyThuat/layLinhNhi'
 import { LICK_BE_BLUES } from '../kyThuat/lickBeBlues'
 
@@ -20,8 +23,8 @@ const score = (hit: number, total: number, medianAbsMs: number, extra = 0): Time
 })
 
 describe('tab Kỹ thuật đánh — mọi kỹ thuật', () => {
-  it('mỗi thầy có sheet một kỹ thuật; Tuấn chưa có (không có sheet)', () => {
-    expect(kyThuatCua('ca-phao').map((kt) => kt.id)).toEqual(['giat-cp'])
+  it('thầy có sheet thì có kỹ thuật, dễ trước; Tuấn chưa có (không có sheet)', () => {
+    expect(kyThuatCua('ca-phao').map((kt) => kt.id)).toEqual(['be4-cp', 'lay-cp', 'giat-cp', 'fill-cp'])
     expect(kyThuatCua('linh-nhi').map((kt) => kt.id)).toEqual(['chay-trai-ln', 'lay-ln'])
     expect(kyThuatCua('blues').map((kt) => kt.id)).toEqual(['lick-be-blues', 'lay-blues'])
     expect(kyThuatCua('tuan')).toEqual([])
@@ -54,6 +57,36 @@ describe('Cà Pháo — đánh giật (Người hãy quên em đi)', () => {
       for (const event of doan.events.filter((one) => one.giat)) expect(event.durationBeats * 2).toBeCloseTo(event.ghiBeats!)
       expect(boGiat(doan.events).some((event) => event.giat)).toBe(false)
     }
+  })
+})
+
+describe('Cà Pháo — câu fill · bè quãng 4/5 (4/10/2026)', () => {
+  it('fill: 8 đoạn; "tay trái dẫn" và "bass đi nửa cung" tập tay trái ở bậc tách tay, ngưỡng giữ nguyên', () => {
+    expect(FILL_CA_PHAO.bai).toHaveLength(8)
+    expect(FILL_CA_PHAO.bai.filter((doan) => doan.tay === 'left').map((doan) => doan.id).sort()).toEqual(['bass-nua-cung', 'tay-trai-dan'])
+    const thang = bacCuaDoan(FILL_CA_PHAO, FILL_CA_PHAO.bai.find((doan) => doan.id === 'tay-trai-dan')!)
+    expect(thang.map((bac) => [bac.tay, bac.ten])).toEqual([
+      ['left', 'Tay trái · 60 %'],
+      ['left', 'Tay trái · 100 %'],
+      ['both', 'Hai tay · 60 %'],
+      ['both', 'Hai tay · 100 %'],
+    ])
+    expect(thang.map((bac) => bac.dungToiThieu)).toEqual(FILL_CA_PHAO.bac.map((bac) => bac.dungToiThieu))
+    expect(bacCuaDoan(FILL_CA_PHAO, FILL_CA_PHAO.bai.find((doan) => !doan.tay)!)).toBe(FILL_CA_PHAO.bac)
+  })
+
+  it('bè quãng 4/5: đoạn nào cũng có ≥ 4 cú tay phải hai nốt cách 5 hoặc 7 nửa cung; mỗi bài tối đa 2 đoạn', () => {
+    expect(BE_QUANG_4_CA_PHAO.bai.length).toBeGreaterThanOrEqual(5)
+    const moiBai = new Map<string, number>()
+    for (const doan of BE_QUANG_4_CA_PHAO.bai) {
+      const be = doan.events.filter(
+        (event) => event.hand === 'right' && event.notes.length === 2 && [5, 7].includes(Math.abs(event.notes[1]! - event.notes[0]!)),
+      )
+      expect(be.length).toBeGreaterThanOrEqual(4)
+      const bai = doan.id.replace(/-o\d+$/, '')
+      moiBai.set(bai, (moiBai.get(bai) ?? 0) + 1)
+    }
+    expect(Math.max(...moiBai.values())).toBeLessThanOrEqual(2)
   })
 })
 
@@ -118,7 +151,7 @@ describe('chamKyThuat — thang 4 bậc', () => {
   })
 })
 
-describe('Luyến láy — Linh Nhi (Biển Tình) · Blues (Boogie, Rockhouse)', () => {
+describe('Luyến láy — Linh Nhi (Biển Tình) · Blues (Boogie, Rockhouse) · Cà Pháo (Người hãy quên em đi)', () => {
   const coLay = (events: readonly { grace?: boolean; hand: string; notes: number[] }[]) =>
     events.some(
       (event) =>
@@ -126,8 +159,12 @@ describe('Luyến láy — Linh Nhi (Biển Tình) · Blues (Boogie, Rockhouse)'
         (event.hand === 'right' && [...event.notes].sort((a, b) => a - b).some((note, i, all) => i > 0 && note - all[i - 1]! === 1)),
     )
 
+  /** Nốt chính của nốt láy: tiếng thật đầu tiên cùng tay từ lúc nốt láy trở đi (như `chamLay`). */
+  const chinhCua = (doan: DoanTap, grace: DoanTap['events'][number]) =>
+    doan.events.find((event) => !event.grace && event.hand === grace.hand && event.startBeat >= grace.startBeat - 1e-6)
+
   it('đoạn nào cũng có nốt láy để chấm; chấm láy bật, chấm nhấc phím tắt', () => {
-    for (const kt of [LAY_LINH_NHI, LAY_BLUES]) {
+    for (const kt of [LAY_LINH_NHI, LAY_BLUES, LAY_CA_PHAO]) {
       expect(kt.chamLay).toBe(true)
       expect(kt.chamNhac).toBe(false)
       expect(kt.bai.length).toBeGreaterThanOrEqual(5)
@@ -144,6 +181,33 @@ describe('Luyến láy — Linh Nhi (Biển Tình) · Blues (Boogie, Rockhouse)'
         return chinh !== undefined && Math.max(...chinh.notes) - event.notes[0]! === 3
       })
       expect(q3.length).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('không nốt láy nào trùng cao độ nốt chính — tay không bấm lại một phím trong ~35 ms', () => {
+    for (const kt of [LAY_LINH_NHI, LAY_BLUES, LAY_CA_PHAO]) {
+      for (const doan of kt.bai) {
+        for (const grace of doan.events.filter((event) => event.grace)) {
+          expect(chinhCua(doan, grace)!.notes.some((note) => grace.notes.includes(note))).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('Cà Pháo: đoạn nào cũng có bước nửa cung trong chuỗi láy; không láy đơn từ quãng 3 thứ dưới kiểu Linh Nhi', () => {
+    expect(LAY_CA_PHAO.bai).toHaveLength(8)
+    for (const doan of LAY_CA_PHAO.bai) {
+      const graces = doan.events.filter((event) => event.grace)
+      const buocNuaCung = graces.some((grace) => {
+        const sau = doan.events.find((event) => event.hand === grace.hand && event.startBeat > grace.startBeat + 1e-6)!
+        return sau.notes.some((note) => Math.abs(note - grace.notes[0]!) === 1)
+      })
+      expect(buocNuaCung).toBe(true)
+      for (const grace of graces) {
+        const chinh = chinhCua(doan, grace)!
+        const cungChinh = graces.filter((one) => chinhCua(doan, one) === chinh)
+        if (cungChinh.length === 1) expect(Math.max(...chinh.notes) - grace.notes[0]!).not.toBe(3)
+      }
     }
   })
 
