@@ -5561,3 +5561,26 @@ phải (64 BPM): 36/36, láy 4/4 → Đạt · fill "tay trái dẫn" bậc 1 nh
 
 **Chưa đo:** ngưỡng mọi bậc của 3 kỹ thuật mới (Claude đặt); cận 30 BPM và 1,5 × nhịp bài của thanh tự do là số chọn; lời bậc 3 của bè
 4/5 dựa trên một bài (Để Em dạo: 21/32 cú tay phải trên bass đang ngân); chưa có lượt tập thật nào trên đàn.
+
+## Ghi — Kế hoạch GĐ 3 mới: tab Học cách soạn câu theo yêu cầu người dùng (4/10/2026)
+
+**Người dùng:** làm theo từng thầy và theo màu hợp âm của từng thầy — (1) nhập giọng + hợp âm bậc 1 → hợp âm các bậc còn lại kèm
+vì sao; (2) quiz nhớ vòng, điền hợp âm còn thiếu; (3) giải thích cặn kẽ chọn nốt solo trên từng hợp âm, thành quiz / bài ghi nhớ;
+(4) tính năng chọn nốt solo trên vòng có backing, nhập bằng đàn MIDI · chuột · bàn phím máy · chạm, chờ đúng nốt, chấm điểm, tự do
+và theo bậc. Nói rõ thêm: *"màu hợp âm … là phong cách đặt hợp âm của từng thầy, tính cả hợp âm cơ bản và màu và tất cả các loại
+hợp âm mà các thầy đặt trong các sheet"*.
+
+- `KE-HOACH-LUYEN-TAP.md` mục GĐ 3 viết lại thành kế hoạch dựng (chờ duyệt): vòng học Hiểu → Nhớ → Nghe → Làm; bốn phần — cách đặt
+  hợp âm của thầy · nhớ vòng · chọn nốt solo · tập solo trên backing; thang 7 bậc; dùng lại / dựng mới; thứ tự dựng; lo ngại; Q1–Q2.
+- **Soát đề xuất 3/10 với md trước khi đưa lại:** Linh Nhi bài 1 SAI (78 % là riêng đoạn dạo Đừng Xa, 47 nốt; gộp 7 bài 48–53 %);
+  bài 5 SAI ("đảo vai" là ý người dùng, đo ra nửa đúng: tay phải giữ 2 phách ở 5/10 ô giang, tay trái chạy 3 ô); Linh Nhi bài 2 và
+  Blues bài 4 nói quá (hai giọng bám hợp âm như nhau ở dạo; câu chạy đi xuống 19/45, không phải luật). Cà Pháo 5/5 khớp.
+- Lúc viết kế hoạch lại bắt được một chỗ sai của chính nó: "Linh Nhi neo giọng bài, không neo hợp âm" (luật 1 md mục 7, ví dụ một ô
+  Đừng Xa) không đúng cho mọi điệu — md 13e: nốt hợp âm ở phách mạnh · nhẹ, slow rock thứ 83 % · 85 % (6 đoạn), bolero thứ 64 % ·
+  56 %. Đã ghi theo điệu.
+- Dữ liệu cách đặt hợp âm: Linh Nhi có sẵn (md 13d, 8 bài: theo bậc kể cả trơn, bước chuyển, nhịp đổi hợp âm); Cà Pháo CHƯA đo theo
+  bậc (chỉ tổng 111 ký hiệu) → phải đo cùng cách trước khi dựng.
+- Khuyến nghị làm thử đổi Cà Pháo (3/10) → Linh Nhi; lý do và lý do không nên ghi ở Q1.
+- `LuyenTap.json` (git không theo dõi): gỡ 20/28 dòng là lượt máy-bấm khi Claude chạy thử 2/10–4/10 (độ trễ 0, trúng 100 % / 0 %);
+  còn 8 dòng — 7 lượt thật 2/10 và dòng "THU" 1/10 chưa rõ nguồn. Bản đủ sao lưu ở scratchpad phiên. Từ nay chạy thử thì sao lưu
+  file rồi trả lại. `Nguon.json` không bị lẫn.
