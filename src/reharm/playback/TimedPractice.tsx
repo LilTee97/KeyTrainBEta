@@ -26,8 +26,6 @@ import { usePracticeStore } from './practiceStore'
 import {
   LUC_RO,
   MIN_TAPS,
-  PASS_HIT_RATIO,
-  PASS_MEDIAN_ABS_MS,
   chamHopAm,
   chamLay,
   chamLuc,
@@ -37,7 +35,6 @@ import {
   hopAmTheoPhach,
   latencyFromTaps,
   median,
-  passes,
   scoreTimed,
   type ChamHopAm,
   type ChamLay,
@@ -532,7 +529,11 @@ export function TimedPractice({
   const busy = phase !== 'idle'
   const score = result?.score
   /* Bậc lộ trình chấm theo ngưỡng của bậc; tập tự do theo ngưỡng chung. */
-  const dat = result?.ketQua ? result.ketQua.dat : score ? passes(score) : false
+  /*
+    Chỉ chấm ĐẠT khi có bậc (lộ trình). Tập tự do không chấm đạt — người dùng 4/10/2026: "đánh tự do trước, khi nào tôi tick vào ô
+    Vào Tập Luyện thì mới mở chế độ chấm đạt và level". Cũ: tự do vẫn hiện "Ngưỡng tạm … → Đạt / Chưa đạt" (`passes`).
+  */
+  const dat = result?.ketQua?.dat ?? false
   const button = (on: boolean) =>
     `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
       on
@@ -566,8 +567,13 @@ export function TimedPractice({
       )}
       {score && phase === 'idle' && (
         <span className="font-mono text-dim">
-          Đúng {score.hit}/{score.total} · lệch {score.medianAbsMs ?? '—'} ms ·{' '}
-          <span className={dat ? 'text-teal-key' : 'text-rose-300'}>{dat ? 'Đạt' : 'Chưa đạt'}</span>
+          Đúng {score.hit}/{score.total} · lệch {score.medianAbsMs ?? '—'} ms
+          {result?.ketQua && (
+            <>
+              {' · '}
+              <span className={dat ? 'text-teal-key' : 'text-rose-300'}>{dat ? 'Đạt' : 'Chưa đạt'}</span>
+            </>
+          )}
         </span>
       )}
     </>
@@ -724,17 +730,12 @@ export function TimedPractice({
               <b>{result.nhac.nganDung}</b>/{result.nhac.nganTong}
             </p>
           )}
-          {result?.ketQua ? (
+          {result?.ketQua && (
             <p className="mt-1 text-xs text-dim">
               Ngưỡng của bậc: {result.ketQua.tomTat} →{' '}
               <span className={dat ? 'font-semibold text-teal-key' : 'font-semibold text-rose-300'}>
                 {dat ? 'Đạt' : 'Chưa đạt'}
               </span>
-            </p>
-          ) : (
-            <p className="mt-1 text-xs text-dim">
-              Ngưỡng tạm — đoán, chưa đo: ≥ {PASS_HIT_RATIO * 100}% đúng nốt và lệch ≤ {PASS_MEDIAN_ABS_MS} ms →{' '}
-              <span className={dat ? 'text-teal-key' : 'text-rose-300'}>{dat ? 'Đạt' : 'Chưa đạt'}</span>
             </p>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { parseChordToken } from '../../reharm/input/chordInputParser'
 import { MAJOR_COLOR_OPTIONS, PALETTE_BY_TONIC_COLOR, type MajorChordColor } from '../../reharm/reharmEngine/staticVoicingRules'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import type { ChordQuality } from '../../shared/musicTheory/types'
@@ -383,6 +384,17 @@ export function dungHopAm(dangGiu: readonly number[], pcs: readonly number[]): b
   return giu.size === new Set(pcs).size && pcs.every((x) => giu.has(x))
 }
 
+/**
+ * Trả lời quiz bằng TÊN hợp âm — chạm chọn hoặc gõ (người dùng 4/10/2026: "dùng cảm ứng hoặc bàn phím cũng có thể trả lời quiz").
+ * Đúng khi tập tên nốt của hợp âm gõ vào trùng hợp âm cần điền — "Bb" hay "A#" đều được; chữ thường đầu tên ("dm7") vẫn đọc.
+ */
+export function traLoiTen(ten: string, pcs: readonly number[]): 'dung' | 'sai' | 'khong-doc' {
+  const chuan = ten.trim().replace(/♭/g, 'b').replace(/♯/g, '#').replace(/^[a-g]/, (c) => c.toUpperCase())
+  const doc = parseChordToken(chuan)
+  if (typeof doc === 'string') return 'khong-doc'
+  return dungHopAm(chordPitchClasses(doc.root, doc.quality), pcs) ? 'dung' : 'sai'
+}
+
 /* ---------------- Tập solo trên backing — thang bậc ---------------- */
 
 export type BacSolo = 1 | 2 | 3
@@ -438,6 +450,16 @@ export function oDem(vongDem: Pick<VongBaiTap, 'phach' | 'doDai' | 'timeline'>, 
       .map((e) => ({ notes: e.notes, startBeat: e.startBeat - a, durationBeats: e.durationBeats, velocity: e.velocity })),
     dai: b - a,
   }
+}
+
+/** Hợp âm thứ mấy đang vang ở phách `beat` của backing lặp — `phach` là số phách từng hợp âm, đồng hồ chạy qua nhiều lượt vòng. */
+export function hopAmTaiPhach(phach: readonly number[], doDai: number, beat: number): number {
+  let t = ((beat % doDai) + doDai) % doDai
+  for (const [i, d] of phach.entries()) {
+    if (t < d - 1e-6) return i
+    t -= d
+  }
+  return Math.max(0, phach.length - 1)
 }
 
 export const khoaSoanCau = (thay: TeacherId, vongId: string) => `soan-cau:${thay}:${vongId}`

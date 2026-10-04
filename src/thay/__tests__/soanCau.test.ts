@@ -7,6 +7,7 @@ import {
   chuyenThay,
   duLieuSoanCau,
   dungHopAm,
+  hopAmTaiPhach,
   khacLyThuyet,
   lyThuyetBac,
   N_TOI_THIEU,
@@ -14,6 +15,7 @@ import {
   phanBoNot,
   tenBac,
   tenNotBac,
+  traLoiTen,
   vongCuaThay,
   vongLyThuyet,
   xepNot,
@@ -135,6 +137,24 @@ describe('Học cách soạn câu — quiz và thang bậc', () => {
     expect(oDem(vong, 1).su.map((e) => e.startBeat)).toEqual([0, 3])
     expect(oDem(vong, 3).su.map((e) => [e.startBeat, e.notes[0]])).toEqual([[0, 58], [5.5, 63.5]])
     for (const k of [0, 1, 2, 3]) expect(oDem(vong, k).su.length).toBeGreaterThan(0)
+  })
+
+  it('trả lời bằng tên: gõ hay chạm đều đọc được, đúng khi cùng tập nốt — Bb hay A#, chữ thường, dấu ♭', () => {
+    const dm = [2, 5, 9]
+    expect(['Dm', 'dm', ' Dm '].map((t) => traLoiTen(t, dm))).toEqual(['dung', 'dung', 'dung'])
+    expect(traLoiTen('Dm7', dm)).toBe('sai')
+    expect(traLoiTen('D', dm)).toBe('sai')
+    expect(['Bb', 'A#', 'B♭'].map((t) => traLoiTen(t, [10, 2, 5]))).toEqual(['dung', 'dung', 'dung'])
+    expect(traLoiTen('E7', [4, 8, 11, 2])).toBe('dung')
+    expect(traLoiTen('Bdim', [11, 2, 5])).toBe('dung')
+    expect(traLoiTen('xyz', dm)).toBe('khong-doc')
+    expect(traLoiTen('', dm)).toBe('khong-doc')
+  })
+
+  it('hợp âm đang vang ở một phách của backing lặp', () => {
+    const phach = [6, 6, 6, 6]
+    expect([0, 5.9, 6, 13, 23.99, 24, 30].map((b) => hopAmTaiPhach(phach, 24, b))).toEqual([0, 0, 1, 2, 3, 0, 1])
+    expect(hopAmTaiPhach([4, 2], 6, -0.5)).toBe(1)
   })
 
   it('qua bậc trước mới mở bậc sau', () => {

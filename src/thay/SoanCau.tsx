@@ -18,6 +18,7 @@ import {
   tenBac,
   tenHopAm,
   tenNotBac,
+  traLoiTen,
   vongCuaThay,
   vongLyThuyet,
   xepNot,
@@ -263,6 +264,30 @@ function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; th
   const [sai, setSai] = useState(0)
   const [diem, setDiem] = useState({ cau: 0, dungNgay: 0 })
   const daSaiLuotBam = useRef(false)
+  /* Tự do mặc định; tick "Vào tập luyện" mới đếm điểm (người dùng 4/10/2026, ý 2). Lịch ôn thẻ nhớ ở bước sau. */
+  const [tapLuyen, setTapLuyen] = useState(false)
+  /* Trả lời bằng TÊN — chạm chọn gốc + loại, hoặc gõ (người dùng 4/10/2026, ý 5). Loại lấy từ các vòng đang hỏi. */
+  const hauTo = useMemo(() => [...new Set(ds.flatMap((v) => v.hopAm.map((h) => h.replace(/^[A-G][#b]?/, ''))))], [ds])
+  const [chonGoc, setChonGoc] = useState<string | null>(null)
+  const [chonHau, setChonHau] = useState<string | null>(null)
+  const [go, setGo] = useState('')
+  const [baoTen, setBaoTen] = useState('')
+  const traLoi = (ten: string) => {
+    if (!cau || ketQua !== 'dang') return
+    const kq = traLoiTen(ten, cau.v.pcs[cau.an]!)
+    if (kq === 'khong-doc') {
+      setBaoTen(`Chưa đọc được "${ten}" — gõ như Dm7, Bb, F#m`)
+      return
+    }
+    if (kq === 'dung') {
+      setKetQua('dung')
+      setDiem((d) => ({ cau: d.cau + 1, dungNgay: d.dungNgay + (sai === 0 ? 1 : 0) }))
+      setBaoTen('')
+      return
+    }
+    setSai((x) => x + 1)
+    setBaoTen(`${ten} — chưa đúng`)
+  }
 
   const held = useMidiStore((state) => state.heldNotes)
   useEffect(() => {
@@ -283,11 +308,17 @@ function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; th
     }
   }, [held, cau, ketQua, sai])
 
+  const lamMoi = () => {
+    setKetQua('dang')
+    setSai(0)
+    setChonGoc(null)
+    setChonHau(null)
+    setBaoTen('')
+  }
   const cauKhac = () => {
     stopTimelineLoop()
     setHat(Math.floor(Math.random() * 1000))
-    setKetQua('dang')
-    setSai(0)
+    lamMoi()
   }
 
   if (!cau) return <p className="text-sm text-dim">Chưa có vòng ở giọng này.</p>
@@ -308,17 +339,22 @@ function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; th
               onClick={() => {
                 setNguon(value)
                 setHat(0)
-                setKetQua('dang')
-                setSai(0)
+                lamMoi()
               }}
               className={nut(nguon === value)}
             >
               {ten}
             </button>
           ))}
-          <span className="ml-auto font-mono">
-            đúng ngay lần đầu {diem.dungNgay}/{diem.cau} câu
-          </span>
+          <label className="ml-auto flex cursor-pointer items-center gap-2 text-cream">
+            <input type="checkbox" checked={tapLuyen} onChange={(event) => setTapLuyen(event.target.checked)} />
+            Vào tập luyện — đếm điểm
+          </label>
+          {tapLuyen && (
+            <span className="font-mono">
+              đúng ngay lần đầu {diem.dungNgay}/{diem.cau} câu
+            </span>
+          )}
         </div>
         <p className="mb-2 text-xs text-dim">{cau.v.ten}</p>
         <div className="mb-3 flex flex-wrap gap-2">
@@ -356,10 +392,60 @@ function NhoVong({ du, tonic, thu, bay }: { du: DuLieuSoanCau; tonic: number; th
             {ketQua === 'xem' && <span className="text-rose-300">Đáp án: {cau.v.hopAm[cau.an]}</span>}
             {ketQua === 'dang' && (
               <span className="text-dim">
-                Bấm hợp âm còn thiếu trên đàn (giữ cùng lúc mọi nốt, quãng tám nào cũng được){sai > 0 && ` · chưa đúng ${sai} lần`}
+                Bấm hợp âm còn thiếu trên đàn (giữ cùng lúc mọi nốt, quãng tám nào cũng được), hoặc chọn / gõ tên ở dưới
+                {sai > 0 && ` · chưa đúng ${sai} lần`}
               </span>
             )}
           </span>
+        </div>
+
+        <div className="mt-3 flex flex-col gap-2 border-t border-line/60 pt-3 text-xs">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-dim">Chạm chọn tên:</span>
+            {GOC.map((g) => (
+              <button key={g} type="button" onClick={() => setChonGoc(g)} className={nut(chonGoc === g)}>
+                {g}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-1 text-dim">loại:</span>
+            {hauTo.map((h) => (
+              <button key={h} type="button" onClick={() => setChonHau(h)} className={nut(chonHau === h)}>
+                {h || 'trưởng'}
+              </button>
+            ))}
+            <button
+              type="button"
+              disabled={chonGoc === null || chonHau === null || ketQua !== 'dang'}
+              onClick={() => traLoi(`${chonGoc}${chonHau}`)}
+              className="ml-2 rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink disabled:opacity-40"
+            >
+              Trả lời {chonGoc ?? '…'}
+              {chonHau ?? ''}
+            </button>
+          </div>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              traLoi(go)
+              setGo('')
+            }}
+            className="flex flex-wrap items-center gap-2"
+          >
+            <span className="text-dim">hoặc gõ tên:</span>
+            <input
+              value={go}
+              onChange={(event) => setGo(event.target.value)}
+              placeholder="vd Dm7"
+              className={`${chonClass} w-28`}
+              aria-label="Gõ tên hợp âm còn thiếu"
+            />
+            <button type="submit" disabled={ketQua !== 'dang' || !go.trim()} className={nut(false)}>
+              Trả lời
+            </button>
+            {baoTen && <span className="text-rose-300">{baoTen}</span>}
+          </form>
         </div>
       </div>
       <MidiConnect />

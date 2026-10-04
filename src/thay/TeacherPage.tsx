@@ -90,6 +90,11 @@ export function TeacherPage({
     moTuNgoai ? { kieu: 'lo-trinh', styleId: moTuNgoai.styleId } : null,
   )
   const [cheDo, setCheDo] = useState<'gated' | 'timed'>('gated')
+  /*
+    "Vào tập luyện" (người dùng 4/10/2026, Q4): mặc định TẬP TỰ DO, tick thì vào lộ trình 7 bậc, chấm đạt. Mở từ trang Hôm nay thì vào
+    thẳng tập luyện. Không nhớ qua lần mở sau — "để tôi đánh tự do trước".
+  */
+  const [tapLuyen, setTapLuyen] = useState(() => moTuNgoai !== null)
   const [tab, setTab] = useState<'dieu' | 'ky-thuat' | 'soan-cau'>('dieu')
   /* Tab Kỹ thuật đánh: thầy không có kỹ thuật nào thì ẩn — câu E. */
   const dsKyThuat = useMemo(() => kyThuatCua(teacher.id), [teacher.id])
@@ -106,7 +111,9 @@ export function TeacherPage({
   // Rời trang đang phát thì tắt tiếng.
   useEffect(() => () => stopTimelineLoop(), [])
 
-  const hien: Che | null = che ?? (bai?.[0] ? { kieu: 'lo-trinh', styleId: bai[0].styleId } : null)
+  const tuDoCua = (one: BaiTap): Che => ({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })
+  const hien: Che | null =
+    che ?? (bai?.[0] ? (tapLuyen ? { kieu: 'lo-trinh', styleId: bai[0].styleId } : tuDoCua(bai[0])) : null)
   const baiLoTrinh = hien?.kieu === 'lo-trinh' ? (bai?.find((one) => one.styleId === hien.styleId) ?? null) : null
   const muc = hien?.kieu === 'tu-do' ? hien.muc : null
   const vong = muc?.vong ?? null
@@ -125,6 +132,14 @@ export function TeacherPage({
   const doi = (next: Che) => {
     stopTimelineLoop()
     setChe(next)
+  }
+  /* Bật / tắt tập luyện: giữ bài đang tập — lộ trình ↔ tự do của cùng bài; đang ở vòng tự tạo thì về bài đầu. */
+  const doiTapLuyen = (bat: boolean) => {
+    stopTimelineLoop()
+    setTapLuyen(bat)
+    const dang = hien?.kieu === 'lo-trinh' ? hien.styleId : bai?.find((one) => one.tap === vong)?.styleId
+    const one = bai?.find((x) => x.styleId === dang)
+    setChe(one ? (bat ? { kieu: 'lo-trinh', styleId: one.styleId } : tuDoCua(one)) : null)
   }
 
   if (bai === null) return <p className="text-sm text-dim">Đang tải bài tập…</p>
@@ -196,10 +211,14 @@ export function TeacherPage({
       ) : (
         <>
           <p className="text-xs text-dim">
-            Bài xếp từ dễ đến khó. Mỗi bài có lộ trình 7 bậc: tách tay chờ đúng nốt → hai tay → theo nhịp 60 · 80 · 100 % → chỉ nhìn
-            tên hợp âm ở giọng lạ. Qua bậc trước mới mở bậc sau; tiến độ lưu trên máy này. Tập tự do: chọn tay, tempo tuỳ ý trên vòng
-            tập, hoặc vòng tự tạo ở dưới.
+            Bài xếp từ dễ đến khó. Mặc định là tập tự do: chọn tay, tempo tuỳ ý trên vòng tập, hoặc vòng tự tạo ở dưới — không chấm
+            đạt, không lưu tiến độ. Tick "Vào tập luyện" để vào lộ trình 7 bậc của bài: tách tay chờ đúng nốt → hai tay → theo nhịp 60 ·
+            80 · 100 % → chỉ nhìn tên hợp âm ở giọng lạ; qua bậc trước mới mở bậc sau; tiến độ lưu trên máy này.
           </p>
+          <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-cream">
+            <input type="checkbox" checked={tapLuyen} onChange={(event) => doiTapLuyen(event.target.checked)} />
+            Vào tập luyện — lộ trình 7 bậc, chấm đạt, lưu tiến độ
+          </label>
 
           <ul className="flex flex-col gap-2">
             {bai.map((one) => {
@@ -216,25 +235,29 @@ export function TeacherPage({
                   </div>
                   <p className="mb-2 font-mono text-xs text-cream/80">Vòng tập: {one.tap.hopAm.join(' · ')}</p>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
-                      className={nut(baiLoTrinh?.styleId === one.styleId)}
-                    >
-                      Lộ trình · {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
-                    </button>
-                    {tienDo.bacNguoi !== null && (
+                    {tapLuyen ? (
+                      <button
+                        type="button"
+                        onClick={() => doi({ kieu: 'lo-trinh', styleId: one.styleId })}
+                        className={nut(baiLoTrinh?.styleId === one.styleId)}
+                      >
+                        Lộ trình · {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => doi(tuDoCua(one))} className={nut(vong === one.tap)}>
+                        Tập tự do
+                      </button>
+                    )}
+                    {tapLuyen && tienDo.bacNguoi !== null && (
                       <span className="text-[11px] text-amber-key">
                         {tienDo.bacNguoi > tienDo.thuocCaoNhat ? 'lượt nguội' : 'kiểm lại'} hôm nay: bậc {tienDo.bacNguoi}
                       </span>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => doi({ kieu: 'tu-do', muc: { ten: `${one.ten} · tập tự do`, vong: one.tap } })}
-                      className={nut(vong === one.tap)}
-                    >
-                      Tập tự do
-                    </button>
+                    {!tapLuyen && (
+                      <span className="text-[11px] text-dim">
+                        lộ trình {qua}/7{tienDo.thuocCaoNhat > 0 ? ` · ★${tienDo.thuocCaoNhat}` : ''}
+                      </span>
+                    )}
                     <span className="text-[11px] text-dim/80">nguồn: {one.nguon.tap}</span>
                   </div>
                 </li>
@@ -242,9 +265,10 @@ export function TeacherPage({
             })}
           </ul>
 
-          <VongTuTao teacher={teacher} bai={bai} onXong={(m) => doi({ kieu: 'tu-do', muc: m })} />
+          {!tapLuyen && <VongTuTao teacher={teacher} bai={bai} onXong={(m) => doi({ kieu: 'tu-do', muc: m })} />}
 
-          {baiLoTrinh &&
+          {tapLuyen &&
+            baiLoTrinh &&
             (daTaiLuot ? (
               <LoTrinh
                 key={baiLoTrinh.styleId}

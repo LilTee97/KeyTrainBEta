@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PracticeStage } from '../reharm/playback/PracticeStage'
-import { startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
+import { getStyle } from '../reharm/style/styleLibrary'
+import {
+  beatAtPerformanceTime,
+  startAudio,
+  startTimelineLoop,
+  stopTimelineLoop,
+  usePlaybackStore,
+} from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
@@ -14,6 +21,7 @@ import {
   bacMoSolo,
   buocSolo,
   DAT_SOLO,
+  hopAmTaiPhach,
   khoaSoanCau,
   oDem,
   tenBac,
@@ -39,7 +47,10 @@ const chonClass = 'rounded border border-line bg-white/6 px-1.5 py-1 text-cream'
  */
 const BACKING: Partial<Record<TeacherId, string>> = { 'linh-nhi': 'slow-rock-la-thu-hai-tay' }
 
-/** Tập solo trên backing — chờ đúng nốt, bậc 1–3 (làm thử với Linh Nhi; theo nhịp và bậc 4–7 là bước sau). */
+/**
+ * Tập solo trên backing. MẶC ĐỊNH solo tự do (người dùng 4/10/2026, ý 2: "đánh tự do trước, khi nào tôi tick vào ô Vào Tập Luyện thì
+ * mới mở chế độ chấm đạt và level"); tick "Vào tập luyện" thì chờ đúng nốt, bậc 1–3 (theo nhịp và bậc 4–7 là bước sau).
+ */
 export function TapSolo({
   teacher,
   du,
@@ -66,6 +77,7 @@ export function TapSolo({
   /* Bậc đang tập giữ nguyên sau lượt đạt — kết quả còn trên màn; người tập tự bấm sang bậc vừa mở. */
   const [chonBac, setChonBac] = useState<BacSolo>(mo)
   const bac = chonBac <= mo ? chonBac : mo
+  const [tapLuyen, setTapLuyen] = useState(false)
   const styleId = BACKING[teacher.id]
   if (!v || !styleId) return <p className="text-sm text-dim">Chưa có vòng ở giọng này.</p>
   const thongTin = BAC_SOLO.find((one) => one.so === bac)!
@@ -74,9 +86,10 @@ export function TapSolo({
     <div className="flex flex-col gap-3">
       <div className="rounded-xl border border-line bg-black/25 p-4 text-sm">
         <p className="mb-2 text-xs text-dim">
-          Backing: điệu Slow Rock Lá thư hai tay đã duyệt (tắt câu fill) — đệm rải ở quãng tám thấp, câu solo của bạn đi phía trên. Mỗi
-          hợp âm, ô đệm lặp lại tới khi bạn đánh đủ số nốt khác nhau thuộc tập được nhận; mỗi lần bấm app báo nốt ấy chị dùng bao nhiêu
-          phần trăm. Không có nốt sai — nốt ngoài tập chỉ là "khác chị", và tính vào tỉ lệ.
+          Backing: điệu Slow Rock Lá thư hai tay đã duyệt (tắt câu fill) — đệm rải ở quãng tám thấp, câu solo của bạn đi phía trên.{' '}
+          {tapLuyen
+            ? 'Mỗi hợp âm, ô đệm lặp lại tới khi bạn đánh đủ số nốt khác nhau thuộc tập được nhận; mỗi lần bấm app báo nốt ấy chị dùng bao nhiêu phần trăm. Không có nốt sai — nốt ngoài tập chỉ là "khác chị", và tính vào tỉ lệ.'
+            : 'Solo tự do: backing chạy liên tục cả vòng, bạn đánh tuỳ ý; mỗi lần bấm app báo nốt ấy so với hợp âm đang vang — chị dùng bao nhiêu phần trăm. Không chấm đạt, không lưu tiến độ.'}
         </p>
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-dim">
           Vòng:
@@ -96,7 +109,18 @@ export function TapSolo({
             ))}
           </select>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <label className="mb-2 flex w-fit cursor-pointer items-center gap-2 text-sm text-cream">
+          <input
+            type="checkbox"
+            checked={tapLuyen}
+            onChange={(event) => {
+              stopTimelineLoop()
+              setTapLuyen(event.target.checked)
+            }}
+          />
+          Vào tập luyện — chờ đúng nốt theo bậc, chấm đạt, lưu tiến độ
+        </label>
+        <div className={`flex flex-wrap items-center gap-2 text-xs ${tapLuyen ? '' : 'hidden'}`}>
           <span className="text-dim">Bậc:</span>
           {BAC_SOLO.map((one) => (
             <button
@@ -115,12 +139,25 @@ export function TapSolo({
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-cream/85">
-          {thongTin.viSao} Qua bậc khi ≥ {Math.round(DAT_SOLO * 100)} % lần bấm thuộc tập được nhận (mốc Claude chọn, chưa đo).
-        </p>
+        {tapLuyen && (
+          <p className="mt-2 text-xs text-cream/85">
+            {thongTin.viSao} Qua bậc khi ≥ {Math.round(DAT_SOLO * 100)} % lần bấm thuộc tập được nhận (mốc Claude chọn, chưa đo).
+          </p>
+        )}
       </div>
 
-      <LuotSolo
+      {!tapLuyen && (
+        <SoloTuDo
+          key={`${v.id}:${tonic}:${thu}`}
+          buoc={buocSolo(du, v.vong, tonic, 3)}
+          vong={v.hopAm}
+          yeuCau={{ styleId, o: v.hopAm.map((h) => [h]), giong: `${tonic}:${thu ? 'minor' : 'major'}` }}
+          tenNot={(goc, rel, chat) => tenNotBac(goc, rel, chat, tonic, thu)}
+        />
+      )}
+
+      {tapLuyen && (
+        <LuotSolo
         key={`${v.id}:${tonic}:${thu}:${bac}`}
         buoc={buocSolo(du, v.vong, tonic, bac)}
         vong={v.hopAm}
@@ -132,6 +169,183 @@ export function TapSolo({
           return dat
         }}
       />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Solo TỰ DO trên backing: lặp cả vòng ở BPM tuỳ chọn; mỗi lần bấm, so nốt với hợp âm ĐANG VANG lúc bấm (`hopAmTaiPhach` theo đồng
+ * hồ phát) — chị dùng bao nhiêu phần trăm. Gợi ý: sáng nhóm chị hay dùng trên hợp âm đang vang. Không chấm đạt, không lưu.
+ */
+function SoloTuDo({
+  buoc,
+  vong,
+  yeuCau,
+  tenNot,
+}: {
+  buoc: BuocSolo[]
+  vong: readonly string[]
+  yeuCau: Parameters<typeof dungVong>[0]
+  tenNot: (goc: number, rel: number, chat: string) => string
+}) {
+  const nhipDieu = getStyle(yeuCau.styleId)?.bpm ?? 80
+  const [backing, setBacking] = useState<VongBaiTap | null>(null)
+  const [dang, setDang] = useState<'cho' | 'dung' | 'dang'>('cho')
+  const [loi, setLoi] = useState('')
+  const [bpm, setBpm] = useState(() => Math.round(nhipDieu * 0.6))
+  const [goiY, setGoiY] = useState(true)
+  const [phanHoi, setPhanHoi] = useState<PhanHoi | null>(null)
+  const viTri = usePlaybackStore((state) => state.positionBeats)
+  useEffect(() => () => stopTimelineLoop(), [])
+
+  const phat = (vongDem: VongBaiTap, nhip: number) =>
+    startTimelineLoop(
+      vongDem.timeline.map((e) => ({ notes: e.notes, startBeat: e.startBeat, durationBeats: e.durationBeats, velocity: e.velocity })),
+      nhip,
+      vongDem.doDai,
+    )
+
+  const batDau = async () => {
+    setLoi('')
+    await startAudio()
+    let vongDem = backing
+    if (!vongDem) {
+      setDang('dung')
+      try {
+        vongDem = await dungVong(yeuCau)
+        setBacking(vongDem)
+      } catch (error) {
+        setLoi(error instanceof Error ? error.message : String(error))
+        setDang('cho')
+        return
+      }
+    }
+    setPhanHoi(null)
+    phat(vongDem, bpm)
+    setDang('dang')
+  }
+  const doiNhip = (nhip: number) => {
+    setBpm(nhip)
+    if (dang === 'dang' && backing) phat(backing, nhip)
+  }
+
+  useEffect(() => {
+    if (dang !== 'dang' || !backing) return
+    return useMidiStore.subscribe((state, previous) => {
+      const event = state.lastEvent
+      if (!event || event === previous.lastEvent || event.velocity === 0) return
+      const step = buoc[hopAmTaiPhach(backing.phach, backing.doDai, beatAtPerformanceTime(event.time))] ?? buoc[0]!
+      const pc = event.note % 12
+      const rel = (pc - step.goc + 12) % 12
+      const m = xepNot(step.pb).find((x) => x.rel === rel)!
+      setPhanHoi({
+        ten: `${step.hopAm} · ${tenNot(step.goc, rel, step.chat)} — ${tenBac(rel, step.chat)}`,
+        loi:
+          m.dem === 0
+            ? `chưa gặp trong sheet (0/${step.pb.n})`
+            : `chị dùng ${Math.round(m.phanTram * 100)} % (${m.muc === 'hay' ? 'hay dùng' : 'có dùng'})`,
+        muc: m.dem === 0 ? 'chua' : m.muc === 'hay' ? 'nhan' : 'co',
+      })
+    })
+  }, [dang, backing, buoc, tenNot])
+
+  const k = dang === 'dang' && backing ? hopAmTaiPhach(backing.phach, backing.doDai, viTri) : 0
+  const step = buoc[k] ?? buoc[0]!
+  const sang = dang === 'dang' && goiY ? step.nhan.flatMap((pc) => [60 + pc, 72 + pc]) : []
+  const mauPhanHoi = phanHoi?.muc === 'nhan' ? 'text-teal-key' : phanHoi?.muc === 'chua' ? 'text-rose-300' : 'text-amber-key'
+  const thanh = (
+    <>
+      <span className="font-mono text-lg font-bold text-amber-key">{dang === 'dang' ? step.hopAm : '—'}</span>
+      {phanHoi && (
+        <span className={mauPhanHoi}>
+          {phanHoi.ten}: {phanHoi.loi}
+        </span>
+      )}
+    </>
+  )
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {vong.map((h, i) => (
+          <span
+            key={i}
+            className={`rounded-lg border px-3 py-1.5 font-mono ${
+              dang === 'dang' && i === k ? 'border-amber-key text-amber-key' : 'border-line text-cream'
+            }`}
+          >
+            {h}
+          </span>
+        ))}
+        <button
+          type="button"
+          disabled={dang === 'dung'}
+          onClick={() => void batDau()}
+          className="ml-2 rounded-lg bg-amber-key px-4 py-2 text-sm font-semibold text-ink disabled:opacity-50"
+        >
+          {dang === 'dung' ? 'Đang dựng backing…' : dang === 'dang' ? 'Phát lại từ đầu' : 'Bắt đầu'}
+        </button>
+        {dang === 'dang' && (
+          <button
+            type="button"
+            onClick={() => {
+              stopTimelineLoop()
+              setDang('cho')
+            }}
+            className={nut(false)}
+          >
+            Dừng
+          </button>
+        )}
+        {loi && <span className="text-xs text-rose-300">{loi}</span>}
+      </div>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-dim">
+        <label className="flex items-center gap-2">
+          Nhịp độ
+          <input
+            type="range"
+            min={30}
+            max={Math.max(60, Math.round(nhipDieu * 1.5))}
+            value={bpm}
+            onChange={(event) => doiNhip(Number(event.target.value))}
+            className="accent-amber-key"
+          />
+          <b className="w-16 font-mono text-cream">{bpm} BPM</b>
+        </label>
+        {[60, 80, 100].map((phan) => (
+          <button
+            key={phan}
+            type="button"
+            onClick={() => doiNhip(Math.round((nhipDieu * phan) / 100))}
+            className={nut(bpm === Math.round((nhipDieu * phan) / 100))}
+          >
+            {phan} %
+          </button>
+        ))}
+        <label className="flex cursor-pointer items-center gap-2 text-cream">
+          <input type="checkbox" checked={goiY} onChange={(event) => setGoiY(event.target.checked)} />
+          Gợi ý: sáng các nốt chị hay dùng trên hợp âm đang vang
+        </label>
+      </div>
+
+      <MidiConnect />
+      <PracticeStage bar={thanh}>
+        {(full) => (
+          <>
+            <div className="mb-1 flex flex-wrap items-center gap-3 text-xs">{thanh}</div>
+            <div className={full ? 'h-[38vh] max-h-80 min-h-28 shrink-0' : ''}>
+              <OnScreenPiano
+                lowNote={48}
+                highNote={84}
+                highlightNotes={sang}
+                chordTones={dang === 'dang' && goiY ? step.nhan : []}
+                height={full ? '100%' : undefined}
+              />
+            </div>
+          </>
+        )}
+      </PracticeStage>
     </div>
   )
 }

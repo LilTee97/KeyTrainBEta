@@ -5672,3 +5672,33 @@ những ý từ 2 đến 6 vào lộ trình dựng GĐ 3. Nếu ý nào có đan
   Kỹ thuật đánh không — chờ trả lời.
 - Số ngón: đếm dấu `<fingering>` trên 29 sheet — chỉ Boogie Woogie có (37 dấu; hai bản cùng một sheet). Sheet Cà Pháo, Linh Nhi và các
   sheet Blues khác không ghi ngón → ngón trong app theo lối dạy chuẩn, ghi rõ không phải của thầy.
+
+## Bước — GĐ 3 bước 2: tự do mặc định + ô "Vào tập luyện" (cả tab Điệu, Kỹ thuật đánh); quiz trả lời bằng chạm / gõ (4/10/2026)
+
+**Người dùng:** ý 2 *"Tất cả phần tập luyện nên để tôi đánh tự do trước, khi nào tôi tick vào ô Vào Tập Luyện thì mới mở chế độ chấm
+đạt và level"* · ý 5 *"phần Nhớ vòng thì tôi muốn dùng cảm ứng hoặc bàn phím cũng có thể trả lời quiz được"* · *"q4 làm theo đề xuất
+của bạn"* (áp cả tab Điệu, Kỹ thuật đánh; từ Hôm nay mở thẳng tập luyện).
+
+- **Tab Điệu** (`TeacherPage`): ô "Vào tập luyện". Mặc định tự do — mỗi bài nút "Tập tự do" (vòng tập; chờ đúng nốt / theo nhịp), vòng
+  tự tạo; tick → nút "Lộ trình · x/7" + khung lộ trình 7 bậc, CÙNG bài đang tập; bỏ tick → tự do cùng bài. Mở từ trang Hôm nay (`moBai`)
+  thì ô bật sẵn. Không nhớ qua lần mở sau.
+- **Tab Kỹ thuật đánh** (`KyThuatBai`): mặc định tự do; ô "Vào tập luyện" thay hai nút "Lộ trình N bậc / Tập tự do".
+- **Khung theo nhịp** (`TimedPractice`): tự do không còn kết luận "Ngưỡng tạm … → Đạt / Chưa đạt" (`passes`) — kể cả khung Luyện đệm ở
+  trang Tái Hòa Âm; chỉ còn số đúng nốt, lệch, phím thừa. Có bậc thì vẫn "Ngưỡng của bậc … → Đạt" như cũ.
+- **Học cách soạn câu:** Tập solo mặc định SOLO TỰ DO — backing lặp cả vòng (`dungVong`), nhịp 30 → 1,5 × nhịp điệu (mở ở 60 %), nút 60 ·
+  80 · 100 %, ô gợi ý sáng nhóm chị hay dùng của hợp âm ĐANG VANG; mỗi lần bấm so với hợp âm đang vang lúc bấm (`hopAmTaiPhach` theo
+  đồng hồ phát) — chị dùng bao nhiêu phần trăm. Tick → chờ đúng nốt bậc 1–3 như cũ. Nhớ vòng: tự do không đếm điểm, tick mới đếm "đúng
+  ngay lần đầu"; trả lời thêm bằng chạm (gốc + loại lấy từ các vòng đang hỏi) hoặc gõ (`traLoiTen`: "dm", "Bb" = "A#", "B♭"; không đọc
+  được thì báo cách gõ).
+
+**Chạy thử (Chrome headless, n = 1 mỗi việc):** tab Điệu mặc định 1 nút "Tập tự do", 0 khung lộ trình → tick: khung lộ trình (6 nút bậc
+khoá), vòng tự tạo ẩn → bỏ tick: tự do cùng bài · Hôm nay "Bắt đầu bậc 1 →" → trang Linh Nhi, ô bật sẵn, khung lộ trình · Kỹ thuật đánh:
+mặc định 0 nút bậc; lượt tự do 96/96 nốt, không có chữ "Đạt"; tick → 4 nút bậc · Nhớ vòng: chạm D + m → "Đúng — Dm"; gõ "xyz" → báo cách
+gõ; "D" → chưa đúng; "dm" → đúng; tick → "đúng ngay lần đầu 1/1" · Tập solo: mặc định tự do, backing chạy (phách tăng 0,69 trong 0,8
+giây ở 52 BPM); bấm La4 → "Dm · A — 5: chị dùng 33 % (hay dùng)"; nút 100 % → 86 BPM, vẫn phát; tick → 3 nút bậc, backing dừng.
+
+**Sổ:** lượt tự do ở Kỹ thuật đánh ghi 1 dòng vào `LuyenTap.json` (của lượt thử, độ trễ 0) → trả sổ về bản sao lưu, giống từng byte;
+`Nguon.json` không đổi.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới 2 (trả lời bằng tên; hợp âm đang vang theo phách) · toàn suite **2 617 qua / 5 đỏ** (5 đỏ
+cũ) · `vite build` qua.

@@ -91,8 +91,11 @@ function BacDoan({
   const bac = thang[chon - 1]!
   const timeline = useMemo(() => lapDoan(doan), [doan])
   const bpmGoc = doan.bpm ?? kt.bpm
-  /* Tập tự do (người dùng 4/10/2026): chọn tay, kéo BPM tuỳ ý — không vào thang bậc, không lưu tiến độ. */
-  const [cheDo, setCheDo] = useState<'bac' | 'tu-do'>('bac')
+  /*
+    Tập tự do (người dùng 4/10/2026): chọn tay, kéo BPM tuỳ ý — không vào thang bậc, không lưu tiến độ. MẶC ĐỊNH là tự do; tick "Vào
+    tập luyện" mới vào lộ trình bậc, chấm đạt (người dùng 4/10/2026, Q4: áp luật này cho cả tab Điệu và Kỹ thuật đánh).
+  */
+  const [cheDo, setCheDo] = useState<'bac' | 'tu-do'>('tu-do')
   const [bpmTuDo, setBpmTuDo] = useState(() => Math.round(bpmGoc * 0.6))
   const bpm = cheDo === 'tu-do' ? bpmTuDo : Math.round((bpmGoc * bac.tempo) / 100)
 
@@ -109,26 +112,17 @@ function BacDoan({
         <span className="text-xs text-dim">♩ {bpmGoc}</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {(
-          [
-            ['bac', `Lộ trình ${kt.bac.length} bậc`],
-            ['tu-do', 'Tập tự do'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => {
-              stopTimelineLoop()
-              setCheDo(value)
-            }}
-            className={nut(cheDo === value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-cream">
+        <input
+          type="checkbox"
+          checked={cheDo === 'bac'}
+          onChange={(event) => {
+            stopTimelineLoop()
+            setCheDo(event.target.checked ? 'bac' : 'tu-do')
+          }}
+        />
+        Vào tập luyện — lộ trình {kt.bac.length} bậc, chấm đạt, lưu tiến độ
+      </label>
 
       {cheDo === 'tu-do' && (
         <div className="flex flex-wrap items-center gap-3 text-xs text-dim">

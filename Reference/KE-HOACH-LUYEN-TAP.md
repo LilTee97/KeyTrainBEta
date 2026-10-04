@@ -357,7 +357,8 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 **Gộp vào kế hoạch** (ý trùng việc đã định thì làm theo cách đã định — người dùng dặn):
 - **Ý 2 — trùng "Tập tự do":** đảo mặc định. Mọi phần tập (quiz, chuyển hợp âm, gam và hợp âm rải, tập solo) mở ở tự do: vẫn báo
   từng nốt / hợp âm (bậc, phần trăm thầy dùng, đúng / chưa đúng) nhưng không chấm đạt, không bậc, không ghi nhật ký. Tick "Vào tập
-  luyện" thì bật thang bậc, chấm đạt, nhật ký `luotTap` (và lịch ôn cho quiz). Nhớ lựa chọn trên máy (localStorage).
+  luyện" thì bật thang bậc, chấm đạt, nhật ký `luotTap` (và lịch ôn cho quiz). Mỗi lần mở là tự do — không nhớ lựa chọn ("để tôi đánh
+  tự do trước"); bấm "Tập" từ trang Hôm nay thì mở thẳng tập luyện. Áp cả tab Điệu và Kỹ thuật đánh (Q4). **Xong 4/10/2026.**
 - **Ý 3 — trùng "bài đọc làm phần vì sao":** phần 1 thành **thẻ giải thích từng bậc**, hai cột:
   - Lý thuyết: hợp âm dựng thế nào (nốt nào, cách nhau mấy nửa cung, vì sao ra trưởng / thứ / giảm), chức năng (chủ · hạ át · át) và
     hay đi về đâu; hợp âm bậc 1 có màu thì vì sao cả bộ màu đổi theo. Sinh từ chính nốt của hợp âm bằng khuôn câu — đúng cho mọi giọng.
@@ -377,7 +378,7 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
   - **Số ngón: sheet không ghi** — đếm 4/10/2026: 29 sheet, chỉ Boogie Woogie có dấu ngón (37). Dùng ngón theo lối dạy chuẩn, ghi rõ
     "lối chuẩn, không phải của thầy".
 - **Ý 5 — trùng "trả lời bằng tay · chọn 1 trong 4":** mọi câu quiz trả lời được ba cách: bấm hợp âm trên đàn; **chạm** chọn tên (gốc +
-  loại — bảng chọn sẵn `GOC`, `LOAI` của vòng tự tạo); **gõ** tên ("Dm7"; "Bb" = "A#").
+  loại — gốc theo `GOC`, loại lấy từ các vòng đang hỏi); **gõ** tên ("Dm7"; "Bb" = "A#"). **Xong 4/10/2026** (dạng điền ô trống).
 - **Ý 6 — mới: "Chuyển hợp âm của thầy"** trong phần 2: app cho giọng, vòng, màu từng hợp âm (của thầy); người tập đánh từng hợp âm
   đúng **thế bấm** của thầy, nối bằng **đường chuyển** của thầy (giữ nốt chung, bè đi ngắn) — chờ đúng nốt bằng `NoteGatedPractice`
   (đủ nốt hai tay); hoặc điền tên (chạm / gõ).
@@ -402,7 +403,8 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 
 #### Thứ tự dựng — mỗi bước người dùng dùng thử rồi mới sang bước sau (sửa 4/10/2026 sau bản thử)
 1. **Làm thử với Linh Nhi — xong 4/10/2026** (`SO-TAY.md` cùng ngày): bốn phần đầu tiên; ý 1 (phím không ra tiếng) đã sửa.
-2. Sửa nhanh trên bản thử: tự do mặc định + ô "Vào tập luyện" (ý 2); trả lời quiz bằng chạm / gõ (ý 5).
+2. Sửa nhanh trên bản thử: tự do mặc định + ô "Vào tập luyện" (ý 2, cả tab Điệu và Kỹ thuật đánh — Q4); trả lời quiz bằng chạm / gõ
+   (ý 5). **Xong 4/10/2026.**
 3. Thẻ giải thích phần 1 + thuật ngữ (ý 3): mẫu Linh Nhi và lý thuyết → người dùng duyệt văn phong → sinh đủ.
 4. Gam và hợp âm rải (ý 4): Linh Nhi + căn bản.
 5. Đo thế bấm và bước chuyển của Linh Nhi → "Chuyển hợp âm của thầy" (ý 6).
@@ -425,9 +427,8 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 - **Người dùng chọn (4/10/2026):** Q1 làm thử với Linh Nhi · Q2 ẩn phần này ở trang Tuấn · Q3 (*"làm q3 theo bạn đề xuất"*) Căn bản
   ở một **trang riêng "Căn bản"** — lý thuyết giống nhau cho mọi thầy, để ở ba trang thầy thì lặp ba lần; học cái chuẩn trước rồi mới
   so thầy. Cái giá: thêm một nút trên thanh trang — điện thoại phải cuộn ngang thêm.
-- **Q4 (chờ trả lời): ý 2 có áp luôn cho tab Điệu và Kỹ thuật đánh không?** Hai tab ấy đang mở sẵn lộ trình bậc. Khuyến nghị: có — cả app
-  một luật. Lý do không nên: trang Hôm nay mở thẳng đúng bài, đúng bậc cần tập; mặc định tự do thì từ Hôm nay phải tick thêm một lần
-  (gỡ được: bấm "Tập" từ Hôm nay thì mở sẵn chế độ tập luyện).
+- **Q4 — người dùng chọn (4/10/2026): "q4 làm theo đề xuất của bạn"** — ý 2 áp cả tab Điệu và Kỹ thuật đánh; bấm "Tập" từ trang Hôm
+  nay thì mở sẵn chế độ tập luyện (để khỏi phải tick thêm).
 
 **Chưa đo:** cách đặt hợp âm theo bậc, bước chuyển và phân bố nốt solo theo chất hợp âm của Cà Pháo · loại hợp âm bậc 1 có kéo theo
 bậc khác không · thang 7 bậc tập solo, ~70 % / ~85 % và mọi ngưỡng · tập nốt được nhận ở từng bậc có giúp người dùng chơi hay hơn
@@ -578,7 +579,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - Bước 3–5 (tab Điệu · trang Hôm nay · tab Kỹ thuật đánh): **xong** — GĐ 1 bước 5–8 và GĐ 2 ở trên. Bước 6 — tab Học cách soạn câu
   (GĐ 3): kế hoạch viết và sửa 4/10/2026 theo ý người dùng (Q1 Linh Nhi · Q2 ẩn Tuấn · Q3 trang riêng Căn bản). **Bước 1 — làm thử
   với Linh Nhi: xong 4/10/2026**; người dùng dùng thử, góp 6 ý: ý 1 (phím không ra tiếng) sửa ngay, ý 2–6 vào kế hoạch (mục GĐ 3 ở trên,
-  "Bổ sung sau bản thử"). Bước kế: sửa nhanh ý 2 + ý 5.
+  "Bổ sung sau bản thử"). Ý 2 + ý 5 xong 4/10/2026 (ý 2 áp cả tab Điệu, Kỹ thuật đánh — Q4). Bước kế: thẻ giải thích phần 1 (ý
+  3) — viết mẫu cho người dùng duyệt văn phong.
 
 ---
 
