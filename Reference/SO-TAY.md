@@ -5731,3 +5731,61 @@ qua. Sổ `LuyenTap.json`, `Nguon.json` không đổi.
 
 **Chưa đo / chờ:** văn phong — người dùng duyệt mẫu rồi mới làm cho thầy khác; câu "nghe ra sao" là mô tả thông thường của sách, không
 phải số đo; "hay đi tới" là thói quen chung, chưa so với từng thầy (cột thầy đã có bước chuyển đo được).
+
+## Bước — GĐ 3 bước 3 làm lại: Phần 1 bỏ lối máy móc — chồng hợp âm (Stack), lối thay, Linh Nhi chọn gì và VÌ SAO (7/10/2026)
+
+**Người dùng (4/10/2026, bác mẫu cd2e349):** *"Tôi ko cần kiểu giải thích máy móc này vì tôi đã học qua các kiến thức cơ bản này rồi.
+Cái tôi cần … cách tạo ra một hợp âm màu … Stack system … video https://www.youtube.com/watch?v=8fOY4Z8Za6I bắt đầu từ 01:20 … tại
+sao ở các bậc lại phải là các hợp âm như bạn đã liệt kê, có thể thay thế chúng bằng những hợp âm gì … (giống như Jeff đã thay G7 bằng
+G13b9#11, tại sao lại có thể thay như vậy) … Tôi không cần bạn liệt kê … bao nhiêu lần ở những chỗ nào. Tôi yêu cầu bạn phải tư duy
+tại sao thầy lại chọn hợp âm đó ở vị trí đó và giải thích trung thực cấm không được qua loa hay bịa"*.
+
+**Video (Jeff Schneider, "How I Play Jazz Piano Chords – The Chord Stack System", 11:20)** — Claude đọc PHỤ ĐỀ TỰ ĐỘNG (yt-dlp; đường
+timedtext và API transcript của YouTube đều trả rỗng / lỗi), không xem hình. Nội dung từ 01:22: vòng 2-5-1 Đô trưởng Dm7 – G7 – Cmaj7
+→ Dm11 – G13♭9♯11 – Cmaj9 bằng ba công thức — **m11 = hợp âm thứ trên gốc + hợp âm trưởng thấp hơn gốc một cung** (03:02, 05:15);
+**maj9 = hợp âm trưởng trên gốc + hợp âm trưởng trên bậc 5** (03:26, 07:07); **13♭9♯11 = tay trái bậc 3 và 7 + hợp âm thứ cách gốc
+ba cung** (03:42, 06:10). Thế đảo (04:26) · nhớ QUAN HỆ tầng trên với gốc trước khi đảo (05:07) · đảo từng tầng ra voicing mới, nốt sát
+nhau và hai tầng chồng lấn đều được (07:13) · bước quan trọng nhất: chuyển voicing sang giọng khác — Fm11, B♭13♭9♯11 (= Rê – La♭ + Mi
+thứ), E♭maj9 (08:47).
+
+- `src/thay/soanCau/chongHopAm.ts` (mới): 26 công thức chồng — 3 của Jeff + 23 Claude suy ra cùng nguyên tắc cho mọi màu có trong sheet
+  các thầy (quét ký hiệu: Cà Pháo 9 bài, Linh Nhi 8, Tôn Hùng 2; add9 · m(add9) · 7sus4 của Linh Nhi đọc từ nốt đệm thật). Mỗi công thức:
+  tầng dưới (và các thế đảo), tầng trên, quan hệ cần nhớ, vì sao không chỏi (hoặc chỏi có chủ ý), thầy nào dùng. Gọi tên theo CHỮ CÁI
+  (`tenTheoChu`): ♭II của Đô trưởng là Rê♭, nốt cảm âm Rê thứ là Đô♯, tầng trên của G13♭9♯11 là D♭m như Jeff gọi.
+- `src/thay/soanCau/giaiThich.ts` (viết lại hẳn): lý thuyết 7 bậc × 2 giọng — vì sao bậc ấy là hợp âm ấy, nói bằng nốt của giọng đang
+  chọn (vd "Dm7 là F đặt trên bass Rê — ii và IV một họ"), thay bằng gì và vì sao; 9 lối thay trong đệm hát (giữ gì · đổi gì · vì sao ·
+  điều kiện giai điệu), mỗi lối nghe câu gốc / câu thay — lối 4 là đúng vòng trong video; Linh Nhi: 4 nguyên tắc giọng thứ, 2 giọng
+  trưởng, lời từng bậc — lập luận trước, ô ví dụ soát tay, số đo dồn vào một dòng "Cơ sở".
+- `SoanCau.tsx` Phần 1 dựng lại: thẻ Chồng hợp âm (chọn công thức · gốc theo giọng hoặc tự chọn · đảo từng tầng · nghe từng tay · bàn
+  phím tô hai màu · ĐỐ CHUYỂN GIỌNG: gõ tên hoặc bấm ba nốt trên đàn) · thẻ Thay hợp âm · thẻ nguyên tắc Linh Nhi (gọn, chỉ tới bậc) · 7
+  thẻ bậc (trái: vì sao · thay bằng gì; phải: Linh Nhi ở bậc này) · hai bảng vòng. Bỏ: thẻ "đọc thế nào", thuật ngữ, bảng bước chuyển
+  đếm số, ghi chú md đếm số.
+- `tools/ly_do_hop_am_linh_nhi.py` (mới, `--kiem`): đo LÝ DO từng màu — giai điệu = nốt cao nhất tay phải (Biển Tình 66/70 nốt mang lời
+  là nốt ấy); nốt đệm bỏ nốt nhân quãng tám giai điệu; mỗi nốt màu một lý do (giữ · giai điệu · lướt · đi ngang · thêm). Ghi md Linh Nhi
+  mục 13k.
+- `soanCau.ts`: bỏ `GHI_CHU_THAY.truong/thu` — có câu sai "II7 — át của V (10/10)".
+
+**Số đo then chốt (md 13k):** ♭VImaj7 là i trên bass ♭6 — sau i 15/21, nốt bảy là bậc 5 của giọng 21/21, ngân qua chỗ đổi 9/21, ở giai
+điệu 5/21 · nốt 9 trên i, iv ở tay trái: bước 8 → 9 liền 15/36 (i), 11/22 (iv) · V: nốt cảm âm ở giai điệu 8/24, chỉ tay đệm 10/24,
+không có 6/24; ♭7 của V đi xuống liền bậc 0/16 · I7 → iv: 7 chỗ, 3 bài, 7/7 vào iv, giai điệu hát ♭3 0/7 · Imaj7 → vi: nốt 7 xuống một
+cung 12/13 · II (trưởng): ♭7 9/10, bậc 3 trưởng 5/10, đi tới V chỉ 3/10.
+
+**Lời tôi từng nói sai, đã sửa (nói rõ với người dùng):** mẫu cd2e349 và md 13d ghi "II7 là át của V, nâng Fa lên Fa♯, 10/10" — sai: 10/10
+là số chỗ có ♭7; Fa♯ vang 5/10; chỉ 3/10 đi tới V. "I7 kéo về iv 6 chỗ, 4 bài" lẫn 3 chỗ máy đọc sai (Rừng Lá ô 16, 45; Lá Thư ô 8).
+Trong phiên này tôi cũng tự sửa hai lần trước khi viết lời: "giữ nốt" định nghĩa lỏng (19/21 → 9/21 khi siết) và "♭VII(add9) giữ chủ âm"
+(bỏ — máy đọc sai ở Rừng Lá ô 39).
+
+**Chạy thử (Chrome, n = 1):** La thứ đủ 4 khối + 7 thẻ bậc; Dm11 = Dm + C; E13♭9♯11 → tay phải B♭m; bấm 2 phím → 2 nguồn âm; đố chuyển
+giọng: tên lạ → báo "chưa đọc được", gõ đúng → Đúng, bấm đúng 3 nốt → Đúng; ▶ hợp âm thay → có tiếng; La trưởng: lối 4 = Bm11 –
+E13♭9♯11 – Amaj9, nghe được (18 nguồn âm); Bậc 2 có lời sửa. Ảnh: thẻ nguyên tắc chỉ đúng bậc, không lặp lời.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới `chongHopAm.test.ts` 6 (mọi công thức sinh đúng tập nốt viết tay; ba công thức và phần
+chuyển giọng của Jeff; gọi tên theo chữ cái; thế bấm tay phải trên tay trái ở mọi gốc và thế; chấm tên đố) · `giaiThich.test.ts` viết
+lại 10 (tên trong giọng; lập luận đúng nốt; mọi hợp âm thay phát được tiếng đúng nốt; số "Cơ sở" khớp bộ đo; không lặp lời; lời về
+một bài không lấy tên hợp âm của giọng đang chọn) · `ly_do_hop_am_linh_nhi.py --kiem` đúng hết · toàn suite **2 633 qua / 5 đỏ** (5 đỏ
+cũ: phraseAcrossBar, daoTruongLinhNhi, sietHopAm, tuyenSolo ×2) · `vite build` qua. Sổ `LuyenTap.json`, `Nguon.json` không đổi (md5).
+
+**Chưa đo / chờ:** người dùng duyệt lối giải thích mới; giai điệu = nốt cao nhất tay phải mới kiểm 1 bài; chưa tách "của chị" / "của
+nhạc sĩ" (md chưa ghi nhạc sĩ); lời "vì sao" của các công thức chồng lấy ví dụ chữ ở Đô trưởng như video (khung công thức ở trên thì
+theo giọng đang chọn); thế bấm để nghe ở thẻ thay hợp âm là công thức chồng hoặc mộc — chưa phải thế bấm của thầy (bước 5); Cà Pháo,
+Blues chưa có cột thầy. PianoBrain (md 13k) chưa commit — chờ người dùng.

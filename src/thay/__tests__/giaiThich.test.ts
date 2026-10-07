@@ -1,66 +1,107 @@
 import { describe, expect, it } from 'vitest'
-import { giaiThichLyThuyet, giaiThichThay, notGam, vn } from '../soanCau/giaiThich'
-import { bacThay, duLieuSoanCau, lyThuyetBac } from '../soanCau/soanCau'
+import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
+import { CONG_THUC } from '../soanCau/chongHopAm'
+import { loiThay, lyDoThay, lyThuyetCacBac, nguCanh, theBamHop, type Hop } from '../soanCau/giaiThich'
 
-const ln = duLieuSoanCau('linh-nhi')!
 const LA = 9
-const noi = (ds: string[]) => ds.join(' ')
+const RE = 2
+const pc = (x: number) => ((x % 12) + 12) % 12
+const noi = (ds: { giai: string; coSo: string; viDu?: string }[]) => ds.map((d) => `${d.giai} ${d.viDu ?? ''} ${d.coSo}`).join(' ')
 
-describe('Thẻ giải thích — lý thuyết (đúng cho mọi giọng)', () => {
-  it('tên nốt: tên Việt; gam gọi theo chữ liền nhau ở giọng có dấu', () => {
-    expect([vn('Bb'), vn('C#'), vn('E')]).toEqual(['Si♭', 'Đô♯', 'Mi'])
-    expect(notGam(5, false)).toEqual(['F', 'G', 'A', 'Bb', 'C', 'D', 'E'])
-    expect(notGam(2, true)).toEqual(['D', 'E', 'F', 'G', 'A', 'Bb', 'C'])
-    expect(notGam(11, false)).toEqual(['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'])
-  })
-
-  it('Đô trưởng bậc 2: nốt, nửa cung, loại thứ, vì sao gam quyết định, hạ át', () => {
-    const ii = noi(giaiThichLyThuyet(0, false, lyThuyetBac(0, false, '').dong.find((d) => d.bac === 2)!))
-    for (const y of ['D – F – A (Rê – Fa – La)', '3 nửa cung — quãng ba thứ', '7 nửa cung — quãng năm đúng', 'hợp âm THỨ', 'gam quyết định', 'HẠ ÁT', '2-5-1']) {
-      expect(ii).toContain(y)
-    }
-  })
-
-  it('chủ thay thế chỉ ra nốt chung; vii° có nốt cảm âm', () => {
-    const dong = lyThuyetBac(0, false, '').dong
-    expect(noi(giaiThichLyThuyet(0, false, dong.find((d) => d.bac === 6)!))).toContain('chung 2 nốt (Đô, Mi)')
-    expect(noi(giaiThichLyThuyet(0, false, dong.find((d) => d.bac === 7)!))).toMatch(/GIẢM.*NỐT CẢM ÂM/)
-  })
-
-  it('La thứ: V của gam thứ hòa âm có Sol♯ — nốt cảm âm; ♭VII là át yếu', () => {
-    const dong = lyThuyetBac(LA, true, 'm').dong
-    const v = noi(giaiThichLyThuyet(LA, true, dong.find((d) => d.chucNang.includes('hòa âm'))!))
-    for (const y of ['E – G# – B', 'Sol♯', 'gam thứ tự nhiên có Sol', 'HÒA ÂM', 'NỐT CẢM ÂM']) expect(v.toLowerCase()).toContain(y.toLowerCase())
-    expect(noi(giaiThichLyThuyet(LA, true, dong.find((d) => d.bac === 7)!))).toContain('ÁT nhưng YẾU')
-  })
-
-  it('nốt màu gọi theo quãng thật: 6 là 6, 13 là 13 (không gộp quãng tám)', () => {
-    expect(noi(giaiThichLyThuyet(LA, false, lyThuyetBac(LA, false, '6').dong[0]!))).toContain('nốt 6 của hợp âm) để tô màu: ngọt')
-    const v13 = lyThuyetBac(0, false, 'maj9').dong.find((d) => d.bac === 5)!
-    expect(v13.hopAm).toBe('G13')
-    expect(noi(giaiThichLyThuyet(0, false, v13))).toContain('nốt 13 của hợp âm')
-    expect(noi(giaiThichLyThuyet(0, false, v13))).not.toContain('nốt 6 của hợp âm')
+describe('Gọi tên trong giọng', () => {
+  it('hợp âm và nốt gọi đúng chữ ở giọng có dấu', () => {
+    expect(nguCanh(RE, true).h(8, 'maj7')).toBe('B♭maj7')
+    expect(nguCanh(RE, true).n(11, 7)).toBe('Đô♯')
+    expect(nguCanh(0, false).h(1, '7')).toBe('D♭7')
+    expect(nguCanh(0, false).h(0, '', 4)).toBe('C/E')
+    expect(nguCanh(0, false).h(7, '13b9#11')).toBe('G13♭9♯11')
+    expect(nguCanh(LA, true).songSong).toBe('Đô trưởng')
   })
 })
 
-describe('Thẻ giải thích — Linh Nhi (số đo md 13c, 13d)', () => {
-  it('V giọng thứ: 24 đoạn, ♭7 17/24, lối gam thứ hòa âm, bước chuyển về i', () => {
-    const v = noi(giaiThichThay(ln, 'linh-nhi', LA, true, bacThay(ln, LA, true).find((r) => r.khoa === 'V')!))
-    for (const y of ['24 đoạn, trong 5 bài', '17/24', 'gam thứ hòa âm', 'Sol♯', 'i (Am) 11 lần, 4 bài']) expect(v).toContain(y)
+describe('Lý thuyết từng bậc — vì sao là hợp âm ấy, thay bằng gì', () => {
+  it('đủ bảy bậc ở cả hai giọng; lập luận nói đúng nốt của giọng đang chọn', () => {
+    expect(lyThuyetCacBac(0, false).map((b) => b.goc)).toEqual([0, 2, 4, 5, 7, 9, 11])
+    expect(lyThuyetCacBac(LA, true).map((b) => b.goc)).toEqual([0, 2, 3, 5, 7, 8, 10])
+    const c = (tonic: number, thu: boolean, goc: number) => lyThuyetCacBac(tonic, thu).find((b) => b.goc === goc)!.viSao
+    expect(c(0, false, 2)).toContain('Dm7 là F đặt trên bass Rê')
+    expect(c(0, false, 7)).toMatch(/Si.*Fa.*ba cung/)
+    expect(c(LA, true, 2)).toContain('Bm7♭5 là Dm đặt trên bass Si')
+    expect(c(LA, true, 8)).toContain('Fmaj7 chính là Am trên bass Fa')
+    expect(c(LA, true, 7)).toContain('Sol♯')
   })
 
-  it('II giọng trưởng: II7 là át của V, nâng Fa lên Fa♯', () => {
-    const ii = noi(giaiThichThay(ln, 'linh-nhi', 0, false, bacThay(ln, 0, false).find((r) => r.khoa === 'II')!))
-    for (const y of ['10/10', 'Fa♯', 'át của V', 'ÁT PHỤ']) expect(ii).toContain(y)
+  it('V của giọng trưởng có lối Jeff (13♭9♯11) và thay thế ba cung D♭7', () => {
+    const v = lyThuyetCacBac(0, false).find((b) => b.goc === 7)!
+    expect(v.thay.some((t) => t.chat === '13b9#11')).toBe(true)
+    expect(v.thay.some((t) => t.goc === 1 && t.chat === '7')).toBe(true)
   })
 
-  it('♭VI khớp lý thuyết; ghi chú điệp khúc maj7 13/21 có nhãn nguồn và tách suy luận', () => {
-    const vi = noi(giaiThichThay(ln, 'linh-nhi', LA, true, bacThay(ln, LA, true).find((r) => r.khoa === 'bVI')!))
-    for (const y of ['Khớp lý thuyết: trong gam, bậc này là ♭VI (F)', '13/21', 'số đo md 13d', 'suy luận của Claude']) expect(vi).toContain(y)
+  it('mọi hợp âm thay — ở bậc và ở các lối thay — đều phát được tiếng, đúng nốt', () => {
+    const hop: Hop[] = []
+    for (const thu of [false, true]) {
+      for (const b of lyThuyetCacBac(LA, thu)) hop.push(...b.thay)
+      for (const l of loiThay(LA, thu)) hop.push(...l.goc, ...l.thay)
+    }
+    for (const x of hop) {
+      const ct = CONG_THUC.find((c) => c.kyHieu === x.chat)
+      const q = findQualityBySymbol(x.chat)
+      expect(ct ?? q, `đọc được "${x.chat}"`).toBeTruthy()
+      const not = theBamHop(LA, x)
+      expect(not.length).toBeGreaterThanOrEqual(3)
+      const goc = pc(LA + x.goc)
+      if (!ct && q) {
+        const pcs = chordPitchClasses(goc, q)
+        for (const m of x.bass === undefined ? not : not.slice(1)) expect(pcs).toContain(pc(m))
+      }
+      if (x.bass !== undefined) expect(pc(not[0]!)).toBe(pc(LA + x.bass))
+    }
   })
 
-  it('bậc có số đo đáng ngờ thì nói rõ', () => {
-    const iii = giaiThichThay(ln, 'linh-nhi', LA, true, bacThay(ln, LA, true).find((r) => r.khoa === 'iii°')!)
-    expect(iii.at(-1)).toMatch(/^Lưu ý số đo: .*chưa kiểm tay/)
+  it('lối 4 là đúng vòng trong video: Dm11 – G13♭9♯11 – Cmaj9', () => {
+    const { h } = nguCanh(0, false)
+    const l = loiThay(0, false)[3]!
+    expect(l.thay.map((x) => h(x.goc, x.chat))).toEqual(['Dm11', 'G13♭9♯11', 'Cmaj9'])
+  })
+})
+
+describe('Linh Nhi — chọn gì, vì sao (số đo `tools/ly_do_hop_am_linh_nhi.py --kiem`)', () => {
+  it('chỉ thầy có số đo mới có thẻ', () => {
+    expect(lyDoThay('ca-phao', 0, false)).toBeNull()
+  })
+
+  it('giọng thứ: ♭VImaj7 = i trên bass ♭6, I7 → iv, V có nốt cảm âm, nốt 9 ở tay trái rải', () => {
+    const ly = lyDoThay('linh-nhi', LA, true)!
+    expect(ly.nguyenTac).toHaveLength(4)
+    expect(noi(ly.bac[8]!)).toContain('Fmaj7')
+    expect(noi(ly.bac[8]!)).toMatch(/15\/21.*9\/21.*5\/21/)
+    expect(noi(ly.bac[0]!)).toMatch(/A7.*Đô♯/)
+    expect(noi(ly.bac[0]!)).toContain('7 chỗ ở 3 bài')
+    expect(noi(ly.bac[0]!)).toContain('0/7')
+    expect(noi(ly.bac[7]!)).toContain('0/16')
+    expect(noi(ly.bac[2]!)).toContain('Một Cõi Đi Về ô 49 → 51')
+    expect(ly.bac[0]![0]!.giai).toContain('La – Mi – La – Si – Đô')
+  })
+
+  it('thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp ở hai bậc', () => {
+    for (const thu of [false, true]) {
+      const ly = lyDoThay('linh-nhi', LA, thu)!
+      for (const nt of ly.nguyenTac) for (const g of nt.bac) expect(ly.bac[g]?.length, `${nt.y} → bậc ${g}`).toBeGreaterThan(0)
+      const y = Object.values(ly.bac).flatMap((ds) => ds!.map((d) => d.y))
+      expect(new Set(y).size).toBe(y.length)
+    }
+  })
+
+  it('lời về một bài cụ thể không lấy tên hợp âm của giọng đang chọn làm tên trong bài', () => {
+    const ii = lyDoThay('linh-nhi', LA, false)!.bac[2]![0]!.giai
+    expect(ii).toContain('Đường Xưa bấm đủ II7 có ♯4')
+    expect(ii).not.toContain('B7 có')
+  })
+
+  it('giọng trưởng: để trơn; Imaj7 là nốt dẫn bass sang vi; bậc II sửa lời cũ', () => {
+    const ly = lyDoThay('linh-nhi', 0, false)!
+    expect(noi(ly.bac[0]!)).toContain('12/13')
+    expect(noi(ly.bac[2]!)).toContain('5/10')
+    expect(noi(ly.bac[2]!)).toContain('Sửa lời trước')
   })
 })

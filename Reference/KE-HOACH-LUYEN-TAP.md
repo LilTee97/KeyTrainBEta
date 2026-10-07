@@ -405,8 +405,10 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 1. **Làm thử với Linh Nhi — xong 4/10/2026** (`SO-TAY.md` cùng ngày): bốn phần đầu tiên; ý 1 (phím không ra tiếng) đã sửa.
 2. Sửa nhanh trên bản thử: tự do mặc định + ô "Vào tập luyện" (ý 2, cả tab Điệu và Kỹ thuật đánh — Q4); trả lời quiz bằng chạm / gõ
    (ý 5). **Xong 4/10/2026.**
-3. Thẻ giải thích phần 1 + thuật ngữ (ý 3): mẫu Linh Nhi và lý thuyết → người dùng duyệt văn phong → sinh đủ. **Mẫu xong 4/10/2026
-   — chờ người dùng duyệt văn phong** (lý thuyết sinh bằng khuôn từ nốt của hợp âm, đúng mọi giọng; thầy khác làm khi tới thầy ấy).
+3. Thẻ giải thích phần 1 (ý 3). Mẫu đầu (4/10/2026) người dùng **bác**: *"ko cần kiểu giải thích máy móc … tư duy tại sao thầy lại
+   chọn hợp âm đó ở vị trí đó"*. **Dựng lại 7/10/2026** — bốn khối: chồng hợp âm (Stack, Jeff Schneider; mọi màu có trong sheet các
+   thầy) + đố chuyển giọng · các lối thay hợp âm trong đệm hát, nghe gốc / thay · lý thuyết từng bậc (vì sao, thay bằng gì) · Linh
+   Nhi chọn gì và VÌ SAO (md 13k, ví dụ soát tay). **Chờ người dùng duyệt**; Cà Pháo, Blues làm khi tới thầy ấy (bước 8, 9).
 4. Gam và hợp âm rải (ý 4): Linh Nhi + căn bản.
 5. Đo thế bấm và bước chuyển của Linh Nhi → "Chuyển hợp âm của thầy" (ý 6).
 6. **Trang Căn bản**: 7 bài lý thuyết, quiz, gam và hợp âm rải, tập solo chấm theo lý thuyết, đệm cơ bản — dùng lại bước 2–5.
@@ -580,8 +582,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
 - Bước 3–5 (tab Điệu · trang Hôm nay · tab Kỹ thuật đánh): **xong** — GĐ 1 bước 5–8 và GĐ 2 ở trên. Bước 6 — tab Học cách soạn câu
   (GĐ 3): kế hoạch viết và sửa 4/10/2026 theo ý người dùng (Q1 Linh Nhi · Q2 ẩn Tuấn · Q3 trang riêng Căn bản). **Bước 1 — làm thử
   với Linh Nhi: xong 4/10/2026**; người dùng dùng thử, góp 6 ý: ý 1 (phím không ra tiếng) sửa ngay, ý 2–6 vào kế hoạch (mục GĐ 3 ở trên,
-  "Bổ sung sau bản thử"). Ý 2 + ý 5 xong 4/10/2026 (ý 2 áp cả tab Điệu, Kỹ thuật đánh — Q4). Thẻ giải thích phần 1 (ý 3) — mẫu
-  xong 4/10/2026, chờ người dùng duyệt văn phong; rồi bước 4 (gam và hợp âm rải).
+  "Bổ sung sau bản thử"). Ý 2 + ý 5 xong 4/10/2026 (ý 2 áp cả tab Điệu, Kỹ thuật đánh — Q4). Thẻ giải thích phần 1 (ý 3) — dựng
+  lại 7/10/2026 theo lời bác bản đầu, chờ người dùng duyệt; rồi bước 4 (gam và hợp âm rải).
 
 ---
 

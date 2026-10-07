@@ -6,10 +6,21 @@ import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { LuotTap } from '../shared/persistence/db'
-import { GIOI_THIEU, giaiThichLyThuyet, giaiThichThay, THUAT_NGU } from './soanCau/giaiThich'
 import {
-  bacThay,
-  chuyenThay,
+  CONG_THUC,
+  DO_DUOC,
+  gocDep,
+  hauDep,
+  pcsTren,
+  soThe,
+  tenHaiTay,
+  tenTren,
+  tenTrongGiong,
+  theBamChong,
+  type CongThuc,
+} from './soanCau/chongHopAm'
+import { loiThay, lyDoThay, lyThuyetCacBac, nguCanh, theBamHop, type Diem, type Hop } from './soanCau/giaiThich'
+import {
   dungHopAm,
   GHI_CHU_THAY,
   LOAI_BAC1,
@@ -22,12 +33,11 @@ import {
   vongCuaThay,
   vongLyThuyet,
   xepNot,
-  type DongThay,
   type DuLieuSoanCau,
 } from './soanCau/soanCau'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
-import { GOC } from './vongThay'
+import { GOC, kieuDau } from './vongThay'
 
 const nut = (on: boolean) =>
   `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
@@ -137,95 +147,102 @@ export function SoanCau({
   )
 }
 
+const ngheHop = async (tonic: number, x: Hop) => {
+  await startAudio()
+  playChord(theBamHop(tonic, x), '2n')
+}
+const ngheChuoi = async (tonic: number, ds: readonly Hop[]) => {
+  await startAudio()
+  playChordSequence(
+    ds.map((x) => theBamHop(tonic, x)),
+    1.2,
+  )
+}
+
 /**
- * Phần 1 — THẺ GIẢI THÍCH từng bậc (ý 3, người dùng 4/10/2026): bên trái lý thuyết piano (vì sao bậc ấy mang hợp âm ấy), bên phải
- * lựa chọn của thầy ở CÙNG gốc hợp âm (số đo từ sheet, có nhãn nguồn). Hợp âm thầy đặt ngoài gam gom một thẻ. Lời: `giaiThich.ts`.
+ * Phần 1 — viết lại 4/10/2026 theo người dùng ("ko cần kiểu giải thích máy móc … tư duy tại sao thầy lại chọn hợp âm đó ở vị trí
+ * đó"). Bốn khối: chồng hợp âm (Stack — Jeff Schneider) · các lối thay hợp âm trong đệm hát · thầy đặt hợp âm thế nào · từng bậc (vì
+ * sao là hợp âm ấy, thay bằng gì | thầy chọn gì ở đó, vì sao). Lời: `soanCau/giaiThich.ts`; công thức chồng: `soanCau/chongHopAm.ts`.
  */
 function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du: DuLieuSoanCau; tonic: number; thu: boolean; loai: string }) {
   const lt = lyThuyetBac(tonic, thu, loai)
   const vongLt = vongLyThuyet(tonic, thu, loai === 'maj7' || loai === 'm7')
-  const thay = bacThay(du, tonic, thu)
-  const chuyen = chuyenThay(du, tonic, thu)
   const vongT = vongCuaThay(du, tonic, thu)
-  const ghiChu = GHI_CHU_THAY[teacher.id]?.[thu ? 'thu' : 'truong'] ?? []
-  const gocLt = new Set(lt.dong.map((d) => d.goc))
+  const bac = lyThuyetCacBac(tonic, thu)
+  const ly = lyDoThay(teacher.id, tonic, thu)
+  const { h } = nguCanh(tonic, thu)
   const cacBac = [1, 2, 3, 4, 5, 6, 7].map((so) => {
     const dong = lt.dong.filter((d) => d.bac === so)
-    return { so, dong, thay: thay.filter((r) => r.goc === dong[0]!.goc) }
+    const goc = dong[0]!.goc
+    return { so, dong, lt: bac.find((x) => x.goc === goc), thay: ly?.bac[goc] ?? [] }
   })
-  const ngoaiGam = thay.filter((r) => !gocLt.has(r.goc))
-
-  const theThay = (r: DongThay) => (
-    <div key={r.khoa} className="mb-3 last:mb-0">
-      <button type="button" onClick={() => void nghe(r.pcs)} className="font-semibold text-amber-key hover:underline">
-        ▶ {r.laMa} · {r.hopAm}
-      </button>
-      {giaiThichThay(du, teacher.id, tonic, thu, r).map((cau) => (
-        <p key={cau} className={`mt-1 text-xs ${cau.startsWith('Lưu ý số đo') ? 'text-rose-300' : 'text-cream/85'}`}>
-          {cau}
-        </p>
-      ))}
-    </div>
-  )
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={the}>
-        <h4 className="mb-1 font-semibold text-cream">Hợp âm theo bậc — đọc thế nào</h4>
-        <p className="mb-2 text-xs text-cream/85">{GIOI_THIEU}</p>
-        <p className="mb-2 text-xs text-dim">{lt.moTa}</p>
-        <details className="text-xs">
-          <summary className="cursor-pointer text-amber-key">Thuật ngữ — bấm để mở</summary>
-          <dl className="mt-2 grid gap-x-4 gap-y-1 md:grid-cols-2">
-            {THUAT_NGU.map((t) => (
-              <div key={t.tu}>
-                <dt className="font-semibold text-cream">{t.tu}</dt>
-                <dd className="text-dim">{t.nghia}</dd>
-              </div>
+      <ChongHopAm tonic={tonic} thu={thu} />
+      <LoiThayThe tonic={tonic} thu={thu} />
+
+      {ly && (
+        <div className={the}>
+          <h4 className="mb-1 font-semibold text-cream">{teacher.label} đặt hợp âm thế nào — và vì sao</h4>
+          <p className="mb-2 text-xs text-dim">
+            Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là
+            số đo và nhãn suy luận.
+          </p>
+          <ul className="flex flex-col gap-1.5 text-xs">
+            {ly.nguyenTac.map((d) => (
+              <li key={d.y}>
+                <b className="text-cream">{d.y}</b> — <span className="text-cream/85">{d.tom}</span>{' '}
+                <span className="text-dim">(xem {d.bac.map((g) => `Bậc ${cacBac.find((c) => c.dong[0]!.goc === g)?.so ?? '?'}`).join(', ')})</span>
+              </li>
             ))}
-          </dl>
-        </details>
-      </div>
+          </ul>
+        </div>
+      )}
 
       {cacBac.map((c) => (
         <div key={c.so} className={the}>
           <h4 className="mb-2 font-semibold text-cream">
             Bậc {c.so} · {c.dong.map((d) => `${d.laMa} ${d.hopAm}`).join(' / ')}
+            {c.lt && <span className="font-normal text-dim"> — {c.lt.vai}</span>}
           </h4>
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
-              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">Lý thuyết piano</h5>
-              {c.dong.map((d) => (
-                <div key={d.laMa} className="mb-3 last:mb-0">
-                  <button type="button" onClick={() => void nghe(d.pcs)} className="font-semibold text-amber-key hover:underline">
-                    ▶ {d.laMa} · {d.hopAm} <span className="font-normal text-dim">— {d.chucNang}</span>
+              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">Vì sao là hợp âm này · thay bằng gì</h5>
+              <div className="mb-2 flex flex-wrap gap-2">
+                {c.dong.map((d) => (
+                  <button key={d.laMa} type="button" onClick={() => void nghe(d.pcs)} className="text-xs font-semibold text-amber-key hover:underline">
+                    ▶ {d.laMa} · {d.hopAm}
                   </button>
-                  {giaiThichLyThuyet(tonic, thu, d).map((cau) => (
-                    <p key={cau} className="mt-1 text-xs text-cream/85">
-                      {cau}
-                    </p>
-                  ))}
-                </div>
-              ))}
+                ))}
+              </div>
+              {c.lt && (
+                <>
+                  <p className="text-xs text-cream/85">{c.lt.viSao}</p>
+                  <ul className="mt-2 flex flex-col gap-1.5 text-xs">
+                    {c.lt.thay.map((t) => (
+                      <li key={`${t.goc}${t.chat}${t.bass ?? ''}`}>
+                        <button type="button" onClick={() => void ngheHop(tonic, t)} className="font-semibold text-amber-key hover:underline">
+                          ▶ {h(t.goc, t.chat, t.bass)}
+                        </button>{' '}
+                        <span className="text-cream/85">{t.viSao}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
             <div>
-              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">{teacher.label} — số đo từ sheet</h5>
+              <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">{teacher.label} ở bậc này</h5>
               {c.thay.length > 0 ? (
-                c.thay.map(theThay)
+                c.thay.map((d) => <DiemThay key={d.y} d={d} />)
               ) : (
-                <p className="text-xs text-dim">Trên bậc này chị không đặt hợp âm nào đủ ≥ 5 đoạn ở ≥ 2 bài.</p>
+                <p className="text-xs text-dim">Ở bậc này chị không có lối riêng đáng kể trong phần hát của các sheet.</p>
               )}
             </div>
           </div>
         </div>
       ))}
-
-      {ngoaiGam.length > 0 && (
-        <div className={the}>
-          <h4 className="mb-2 font-semibold text-cream">Hợp âm chị đặt ngoài gam</h4>
-          <div className="grid gap-4 lg:grid-cols-2">{ngoaiGam.map(theThay)}</div>
-        </div>
-      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={the}>
@@ -243,12 +260,8 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
           </ul>
         </div>
         <div className={the}>
-          <h5 className="mb-1 text-xs font-semibold text-cream">Bước chuyển hay gặp của chị (≥ 2 bài)</h5>
-          <p className="mb-3 text-xs text-cream/85">
-            {chuyen.map((c) => `${c.tu} → ${c.den}: ${c.n} lần, ${c.bai} bài`).join(' · ')}
-          </p>
-          <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet</h5>
-          <ul className="mb-3 flex flex-col gap-1 text-xs">
+          <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet của {teacher.label}</h5>
+          <ul className="flex flex-col gap-1 text-xs">
             {vongT.map((v) => (
               <li key={v.id}>
                 <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
@@ -258,18 +271,290 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
               </li>
             ))}
           </ul>
-          {ghiChu.length > 0 && (
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DiemThay({ d }: { d: Diem }) {
+  return (
+    <div className="mb-3 text-xs last:mb-0">
+      <p className="font-semibold text-cream">{d.y}</p>
+      <p className="mt-1 text-cream/85">{d.giai}</p>
+      {d.viDu && (
+        <p className="mt-1 text-cream/75">
+          <span className="text-amber-key">Trong sheet:</span> {d.viDu}
+        </p>
+      )}
+      <p className="mt-1 text-dim">Cơ sở: {d.coSo}</p>
+    </div>
+  )
+}
+
+/** Các lối thay hợp âm trong đệm hát — giữ gì, đổi gì, vì sao tai vẫn nhận; nghe câu gốc rồi câu đã thay. */
+function LoiThayThe({ tonic, thu }: { tonic: number; thu: boolean }) {
+  const { h, giong } = nguCanh(tonic, thu)
+  const ten = (ds: readonly Hop[]) => ds.map((x) => h(x.goc, x.chat, x.bass)).join(' – ')
+  return (
+    <div className={the}>
+      <h4 className="mb-1 font-semibold text-cream">Thay hợp âm trong đệm hát — vì sao thay được</h4>
+      <p className="mb-3 text-xs text-dim">
+        Mỗi lối: giữ gì, đổi gì, vì sao tai vẫn nhận. Bấm ▶ nghe câu gốc rồi câu đã thay ({giong}). Thế bấm để nghe: hợp âm có công thức
+        chồng thì bấm theo công thức, còn lại bấm mộc — chưa phải thế bấm của thầy.
+      </p>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {loiThay(tonic, thu).map((l) => (
+          <div key={l.ten} className="rounded-lg border border-line/60 p-3 text-xs">
+            <p className="font-semibold text-cream">{l.ten}</p>
+            <p className="text-dim">
+              Giữ: {l.giu} · Đổi: {l.doi}
+            </p>
+            <p className="mt-1 text-cream/85">{l.viSao}</p>
+            <div className="mt-2 flex flex-col items-start gap-1">
+              <button type="button" onClick={() => void ngheChuoi(tonic, l.goc)} className="text-amber-key hover:underline">
+                ▶ gốc: <span className="font-mono">{ten(l.goc)}</span>
+              </button>
+              <button type="button" onClick={() => void ngheChuoi(tonic, l.thay)} className="text-amber-key hover:underline">
+                ▶ thay: <span className="font-mono">{ten(l.thay)}</span>
+              </button>
+            </div>
+            {l.thayDung && <p className="mt-1 text-cream/75">Trong sheet: {l.thayDung}</p>}
+            <p className="mt-1 text-dim">Nguồn: {l.nguon}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const NHOM_CT = ['Trưởng', 'Thứ', 'Nửa giảm · giảm', 'Át'] as const
+const THE = ['nguyên vị', 'đảo 1', 'đảo 2', 'đảo 3']
+
+/**
+ * CHỒNG HỢP ÂM (Stack, Jeff Schneider) — người dùng 4/10/2026. Chọn công thức → thấy hai tầng ở giọng đang chọn (hoặc gốc tự chọn —
+ * tập chuyển giọng, bước Jeff gọi là quan trọng nhất), đảo từng tầng, nghe, bàn phím tô hai màu. Đố chuyển giọng: gốc ngẫu nhiên,
+ * tìm hợp âm tầng trên — gõ tên hoặc bấm trên đàn (đàn MIDI · chuột · bàn phím máy · chạm).
+ */
+function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
+  // Có bàn phím thì phím bấm phải ra tiếng (người dùng 4/10/2026). Phần 1 chỉ có một bàn phím — không kêu đôi.
+  useLiveSound()
+  useComputerKeyboard(60)
+  const style = kieuDau(tonic, thu)
+  const [id, setId] = useState('m11')
+  const [gocTu, setGocTu] = useState<number | null>(null)
+  const [daoDuoi, setDaoDuoi] = useState(0)
+  const [daoTren, setDaoTren] = useState(0)
+  /* Đố chuyển giọng. */
+  const [cau, setCau] = useState<{ ct: CongThuc; goc: number } | null>(null)
+  const [kq, setKq] = useState<'dang' | 'dung' | 'xem'>('dang')
+  const [go, setGo] = useState('')
+  const [bao, setBao] = useState('')
+  const [diem, setDiem] = useState({ cau: 0, dung: 0 })
+  const ct = CONG_THUC.find((c) => c.id === id)!
+  const viDu = thu ? ct.viDu.thu : ct.viDu.truong
+  const goc = gocTu ?? (tonic + viDu) % 12
+  const gocTen = gocTu === null ? tenTrongGiong(tonic, thu, viDu) : GOC[gocTu]!
+  const bam = theBamChong(ct, goc, daoDuoi, daoTren)
+  const ten = tenHaiTay(ct, gocTen, style, daoDuoi, daoTren)
+  const chonCt = (x: string) => {
+    setId(x)
+    setDaoDuoi(0)
+    setDaoTren(0)
+    setCau(null)
+  }
+  const choi = async (not: readonly number[]) => {
+    await startAudio()
+    playChord([...not], '2n')
+  }
+
+  const cauMoi = () => {
+    setCau({ ct: DO_DUOC[Math.floor(Math.random() * DO_DUOC.length)]!, goc: Math.floor(Math.random() * 12) })
+    setKq('dang')
+    setBao('')
+    setGo('')
+  }
+  const dung = () => {
+    setKq('dung')
+    setDiem((d) => ({ cau: d.cau + 1, dung: d.dung + 1 }))
+  }
+  const held = useMidiStore((state) => state.heldNotes)
+  useEffect(() => {
+    if (cau && kq === 'dang' && held.length >= 3 && dungHopAm(held, pcsTren(cau.ct, cau.goc))) dung()
+  }, [held, cau, kq])
+  const cauTen = cau ? `${gocDep(GOC[cau.goc]!)}${hauDep(cau.ct.kyHieu)}` : ''
+  /* Bàn phím: đang đố thì tắt gợi ý; trả lời xong thì chỉ thế bấm của câu đố; không đố thì chỉ công thức đang xem. */
+  const hien = cau ? (kq === 'dang' ? null : theBamChong(cau.ct, cau.goc)) : bam
+  const dapAn = cau ? `${tenTren(cau.ct, GOC[cau.goc]!, style)} (${tenHaiTay(cau.ct, GOC[cau.goc]!, style).phai.join(' – ')})` : ''
+
+  return (
+    <div className={the}>
+      <h4 className="mb-1 font-semibold text-cream">Chồng hợp âm — dựng hợp âm màu (Stack · Jeff Schneider)</h4>
+      <div className="mb-3 flex flex-col gap-1.5 text-xs text-cream/85">
+        <p>
+          Ý chính của video: một hợp âm "khó" là <b className="text-cream">hai hợp âm dễ chồng lên nhau</b> — như đọc chữ "earthquake" thành
+          "earth" + "quake". Tay trái một hợp âm ba (hay chỉ hai nốt 3 – 7 của hợp âm át), tay phải một hợp âm ba khác. Jeff lấy vòng 2-5-1
+          Đô trưởng Dm7 – G7 – Cmaj7 rồi dựng thành Dm11 – G13♭9♯11 – Cmaj9 bằng ba công thức (đánh dấu "Jeff" ở dưới).
+        </p>
+        <p>
+          Bước quan trọng trước khi đảo thế: nhớ <b className="text-cream">quan hệ</b> giữa hợp âm chồng trên và gốc ("thấp hơn gốc một
+          cung", "trên bậc 5", "cách gốc ba cung") chứ không nhớ tên nốt — quan hệ đem sang giọng nào cũng đúng. Thế đảo: đổi nốt nằm dưới
+          của từng tầng (nguyên vị · đảo 1 · đảo 2) để ra voicing mới; nốt sát nhau ("crunch") và hai tầng chồng lấn đều không sao. Bước khó
+          nhất và quan trọng nhất: chuyển voicing sang giọng khác — vd Fm11 = Fa thứ + Mi♭ trưởng; B♭13♭9♯11 = Rê – La♭ + Mi thứ; E♭maj9 =
+          Mi♭ trưởng + Si♭ trưởng.
+        </p>
+        <p className="text-dim">
+          Nguồn: Jeff Schneider, "How I Play Jazz Piano Chords – The Chord Stack System" (01:22 – 09:59) — Claude đọc phụ đề tự động của
+          video, không xem hình. Công thức đánh dấu "Claude" là suy ra cùng nguyên tắc cho các màu có trong sheet các thầy; mỗi công thức có
+          test kiểm nốt khớp đúng hợp âm.
+        </p>
+      </div>
+
+      <div className="mb-3 flex flex-col gap-1.5">
+        {NHOM_CT.map((nhom) => (
+          <div key={nhom} className="flex flex-wrap items-center gap-1">
+            <span className="w-28 text-xs text-dim">{nhom}</span>
+            {CONG_THUC.filter((c) => c.nhom === nhom).map((c) => (
+              <button key={c.id} type="button" onClick={() => chonCt(c.id)} className={nut(id === c.id)}>
+                {hauDep(c.kyHieu)}
+                {c.nguon === 'jeff' && ' · Jeff'}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-lg text-amber-key">
+            {gocDep(gocTen)}
+            {hauDep(ct.kyHieu)}
+          </span>
+          <span className="text-dim">gốc</span>
+          <select
+            value={gocTu ?? ''}
+            onChange={(event) => setGocTu(event.target.value === '' ? null : Number(event.target.value))}
+            className={chonClass}
+            aria-label="Gốc hợp âm"
+          >
+            <option value="">theo giọng</option>
+            {GOC.map((g, i) => (
+              <option key={g} value={i}>
+                {g}
+              </option>
+            ))}
+          </select>
+          <span className="text-dim">Thầy dùng: {ct.thay.length ? ct.thay.join(' · ') : 'chưa thấy trong sheet các thầy'}</span>
+        </div>
+        <p>
+          <b className="text-teal-key">Tay trái</b> — {ct.tenDuoi}: {ten.trai.join(' – ')} · <b className="text-amber-key">Tay phải</b> —{' '}
+          {'iv' in ct.tren ? ct.tren.ten : `${tenTren(ct, gocTen, style)} (${ct.quanHe})`}: {ten.phai.join(' – ')}
+        </p>
+        <p className="mt-1 text-cream/85">
+          <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>
+          {ct.viSao}
+        </p>
+        <p className="mt-1 text-dim">Nguồn: {ct.nguon === 'jeff' ? 'Jeff Schneider (video)' : 'Claude suy ra cùng nguyên tắc'}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => void choi(bam.trai)} className={nut(false)}>
+            ▶ Tay trái
+          </button>
+          <button type="button" onClick={() => void choi(bam.phai)} className={nut(false)}>
+            ▶ Tay phải
+          </button>
+          <button type="button" onClick={() => void choi([...bam.trai, ...bam.phai])} className={nut(false)}>
+            ▶ Cả hai
+          </button>
+          {ct.duoi.length > 1 && (
             <>
-              <h5 className="mb-1 text-xs font-semibold text-cream">Ghi chú (số đo md của chị)</h5>
-              <ul className="list-disc pl-4 text-xs text-dim">
-                {ghiChu.map((g) => (
-                  <li key={g}>{g}</li>
-                ))}
-              </ul>
+              <span className="ml-2 text-dim">Tay trái:</span>
+              {ct.duoi.map((_, i) => (
+                <button key={i} type="button" onClick={() => setDaoDuoi(i)} className={nut(daoDuoi === i)}>
+                  {ct.duoi.length === 2 ? (i === 0 ? '3 dưới' : '7 dưới') : THE[i]}
+                </button>
+              ))}
+            </>
+          )}
+          {soThe(ct) > 1 && (
+            <>
+              <span className="ml-2 text-dim">Tay phải:</span>
+              {Array.from({ length: soThe(ct) }, (_, i) => (
+                <button key={i} type="button" onClick={() => setDaoTren(i)} className={nut(daoTren === i)}>
+                  {THE[i]}
+                </button>
+              ))}
             </>
           )}
         </div>
       </div>
+
+      <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold text-cream">Đố chuyển giọng</span>
+          <button type="button" onClick={cauMoi} className={nut(false)}>
+            {cau ? 'Câu khác' : 'Bắt đầu'}
+          </button>
+          {cau && (
+            <>
+              <span>
+                <span className="font-mono text-base text-amber-key">{cauTen}</span> — tay trái {cau.ct.tenDuoi}; tay phải chồng hợp âm nào?
+              </span>
+              <button
+                type="button"
+                disabled={kq !== 'dang'}
+                onClick={() => {
+                  setKq('xem')
+                  setDiem((d) => ({ ...d, cau: d.cau + 1 }))
+                }}
+                className={nut(false)}
+              >
+                Xem đáp án
+              </button>
+            </>
+          )}
+          {diem.cau > 0 && (
+            <span className="ml-auto font-mono text-dim">
+              đúng {diem.dung}/{diem.cau} câu
+            </span>
+          )}
+        </div>
+        {cau && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (kq !== 'dang') return
+              const r = traLoiTen(go, pcsTren(cau.ct, cau.goc))
+              if (r === 'dung') dung()
+              else setBao(r === 'khong-doc' ? `Chưa đọc được "${go}" — gõ như C, Dbm, Bdim, Eb+` : `${go} — chưa đúng`)
+              setGo('')
+            }}
+            className="mt-2 flex flex-wrap items-center gap-2"
+          >
+            <span className="text-dim">Bấm hợp âm ấy trên đàn (3 nốt, quãng tám nào cũng được) hoặc gõ tên:</span>
+            <input
+              value={go}
+              onChange={(event) => setGo(event.target.value)}
+              placeholder="vd Dbm"
+              className={`${chonClass} w-24`}
+              aria-label="Gõ tên hợp âm tầng trên"
+            />
+            <button type="submit" disabled={kq !== 'dang' || !go.trim()} className={nut(false)}>
+              Trả lời
+            </button>
+            {kq === 'dang' && bao && <span className="text-rose-300">{bao}</span>}
+            {kq === 'dung' && <b className="text-teal-key">Đúng — {dapAn}</b>}
+            {kq === 'xem' && <span className="text-rose-300">Đáp án: {dapAn}</span>}
+          </form>
+        )}
+      </div>
+
+      <MidiConnect />
+      <OnScreenPiano
+        lowNote={36}
+        highNote={84}
+        leftHandNotes={hien?.trai ?? []}
+        rightHandNotes={hien?.phai ?? []}
+      />
     </div>
   )
 }

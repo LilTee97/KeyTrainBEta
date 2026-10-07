@@ -288,19 +288,12 @@ export function vongCuaThay(du: DuLieuSoanCau, tonic: number, thu: boolean): (Vo
     }))
 }
 
-/** Ghi chú số đo viết tay từ md của thầy — hiện dưới bảng đặt hợp âm và ở phần chọn nốt. */
-export const GHI_CHU_THAY: Partial<Record<TeacherId, { truong: string[]; thu: string[]; not: string }>> = {
+/**
+ * Ghi chú số đo viết tay từ md của thầy — hiện ở phần chọn nốt. Hai mảng `truong` · `thu` (ghi chú dưới bảng hợp âm cũ) bỏ 4/10/2026
+ * cùng bảng ấy: câu "II7 — át của V (10/10)" sai — soát tay chỉ 3/10 đi tới V (`tools/ly_do_hop_am_linh_nhi.py`, md 13k).
+ */
+export const GHI_CHU_THAY: Partial<Record<TeacherId, { not: string }>> = {
   'linh-nhi': {
-    truong: [
-      'Giọng trưởng: trơn là loại hay gặp nhất ở mọi bậc; màu đứng vững duy nhất là II7 — át của V (10/10 đoạn, 3 bài).',
-      'Ô có hai hợp âm: bolero trưởng 30/204 ô (15 %). Đảo bass hiếm: 7/245 đoạn.',
-      'Chỉ 3 bài giọng trưởng — số ít, đọc thận trọng.',
-    ],
-    thu: [
-      'Lên điệp khúc: ♭VI thành maj7 (13/21 đoạn, 3 bài; phiên khúc chỉ 8/25) và iv thành add9 (7/10, 3 bài).',
-      'Át phụ chỉ cho hợp âm trưởng ngoài giọng; ♭VII → ♭III và ♭III → ♭VI (đi quãng năm nhưng trong giọng) thì trơn 9/10.',
-      'Ô có hai hợp âm: slow rock 81/111 ô (73 %), bolero thứ 44/161 (27 %). Hợp âm chen lặp ở ≥ 2 bài chỉ có ba mẫu (vd i → ♭VI trong ô, 5 lần, 3 bài) — quá mỏng để thành luật.',
-    ],
     not: 'Mức bám hợp âm của chị tùy điệu (23 đoạn solo, 8 bài): nốt hợp âm ở phách mạnh · phách nhẹ — slow rock thứ 83 % · 85 %, bolero trưởng 82 % · 60 %, bolero thứ 64 % · 56 %.',
   },
 }
