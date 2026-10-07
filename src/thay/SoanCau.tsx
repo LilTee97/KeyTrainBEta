@@ -186,14 +186,17 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
         <div className={the}>
           <h4 className="mb-1 font-semibold text-cream">{teacher.label} đặt hợp âm thế nào — và vì sao</h4>
           <p className="mb-2 text-xs text-dim">
-            Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là
-            số đo và nhãn suy luận.
+            Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Ai chọn" so với HỢP ÂM PHỔ BIẾN của chính bài (vài bản cộng đồng mỗi bài —
+            không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của {teacher.id === 'linh-nhi' ? 'chị' : 'thầy'};
+            "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là số đo và nhãn suy luận.
           </p>
           <ul className="flex flex-col gap-1.5 text-xs">
             {ly.nguyenTac.map((d) => (
               <li key={d.y}>
                 <b className="text-cream">{d.y}</b> — <span className="text-cream/85">{d.tom}</span>{' '}
-                <span className="text-dim">(xem {d.bac.map((g) => `Bậc ${cacBac.find((c) => c.dong[0]!.goc === g)?.so ?? '?'}`).join(', ')})</span>
+                {d.bac.length > 0 && (
+                  <span className="text-dim">(xem {d.bac.map((g) => `Bậc ${cacBac.find((c) => c.dong[0]!.goc === g)?.so ?? '?'}`).join(', ')})</span>
+                )}
               </li>
             ))}
           </ul>
@@ -282,6 +285,9 @@ function DiemThay({ d }: { d: Diem }) {
     <div className="mb-3 text-xs last:mb-0">
       <p className="font-semibold text-cream">{d.y}</p>
       <p className="mt-1 text-cream/85">{d.giai}</p>
+      <p className="mt-1 text-cream/85">
+        <span className="text-teal-key">Ai chọn:</span> {d.ai}
+      </p>
       {d.viDu && (
         <p className="mt-1 text-cream/75">
           <span className="text-amber-key">Trong sheet:</span> {d.viDu}

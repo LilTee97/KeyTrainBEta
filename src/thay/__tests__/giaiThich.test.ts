@@ -65,43 +65,59 @@ describe('Lý thuyết từng bậc — vì sao là hợp âm ấy, thay bằng 
   })
 })
 
-describe('Linh Nhi — chọn gì, vì sao (số đo `tools/ly_do_hop_am_linh_nhi.py --kiem`)', () => {
+describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop_am_linh_nhi.py --kiem`, `tools/tach_lua_chon.py --kiem`)', () => {
+  const ai = (ds: { ai: string }[]) => ds.map((d) => d.ai).join(' ')
+
   it('chỉ thầy có số đo mới có thẻ', () => {
     expect(lyDoThay('ca-phao', 0, false)).toBeNull()
   })
 
-  it('giọng thứ: ♭VImaj7 = i trên bass ♭6, I7 → iv, V có nốt cảm âm, nốt 9 ở tay trái rải', () => {
+  it('giọng thứ: số đo sau khi sửa lỗi đọc doc_trai (7/10/2026)', () => {
     const ly = lyDoThay('linh-nhi', LA, true)!
     expect(ly.nguyenTac).toHaveLength(4)
     expect(noi(ly.bac[8]!)).toContain('Fmaj7')
-    expect(noi(ly.bac[8]!)).toMatch(/15\/21.*9\/21.*5\/21/)
+    expect(noi(ly.bac[8]!)).toMatch(/23 đoạn, 4 bài.*16\/23.*10\/23.*5\/23/)
     expect(noi(ly.bac[0]!)).toMatch(/A7.*Đô♯/)
-    expect(noi(ly.bac[0]!)).toContain('7 chỗ ở 3 bài')
-    expect(noi(ly.bac[0]!)).toContain('0/7')
-    expect(noi(ly.bac[7]!)).toContain('0/16')
+    expect(noi(ly.bac[0]!)).toContain('8 chỗ sạch (soát tay) ở 3 bài')
+    expect(noi(ly.bac[0]!)).toContain('0/8')
+    expect(noi(ly.bac[7]!)).toContain('2/19')
     expect(noi(ly.bac[2]!)).toContain('Một Cõi Đi Về ô 49 → 51')
     expect(ly.bac[0]![0]!.giai).toContain('La – Mi – La – Si – Đô')
   })
 
-  it('thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp ở hai bậc', () => {
+  it('ai chọn — giọng thứ: V và I7 là của bài; ii°, maj7 trên ♭VI, màu trên i là của chị', () => {
+    const ly = lyDoThay('linh-nhi', LA, true)!
+    expect(ai(ly.bac[7]!)).toContain('V ở 34/39 chỗ cùng bản phổ biến')
+    expect(ai(ly.bac[0]!)).toContain('bản phổ biến có I7 ở 8/11 chỗ')
+    expect(ai(ly.bac[2]!)).toContain('0/12')
+    expect(ai(ly.bac[8]!)).toContain('0/19')
+    expect(ai(ly.bac[0]!)).toMatch(/39\/39.*21\/21/)
+    expect(noi(ly.bac[0]!)).toContain('Sửa lời trước')
+  })
+
+  it('ai chọn — giọng trưởng: II của Mùa Xuân là của bài, II7 của Đường Xưa và hợp âm giảm thay V là của chị', () => {
+    const ly = lyDoThay('linh-nhi', 0, false)!
+    expect(ai(ly.bac[2]!)).toMatch(/Mùa Xuân.*3\/4.*Đường Xưa.*0\/3/)
+    expect(ai(ly.bac[7]!)).toContain('0/3 bản có ♯iv°')
+    expect(noi(ly.bac[0]!)).toContain('12/13')
+    expect(noi(ly.bac[2]!)).toContain('5/10')
+    expect(noi(ly.bac[2]!)).toContain('Sửa lời trước')
+  })
+
+  it('mọi ý đều có dòng ai chọn; thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp', () => {
     for (const thu of [false, true]) {
       const ly = lyDoThay('linh-nhi', LA, thu)!
       for (const nt of ly.nguyenTac) for (const g of nt.bac) expect(ly.bac[g]?.length, `${nt.y} → bậc ${g}`).toBeGreaterThan(0)
-      const y = Object.values(ly.bac).flatMap((ds) => ds!.map((d) => d.y))
+      const ds = Object.values(ly.bac).flatMap((x) => x!)
+      expect(ds.every((d) => /Của (bài|chị)/.test(d.ai))).toBe(true)
+      const y = ds.map((d) => d.y)
       expect(new Set(y).size).toBe(y.length)
     }
   })
 
   it('lời về một bài cụ thể không lấy tên hợp âm của giọng đang chọn làm tên trong bài', () => {
     const ii = lyDoThay('linh-nhi', LA, false)!.bac[2]![0]!.giai
-    expect(ii).toContain('Đường Xưa bấm đủ II7 có ♯4')
+    expect(ii).toContain('Đường Xưa: bản ghi ii hoặc V7, chị đổi thành II7')
     expect(ii).not.toContain('B7 có')
-  })
-
-  it('giọng trưởng: để trơn; Imaj7 là nốt dẫn bass sang vi; bậc II sửa lời cũ', () => {
-    const ly = lyDoThay('linh-nhi', 0, false)!
-    expect(noi(ly.bac[0]!)).toContain('12/13')
-    expect(noi(ly.bac[2]!)).toContain('5/10')
-    expect(noi(ly.bac[2]!)).toContain('Sửa lời trước')
   })
 })

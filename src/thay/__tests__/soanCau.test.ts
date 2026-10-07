@@ -50,25 +50,30 @@ describe('Học cách soạn câu — lý thuyết piano', () => {
 })
 
 describe('Học cách soạn câu — Linh Nhi: phong cách đặt hợp âm (số đo md 13d)', () => {
-  it('số đo khớp md: thứ i 101 đoạn (trơn 41), ♭VI 46 (có maj7 21); bậc 1 bài bị loại', () => {
+  /*
+    Số đo đổi 7/10/2026: sửa lỗi đếm đôi bậc ba trong `doc_trai` (tools/hop_am_linh_nhi.py) — 64/676 đoạn đọc từ tay trái đổi cách đọc,
+    phần lớn "iii°" thành V. Số cũ: i 101 (trơn 41) · ♭VI 46 (maj7 21) · V 24 (♭7 17/24) · I 10 · i → ♭VI 20 lần, 4 bài · iii° 24 đoạn
+    bị gắn "nghi". Triệu chứng nếu lùi: iii° lại thành ≥ 5 đoạn, V tụt về 24.
+  */
+  it('số đo khớp md: thứ i 118 đoạn (trơn 52), ♭VI 48 (có maj7 23); bậc 1 bài bị loại; iii° (lỗi đọc cũ) không còn', () => {
     const thu = bacThay(ln, LA, true)
-    expect(thu[0]).toMatchObject({ laMa: 'i', hopAm: 'Am', n: 101, bai: 5, tron: 41 })
-    expect(thu.find((d) => d.laMa === '♭VI')).toMatchObject({ hopAm: 'F', n: 46, mau: expect.arrayContaining([['7 (maj7)', 21]]) })
+    expect(thu[0]).toMatchObject({ laMa: 'i', hopAm: 'Am', n: 118, bai: 5, tron: 52 })
+    expect(thu.find((d) => d.laMa === '♭VI')).toMatchObject({ hopAm: 'F', n: 48, mau: expect.arrayContaining([['7 (maj7)', 23]]) })
     expect(thu.every((d) => d.bai >= 2 && d.n >= 5)).toBe(true)
-    expect(thu.find((d) => d.laMa === 'iii°')!.nghi).toContain('chưa kiểm tay')
+    expect(thu.find((d) => d.laMa === 'iii°')).toBeUndefined()
   })
 
-  it('khác lý thuyết: thứ — V trưởng có ♭7, I trưởng; trưởng — II7; bậc nghi ngờ không vào', () => {
+  it('khác lý thuyết: thứ — V trưởng, I trưởng; trưởng — II7; bậc nghi ngờ không vào', () => {
     const thu = khacLyThuyet(ln, LA, true)
-    expect(thu.some((s) => s.includes('V (E) 24 đoạn') && s.includes('♭7 17/24'))).toBe(true)
-    expect(thu.some((s) => s.includes('I (A) 10 đoạn'))).toBe(true)
+    expect(thu.some((s) => s.includes('V (E) 42 đoạn'))).toBe(true)
+    expect(thu.some((s) => s.includes('I (A) 11 đoạn'))).toBe(true)
     expect(thu.some((s) => s.includes('iii°'))).toBe(false)
     expect(khacLyThuyet(ln, 0, false).some((s) => s.includes('II (D) 10 đoạn') && s.includes('♭7 10/10'))).toBe(true)
   })
 
   it('bước chuyển hay gặp, chỉ bước có ở ≥ 2 bài', () => {
     const chuyen = chuyenThay(ln, LA, true)
-    expect(chuyen[0]).toEqual({ tu: 'i (Am)', den: '♭VI (F)', n: 20, bai: 4 })
+    expect(chuyen[0]).toEqual({ tu: 'i (Am)', den: '♭VI (F)', n: 21, bai: 5 })
     expect(chuyen.every((c) => c.bai >= 2)).toBe(true)
   })
 

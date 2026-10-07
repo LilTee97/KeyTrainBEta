@@ -38,7 +38,8 @@ BAC = ['1', 'b2', '2', 'b3', '3', '4', '#4', '5', 'b6', '6', 'b7', '7']
 #   Rung La o45: tay trai La2 Si2 Mi2 La3 Mi3 Sol3 Do4 — Am7 (Do TU NHIEN), khong phai La truong.
 #   La Thu o8:  giai dieu Fa#4 nhung tay trai Fa3 tu nhien, va di toi bVII chu khong toi iv.
 DOC_SAI_I7 = {('Rừng Lá Thấp', 16), ('Rừng Lá Thấp', 45), ('Lá Thư Trần Thế', 8)}
-# Hop am SAU I7 may doc "Isus", soat tay la iv (Sol thu): o 47 -> phach 4 tay trai Sol2 Re3 Sol3 Sib3; o 93 -> o 94 nhu vay.
+# Hop am SAU I7: truoc khi sua doc_trai (7/10/2026) may doc "Isus", soat tay la iv (Sol thu): o 47 -> phach 4 tay trai Sol2 Re3
+# Sol3 Sib3; o 93 -> o 94 nhu vay. Sua doc_trai xong may doc dung iv — giu bo nay de kiem khong lui.
 SAU_LA_IV = {('Lá Thư Trần Thế', 47), ('Lá Thư Trần Thế', 93)}
 
 
@@ -227,25 +228,28 @@ def kiem(d):
     assert kiem_loi_bien_tinh() == (66, 70)
     m, hg = d['mau'], d['huong']
     vi = m[('thu', 'bVI', '7')]
-    assert (vi['n'], so_bai(vi), vi['truoc:i'], vi['giu'], vi['gd'], vi['bac_giong:5']) == (21, 3, 15, 9, 5, 21), dict(vi)
+    # So cu (truoc khi sua doc_trai 7/10/2026): (21, 3, 15, 9, 5, 21).
+    assert (vi['n'], so_bai(vi), vi['truoc:i'], vi['giu'], vi['gd'], vi['bac_giong:5']) == (23, 4, 16, 10, 5, 23), dict(vi)
     iv9 = m[('thu', 'iv', '9')]
-    assert (iv9['n'], iv9['bac_giong:5']) == (22, 22), dict(iv9)
+    assert (iv9['n'], iv9['bac_giong:5']) == (24, 24), dict(iv9)   # cu (22, 22)
     v7 = m[('thu', 'V', 'b7')]
-    assert (v7['n'], v7['them'], hg[('thu', 'V', 'b7')]['xuong1'] + hg[('thu', 'V', 'b7')]['xuong2'], hg[('thu', 'V', 'b7')]['n']) == (17, 10, 0, 16), \
+    # cu (17, 10, 0, 16) — "b7 cua V khong bao gio giai xuong" SAI sau khi sua doc_trai: 2/19 giai xuong mot cung (♭7 -> ♭3 cua i).
+    assert (v7['n'], v7['them'], hg[('thu', 'V', 'b7')]['xuong1'] + hg[('thu', 'V', 'b7')]['xuong2'], hg[('thu', 'V', 'b7')]['n']) == (20, 11, 2, 19), \
         (dict(v7), dict(hg[('thu', 'V', 'b7')]))
     imaj = hg[('truong', 'I', '7')]
-    assert (imaj['n'], imaj['xuong2'], imaj['sau:vi']) == (13, 12, 11), dict(imaj)
+    assert (imaj['n'], imaj['xuong2'], imaj['sau:vi']) == (13, 12, 12), dict(imaj)   # cu sau:vi 11
     V = d['hoa'][('thu', 'V')]
-    assert (V['n'], so_bai(V), V['gd'], V['chi_dem'], V['khong']) == (24, 5, 8, 10, 6), dict(V)
+    assert (V['n'], so_bai(V), V['gd'], V['chi_dem'], V['khong']) == (42, 5, 12, 18, 12), dict(V)   # cu (24, 5, 8, 10, 6)
     II = d['hoa'][('truong', 'II')]
     assert (II['n'], so_bai(II), II['gd'] + II['chi_dem'], II['sau:V'], II['sau:I']) == (10, 3, 5, 3, 4), dict(II)
     b7 = m[('truong', 'II', 'b7')]
     assert b7['n'] == 9, dict(b7)
     sach = [x for x in d['i7'] if (x[0], x[1]) not in DOC_SAI_I7]
     vao_iv = sum(x[3] == 'iv' or (x[0], x[1]) in SAU_LA_IV for x in sach)
-    assert (len(sach), len({x[0] for x in sach}), sum(x[2] for x in sach), vao_iv, sum(x[4] for x in sach)) == (7, 3, 0, 7, 1), sach
+    # cu (7, 3, 0, 7, 1): them Mot Coi o 29 — truoc day may doc la iii° (loi doc_trai).
+    assert (len(sach), len({x[0] for x in sach}), sum(x[2] for x in sach), vao_iv, sum(x[4] for x in sach)) == (8, 3, 0, 8, 1), sach
     ri, rv = d['rai'][('thu', 'i')], d['rai'][('thu', 'iv')]
-    assert (ri['co9'], ri['8>9'], so_bai(ri), rv['co9'], rv['8>9'], so_bai(rv)) == (36, 15, 4, 22, 11, 2), (dict(ri), dict(rv))
+    assert (ri['co9'], ri['8>9'], so_bai(ri), rv['co9'], rv['8>9'], so_bai(rv)) == (42, 21, 4, 22, 11, 2), (dict(ri), dict(rv))   # cu (36, 15, …)
     print('kiem: dung het')
 
 

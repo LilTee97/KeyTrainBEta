@@ -5789,3 +5789,40 @@ cũ: phraseAcrossBar, daoTruongLinhNhi, sietHopAm, tuyenSolo ×2) · `vite build
 nhạc sĩ" (md chưa ghi nhạc sĩ); lời "vì sao" của các công thức chồng lấy ví dụ chữ ở Đô trưởng như video (khung công thức ở trên thì
 theo giọng đang chọn); thế bấm để nghe ở thẻ thay hợp âm là công thức chồng hoặc mộc — chưa phải thế bấm của thầy (bước 5); Cà Pháo,
 Blues chưa có cột thầy. PianoBrain (md 13k) chưa commit — chờ người dùng.
+
+## Bước — GĐ 3: tách lựa chọn của Linh Nhi khỏi hòa âm của bài; sửa lỗi đọc hợp âm `doc_trai`; giai điệu nằm đâu (7/10/2026)
+
+**Người dùng:** *"hãy giải quyết 3 chỗ hở, phân tích kỹ sheet của Linh Nhi để tách lựa chọn và sau này áp dụng cho các thầy khác. xong
+hãy hiện lộ trình"* — ba chỗ hở: giai điệu = nốt cao nhất tay phải mới kiểm 1 bài; chưa tách "của chị" với "của nhạc sĩ"; Cà Pháo, Blues
+chưa có phần giải thích riêng.
+
+- `tools/lay_hop_am_pho_bien.py` (mới): lấy hợp âm phổ biến của 8 bài từ hopamchuan.com — tên nhạc sĩ, giọng, chuỗi hợp âm theo dòng
+  (số âm tiết, vị trí âm tiết), KHÔNG lưu lời → `tools/du_lieu/hop_am_pho_bien.json`. Bài ↔ trang chọn tay: Mùa Xuân Đầu Tiên có hai bài
+  trùng tên — sheet Linh Nhi là bài **Tuấn Khanh**, không phải Văn Cao. Tám bài của tám nhạc sĩ.
+- `tools/tach_lua_chon.py` (mới, `--kiem`): dịch giọng từng bản theo cách khớp sheet nhất (thử 12 — nhãn giọng trang có chỗ sai), gộp bản
+  trùng, căn hàng bán toàn cục từng đoạn hát → giống / đổi loại / đổi gốc / chèn / cùng nốt khác bass; màu bản không ghi; thay thế riêng;
+  đổi giữa các lần lặp.
+- **Lỗi đọc tìm ra và sửa** — `tools/hop_am_linh_nhi.doc_trai`: điểm "có bậc ba" cộng cả cho ứng viên hợp âm giảm → bậc ba thứ đếm hai
+  lần (ô Rê – Fa♯ – La đọc ra Si°). Sửa: chỉ cộng cho ứng viên '5'. 64/676 đoạn đổi cách đọc (đều đọc từ tay trái): V giọng thứ 24 → 42,
+  "iii°" 24 → 2. Kéo theo: `linhNhi.json` (bảng hợp âm phần hát; nốt và vòng solo không đổi), `soanCau.test.ts` (số mới, ghi số cũ + triệu
+  chứng lùi), `ly_do_hop_am_linh_nhi.py --kiem` (số 13k mới).
+- `giaiThich.ts` cột Linh Nhi viết lại: mỗi ý thêm dòng **"Ai chọn"** (của bài / của chị, có số). Nguyên tắc mới đứng đầu: khung hòa âm là
+  của bài (423/616 hợp âm giống bản phổ biến) — cái riêng là màu, hợp âm chèn, vài chỗ thay, đổi giữa các lần lặp (48/154). Thêm ý "hợp âm
+  giảm thay V" (Đường Xưa F♯m7♭5, Mùa Xuân F♯°7). Lối thay 3 và 8 cập nhật.
+
+**Hai điều tôi giảng sai trong bản trước, nay lật (nói rõ với người dùng):** "I7 → iv nhiều khả năng là lựa chọn của người phối" — sai,
+bản phổ biến của cả ba bài có sẵn (8/11). "V trưởng ở bài thứ là màu chị chọn" — sai, của bài (34/39); của chị là ♭9 · ♭13, treo, cách lấy
+nốt cảm âm. Thêm: "♭7 của V không bao giờ giải theo sách (0/16)" sinh từ lỗi đọc — đo lại 2/19.
+
+**Chỗ hở giai điệu:** Biển Tình: giai điệu nằm ở nốt cao nhất tay phải 66/70, nhưng đường ấy lẫn 34/100 nốt không lời. Luật fill md mục
+12 gọi nhầm 24/66 nốt giai điệu là fill (cảnh báo đã ghi vào md). Phép thử lặp (50 % tay phải / 54 % tay trái) và đếm âm tiết (0,69 –
+1,52) không kết luận được — đã bỏ. Cách dùng từ nay: chỉ kết luận "không có nốt X"; khẳng định thì gọi "nốt trên cùng". Tìm MIDI giai điệu
+trên mạng: không thấy.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `tach_lua_chon.py --kiem`, `ly_do_hop_am_linh_nhi.py --kiem` đúng hết · `giaiThich.test.ts` 11 (thêm
+ai chọn hai giọng; mọi ý có dòng ai chọn) · `soanCau.test.ts` 16 · toàn suite **2 634 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · sổ
+`LuyenTap.json`, `Nguon.json` không đổi. md Linh Nhi: 13d ghi chú lỗi đọc, 13k số mới, **13l mới**, mục 12 cảnh báo, mục 14 thêm ba kết
+luận bị lật (PianoBrain chưa commit).
+
+**Chưa đo / chờ:** bản phổ biến là bản cộng đồng, chưa đối chiếu bản in của nhạc sĩ; số tổng căn hàng chưa soát hết từng chỗ (các ví dụ
+trong app đã soát); kiểm giai điệu thêm cần bản có lời; Cà Pháo (bước kế), Blues.

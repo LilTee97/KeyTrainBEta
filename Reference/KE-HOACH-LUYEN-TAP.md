@@ -409,6 +409,8 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
    chọn hợp âm đó ở vị trí đó"*. **Dựng lại 7/10/2026** — bốn khối: chồng hợp âm (Stack, Jeff Schneider; mọi màu có trong sheet các
    thầy) + đố chuyển giọng · các lối thay hợp âm trong đệm hát, nghe gốc / thay · lý thuyết từng bậc (vì sao, thay bằng gì) · Linh
    Nhi chọn gì và VÌ SAO (md 13k, ví dụ soát tay). **Chờ người dùng duyệt**; Cà Pháo, Blues làm khi tới thầy ấy (bước 8, 9).
+   **Ba chỗ hở (7/10/2026):** tách "của bài / của chị" bằng hợp âm phổ biến của chính bài — xong cho Linh Nhi (`tach_lua_chon.py`,
+   md 13l); giai điệu = nốt cao nhất tay phải — đo được tới đâu và đổi cách dùng (13l); áp cho Cà Pháo — làm tiếp.
 4. Gam và hợp âm rải (ý 4): Linh Nhi + căn bản.
 5. Đo thế bấm và bước chuyển của Linh Nhi → "Chuyển hợp âm của thầy" (ý 6).
 6. **Trang Căn bản**: 7 bài lý thuyết, quiz, gam và hợp âm rải, tập solo chấm theo lý thuyết, đệm cơ bản — dùng lại bước 2–5.

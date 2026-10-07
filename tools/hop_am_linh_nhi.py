@@ -71,7 +71,11 @@ def doc_trai(ns, a, b, chu=None, thu=None):
             tap = {'5': {r, (r + 7) % 12}, 'dim': {r, (r + 3) % 12, (r + 6) % 12}, 'sus4': {r, (r + 5) % 12, (r + 7) % 12}}[q]
             if bass not in tap | {(r + 3) % 12, (r + 4) % 12, (r + 10) % 12, (r + 11) % 12}:
                 continue
-            diem = (sum(w[p] for p in tap) + 0.8 * (w[(r + 3) % 12] + w[(r + 4) % 12])
+            # Điem "co bac ba" CHI cho ung vien '5' (goc - 5, khong co bac ba). Sua 7/10/2026 — cu cong cho ca 'dim' va 'sus4':
+            # bac ba thu cua hop am giam da nam trong `tap` nen bi DEM HAI LAN. Trieu chung: o Re-Fa#-La doc ra Si° (Mot Coi o 38),
+            # o Eb -> D doc ra Si° (o 25) — chinh la "iii°/b3 x22 chua kiem tay" cua md 13d. Lui = bo `if q == '5'`.
+            ba = 0.8 * (w[(r + 3) % 12] + w[(r + 4) % 12]) if q == '5' else 0.0
+            diem = (sum(w[p] for p in tap) + ba
                     - 0.7 * sum(w[p] for p in w if p not in tap and (p - r) % 12 not in (3, 4, 10, 11, 2)))
             if r == bass:
                 diem += 0.3 * sum(w.values())
