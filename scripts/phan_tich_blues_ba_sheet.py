@@ -417,7 +417,30 @@ def mau_hop_am():
             print(f'   {h:5} ({l3}, n={len(v):3}): {c}')
 
 
+def pho_bien():
+    """Rising Sun: gốc hợp âm bản phối so với HỢP ÂM PHỔ BIẾN của bài (hopamchuan, `tools/lay_hop_am_pho_bien.py`) — tách gốc của bài
+    khỏi lựa chọn của người phối, như `tools/tach_lua_chon.py` làm cho Linh Nhi, Cà Pháo (7/10/2026). Tự kiểm bằng assert."""
+    import re
+    pb = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'tools', 'du_lieu', 'hop_am_pho_bien.json'),
+                        encoding='utf-8'))['The House of the Rising Sun']['ban']
+    phoi = [(ten_ham((g - 4) % 12, True), loai(k)) for t, g, k in nhan(BLUES + 'The-House-of-the-Rising-Sun.mxl') if t > 0]  # bỏ ô đón
+    STEP = {'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11}
+    for ban in pb:
+        assert ban['giong'] == 'Am', ban['giong']  # bản ghi La thứ → dời về Mi thứ của sheet
+        hop = [re.match(r'([A-G])([#b]?)(.*)', h).groups() for _, dong in ban['dong'] for _, h in dong]
+        ban_bac = [(ten_ham((STEP[c] + {'#': 1, 'b': -1, '': 0}[a] + 7 - 4) % 12, True), q) for c, a, q in hop]
+        print('bản phổ biến:', ' '.join(r + q for r, q in ban_bac[:len(phoi)]))
+        print('bản phối    :', ' '.join(r + q for r, q in phoi))
+        assert [r for r, _ in ban_bac[:len(phoi)]] == [r for r, _ in phoi], 'gốc khác'
+        assert {q for _, q in ban_bac} <= {'', 'm'}, 'bản phổ biến có hợp âm bảy'
+    assert all(q == '7' for r, q in phoi if r != 'i'), 'bản phối có hợp âm ngoài i không phải hợp âm bảy'
+    print(f'kiem: gốc {len(phoi)}/{len(phoi)} trùng bản phổ biến ({len(pb)} bản, toàn hợp âm ba); bản phối: mọi hợp âm ngoài i là hợp âm bảy')
+
+
 if __name__ == '__main__':
+    if '--pho-bien' in sys.argv:
+        pho_bien()
+        sys.exit()
     S = doc()
     if '--mau' in sys.argv:
         mau_hop_am()

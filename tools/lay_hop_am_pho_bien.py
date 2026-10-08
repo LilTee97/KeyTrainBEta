@@ -45,6 +45,8 @@ BAI = {
     'Để Em Rời Xa': [('3825', 'de-em-roi-xa')],
     'Chưa Bao Giờ (Trung Quân)': [('6213', 'chua-bao-gio')],
     'Chúng Ta Không Thuộc Về Nhau': [('8027', 'chung-ta-khong-thuoc-ve-nhau')],
+    # Blues (7/10/2026): sheet Rising Sun không nằm trong corpus — so ở `scripts/phan_tich_blues_ba_sheet.py --pho-bien`.
+    'The House of the Rising Sun': [('3680', 'the-house-of-the-rising-sun')],
 }
 
 

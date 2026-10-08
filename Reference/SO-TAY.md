@@ -5858,3 +5858,22 @@ chọn hợp âm" mới; md Linh Nhi 13l thêm phần so với Cà Pháo và l�
 
 **Chưa đo / chờ:** 19/60 chỗ khác bản của Cà Pháo chưa soát; lỗi đọc "ký hiệu không ghi bass mà bass gõ ở phách 1 là nốt khác" chưa sửa
 máy, chưa đo ở Linh Nhi; Kém duyên, Yêu xa chưa tách; giọng 3 bài thứ là suy; Phần 2–4 Cà Pháo (bước 8); Blues (bước 9).
+
+## Bước — GĐ 3: Blues có Phần 1 — tách thể loại · bài · người chơi (7/10/2026)
+
+**Tiếp chỗ hở 3** — Blues không có một thầy (ba sheet: Ray Charles *Rockhouse*, Robert Van, bản phối *House of the Rising Sun*; thêm
+đoạn đàn mẫu thầy Đức Thịnh), nên mốc so là khung 12 ô của thể loại và hợp âm phổ biến của bài.
+
+- `tools/lay_hop_am_pho_bien.py`: thêm *The House of the Rising Sun* (hopamchuan 3680, 2 bản). `scripts/phan_tich_blues_ba_sheet.py
+  --pho-bien` (có assert): gốc 14/14 hợp âm bản phối trùng bản phổ biến (toàn hợp âm ba) — hợp âm bảy là của người phối.
+- `giaiThich.ts`: `lyDoBlues` — trưởng 3 nguyên tắc (khung và hợp âm bảy là của thể loại; hợp âm bảy đưa nốt blue vào hòa âm; quay vòng
+  bằng hợp âm lướt nửa cung), 4 ý (I · ii · IV · V); thứ 2 nguyên tắc, 5 ý (i · III · IV · V · ♭VI). Nốt blue ♭5 gọi theo chữ bậc 5
+  (Si♭ ở Mi thứ — test bắt được lần đầu ra "La♯").
+- `SoanCau.tsx`: Blues xưng "người chơi"; lời dẫn thẻ so với khung 12 ô; ghi chú Phần 2–4 "bước 9".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `giaiThich.test.ts` 19 (3 mới cho Blues) · toàn suite **2 642 qua / 5 đỏ** (5 đỏ cũ) · `vite build`
+qua · chạy thử headless (cổng 5199): tab Blues, Phần 2–4 khóa, F7 có Mi♭ (La thứ), D7 có Đô (La trưởng) — 7/7 đạt · `LuyenTap.json`,
+`Nguon.json` không đổi. md Blues: mục 10 mới; bảng Robert mục 2 sửa 3 số đếm lại (ghi số cũ). PianoBrain chưa commit.
+
+**Chưa đo / chờ:** giọng thứ chỉ có Rising Sun 15 ký hiệu; ví dụ Đức Thịnh đọc bằng mắt; "Trong sheet" của ví dụ video là nhãn chung của
+thẻ (lời đã ghi "video"); Phần 2–4 Blues (bước 9).

@@ -61,8 +61,8 @@ const ngheVong = async (pcs: readonly (readonly number[])[]) => {
 
 const PHAN = ['1. Hợp âm theo bậc', '2. Nhớ vòng', '3. Chọn nốt solo', '4. Tập solo'] as const
 
-/** Cách gọi thầy trong lời: Linh Nhi "chị", Cà Pháo "anh". */
-const goi = (t: Teacher) => (t.id === 'linh-nhi' ? 'chị' : t.id === 'ca-phao' ? 'anh' : 'thầy')
+/** Cách gọi thầy trong lời: Linh Nhi "chị", Cà Pháo "anh"; Blues không có một thầy — ba sheet và thầy Đức Thịnh. */
+const goi = (t: Teacher) => (t.id === 'linh-nhi' ? 'chị' : t.id === 'ca-phao' ? 'anh' : t.id === 'blues' ? 'người chơi' : 'thầy')
 
 /**
  * Tab HỌC CÁCH SOẠN CÂU (GĐ 3, `Reference/KE-HOACH-LUYEN-TAP.md` mục GĐ 3) — làm thử với Linh Nhi (người dùng chọn 4/10/2026).
@@ -95,7 +95,7 @@ export function SoanCau({
           <b className="text-cream">số đo từ sheet của {goi(teacher)}</b>.{' '}
           {du
             ? `Chọn nốt solo bám sheet — ${goi(teacher)} đánh nốt nào bao nhiêu phần trăm; không có đúng sai tuyệt đối, nốt ${goi(teacher)} không dùng chỉ là "khác ${goi(teacher)}".`
-            : `Hiện mới có Phần 1. Nhớ vòng · Chọn nốt · Tập solo cần bảng số đo đoạn solo của ${goi(teacher)} — chưa dựng (bước 8 lộ trình).`}
+            : `Hiện mới có Phần 1. Nhớ vòng · Chọn nốt · Tập solo cần bảng số đo đoạn solo của ${goi(teacher)} — chưa dựng (bước ${teacher.id === 'blues' ? 9 : 8} lộ trình).`}
         </p>
       </div>
 
@@ -205,8 +205,11 @@ function HopAmTheoBac({
         <div className={the}>
           <h4 className="mb-1 font-semibold text-cream">{teacher.label} đặt hợp âm thế nào — và vì sao</h4>
           <p className="mb-2 text-xs text-dim">
-            Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Ai chọn" so với HỢP ÂM PHỔ BIẾN của chính bài (vài bản cộng đồng mỗi bài —
-            không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của {goi(teacher)};
+            Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Ai chọn" so với{' '}
+            {teacher.id === 'blues'
+              ? 'KHUNG 12 Ô của thể loại, và với HỢP ÂM PHỔ BIẾN của bài (Rising Sun): giống thì là của thể loại hay của bài, khác hay thêm thì là của người chơi (Ray, Robert, người phối Rising Sun)'
+              : `HỢP ÂM PHỔ BIẾN của chính bài (vài bản cộng đồng mỗi bài — không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của ${goi(teacher)}`}
+            ;
             "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là số đo và nhãn suy luận.
           </p>
           <ul className="flex flex-col gap-1.5 text-xs">

@@ -387,6 +387,7 @@ const KHUNG: NguyenTac = {
 
 export function lyDoThay(thay: TeacherId, tonic: number, thu: boolean): LyDoThay | null {
   if (thay === 'ca-phao') return lyDoCaPhao(tonic, thu)
+  if (thay === 'blues') return lyDoBlues(tonic, thu)
   if (thay !== 'linh-nhi') return null
   const { n, h, giong } = nguCanh(tonic, thu)
   if (thu) {
@@ -686,5 +687,134 @@ function lyDoCaPhao(tonic: number, thu: boolean): LyDoThay {
       },
     ],
     bac: { 0: [I], 2: [ii, II], 4: [iii], 5: [IV], 7: [V], 9: [vi] },
+  }
+}
+
+/*
+  BLUES (7/10/2026): không có một thầy — nguồn là ba sheet (Ray Charles *Rockhouse* Sol trưởng · Robert Van *Slow Blues Impromptu* Đô
+  trưởng · bản phối *House of the Rising Sun* Mi thứ, Songscription) và đoạn đàn mẫu của thầy Đức Thịnh (La thứ). Tách "ai chọn":
+  khung 12 ô và hợp âm bảy trên I · IV · V là CỦA THỂ LOẠI; Rising Sun so với hợp âm phổ biến của bài như Linh Nhi, Cà Pháo
+  (`scripts/phan_tich_blues_ba_sheet.py --pho-bien`: gốc 14/14 trùng, bản phổ biến toàn hợp âm ba); phần còn lại là của người chơi.
+  Số đo: md Blues mục 2, 6, 7a, 7b, 7e; ký hiệu in đếm lại 7/10/2026 (Rockhouse 116, Robert 98 — bảng Robert ở md mục 2 là số cũ).
+*/
+function lyDoBlues(tonic: number, thu: boolean): LyDoThay {
+  const { n, h } = nguCanh(tonic, thu)
+  if (thu) {
+    return {
+      nguyenTac: [
+        {
+          y: 'Blues giọng thứ: gốc hợp âm là của bài — hợp âm bảy là của người phối',
+          tom: 'Rising Sun: gốc 14/14 hợp âm trùng bản phổ biến (2 bản, toàn hợp âm ba); bản phối biến mọi hợp âm ngoài i thành hợp âm bảy. Thầy Đức Thịnh ở La thứ cũng bấm F7, E7♯9.',
+          bac: [],
+        },
+        {
+          y: 'Mỗi hợp âm bảy mang đúng một nốt ngoài gam thứ tự nhiên — có cái chính là nốt blue',
+          tom: '♭7 của ♭VI7 là nốt blue ♭5; bậc 3 của V7 là cảm âm, ♯9 của nó là ♭7 tự nhiên — hai bậc 7 cùng vang; bậc 3 của IV7 là bậc 6 Dorian; ♭7 của III7 là ♭2.',
+          bac: [8, 7, 5, 3],
+        },
+      ],
+      bac: {
+        0: [
+          {
+            y: 'i: của bài — hợp âm duy nhất không thành hợp âm bảy',
+            giai: `Bản phối giữ ${h(0, 'm')} — chủ thứ là chỗ đứng yên của cả vòng, mọi hợp âm khác đều là hợp âm bảy. Màu: 11 (${n(5)}), ♭7 (${n(10)}), và nốt blue ♭5 (${n(6, 5)}) lướt trong câu rồi trượt nửa cung lên ${n(7)}.`,
+            ai: 'Của bài: i ở cả 5 chỗ (bản phổ biến có). Của người phối: 11 vang 5/5 đơn vị i, ♭5 lướt 4/5.',
+            coSo: 'Rising Sun — n rất nhỏ (5 đơn vị i). Nốt blue ♭5 đi tiếp lên 5: 77 % (n=13, md Blues 7b).',
+          },
+        ],
+        3: [
+          {
+            y: 'III7: gốc của bài — hợp âm bảy của người phối',
+            giai: `${h(3, '7')} thêm ${n(1)} — nốt ngoài gam thứ tự nhiên (♭2 của giọng). Bản phối biến mọi hợp âm ngoài i thành hợp âm bảy, nên đây là một lối nhất quán của người phối hơn là lý do riêng cho III; vì sao chọn đúng màu ấy ở III thì chưa rõ. Màu thêm: 9, 13.`,
+            ai: 'Của bài: gốc III ở 3/3 chỗ. Của người phối: ♭7 — 0/2 bản phổ biến ghi III7.',
+            coSo: 'Rising Sun: III có ♭7 · 9 · 13 ở 3/3 đơn vị (md Blues 7e).',
+          },
+        ],
+        5: [
+          {
+            y: 'IV trưởng là của bài (Dorian) — IV7 của người phối',
+            giai: `Ngay bản phổ biến đã ghi IV trưởng (${h(5, '')}): bậc 3 của nó là ${n(9)} — bậc 6 nâng (Dorian), sáng hơn iv của gam thứ tự nhiên. Người phối thêm ♭7 (${n(3)}) — ${n(3)} là ♭3 của giọng, nốt trong gam — nên IV7 chỉ thêm màu, không thêm nốt lạ.`,
+            ai: 'Của bài: IV trưởng ở 2/2 chỗ. Của người phối: ♭7 — 0/2 bản ghi IV7.',
+            coSo: 'Rising Sun — n nhỏ.',
+          },
+        ],
+        7: [
+          {
+            y: 'V7♯9: V trưởng của bài — ♯9 của người phối, và của thầy Đức Thịnh',
+            giai: `${h(7, '7#9')} chứa cả ${n(11, 7)} (bậc 3 của V — cảm âm) lẫn ${n(10)} (♯9 của V — chính bậc ♭7 tự nhiên của giọng): hai bậc 7 của gam thứ vang cùng lúc, cách nửa cung — tiếng chỏi ấy là "hợp âm blues". Vào V, nốt blue ♭5 (${n(6, 5)}) trượt nửa cung lên ${n(7)}; thầy Đức Thịnh đặt bước ấy ngay ở bass.`,
+            ai: 'Của bài: V trưởng (bản phổ biến có ở 2/2 chỗ). Của người phối: ♭7 và ♯9 — ♯9 vang 3/3 đơn vị V7.',
+            viDu: 'Thầy Đức Thịnh, đoạn đàn mẫu La thứ (video KN9JEiQXAHs, 02:42–03:50): E7♯9 bấm Sol3 – La♭3 – Rê4 (♯9 và bậc 3 cùng lúc); bass Mi♭2 → Mi2 vào V.',
+            coSo: 'Rising Sun 3 đơn vị V7; đoạn video đọc bằng mắt từ bản máy chép, chưa đếm (md Blues mục 2).',
+          },
+        ],
+        8: [
+          {
+            y: '♭VI7: ♭7 của ♭VI chính là nốt blue ♭5',
+            giai: `${h(8, '7')} có ${n(6, 5)}: với ♭VI đó là ♭7, với giọng đó là nốt blue ♭5. Nên ♭VI7 → V7 là nốt blue đi nửa cung lên: ${n(6, 5)} → ${n(7)}, gốc của V. Như IV7 ở blues trưởng, hợp âm bảy ở đây là cách đưa nốt blue vào hòa âm.`,
+            ai: 'Của bài: gốc ♭VI ở 2/2 chỗ. Của người phối: ♭7 — 0/2 bản ghi ♭VI7. Thầy Đức Thịnh cũng bấm F7 ở La thứ.',
+            viDu: 'Thầy Đức Thịnh (La thứ): F7 bấm bè 3 – ♭7 (La3 – Mi♭4); vòng về ♭VI7 → V7(♯9) → i.',
+            coSo: 'Rising Sun: ♭VI7 2 chỗ — n nhỏ. Đức Thịnh: đọc bằng mắt, chưa đếm.',
+          },
+        ],
+      },
+    }
+  }
+
+  return {
+    nguyenTac: [
+      {
+        y: 'Khung 12 ô và hợp âm bảy trên I · IV · V là của thể loại — người chơi tô màu và chen hợp âm lướt',
+        tom: 'Rockhouse: 5/9 vòng đi đúng khung I I I I · IV IV I I · V IV I I ở ô 1–10; ký hiệu hợp âm bảy trên I · IV · V 72/116. Phần riêng: màu 13 · 9 · ♯9 (Ray), ii – V và hợp âm lướt (Robert), cách quay vòng ở ô 11–12.',
+        bac: [],
+      },
+      {
+        y: 'Hợp âm bảy là cách đưa nốt blue vào hòa âm',
+        tom: '♭7 của I là ♭7 blue của giọng; ♭7 của IV là ♭3 blue; ♯9 của V lại là ♭7 blue. Câu hát, câu chạy dùng nốt blue mà không chỏi — nốt blue đã là nốt của hợp âm.',
+        bac: [0, 5, 7],
+      },
+      {
+        y: 'Quay vòng bằng hợp âm lướt nửa cung',
+        tom: 'Ray: I · IV · ♯IV · V ở ô 11–12 (bass đi nửa cung lên vào V); kết bằng ♭II7 → I13 (thay ba cung cho V7). Robert: ♭II7 → I, I → ♭III° → ii.',
+        bac: [5, 7, 2],
+      },
+    ],
+    bac: {
+      0: [
+        {
+          y: 'I7 · I13: hợp âm bảy là của thể loại — 13 và ♭3 blue là của Ray',
+          giai: `${h(0, '7')} có ${n(10)} — chính nốt blue ♭7 của giọng — nên chủ âm không đứng yên như hợp âm ba trưởng: nó mang sẵn tiếng blues, nghe như còn muốn đi tiếp. Ray tô I bằng 6/13 (${n(9)}) và để ${n(3)} — ♭3 blue, tức ♯9 của I — chen sát dưới ${n(4)}: hai nốt cách nửa cung cọ nhau, tiếng blues đặc trưng. Robert nhiều chỗ để I trơn hay Imaj7 — chỗ ấy nghe pop hơn blues.`,
+          ai: 'Của thể loại: I7 (Ray ghi I7 ở 27/47 ký hiệu I). Của Ray: 6/13 vang ở 72 % đơn vị I (n=118), ♭3 blue 51 %. Của Robert: I trơn 21/35, Imaj7 4/35.',
+          viDu: 'Rockhouse ô 113 → 115 (Sol trưởng): kết bằng I13(♯11) — tay phải Đô♯ – Fa – Si – Mi trên bass Sol.',
+          coSo: 'md Blues mục 6, 7a, 7e; màu đếm theo nốt vang hai tay, có lẫn nốt giai điệu lướt. "Nghe như còn muốn đi tiếp" là lý thuyết.',
+        },
+      ],
+      2: [
+        {
+          y: 'ii – V: của Robert — Ray không dùng ii',
+          giai: `Robert chen ${h(2, 'm7')} trước ${h(7, '7')} — lối ii – V của jazz đặt vào khung blues — và nối I sang ii bằng ${h(3, 'dim')} lướt: bass ${n(4)} → ${n(3)} → ${n(2)} đi nửa cung xuống (I/3 → ♭III° → ii). Ray đi thẳng vào V, không qua ii: cùng thể loại, hai cách vào V.`,
+          ai: 'Của Robert: ii 13/98 ký hiệu, ♭III° 8/98. Ray: 0/116 ký hiệu ii.',
+          viDu: 'Robert (Đô trưởng): C/E → E♭dim → Dm7 (md Blues mục 6).',
+          coSo: 'Ký hiệu in đếm lại 7/10/2026. Màu của ii (Robert): ♭7 53 %, 11 33 % (n=15 đơn vị).',
+        },
+      ],
+      5: [
+        {
+          y: 'IV7 · IV9: hợp âm bảy là của thể loại — 9 là của Ray; ♯IV lướt ở chỗ quay vòng',
+          giai: `${h(5, '7')} có ${n(3)}: với IV đó là ♭7, với giọng đó là nốt blue ♭3 — nên sang IV, câu chạy dùng ♭3 blue mà không chỏi. Ray tô IV bằng 9 (${n(7)}) — bậc 5 của giọng, nốt chung với I — nên I → IV9 tầng trên gần như đứng yên. Ở ô 11–12, Ray đi I · IV · ♯IV · V: bass ${n(5)} → ${n(6, 4)} → ${n(7)} bước nửa cung lên vào V.`,
+          ai: 'Của thể loại: IV7 (Ray 20/32 ký hiệu IV, Robert 15/20). Của Ray: 9 vang 74 % đơn vị IV (n=47), 13 55 %.',
+          viDu: 'Rockhouse ô 11–12 của vòng 12 ô (Sol trưởng): G → C → C♯ → D.',
+          coSo: 'md Blues mục 2, 7e.',
+        },
+      ],
+      7: [
+        {
+          y: 'V7: của thể loại — V lùi về IV trước khi về I; ♭II7 thay V ở chỗ kết',
+          giai: `Ở ô 9 – 11, khung đi ${h(7, '7')} → ${h(5, '7')} → ${h(0, '7')}: V không giải thẳng về I mà lùi về IV rồi mới về — câu B của khung hỏi – đáp. Màu của V: 9, 11, và ♯9 (${n(10)}) — chính nốt blue ♭7 của giọng đặt trên V. Ở đuôi kết, Ray thay V7 bằng ${h(1, '7')}: hai hợp âm chung cặp nốt ba cung ${n(11)} – ${n(5)} (bậc 3 và ♭7 của cả hai), nên vẫn kéo về I, mà bass trượt nửa cung ${n(1)} → ${n(0)}.`,
+          ai: 'Của thể loại: V7 (Ray 25/29 ký hiệu V); Ray đi V → IV 16 %, IV → V 5 % số bước (n=63). Của Ray: ♯9 vang 45 % đơn vị V (n=22), ♭II7 ở đuôi kết. Của Robert: ♭II7 → I, 5/98 ký hiệu.',
+          viDu: 'Rockhouse ô 113 → 115 (Sol trưởng): bass Rê · Mi♭ · La♭, tay phải A♭7 (Sol♭ – Đô – Mi♭), rơi nửa cung về G13(♯11).',
+          coSo: 'md Blues mục 6, 7a, 7e. "Câu B của khung hỏi – đáp": md mục 6 (Ray giữ nhịp câu A khi sang IV, đổi hẳn chất liệu ở ô 9).',
+        },
+      ],
+    },
   }
 }

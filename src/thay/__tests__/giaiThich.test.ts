@@ -69,9 +69,9 @@ describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop
   const ai = (ds: { ai: string }[]) => ds.map((d) => d.ai).join(' ')
 
   it('chỉ thầy có số đo mới có thẻ', () => {
-    // Trước 7/10/2026 Cà Pháo cũng null — nay có thẻ (khối Cà Pháo dưới). Tuấn không có sheet, Blues không có sheet thầy.
+    // Trước 7/10/2026 Cà Pháo, Blues cũng null — nay có thẻ (khối Cà Pháo, Blues dưới). Tuấn không có sheet.
     expect(lyDoThay('tuan', 0, false)).toBeNull()
-    expect(lyDoThay('blues', 0, true)).toBeNull()
+    expect(lyDoThay('tuan', LA, true)).toBeNull()
   })
 
   it('giọng thứ: số đo sau khi sửa lỗi đọc doc_trai (7/10/2026)', () => {
@@ -167,5 +167,38 @@ describe('Cà Pháo — chọn gì, vì sao, AI chọn (số đo `tools/tach_lua
     expect(v).toContain('Hồng Kông 1: Csus4/G')
     expect(v).not.toContain('Asus4/E')
     expect(noi(lyDoThay('ca-phao', LA, true)!.bac[5]!)).toContain('Ở Chúng Ta, iv9 đứng sau v7: bass bậc 5 → bậc 4')
+  })
+})
+
+describe('Blues — khung của thể loại, gốc của bài, màu của người chơi (md Blues 2 · 6 · 7; `phan_tich_blues_ba_sheet.py --pho-bien`)', () => {
+  it('giọng trưởng: hợp âm bảy là của thể loại; nốt blue nằm trong hợp âm bảy', () => {
+    const ly = lyDoThay('blues', 7, false)!
+    expect(ly.nguyenTac[0]!.tom).toMatch(/5\/9 vòng.*72\/116/)
+    // Sol trưởng (Rockhouse): ♭7 của IV (C7) là Si♭ = ♭3 blue; ♯9 của V (D7) là Fa = ♭7 blue; ♭II7 = A♭7.
+    expect(noi(ly.bac[5]!)).toContain('C7 có Si♭')
+    expect(noi(ly.bac[7]!)).toMatch(/♯9 \(Fa\)/)
+    expect(noi(ly.bac[7]!)).toContain('A♭7')
+    expect(ly.bac[2]![0]!.ai).toContain('Ray: 0/116 ký hiệu ii')
+  })
+
+  it('giọng thứ: Rising Sun — gốc 14/14 của bài, hợp âm bảy của người phối; ♭VI7 mang nốt blue ♭5', () => {
+    const ly = lyDoThay('blues', 4, true)!
+    expect(ly.nguyenTac[0]!.tom).toContain('14/14')
+    // Mi thứ: ♭VI7 = C7, ♭7 = Si♭ = ♭5 blue, đi lên Si (gốc của V).
+    expect(noi(ly.bac[8]!)).toContain('C7 có Si♭')
+    expect(noi(ly.bac[8]!)).toContain('Si♭ → Si')
+    // V7♯9 = B7♯9: Rê♯ (cảm âm) và Rê (♯9) cùng vang.
+    expect(noi(ly.bac[7]!)).toMatch(/Rê♯.*Rê \(♯9/)
+  })
+
+  it('mọi ý có dòng ai chọn; thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp', () => {
+    for (const thu of [false, true]) {
+      const ly = lyDoThay('blues', LA, thu)!
+      for (const nt of ly.nguyenTac) for (const g of nt.bac) expect(ly.bac[g]?.length, `${nt.y} → bậc ${g}`).toBeGreaterThan(0)
+      const ds = Object.values(ly.bac).flatMap((x) => x!)
+      expect(ds.every((d) => /Của (thể loại|bài|Ray|Robert|người phối)/.test(d.ai))).toBe(true)
+      const y = ds.map((d) => d.y)
+      expect(new Set(y).size).toBe(y.length)
+    }
   })
 })
