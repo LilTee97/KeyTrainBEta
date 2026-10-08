@@ -11,6 +11,7 @@ import { kyThuatCua } from './kyThuat'
 import { KyThuatBai } from './KyThuatBai'
 import { tienDoBai } from './loTrinh'
 import { SoanCau } from './SoanCau'
+import { lyDoThay } from './soanCau/giaiThich'
 import { duLieuSoanCau } from './soanCau/soanCau'
 import type { Teacher } from './teachers'
 import { GOC, LOAI, soanVong, vongMau } from './vongThay'
@@ -99,12 +100,14 @@ export function TeacherPage({
   /* Tab Kỹ thuật đánh: thầy không có kỹ thuật nào thì ẩn — câu E. */
   const dsKyThuat = useMemo(() => kyThuatCua(teacher.id), [teacher.id])
   const coKyThuat = dsKyThuat.length > 0
-  /* Tab Học cách soạn câu (GĐ 3): thầy chưa có số đo thì ẩn — Tuấn không có sheet (người dùng chọn Q2, 4/10/2026). */
+  /* Tab Học cách soạn câu (GĐ 3): thầy không có số đo cũng không có lời giải thích thì ẩn — Tuấn không có sheet (người dùng chọn Q2,
+     4/10/2026). Cà Pháo chỉ có lời giải thích (Phần 1) — Phần 2–4 cần bảng số đo solo, chưa dựng (bước 8 lộ trình). */
   const duSoanCau = useMemo(() => duLieuSoanCau(teacher.id), [teacher.id])
+  const coSoanCau = duSoanCau !== null || lyDoThay(teacher.id, 0, true) !== null
   const dsTab = [
     ['dieu', 'Điệu'],
     ...(coKyThuat ? [['ky-thuat', 'Kỹ thuật đánh'] as const] : []),
-    ...(duSoanCau ? [['soan-cau', 'Học cách soạn câu'] as const] : []),
+    ...(coSoanCau ? [['soan-cau', 'Học cách soạn câu'] as const] : []),
   ] as const
   const [ktId, setKtId] = useState<string | null>(null)
   const kt = dsKyThuat.find((one) => one.id === ktId) ?? dsKyThuat[0] ?? null
@@ -177,7 +180,7 @@ export function TeacherPage({
         ))}
       </div>
 
-      {tab === 'soan-cau' && duSoanCau ? (
+      {tab === 'soan-cau' && coSoanCau ? (
         daTaiLuot ? (
           <SoanCau teacher={teacher} du={duSoanCau} luot={luot} onGhi={ghi} />
         ) : (

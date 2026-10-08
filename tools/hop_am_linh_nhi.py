@@ -31,7 +31,7 @@ B = S.B
 LA_MA = S.LA_MA
 EPS = 1e-6
 GAM = {True: {0, 2, 3, 5, 7, 8, 10}, False: {0, 2, 4, 5, 7, 9, 11}}
-HAT = ('verse', 'chorus')
+HAT = ('verse', 'chorus', 'prechorus')   # prechorus: kho Cà Pháo có (7/10/2026); Linh Nhi không có đoạn nào tên ấy
 
 
 def tap_ba(root, q):
@@ -168,6 +168,18 @@ def doan_hat(song):
             tong = sum(d for n, d in trai) or 1
             trong = sum(d for n, d in trai if n['midi'] % 12 in tap_ba(rp, q) | {(rp + 10) % 12, (rp + 11) % 12, (rp + 2) % 12})
             if trong / tong >= 0.6:
+                # BẬC BA theo nốt thật (sửa 7/10/2026): ký hiệu ghi trưởng mà KHÔNG nốt nào đang vang có bậc 3 trưởng, còn tay đệm
+                # có bậc 3 thứ (hay ngược lại) → theo nốt. Triệu chứng cũ: Người hãy quên em đi ô 9 ghi "D9(#11)", tay phải bấm
+                # A – C – E – F (Dm9) mà đọc ra I trưởng. Lùi = bỏ khối này.
+                if q in ('M', 'm'):
+                    vang = {n['midi'] % 12 for n, d in not_vang(ns, at, den)}
+                    dem = {n['midi'] % 12 for n, d in not_vang(ns, at, den, 2)}
+                    for n, d in not_vang(ns, at, den, 1):
+                        if n['midi'] < max(x['midi'] for x, _ in not_vang(ns, n['beat'], n['beat'] + EPS * 10, 1) or [(n, 0)]):
+                            dem.add(n['midi'] % 12)
+                    ba_dung, ba_kia = ((rp + 4) % 12, (rp + 3) % 12) if q == 'M' else ((rp + 3) % 12, (rp + 4) % 12)
+                    if ba_dung not in vang and ba_kia in dem:
+                        q = 'm' if q == 'M' else 'M'
                 ra.append(dict(doan=k, o=None, a=at, b=den, goc=rp, q=q, bass=bp, mau=mau(ns, at, den, rp), nguon='ky hieu'))
             else:
                 h = doc_trai(ns, at, den, chu, the == 'thu')

@@ -5826,3 +5826,35 @@ luận bị lật (PianoBrain chưa commit).
 
 **Chưa đo / chờ:** bản phổ biến là bản cộng đồng, chưa đối chiếu bản in của nhạc sĩ; số tổng căn hàng chưa soát hết từng chỗ (các ví dụ
 trong app đã soát); kiểm giai điệu thêm cần bản có lời; Cà Pháo (bước kế), Blues.
+
+## Bước — GĐ 3: áp cách tách lựa chọn sang Cà Pháo; lỗi đọc thứ hai (ký hiệu tin bậc ba sai); tab soạn câu cho Cà Pháo (7/10/2026)
+
+**Tiếp yêu cầu ở bước trên** — chỗ hở 3: Cà Pháo, Blues chưa có phần giải thích riêng.
+
+- **Lỗi đọc thứ hai, tìm ra khi áp sang Cà Pháo** — `tools/hop_am_linh_nhi.doan_hat`, nhánh đọc theo KÝ HIỆU tin luôn bậc ba của ký hiệu
+  (Người hãy quên em đi ô 9 ghi "D9(♯11)" mà tay phải bấm La – Đô – Mi – Fa). Sửa: bậc ba của ký hiệu vắng hẳn trong nốt đang vang mà
+  bậc ba kia có ở tay đệm thì theo nốt thật (lùi: bỏ khối ấy). Linh Nhi đổi 4/676 đoạn; số Linh Nhi trên thẻ theo: 422/616 (cũ 423), lặp
+  45/152 (cũ 48/154), I7 8/10 (cũ 8/11), V 33/38 (cũ 34/39), II 12 đoạn (cũ 10); `linhNhi.json`, `soanCau.test.ts` (ghi số cũ) theo.
+- `tools/lay_hop_am_pho_bien.py`: thêm 7 bài Cà Pháo. `PianoBrain/tools/sheet/mxl.py` đọc được .musicxml không nén (Hồng Kông 1) —
+  PianoBrain chưa commit.
+- `tools/tach_lua_chon.py --thay ca-phao`: 7 bài, 7 nhạc sĩ; 3/4 bài thứ sheet không ghi giọng → `GIONG_SUY` (suy từ hợp âm); bỏ đoạn
+  chuyển giọng. **309/400 hợp âm giống bản phổ biến.** `SOAT_TAY_CA_PHAO`: 41/60 chỗ "khác" soát tay từng nốt — 16 chỉ anh bấm, 10 có trong
+  một bản khác, 12 máy đọc lệch ký hiệu, 3 bản phổ biến chỏi giai điệu. `--kiem` giữ số cả hai thầy lẫn danh sách soát tay.
+- `tools/cho_dat_mau.py` (mới, `--kiem`): màu nằm ở đâu, hai thầy cùng một cách đo — ♭7 ở bè giữa tay phải Cà Pháo 145/248 · Linh Nhi
+  27/253; hợp âm thứ có ♭7 140/172 · 137/302; tay trái bấm hợp âm ba đủ 42/350 · 196/638; cụm 9 sát dưới bậc 3 30/88 · 13/43 (ngang nhau).
+- `giaiThich.ts`: khối Cà Pháo (`lyDoCaPhao`) — giọng thứ 4 nguyên tắc, 9 ý; giọng trưởng 3 nguyên tắc, 7 ý; xưng "anh"; câu nói về một bài
+  giữ tên thật của bài (Csus4/G), không đổi theo giọng đang chọn.
+- `SoanCau.tsx`, `TeacherPage.tsx`: tab Học cách soạn câu hiện cả khi thầy chỉ có lời giải thích — Cà Pháo: Phần 1 mở, Phần 2–4 khóa kèm
+  ghi chú "chưa dựng (bước 8 lộ trình)", không hiện "Vòng thật từ sheet"; xưng hô theo thầy (`goi`).
+
+**Điều tôi nói sai trong lượt, đã sửa với người dùng:** "♭VII → v7 ở Chúng Ta là anh chọn" — 2/3 bản ghi Em, của bài; "vi thay IV ở Hồng
+Kông 1" — máy đọc nhầm Fmaj7 (Am trên bass Fa); "cụm 9 sát dưới bậc 3 là dấu riêng của anh" — 30/88 so với Linh Nhi 13/43, ngang nhau;
+Ngày mai em đi ở Mi♭ trưởng (không phải Si♭), ô 25 là II13 đúng như ký hiệu.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `tach_lua_chon.py --kiem`, `cho_dat_mau.py --kiem` đúng hết · `giaiThich.test.ts` 16 (5 mới cho Cà
+Pháo) · toàn suite **2 639 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless trên máy chủ dev riêng (cổng 5199): 22/22 mục đạt —
+tab Cà Pháo, Phần 2–4 khóa, Linh Nhi vẫn đủ 4 phần, Tuấn/Blues không có tab · `LuyenTap.json`, `Nguon.json` không đổi. md Cà Pháo mục "Ai
+chọn hợp âm" mới; md Linh Nhi 13l thêm phần so với Cà Pháo và lỗi đọc chưa đo, mục 14 sửa hai số cũ (PianoBrain chưa commit).
+
+**Chưa đo / chờ:** 19/60 chỗ khác bản của Cà Pháo chưa soát; lỗi đọc "ký hiệu không ghi bass mà bass gõ ở phách 1 là nốt khác" chưa sửa
+máy, chưa đo ở Linh Nhi; Kém duyên, Yêu xa chưa tách; giọng 3 bài thứ là suy; Phần 2–4 Cà Pháo (bước 8); Blues (bước 9).

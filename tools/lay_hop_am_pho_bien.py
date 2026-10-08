@@ -37,6 +37,14 @@ BAI = {
     'Mua xuan dau tien': [('2306', 'mua-xuan-dau-tien'), ('6978', 'mua-xuan-dau-tien-tuan-khanh')],
     'Rung La Thap': [('3319', 'rung-la-thap')],
     'Noi buon hoa phuong': [('1254', 'noi-buon-hoa-phuong')],
+    # Cà Pháo (7/10/2026). Trang trùng tên khác bài đã bỏ: "Ngày Mai Em Đi Mất" (Đạt G), "Hongkong 12", bản chế, mashup.
+    'Hồng Kông 1': [('22061', 'hong-kong-1')],
+    'Người hãy quên em đi': [('15388', 'nguoi-hay-quen-em-di')],
+    'Co Em Cho': [('9998', 'co-em-cho')],
+    'Ngay mai em di': [('1528', 'ngay-mai-em-di')],
+    'Để Em Rời Xa': [('3825', 'de-em-roi-xa')],
+    'Chưa Bao Giờ (Trung Quân)': [('6213', 'chua-bao-gio')],
+    'Chúng Ta Không Thuộc Về Nhau': [('8027', 'chung-ta-khong-thuoc-ve-nhau')],
 }
 
 

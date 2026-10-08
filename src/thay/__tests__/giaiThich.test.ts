@@ -69,7 +69,9 @@ describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop
   const ai = (ds: { ai: string }[]) => ds.map((d) => d.ai).join(' ')
 
   it('chỉ thầy có số đo mới có thẻ', () => {
-    expect(lyDoThay('ca-phao', 0, false)).toBeNull()
+    // Trước 7/10/2026 Cà Pháo cũng null — nay có thẻ (khối Cà Pháo dưới). Tuấn không có sheet, Blues không có sheet thầy.
+    expect(lyDoThay('tuan', 0, false)).toBeNull()
+    expect(lyDoThay('blues', 0, true)).toBeNull()
   })
 
   it('giọng thứ: số đo sau khi sửa lỗi đọc doc_trai (7/10/2026)', () => {
@@ -87,20 +89,20 @@ describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop
 
   it('ai chọn — giọng thứ: V và I7 là của bài; ii°, maj7 trên ♭VI, màu trên i là của chị', () => {
     const ly = lyDoThay('linh-nhi', LA, true)!
-    expect(ai(ly.bac[7]!)).toContain('V ở 34/39 chỗ cùng bản phổ biến')
-    expect(ai(ly.bac[0]!)).toContain('bản phổ biến có I7 ở 8/11 chỗ')
+    expect(ai(ly.bac[7]!)).toContain('V ở 33/38 chỗ cùng bản phổ biến')
+    expect(ai(ly.bac[0]!)).toContain('bản phổ biến có I7 ở 8/10 chỗ')
     expect(ai(ly.bac[2]!)).toContain('0/12')
     expect(ai(ly.bac[8]!)).toContain('0/19')
-    expect(ai(ly.bac[0]!)).toMatch(/39\/39.*21\/21/)
+    expect(ai(ly.bac[0]!)).toMatch(/40\/40.*22\/22/)
     expect(noi(ly.bac[0]!)).toContain('Sửa lời trước')
   })
 
   it('ai chọn — giọng trưởng: II của Mùa Xuân là của bài, II7 của Đường Xưa và hợp âm giảm thay V là của chị', () => {
     const ly = lyDoThay('linh-nhi', 0, false)!
-    expect(ai(ly.bac[2]!)).toMatch(/Mùa Xuân.*3\/4.*Đường Xưa.*0\/3/)
+    expect(ai(ly.bac[2]!)).toMatch(/Mùa Xuân.*3\/6.*Đường Xưa.*0\/3/)
     expect(ai(ly.bac[7]!)).toContain('0/3 bản có ♯iv°')
     expect(noi(ly.bac[0]!)).toContain('12/13')
-    expect(noi(ly.bac[2]!)).toContain('5/10')
+    expect(noi(ly.bac[2]!)).toContain('7/12')
     expect(noi(ly.bac[2]!)).toContain('Sửa lời trước')
   })
 
@@ -119,5 +121,51 @@ describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop
     const ii = lyDoThay('linh-nhi', LA, false)!.bac[2]![0]!.giai
     expect(ii).toContain('Đường Xưa: bản ghi ii hoặc V7, chị đổi thành II7')
     expect(ii).not.toContain('B7 có')
+  })
+})
+
+describe('Cà Pháo — chọn gì, vì sao, AI chọn (số đo `tools/tach_lua_chon.py --thay ca-phao --kiem`, soát tay 41/60 chỗ khác bản)', () => {
+  const ai = (ds: { ai: string }[]) => ds.map((d) => d.ai).join(' ')
+
+  it('nguyên tắc: khung của bài, màu ở tay phải — so với Linh Nhi cùng cách đo', () => {
+    const ly = lyDoThay('ca-phao', LA, true)!
+    expect(ly.nguyenTac[0]!.tom).toMatch(/309\/400.*16 chỗ chỉ anh bấm.*12 chỗ máy đọc lệch/)
+    expect(ly.nguyenTac[1]!.tom).toMatch(/145\/248.*27\/253.*140\/172.*137\/302/)
+  })
+
+  it('giọng thứ: iv thay ♭VI và II7 là của anh; v7 ở Chúng Ta, V là của bài', () => {
+    const ly = lyDoThay('ca-phao', LA, true)!
+    expect(ai(ly.bac[5]!)).toContain('8/8')
+    expect(noi(ly.bac[5]!)).toContain('Fmaj7 trên bass Rê là Dm9')
+    expect(ai(ly.bac[2]!)).toContain('3/3')
+    expect(ai(ly.bac[7]!)).toMatch(/V ở 15\/20.*2\/3 bản ghi v/)
+    expect(ai(ly.bac[0]!)).toMatch(/53\/55.*28\/28.*24\/24.*3\/5/)
+    expect(ai(ly.bac[8]!)).toContain('45/45')
+  })
+
+  it('giọng trưởng: theo bài gần như trọn — chỗ khác phần lớn là máy đọc lệch; II13 trước V là của anh', () => {
+    const ly = lyDoThay('ca-phao', 0, false)!
+    expect(ly.nguyenTac[2]!.tom).toMatch(/13\/22.*11 chỗ.*2 chỗ anh tự đổi/)
+    expect(ai(ly.bac[2]!)).toContain('2/2')
+    expect(noi(ly.bac[5]!)).toContain('Am đặt trên bass Fa chính là Fmaj7')
+  })
+
+  it('mọi ý có dòng ai chọn xưng "anh"; thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp', () => {
+    for (const thu of [false, true]) {
+      const ly = lyDoThay('ca-phao', LA, thu)!
+      for (const nt of ly.nguyenTac) for (const g of nt.bac) expect(ly.bac[g]?.length, `${nt.y} → bậc ${g}`).toBeGreaterThan(0)
+      const ds = Object.values(ly.bac).flatMap((x) => x!)
+      expect(ds.every((d) => /Của (bài|anh)/.test(d.ai))).toBe(true)
+      expect(ds.some((d) => /chị/.test(d.ai))).toBe(false)
+      const y = ds.map((d) => d.y)
+      expect(new Set(y).size).toBe(y.length)
+    }
+  })
+
+  it('lời về một bài cụ thể giữ tên thật của bài, không đổi theo giọng đang chọn', () => {
+    const v = noi(lyDoThay('ca-phao', LA, false)!.bac[7]!)
+    expect(v).toContain('Hồng Kông 1: Csus4/G')
+    expect(v).not.toContain('Asus4/E')
+    expect(noi(lyDoThay('ca-phao', LA, true)!.bac[5]!)).toContain('Ở Chúng Ta, iv9 đứng sau v7: bass bậc 5 → bậc 4')
   })
 })

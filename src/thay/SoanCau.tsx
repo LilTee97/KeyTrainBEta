@@ -61,9 +61,13 @@ const ngheVong = async (pcs: readonly (readonly number[])[]) => {
 
 const PHAN = ['1. Hợp âm theo bậc', '2. Nhớ vòng', '3. Chọn nốt solo', '4. Tập solo'] as const
 
+/** Cách gọi thầy trong lời: Linh Nhi "chị", Cà Pháo "anh". */
+const goi = (t: Teacher) => (t.id === 'linh-nhi' ? 'chị' : t.id === 'ca-phao' ? 'anh' : 'thầy')
+
 /**
  * Tab HỌC CÁCH SOẠN CÂU (GĐ 3, `Reference/KE-HOACH-LUYEN-TAP.md` mục GĐ 3) — làm thử với Linh Nhi (người dùng chọn 4/10/2026).
  * Bốn phần: hợp âm theo bậc (lý thuyết | thầy) · nhớ vòng · chọn nốt solo bám sheet · tập solo trên backing (`TapSolo`).
+ * `du` null (Cà Pháo, 7/10/2026): chỉ có lời giải thích Phần 1 — Phần 2–4 cần bảng số đo solo, chưa dựng (bước 8 lộ trình).
  */
 export function SoanCau({
   teacher,
@@ -72,7 +76,7 @@ export function SoanCau({
   onGhi,
 }: {
   teacher: Teacher
-  du: DuLieuSoanCau
+  du: DuLieuSoanCau | null
   luot: readonly LuotTap[]
   onGhi: (luot: Omit<LuotTap, 'id' | 'day'>) => void
 }) {
@@ -87,9 +91,11 @@ export function SoanCau({
       <div className={the}>
         <h3 className="mb-1 font-semibold text-cream">Học cách soạn câu — {teacher.label}</h3>
         <p className="text-xs text-dim">
-          Hai nguồn, không trộn: <b className="text-cream">lý thuyết piano</b> và <b className="text-cream">số đo từ sheet của chị</b>.
-          Chọn nốt solo bám sheet — chị đánh nốt nào bao nhiêu phần trăm; không có đúng sai tuyệt đối, nốt chị không dùng chỉ là
-          "khác chị".
+          Hai nguồn, không trộn: <b className="text-cream">lý thuyết piano</b> và{' '}
+          <b className="text-cream">số đo từ sheet của {goi(teacher)}</b>.{' '}
+          {du
+            ? `Chọn nốt solo bám sheet — ${goi(teacher)} đánh nốt nào bao nhiêu phần trăm; không có đúng sai tuyệt đối, nốt ${goi(teacher)} không dùng chỉ là "khác ${goi(teacher)}".`
+            : `Hiện mới có Phần 1. Nhớ vòng · Chọn nốt · Tập solo cần bảng số đo đoạn solo của ${goi(teacher)} — chưa dựng (bước 8 lộ trình).`}
         </p>
       </div>
 
@@ -128,11 +134,12 @@ export function SoanCau({
           <button
             key={ten}
             type="button"
+            disabled={!du && i > 0}
             onClick={() => {
               stopTimelineLoop()
               setPhan(i)
             }}
-            className={nut(phan === i)}
+            className={`${nut(phan === i)} disabled:cursor-not-allowed disabled:opacity-40`}
           >
             {ten}
           </button>
@@ -140,9 +147,9 @@ export function SoanCau({
       </div>
 
       {phan === 0 && <HopAmTheoBac teacher={teacher} du={du} tonic={tonic} thu={thu} loai={loai} />}
-      {phan === 1 && <NhoVong du={du} tonic={tonic} thu={thu} bay={loai === 'maj7' || loai === 'm7'} />}
-      {phan === 2 && <ChonNot teacher={teacher} du={du} tonic={tonic} thu={thu} />}
-      {phan === 3 && <TapSolo teacher={teacher} du={du} tonic={tonic} thu={thu} luot={luot} onGhi={onGhi} />}
+      {du && phan === 1 && <NhoVong du={du} tonic={tonic} thu={thu} bay={loai === 'maj7' || loai === 'm7'} />}
+      {du && phan === 2 && <ChonNot teacher={teacher} du={du} tonic={tonic} thu={thu} />}
+      {du && phan === 3 && <TapSolo teacher={teacher} du={du} tonic={tonic} thu={thu} luot={luot} onGhi={onGhi} />}
     </div>
   )
 }
@@ -164,10 +171,22 @@ const ngheChuoi = async (tonic: number, ds: readonly Hop[]) => {
  * đó"). Bốn khối: chồng hợp âm (Stack — Jeff Schneider) · các lối thay hợp âm trong đệm hát · thầy đặt hợp âm thế nào · từng bậc (vì
  * sao là hợp âm ấy, thay bằng gì | thầy chọn gì ở đó, vì sao). Lời: `soanCau/giaiThich.ts`; công thức chồng: `soanCau/chongHopAm.ts`.
  */
-function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du: DuLieuSoanCau; tonic: number; thu: boolean; loai: string }) {
+function HopAmTheoBac({
+  teacher,
+  du,
+  tonic,
+  thu,
+  loai,
+}: {
+  teacher: Teacher
+  du: DuLieuSoanCau | null
+  tonic: number
+  thu: boolean
+  loai: string
+}) {
   const lt = lyThuyetBac(tonic, thu, loai)
   const vongLt = vongLyThuyet(tonic, thu, loai === 'maj7' || loai === 'm7')
-  const vongT = vongCuaThay(du, tonic, thu)
+  const vongT = du ? vongCuaThay(du, tonic, thu) : []
   const bac = lyThuyetCacBac(tonic, thu)
   const ly = lyDoThay(teacher.id, tonic, thu)
   const { h } = nguCanh(tonic, thu)
@@ -187,7 +206,7 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
           <h4 className="mb-1 font-semibold text-cream">{teacher.label} đặt hợp âm thế nào — và vì sao</h4>
           <p className="mb-2 text-xs text-dim">
             Lời đầy đủ ở từng thẻ bậc bên dưới: lập luận trước; "Ai chọn" so với HỢP ÂM PHỔ BIẾN của chính bài (vài bản cộng đồng mỗi bài —
-            không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của {teacher.id === 'linh-nhi' ? 'chị' : 'thầy'};
+            không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của {goi(teacher)};
             "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là số đo và nhãn suy luận.
           </p>
           <ul className="flex flex-col gap-1.5 text-xs">
@@ -240,7 +259,7 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
               {c.thay.length > 0 ? (
                 c.thay.map((d) => <DiemThay key={d.y} d={d} />)
               ) : (
-                <p className="text-xs text-dim">Ở bậc này chị không có lối riêng đáng kể trong phần hát của các sheet.</p>
+                <p className="text-xs text-dim">Ở bậc này {goi(teacher)} không có lối riêng đáng kể trong phần hát của các sheet.</p>
               )}
             </div>
           </div>
@@ -262,19 +281,21 @@ function HopAmTheoBac({ teacher, du, tonic, thu, loai }: { teacher: Teacher; du:
             ))}
           </ul>
         </div>
-        <div className={the}>
-          <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet của {teacher.label}</h5>
-          <ul className="flex flex-col gap-1 text-xs">
-            {vongT.map((v) => (
-              <li key={v.id}>
-                <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
-                  ▶ {v.ten}
-                </button>{' '}
-                <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span> <span className="text-dim">({v.dieu})</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {du && (
+          <div className={the}>
+            <h5 className="mb-1 text-xs font-semibold text-cream">Vòng thật từ sheet của {teacher.label}</h5>
+            <ul className="flex flex-col gap-1 text-xs">
+              {vongT.map((v) => (
+                <li key={v.id}>
+                  <button type="button" onClick={() => void ngheVong(v.pcs)} className="font-semibold text-amber-key hover:underline">
+                    ▶ {v.ten}
+                  </button>{' '}
+                  <span className="font-mono text-cream">{v.hopAm.join(' – ')}</span> <span className="text-dim">({v.dieu})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )

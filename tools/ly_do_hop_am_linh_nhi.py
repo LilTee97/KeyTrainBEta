@@ -239,17 +239,18 @@ def kiem(d):
     imaj = hg[('truong', 'I', '7')]
     assert (imaj['n'], imaj['xuong2'], imaj['sau:vi']) == (13, 12, 12), dict(imaj)   # cu sau:vi 11
     V = d['hoa'][('thu', 'V')]
-    assert (V['n'], so_bai(V), V['gd'], V['chi_dem'], V['khong']) == (42, 5, 12, 18, 12), dict(V)   # cu (24, 5, 8, 10, 6)
+    assert (V['n'], so_bai(V), V['gd'], V['chi_dem'], V['khong']) == (41, 5, 12, 18, 11), dict(V)   # cu (24, 5, 8, 10, 6) · (42, …, 12)
     II = d['hoa'][('truong', 'II')]
-    assert (II['n'], so_bai(II), II['gd'] + II['chi_dem'], II['sau:V'], II['sau:I']) == (10, 3, 5, 3, 4), dict(II)
+    # cu (10, 3, 5, 3, 4): sua nhanh ky hieu theo bac ba not that, Mua Xuan them 2 doan II (ban ghi ii, chi nang bac 3).
+    assert (II['n'], so_bai(II), II['gd'] + II['chi_dem'], II['sau:V'], II['sau:I']) == (12, 3, 7, 5, 4), dict(II)
     b7 = m[('truong', 'II', 'b7')]
-    assert b7['n'] == 9, dict(b7)
+    assert b7['n'] == 11, dict(b7)   # cu 9 (cua 10)
     sach = [x for x in d['i7'] if (x[0], x[1]) not in DOC_SAI_I7]
     vao_iv = sum(x[3] == 'iv' or (x[0], x[1]) in SAU_LA_IV for x in sach)
     # cu (7, 3, 0, 7, 1): them Mot Coi o 29 — truoc day may doc la iii° (loi doc_trai).
     assert (len(sach), len({x[0] for x in sach}), sum(x[2] for x in sach), vao_iv, sum(x[4] for x in sach)) == (8, 3, 0, 8, 1), sach
     ri, rv = d['rai'][('thu', 'i')], d['rai'][('thu', 'iv')]
-    assert (ri['co9'], ri['8>9'], so_bai(ri), rv['co9'], rv['8>9'], so_bai(rv)) == (42, 21, 4, 22, 11, 2), (dict(ri), dict(rv))   # cu (36, 15, …)
+    assert (ri['co9'], ri['8>9'], so_bai(ri), rv['co9'], rv['8>9'], so_bai(rv)) == (43, 21, 4, 22, 11, 2), (dict(ri), dict(rv))   # cu (36, 15, …) · (42, …)
     print('kiem: dung het')
 
 

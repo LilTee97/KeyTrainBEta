@@ -410,12 +410,15 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
    thầy) + đố chuyển giọng · các lối thay hợp âm trong đệm hát, nghe gốc / thay · lý thuyết từng bậc (vì sao, thay bằng gì) · Linh
    Nhi chọn gì và VÌ SAO (md 13k, ví dụ soát tay). **Chờ người dùng duyệt**; Cà Pháo, Blues làm khi tới thầy ấy (bước 8, 9).
    **Ba chỗ hở (7/10/2026):** tách "của bài / của chị" bằng hợp âm phổ biến của chính bài — xong cho Linh Nhi (`tach_lua_chon.py`,
-   md 13l); giai điệu = nốt cao nhất tay phải — đo được tới đâu và đổi cách dùng (13l); áp cho Cà Pháo — làm tiếp.
+   md 13l); giai điệu = nốt cao nhất tay phải — đo được tới đâu và đổi cách dùng (13l); **áp cho Cà Pháo — xong 7/10/2026**: tab
+   Học cách soạn câu của Cà Pháo mở Phần 1 (cột thầy: 309/400 hợp âm phần hát là của bài, 41/60 chỗ khác soát tay; màu ở tay phải —
+   `tools/cho_dat_mau.py`), Phần 2–4 khóa tới bước 8; md Cà Pháo mục "Ai chọn hợp âm". Blues: xem bước 9.
 4. Gam và hợp âm rải (ý 4): Linh Nhi + căn bản.
 5. Đo thế bấm và bước chuyển của Linh Nhi → "Chuyển hợp âm của thầy" (ý 6).
 6. **Trang Căn bản**: 7 bài lý thuyết, quiz, gam và hợp âm rải, tập solo chấm theo lý thuyết, đệm cơ bản — dùng lại bước 2–5.
 7. Linh Nhi: tập solo theo nhịp, bậc 4–7.
-8. **Đo Cà Pháo** (cách đặt hợp âm theo bậc, bước chuyển, nhịp đổi hợp âm, phân bố nốt solo theo chất hợp âm, thế bấm) — rồi dựng Cà Pháo.
+8. **Đo Cà Pháo** (cách đặt hợp âm theo bậc — phần hát xong 7/10/2026; bước chuyển, nhịp đổi hợp âm, phân bố nốt solo theo chất hợp
+   âm, thế bấm) — rồi dựng Cà Pháo Phần 2–4.
 9. Blues.
 10. Chỉnh ngưỡng theo số đo thật khi người dùng đã tập.
 

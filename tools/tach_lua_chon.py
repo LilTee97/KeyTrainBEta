@@ -89,8 +89,15 @@ TRI = {'M': 'M', 'm': 'm', 'dim': 'dim', 'aug': 'aug', 'sus4': 'sus', 'sus2': 's
 MAU_IV = {10: '7', 11: 'maj7', 2: '9', 9: '6', 1: 'b9', 8: 'b13', 6: '#11'}
 
 
+# Giọng của bài kho CHƯA ghi (corpus `giong: null`) — suy từ bản phổ biến: giọng của bản + độ dịch khớp sheet nhất (7/10/2026).
+# CHƯA người dùng xác nhận. Không suy bằng dấu hóa (corpus `_doc_giong`: thử trên 7 bài đã biết thì sai 5).
+GIONG_SUY = {'Để Em Rời Xa': 'Re thu', 'Chúng Ta Không Thuộc Về Nhau': 'La thu', 'Chưa Bao Giờ (Trung Quân)': 'Fa thu'}
+
+
 def doan_cua_bai(song):
     """{tên đoạn hát: [hợp âm]} — mỗi hợp âm: dict(bac, tri, mau, o, a, b, gd) — bac so với chủ âm."""
+    if not song.get('giong') and song['name'] in GIONG_SUY:
+        song = dict(song, giong=GIONG_SUY[song['name']])
     chu, thu, meta, segs = H.doan_hat(song)
     ns, _, _ = S.doc(song)
     o_cua = lambda t: max((b for b, st in meta['bar_start'].items() if st <= t + EPS), default=0)  # noqa: E731
@@ -175,7 +182,8 @@ def chuoi_ban(ban, chu_thay, dich):
 
 def phan_tich(song, ky_ban):
     chu, thu, doan, ns = doan_cua_bai(song)
-    cac_doan = {k: gop(v) for k, v in doan.items()}
+    # Đoạn CHUYỂN GIỌNG ('*_mod') bỏ: kho không ghi giọng mới của đoạn, tính bậc theo giọng cũ thì ra ♭II, ♯IV vô nghĩa (Cà Pháo).
+    cac_doan = {k: gop(v) for k, v in doan.items() if not k.endswith('_mod')}
     # Dịch giọng từng bản: thử 12, lấy tổng điểm căn các đoạn cao nhất
     ban_dich, da_co = [], set()
     for b in ky_ban['ban']:
@@ -336,35 +344,98 @@ def in_ra(ra, chi_tiet=False):
 
 
 if __name__ == '__main__' and '--kiem' not in sys.argv:
-    in_ra(chay(), chi_tiet='--chi-tiet' in sys.argv)
+    in_ra(chay(sys.argv[sys.argv.index('--thay') + 1] if '--thay' in sys.argv else 'linh-nhi'), chi_tiet='--chi-tiet' in sys.argv)
 
 
 def kiem(ra):
     """Các số trích vào app (`giaiThich.ts`) và md Linh Nhi mục 13l — đổi số đo thì sửa cả hai nơi."""
     tong = collections.Counter(h['loai'] for r in ra.values() for h in r['hang'])
-    assert (sum(tong.values()), tong['giong'], tong['chen'], tong['thay'], tong['doi']) == (616, 423, 95, 68, 30), dict(tong)
+    assert (sum(tong.values()), tong['giong'], tong['chen'], tong['thay'], tong['doi']) == (616, 422, 96, 67, 31), dict(tong)
     assert sorted(set(a for r in ra.values() for a in r['tac_gia'])) == sorted(
         ['Lam Phương', 'Đức Huy', 'Hoài Linh', 'Trịnh Công Sơn', 'Hoàng Thi Thơ', 'Tuấn Khanh', 'Trần Thiện Thanh', 'Thanh Sơn'])
     nhom, thay_cap, lap = tong_ket(ra)
     g = lambda giong, lm: nhom[(giong, lm)]  # noqa: E731
     assert (g('thu', 'i')['n'], g('thu', 'i')['giong'], g('thu', 'i')['mau_rieng:9'], g('thu', 'i')['mau:9'],
-            g('thu', 'i')['mau_rieng:7'], g('thu', 'i')['mau:7']) == (99, 92, 39, 39, 21, 21)
+            g('thu', 'i')['mau_rieng:7'], g('thu', 'i')['mau:7']) == (100, 93, 40, 40, 22, 22)
     assert (g('thu', 'iv')['n'], g('thu', 'iv')['giong'], g('thu', 'iv')['mau_rieng:9'], g('thu', 'iv')['mau:9']) == (52, 34, 23, 23)
     assert (g('thu', 'bVI')['n'], g('thu', 'bVI')['giong'], g('thu', 'bVI')['mau_rieng:maj7'], g('thu', 'bVI')['mau:maj7']) == (42, 21, 19, 19)
     v = g('thu', 'V')
-    assert (v['n'], v['giong'], v['mau_rieng:b9'] + v['mau_rieng:b13'], v['mau:b9'] + v['mau:b13'], v['mau_ban_co:7'], v['mau:7']) == (39, 34, 8, 8, 16, 20)
+    assert (v['n'], v['giong'], v['mau_rieng:b9'] + v['mau_rieng:b13'], v['mau:b9'] + v['mau:b13'], v['mau_ban_co:7'], v['mau:7']) == (38, 33, 8, 8, 16, 20)
     assert (g('thu', 'ii°')['n'], g('thu', 'ii°')['giong'], g('thu', 'ii°')['co_ban'], sum(1 for z in g('thu', 'ii°') if z.startswith('bai:'))) == (12, 0, 1, 4)
-    assert (g('thu', 'I')['n'], g('thu', 'I')['giong']) == (11, 8)
-    assert (g('thu', 'bVII')['n'], g('thu', 'bVII')['giong']) == (28, 9)
+    assert (g('thu', 'I')['n'], g('thu', 'I')['giong']) == (10, 8)
+    assert (g('thu', 'bVII')['n'], g('thu', 'bVII')['giong'], g('thu', 'bVII')['chen']) == (28, 8, 11)
+    assert (g('thu', 'bIII')['n'], g('thu', 'bIII')['giong'], g('thu', 'bIII')['chen']) == (42, 26, 12)
     assert (g('truong', 'I')['n'], g('truong', 'I')['giong'], g('truong', 'I')['mau_rieng:maj7'], g('truong', 'I')['mau:maj7'],
             g('truong', 'I')['mau_rieng:9'], g('truong', 'I')['mau:9']) == (58, 51, 13, 13, 14, 14)
-    assert (g('truong', 'ii')['n'], g('truong', 'ii')['giong'], g('truong', 'ii')['mau_rieng:7'], g('truong', 'ii')['mau:7']) == (32, 30, 13, 13)
+    assert (g('truong', 'ii')['n'], g('truong', 'ii')['giong'], g('truong', 'ii')['mau_rieng:7'], g('truong', 'ii')['mau:7']) == (30, 28, 11, 11)
     assert (g('truong', 'V')['n'], g('truong', 'V')['giong']) == (41, 37)
-    assert (g('truong', 'II')['n'], g('truong', 'II')['giong'], g('truong', 'II')['doi']) == (10, 3, 3)
+    assert (g('truong', 'II')['n'], g('truong', 'II')['giong'], g('truong', 'II')['doi']) == (12, 3, 5)
     assert thay_cap[('thu', 'vi°', 'bIII')]['n'] == 4 and thay_cap[('truong', '#iv°', 'V')]['khong_ban_nao'] == 3
-    assert (lap['cho_lap'], lap['doi_khi_lap']) == (154, 48)
+    assert (lap['cho_lap'], lap['doi_khi_lap']) == (152, 45)
     print('kiem: dung het')
+
+
+# Cà Pháo — soát tay từng nốt (7/10/2026, in hai tay từng ô) 41/60 chỗ máy báo khác bản phổ biến. Khóa: (bài, ô, hợp âm anh theo máy,
+# hợp âm của bản). 'that' = sheet bấm đúng như máy đọc — anh đổi thật (co_ban chia ra "chỉ anh bấm" / "có trong bản khác");
+# 'doc_lech' = máy đọc lệch ký hiệu ("Am" mà tay trái bấm Fa ở phách 1 = Fmaj7; "Csus4/G" = G7sus4; ký hiệu đặt ngược thứ tự);
+# 'ban_lech' = hợp âm của bản chỏi với giai điệu (giai điệu có Đô♯ chỗ bản ghi C). 19 chỗ còn lại chưa soát.
+_DE, _CBG, _CT, _NHQ, _HK = 'Để Em Rời Xa', 'Chưa Bao Giờ (Trung Quân)', 'Chúng Ta Không Thuộc Về Nhau', 'Người hãy quên em đi', 'Hồng Kông 1'
+SOAT_TAY_CA_PHAO = {
+    **{(b, o, 'iv', 'bVI'): 'that' for b, o in [(_DE, 10), (_DE, 12), (_DE, 38), (_DE, 40), (_CBG, 55), (_CT, 21), (_CT, 53), (_CT, 61)]},
+    **{(_CT, o, 'v', 'bVII'): 'that' for o in (12, 20, 22, 28, 52, 54, 60)},
+    **{(b, o, 'I', 'i'): 'that' for b, o in [(_DE, 11), (_DE, 39), (_CBG, 17), (_CBG, 54), (_CT, 64)]},
+    **{(_NHQ, o, 'II', 'ii°'): 'that' for o in (23, 36, 55)},
+    (_DE, 11, 'v', 'V'): 'that',
+    **{('Ngay mai em di', o, 'II', 'I'): 'that' for o in (25, 61)},
+    **{(_HK, o, 'vi', 'IV'): 'doc_lech' for o in (26, 33, 82, 90)},
+    (_HK, 41, 'vi', 'iii'): 'doc_lech',
+    **{(_HK, o, 'Isus', ban): 'doc_lech' for o, ban in [(30, 'iii'), (40, 'IV'), (45, 'ii'), (99, 'I')]},
+    (_DE, 47, 'v', 'V'): 'doc_lech',
+    **{('Co Em Cho', o, 'V', 'vi'): 'doc_lech' for o in (19, 27)},
+    **{(_NHQ, o, 'V', 'bVII'): 'ban_lech' for o in (28, 68, 83)},
+}
+
+
+def kiem_ca_phao(ra):
+    """Các số trích vào app (`giaiThich.ts`, khối Cà Pháo) và md Cà Pháo mục "Ai chọn" — đổi số đo thì sửa cả hai nơi."""
+    tong = collections.Counter(h['loai'] for r in ra.values() for h in r['hang'])
+    assert (sum(tong.values()), tong['giong'], tong['chen'], tong['thay'], tong['doi']) == (400, 309, 31, 39, 21), dict(tong)
+    assert sorted(set(a for r in ra.values() for a in r['tac_gia'])) == sorted(
+        ['Nguyễn Trọng Tài', 'Khắc Hưng', 'Kai Đinh', 'Thái Thịnh', 'FB Boiz', 'Tiên Tiên', 'Sơn Tùng M-TP'])
+    nhom, thay_cap, lap = tong_ket(ra)
+    g = lambda giong, lm: nhom[(giong, lm)]  # noqa: E731
+    mau = lambda x, *ks: tuple(v for k in ks for v in (x[f'mau_rieng:{k}'], x[f'mau:{k}']))  # noqa: E731
+    assert (g('thu', 'i')['n'], g('thu', 'i')['giong'], *mau(g('thu', 'i'), '7', '9')) == (55, 53, 28, 28, 24, 24)
+    assert (g('thu', 'bVI')['n'], g('thu', 'bVI')['giong'], *mau(g('thu', 'bVI'), 'maj7', '9', '6', '#11')) == (45, 45, 23, 23, 19, 19, 14, 14, 8, 8)
+    assert (g('thu', 'bVII')['n'], g('thu', 'bVII')['giong'], *mau(g('thu', 'bVII'), '7', '9')) == (35, 35, 13, 13, 11, 11)
+    assert (g('thu', 'iv')['n'], g('thu', 'iv')['giong']) == (27, 17)
+    v = g('thu', 'V')
+    assert (v['n'], v['giong'], *mau(v, '9', 'b13'), v['mau_ban_co:7'], v['mau:7']) == (20, 15, 7, 7, 7, 7, 7, 13)
+    assert (g('thu', 'bIII')['n'], g('thu', 'bIII')['giong'], *mau(g('thu', 'bIII'), 'maj7')) == (11, 8, 6, 6)
+    assert (g('truong', 'I')['n'], g('truong', 'I')['giong'], *mau(g('truong', 'I'), '9', 'maj7', '7')) == (33, 29, 15, 15, 5, 5, 10, 12)
+    assert (g('truong', 'V')['n'], g('truong', 'V')['giong'], *mau(g('truong', 'V'), '9', '6')) == (32, 27, 12, 12, 6, 6)
+    assert (g('truong', 'IV')['n'], g('truong', 'IV')['giong'], g('truong', 'IV')['mau_ban_co:maj7'], g('truong', 'IV')['mau:maj7']) == (20, 20, 5, 8)
+    assert (g('truong', 'ii')['n'], g('truong', 'ii')['giong'], g('truong', 'ii')['mau_ban_co:7'], g('truong', 'ii')['mau:7']) == (17, 17, 7, 11)
+    assert (g('truong', 'iii')['n'], g('truong', 'iii')['giong'], *mau(g('truong', 'iii'), '7')) == (16, 14, 12, 12)
+    assert (g('truong', 'vi')['n'], g('truong', 'vi')['giong']) == (18, 12)
+    assert (thay_cap[('thu', 'iv', 'bVI')]['n'], thay_cap[('thu', 'iv', 'bVI')]['khong_ban_nao']) == (8, 8)
+    assert (thay_cap[('thu', 'v', 'bVII')]['n'], thay_cap[('thu', 'v', 'bVII')]['khong_ban_nao']) == (7, 0)
+    assert (thay_cap[('truong', 'II', 'I')]['n'], thay_cap[('truong', 'II', 'I')]['khong_ban_nao']) == (2, 2)
+    assert (lap['cho_lap'], lap['doi_khi_lap']) == (105, 27)
+    # Soát tay: mọi chỗ đã ghi phải còn trong kết quả máy (máy đọc đổi thì phải soát lại), và chia đúng như lời trên thẻ.
+    hang = {(bai, h['o'], la_ma(h['bac'], h['tri']), la_ma(*h['ban'])): h for bai, r in ra.items() for h in r['hang']
+            if h['loai'] in ('thay', 'doi') and h['ban']}
+    assert sum(1 for h in hang.values()) == 60, len(hang)
+    thieu = [k for k in SOAT_TAY_CA_PHAO if k not in hang]
+    assert not thieu, thieu
+    loai = collections.Counter(
+        ('chi_anh' if hang[k]['co_ban'] == 0 else 'ban_khac') if v == 'that' else v for k, v in SOAT_TAY_CA_PHAO.items())
+    assert (loai['chi_anh'], loai['ban_khac'], loai['doc_lech'], loai['ban_lech']) == (16, 10, 12, 3), dict(loai)
+    truong = collections.Counter(SOAT_TAY_CA_PHAO[k] for k in SOAT_TAY_CA_PHAO if not ra[k[0]]['thu'])
+    assert (sum(1 for k in hang if not ra[k[0]]['thu']), truong['doc_lech'], truong['that']) == (22, 11, 2)
+    print('kiem ca-phao: dung het')
 
 
 if __name__ == '__main__' and '--kiem' in sys.argv:
     kiem(chay())
+    kiem_ca_phao(chay('ca-phao'))
