@@ -496,6 +496,7 @@ Các hợp âm phải được chọn tự do …"*
   thức. Các phần khác vẫn không lớp game. Cập nhật 9/10: mọi màn mở; chia hai bên — luyện có mẹo (mẹo gia sư: đếm phím từ gốc tay
   trái) · thi không mẹo, 20 viên, đúng từ 16 là Đạt màn.
   Cập nhật 9/10 (người dùng): quy luật và mẹo tính THEO LOẠI hợp âm, không theo vị trí tay; thêm quy luật hợp âm slash; màn game theo họ.
+  Cập nhật 9/10 (người dùng "1 có"): thêm màn game "Hợp âm slash" — bấm bass + hợp âm, hay chọn nghĩa.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

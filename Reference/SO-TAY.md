@@ -6214,3 +6214,24 @@ ko thấy các quy luật về hợp âm slash"*.
 suite **2 707 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: theo loại 10/10 (4 bước C13♭9, con số, các họ; slash F/G →
 Sol + F = G9sus4; Thử Cmaj7; tự chọn C6/9 ra Đô – Sol + Asus4; game màn theo họ, viên "tay phải 7·9·♯11 · thứ"), chạy lại hai bên 12/12,
 tab vòng 17/17, Bấm như thầy 12/12, chồng tự do 7/7, đố một tay 4/4, trang Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: màn "Hợp âm slash" trong game Mưa hợp âm (9/10/2026)
+
+**Người dùng:** *"1 có"* — trả lời câu Claude hỏi "Có muốn thêm màn 'Hợp âm slash' vào game không?".
+
+- `soanCau/gameChong.ts`: câu game gộp một kiểu `CauGame` (id · tên · gốc hay bass · đáp án hai tay · dòng khung · gợi ý · đáp án chọn
+  tên · lời giải · mẹo · bốn lựa chọn · `haiTayBuoc`) cho cả câu chồng (26 công thức) lẫn câu slash. `MAU_SLASH`: 9 mẫu theo QUY LUẬT, chạy
+  được mọi bass — 4 thế đảo (trưởng / thứ, bass bậc 3 / bậc 5) và 5 bass lạ = hợp âm màu viết tắt (thứ cao hơn bass 4 phím = maj7 ·
+  trưởng +3 = m7 · giảm +4 = 7 · trưởng thấp hơn một cung = 9sus4 · trưởng +7 = maj9 thiếu 3). Tên ghi đúng chữ (`tenTheoChu`). Bốn nghĩa
+  để chọn: câu thế đảo thì nhiễu là các thế khác của X + một màu của bass; câu bass lạ thì nhiễu là màu khác của bass. `MAN` thành 7 màn
+  (5 họ · slash · trộn 26 loại), mỗi màn mang sẵn bảng mẹo.
+- Câu slash luôn chấm HAI tay: đủ lớp cao độ và nốt thấp nhất là bass Y (chỉ bấm X thì không tính). Bên mẹo sáng phím bass, viên ghi
+  "bass Sol" + "bass là nốt của X → thế đảo" hay "bass lạ · lên N phím tới gốc X"; bên thi không sáng gì. Chọn tên = chọn NGHĨA (Cmaj7,
+  C đảo 1, G9sus4 …). Kỷ lục màn slash không tách "hai tay" (vốn hai tay); bên thi rơi theo luật hai tay (12 s).
+- `GameChong.tsx` theo kiểu mới; bảng mẹo của màn đọc `MAN[k].meo`.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `gameChong.test.ts` 8 (tên + nghĩa slash ở bass Đô / Sol / Mi; 9 mẫu × 12 bass: thế đảo có bass trong
+X, bass lạ khớp đúng nốt hợp âm màu; chấm hai tay; bốn lựa chọn có đáp án) · toàn suite **2 709 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua ·
+chạy thử headless: màn slash 19/19 (bên mẹo D♭/F sáng đúng một phím Fa; giữ X thiếu bass không tính, bass + X là đúng; chạm từng nốt;
+thi chọn nghĩa đúng / sai; thi 20/20 Đạt; bật "hai tay" màn slash vẫn giữ Đạt; điện thoại 390 px không cuộn ngang), chạy lại hai bên 12/12,
+theo loại 10/10 · `LuyenTap.json`, `Nguon.json` không đổi.
