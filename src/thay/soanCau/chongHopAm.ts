@@ -311,6 +311,23 @@ const CHU_BA: Record<LoaiBa, readonly number[]> = {
 }
 
 /** Tên Việt các nốt hai tay, đúng thứ tự của `theBamChong`. Tầng trên gọi theo chữ cái chồng quãng ba từ gốc của chính nó. */
+/**
+ * Nhãn hai tay — người dùng 8/10/2026: "tay trái bấm hợp âm gì thì ghi tên bên phía tay trái và tương tự với tay phải. Sau đó hãy ghi
+ * tên của hợp âm tổng ở phía dưới". Tay trái là hợp âm ba thì gọi tên hợp âm (phụ: các nốt); còn lại ghi các nốt (phụ: vai — gốc – 5…).
+ */
+export function nhanHaiTay(ct: CongThuc, gocTen: string, style: AccidentalStyle, daoDuoi = 0, daoTren = 0) {
+  const not = tenHaiTay(ct, gocTen, style, daoDuoi, daoTren)
+  const ba = [...ct.duoi[0]!].map(pc).sort((x, y) => x - y).join()
+  const hop = ba === '0,4,7' ? gocDep(gocTen) : ba === '0,3,7' ? `${gocDep(gocTen)}m` : null
+  return {
+    trai: hop ?? not.trai.join(' – '),
+    traiPhu: hop ? not.trai.join(' – ') : ct.tenDuoi,
+    phai: 'iv' in ct.tren ? ct.tren.ten : tenTren(ct, gocTen, style),
+    phaiPhu: not.phai.join(' – '),
+    tong: `${gocDep(gocTen)}${hauDep(ct.kyHieu)}`,
+  }
+}
+
 export function tenHaiTay(ct: CongThuc, gocTen: string, style: AccidentalStyle, daoDuoi = 0, daoTren = 0) {
   const quang = (iv: number) => vn(tenTheoChu(gocTen, iv, CHU_HOP[pc(iv)]!, style))
   const trai = (ct.duoi[daoDuoi] ?? ct.duoi[0]!).map(quang)

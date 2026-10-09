@@ -13,6 +13,7 @@ import {
   hauDep,
   pcsTren,
   soThe,
+  nhanHaiTay,
   tenHaiTay,
   tenTren,
   tenTrongGiong,
@@ -400,7 +401,6 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const goc = gocTu ?? (tonic + viDu) % 12
   const gocTen = gocTu === null ? tenTrongGiong(tonic, thu, viDu) : GOC[gocTu]!
   const bam = theBamChong(ct, goc, daoDuoi, daoTren)
-  const ten = tenHaiTay(ct, gocTen, style, daoDuoi, daoTren)
   const chonCt = (x: string) => {
     setId(x)
     setDaoDuoi(0)
@@ -430,6 +430,8 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   /* Bàn phím: đang đố thì tắt gợi ý; trả lời xong thì chỉ thế bấm của câu đố; không đố thì chỉ công thức đang xem. */
   const hien = cau ? (kq === 'dang' ? null : theBamChong(cau.ct, cau.goc)) : bam
   const dapAn = cau ? `${tenTren(cau.ct, GOC[cau.goc]!, style)} (${tenHaiTay(cau.ct, GOC[cau.goc]!, style).phai.join(' – ')})` : ''
+  /* Nhãn hai tay đi theo đúng thứ đang sáng trên bàn phím; đang đố thì ẩn để không lộ đáp án. */
+  const nhan = cau ? (kq === 'dang' ? null : nhanHaiTay(cau.ct, GOC[cau.goc]!, style)) : nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren)
 
   return (
     <div className={the}>
@@ -490,9 +492,9 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
           </select>
           <span className="text-dim">Thầy dùng: {ct.thay.length ? ct.thay.join(' · ') : 'chưa thấy trong sheet các thầy'}</span>
         </div>
-        <p>
-          <b className="text-teal-key">Tay trái</b> — {ct.tenDuoi}: {ten.trai.join(' – ')} · <b className="text-amber-key">Tay phải</b> —{' '}
-          {'iv' in ct.tren ? ct.tren.ten : `${tenTren(ct, gocTen, style)} (${ct.quanHe})`}: {ten.phai.join(' – ')}
+        <p className="text-cream/85">
+          <span className="text-dim">Quan hệ tay phải với gốc: </span>
+          {ct.quanHe}
         </p>
         <p className="mt-1 text-cream/85">
           <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>
@@ -532,6 +534,34 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
         </div>
       </div>
 
+      <div className="mb-1 grid min-h-9 grid-cols-2 gap-2 text-xs">
+        {nhan && (
+          <>
+            <p>
+              <span className="text-dim">Tay trái: </span>
+              <b className="font-mono text-base text-teal-key">{nhan.trai}</b> <span className="text-cream/70">({nhan.traiPhu})</span>
+            </p>
+            <p className="text-right">
+              <span className="text-dim">Tay phải: </span>
+              <b className="font-mono text-base text-amber-key">{nhan.phai}</b> <span className="text-cream/70">({nhan.phaiPhu})</span>
+            </p>
+          </>
+        )}
+      </div>
+      <OnScreenPiano
+        lowNote={36}
+        highNote={84}
+        leftHandNotes={hien?.trai ?? []}
+        rightHandNotes={hien?.phai ?? []}
+      />
+      <p className="mt-1 mb-3 min-h-7 text-center text-sm">
+        {nhan && (
+          <>
+            <span className="text-dim">Hợp âm tổng: </span>
+            <b className="font-mono text-lg text-cream">{nhan.tong}</b>
+          </>
+        )}
+      </p>
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-cream">Đố chuyển giọng</span>
@@ -593,12 +623,6 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       </div>
 
       <MidiConnect />
-      <OnScreenPiano
-        lowNote={36}
-        highNote={84}
-        leftHandNotes={hien?.trai ?? []}
-        rightHandNotes={hien?.phai ?? []}
-      />
     </div>
   )
 }

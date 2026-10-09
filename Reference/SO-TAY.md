@@ -5910,3 +5910,17 @@ ghi ≠ anh bấm, mọi hợp âm phát được tiếng) · chạy thử headl
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `src/thay/__tests__` 107 (thêm: mọi ý ba thầy có câu nghe khác nhau, phát được tiếng, bass đúng; tựa
 Linh Nhi La thứ / Đô trưởng, Blues Sol trưởng / Mi thứ) · toàn suite **2 649 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless
 (cổng 5199): Linh Nhi 16 + 16 nút nghe, ▶ ra tiếng, Blues 10 + 10 — 5/5 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3 (A): nhãn hai tay ở thẻ Chồng hợp âm (9/10/2026)
+
+**Người dùng (8/10):** *"Hãy viết rõ tên hợp âm của từng tay, tay trái bấm hợp âm gì thì ghi tên bên phía tay trái và tương tự với tay
+phải. Sau đó hãy ghi tên của hợp âm tổng ở phía dưới."*
+
+- `chongHopAm.nhanHaiTay` (mới): tay trái là hợp âm ba thì gọi tên hợp âm (phụ: các nốt), còn lại ghi nốt (phụ: vai — gốc, gốc – 5,
+  gốc – 3 – ♭7…); tay phải là tên hợp âm chồng trên (chùm nốt rời thì tên chùm); tổng.
+- `SoanCau.ChongHopAm`: nhãn "Tay trái" (trái) · "Tay phải" (phải) ngay trên bàn phím, "Hợp âm tổng" dưới bàn phím; đi theo đúng thứ đang
+  sáng — đang đố thì ẩn (không lộ đáp án). Bàn phím chuyển lên ngay sau ô công thức, ô đố xuống dưới. Dòng "Tay trái — … · Tay phải — …"
+  cũ trong ô công thức thay bằng "Quan hệ tay phải với gốc".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 8 (2 mới) · chạy thử headless: Dm11 = Dm + C, E7 tay trái "Mi (gốc)", đố ẩn
+nhãn, xem đáp án hiện nhãn — 4/4 đạt · `LuyenTap.json`, `Nguon.json` không đổi.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
-import { CONG_THUC, DO_DUOC, pcsTren, quangTren, soThe, tenHaiTay, tenTren, tenTrongGiong, theBamChong } from '../soanCau/chongHopAm'
+import { CONG_THUC, DO_DUOC, nhanHaiTay, pcsTren, quangTren, soThe, tenHaiTay, tenTren, tenTrongGiong, theBamChong } from '../soanCau/chongHopAm'
 import { traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -80,5 +80,18 @@ describe('Chồng hợp âm — công thức sinh đúng nốt', () => {
     expect(tenTrongGiong(2, true, 11, 7)).toBe('C#')
     expect(tenTrongGiong(9, true, 11, 7)).toBe('G#')
     expect(tenTrongGiong(5, false, 10)).toBe('Eb')
+  })
+})
+
+describe('Nhãn hai tay — tên tay trái, tên tay phải, hợp âm tổng (người dùng 8/10/2026)', () => {
+  it('tay trái là hợp âm ba thì gọi tên hợp âm; tay phải là hợp âm chồng trên; tổng ở dưới', () => {
+    expect(nhanHaiTay(ct('m11'), 'F', 'flat')).toMatchObject({ trai: 'Fm', traiPhu: 'Fa – La♭ – Đô', phai: 'E♭', tong: 'Fm11' })
+    expect(nhanHaiTay(ct('maj9'), 'Eb', 'flat')).toMatchObject({ trai: 'E♭', phai: 'B♭', tong: 'E♭maj9' })
+  })
+
+  it('tay trái không phải hợp âm ba thì ghi nốt, kèm vai của chúng', () => {
+    expect(nhanHaiTay(ct('7'), 'G', 'sharp')).toMatchObject({ trai: 'Sol', traiPhu: 'gốc', tong: 'G7' })
+    expect(nhanHaiTay(ct('6'), 'C', 'sharp')).toMatchObject({ trai: 'Đô – Sol', traiPhu: 'gốc – 5', phai: 'Am', tong: 'C6' })
+    expect(nhanHaiTay(ct('add9'), 'C', 'sharp').phai).toBe('chùm 9 – 3 – 5')
   })
 })
