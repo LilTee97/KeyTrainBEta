@@ -40,6 +40,7 @@ import { buildLine, lineToTimeline } from './fillSoloGenerator/lineBuilder'
 import { expandToBeats, listToBeatTable } from './input/importedTrack'
 import { SongTextInput } from './input/SongTextInput'
 import { SongSheetView } from './input/SongSheetView'
+import { VongTrongBai } from './input/VongTrongBai'
 import type { SectionMark } from './input/songSheet'
 import {
   breathChords,
@@ -5288,6 +5289,8 @@ export function ReharmHome() {
             ·{' '}
             <span className="overline decoration-1">chia đôi ô nhịp</span>
           </p>
+
+          <VongTrongBai chords={recolored} ranges={rawSectionRanges} songKey={reharm.key} />
         </div>
       )}
 

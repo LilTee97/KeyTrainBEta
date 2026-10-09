@@ -1,10 +1,11 @@
+import type { ParsedChord } from '../../reharm/types'
 import type { Hop } from './giaiThich'
 
 /*
   NHẬN VÒNG PHỔ BIẾN — người dùng 9/10/2026: "Hãy phân tích các vòng hợp âm trong các sheet của từng thầy rồi cố gắng tổng hợp lại xem
   nó là vòng nào trong các vòng hợp âm phổ biến trong âm nhạc", và ở trang Tái hòa âm: "phân tích và cô đọng hợp âm lại xem chúng thuộc
   vòng nào trong các vòng hòa thanh". Một bộ nhận dùng chung: chuỗi hợp âm (đã gộp hợp âm lặp liền nhau) → các khúc khớp vòng mẫu,
-  không chồng nhau, khúc dài được chọn trước.
+  không chồng nhau, chọn sao cho phủ nhiều hợp âm nhất (xem `nhanVong`).
   Khớp theo GỐC (nửa cung so với chủ âm) và HỌ chất: trưởng (gồm át, maj7) · thứ · giảm (gồm nửa giảm) · tăng; sus khớp cả trưởng lẫn
   thứ; bậc mẫu "giảm" nhận cả thứ (ii° hay ii đều là bậc 2 chuẩn bị cho V); "?" = chất nào cũng được.
   Vòng viết cho giọng trưởng vẫn nhận trong bài giọng thứ qua GIỌNG SONG SONG (và ngược lại): ♭VI–♭VII–v–i ở La thứ (F–G–Em–Am)
@@ -235,25 +236,30 @@ const buoc5 = (a: Hop, b: Hop, thu: boolean) => {
 
 /**
  * Nhận các vòng phổ biến trong chuỗi `hop` (gốc tính từ chủ âm; hợp âm lặp liền nhau nên gộp trước). Trả các khúc không chồng nhau,
- * xếp theo vị trí. Khúc dài chọn trước; dài bằng nhau thì mẫu có tên trước chuỗi quãng 5, cùng giọng trước giọng song song, đúng đầu
- * mẫu trước xoay vòng.
+ * xếp theo vị trí. Chọn bằng quy hoạch động: phủ được NHIỀU hợp âm nhất; bằng nhau thì ÍT khúc hơn (khúc dài); rồi mẫu có tên trước
+ * chuỗi quãng 5, cùng giọng trước giọng song song, đúng đầu mẫu trước xoay vòng; cuối cùng khúc bắt đầu từ chủ âm. Vòng lặp kéo dài chừng nào chuỗi còn đi tiếp vòng ấy.
+ * Trước (9/10/2026, commit 4ee3fd8) chọn tham "khúc dài trước" — chạy thử trang Tái hòa âm thấy F–G–Em–Am–Dm–G–C ra chuỗi quãng 5
+ * Em…C, bỏ trơ F–G (đúng: Royal Road + ii–V–I), và Am–F–C–G ×2 chỉ nhận khúc C–G–Am–F ở giữa. Triệu chứng nếu lùi: hai lỗi ấy quay lại.
  */
 export function nhanVong(hop: readonly Hop[], thu: boolean): KhucVong[] {
   const n = hop.length
-  const ung: (KhucVong & { uu: number })[] = []
+  type UngVien = KhucVong & { uu: number }
+  const ung: UngVien[] = []
+  const khop = (k: number, b: ReturnType<typeof docBacMau>, lech: number) => pc(hop[k]!.goc - lech) === b.goc && khopHo(hoCua(hop[k]!.chat), b.ho)
   for (const mau of MAU_VONG) {
     const bac = mau.bac.map(docBacMau)
+    const m = bac.length
     for (const songSong of [false, true]) {
       // Mẫu cùng hệ giọng với bài: khớp thẳng. Khác hệ: chủ âm của mẫu là chủ âm giọng song song (bài thứ +3, bài trưởng +9).
       const lech = mau.thu === thu ? (songSong ? null : 0) : songSong ? (thu ? 3 : 9) : null
       if (lech === null) continue
-      for (let xoay = 0; xoay < (mau.lap ? bac.length : 1); xoay++) {
-        const ds = [...bac.slice(xoay), ...bac.slice(0, xoay)]
-        for (let i = 0; i + ds.length <= n; i++) {
-          if (ds.every((b, k) => pc(hop[i + k]!.goc - lech) === b.goc && khopHo(hoCua(hop[i + k]!.chat), b.ho)))
-            ung.push({ id: mau.id, ten: mau.ten, nghe: mau.nghe, tu: i, den: i + ds.length - 1, xoay, songSong, chen: [], uu: (songSong ? 2 : 0) + (xoay ? 1 : 0) })
+      for (let xoay = 0; xoay < (mau.lap ? m : 1); xoay++)
+        for (let i = 0; i + m <= n; i++) {
+          let dai = 0
+          while (i + dai < n && (mau.lap || dai < m) && khop(i + dai, bac[(xoay + dai) % m]!, lech)) dai++
+          for (let d = m; d <= dai; d++)
+            ung.push({ id: mau.id, ten: mau.ten, nghe: mau.nghe, tu: i, den: i + d - 1, xoay, songSong, chen: [], uu: (songSong ? 2 : 0) + (xoay ? 1 : 0) })
         }
-      }
     }
   }
   for (let i = 0; i < n; i++) {
@@ -267,20 +273,51 @@ export function nhanVong(hop: readonly Hop[], thu: boolean): KhucVong[] {
         j += 2
       } else break
       so++
+      // Chuỗi 3 hợp âm chỉ nhận khi về chủ âm (II–V–I: át của át) — "V–I–IV" ở đâu cũng có, đếm thì loãng.
+      if (so >= 4 || (so === 3 && !chen.length && hop[j]!.goc === 0))
+        ung.push({ id: QUANG_5.id, ten: `Chuỗi quãng 5 — ${so} hợp âm`, nghe: QUANG_5.nghe, tu: i, den: j, xoay: 0, songSong: false, chen: [...chen], uu: 4 })
     }
-    // Chuỗi 3 hợp âm chỉ nhận khi về chủ âm (II–V–I: át của át) — "V–I–IV" ở đâu cũng có, đếm thì loãng.
-    if (so >= 4 || (so === 3 && !chen.length && hop[j]!.goc === 0))
-      ung.push({ id: QUANG_5.id, ten: `Chuỗi quãng 5 — ${so} hợp âm`, nghe: QUANG_5.nghe, tu: i, den: j, xoay: 0, songSong: false, chen, uu: 4 })
   }
-  ung.sort((a, b) => b.den - b.tu - (a.den - a.tu) || a.uu - b.uu || a.tu - b.tu)
-  const chiem = new Array<boolean>(n).fill(false)
+  /* Điểm một khúc, bốn tầng không lấn nhau (chuỗi tới 1 000 hợp âm): phủ × 1e9 − 1e5 mỗi khúc − ưu × 10 − 1 nếu không bắt đầu từ chủ âm.
+     Tầng cuối phân xử hai cách phủ bằng nhau: verse Người Hãy Quên Em Đi phải là hai lượt i…V, không phải i…♭VI + ii°…V. */
+  const diem = (k: UngVien) => (k.den - k.tu + 1 - k.chen.length) * 1e9 - 1e5 - k.uu * 10 - (hop[k.tu]!.goc === 0 ? 0 : 1)
+  const theoCuoi = new Map<number, UngVien[]>()
+  for (const k of ung) theoCuoi.set(k.den, [...(theoCuoi.get(k.den) ?? []), k])
+  const tot = new Array<number>(n + 1).fill(0)
+  const chon = new Array<UngVien | null>(n + 1).fill(null)
+  for (let e = 1; e <= n; e++) {
+    tot[e] = tot[e - 1]!
+    for (const k of theoCuoi.get(e - 1) ?? []) {
+      const v = tot[k.tu]! + diem(k)
+      if (v > tot[e]!) {
+        tot[e] = v
+        chon[e] = k
+      }
+    }
+  }
   const ra: KhucVong[] = []
-  for (const k of ung) {
-    if (chiem.slice(k.tu, k.den + 1).some(Boolean)) continue
-    chiem.fill(true, k.tu, k.den + 1)
+  for (let e = n; e > 0; ) {
+    const k = chon[e]
+    if (!k) {
+      e--
+      continue
+    }
     ra.push({ id: k.id, ten: k.ten, nghe: k.nghe, tu: k.tu, den: k.den, xoay: k.xoay, songSong: k.songSong, chen: k.chen })
+    e = k.tu
   }
-  return ra.sort((a, b) => a.tu - b.tu)
+  return ra.reverse()
+}
+
+/** Một khúc nhận ra, đọc thành lời: tên vòng · bắt đầu từ bậc nào · lặp mấy vòng · qua giọng song song · chen gì. `ten(j)` = tên hợp âm thứ j. */
+export function moTaKhuc(k: KhucVong, ten: (j: number) => string, songSong: string): string {
+  const mau = MAU_VONG.find((m) => m.id === k.id)
+  const phan = [k.ten]
+  if (mau && k.xoay) phan.push(`bắt đầu từ ${mau.bac[k.xoay]!.replace('?', '')}`)
+  const dai = k.den - k.tu + 1
+  if (mau?.lap && dai > mau.bac.length) phan.push(`lặp ${Math.floor(dai / mau.bac.length)} vòng${dai % mau.bac.length ? ` và ${dai % mau.bac.length} hợp âm` : ''}`)
+  if (k.songSong) phan.push(`qua giọng song song ${songSong}`)
+  if (k.chen.length) phan.push(`chen ${k.chen.map(ten).join(', ')}`)
+  return phan.join(' · ')
 }
 
 /** Vòng mẫu → chuỗi hợp âm để đánh theo (gốc tính từ chủ âm của giọng mẫu). */
@@ -344,14 +381,34 @@ export function laMa(x: Hop): string {
 }
 
 /**
- * Đọc kết quả từng thầy — lời Claude đọc từ số đo của `tongHop` trên vongSheet.json (9/10/2026); mọi con số trong lời có test giữ
+ * Đọc kết quả từng thầy — lời Claude đọc từ số đo của `tongHop` trên vongSheet.json (9/10/2026, viết lại sau khi đổi sang phủ tối ưu —
+ * số cũ của commit 4ee3fd8: LN 155/605, CP 175/380, Aeolian 9/29); mọi con số trong lời có test giữ
  * (nhanVong.test.ts) — số đo đổi thì test hỏng, phải viết lại lời. Chỗ "nghe ra sao" là cảm nhận của Claude, không phải số đo.
  */
 export const LOI_TONG_HOP: Readonly<Record<'linh-nhi' | 'ca-phao' | 'blues', string>> = {
   'linh-nhi':
-    'Linh Nhi không bám một vòng pop nào: chỉ 155/605 hợp âm (26%) rơi vào một vòng có tên — phần còn lại là hòa âm đi theo giai điệu, câu nào tính câu nấy. Cái lặp lại nhiều nhất là lực kéo quãng 5 (chuỗi quãng 5: 11/35 đoạn), rõ nhất là đuôi kết giọng thứ ♭VI–ii°–V–i (Dung Xa Em Đêm Nay, Một Cõi Đi Về) — nửa sau của vòng quãng 5 giọng thứ: ♭VI mở ra, ii° chênh vênh, V kéo, i đóng lại. Ba trụ i–iv–V cũng có mặt ở 11/35 đoạn. Bài trưởng thì về bằng vòng 1–6–2–5 (7/35 đoạn — Đường Xưa Lối Cũ, Mùa Xuân Đầu Tiên; Mùa Xuân có khi đổi ii thành II át phụ cho sáng hơn), và điệp khúc Đường Xưa đi IV–III7–vi ba lần (vòng Just the Two of Us). Muốn đánh ra chất Linh Nhi: luyện ♭VI–ii°–V–i ở giọng thứ, I–vi–ii–V ở giọng trưởng.',
+    'Linh Nhi không bám một vòng pop nào: chỉ 164/605 hợp âm (27%) rơi vào một vòng có tên — phần còn lại là hòa âm đi theo giai điệu, câu nào tính câu nấy. Hay gặp nhất là ba trụ i–iv–V (11/35 đoạn) và lực kéo quãng 5 (chuỗi quãng 5: 10/35 đoạn), rõ nhất là đuôi kết giọng thứ ♭VI–ii°–V–i (Dung Xa Em Đêm Nay, Một Cõi Đi Về) — nửa sau của vòng quãng 5 giọng thứ: ♭VI mở ra, ii° chênh vênh, V kéo, i đóng lại. Bài trưởng thì về bằng vòng 1–6–2–5 (8/35 đoạn, chủ yếu ở Đường Xưa Lối Cũ, Mùa Xuân Đầu Tiên, Biển Tình; Mùa Xuân có khi đổi ii thành II át phụ cho sáng hơn); điệp khúc Đường Xưa xoay quanh vi: IV–III7–vi (vòng Just the Two of Us) xen vi–ii–III (i–iv–V của giọng song song La thứ). Muốn đánh ra chất Linh Nhi: luyện ♭VI–ii°–V–i ở giọng thứ, I–vi–ii–V ở giọng trưởng.',
   'ca-phao':
-    'Cà Pháo dựa vào vòng có tên nhiều hơn hẳn: 175/380 hợp âm (46%). Dấu tay rõ nhất là kết Aeolian ♭VI–♭VII–i (9/29 đoạn, 13 lần — Để Em Rời Xa, Chưa Bao Giờ, Chúng Ta Không Thuộc Về Nhau): về chủ âm bằng hai bậc bước lên, không qua V, nên câu kết hùng mà không cũ. Người Hãy Quên Em Đi thì đi gần trọn vòng quãng 5 giọng thứ i–iv–♭VII–♭III–♭VI–ii°–V–i (vòng của Fly Me to the Moon) — verse là một chuỗi quãng 5 dài 12 hợp âm. Chưa Bao Giờ có Royal Road thật ở prechorus (♭VI–♭VII–v–i). Bài trưởng: 1–6–2–5 và nửa đầu vòng Canon (Ngày Mai Em Đi). Muốn đánh ra chất Cà Pháo: luyện ♭VI–♭VII–i và vòng quãng 5 giọng thứ.',
+    'Cà Pháo dựa vào vòng có tên nhiều hơn hẳn: 189/380 hợp âm (50%). Dấu tay rõ nhất là kết Aeolian ♭VI–♭VII–i (8/29 đoạn, 12 lần — Để Em Rời Xa, Chưa Bao Giờ, Chúng Ta Không Thuộc Về Nhau): về chủ âm bằng hai bậc bước lên, không qua V, nên câu kết hùng mà không cũ. Người Hãy Quên Em Đi thì đi vòng quãng 5 giọng thứ i–iv–♭VII–♭III–♭VI–ii°–V (vòng của Fly Me to the Moon): verse là hai lượt vòng ấy, lượt nào cũng chen iv sau ♭VI, lượt sau đổi ii° thành II át phụ. Chưa Bao Giờ có Royal Road thật ở prechorus (♭VI–♭VII–v–i). Bài trưởng: 1–6–2–5 và nửa đầu vòng Canon (Ngày Mai Em Đi). Muốn đánh ra chất Cà Pháo: luyện ♭VI–♭VII–i và vòng quãng 5 giọng thứ.',
   blues:
     'Blues đứng trên ba hợp âm I–IV–V (2/3 bài, 10 lần), cả ba đều là hợp âm bảy át. Khung 12 ô đo theo ô nhịp: Rockhouse có 2 khung sạch trong 120 ô (ô 32–43 khớp 12/12; ô 44–55 khớp 11/12), phần còn lại Ray Charles đi lệch khung (lệch ra sao — chưa đo); Robert không có khung nào khớp từ 11/12 (bài ứng tác, tốt nhất 9/12). Lối riêng của Robert là quay đầu I–♭iii°–ii–V (3 lần): hợp âm giảm trượt nửa cung xuống ii — sang và cổ. Rising Sun là đúng vòng i–♭III–IV–♭VI của nó (2 lần).',
+}
+
+/**
+ * Cô đọng hợp âm (trang Tái hòa âm) để nhận vòng: hợp âm lướt bỏ ra, hợp âm liền nhau cùng gốc cùng họ chất gộp một (Am7 → Am9 là một
+ * hợp âm; sus gộp với hợp âm cùng gốc bên cạnh), gốc tính từ chủ âm. Giữ tên hợp âm đầu của mỗi nhóm để hiện.
+ */
+export function coDong(chords: readonly ParsedChord[], tonic: number): { ten: string; hop: Hop }[] {
+  const ra: { ten: string; hop: Hop }[] = []
+  for (const c of chords) {
+    if (c.passing) continue
+    const goc = pc(c.root - tonic)
+    const hop: Hop = c.bass === undefined ? { goc, chat: c.quality.symbol } : { goc, chat: c.quality.symbol, bass: pc(c.bass - tonic) }
+    const cuoi = ra[ra.length - 1]
+    const [h0, h1] = [hoCua(cuoi?.hop.chat ?? ''), hoCua(hop.chat)]
+    // sus là trang trí của chính bậc ấy (V7sus4 → V7) — cùng gốc thì gộp với hợp âm bên cạnh
+    if (cuoi && cuoi.hop.goc === goc && (h0 === h1 || h0 === 's' || h1 === 's')) continue
+    ra.push({ ten: c.symbol, hop })
+  }
+  return ra
 }

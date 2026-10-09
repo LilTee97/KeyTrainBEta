@@ -486,7 +486,8 @@ Các hợp âm phải được chọn tự do …"*
 - **Vòng trong sheet → vòng phổ biến · đánh theo · tự nhập — xong 9/10/2026:** tab Tái hòa âm vòng có khung Đánh theo (thế gợi ý lối chung
   của Claude, bấm đúng thì sang; ô tự nhập vòng), Vòng trong sheet các thầy (tổng hợp + lời đọc kết quả, từng đoạn), Vòng phổ biến (16
   vòng). Bộ nhận `nhanVong.ts`; số đo ở SO-TAY.
-- **Nhận vòng ở trang Tái hòa âm** — dùng lại bộ nhận vòng ở trên.
+- **Nhận vòng ở trang Tái hòa âm — xong 9/10/2026:** khung "Vòng hòa thanh trong bài" dưới bản nhạc đã tái hòa âm (cô đọng: bỏ lướt, gộp
+  cùng gốc cùng họ; từng đoạn lời), cùng bộ nhận `nhanVong` (nay chọn khúc bằng phủ tối ưu).
 - **Thế bấm và cách chuyển hợp âm của từng thầy** — đây là bước 5 cũ ("Chuyển hợp âm của thầy"), mở cho cả ba thầy. **Giới hạn nói trước:**
   21 sheet Cà Pháo · Linh Nhi · Blues không ghi số ngón (0 dấu `<fingering>`; chỉ Boogie Woogie có 37) — nên đo được THẾ BẤM (tay nào bấm
   nốt nào, thế đảo, slash chord, khoảng cách, nốt giữ / đi liền bậc khi chuyển), còn số ngón là Claude đề xuất từ thế bấm đo được.

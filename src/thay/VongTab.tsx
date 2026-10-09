@@ -7,7 +7,7 @@ import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKey
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { doiThe, TEN_DAO, theBamVong } from './soanCau/danhTheo'
 import { nguCanh, type Hop } from './soanCau/giaiThich'
-import { hopCuaMau, hopDoan, laMa, LOI_TONG_HOP, MAU_VONG, nhanVong, tongHop, type BaiSheet, type KhucVong } from './soanCau/nhanVong'
+import { hopCuaMau, hopDoan, laMa, LOI_TONG_HOP, MAU_VONG, moTaKhuc, nhanVong, tongHop, type BaiSheet, type KhucVong } from './soanCau/nhanVong'
 import { dungHopAm } from './soanCau/soanCau'
 import { docVong } from './soanCau/thayTrongVong'
 import vongSheet from './soanCau/vongSheet.json'
@@ -43,15 +43,9 @@ const nut = (on: boolean) =>
     on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-dim hover:bg-white/8'
   }`
 
-/** Một khúc nhận ra: tên vòng · bắt đầu từ bậc nào · qua giọng song song · chen gì. */
 function moTa(k: KhucVong, v: VongDanh) {
   const { h, songSong } = nguCanh(v.tonic, v.thu)
-  const mau = MAU_VONG.find((m) => m.id === k.id)
-  const phan = [k.ten]
-  if (mau && k.xoay) phan.push(`bắt đầu từ ${mau.bac[k.xoay]!.replace('?', '')}`)
-  if (k.songSong) phan.push(`qua giọng song song ${songSong}`)
-  if (k.chen.length) phan.push(`chen ${k.chen.map((j) => h(v.hop[j]!.goc, v.hop[j]!.chat)).join(', ')}`)
-  return phan.join(' · ')
+  return moTaKhuc(k, (j) => h(v.hop[j]!.goc, v.hop[j]!.chat), songSong)
 }
 const khucCua = (k: KhucVong, v: VongDanh): VongDanh => ({ ...v, ten: `${k.ten} — ${v.ten}`, hop: v.hop.slice(k.tu, k.den + 1).filter((_, j) => !k.chen.includes(k.tu + j)) })
 

@@ -6044,3 +6044,28 @@ hợp âm phổ biến trong âm nhạc. Sau đó đưa vào tab để tôi có 
 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless 18/18 đạt (tổng hợp ba thầy; nạp khúc Người Hãy Quên Em Đi → bấm Dm, Gm sang 3/12;
 bấm Cmaj7 thay C → "thừa Si"; tự nhập Am F C G → vòng trục bắt đầu từ vi; khung 12 ô Rockhouse / Robert; Canon ở Đô trưởng) ·
 `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: nhận vòng ở trang Tái hòa âm; bộ nhận vòng đổi sang phủ tối ưu (9/10/2026)
+
+**Người dùng:** *"Trong tab Tái hòa âm sau khi tái hòa âm từ lời bài hát thì cũng hãy cố gắng phân tích và cô đọng hợp âm lại xem chúng
+thuộc vòng nào trong các vòng hòa thanh trong âm nhạc"*.
+
+- `src/reharm/input/VongTrongBai.tsx` (mới): khung "Vòng hòa thanh trong bài" ngay dưới bản nhạc đã tái hòa âm — hợp âm đúng như trên bản
+  nhạc (`recolored`: đã tô màu, gồm chỗ người dùng sửa, chưa chèn lướt), chia theo đoạn lời (`rawSectionRanges`; không có lời thì cả bài
+  một khúc), cô đọng (`coDong`: bỏ hợp âm lướt, gộp liền nhau cùng gốc cùng họ, sus gộp với hợp âm cùng gốc), nhận bằng `nhanVong`; đoạn
+  hát lại y hệt gộp một dòng; dòng tổng: phủ bao nhiêu hợp âm, vòng nào ở đoạn nào; mỗi khúc kèm lời nghe ra sao.
+- `nhanVong.ts` — **đổi cách chọn khúc**: chạy thử trang Tái hòa âm bắt hai lỗi của lối tham "khúc dài trước" (commit 4ee3fd8): F–G–Em–Am–
+  Dm–G–C ra chuỗi quãng 5 Em…C, bỏ trơ F–G (đúng: Royal Road + ii–V–I); Am–F–C–G ×2 chỉ nhận C–G–Am–F ở giữa. Nay quy hoạch động: phủ
+  nhiều hợp âm nhất → ít khúc nhất → mẫu có tên / cùng giọng / không xoay → khúc bắt đầu từ chủ âm; vòng lặp kéo dài qua nhiều vòng
+  ("lặp 2 vòng"); chuỗi quãng 5 sinh mọi độ dài. Triệu chứng nếu lùi: hai lỗi trên quay lại (có test giữ). `moTaKhuc` dùng chung hai trang.
+- Số đo các thầy đổi theo (4ee3fd8 → nay): Linh Nhi phủ 155 → 164/605 (27%), chuỗi quãng 5 11 → 10/35 đoạn, 1–6–2–5 7 → 8/35; Cà Pháo phủ
+  175 → 189/380 (50%), Aeolian 9/29 (13 lần) → 8/29 (12 lần) — "Để Em Rời Xa · verse" nay đọc i–iv–v thay một lần ♭VI–♭VII–i chồng lên
+  nó; verse Người Hãy Quên Em Đi nay là hai lượt vòng quãng 5 i…V (chen iv), không còn "một chuỗi 12 hợp âm"; Blues phủ 72 → 77/216. Lời
+  đọc kết quả (`LOI_TONG_HOP`) viết lại theo số mới, test giữ.
+- Sự cố tự gây: sửa `ReharmHome.tsx` bằng python (text mode trên Windows) làm cả file thành CRLF trong thư mục làm việc →
+  `caPhaoFullSolo.test.ts` (đọc nguyên văn mã nguồn) hỏng. Đã đổi về LF; kho không bị ảnh hưởng (index LF). Ghi vào bộ nhớ.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi (9 cảnh báo cũ của ReharmHome) · `nhanVong.test.ts` 15 (mới: phủ tối ưu + vòng lặp kéo dài; cô đọng) ·
+toàn suite **2 683 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: trang Tái hòa âm 4/4 (bài thử Am–F–C–G ×2 / F–G–Em–Am–
+Dm7–G7–Cmaj7, sau tái hòa âm → vòng trục bắt đầu từ vi lặp 2 vòng · Royal Road · ii–V–I, phủ 15/15), tab Tái hòa âm vòng 18/18 ·
+`LuyenTap.json`, `Nguon.json` không đổi.

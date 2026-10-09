@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Hop } from './giaiThich'
-import { docBacMau, hopCuaMau, hopDoan, laMa, LOI_TONG_HOP, MAU_VONG, nhanVong, tongHop, type BaiSheet } from './nhanVong'
+import { parseChordToken } from '../../reharm/input/chordInputParser'
+import type { ParsedChord } from '../../reharm/types'
+import { coDong, docBacMau, hopCuaMau, hopDoan, laMa, LOI_TONG_HOP, MAU_VONG, nhanVong, tongHop, type BaiSheet } from './nhanVong'
 import vongSheet from './vongSheet.json'
 
 const H = (s: string): Hop[] => s.split(' ').map((t) => docBacMau(t).hop)
@@ -55,6 +57,14 @@ describe('nhanVong — nhận vòng phổ biến', () => {
     expect(nhanVong(H('I V VI IV'), false)).toEqual([])
   })
 
+  it('vòng lặp kéo dài thành một khúc; phủ tối ưu chứ không tham khúc dài (hai lỗi chạy thử trang Tái hòa âm tìm ra)', () => {
+    expect(nhanVong(H('vi IV I V vi IV I V'), false)).toMatchObject([{ id: 'truc', tu: 0, den: 7, xoay: 2 }])
+    expect(nhanVong(H('IV V iii vi ii V I'), false)).toMatchObject([
+      { id: 'royal', tu: 0, den: 3 },
+      { id: 'ii-v-i', tu: 4, den: 6 },
+    ])
+  })
+
   it('khung 12 ô gộp ô lặp: I7 IV7 I7 V7 IV7 I7', () => {
     expect(nhanVong(H('I7 IV7 I7 V7 IV7 I7'), false)).toMatchObject([{ id: 'blues-12', tu: 0, den: 5 }])
   })
@@ -81,14 +91,21 @@ describe('vòng trong sheet các thầy (vongSheet.json)', () => {
     const t = (k: string) => tongHop(sheet[k]!)
     const dong = (k: string, id: string) => t(k).theoMau.find((m) => m.id === id)!
     const ln = t('linh-nhi')
-    expect([ln.phu, ln.soHop, ln.soDoan, dong('linh-nhi', 'quang-5').doan, dong('linh-nhi', 'ba-chinh-thu').doan, dong('linh-nhi', '1625').doan]).toEqual([155, 605, 35, 11, 11, 7])
-    expect(dong('linh-nhi', 'just-two').lan).toBe(3)
-    expect(LOI_TONG_HOP['linh-nhi']).toContain('155/605 hợp âm (26%)')
+    expect([ln.phu, ln.soHop, ln.soDoan, dong('linh-nhi', 'ba-chinh-thu').doan, dong('linh-nhi', 'quang-5').doan, dong('linh-nhi', '1625').doan]).toEqual([164, 605, 35, 11, 10, 8])
+    expect(LOI_TONG_HOP['linh-nhi']).toContain('164/605 hợp âm (27%)')
+    const duongXua = nhanVong(hopDoan(sheet['linh-nhi']!.find((b) => b.bai === 'Duong Xua Loi Cu')!.doan.find((d) => d.ten === 'chorus')!), false)
+    expect(duongXua.some((k) => k.id === 'just-two') && duongXua.some((k) => k.id === 'ba-chinh-thu' && k.songSong)).toBe(true)
     const cp = t('ca-phao')
-    expect([cp.phu, cp.soHop, cp.soDoan, dong('ca-phao', 'aeolian').doan, dong('ca-phao', 'aeolian').lan]).toEqual([175, 380, 29, 9, 13])
-    expect(LOI_TONG_HOP['ca-phao']).toContain('175/380 hợp âm (46%)')
+    expect([cp.phu, cp.soHop, cp.soDoan, dong('ca-phao', 'aeolian').doan, dong('ca-phao', 'aeolian').lan]).toEqual([189, 380, 29, 8, 12])
+    expect(LOI_TONG_HOP['ca-phao']).toContain('189/380 hợp âm (50%)')
     const quen = sheet['ca-phao']!.find((b) => b.bai === 'Người hãy quên em đi')!.doan[0]!
-    expect(nhanVong(hopDoan(quen), true)[0]).toMatchObject({ id: 'quang-5', ten: 'Chuỗi quãng 5 — 12 hợp âm' })
+    const hq = hopDoan(quen)
+    const verse = nhanVong(hq, true)
+    expect(verse.map((k) => [k.ten, k.chen.length, hq[k.tu]!.goc])).toEqual([
+      ['Chuỗi quãng 5 — 7 hợp âm', 1, 0],
+      ['Chuỗi quãng 5 — 7 hợp âm', 1, 0],
+    ])
+    expect(verse.map((k) => laMa(hq[k.den - 1]!))).toEqual(['ii°', 'II'])
     const chua = sheet['ca-phao']!.find((b) => b.bai.startsWith('Chưa Bao Giờ'))!.doan.find((d) => d.ten === 'prechorus')!
     expect(nhanVong(hopDoan(chua), true).map((k) => k.id)).toContain('royal')
     expect([dong('blues', 'ba-chinh').doan, dong('blues', 'ba-chinh').lan, dong('blues', 'quay-dau-giam').lan, dong('blues', 'rising-sun').lan]).toEqual([2, 10, 3, 2])
@@ -103,3 +120,15 @@ describe('vòng trong sheet các thầy (vongSheet.json)', () => {
     expect([coDuoi('Dung Xa Em Dem Nay'), coDuoi('Mot Coi Di Ve')]).toEqual([true, true])
   })
 })
+
+describe('coDong — cô đọng hợp âm đã tái hòa âm (trang Tái hòa âm)', () => {
+  const doc = (t: string) => parseChordToken(t) as ParsedChord
+  it('bỏ hợp âm lướt, gộp liền nhau cùng gốc cùng họ, gốc tính từ chủ âm; khác họ thì giữ', () => {
+    const ds = [doc('Am7'), doc('Am9'), { ...doc('G#dim7'), passing: true }, doc('Fmaj7'), doc('F/G'), doc('G7'), doc('Gsus4'), doc('Gm')]
+    const r = coDong(ds, 0)
+    expect(r.map((x) => x.ten)).toEqual(['Am7', 'Fmaj7', 'G7', 'Gm'])
+    expect(r[0]!.hop).toEqual({ goc: 9, chat: 'm7' })
+    expect(nhanVong(coDong([doc('Am7'), doc('Fmaj7'), doc('C'), doc('G7')], 0).map((x) => x.hop), false)).toMatchObject([{ id: 'truc', xoay: 2 }])
+  })
+})
+
