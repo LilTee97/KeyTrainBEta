@@ -470,6 +470,25 @@ công cụ "vòng + lựa chọn thay" (`VongLuaChon`, `soanCau/thayTrongVong.ts
 gam) ở tab Tái hòa âm vòng và Phần 2 của tab thầy (Phần 2 nay mở cho cả Cà Pháo, Blues — vòng sẵn từ nút đã duyệt). **Chờ người dùng
 dùng thử.** Kế tiếp: bước 4.
 
+#### Bổ sung 9/10/2026 — người dùng: dạy bấm như thầy · vòng trong sheet · nhận vòng ở tab Tái hòa âm · tab Chồng hợp âm
+
+Người dùng: *"Tab tái hòa âm vòng: Hãy cho thêm tính năng dạy bấm hợp âm như từng thầy. Hãy phân tích cách các thầy xếp ngón khi bấm các
+hợp âm và khi chuyển hợp âm thì từng thầy đã xếp ngón thế nào … Nhớ phân tích luôn cách các thầy dùng các thế đảo và slash chord hoặc bất
+cứ kỹ thuật bấm hợp âm nào … Hãy phân tích các vòng hợp âm trong các sheet của từng thầy rồi cố gắng tổng hợp lại xem nó là vòng nào trong
+các vòng hợp âm phổ biến trong âm nhạc. Sau đó đưa vào tab để tôi có cái đánh theo. Hãy làm thêm chức năng tự nhập vòng hợp âm để đánh
+theo. Trong tab Tái hòa âm sau khi tái hòa âm từ lời bài hát thì cũng hãy cố gắng phân tích và cô đọng hợp âm lại xem chúng thuộc vòng nào
+trong các vòng hòa thanh trong âm nhạc. Tab chồng hợp âm: … hợp âm đó phải to rõ và hiện ở giữa phía trái hoặc phải trên đầu phím đàn …
+Các hợp âm phải được chọn tự do …"*
+
+- **Tab Chồng hợp âm — xong 9/10/2026:** tên hai tay to, đặt giữa trên vùng phím của từng tay; hợp âm tổng to dưới bàn phím
+  (`BanPhimHaiTay`); chọn tự do mọi gốc × 37 loại hợp âm (`chongTuDo` — có công thức chồng thì theo, không thì hợp âm chồng trên trong
+  hợp âm, lối chung của Claude); kho đố "Mọi hợp âm".
+- **Vòng trong sheet → vòng phổ biến · đánh theo · tự nhập** — làm tiếp.
+- **Nhận vòng ở trang Tái hòa âm** — dùng lại bộ nhận vòng ở trên.
+- **Thế bấm và cách chuyển hợp âm của từng thầy** — đây là bước 5 cũ ("Chuyển hợp âm của thầy"), mở cho cả ba thầy. **Giới hạn nói trước:**
+  21 sheet Cà Pháo · Linh Nhi · Blues không ghi số ngón (0 dấu `<fingering>`; chỉ Boogie Woogie có 37) — nên đo được THẾ BẤM (tay nào bấm
+  nốt nào, thế đảo, slash chord, khoảng cách, nốt giữ / đi liền bậc khi chuyển), còn số ngón là Claude đề xuất từ thế bấm đo được.
+
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
    chưa đo) → đưa loại hay đặt nhất + phương án 2, kèm số lần. Cột lý thuyết thì ra một đáp án.

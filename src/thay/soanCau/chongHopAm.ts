@@ -1,3 +1,5 @@
+import { bestUpperStructure } from '../../reharm/reharmEngine/staticVoicingRules'
+import { CHORD_QUALITIES, chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { kieuDau } from '../vongThay'
@@ -409,3 +411,74 @@ export const KHI_CHON: Readonly<Record<string, string>> = {
   '7b5': 'Át có ♭5 — xẵng, lạ; trùng nốt với ♭II7 (thay tam cung). Dùng khi muốn bass hay bè đi nửa cung; tiết chế.',
   '13b9#11': 'Át "đủ màu" của Jeff: căng nhất mà về vẫn đẹp — V trước I trong ii – V – I kiểu jazz. Ở bolero mộc thì quá tay.',
 }
+
+
+/* ---------------- Thế chồng hai tay đã dựng — cho mọi hợp âm (người dùng 9/10/2026) ---------------- */
+
+/** Một thế chồng hai tay đã dựng: tên tổng, nốt hai tay (MIDI), nhãn; `ct` khi dựng từ công thức chồng. */
+export interface Chong {
+  goc: number
+  trai: number[]
+  phai: number[]
+  nhan: ReturnType<typeof nhanHaiTay>
+  ct?: CongThuc
+}
+
+export function chongCongThuc(ct: CongThuc, gocPc: number, gocTen: string, style: AccidentalStyle, daoDuoi = 0, daoTren = 0): Chong {
+  const b = theBamChong(ct, gocPc, daoDuoi, daoTren)
+  return { goc: pc(gocPc), trai: b.trai, phai: b.phai, nhan: nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren), ct }
+}
+
+/** Ký hiệu của bộ hợp âm app ↔ ký hiệu công thức chồng (khác cách viết, cùng nốt). */
+const BIET_DANH: Record<string, string> = { '6/9': '69', 'm(add9)': 'madd9', 'm(maj7)': 'mMaj7', add2: 'add9' }
+
+/**
+ * Thế chồng hai tay cho MỌI hợp âm của app — người dùng 9/10/2026: "Các hợp âm phải được chọn tự do chứ ko chỉ gói gọn trong khung các
+ * thầy … (như các hợp âm trưởng, thứ...)". Có công thức chồng thì theo công thức; không có thì tay phải bấm hợp âm chồng trên đơn giản
+ * nhất nằm trọn trong hợp âm (`bestUpperStructure` — ưu tiên dựng trên bậc 7, như tài liệu đệm hát), tay trái giữ gốc cộng nốt còn
+ * thiếu; hợp âm ba trơn (không có tầng trên nào đơn giản hơn) thì tay phải bấm cả hợp âm, tay trái giữ gốc. Lối này là lý thuyết chung
+ * (Claude), không phải thế bấm đo từ sheet.
+ */
+export function chongTuDo(gocPc: number, qualityId: string, style: AccidentalStyle): Chong | null {
+  const q = getChordQuality(qualityId)
+  if (!q) return null
+  const g = pc(gocPc)
+  const gocTen = pitchClassName(g, style)
+  const ct = CONG_THUC.find((c) => c.kyHieu === (BIET_DANH[q.symbol] ?? q.symbol))
+  if (ct) return chongCongThuc(ct, g, gocTen, style)
+  let bass = 48 + g
+  if (bass > 54) bass -= 12
+  const pcs = chordPitchClasses(g, q)
+  const tren = bestUpperStructure({ root: g, quality: q, symbol: '', source: '' })
+  const qTren = tren ? getChordQuality(tren.upperQualityId) : undefined
+  const pcsTren = tren && qTren ? chordPitchClasses(tren.upperRoot, qTren) : pcs
+  const thieu = pcs.filter((p) => p !== g && !pcsTren.includes(p))
+  const trai = [bass, ...thieu.map((p) => bass + pc(p - g))].sort((a, b) => a - b)
+  const gocTren = tren && qTren ? tren.upperRoot : g
+  let r = gocTren
+  while (r <= Math.max(...trai)) r += 12
+  while (r - 12 > Math.max(...trai)) r -= 12
+  const phai = (qTren ?? q).intervals.map((iv) => r + iv)
+  const tenNot = (m: number) => vn(pitchClassName(pc(m), style))
+  return {
+    goc: g,
+    trai,
+    phai,
+    nhan: {
+      trai: trai.map(tenNot).join(' – '),
+      traiPhu: thieu.length ? 'gốc + nốt hợp âm còn thiếu' : 'gốc',
+      phai: `${gocDep(pitchClassName(gocTren, style))}${hauDep(tren && qTren ? qTren.symbol : q.symbol)}`,
+      phaiPhu: phai.map(tenNot).join(' – '),
+      tong: `${gocDep(gocTen)}${hauDep(q.symbol)}`,
+    },
+  }
+}
+
+/** Cách ghi dấu cho tên nốt của một hợp âm — theo giọng của chính hợp âm (A7♯9 có Đô♯, Dm có Si♭), như `kieuDau`. */
+export function kieuCuaHop(gocPc: number, qualityId: string): AccidentalStyle {
+  const k = getChordQuality(qualityId)?.symbol ?? ''
+  return kieuDau(pc(gocPc), (k.startsWith('m') && !k.startsWith('maj')) || k.startsWith('dim'))
+}
+
+/** Các loại hợp âm chọn tự do — toàn bộ bộ hợp âm của app. */
+export const LOAI_TU_DO = CHORD_QUALITIES.map((q) => ({ id: q.id, kyHieu: q.symbol, ten: q.label }))

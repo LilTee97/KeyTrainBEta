@@ -5983,3 +5983,23 @@ chơi và sẽ biến vòng đó theo hướng nào."* Chốt 9/10: gộp với 
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `thayTrongVong.test.ts` 7 (lựa chọn đúng nhạc lý ở Đô trưởng / La thứ, câu tính đúng nốt, lời đủ,
 đọc vòng) · toàn suite **2 662 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: C → D7 có lời "Bass: Fa → Rê → Sol … Fa♯ →
 Sol", ▶ ra tiếng, tự điền, G7 trước C có D♭7 và treo, Phần 2 Linh Nhi / Cà Pháo đúng — 12/12 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: tab Chồng hợp âm — tên hai tay to trên vùng phím, chọn hợp âm tự do (9/10/2026)
+
+**Người dùng:** *"Khi cho hợp âm của tay trái hoặc phải thì hợp âm đó phải to rõ và hiện ở giữa phía trái hoặc phải trên đầu phím đàn.
+hợp âm tổng phía dưới cũng phải to rõ … Các hợp âm phải được chọn tự do chứ ko chỉ gói gọn trong khung các thầy, còn rất nhiều hợp âm
+tôi ko chọn hoặc ko tập được (như các hợp âm trưởng, thứ...)"*.
+
+- `BanPhimHaiTay.tsx` (mới): tên tay trái / tay phải cỡ 2xl, khung màu, đặt ngay trên tâm các phím của tay ấy (tính từ `buildKeyboardLayout`;
+  gần nhau quá thì đẩy ra hai bên); "Hợp âm tổng" cỡ 4xl dưới bàn phím; đang đố thì ẩn.
+- `chongHopAm.ts`: `Chong` (thế chồng đã dựng), `chongCongThuc`, `chongTuDo` — mọi loại hợp âm của app (37): có công thức chồng thì theo
+  công thức; không có thì tay phải = hợp âm chồng trên đơn giản nhất nằm trọn trong hợp âm (`bestUpperStructure`, ưu tiên bậc 7), tay trái
+  = gốc + nốt còn thiếu; hợp âm ba trơn thì tay phải bấm cả hợp âm. `kieuCuaHop`: ghi dấu theo giọng của chính hợp âm (A7♯9 có Đô♯ —
+  lần đầu ra "Rê♭", sửa). `LOAI_TU_DO`.
+- `SoanCau.ChongHopAm`: dòng "Tự chọn" (gốc × loại); ô thông tin ghi rõ khi thế bấm là lối chung của Claude; phần đố thêm kho "Công thức
+  chồng · Mọi hợp âm" (ba dạng đầu; tìm màu vẫn theo công thức); đố và chấm chạy trên `Chong`.
+- `KE-HOACH`: mục "Bổ sung 9/10/2026" — bốn ý mới của người dùng và giới hạn nói trước: sheet không ghi số ngón (0/21).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 15 (3 mới: hợp âm ba, theo công thức, đủ nốt + bass là gốc cho 37 loại × 3 gốc) ·
+toàn suite **2 665 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: tên tay trái bên trái / tay phải bên phải cỡ 24px, tổng
+36px, tự chọn Am và A7♯9 đúng, đố kho "Mọi hợp âm" bấm đúng → "Đúng" — 7/7 đạt · `LuyenTap.json`, `Nguon.json` không đổi.

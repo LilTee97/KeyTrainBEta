@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
+import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import {
+  chongTuDo,
   CONG_THUC,
   DO_DUOC,
   KHI_CHON,
+  LOAI_TU_DO,
   mauCuaHo,
   nhanHaiTay,
   nhanMau,
@@ -145,5 +147,35 @@ describe('Trang Hợp âm — chấm đố chồng hợp âm (bước B)', () =>
 describe('Tab Hợp âm màu — mỗi màu có lời "khi nào nên chọn" (người dùng 8/10/2026)', () => {
   it('đủ 26 công thức, mỗi lời đủ dài để nói khi nào', () => {
     for (const c of CONG_THUC) expect((KHI_CHON[c.id] ?? '').length, c.id).toBeGreaterThan(40)
+  })
+})
+
+describe('Chọn hợp âm tự do — thế chồng hai tay cho mọi hợp âm của app (người dùng 9/10/2026)', () => {
+  const lop = (ds: readonly number[]) => [...new Set(ds.map((m) => ((m % 12) + 12) % 12))].sort((a, b) => a - b)
+  it('hợp âm ba trơn: tay trái gốc, tay phải bấm cả hợp âm', () => {
+    const c = chongTuDo(0, 'maj', 'sharp')!
+    expect(c.nhan).toMatchObject({ trai: 'Đô', traiPhu: 'gốc', phai: 'C', tong: 'C' })
+    expect(lop(c.phai)).toEqual([0, 4, 7])
+    expect(Math.min(...c.phai)).toBeGreaterThan(Math.max(...c.trai))
+    expect(chongTuDo(9, 'min', 'sharp')!.nhan).toMatchObject({ phai: 'Am', tong: 'Am' })
+  })
+
+  it('có công thức chồng thì theo công thức (Fm11 = Fm + E♭)', () => {
+    expect(chongTuDo(5, 'm11', 'flat')!.nhan).toMatchObject({ trai: 'Fm', phai: 'E♭', tong: 'Fm11' })
+  })
+
+  it('không có công thức: tay phải là hợp âm chồng trên nằm trọn trong hợp âm, tay trái gốc + nốt thiếu — đủ nốt của hợp âm', () => {
+    for (const q of LOAI_TU_DO) {
+      for (const g of [0, 7, 10]) {
+        const c = chongTuDo(g, q.id, 'flat')!
+        expect(c, `${g} ${q.id}`).toBeTruthy()
+        const can = lop(chordPitchClasses(g, getChordQuality(q.id)!))
+        const co = lop([...c.trai, ...c.phai])
+        expect(((c.trai[0]! - g) % 12 + 12) % 12, `${g}${q.kyHieu}: bass phải là gốc`).toBe(0)
+        // Đi qua công thức chồng thì nốt đã kiểm ở PHAI_RA (công thức mở rộng bỏ bậc 5, 13 bỏ cả 9). Nhánh tự dựng: đủ mọi nốt, trừ bậc 5.
+        if (c.ct) continue
+        expect(can.every((p) => co.includes(p) || p === (g + 7) % 12), `${g}${q.kyHieu}: thiếu nốt`).toBe(true)
+      }
+    }
   })
 })

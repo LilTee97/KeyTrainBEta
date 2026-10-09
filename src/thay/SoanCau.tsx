@@ -5,22 +5,23 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
+import type { AccidentalStyle } from '../shared/musicTheory/types'
 import type { LuotTap } from '../shared/persistence/db'
 import {
+  chongCongThuc,
+  chongTuDo,
   CONG_THUC,
+  kieuCuaHop,
   DO_DUOC,
   gocDep,
   hauDep,
   HO_MAU,
   mauCuaHo,
-  nhanHaiTay,
   nhanMau,
-  pcsDuoi,
-  pcsTong,
-  pcsTren,
   soThe,
   tenTrongGiong,
-  theBamChong,
+  LOAI_TU_DO,
+  type Chong,
   type CongThuc,
   type HoMau,
 } from './soanCau/chongHopAm'
@@ -43,6 +44,7 @@ import {
   xepNot,
   type DuLieuSoanCau,
 } from './soanCau/soanCau'
+import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
 import { GOC, kieuDau, vongMau } from './vongThay'
@@ -417,6 +419,9 @@ const DANG_DO: readonly { id: DangDo; ten: string }[] = [
   { id: 'mau', ten: 'Cho hợp âm gốc → tìm màu' },
 ]
 const ngauNhien = <T,>(ds: readonly T[]) => ds[Math.floor(Math.random() * ds.length)]!
+/** Gốc đặt ngẫu nhiên gọi theo `GOC` (C♯, E♭, F♯, A♭, B♭). */
+const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
+const lopCao = (ds: readonly number[]) => [...new Set(ds.map((m) => ((m % 12) + 12) % 12))]
 
 /**
  * CHỒNG HỢP ÂM (Stack, Jeff Schneider) — người dùng 4/10/2026. Chọn công thức → thấy hai tầng ở giọng đang chọn (hoặc gốc tự chọn —
@@ -433,10 +438,14 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const [gocTu, setGocTu] = useState<number | null>(null)
   const [daoDuoi, setDaoDuoi] = useState(0)
   const [daoTren, setDaoTren] = useState(0)
+  /* Chọn tự do — người dùng 9/10/2026: "Các hợp âm phải được chọn tự do chứ ko chỉ gói gọn trong khung các thầy". null = đang xem công
+     thức chồng. */
+  const [tuDo, setTuDo] = useState<{ goc: number; q: string } | null>(null)
   /* Đố — bốn dạng (người dùng 8/10/2026: "Cho hợp âm rồi hỏi thế bấm chồng 2 tay, cho biết một bên tay rồi hỏi tay còn lại bấm gì để ra
-     được hợp âm tổng. Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó"). */
+     được hợp âm tổng. Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó"); kho đố: công thức chồng, hay mọi hợp âm của app (9/10). */
   const [dang, setDang] = useState<DangDo>('tren')
-  const [cau, setCau] = useState<{ ct: CongThuc; goc: number } | null>(null)
+  const [kho, setKho] = useState<'ct' | 'moi'>('ct')
+  const [cau, setCau] = useState<Chong | null>(null)
   const [ho, setHo] = useState<{ nhom: HoMau; goc: number; tim: readonly string[]; vua: CongThuc | null } | null>(null)
   const [kq, setKq] = useState<'dang' | 'dung' | 'xem'>('dang')
   const [go, setGo] = useState('')
@@ -447,7 +456,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const viDu = thu ? ct.viDu.thu : ct.viDu.truong
   const goc = gocTu ?? (tonic + viDu) % 12
   const gocTen = gocTu === null ? tenTrongGiong(tonic, thu, viDu) : GOC[gocTu]!
-  const bam = theBamChong(ct, goc, daoDuoi, daoTren)
+  const dangXem: Chong = (tuDo && chongTuDo(tuDo.goc, tuDo.q, kieuCuaHop(tuDo.goc, tuDo.q))) || chongCongThuc(ct, goc, gocTen, style, daoDuoi, daoTren)
   const thoiDo = () => {
     setCau(null)
     setHo(null)
@@ -456,6 +465,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
     setId(x)
     setDaoDuoi(0)
     setDaoTren(0)
+    setTuDo(null)
     thoiDo()
   }
   const choi = async (not: readonly number[]) => {
@@ -475,7 +485,11 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       return
     }
     setHo(null)
-    setCau({ ct: ngauNhien(d === 'duoi' ? CONG_THUC.filter((c) => c.duoi[0]!.length >= 2) : DO_DUOC), goc: g })
+    setCau(
+      kho === 'moi'
+        ? ((q) => chongTuDo(g, q, kieuCuaHop(g, q))!)(ngauNhien(LOAI_TU_DO).id)
+        : chongCongThuc(ngauNhien(d === 'duoi' ? CONG_THUC.filter((c) => c.duoi[0]!.length >= 2) : DO_DUOC), g, GOC[g]!, kieuGoc(g)),
+    )
   }
   const doiDang = (d: DangDo) => {
     setDang(d)
@@ -488,7 +502,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const timThay = (r: CongThuc) => setHo((x) => (x && !x.tim.includes(r.id) ? { ...x, tim: [...x.tim, r.id], vua: r } : x))
   const held = useMidiStore((state) => state.heldNotes)
   useEffect(() => {
-    if (kq !== 'dang' || held.length < 2) return
+    if (kq !== 'dang' || held.length === 0) return
     const bassLaGoc = (g: number) => (Math.min(...held) - g + 120) % 12 === 0
     if (dang === 'mau') {
       const r = ho && held.length >= 3 && bassLaGoc(ho.goc) ? nhanMau(held, ho.goc, ho.nhom) : null
@@ -498,22 +512,26 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
     if (!cau) return
     const ok =
       dang === 'tren'
-        ? held.length >= 3 && dungHopAm(held, pcsTren(cau.ct, cau.goc))
+        ? held.length >= 3 && dungHopAm(held, lopCao(cau.phai))
         : dang === 'duoi'
-          ? dungHopAm(held, pcsDuoi(cau.ct, cau.goc))
-          : bassLaGoc(cau.goc) && dungHopAm(held, pcsTong(cau.ct, cau.goc))
+          ? dungHopAm(held, lopCao(cau.trai))
+          : bassLaGoc(cau.goc) && dungHopAm(held, lopCao([...cau.trai, ...cau.phai]))
     if (ok) dung()
   }, [held, cau, ho, dang, kq])
-  const cauTen = cau ? `${gocDep(GOC[cau.goc]!)}${hauDep(cau.ct.kyHieu)}` : ''
-  const nhanCau = cau ? nhanHaiTay(cau.ct, GOC[cau.goc]!, style) : null
+  const nhanCau = cau?.nhan ?? null
   const tenGocHo = ho ? `${gocDep(GOC[ho.goc]!)}${HO_MAU.find((x) => x.nhom === ho.nhom)!.hau}` : ''
   const tenMau = (c: CongThuc) => (ho ? `${gocDep(GOC[ho.goc]!)}${hauDep(c.kyHieu)}` : '')
   const dangDo = cau !== null || ho !== null
-  /* Bàn phím và nhãn hai tay: không đố → công thức đang xem; đang đố → tắt gợi ý; trả lời xong → thế bấm của câu đố; đố màu → màu vừa
-     tìm được. Nhãn đi theo đúng thứ đang sáng, nên đang đố thì ẩn — không lộ đáp án. */
-  const xem = ho ? (ho.vua ? { ct: ho.vua, goc: ho.goc } : null) : cau && kq !== 'dang' ? cau : null
-  const hien = !dangDo ? bam : xem ? theBamChong(xem.ct, xem.goc) : null
-  const nhan = !dangDo ? nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren) : xem ? nhanHaiTay(xem.ct, GOC[xem.goc]!, style) : null
+  /* Bàn phím và tên hai tay: không đố → hợp âm đang xem; đang đố → tắt gợi ý; trả lời xong → thế bấm của câu đố; đố màu → màu vừa
+     tìm được. Tên đi theo đúng thứ đang sáng, nên đang đố thì ẩn — không lộ đáp án. */
+  const xem: Chong | null = ho
+    ? ho.vua
+      ? chongCongThuc(ho.vua, ho.goc, GOC[ho.goc]!, kieuGoc(ho.goc))
+      : null
+    : cau && kq !== 'dang'
+      ? cau
+      : null
+  const hien = !dangDo ? dangXem : xem
   const dapAn = nhanCau ? `tay trái ${nhanCau.trai} (${nhanCau.traiPhu}) + tay phải ${nhanCau.phai} (${nhanCau.phaiPhu})` : ''
   const traLoi = () => {
     if (kq !== 'dang') return
@@ -532,8 +550,8 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       )
     } else if (cau) {
       const trai = docTay(go)
-      const traiDung = trai.some((x) => cungTap(x, pcsDuoi(cau.ct, cau.goc)))
-      const phai = dang === 'duoi' ? 'dung' : traLoiTen(dang === 'tong' ? go2 : go, pcsTren(cau.ct, cau.goc))
+      const traiDung = trai.some((x) => cungTap(x, lopCao(cau.trai)))
+      const phai = dang === 'duoi' ? 'dung' : traLoiTen(dang === 'tong' ? go2 : go, lopCao(cau.phai))
       if (dang === 'tren' ? phai === 'dung' : dang === 'duoi' ? traiDung : traiDung && phai === 'dung') dung()
       else if (dang === 'tren') setBao(phai === 'khong-doc' ? `Chưa đọc được "${go}" — gõ như C, Dbm, Bdim, Eb+` : `${go} — chưa đúng`)
       else if (dang === 'duoi') setBao(trai.length ? `${go} — chưa đúng` : `Chưa đọc được "${go}" — gõ tên hợp âm (Fm) hay các nốt (F Ab C)`)
@@ -571,57 +589,120 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
           <div key={nhom} className="flex flex-wrap items-center gap-1">
             <span className="w-28 text-xs text-dim">{nhom}</span>
             {CONG_THUC.filter((c) => c.nhom === nhom).map((c) => (
-              <button key={c.id} type="button" onClick={() => chonCt(c.id)} className={nut(id === c.id)}>
+              <button key={c.id} type="button" onClick={() => chonCt(c.id)} className={nut(!tuDo && id === c.id)}>
                 {hauDep(c.kyHieu)}
                 {c.nguon === 'jeff' && ' · Jeff'}
               </button>
             ))}
           </div>
         ))}
-      </div>
-
-      <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-lg text-amber-key">
-            {gocDep(gocTen)}
-            {hauDep(ct.kyHieu)}
-          </span>
-          <span className="text-dim">gốc</span>
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="w-28 text-xs text-dim">Tự chọn</span>
           <select
-            value={gocTu ?? ''}
-            onChange={(event) => setGocTu(event.target.value === '' ? null : Number(event.target.value))}
+            value={tuDo?.goc ?? goc}
+            onChange={(event) => {
+              setTuDo({ goc: Number(event.target.value), q: tuDo?.q ?? 'maj' })
+              thoiDo()
+            }}
             className={chonClass}
-            aria-label="Gốc hợp âm"
+            aria-label="Gốc hợp âm tự chọn"
           >
-            <option value="">theo giọng</option>
             {GOC.map((g, i) => (
               <option key={g} value={i}>
                 {g}
               </option>
             ))}
           </select>
-          <span className="text-dim">Thầy dùng: {ct.thay.length ? ct.thay.join(' · ') : 'chưa thấy trong sheet các thầy'}</span>
+          <select
+            value={tuDo?.q ?? ''}
+            onChange={(event) => {
+              setTuDo({ goc: tuDo?.goc ?? goc, q: event.target.value })
+              thoiDo()
+            }}
+            className={chonClass}
+            aria-label="Loại hợp âm tự chọn"
+          >
+            <option value="" disabled>
+              — mọi loại hợp âm —
+            </option>
+            {LOAI_TU_DO.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.kyHieu ? hauDep(x.kyHieu) : 'trưởng'} · {x.ten}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-dim">gốc nào, loại nào cũng được — kể cả hợp âm ba trưởng, thứ</span>
         </div>
-        <p className="text-cream/85">
-          <span className="text-dim">Quan hệ tay phải với gốc: </span>
-          {ct.quanHe}
-        </p>
-        <p className="mt-1 text-cream/85">
-          <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>
-          {ct.viSao}
-        </p>
-        <p className="mt-1 text-dim">Nguồn: {ct.nguon === 'jeff' ? 'Jeff Schneider (video)' : 'Claude suy ra cùng nguyên tắc'}</p>
+      </div>
+
+      <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
+        {tuDo ? (
+          <>
+            <p className="mb-2 font-mono text-lg text-amber-key">{dangXem.nhan.tong}</p>
+            {dangXem.ct ? (
+              <>
+                <p className="text-cream/85">
+                  <span className="text-dim">Có công thức chồng — quan hệ tay phải với gốc: </span>
+                  {dangXem.ct.quanHe}
+                </p>
+                <p className="mt-1 text-cream/85">
+                  <span className="text-dim">Vì sao: </span>
+                  {dangXem.ct.viSao}
+                </p>
+              </>
+            ) : (
+              <p className="text-cream/85">
+                Không có công thức chồng riêng: tay phải bấm hợp âm chồng trên đơn giản nhất nằm trọn trong hợp âm (ưu tiên dựng trên bậc 7 —
+                như tài liệu đệm hát), tay trái giữ gốc và nốt còn thiếu; hợp âm ba trơn thì tay phải bấm cả hợp âm. Đây là lối chung của
+                Claude, chưa phải thế bấm đo từ sheet các thầy.
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <span className="font-mono text-lg text-amber-key">
+                {gocDep(gocTen)}
+                {hauDep(ct.kyHieu)}
+              </span>
+              <span className="text-dim">gốc</span>
+              <select
+                value={gocTu ?? ''}
+                onChange={(event) => setGocTu(event.target.value === '' ? null : Number(event.target.value))}
+                className={chonClass}
+                aria-label="Gốc hợp âm"
+              >
+                <option value="">theo giọng</option>
+                {GOC.map((g, i) => (
+                  <option key={g} value={i}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+              <span className="text-dim">Thầy dùng: {ct.thay.length ? ct.thay.join(' · ') : 'chưa thấy trong sheet các thầy'}</span>
+            </div>
+            <p className="text-cream/85">
+              <span className="text-dim">Quan hệ tay phải với gốc: </span>
+              {ct.quanHe}
+            </p>
+            <p className="mt-1 text-cream/85">
+              <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>
+              {ct.viSao}
+            </p>
+            <p className="mt-1 text-dim">Nguồn: {ct.nguon === 'jeff' ? 'Jeff Schneider (video)' : 'Claude suy ra cùng nguyên tắc'}</p>
+          </>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void choi(bam.trai)} className={nut(false)}>
+          <button type="button" onClick={() => void choi(dangXem.trai)} className={nut(false)}>
             ▶ Tay trái
           </button>
-          <button type="button" onClick={() => void choi(bam.phai)} className={nut(false)}>
+          <button type="button" onClick={() => void choi(dangXem.phai)} className={nut(false)}>
             ▶ Tay phải
           </button>
-          <button type="button" onClick={() => void choi([...bam.trai, ...bam.phai])} className={nut(false)}>
+          <button type="button" onClick={() => void choi([...dangXem.trai, ...dangXem.phai])} className={nut(false)}>
             ▶ Cả hai
           </button>
-          {ct.duoi.length > 1 && (
+          {!tuDo && ct.duoi.length > 1 && (
             <>
               <span className="ml-2 text-dim">Tay trái:</span>
               {ct.duoi.map((_, i) => (
@@ -631,7 +712,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
               ))}
             </>
           )}
-          {soThe(ct) > 1 && (
+          {!tuDo && soThe(ct) > 1 && (
             <>
               <span className="ml-2 text-dim">Tay phải:</span>
               {Array.from({ length: soThe(ct) }, (_, i) => (
@@ -644,40 +725,19 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
         </div>
       </div>
 
-      <div className="mb-1 grid min-h-9 grid-cols-2 gap-2 text-xs">
-        {nhan && (
-          <>
-            <p>
-              <span className="text-dim">Tay trái: </span>
-              <b className="font-mono text-base text-teal-key">{nhan.trai}</b> <span className="text-cream/70">({nhan.traiPhu})</span>
-            </p>
-            <p className="text-right">
-              <span className="text-dim">Tay phải: </span>
-              <b className="font-mono text-base text-amber-key">{nhan.phai}</b> <span className="text-cream/70">({nhan.phaiPhu})</span>
-            </p>
-          </>
-        )}
-      </div>
-      <OnScreenPiano
-        lowNote={36}
-        highNote={84}
-        leftHandNotes={hien?.trai ?? []}
-        rightHandNotes={hien?.phai ?? []}
-      />
-      <p className="mt-1 mb-3 min-h-7 text-center text-sm">
-        {nhan && (
-          <>
-            <span className="text-dim">Hợp âm tổng: </span>
-            <b className="font-mono text-lg text-cream">{nhan.tong}</b>
-          </>
-        )}
-      </p>
+      <BanPhimHaiTay trai={hien?.trai ?? []} phai={hien?.phai ?? []} nhan={hien?.nhan ?? null} />
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-cream">Đố</span>
           {DANG_DO.map((d) => (
             <button key={d.id} type="button" onClick={() => doiDang(d.id)} className={nut(dangDo && dang === d.id)}>
               {d.ten}
+            </button>
+          ))}
+          <span className="ml-2 text-dim">Kho:</span>
+          {(['ct', 'moi'] as const).map((k) => (
+            <button key={k} type="button" onClick={() => setKho(k)} className={nut(kho === k)} title="Áp cho ba dạng đầu; dạng tìm màu luôn theo công thức">
+              {k === 'ct' ? 'Công thức chồng' : 'Mọi hợp âm'}
             </button>
           ))}
           {dangDo && (
@@ -709,7 +769,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
         </div>
         {cau && nhanCau && (
           <p className="mt-2">
-            <span className="font-mono text-base text-amber-key">{cauTen}</span> —{' '}
+            <span className="font-mono text-base text-amber-key">{nhanCau.tong}</span> —{' '}
             {dang === 'tong' ? (
               'bấm cả hai tay (tay trái thấp, tay phải cao; bass là gốc), hoặc gõ tên từng tay.'
             ) : dang === 'tren' ? (
@@ -736,9 +796,9 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
                 </span>
               ))}
             </p>
-            {ho.vua && nhan && (
+            {ho.vua && hien && (
               <p className="text-cream/85">
-                <b className="text-teal-key">Tìm được {tenMau(ho.vua)}</b> = tay trái {nhan.trai} + tay phải {nhan.phai}. {ho.vua.viSao}
+                <b className="text-teal-key">Tìm được {tenMau(ho.vua)}</b> = tay trái {hien.nhan.trai} + tay phải {hien.nhan.phai}. {ho.vua.viSao}
               </p>
             )}
           </div>
