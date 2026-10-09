@@ -1,4 +1,5 @@
 import { BA, bangCongThuc, cachTimTayPhai, CONG_THUC, hauDep, KHUNG_TRAI, khungTrai, QUY_LUAT_CHAT } from './soanCau/chongHopAm'
+import { MEO_VANG, meoTheoKhung } from './soanCau/meoChong'
 
 const nutThu = 'rounded border border-line bg-white/4 px-2 py-0.5 text-[11px] text-dim hover:bg-white/8'
 
@@ -45,6 +46,30 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
         Học thuộc QUAN HỆ (tay phải đứng bậc mấy, trưởng hay thứ), không học tên nốt — đổi sang gốc khác chỉ việc đếm lại. Ví dụ: {cachTimTayPhai(viDu, 'F#', 'sharp')} Tay trái giữ
         khung Fa♯ – La♯ – Mi → ra F♯13♭9.
       </p>
+
+      <div className="mt-3 rounded-lg border border-teal-key/40 p-2">
+        <p className="font-semibold text-teal-key">Mẹo của gia sư — đếm phím từ gốc tay trái (cả phím đen)</p>
+        <ol className="mt-1 ml-5 list-decimal">
+          {MEO_VANG.map((m) => (
+            <li key={m}>{m}</li>
+          ))}
+        </ol>
+        {meoTheoKhung().map((k) => (
+          <div key={k.khung} className="mt-2">
+            <p className="text-cream">
+              Tay trái đã giữ <b className="text-teal-key">{k.ten}</b>:
+            </p>
+            <ul className="ml-3 flex flex-col gap-0.5">
+              {k.ds.map((d) => (
+                <li key={d.ct.id}>
+                  <b className="font-mono text-cream">C{hauDep(d.ct.kyHieu)}</b> — {d.meo}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <p className="mt-1 text-dim">Mẹo là lời gia sư (Claude) rút từ 26 công thức; mỗi câu có test kiểm trên công thức thật. Luyện mẹo ở tab Game công thức, bên "Luyện có mẹo".</p>
+      </div>
 
       <p className="mt-3 font-semibold text-cream">Quy luật 1 — tay phải đứng ở đâu thì thêm màu ấy</p>
       {theoViTri.map((v) => (

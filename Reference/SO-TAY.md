@@ -6165,3 +6165,26 @@ công thức chồng hợp âm này"* — ngoại lệ của luật "không lớ
 10/10 (giữ hợp âm 10 viên → 150 điểm = 5 × 10 + 5 × 20 combo; tạm dừng viên đứng yên; dừng → mở màn 2; chạm sai đủ nốt → "Chưa đúng",
 chạm đúng → 10; chọn tên đúng → 10; để viên chạm đáy → "Trượt" + cách đếm gam, còn 2 mạng; tổng kết có công thức cần ôn) · khổ điện thoại
 412 px: không cuộn ngang, nút chọn 48 px · `LuyenTap.json`, `Nguon.json` không đổi (game không ghi nhật ký lượt tập).
+
+## Bước — GĐ 3: mẹo chồng hợp âm của gia sư; game chia hai bên — luyện có mẹo · thi chấm đạt (9/10/2026)
+
+**Người dùng:** *"Trong vai gia sư Piano nhiều kinh nghiệm, bạn hãy phân tích những công thức và quy tắc rồi đưa ra các Mẹo chồng hợp âm
+dựa theo các gốc đã biết ở tay trái. Trong game công thức hãy mở khóa các level hợp âm nhưng chia làm hai bên. Một bên có các gợi ý và các
+mẹo để tôi dựa vào đó và suy ra các hợp âm cần tìm để chồng lên. Một bên là chơi ko mẹo nhưng có chấm điểm đạt cho từng level"*.
+
+- `soanCau/meoChong.ts` (mới): mẹo cốt lõi — tay phải luôn đứng cách GỐC TAY TRÁI một số phím cố định (đếm cả phím đen): `demPhim` (lên
+  2 · 3 · 4 · 7, lùi 1 · 2 · 3 · 4, cách 6), câu móc nhớ từng công thức (gốc Đô), `meoTheoKhung` (mẹo xếp theo khung tay trái đã biết), bảy
+  `MEO_VANG` (đếm phím; lùi 3 = hợp âm thứ song song → 6 / 13; lên 3 = trưởng song song → m7; cùng chỗ thứ êm / trưởng căng; lên 7 = bậc
+  V; lùi 2 = ♭VII → m11 / 9sus4; tăng và bảy giảm nhiều tên: A♭+ = C+, Edim7 = C♯dim7). `meoChong.test.ts`: mọi mẹo đối chiếu công thức
+  thật, câu móc gọi đúng tên tay phải app hiện (C13♭9♯11 tay phải là G♭m, móc ghi "G♭m (cũng là F♯m)").
+- `BangCongThuc.tsx`: thêm khung "Mẹo của gia sư" (bảy mẹo vàng + mẹo theo khung tay trái).
+- `gameChong.ts`: bỏ ba độ khó và khóa màn; `Ben = 'meo' | 'thi'`; `thoiGianRoi(ben, daDung, haiTay)` (mẹo 14 s, nhanh 1%, sàn 9 s · thi
+  10 s / hai tay 12 s, nhanh 3%, sàn 4 s); `SO_CAU_THI = 20`, `DAT_THI = 16`.
+- `GameChong.tsx`: màn chọn hai cột, mọi màn mở. **Luyện có mẹo**: viên ghi khung tay trái + "lùi 3 phím · thứ"; bảng mẹo của màn; sai thì
+  hiện mẹo; không mất mạng. **Thi không mẹo**: viên chỉ tên; 20 viên; sai lần đầu (chạm / chọn) hay trượt đáy là tính sai; đúng từ 16 là
+  ĐẠT; tùy chọn bấm cả hai tay; kỷ lục từng màn (localStorage `keytrain.mua-hop-am.v2` — v1 có khóa màn bỏ).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 3, `gameChong.test.ts` 6 · toàn suite **2 706 qua / 5 đỏ** (5 đỏ cũ) · `vite build`
+qua · chạy thử headless 13/13 (mẹo của gia sư ở tab Chồng hợp âm; hai cột, mọi màn mở; bên mẹo: viên "khung Đô · lên 3 phím · tăng", bảng
+mẹo, giữ đúng → 10; bên thi: viên chỉ tên, 20 viên giữ đúng → "ĐẠT ✓ 20/20", màn ghi Đạt; chọn sai lần đầu → "Sai", sang viên 2/20) ·
+khổ điện thoại 412 px không cuộn ngang · `LuyenTap.json`, `Nguon.json` không đổi.

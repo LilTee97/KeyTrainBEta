@@ -11,7 +11,8 @@ import { BA, chongCongThuc, CONG_THUC, tenTren, VI_TRI_TREN, type Chong, type Co
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
-export type DoKho = 'de' | 'vua' | 'kho'
+/** Hai bên (người dùng 9/10/2026): luyện có gợi ý + mẹo · thi không mẹo, chấm đạt từng màn. */
+export type Ben = 'meo' | 'thi'
 export type GocChoi = 'do' | 'trang' | 'tat'
 export type CachNhap = 'giu' | 'cham' | 'chon'
 
@@ -20,7 +21,7 @@ export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sh
 
 const theoCach = (cach: readonly number[]) => CONG_THUC.filter((c) => !('iv' in c.tren) && cach.includes(c.tren.cach)).map((c) => c.id)
 
-/** Sáu màn theo đúng quy luật 1 của bảng công thức (vị trí tay phải); màn 6 trộn cả 26 công thức. */
+/** Sáu màn theo đúng quy luật 1 của bảng công thức (vị trí tay phải); màn 6 trộn cả 26 công thức. Mọi màn mở sẵn (người dùng 9/10/2026). */
 export const MAN: readonly { ten: string; goiY: string; ct: readonly string[] }[] = [
   { ten: 'Hợp âm bảy', goiY: 'tay phải trên bậc 3 hoặc ♭3', ct: theoCach(VI_TRI_TREN[0]!.cach) },
   { ten: 'Thêm 9', goiY: 'tay phải trên bậc 5', ct: theoCach(VI_TRI_TREN[1]!.cach) },
@@ -97,7 +98,9 @@ export function luaChonTen(cau: CauGame, rand: () => number = Math.random): stri
 
 /** Điểm một câu: 10 × (1 + combo/5 làm tròn xuống). */
 export const diemCau = (combo: number) => 10 * (1 + Math.floor(combo / 5))
-/** Thời gian rơi (mili giây): nhanh dần 3% mỗi câu đúng, không dưới 4 giây. */
-export const thoiGianRoi = (doKho: DoKho, daDung: number) => Math.max(4000, { de: 14000, vua: 10000, kho: 9000 }[doKho] * 0.97 ** daDung)
-/** Điểm để mở màn sau. */
-export const DAT_MAN = 100
+/** Thời gian rơi (mili giây): bên mẹo chậm (14 s, nhanh 1% mỗi câu đúng, sàn 9 s); bên thi 10 s (hai tay 12 s), nhanh 3%, sàn 4 s. */
+export const thoiGianRoi = (ben: Ben, daDung: number, haiTay = false) =>
+  ben === 'meo' ? Math.max(9000, 14000 * 0.99 ** daDung) : Math.max(4000, (haiTay ? 12000 : 10000) * 0.97 ** daDung)
+/** Bên thi: mỗi lượt 20 viên; đúng từ 16 (80%) là Đạt màn. */
+export const SO_CAU_THI = 20
+export const DAT_THI = 16

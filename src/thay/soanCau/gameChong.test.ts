@@ -49,8 +49,9 @@ describe('game Mưa hợp âm — logic', () => {
 
   it('điểm và tốc độ', () => {
     expect([diemCau(0), diemCau(4), diemCau(5), diemCau(12)]).toEqual([10, 10, 20, 30])
-    expect(thoiGianRoi('de', 0)).toBe(14000)
-    expect(thoiGianRoi('vua', 10)).toBeLessThan(thoiGianRoi('vua', 0))
-    expect(thoiGianRoi('kho', 200)).toBe(4000)
+    expect([thoiGianRoi('meo', 0), thoiGianRoi('meo', 500)]).toEqual([14000, 9000])
+    expect([thoiGianRoi('thi', 0), thoiGianRoi('thi', 0, true)]).toEqual([10000, 12000])
+    expect(thoiGianRoi('thi', 10)).toBeLessThan(thoiGianRoi('thi', 0))
+    expect(thoiGianRoi('thi', 200)).toBe(4000)
   })
 })

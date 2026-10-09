@@ -493,7 +493,8 @@ Các hợp âm phải được chọn tự do …"*
   nốt nào, thế đảo, slash chord, khoảng cách, nốt giữ / đi liền bậc khi chuyển), còn số ngón là Claude đề xuất từ thế bấm đo được.
 - **Bảng công thức chồng + game "Mưa hợp âm" — xong 9/10/2026.** Người dùng: *"hãy phá lệ làm game cho phần học thuộc công thức chồng
   hợp âm này"* — NGOẠI LỆ của quyết định "không lớp game" (mục 4c), chỉ cho phần học thuộc công thức chồng: trang Hợp âm · tab Game công
-  thức (điểm, combo, mạng, màn mở dần). Các phần khác vẫn không lớp game.
+  thức. Các phần khác vẫn không lớp game. Cập nhật 9/10: mọi màn mở; chia hai bên — luyện có mẹo (mẹo gia sư: đếm phím từ gốc tay
+  trái) · thi không mẹo, 20 viên, đúng từ 16 là Đạt màn.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
