@@ -5,7 +5,7 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import { pitchClassName } from '../shared/musicTheory/pitch'
-import { MeoCongGoc } from './BangCongThuc'
+import { MeoCongLoai } from './BangCongThuc'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { tenMotTay, vn } from './soanCau/chongHopAm'
 import {
@@ -16,7 +16,6 @@ import {
   dungHaiTay,
   dungTayPhai,
   GOC_CHOI,
-  LO_TU,
   MAN,
   MOC_MAC_DINH,
   MOC_ROI,
@@ -97,8 +96,8 @@ function ChonMoc({ giay, doi }: { giay: number; doi: (s: number) => void }) {
  * GAME "MƯA HỢP ÂM" — học thuộc 26 công thức chồng và hợp âm slash bằng tay (người dùng 9/10/2026: "hãy phá lệ làm game cho phần học
  * thuộc công thức chồng hợp âm này"; rồi "mở khóa các level hợp âm nhưng chia làm hai bên. Một bên có các gợi ý và các mẹo để tôi dựa vào
  * đó và suy ra các hợp âm cần tìm để chồng lên. Một bên là chơi ko mẹo nhưng có chấm điểm đạt cho từng level").
- * Bên MẸO: viên rơi ghi tay trái + gợi ý cộng gốc; quá 60% quãng rơi thì đáp án hiện dần (tên trên viên, viền cam trên phím); bật "chờ
- * đúng nốt" thì viên dừng ở vạch 90% đợi bấm đúng; không mất mạng; đổi mốc tốc độ ngay khi chơi.
+ * Bên MẸO: viên rơi ghi tên hai tay và phép cộng loại ("A + G♯m · trưởng + thứ" — người dùng chọn 10/10/2026); quá 60% quãng rơi thì
+ * phím đáp án sáng dần (viền cam); bật "chờ đúng nốt" thì viên dừng ở vạch 90% đợi bấm đúng; không mất mạng; đổi mốc tốc độ ngay khi chơi.
  * Bên THI: chỉ tên hợp âm, 20 viên một lượt, sai lần đầu là tính sai, đúng từ 16 là Đạt; kỷ lục từng màn theo mốc tốc độ. Không hiện
  * đáp án, không chờ — Claude quyết (9/10/2026): bên thi mà hiện đáp án hay chờ thì "Đạt" không còn đo gì.
  * Bàn phím: tay nào đang sáng phím thì ghi tên hợp âm của tay ấy (người dùng 9/10/2026). Chọn tên: bấm nút là bấm hợp âm ấy và nghe.
@@ -403,8 +402,8 @@ export function GameChong() {
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
-              Viên rơi ghi tay trái và mẹo cộng gốc (vd B6/9: tay trái Si – Fa♯, "+ treo 4 · lùi 3 phím" — Si lùi 3 phím là Sol♯ → G♯sus4). Rơi
-              quá 60% thì đáp án hiện dần. Không mất mạng — dừng lúc nào cũng được.
+              Viên rơi ghi tên hai tay và phép cộng loại (vd Amaj9♯11: "A + G♯m · trưởng + thứ"). Rơi quá 60% thì phím đáp án sáng dần chỉ chỗ
+              đặt tay. Không mất mạng — dừng lúc nào cũng được.
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
               <ChonMoc giay={moc.meo} doi={(s) => setMoc((m) => ({ ...m, meo: s }))} />
@@ -590,7 +589,7 @@ export function GameChong() {
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>
-          <summary className="cursor-pointer text-teal-key">{MAN[man]!.meo ? 'Quy luật của màn này' : 'Mẹo cộng gốc của màn này — gốc nào cộng gốc nào'}</summary>
+          <summary className="cursor-pointer text-teal-key">{MAN[man]!.meo ? 'Quy luật của màn này' : 'Mẹo cộng loại của màn này — tay trái + tay phải'}</summary>
           {MAN[man]!.meo ? (
             <ul className="mt-1 flex flex-col gap-0.5">
               {MAN[man]!.meo!.map((m) => (
@@ -598,7 +597,7 @@ export function GameChong() {
               ))}
             </ul>
           ) : (
-            <MeoCongGoc ids={MAN[man]!.ids} gocs={GOC_CHOI[gocChoi]} />
+            <MeoCongLoai ids={MAN[man]!.ids} />
           )}
         </details>
       )}
@@ -630,23 +629,17 @@ function VungRoi({ vien, dich, bayGio, tick, chay, meo }: { vien: readonly Vien[
       {vien.map((v) => {
         const p = Math.min(1, Math.max(0, (t - v.sinh) / v.roi))
         const laDich = v === dich
-        const lo = meo ? Math.min(1, Math.max(0, (p - LO_TU) / (DONG_CHO - LO_TU))) : 0
         return (
           <div
             key={v.khoa}
             className={`absolute w-[23%] rounded-lg border px-1 py-1.5 text-center ${laDich ? 'border-amber-key bg-amber-key/20 shadow-[0_0_14px_rgba(245,166,35,0.35)]' : 'border-line bg-white/6 opacity-80'}`}
-            style={{ left: `${v.lan * 25 + 1}%`, top: `calc(${p * 100}% - ${p * (meo ? 112 : 48)}px)` }}
+            style={{ left: `${v.lan * 25 + 1}%`, top: `calc(${p * 100}% - ${p * (meo ? 92 : 48)}px)` }}
           >
             <p className={`font-mono font-bold text-cream ${v.ten.length > 6 ? 'text-sm sm:text-2xl' : 'text-lg sm:text-2xl'}`}>{v.ten}</p>
             {meo && (
               <>
-                <p className="text-[10px] leading-tight text-cream/75 sm:text-[11px]">{v.khungTen}</p>
+                <p className="text-xs leading-tight font-semibold text-cream sm:text-sm">{v.khungTen}</p>
                 <p className="text-[10px] leading-tight text-teal-key sm:text-[11px]">{v.goiY}</p>
-                {lo > 0 && (
-                  <p className="text-xs leading-tight font-semibold text-amber-key sm:text-sm" style={{ opacity: lo }}>
-                    {v.lo}
-                  </p>
-                )}
               </>
             )}
           </div>

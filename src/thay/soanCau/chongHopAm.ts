@@ -300,13 +300,11 @@ export function theBamChong(ct: CongThuc, gocPc: number, daoDuoi = 0, daoTren = 
   return { trai, phai }
 }
 
-/** Tên gốc tay phải cách gốc `cach` nửa cung, gọi theo chữ cái: Si lùi 3 phím là G♯ (không A♭), Đô cách 6 phím là G♭. */
-export const gocTren = (gocTen: string, cach: number, style: AccidentalStyle) => gocDep(tenTheoChu(gocTen, cach, cach === 6 ? 4 : CHU_CUA[pc(cach)]!, style))
-
 /** Tên tầng trên, gọi theo chữ cái tính từ tên gốc hợp âm: 'Db' + 'm' (G13♭9♯11 — đúng tên Jeff gọi); chùm nốt rời thì tên chùm. */
 export function tenTren(ct: CongThuc, gocTen: string, style: AccidentalStyle): string {
   if ('iv' in ct.tren) return ct.tren.ten
-  return gocTren(gocTen, ct.tren.cach, style) + BA[ct.tren.loai].hau
+  const { cach, loai } = ct.tren
+  return gocDep(tenTheoChu(gocTen, cach, cach === 6 ? 4 : CHU_CUA[cach]!, style)) + BA[loai].hau
 }
 
 /** Chữ cái của nốt hợp âm theo quãng: ♭5 là chữ thứ năm (Rê♭ trên Sol), không phải ♯4. */

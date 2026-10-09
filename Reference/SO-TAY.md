@@ -6271,3 +6271,32 @@ chọn mang nốt: nút đúng là chính đáp án, nút nhiễu giữ tay trá
 2 → 3 phím; chờ: viên đứng yên 2,5 s không trượt, đáp án đủ; đổi mốc 5 → 30 s viên lệch 1,4 px; thi không hiện đáp án; điện thoại hợp âm
 hiện đủ, không cuộn ngang), nhãn khi giữ hợp âm 2/2, chạy lại hai bên 12/12, theo loại 10/10, slash 19/19 (câu kiểm đổi theo chữ mới) ·
 `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: mẹo CỘNG LOẠI thay mẹo cộng gốc — viên rơi ghi tên hai tay (10/10/2026)
+
+**Người dùng:** *"tôi đã sai khi dùng từ Gốc để ám chỉ Maj7, dim7, m7b5, 13... Ý tôi muốn ám chỉ tới các phần maj7, m7b5, 11, 13, sus2,
+dim7.... thì nên dùng từ gì? Có phải là extention hay đuôi ko?"*, rồi kèm ảnh viên "Amaj9♯11 · tay trái A · + thứ · lùi 1 phím": *"các
+mẹo trong hình đã tính từ nốt trên tay trái hoặc phải và tôi ko muốn tìm cái đó"*. Claude trả lời: phần sau gốc gọi là **loại hợp âm**
+(chord type / quality; chữ viết là suffix — "đuôi"); "extension" chỉ là nốt mở rộng 9 · 11 · 13. Hỏi người dùng chọn kiểu mẹo (ba mẫu xem
+trước) → người dùng chọn **"Ghi tên cả hai tay"**.
+
+- **Sai của Claude ở bước trước (526a1fe):** đọc "gốc nào cộng gốc nào thì sẽ ra gốc tổng" là nốt gốc, nên làm mẹo đếm phím (gốc tay phải
+  = gốc lên / lùi mấy phím). Đúng ý người dùng: **loại tay trái + loại tay phải = loại tổng**, một dạng công thức ra nhiều loại.
+- `meoChong.ts`: bỏ hẳn phần đếm phím (`CONG_GOC`, `capGoc`, `cachTimTayPhai`, `meoNgan`, `nhoNgan`, `demPhim`). Thêm `dangTrai` · `loaiPhai`
+  · `congLoai` · `trungCongLoai` · `bangCongLoai`. Số đo trên 26 công thức: tay trái chỉ có **8 dạng** (nốt gốc 9 loại · khung 7 5 · gốc – 5
+  5 · trưởng 2 · thứ 2 · khung m7, gốc – 3, gốc – ♭5 mỗi dạng 1). Chỉ cộng loại thì **6 cặp trùng**: nốt gốc + thứ = maj7 / m7♭5; nốt gốc +
+  trưởng = m7 / 9sus4; nốt gốc + giảm = 7 / dim7; khung 7 + thứ = 13 / 13♭9♯11; khung 7 + trưởng = 13♭9 / 13♯11; gốc – 5 + chùm = add9 /
+  m(add9). Vì thế viên rơi ghi luôn tên tay phải; lời giải khi sai chỉ ra cặp trùng ở chính gốc đang đố ("Cùng phép cộng này còn ra
+  F♯13♯11 = F♯7 + G♯ — nhìn tên tay phải mà phân biệt"). Quy luật con số, mẹo vàng trả về lời cũ (bỏ số phím đã chèn ở 526a1fe).
+- Game: viên bên mẹo ghi "F7 + Bm" và "khung 7 + thứ"; chùm nốt rời gọi bằng các nốt ("Fa♯ – Sol♯ – Si"), không ghi bậc "chùm 9 – 3 – 5";
+  bỏ dòng đáp án hiện trên viên (tên đã có sẵn) — phím đáp án vẫn sáng dần từ 60% quãng rơi để chỉ chỗ đặt tay. Màn slash: "Đô + Em" và
+  "bass + thứ = Cmaj7"; quy luật bass lạ học bằng ví dụ (Em/C = Cmaj7 · Am/F = Fmaj7 · Bm/G = Gmaj7), bỏ "cao hơn bass 4 phím".
+- Tab Chồng hợp âm: mục "Mẹo cộng loại" gom theo dạng tay trái thay mục cộng gốc; bước 4 đọc tên hợp âm (không đếm); ô thông tin "Cộng
+  loại ở gốc này: Đô + Em = Cmaj7 (nốt gốc + thứ)".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 9 (8 dạng tay trái và số loại mỗi dạng; phép cộng từng công thức; đúng 6 cặp
+trùng; bảng gom theo tay trái kèm ví dụ gốc Đô) · `gameChong.test.ts` 10 (viên và lời giải không còn chữ "phím / bậc / gam"; chùm gọi bằng
+nốt; luật slash không đếm phím) · toàn suite **2 714 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: cộng loại 13/13 (bảng,
+ô thông tin, viên "F7 + Bm · khung 7 + thứ", lời sai / đúng, khung mẹo của màn, phím đáp án vẫn sáng dần, viên slash, điện thoại không cuộn
+ngang), chạy lại hai bên 12/12, theo loại 10/10, slash 19/19, nhãn khi giữ 2/2 (câu kiểm đổi theo chữ mới) · `LuyenTap.json`, `Nguon.json`
+không đổi.

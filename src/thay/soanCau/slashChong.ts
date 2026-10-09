@@ -26,7 +26,7 @@ export interface SlashMau extends ViDuSlash {
 export const QUY_LUAT_SLASH: readonly string[] = [
   'Đọc X/Y: tay phải bấm hợp âm X, tay trái bấm nốt Y ở bass. Y là nốt thấp nhất của cả hợp âm.',
   'Y là nốt CỦA X → thế đảo: bass bậc 3 (đảo 1) nghe nhẹ, đang đi; bass bậc 5 (đảo 2) lửng lơ, hay đứng ngay trước V; bass ♭7 (đảo 3) kéo bass xuống tiếp. Thế đảo để bass đi liền bậc thay vì nhảy.',
-  'Y KHÔNG thuộc X → hợp âm màu viết tắt: đếm phím từ Y lên gốc X rồi đọc như công thức chồng tay trái một nốt — Em/C = Cmaj7, E♭/C = Cm7, B♭/C = C9sus4.',
+  'Y KHÔNG thuộc X → hợp âm màu viết tắt: bass Y + hợp âm X đọc như công thức chồng tay trái một nốt — Em/C = Cmaj7, E♭/C = Cm7, B♭/C = C9sus4.',
   'Hợp âm trưởng thấp hơn bass một cung (B♭/C, F/G, C/D, D/E, G/A) = 9sus4 của bass — gặp rất nhiều trong pop, gospel, thay cho V.',
   'Mẹo chèn slash: hai hợp âm có bass cách nhau quãng ba thì chèn một hợp âm slash có bass ở giữa — C → Am thành C – G/B – Am (bass Đô – Si – La).',
 ]

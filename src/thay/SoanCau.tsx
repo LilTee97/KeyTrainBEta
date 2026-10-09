@@ -25,7 +25,7 @@ import {
   type HoMau,
 } from './soanCau/chongHopAm'
 import { loiThay, lyDoThay, lyThuyetCacBac, nguCanh, theBamHop, type Diem, type Hop } from './soanCau/giaiThich'
-import { cachTimTayPhai, kieuGoc } from './soanCau/meoChong'
+import { congLoai, kieuGoc } from './soanCau/meoChong'
 import {
   cungTap,
   docHop,
@@ -699,8 +699,8 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
               {ct.quanHe}
             </p>
             <p className="mt-1 text-cream/85">
-              <span className="text-dim">Cách tìm tay phải ở gốc này: </span>
-              {cachTimTayPhai(ct, gocTen, style)}
+              <span className="text-dim">Cộng loại ở gốc này: </span>
+              {dangXem.nhan.trai} + {dangXem.nhan.phai} = {dangXem.nhan.tong} ({congLoai(ct)})
             </p>
             <p className="mt-1 text-cream/85">
               <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>

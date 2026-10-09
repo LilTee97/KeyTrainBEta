@@ -499,6 +499,8 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 9/10 (người dùng "1 có"): thêm màn game "Hợp âm slash" — bấm bass + hợp âm, hay chọn nghĩa.
   Cập nhật 9/10 (người dùng): mẹo theo lối CỘNG GỐC (9 cách tìm gốc tay phải); bên luyện có đáp án hiện dần từ 60% quãng rơi, mốc tốc
   độ và chờ đúng nốt; chọn tên là bấm hợp âm và nghe. Bên thi không hiện đáp án, không chờ (Claude quyết).
+  Cập nhật 10/10 (người dùng): mẹo cộng gốc (đếm phím) là Claude hiểu nhầm chữ "gốc" — thay bằng mẹo CỘNG LOẠI (loại tay trái + loại
+  tay phải = loại tổng), viên rơi ghi luôn tên hai tay.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

@@ -1,7 +1,7 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { GOC } from '../vongThay'
 import { chongCongThuc, CONG_THUC, gocDep, hauDep, tenHaiTay, tenTheoChu, tenTren, theBamChong, vn, type Chong, type CongThuc } from './chongHopAm'
-import { cachTimTayPhai, congThucChung, demPhim, HO_LOAI, kieuGoc, meoNgan, nhoNgan } from './meoChong'
+import { congLoai, HO_LOAI, kieuGoc, trungCongLoai } from './meoChong'
 import { QUY_LUAT_SLASH, theSlash } from './slashChong'
 
 /*
@@ -9,7 +9,8 @@ import { QUY_LUAT_SLASH, theSlash } from './slashChong'
   thực hành vì tôi ghét học thuộc lòng lý thuyết. Có thể chơi bằng đàn Midi hoặc phím chuột hoặc cảm ứng trên Android", rồi "hãy phá lệ
   làm game cho phần học thuộc công thức chồng hợp âm này" — ngoại lệ của luật "không lớp game", CHỈ cho phần này. Logic thuần (màn, chọn
   câu, chấm, lựa chọn, điểm, tốc độ, đáp án hiện dần) ở đây; giao diện ở GameChong.tsx. Câu có hai dạng: hợp âm chồng (26 công thức) và
-  hợp âm slash (người dùng 9/10/2026 đồng ý thêm màn slash) — chung một kiểu `CauGame`. Gợi ý và lời giải theo lối CỘNG GỐC (meoChong.ts).
+  hợp âm slash (người dùng 9/10/2026 đồng ý thêm màn slash) — chung một kiểu `CauGame`. Gợi ý theo lối CỘNG LOẠI, ghi luôn tên hai tay
+  (người dùng chọn 10/10/2026 — meoChong.ts).
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -48,19 +49,17 @@ export interface CauGame {
   trai: number[]
   phai: number[]
   nhan: NhanTay
-  /** "tay trái D" · "bass Sol" — dòng thứ hai trên viên bên mẹo. */
+  /** Dòng hai trên viên bên mẹo — tên hai tay: "A + G♯m", "Đô + Em" (slash). */
   khungTen: string
-  /** Gợi ý cộng gốc bên mẹo — chỉ đường, không nói thẳng đáp án. */
+  /** Dòng ba — phép cộng loại: "trưởng + thứ", "bass + thứ = Cmaj7" (slash). */
   goiY: string
-  /** Đáp án hiện dần trên viên khi rơi quá 60% (bên mẹo). */
-  lo: string
   /** Đáp án ở chế độ chọn tên: tên tay phải (câu chồng) hay nghĩa của slash. */
   dapAnTen: string
   /** Lời giải: "B6/9 = Si – Fa♯ + G♯sus4". */
   loi: string
-  /** Nhắc ngắn sau khi đúng: "Si lùi 3 phím → G♯sus4". */
+  /** Nhắc ngắn sau khi đúng: phép cộng loại. */
   nho: string
-  /** Lời giải cộng gốc đầy đủ — hiện khi sai và trong tổng kết. */
+  /** Mẹo đầy đủ — hiện khi sai và trong tổng kết. */
   meo: string
   luaChon: LuaChon[]
   /** Câu slash luôn bấm hai tay (bass + hợp âm). */
@@ -84,7 +83,14 @@ const datTren = (ns: readonly number[], cao: number) => {
   return x
 }
 
-const nhanCua = (c: Chong): NhanTay => ({ trai: c.nhan.trai, traiPhu: c.nhan.traiPhu, phai: c.nhan.phai, phaiPhu: c.nhan.phaiPhu })
+/** Tên tay phải: hợp âm ba thì tên hợp âm; chùm nốt rời thì các nốt ("Mi – Fa♯ – La", không ghi bậc "chùm 9 – 3 – 5"). */
+const tenPhai = (ct: CongThuc, g: number) => ('iv' in ct.tren ? tenHaiTay(ct, GOC[g]!, kieuGoc(g)).phai.join(' – ') : tenTren(ct, GOC[g]!, kieuGoc(g)))
+const nhanCua = (c: Chong, ct: CongThuc, g: number): NhanTay => ({
+  trai: c.nhan.trai,
+  traiPhu: c.nhan.traiPhu,
+  phai: 'iv' in ct.tren ? 'chùm' : c.nhan.phai,
+  phaiPhu: c.nhan.phaiPhu || tenPhai(ct, g),
+})
 
 /**
  * Bốn tên tay phải để chọn: một đúng, ba nhiễu cùng gốc — ưu tiên công thức cùng họ; câu hợp âm ba thì không lẫn tên chùm nốt. Mỗi nút
@@ -94,36 +100,44 @@ function luaChonTen(ct: CongThuc, g: number, dung: Chong, rand: () => number): L
   const chum = 'iv' in ct.tren
   const khac = CONG_THUC.filter((c) => c.id !== ct.id && (chum || !('iv' in c.tren)))
   const thuTu = [...tron(khac.filter((c) => c.nhom === ct.nhom), rand), ...tron(khac.filter((c) => c.nhom !== ct.nhom), rand)]
-  const st = kieuGoc(g)
+  const tenDung = tenPhai(ct, g)
   const nhieu: LuaChon[] = []
   for (const c of thuTu) {
-    const ten = tenTren(c, GOC[g]!, st)
-    if (nhieu.length === 3 || ten === dung.nhan.phai || nhieu.some((x) => x.ten === ten)) continue
+    const ten = tenPhai(c, g)
+    if (nhieu.length === 3 || ten === tenDung || nhieu.some((x) => x.ten === ten)) continue
     const phai = datTren(theBamChong(c, g).phai, Math.max(...dung.trai))
-    nhieu.push({ ten, trai: dung.trai, phai, nhan: { ...nhanCua(dung), phai: ten, phaiPhu: tenHaiTay(c, GOC[g]!, st).phai.join(' – ') } })
+    nhieu.push({ ten, trai: dung.trai, phai, nhan: { ...nhanCua(dung, ct, g), phai: 'iv' in c.tren ? 'chùm' : ten, phaiPhu: tenHaiTay(c, GOC[g]!, kieuGoc(g)).phai.join(' – ') } })
   }
-  return tron([{ ten: dung.nhan.phai, trai: dung.trai, phai: dung.phai, nhan: nhanCua(dung) }, ...nhieu], rand)
+  return tron([{ ten: tenDung, trai: dung.trai, phai: dung.phai, nhan: nhanCua(dung, ct, g) }, ...nhieu], rand)
+}
+
+/** Mẹo khi sai: phép cộng loại; cùng phép cộng mà ra loại khác thì chỉ tên tay phải để phân biệt (ở chính gốc đang đố). */
+function meoLoai(ct: CongThuc, g: number): string {
+  const ten = (c: CongThuc) => {
+    const x = chongCongThuc(c, g, GOC[g]!, kieuGoc(g)).nhan
+    return `${x.tong} = ${x.trai} + ${tenPhai(c, g)}`
+  }
+  const trung = trungCongLoai(ct)
+  return `${hauDep(ct.kyHieu)} = tay trái ${congLoai(ct).replace(' + ', ' + tay phải ')}.${trung.length ? ` Cùng phép cộng này còn ra ${trung.map(ten).join('; ')} — nhìn tên tay phải mà phân biệt.` : ''}`
 }
 
 /** Câu hợp âm chồng: gốc `g`, công thức `ct`. */
 export function taoCau(ct: CongThuc, g: number, rand: () => number = Math.random): CauGame {
-  const gocTen = GOC[g]!
-  const st = kieuGoc(g)
-  const c = chongCongThuc(ct, g, gocTen, st)
+  const c = chongCongThuc(ct, g, GOC[g]!, kieuGoc(g))
+  const phai = tenPhai(ct, g)
   return {
     id: ct.id,
     ten: c.nhan.tong,
     g,
     trai: c.trai,
     phai: c.phai,
-    nhan: nhanCua(c),
-    khungTen: `tay trái ${c.nhan.trai}`,
-    goiY: meoNgan(ct),
-    lo: `tay phải ${c.nhan.phai}`,
-    dapAnTen: c.nhan.phai,
-    loi: `${c.nhan.tong} = ${c.nhan.trai} + ${c.nhan.phai}`,
-    nho: nhoNgan(ct, gocTen, st),
-    meo: `${cachTimTayPhai(ct, gocTen, st)} Mọi gốc: ${hauDep(ct.kyHieu)} = ${congThucChung(ct)}.`,
+    nhan: nhanCua(c, ct, g),
+    khungTen: `${c.nhan.trai} + ${phai}`,
+    goiY: congLoai(ct),
+    dapAnTen: phai,
+    loi: `${c.nhan.tong} = ${c.nhan.trai} + ${phai}`,
+    nho: congLoai(ct),
+    meo: meoLoai(ct, g),
     luaChon: luaChonTen(ct, g, c, rand),
     haiTayBuoc: false,
   }
@@ -149,11 +163,11 @@ export const MAU_SLASH: readonly MauSlash[] = [
   { id: 'dao1m', cach: 9, chu: 5, chat: 'm', loai: 'dao', nghia: (x) => `${x} đảo 1`, luat: 'Bass là bậc ♭3 của hợp âm thứ → đảo 1 (Am/C — cũng là C6 thiếu 5).' },
   { id: 'dao2', cach: 5, chu: 3, chat: '', loai: 'dao', nghia: (x) => `${x} đảo 2`, luat: 'Bass là bậc 5 → đảo 2 (C/G): lửng lơ, hay đứng trước V.' },
   { id: 'dao2m', cach: 5, chu: 3, chat: 'm', loai: 'dao', nghia: (x) => `${x} đảo 2`, luat: 'Bass là bậc 5 của hợp âm thứ → đảo 2 (Am/E).' },
-  { id: 'maj7', cach: 4, chu: 2, chat: 'm', loai: 'mau', nghia: (_, y) => `${y}maj7`, luat: 'Hợp âm thứ cao hơn bass 4 phím = maj7 của bass (Em/C = Cmaj7).' },
-  { id: 'm7', cach: 3, chu: 2, chat: '', loai: 'mau', nghia: (_, y) => `${y}m7`, luat: 'Hợp âm trưởng cao hơn bass 3 phím = m7 của bass (E♭/C = Cm7).' },
-  { id: '7', cach: 4, chu: 2, chat: 'dim', loai: 'mau', nghia: (_, y) => `${y}7`, luat: 'Hợp âm giảm cao hơn bass 4 phím = 7 của bass (Edim/C = C7).' },
-  { id: '9sus4', cach: 10, chu: 6, chat: '', loai: 'mau', nghia: (_, y) => `${y}9sus4`, luat: 'Hợp âm trưởng thấp hơn bass một cung = 9sus4 của bass (F/G = G9sus4).' },
-  { id: 'maj9', cach: 7, chu: 4, chat: '', loai: 'mau', nghia: (_, y) => `${y}maj9 (thiếu 3)`, luat: 'Hợp âm trưởng cao hơn bass 7 phím = maj9 thiếu bậc 3 của bass (G/C).' },
+  { id: 'maj7', cach: 4, chu: 2, chat: 'm', loai: 'mau', nghia: (_, y) => `${y}maj7`, luat: 'Bass + hợp âm thứ = maj7 của bass: Em/C = Cmaj7 · Am/F = Fmaj7 · Bm/G = Gmaj7.' },
+  { id: 'm7', cach: 3, chu: 2, chat: '', loai: 'mau', nghia: (_, y) => `${y}m7`, luat: 'Bass + hợp âm trưởng = m7 của bass: E♭/C = Cm7 · C/A = Am7 · F/D = Dm7.' },
+  { id: '7', cach: 4, chu: 2, chat: 'dim', loai: 'mau', nghia: (_, y) => `${y}7`, luat: 'Bass + hợp âm giảm = 7 của bass: Edim/C = C7 · Bdim/G = G7 · F♯dim/D = D7.' },
+  { id: '9sus4', cach: 10, chu: 6, chat: '', loai: 'mau', nghia: (_, y) => `${y}9sus4`, luat: 'Bass + hợp âm trưởng thấp hơn bass một cung = 9sus4 của bass: B♭/C = C9sus4 · F/G = G9sus4 · C/D = D9sus4.' },
+  { id: 'maj9', cach: 7, chu: 4, chat: '', loai: 'mau', nghia: (_, y) => `${y}maj9 (thiếu 3)`, luat: 'Bass + hợp âm trưởng = maj9 thiếu bậc 3 của bass: G/C = Cmaj9 · D/G = Gmaj9 · C/F = Fmaj9.' },
 ]
 
 /** Ba nốt của hợp âm X theo chất: (nửa cung, chữ cái) tính từ gốc X. */
@@ -163,6 +177,7 @@ const BA_X: Record<MauSlash['chat'], readonly (readonly [number, number])[]> = {
   dim: [[0, 0], [3, 2], [6, 4]],
 }
 const TEN_DAO = ['thế gốc', 'đảo 1', 'đảo 2'] as const
+const TEN_CHAT: Record<MauSlash['chat'], string> = { '': 'trưởng', m: 'thứ', dim: 'giảm' }
 /** Tên chữ của gốc X ('Db') — gọi theo chữ cái tính từ bass. */
 const xChu = (m: MauSlash, y: number) => tenTheoChu(GOC[y]!, m.cach, m.chu, kieuGoc(y))
 const tenX = (m: MauSlash, y: number) => gocDep(xChu(m, y)) + m.chat
@@ -221,12 +236,11 @@ export function taoCauSlash(m: MauSlash, y: number, rand: () => number = Math.ra
     trai: d.trai,
     phai: d.phai,
     nhan: d.nhan,
-    khungTen: `bass ${bass}`,
-    goiY: m.loai === 'dao' ? `bass là nốt của ${x} → thế đảo` : `bass lạ · ${demPhim(m.cach)} tới gốc ${x}`,
-    lo: `= ${d.ten}`,
+    khungTen: `${bass} + ${x}`,
+    goiY: `bass + ${TEN_CHAT[m.chat]} = ${d.ten}`,
     dapAnTen: d.ten,
     loi: `${ten} = ${d.ten}: tay trái ${bass} + tay phải ${x}`,
-    nho: m.loai === 'dao' ? `bass ${bass} là nốt của ${x}` : `${bass} ${demPhim(m.cach)} → ${x}`,
+    nho: `bass + ${TEN_CHAT[m.chat]} = ${d.ten}`,
     meo: m.luat,
     luaChon: luaChonSlash(m, y, d, rand),
     haiTayBuoc: true,

@@ -1,6 +1,5 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
-import { GOC } from '../vongThay'
-import { BA, CONG_THUC, chongCongThuc, gocDep, gocTren, hauDep, quangTren, tenBac, tenHaiTay, tenTheoChu, tenTren, vn, type CongThuc } from './chongHopAm'
+import { BA, CONG_THUC, chongCongThuc, hauDep, quangTren, tenBac, type CongThuc } from './chongHopAm'
 
 /*
   QUY LUẬT VÀ MẸO CHỒNG HỢP ÂM — THEO LOẠI HỢP ÂM. Người dùng 9/10/2026: "về các quy luật chồng hợp âm thì tôi muốn nó tính theo loại hợp
@@ -8,23 +7,15 @@ import { BA, CONG_THUC, chongCongThuc, gocDep, gocTren, hauDep, quangTren, tenBa
   tích lại và thiết kế lại quy luật và mẹo" (bản trước xếp theo vị trí tay phải — bỏ). Lời là của Claude (gia sư), rút từ 26 công thức
   chồng; mỗi quy luật có test đối chiếu công thức thật (meoChong.test.ts).
 
-  MẸO CỘNG GỐC — người dùng 9/10/2026 (ảnh lời giải B6/9 trong game): "Mẹo ghi như trong ảnh còn quá mơ hồ và máy móc tôi ko hiểu được …
-  Tôi muốn mẹo sẽ chỉ cho tôi cụ thể theo hướng gốc nào cộng gốc nào thì sẽ ra gốc tổng cần tìm. Trong piano tuy có nhiều gốc khác nhau
-  nhưng tôi đoán là sẽ có những mẹo cộng gốc chung có thể giúp tìm ra nhiều gốc từ 1 dạng công thức". Bản cũ đếm gam trưởng của gốc tới
-  bậc cần dùng ("Gam Si trưởng: Si Đô♯ … → bậc 6 là Sol♯"), ghi bậc (6·9·3) và lấy ví dụ gốc Đô cho mọi gốc — bỏ. Nay: gốc tay phải =
-  gốc hợp âm lên / lùi mấy phím. Đếm trên 26 công thức: 23 loại tay phải là hợp âm ba, chỉ dùng 9 cách cộng gốc; 3 loại là chùm nốt rời.
-  Mỗi cách dùng cho nhiều loại — chỉ đổi chất tay phải (số đếm có test).
+  MẸO CỘNG LOẠI — người dùng 9/10/2026 (ảnh lời giải B6/9 trong game): "Mẹo ghi như trong ảnh còn quá mơ hồ và máy móc tôi ko hiểu được …
+  Tôi muốn mẹo sẽ chỉ cho tôi cụ thể theo hướng gốc nào cộng gốc nào thì sẽ ra gốc tổng cần tìm"; 10/10/2026 người dùng nói rõ chữ "gốc" ở
+  đó là LOẠI (maj7, dim7, m7♭5, 13…) và chê bản Claude đã làm theo nghĩa nốt gốc (gốc tay phải lên / lùi mấy phím, commit 526a1fe): "các
+  mẹo trong hình đã tính từ nốt trên tay trái hoặc phải và tôi ko muốn tìm cái đó" — rồi chọn kiểu "ghi tên cả hai tay". Nay: loại tay
+  trái + loại tay phải = loại tổng; viên rơi ghi luôn tên hai tay; bảng gom theo dạng tay trái (26 công thức chỉ có 8 dạng — test).
 */
 
 /** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭) — đúng cách ghi của `GOC`. */
 export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
-
-/** Đếm phím từ gốc tay trái tới gốc tay phải (cả phím đen lẫn trắng). */
-export function demPhim(cach: number): string {
-  if (cach === 6) return 'cách 6 phím (nửa quãng tám)'
-  if (cach === 7) return 'lên 7 phím (hay lùi 5)'
-  return cach < 6 ? `lên ${cach} phím` : `lùi ${12 - cach} phím`
-}
 
 /** Năm họ, mỗi họ xếp từ dễ tới khó — thứ tự học và thứ tự màn game. */
 export const HO_LOAI: readonly { ten: string; ids: readonly string[] }[] = [
@@ -46,96 +37,48 @@ export function bacCua(ct: CongThuc) {
   return { trai, phai, caHai: xepBac([...trai, ...phai]) }
 }
 
-/* ---------------- Mẹo cộng gốc ---------------- */
+/* ---------------- Mẹo cộng loại ---------------- */
 
-export interface CachCongGoc {
-  /** Gốc tay phải cách gốc hợp âm bao nhiêu nửa cung, tính đi lên (0–11). */
-  cach: number
-  ten: string
-  /** Cái móc để nhớ — đúng ở mọi gốc. */
-  moc: string
-}
-
-/** Chín cách cộng gốc, xếp từ dễ thấy nhất: nốt nằm ngay trong hợp âm trên gốc, rồi cặp quen tai, rồi đếm phím. */
-export const CONG_GOC: readonly CachCongGoc[] = [
-  { cach: 4, ten: 'lên 4 phím', moc: 'nốt giữa của hợp âm trưởng trên gốc' },
-  { cach: 3, ten: 'lên 3 phím', moc: 'nốt giữa của hợp âm thứ trên gốc' },
-  { cach: 7, ten: 'lên 7 phím', moc: 'nốt trên cùng của hợp âm trên gốc' },
-  { cach: 9, ten: 'lùi 3 phím', moc: 'cặp thứ song song quen tai: C ↔ Am, G ↔ Em, F ↔ Dm' },
-  { cach: 10, ten: 'lùi 2 phím', moc: 'thấp hơn gốc một cung' },
-  { cach: 2, ten: 'lên 2 phím', moc: 'cao hơn gốc một cung' },
-  { cach: 11, ten: 'lùi 1 phím', moc: 'phím sát dưới gốc' },
-  { cach: 6, ten: 'cách 6 phím', moc: 'giữa quãng tám — lên hay lùi đều 6 phím' },
-  { cach: 8, ten: 'lùi 4 phím', moc: 'hợp âm tăng chia đều quãng tám — cùng nốt với hợp âm tăng trên chính gốc' },
+/** Tám dạng tay trái của 26 công thức, xếp theo số loại dùng dạng ấy (nhiều trước). Khóa là quãng (nửa cung) của thế mặc định. */
+const DANG_TRAI: readonly { iv: string; ten: string }[] = [
+  { iv: '0', ten: 'nốt gốc' },
+  { iv: '0,4,10', ten: 'khung 7' },
+  { iv: '0,7', ten: 'gốc – 5' },
+  { iv: '0,4,7', ten: 'trưởng' },
+  { iv: '0,3,7', ten: 'thứ' },
+  { iv: '0,3,10', ten: 'khung m7' },
+  { iv: '0,4', ten: 'gốc – 3' },
+  { iv: '0,6', ten: 'gốc – ♭5' },
 ]
-const cachCua = (cach: number) => CONG_GOC.find((c) => c.cach === cach)!
+const khoaTrai = (ct: CongThuc) => [...ct.duoi[0]!].sort((a, b) => a - b).join()
+/** Loại tay trái: "nốt gốc", "khung 7", "trưởng"… */
+export const dangTrai = (ct: CongThuc) => DANG_TRAI.find((d) => d.iv === khoaTrai(ct))!.ten
+/** Loại tay phải: chất hợp âm ba ("thứ", "treo 4"…), hay "chùm" khi là chùm nốt rời. */
+export const loaiPhai = (ct: CongThuc) => ('iv' in ct.tren ? 'chùm' : BA[ct.tren.loai].ten)
+/** Phép cộng loại của một công thức: "trưởng + thứ" (maj9♯11), "khung 7 + trưởng" (13♭9). */
+export const congLoai = (ct: CongThuc) => `${dangTrai(ct)} + ${loaiPhai(ct)}`
+/** Các loại khác có CÙNG phép cộng (cùng dạng tay trái, cùng loại tay phải) — chỉ tên tay phải mới phân biệt được. */
+export const trungCongLoai = (ct: CongThuc) => CONG_THUC.filter((c) => c.id !== ct.id && khoaTrai(c) === khoaTrai(ct) && loaiPhai(c) === loaiPhai(ct))
 
-/** Các loại có tay phải là hợp âm ba dựng trên một cách cộng gốc (chỉ trong `ids` nếu có). */
-export const loaiCuaCach = (cach: number, ids?: readonly string[]) =>
-  CONG_THUC.filter((ct) => 'loai' in ct.tren && ct.tren.cach === cach && (!ids || ids.includes(ct.id)))
-
-/** Cặp "gốc → gốc tay phải" của một cách cộng gốc ở các gốc `gocs` (nửa cung từ Đô) — bảng để học thuộc. */
-export const capGoc = (cach: number, gocs: readonly number[]) => gocs.map((g) => `${gocDep(GOC[g]!)}→${gocTren(GOC[g]!, cach, kieuGoc(g))}`)
-
-const notBa = (gocTen: string, iv: readonly number[], style: AccidentalStyle) => iv.map((x, k) => vn(tenTheoChu(gocTen, x, k * 2, style))).join(' – ')
-
-/** Cái móc nói ở một gốc cụ thể: "nốt giữa của D: Rê – Fa♯ – La", "cặp thứ song song B ↔ G♯m". */
-export function mocTai(cach: number, gocTen: string, style: AccidentalStyle): string {
-  const x = gocDep(gocTen)
-  if (cach === 4) return `nốt giữa của ${x}: ${notBa(gocTen, [0, 4, 7], style)}`
-  if (cach === 3) return `nốt giữa của ${x}m: ${notBa(gocTen, [0, 3, 7], style)}`
-  if (cach === 7) return `nốt trên cùng của ${x}: ${notBa(gocTen, [0, 4, 7], style)}`
-  if (cach === 9) return `cặp thứ song song ${x} ↔ ${gocTren(gocTen, 9, style)}m`
-  if (cach === 8) return `cùng nốt với ${x}+ — hợp âm tăng chia đều quãng tám`
-  return cachCua(cach).moc
-}
-
-/** Chùm nốt rời: các nốt cách gốc bao nhiêu phím, đếm đi lên. */
-const demChum = (iv: readonly number[]) => iv.map((x) => x % 12).join(' · ')
-
-/** Công thức chung, đúng ở mọi gốc: "tay trái gốc – 5 + tay phải treo 4 trên gốc lùi 3 phím". */
-export function congThucChung(ct: CongThuc): string {
-  if ('iv' in ct.tren) return `tay trái ${ct.tenDuoi} + chùm nốt ${demChum(ct.tren.iv)} phím trên gốc`
-  return `tay trái ${ct.tenDuoi} + tay phải ${BA[ct.tren.loai].ten} trên gốc ${cachCua(ct.tren.cach).ten}`
-}
-
-/** Dòng ngắn trên viên rơi (bên mẹo): chất tay phải · cách cộng gốc — chỉ đường, không nói thẳng tên. */
-export const meoNgan = (ct: CongThuc) =>
-  'iv' in ct.tren ? `+ chùm ${demChum(ct.tren.iv)} phím` : `+ ${BA[ct.tren.loai].ten} · ${cachCua(ct.tren.cach).ten}`
-
-/**
- * Cách tìm tay phải ở MỘT gốc cụ thể, theo lối cộng gốc: "Si lùi 3 phím = Sol♯ (cặp thứ song song B ↔ G♯m) → treo 4 trên Sol♯: G♯sus4
- * (Sol♯ – Đô♯ – Rê♯)." Thay bản đếm gam trưởng (người dùng chê "quá mơ hồ và máy móc", 9/10/2026).
- */
-export function cachTimTayPhai(ct: CongThuc, gocTen: string, style: AccidentalStyle): string {
-  const g = vn(gocTen)
-  const notPhai = tenHaiTay(ct, gocTen, style).phai
-  if ('iv' in ct.tren)
-    return `Tay phải là chùm nốt rời: ${g} ${ct.tren.iv.map((x, k) => `lên ${x % 12} phím = ${notPhai[k]}`).join(', ')} — bấm sát nhau ${notPhai.join(' – ')}.`
-  const { cach, loai } = ct.tren
-  const r = vn(gocTren(gocTen, cach, style))
-  return `${g} ${cachCua(cach).ten} = ${r} (${mocTai(cach, gocTen, style)}) → ${BA[loai].ten} trên ${r}: ${tenTren(ct, gocTen, style)} (${notPhai.join(' – ')}).`
-}
-
-/** Nhắc ngắn sau khi bấm đúng: "Si lùi 3 phím → G♯sus4". */
-export const nhoNgan = (ct: CongThuc, gocTen: string, style: AccidentalStyle) =>
-  'iv' in ct.tren ? `chùm ${tenHaiTay(ct, gocTen, style).phai.join(' – ')}` : `${vn(gocTen)} ${cachCua(ct.tren.cach).ten} → ${tenTren(ct, gocTen, style)}`
-
-/** Bảng cộng gốc cho một nhóm loại: mỗi cách → các loại dùng nó, gom theo chất tay phải; chùm nốt rời để riêng. */
-export function bangCongGoc(ids: readonly string[]) {
-  const dong = CONG_GOC.map((c) => {
-    const ds = loaiCuaCach(c.cach, ids)
-    const chat = [...new Set(ds.map((ct) => ('loai' in ct.tren ? ct.tren.loai : 'M')))]
+/** Bảng cộng loại gom theo dạng tay trái (chỉ các loại trong `ids`): một dạng tay trái + đổi loại tay phải = nhiều loại. Ví dụ gốc Đô. */
+export function bangCongLoai(ids: readonly string[]) {
+  const ds = CONG_THUC.filter((ct) => ids.includes(ct.id))
+  return DANG_TRAI.map((d) => {
+    const nhom = ds.filter((ct) => khoaTrai(ct) === d.iv)
     return {
-      ...c,
-      theoChat: chat.map((l) => ({
-        chat: BA[l].ten,
-        loai: ds.filter((ct) => 'loai' in ct.tren && ct.tren.loai === l).map((ct) => `${hauDep(ct.kyHieu)} (tay trái ${ct.tenDuoi})`),
+      dang: d.ten,
+      viDu: nhom.length ? chongCongThuc(nhom[0]!, 0, 'C', 'flat').nhan.trai : '',
+      theoChat: [...new Set(nhom.map(loaiPhai))].map((chat) => ({
+        chat,
+        loai: nhom
+          .filter((ct) => loaiPhai(ct) === chat)
+          .map((ct) => {
+            const n = chongCongThuc(ct, 0, 'C', 'flat').nhan
+            return { ten: hauDep(ct.kyHieu), viDu: `${n.trai} + ${'iv' in ct.tren ? n.phaiPhu : n.phai}` }
+          }),
       })),
     }
   }).filter((d) => d.theoChat.length > 0)
-  const chum = CONG_THUC.filter((ct) => 'iv' in ct.tren && ids.includes(ct.id)).map((ct) => `${hauDep(ct.kyHieu)} = ${congThucChung(ct)}`)
-  return { dong, chum }
 }
 
 /** Ví dụ gốc Đô + cái móc nhớ của từng loại — lời gia sư. */
@@ -150,12 +93,12 @@ const MEO: Readonly<Record<string, string>> = {
   m6: 'Đô – Sol + Adim (La – Đô – Mi♭)',
   madd9: 'Đô – Sol + chùm Rê – Mi♭ – Sol — Rê kẹp sát dưới Mi♭',
   mMaj7: 'Đô + E♭+ (Mi♭ – Sol – Si) — nốt Si cho tiếng phim trinh thám',
-  m9: 'Cm + Gm — hai hợp âm thứ cách nhau 7 phím',
+  m9: 'Cm + Gm — hai hợp âm thứ',
   m11: 'Cm + B♭',
-  m13: 'Đô – Mi♭ – Si♭ + Dm',
+  m13: 'khung Cm7 (Đô – Mi♭ – Si♭) + Dm',
   m7b5: 'Đô + E♭m — như Cm7 (Đô + E♭) nhưng tay phải đổi sang thứ',
   m11b5: 'Đô – Sol♭ + E♭sus2 (Mi♭ – Fa – Si♭)',
-  dim7: 'Đô + E♭dim (Mi♭ – Sol♭ – La) — bốn nốt cách đều 3 phím',
+  dim7: 'Đô + E♭dim (Mi♭ – Sol♭ – La) — bốn nốt cách đều nhau',
   '7': 'Đô + Edim (Mi – Sol – Si♭) — như Cmaj7 (Đô + Em) nhưng tay phải đổi sang giảm',
   '9': 'Đô – Mi + Gm — như Cm9 nhưng tay trái có Mi',
   '13': 'khung C7 (Đô – Mi – Si♭) + Am — tay phải giống C6',
@@ -168,9 +111,9 @@ const MEO: Readonly<Record<string, string>> = {
   '13b9#11': 'khung C7 + G♭m (cũng là F♯m)',
 }
 
-/** Mẹo của một loại ở bảng: công thức cộng gốc (mọi gốc) + ví dụ gốc Đô. */
+/** Mẹo của một loại ở bảng: phép cộng loại + ví dụ gốc Đô. */
 export function meoCua(ct: CongThuc): string {
-  return `${congThucChung(ct)} — gốc Đô: ${MEO[ct.id] ?? ''}`
+  return `${congLoai(ct)} — gốc Đô: ${MEO[ct.id] ?? ''}`
 }
 
 /** Bảng 26 loại theo họ (gốc Đô). */
@@ -185,55 +128,40 @@ export function bangTheoLoai() {
 }
 
 /**
- * Quy luật CON SỐ (đuôi tên hợp âm): số càng lớn, tay phải càng leo cao trên hợp âm. `phai` là các bậc tay phải, `cach` là cách cộng gốc
- * của từng loại; mọi loại trong `ids` có test kiểm đúng cả hai.
+ * Quy luật CON SỐ (đuôi tên hợp âm): số càng lớn, tay phải càng leo cao trên hợp âm. `phai` là các bậc tay phải; mọi loại trong `ids`
+ * có test kiểm đúng các bậc ấy. (526a1fe chèn số phím vào lời — gỡ 10/10/2026, vì người dùng không muốn mẹo đếm phím.)
  */
-export const LUAT_SO: readonly { so: string; luat: string; ids: readonly string[]; phai: readonly (readonly string[])[]; cach: readonly (number | null)[] }[] = [
-  {
-    so: '6',
-    luat: 'tay phải dựng trên gốc LÙI 3 PHÍM (bậc 6 — cặp thứ song song)',
-    ids: ['6', '69', 'm6'],
-    phai: [['6', '1', '3'], ['6', '9', '3'], ['6', '1', '♭3']],
-    cach: [9, 9, 9],
-  },
+export const LUAT_SO: readonly { so: string; luat: string; ids: readonly string[]; phai: readonly (readonly string[])[] }[] = [
+  { so: '6', luat: 'tay phải dựng trên bậc 6 (6 · 1 · 3)', ids: ['6', '69', 'm6'], phai: [['6', '1', '3'], ['6', '9', '3'], ['6', '1', '♭3']] },
   {
     so: '7',
-    luat: 'tay phải dựng trên gốc LÊN 4 PHÍM (hợp âm có 3 trưởng) hay LÊN 3 PHÍM (có ♭3) — chính là 3 · 5 · 7 của hợp âm',
+    luat: 'tay phải chính là 3 · 5 · 7 của hợp âm (dựng trên bậc 3 hay ♭3)',
     ids: ['maj7', '7', 'm7', 'm7b5', 'dim7', 'mMaj7'],
     phai: [['3', '5', '7'], ['3', '5', '♭7'], ['♭3', '5', '♭7'], ['♭3', '♭5', '♭7'], ['♭3', '♭5', '𝄫7'], ['♭3', '5', '7']],
-    cach: [4, 4, 3, 3, 3, 3],
   },
-  { so: '9', luat: 'tay phải dựng trên gốc LÊN 7 PHÍM (bậc 5): 5 · 7 · 9', ids: ['maj9', 'm9', '9'], phai: [['5', '7', '9'], ['5', '♭7', '9'], ['5', '♭7', '9']], cach: [7, 7, 7] },
-  {
-    so: '11',
-    luat: 'tay phải dựng trên gốc LÙI 2 PHÍM (bậc ♭7): ♭7 · 9 · 11; riêng m11♭5 khác lệ',
-    ids: ['m11', '9sus4'],
-    phai: [['♭7', '9', '11'], ['♭7', '9', '4']],
-    cach: [10, 10],
-  },
+  { so: '9', luat: 'tay phải 5 · 7 · 9 (dựng trên bậc 5)', ids: ['maj9', 'm9', '9'], phai: [['5', '7', '9'], ['5', '♭7', '9'], ['5', '♭7', '9']] },
+  { so: '11', luat: 'tay phải ♭7 · 9 · 11 (dựng trên bậc ♭7 — thấp hơn gốc một cung); riêng m11♭5 khác lệ', ids: ['m11', '9sus4'], phai: [['♭7', '9', '11'], ['♭7', '9', '4']] },
   {
     so: '13',
-    luat: 'hợp âm thứ: gốc LÊN 2 PHÍM (9 · 11 · 13); hợp âm át: gốc LÙI 3 PHÍM (13 · 1 · 3 — tránh 11 chọi bậc 3)',
+    luat: 'hợp âm thứ: tay phải 9 · 11 · 13 (trên bậc 9); hợp âm át: 13 · 1 · 3 (trên bậc 13 — tránh 11 chọi bậc 3)',
     ids: ['m13', '13'],
     phai: [['9', '11', '13'], ['13', '1', '3']],
-    cach: [2, 9],
   },
-  { so: 'add9', luat: 'chùm nốt 2 · 4 · 7 phím trên gốc — kẹp nốt 9 sát dưới bậc 3', ids: ['add9', 'madd9'], phai: [['9', '3', '5'], ['9', '♭3', '5']], cach: [null, null] },
+  { so: 'add9', luat: 'chùm 9 · 3 · 5 — kẹp 9 sát dưới bậc 3', ids: ['add9', 'madd9'], phai: [['9', '3', '5'], ['9', '♭3', '5']] },
   {
     so: 'nốt căng',
-    luat: 'giữ chỗ, đổi đúng MỘT nốt hay MỘT chất của tay phải loại gốc: 13 → 13♭9 (Am → A), 7 → 7♭9 (Edim → Edim7), 7 → 7♭5 (Sol → Sol♭)',
+    luat: 'đổi đúng MỘT nốt hay MỘT chất của tay phải loại gốc: 13 → 13♭9 (Am → A), 7 → 7♭9 (Edim → Edim7), 7 → 7♭5 (Sol → Sol♭)',
     ids: ['13b9', '7b9', '7b5'],
     phai: [['13', '♭9', '3'], ['3', '5', '♭7', '♭9'], ['3', '♭5', '♭7']],
-    cach: [9, 4, null],
   },
 ]
 
 /** Mẹo vàng theo loại — mỗi câu có test. */
 export const MEO_VANG: readonly string[] = [
-  'Nhìn ĐUÔI tên rồi đếm phím từ gốc: 6 → lùi 3 phím; 7 → lên 4 phím (lên 3 nếu hợp âm thứ, giảm); 9 → lên 7 phím; 11 → lùi 2 phím; 13 → lên 2 phím (thứ) hay lùi 3 phím (át).',
+  'Nhìn ĐUÔI tên trước: 6 → tay phải trên bậc 6; 7 → trên bậc 3; 9 → trên bậc 5; 11 → trên bậc ♭7; 13 → trên bậc 9 (thứ) hay 13 (át). Số càng lớn, tay phải càng leo cao.',
   'Loại "7": tay phải chính là ba nốt 3 · 5 · 7 của hợp âm — chỉ cần biết chất của ba nốt ấy: maj7 → thứ, 7 → giảm, m7 → trưởng, m7♭5 → thứ, dim7 → giảm, m(maj7) → tăng.',
-  'Đổi họ chỉ đổi CHẤT tay phải, không đổi chỗ: Cmaj7 = C + Em, C7 = C + Edim — cùng lên 4 phím; Cm7 = C + E♭, Cm7♭5 = C + E♭m — cùng lên 3 phím.',
-  'Hợp âm 9 nào cũng có tay phải trên gốc LÊN 7 PHÍM (hợp âm bậc V): Cmaj9 → G, Cm9 và C9 → Gm.',
+  'Đổi họ chỉ đổi CHẤT tay phải, không đổi chỗ: Cmaj7 = C + Em, C7 = C + Edim — cùng trên Mi; Cm7 = C + E♭, Cm7♭5 = C + E♭m — cùng trên Mi♭.',
+  'Hợp âm 9 nào cũng có tay phải là hợp âm bậc V của gốc: Cmaj9 → G, Cm9 và C9 → Gm.',
   'Nốt căng = đổi một nốt: C13 (Am) → C13♭9 (A, Đô thành Đô♯); C7 (Edim) → C7♭9 (Edim7, thêm Rê♭).',
   'Hợp âm tăng và bảy giảm có nhiều tên cùng nốt: A♭+ = C+ (C7♭13 = C7 + C+); Edim7 = C♯dim7 (C7♭9 = gốc + bảy giảm nửa cung trên gốc).',
 ]

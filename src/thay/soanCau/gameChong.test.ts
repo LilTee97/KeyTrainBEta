@@ -19,13 +19,12 @@ describe('game Mưa hợp âm — logic', () => {
     expect([...MAN[6]!.ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
   })
 
-  it('câu chồng F♯13♭9: gợi ý cộng gốc, lời giải theo gốc thật, chấm tay phải theo lớp cao độ', () => {
+  it('câu chồng F♯13♭9: viên ghi tên hai tay + phép cộng loại (không đếm phím), chấm tay phải theo lớp cao độ', () => {
     const cau = taoCau(ct('13b9'), 6)
-    expect([cau.ten, cau.khungTen, cau.goiY, cau.dapAnTen, cau.lo]).toEqual(['F♯13♭9', 'tay trái F♯7', '+ trưởng · lùi 3 phím', 'D♯', 'tay phải D♯'])
-    expect([cau.loi, cau.nho]).toEqual(['F♯13♭9 = F♯7 + D♯', 'Fa♯ lùi 3 phím → D♯'])
-    expect(cau.meo).toBe(
-      'Fa♯ lùi 3 phím = Rê♯ (cặp thứ song song F♯ ↔ D♯m) → trưởng trên Rê♯: D♯ (Rê♯ – Sol – La♯). Mọi gốc: 13♭9 = tay trái gốc – 3 – ♭7 + tay phải trưởng trên gốc lùi 3 phím.',
-    )
+    expect([cau.ten, cau.khungTen, cau.goiY, cau.dapAnTen]).toEqual(['F♯13♭9', 'F♯7 + D♯', 'khung 7 + trưởng', 'D♯'])
+    expect([cau.loi, cau.nho]).toEqual(['F♯13♭9 = F♯7 + D♯', 'khung 7 + trưởng'])
+    expect(cau.meo).toBe('13♭9 = tay trái khung 7 + tay phải trưởng. Cùng phép cộng này còn ra F♯13♯11 = F♯7 + G♯ — nhìn tên tay phải mà phân biệt.')
+    expect(`${cau.khungTen} ${cau.goiY} ${cau.meo}`).not.toMatch(/phím|bậc|gam/)
     expect(cau.nhan).toEqual({ trai: 'F♯7', traiPhu: 'Fa♯ – La♯ – Mi', phai: 'D♯', phaiPhu: 'Rê♯ – Sol – La♯' })
     expect(dungTayPhai([63, 67, 70], cau)).toBe(true) // Mi♭ Sol Si♭ = D♯ trưởng, thế nào cũng được
     expect(dungTayPhai([...cau.trai, ...cau.phai], cau)).toBe(true)
@@ -46,6 +45,13 @@ describe('game Mưa hợp âm — logic', () => {
         expect(l.nhan.phai).toBe(l.ten)
       }
     }
+  })
+
+  it('chùm nốt rời gọi bằng các nốt, không ghi bậc', () => {
+    const cau = taoCau(ct('add9'), 4)
+    expect([cau.khungTen, cau.goiY, cau.dapAnTen, cau.nhan.phai]).toEqual(['Mi – Si + Fa♯ – Sol♯ – Si', 'gốc – 5 + chùm', 'Fa♯ – Sol♯ – Si', 'chùm'])
+    expect(cau.luaChon.map((l) => l.ten)).toContain('Fa♯ – Sol♯ – Si')
+    expect(cau.meo).toContain('Cùng phép cộng này còn ra Em(add9) = Mi – Si + Fa♯ – Sol – Si')
   })
 
   it('hai tay: đủ nốt và nốt thấp nhất là gốc', () => {
@@ -69,13 +75,13 @@ describe('game Mưa hợp âm — logic', () => {
     expect(t('dao1m', 0)).toEqual(['Am/C', 'Am đảo 1'])
     expect(t('dao1', 8)).toEqual(['E/G♯', 'E đảo 1'])
     const c = taoCauSlash(mau('maj7'), 0, () => 0.3)
-    expect([c.khungTen, c.goiY, c.lo, c.nho, c.nhan]).toEqual([
-      'bass Đô',
-      'bass lạ · lên 4 phím tới gốc Em',
-      '= Cmaj7',
-      'Đô lên 4 phím → Em',
+    expect([c.khungTen, c.goiY, c.nho, c.nhan]).toEqual([
+      'Đô + Em',
+      'bass + thứ = Cmaj7',
+      'bass + thứ = Cmaj7',
       { trai: 'Đô', traiPhu: 'bass', phai: 'Em', phaiPhu: 'Mi – Sol – Si' },
     ])
+    expect(MAU_SLASH.map((m) => m.luat).join(' ')).not.toMatch(/phím/)
   })
 
   it('mọi mẫu slash ở cả 12 bass: thế đảo có bass trong hợp âm; bass lạ khớp nốt hợp âm màu', () => {

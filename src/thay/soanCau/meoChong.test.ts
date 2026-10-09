@@ -1,22 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BA, CONG_THUC, tenTren } from './chongHopAm'
-import {
-  bacCua,
-  bangCongGoc,
-  bangTheoLoai,
-  cachTimTayPhai,
-  capGoc,
-  CONG_GOC,
-  congThucChung,
-  demPhim,
-  HO_LOAI,
-  loaiCuaCach,
-  LUAT_SO,
-  meoCua,
-  meoNgan,
-  MEO_VANG,
-  nhoNgan,
-} from './meoChong'
+import { bacCua, bangCongLoai, bangTheoLoai, congLoai, dangTrai, HO_LOAI, LUAT_SO, meoCua, MEO_VANG, trungCongLoai } from './meoChong'
 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
 const lop = (goc: number, iv: readonly number[]) => [...new Set(iv.map((x) => (goc + x) % 12))].sort((a, b) => a - b)
@@ -35,12 +19,8 @@ describe('quy luật và mẹo theo loại hợp âm', () => {
     expect(bacCua(ct('dim7')).caHai).toEqual(['1', '♭3', '♭5', '𝄫7'])
   })
 
-  it('quy luật con số đúng với mọi loại được nêu — cả bậc tay phải lẫn cách cộng gốc', () => {
-    for (const l of LUAT_SO)
-      l.ids.forEach((id, k) => {
-        const c = ct(id)
-        expect([id, bacCua(c).phai, 'loai' in c.tren ? c.tren.cach : null]).toEqual([id, [...l.phai[k]!], l.cach[k]])
-      })
+  it('quy luật con số đúng với mọi loại được nêu', () => {
+    for (const l of LUAT_SO) l.ids.forEach((id, k) => expect([id, bacCua(ct(id)).phai]).toEqual([id, [...l.phai[k]!]]))
   })
 
   it('mọi loại có mẹo; câu mẹo gọi đúng tên tay phải ở gốc Đô', () => {
@@ -49,14 +29,13 @@ describe('quy luật và mẹo theo loại hợp âm', () => {
       expect(m.length).toBeGreaterThan(15)
       if (!('iv' in c.tren)) expect(m).toContain(tenTren(c, 'C', 'flat'))
     }
-    expect(meoCua(ct('13b9'))).toBe('tay trái gốc – 3 – ♭7 + tay phải trưởng trên gốc lùi 3 phím — gốc Đô: khung C7 + A — như C13 (Am) nhưng Đô lên Đô♯')
-    expect(demPhim(9)).toBe('lùi 3 phím')
+    expect(meoCua(ct('13b9'))).toBe('khung 7 + trưởng — gốc Đô: khung C7 + A — như C13 (Am) nhưng Đô lên Đô♯')
   })
 
   it('mẹo vàng đúng với công thức thật', () => {
     expect(MEO_VANG).toHaveLength(6)
     const tren = (id: string) => ct(id).tren as { loai: keyof typeof BA; cach: number }
-    // mẹo 1: đuôi số → cách cộng gốc
+    // mẹo 1: đuôi số → bậc tay phải (6 → bậc 6, 7 → bậc 3 / ♭3, 9 → bậc 5, 11 → ♭7, 13 → bậc 9 hay 13)
     expect(['6', 'maj7', 'm7', 'maj9', 'm11', 'm13', '13'].map((id) => tren(id).cach)).toEqual([9, 4, 3, 7, 10, 2, 9])
     // mẹo 2: chất tay phải của loại 7
     expect(['maj7', '7', 'm7', 'm7b5', 'dim7', 'mMaj7'].map((id) => BA[tren(id).loai].ten)).toEqual(['thứ', 'giảm', 'trưởng', 'thứ', 'giảm', 'tăng'])
@@ -72,63 +51,49 @@ describe('quy luật và mẹo theo loại hợp âm', () => {
   })
 })
 
-describe('mẹo cộng gốc — gốc nào cộng gốc nào ra hợp âm tổng', () => {
-  it('9 cách cộng gốc phủ đủ 23 loại tay phải là hợp âm ba, mỗi loại đúng một cách; 3 loại còn lại là chùm nốt', () => {
-    const ba = CONG_THUC.filter((c) => 'loai' in c.tren)
-    expect([ba.length, CONG_THUC.length - ba.length, CONG_GOC.length]).toEqual([23, 3, 9])
-    expect(CONG_GOC.flatMap((c) => loaiCuaCach(c.cach).map((x) => x.id)).sort()).toEqual(ba.map((c) => c.id).sort())
-    // một dạng công thức dùng cho nhiều loại — số loại mỗi cách
-    expect(Object.fromEntries(CONG_GOC.map((c) => [c.ten, loaiCuaCach(c.cach).length]))).toEqual({
-      'lên 4 phím': 3,
-      'lên 3 phím': 5,
-      'lên 7 phím': 3,
-      'lùi 3 phím': 5,
-      'lùi 2 phím': 2,
-      'lên 2 phím': 2,
-      'lùi 1 phím': 1,
-      'cách 6 phím': 1,
-      'lùi 4 phím': 1,
-    })
+describe('mẹo cộng loại — loại tay trái + loại tay phải = loại tổng', () => {
+  it('26 loại chỉ dùng 8 dạng tay trái; số loại mỗi dạng', () => {
+    const dem: Record<string, number> = {}
+    for (const c of CONG_THUC) dem[dangTrai(c)] = (dem[dangTrai(c)] ?? 0) + 1
+    expect(dem).toEqual({ 'nốt gốc': 9, 'khung 7': 5, 'gốc – 5': 5, trưởng: 2, thứ: 2, 'khung m7': 1, 'gốc – 3': 1, 'gốc – ♭5': 1 })
   })
 
-  it('tên cách đếm đúng chiều: lên N là N nửa cung, lùi N là 12 − N', () => {
-    for (const c of CONG_GOC) {
-      const [huong, so] = c.ten.split(' ')
-      const n = Number(so)
-      expect([c.ten, huong === 'lên' ? n : huong === 'lùi' ? 12 - n : 6]).toEqual([c.ten, c.cach])
-    }
-  })
-
-  it('cách tìm tay phải ở gốc cụ thể — B6/9 trong ảnh người dùng, Dmaj9, Cm11, C13♭9♯11, chùm Badd9', () => {
-    expect(cachTimTayPhai(ct('69'), 'B', 'flat')).toBe('Si lùi 3 phím = Sol♯ (cặp thứ song song B ↔ G♯m) → treo 4 trên Sol♯: G♯sus4 (Sol♯ – Đô♯ – Rê♯).')
-    expect(cachTimTayPhai(ct('maj9'), 'D', 'flat')).toBe('Rê lên 7 phím = La (nốt trên cùng của D: Rê – Fa♯ – La) → trưởng trên La: A (La – Đô♯ – Mi).')
-    expect(cachTimTayPhai(ct('m11'), 'C', 'flat')).toBe('Đô lùi 2 phím = Si♭ (thấp hơn gốc một cung) → trưởng trên Si♭: B♭ (Si♭ – Rê – Fa).')
-    expect(cachTimTayPhai(ct('maj7'), 'E', 'flat')).toBe('Mi lên 4 phím = Sol♯ (nốt giữa của E: Mi – Sol♯ – Si) → thứ trên Sol♯: G♯m (Sol♯ – Si – Rê♯).')
-    expect(cachTimTayPhai(ct('13b9#11'), 'C', 'flat')).toContain('Đô cách 6 phím = Sol♭')
-    expect(cachTimTayPhai(ct('add9'), 'B', 'flat')).toBe('Tay phải là chùm nốt rời: Si lên 2 phím = Đô♯, lên 4 phím = Rê♯, lên 7 phím = Fa♯ — bấm sát nhau Đô♯ – Rê♯ – Fa♯.')
-  })
-
-  it('công thức chung, dòng ngắn trên viên, nhắc sau khi đúng', () => {
-    expect(congThucChung(ct('69'))).toBe('tay trái gốc – 5 + tay phải treo 4 trên gốc lùi 3 phím')
-    expect([meoNgan(ct('69')), meoNgan(ct('maj9')), meoNgan(ct('add9'))]).toEqual(['+ treo 4 · lùi 3 phím', '+ trưởng · lên 7 phím', '+ chùm 2 · 4 · 7 phím'])
-    expect(nhoNgan(ct('69'), 'B', 'flat')).toBe('Si lùi 3 phím → G♯sus4')
-  })
-
-  it('bảng cặp gốc ghi đúng chữ ở mọi gốc', () => {
-    expect(capGoc(9, [0, 11, 3, 6])).toEqual(['C→A', 'B→G♯', 'E♭→C', 'F♯→D♯'])
-    expect(capGoc(7, [0, 2, 6])).toEqual(['C→G', 'D→A', 'F♯→C♯'])
-    expect(capGoc(10, [0, 2, 4])).toEqual(['C→B♭', 'D→C', 'E→D'])
-  })
-
-  it('bảng cộng gốc của một màn: gom theo chất tay phải, chùm để riêng', () => {
-    const b = bangCongGoc(['6', '69', '13', '13b9', 'm6', 'maj7', 'add9'])
-    expect(b.dong.map((d) => d.ten)).toEqual(['lên 4 phím', 'lùi 3 phím'])
-    expect(b.dong[1]!.theoChat).toEqual([
-      { chat: 'thứ', loai: ['6 (tay trái gốc – 5)', '13 (tay trái gốc – 3 – ♭7)'] },
-      { chat: 'treo 4', loai: ['6/9 (tay trái gốc – 5)'] },
-      { chat: 'giảm', loai: ['m6 (tay trái gốc – 5)'] },
-      { chat: 'trưởng', loai: ['13♭9 (tay trái gốc – 3 – ♭7)'] },
+  it('phép cộng loại của từng công thức', () => {
+    expect(['maj9#11', '13b9', '69', 'add9', 'maj7', 'm13'].map((id) => congLoai(ct(id)))).toEqual([
+      'trưởng + thứ',
+      'khung 7 + trưởng',
+      'gốc – 5 + treo 4',
+      'gốc – 5 + chùm',
+      'nốt gốc + thứ',
+      'khung m7 + thứ',
     ])
-    expect(b.chum).toEqual(['add9 = tay trái gốc – 5 + chùm nốt 2 · 4 · 7 phím trên gốc'])
+  })
+
+  it('chỉ cộng loại thì có đúng 6 cặp trùng — 5 cặp hợp âm ba và cặp chùm add9 / m(add9)', () => {
+    const cap = [...new Set(CONG_THUC.flatMap((c) => trungCongLoai(c).map((t) => [c.id, t.id].sort().join('|'))))].sort()
+    expect(cap).toEqual(['13|13b9#11', '13#11|13b9', '7|dim7', '9sus4|m7', 'add9|madd9', 'm7b5|maj7'].sort())
+  })
+
+  it('bảng gom theo tay trái: một dạng tay trái + đổi loại tay phải = nhiều loại, ví dụ gốc Đô ghi tên hai tay', () => {
+    const b = bangCongLoai(CONG_THUC.map((c) => c.id))
+    expect(b.map((d) => d.dang)).toEqual(['nốt gốc', 'khung 7', 'gốc – 5', 'trưởng', 'thứ', 'khung m7', 'gốc – 3', 'gốc – ♭5'])
+    expect(b[1]).toEqual({
+      dang: 'khung 7',
+      viDu: 'C7',
+      theoChat: [
+        { chat: 'thứ', loai: [{ ten: '13', viDu: 'C7 + Am' }, { ten: '13♭9♯11', viDu: 'C7 + G♭m' }] },
+        { chat: 'trưởng', loai: [{ ten: '13♭9', viDu: 'C7 + A' }, { ten: '13♯11', viDu: 'C7 + D' }] },
+        { chat: 'tăng', loai: [{ ten: '7♭13', viDu: 'C7 + A♭+' }] },
+      ],
+    })
+    expect(b[2]!.theoChat.find((c) => c.chat === 'chùm')!.loai).toEqual([
+      { ten: 'add9', viDu: 'Đô – Sol + Rê – Mi – Sol' },
+      { ten: 'm(add9)', viDu: 'Đô – Sol + Rê – Mi♭ – Sol' },
+    ])
+    // một màn chỉ lấy loại của màn, giữ thứ tự dạng tay trái
+    expect(bangCongLoai(['maj9', 'maj9#11', '6']).map((d) => [d.dang, d.viDu])).toEqual([
+      ['gốc – 5', 'Đô – Sol'],
+      ['trưởng', 'C'],
+    ])
   })
 })
