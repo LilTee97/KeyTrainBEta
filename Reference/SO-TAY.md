@@ -6069,3 +6069,35 @@ thuộc vòng nào trong các vòng hòa thanh trong âm nhạc"*.
 toàn suite **2 683 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: trang Tái hòa âm 4/4 (bài thử Am–F–C–G ×2 / F–G–Em–Am–
 Dm7–G7–Cmaj7, sau tái hòa âm → vòng trục bắt đầu từ vi lặp 2 vòng · Royal Road · ii–V–I, phủ 15/15), tab Tái hòa âm vòng 18/18 ·
 `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: "Bấm như thầy" — thế bấm, thế đảo, slash chord, chuyển hợp âm đo trên sheet; đánh theo thế thầy (9/10/2026)
+
+**Người dùng:** *"Hãy cho thêm tính năng dạy bấm hợp âm như từng thầy. Hãy phân tích cách các thầy xếp ngón khi bấm các hợp âm và khi
+chuyển hợp âm thì từng thầy đã xếp ngón thế nào … Nhớ phân tích luôn cách các thầy dùng các thế đảo và slash chord hoặc bất cứ kỹ thuật bấm
+hợp âm nào"*.
+
+- `tools/the_bam_thay.py` (mới) → `src/thay/soanCau/theBamThay.json`: mỗi khúc hợp âm (Linh Nhi, Cà Pháo: `doan_hat` phần hát; Blues: ký
+  hiệu in) — cú đầu tay trái (bass → bậc so với gốc = thế đảo / slash), các nốt rải, cụm tay phải ≥ 3 nốt (cụm TIÊU BIỂU = nhiều nốt thuộc
+  hợp âm nhất — cụm đầu có khi là nốt giai điệu lướt), chuyển hợp âm (nốt chung, dời bao nhiêu, bass đi thế nào), đường bass liền bậc nhờ
+  thế đảo. Đoạn đánh theo = nốt thật, chỉ lấy khúc ký hiệu được tay trái xác nhận và cụm sạch (Blues: cụm có 3/♭3/♭7 của gốc ký hiệu), bỏ
+  trùng, ≤ 3 đoạn mỗi bài. `--kiem` giữ số đo.
+- Soát tay trước khi viết lời (ví dụ có tên đều đã xem từng nốt): Cà Pháo verse Người Hãy Quên Em Đi Dm9 · Gm7 · C9 · Fmaj7 · B♭maj7
+  thiếu gốc; Dm/C – B♭/A – Dm/G (Để Em Rời Xa), A♭ – Cm/G – Fm (Ngày Mai Em Đi), F/G (Hồng Kông 1); Linh Nhi Am – D/F♯ – G (Mùa Xuân);
+  Robert C/E – E♭°7 – Dm. Soát tay bắt được: bộ đọc sai gốc ở khúc tự suy ("Dm/E" thật ra là A7/E) → chỉ dùng khúc có ký hiệu xác nhận;
+  Rừng Lá Thấp ký hiệu có vẻ lệch tay trái (v/♭3, i/5) → ghi "chưa tách", không dạy; đoạn tay trái riêng cho Linh Nhi đã thử rồi bỏ (tên
+  hợp âm lệch nốt).
+- `bamNhuThay.ts` (mới): đọc JSON, `ngonGoiY` (ngón gợi ý theo luật bàn tay — Claude, không phải số đo; 0/21 sheet ghi ngón),
+  `hopTheoNot` (tên đọc từ nốt bấm thật khi cùng gốc ký hiệu: Dm9, C9, A9sus4, E♭sus2…), `LOI_BAM_THAY` (lời đọc kết quả, số có test giữ).
+- `VongTab.tsx`: khung **Bấm như thầy** (số đo từng thầy: tay trái, bass vào hợp âm, slash, đường bass, tay phải, chuyển hợp âm; lời đọc;
+  đoạn "Đánh theo thế thầy"); khung **Đánh theo** thêm chế độ thế thầy — phải đúng từng nốt (đúng nốt sai quãng tám thì báo "khác thế"
+  kèm số quãng tám), bàn phím nới theo tầm đoạn; nhãn hai tay ghi ngón gợi ý ở cả hai chế độ.
+- Số đo chính: Linh Nhi — tay trái mang thế (bass đơn 500/672, rải 1–5–8 73, 1–5–8–10 79), tay phải ít cụm (139/676); Cà Pháo — tay trái
+  bass đơn 345/430, tay phải thiếu gốc (♭7 ở đáy 46/254), quãng tám kẹp giữa 116/254, giữ nốt chung 77/147; Blues — ♭7 ở đáy 22/113, giữ
+  nốt chung 39/66. Đoạn đánh theo: Linh Nhi 1 · Cà Pháo 11 · Blues 4.
+- PianoBrain (chưa commit, chờ duyệt): mục "Vòng hợp âm và thế bấm — đo 9/10/2026" ở md Cà Pháo, Linh Nhi, Blues.
+- Sửa số cũ: hai mục SO-TAY trước ghi chạy thử tab Tái hòa âm vòng "18/18" — đếm lại kịch bản có 17 bước kiểm, đạt 17/17.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `bamNhuThay.test.ts` 4 (ngón; tên Dm9 · Gm7 · C9 đúng như soát tay; mọi số trong lời; đoạn đủ hai tay)
+· `the_bam_thay.py --kiem` · toàn suite **2 687 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: Bấm như thầy 12/12 (nạp verse
+Người Hãy Quên Em Đi, bấm Dm9 đúng nốt → sang; Gm7 sai quãng tám bass → "khác thế … Sol2", chưa sang; đúng → sang), tab vòng 17/17, trang
+Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.
