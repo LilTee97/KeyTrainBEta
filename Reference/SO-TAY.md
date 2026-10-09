@@ -5896,3 +5896,17 @@ ghi ≠ anh bấm, mọi hợp âm phát được tiếng) · chạy thử headl
 6/6 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
 
 **Chưa làm:** thẻ Linh Nhi và Blues chưa viết lại theo lối nhạc sĩ (chờ người dùng); A–D của kế hoạch chưa dựng.
+
+## Bước — GĐ 3: thẻ Linh Nhi, Blues viết lại theo mẫu Cà Pháo (9/10/2026)
+
+**Người dùng:** *"Cà Pháo đã đúng hãy sửa 2 thẻ kia theo. Các mục trong "cần tôi chọn" hãy làm theo đề xuất của bạn"*.
+
+- `giaiThich.ts`: `lyDoLinhNhi` (tách khỏi `lyDoThay`, nay chỉ còn chia việc) và `lyDoBlues` viết lại — tựa "bài ghi / khung ghi X → chị /
+  người chơi bấm Y" theo bậc của bài; lời nghe ra sao, vì sao, khi nào nên / không nên; mỗi ý một cặp `nghe`. Số và ô ví dụ giữ nguyên
+  (test cũ của hai thầy qua nguyên). Blues tách ý ♭II7 đuôi kết khỏi ý V. Lời về Đường Xưa không gọi tên nốt theo giọng đang chọn ("nốt ♯4").
+- `H(goc, chat, bass?)` dùng chung ba khối; `chongHopAm.hauDep`: "madd9" hiện là "m(add9)".
+- `KE-HOACH-LUYEN-TAP.md`: ghi người dùng chốt thứ tự A → B → C → "vòng + lựa chọn thay" → bước 4; trang "Hợp âm".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `src/thay/__tests__` 107 (thêm: mọi ý ba thầy có câu nghe khác nhau, phát được tiếng, bass đúng; tựa
+Linh Nhi La thứ / Đô trưởng, Blues Sol trưởng / Mi thứ) · toàn suite **2 649 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless
+(cổng 5199): Linh Nhi 16 + 16 nút nghe, ▶ ra tiếng, Blues 10 + 10 — 5/5 đạt · `LuyenTap.json`, `Nguon.json` không đổi.

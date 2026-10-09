@@ -176,20 +176,6 @@ describe('Cà Pháo — bài ghi gì, anh bấm gì, nghe ra sao (viết lại 8
     }
   })
 
-  it('mỗi ý có câu nghe bài ghi / anh bấm, khác nhau, và mọi hợp âm phát được tiếng', () => {
-    for (const thu of [false, true]) {
-      const ds = Object.values(lyDoThay('ca-phao', LA, thu)!.bac).flatMap((x) => x!)
-      for (const d of ds) {
-        expect(d.nghe, d.y).toBeTruthy()
-        expect(JSON.stringify(d.nghe!.bai), d.y).not.toBe(JSON.stringify(d.nghe!.thay))
-        for (const x of [...d.nghe!.bai, ...d.nghe!.thay]) {
-          expect(CONG_THUC.find((c) => c.kyHieu === x.chat) ?? findQualityBySymbol(x.chat), `"${x.chat}" ở ${d.y}`).toBeTruthy()
-          expect(theBamHop(LA, x).length).toBeGreaterThanOrEqual(3)
-        }
-      }
-    }
-  })
-
   it('lời về một bài cụ thể giữ tên thật của bài, không đổi theo giọng đang chọn', () => {
     const v = noi(lyDoThay('ca-phao', LA, false)!.bac[7]!)
     expect(v).toContain('sheet ghi "Csus4/G"')
@@ -231,5 +217,53 @@ describe('Blues — khung của thể loại, gốc của bài, màu của ngư�
       const y = ds.map((d) => d.y)
       expect(new Set(y).size).toBe(y.length)
     }
+  })
+})
+
+describe('Mẫu thẻ thầy người dùng duyệt (Cà Pháo 8/10, áp cho Linh Nhi · Blues 9/10): tựa bài ghi → thầy bấm, câu nghe so được', () => {
+  const tua = (ds: { y: string }[]) => ds.map((d) => d.y).join(' | ')
+
+  it.each(['linh-nhi', 'ca-phao', 'blues'] as const)('%s: mỗi ý có câu nghe bài ghi ≠ thầy bấm, mọi hợp âm phát được tiếng', (thay) => {
+    for (const thu of [false, true]) {
+      const ds = Object.values(lyDoThay(thay, LA, thu)!.bac).flatMap((x) => x!)
+      for (const d of ds) {
+        expect(d.nghe, d.y).toBeTruthy()
+        expect(JSON.stringify(d.nghe!.bai), d.y).not.toBe(JSON.stringify(d.nghe!.thay))
+        for (const x of [...d.nghe!.bai, ...d.nghe!.thay]) {
+          expect(CONG_THUC.find((c) => c.kyHieu === x.chat) ?? findQualityBySymbol(x.chat), `"${x.chat}" ở ${d.y}`).toBeTruthy()
+          const not = theBamHop(LA, x)
+          expect(not.length).toBeGreaterThanOrEqual(3)
+          if (x.bass !== undefined) expect(pc(not[0]!)).toBe(pc(LA + x.bass))
+        }
+      }
+    }
+  })
+
+  it('Linh Nhi, La thứ: tựa ghi rõ bài ghi gì → chị bấm gì; lời có chỗ không nên', () => {
+    const ly = lyDoThay('linh-nhi', LA, true)!
+    expect(tua(ly.bac[0]!)).toContain('Bài ghi Am → chị bấm Am(add9), Am7 — nốt màu nằm trong hình rải tay trái')
+    expect(tua(ly.bac[0]!)).toContain('Bài ghi A7 trước Dm → chị giữ, có chỗ đặt Đô♯ ở bass (A7/C♯)')
+    expect(tua(ly.bac[2]!)).toContain('Bài đi thẳng Dm → E7 → chị chèn Bm7♭5 vào giữa')
+    expect(tua(ly.bac[8]!)).toContain('chị bấm Fmaj7: giữ nguyên tay phải của i, chỉ bass bước xuống')
+    expect(tua(ly.bac[10]!)).toContain('chị chèn G cho bass đi xuống liền bậc')
+    expect(noi(ly.bac[2]!)).toContain('đừng chèn khi giai điệu đang ngân Đô')
+    expect(noi(ly.bac[10]!)).toContain('La → Sol → Fa → Mi')
+  })
+
+  it('Linh Nhi, Đô trưởng: II7 chen giữa hai lần I, hợp âm giảm thay V, iv mượn ở đoạn kết', () => {
+    const ly = lyDoThay('linh-nhi', 0, false)!
+    expect(tua(ly.bac[2]!)).toContain('Bài ghi Dm hay G7 → chị bấm D7 (II7 có ♯4) rồi về thẳng I')
+    expect(tua(ly.bac[7]!)).toContain('Bài ghi G → chị đặt F♯m7♭5 hay Bdim7: bass đi nửa cung')
+    expect(tua(ly.bac[5]!)).toContain('đoạn kết chị đổi thành Fm (mượn Đô thứ)')
+    expect(noi(ly.bac[5]!)).toContain('♭6 (La♭) rơi xuống bậc 5 (Sol)')
+  })
+
+  it('Blues: tựa ghi khung / bài ghi → người chơi bấm', () => {
+    const t = lyDoThay('blues', 7, false)!
+    expect(tua(t.bac[7]!)).toContain('Đuôi kết: khung ghi D7 → G → Ray đổi thành A♭7 → G13')
+    expect(tua(t.bac[5]!)).toContain('Khung ghi C → người chơi bấm C7, C9; quay vòng thêm ♯IV°')
+    const m = lyDoThay('blues', 4, true)!
+    expect(tua(m.bac[8]!)).toContain('Bài ghi C → người phối bấm C7: ♭7 của nó chính là nốt blue ♭5')
+    expect(tua(m.bac[7]!)).toContain('Bài ghi B → người phối bấm B7♯9')
   })
 })

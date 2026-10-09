@@ -266,7 +266,7 @@ const SOL: Record<string, string> = { C: 'Đô', D: 'Rê', E: 'Mi', F: 'Fa', G: 
 /** Tên Việt của nốt: 'Bb' → 'Si♭', 'C#' → 'Đô♯'. */
 export const vn = (ten: string) => `${SOL[ten[0]!] ?? ten[0]}${ten.slice(1).replace(/#/g, '♯').replace(/b/g, '♭')}`
 /** Hậu tố hợp âm đẹp: 'm7b5' → 'm7♭5', '13#11' → '13♯11'. */
-export const hauDep = (chat: string) => chat.replace(/b(\d)/g, '♭$1').replace(/#/g, '♯')
+export const hauDep = (chat: string) => chat.replace(/^madd(\d+)/, 'm(add$1)').replace(/b(\d)/g, '♭$1').replace(/#/g, '♯')
 /** Tên gốc đẹp: 'Bb' → 'B♭'. */
 export const gocDep = (ten: string) => ten.replace(/#/g, '♯').replace(/^([A-G])b/, '$1♭')
 

@@ -382,154 +382,186 @@ export interface LyDoThay {
 }
 
 const KHUNG: NguyenTac = {
-  y: 'Khung hòa âm là của bài — cái riêng của chị nằm ở màu, hợp âm chèn và vài chỗ thay',
-  tom: '422/616 hợp âm phần hát (8 bài, 8 nhạc sĩ) cùng gốc và loại với bản phổ biến. Phần của chị: nốt màu (gần như mọi nốt màu bản phổ biến không ghi), 96 chỗ chèn thêm, 67 chỗ đổi gốc, và đổi hợp âm giữa các lần lặp ở 45/152 chỗ.',
+  y: 'Chị đi đúng đường của bài — cái riêng là tay trái biết hát và vài hợp âm chèn cho bass đi liền',
+  tom: 'Gần như mọi hợp âm chị bấm là hợp âm của bài. Chị thêm nét bằng hai cách: tay trái rải đi liền bậc (nốt 9 tự hiện ra), và chèn hợp âm cho bass bước từng bậc (ii° trước V, ♭VII giữa i và ♭VI). Nghe vẫn là bolero mộc, nhưng tay trái có câu nhạc riêng. (422/616 hợp âm phần hát — 8 bài, 8 nhạc sĩ — cùng gốc và loại với bản phổ biến; 96 chỗ chèn, 67 chỗ đổi gốc; đổi hợp âm giữa các lần lặp 45/152 chỗ.)',
   bac: [],
 }
 
 export function lyDoThay(thay: TeacherId, tonic: number, thu: boolean): LyDoThay | null {
   if (thay === 'ca-phao') return lyDoCaPhao(tonic, thu)
   if (thay === 'blues') return lyDoBlues(tonic, thu)
-  if (thay !== 'linh-nhi') return null
-  const { n, h, giong } = nguCanh(tonic, thu)
+  if (thay === 'linh-nhi') return lyDoLinhNhi(tonic, thu)
+  return null
+}
+
+const H = (goc: number, chat: string, bass?: number): Hop => (bass === undefined ? { goc, chat } : { goc, chat, bass })
+
+/*
+  LINH NHI — viết lại 9/10/2026 theo mẫu Cà Pháo người dùng đã duyệt ("Cà Pháo đã đúng hãy sửa 2 thẻ kia theo"): tựa "bài ghi X → chị
+  bấm Y" theo bậc của bài; lời = nghe ra sao, vì sao chọn, khi nào nên / không nên; `nghe` để so bằng tai. Số và ô ví dụ giữ nguyên
+  (đã soát tay 7/10/2026, `tools/ly_do_hop_am_linh_nhi.py --kiem`, `tools/tach_lua_chon.py --kiem`).
+*/
+function lyDoLinhNhi(tonic: number, thu: boolean): LyDoThay {
+  const { n, h, songSong, cungChu } = nguCanh(tonic, thu)
   if (thu) {
     const iMau: Diem = {
-      y: 'i: hợp âm của bài — màu là của chị, và nằm ở tay trái rải',
-      giai: `Chị đặt i đúng chỗ bài đặt. Màu thì bản phổ biến không ghi: nốt 9 (${n(2)}) và ♭7 (${n(10)}) là của chị. Nốt 9 gần như luôn ở tay trái, trong hình rải gốc – 5 – 8 rồi bước liền lên 9 – 10: trên ${h(0, 'm')} là ${n(0)} – ${n(7)} – ${n(0)} – ${n(2)} – ${n(3)}. Nốt 9 là bước giữa quãng tám và quãng mười — nó có mặt vì ngón tay đi liền, không vì chị "đặt add9". Học lối này là học hình rải tay trái, không phải học thêm một tên hợp âm.`,
-      ai: 'Của bài: gốc i (93/100 chỗ cùng bản phổ biến). Của chị: màu — nốt 9 bản không ghi ở 40/40 chỗ, ♭7 ở 22/22.',
+      y: `Bài ghi ${h(0, 'm')} → chị bấm ${h(0, 'madd9')}, ${h(0, 'm7')} — nốt màu nằm trong hình rải tay trái`,
+      giai: `Chị giữ ${h(0, 'm')} đúng chỗ bài đặt, nhưng màu đến từ tay trái: hình rải đi ${n(0)} – ${n(7)} – ${n(0)} – ${n(2)} – ${n(3)}, bước liền lên từ quãng tám tới quãng mười. Nốt 9 (${n(2)}) không được "đặt" vào như một hợp âm màu — nó là bậc thang giữa hai nốt, ngón tay đi liền nên nó có mặt. Nghe ra: tay trái không còn là khuôn gốc – năm – tám nhảy đều, mà thành một câu nhạc nhỏ đi lên, như dòng hát thứ hai dưới giai điệu — mềm, có hướng, đúng chất bolero. Thêm ${n(10)} thành ${h(0, 'm7')} thì i ấm lại, bớt trần. Nên dùng khi i ngân từ một ô trở lên ở nhịp chậm — đủ chỗ cho hình rải đi hết; ô ngắn hay nhịp nhanh thì về gốc – năm cho gọn.`,
+      ai: 'Của chị: nốt 9 bản phổ biến không ghi ở 40/40 chỗ, ♭7 ở 22/22. Gốc i là của bài (93/100).',
       viDu: 'Nỗi Buồn Hoa Phượng ô 36 (Rê thứ): Rê2 – La2 – Rê3 – Mi3 – Fa3. Một Cõi Đi Về ô 40 (Sol thứ): Sol – Rê – Sol – La – Si♭.',
-      coSo: 'Số đo phần hát 5 bài thứ: 43 đoạn i có nốt 9 ở tay trái, 21 trong đó có bước 8 → 9 liền (4 bài); iv 11/22 (2 bài). Còn lại nốt 9 nằm chỗ khác trong hình rải — chưa phân loại.',
+      coSo: 'Phần hát 5 bài thứ: 43 đoạn i có nốt 9 ở tay trái, 21 trong đó có bước 8 → 9 liền (4 bài); iv 11/22 (2 bài).',
+      nghe: { bai: [H(0, 'm'), H(5, 'm'), H(0, 'm')], thay: [H(0, 'madd9'), H(5, 'madd9'), H(0, 'm7')] },
     }
     const i7: Diem = {
-      y: 'I7 → iv: hòa âm của bài — cái của chị là cách bấm',
-      giai: `Ngay trước ${h(5, 'm')}, bài đổi ${h(0, 'm')} thành ${h(0, '7')}: ${n(3)} nâng lên ${n(4, 3)}, nốt ấy kéo nửa cung lên ${n(5)} (gốc của iv), còn ${n(10)} (♭7) kéo xuống ${n(8)} (♭3 của iv) — hai nốt dẫn cùng đổ vào iv, nên iv nghe như được kéo tới. Bản phổ biến của cả ba bài đều có bước này, nên đây là hòa âm của bài. Cái của chị: nốt nâng chỉ nằm ở tay đệm, và có chỗ chị đặt luôn ${n(4, 3)} ở bass — bass đi nửa cung ${n(4, 3)} → ${n(5)}.`,
-      ai: 'Của bài: bản phổ biến có I7 ở 8/10 chỗ chị đặt I. Của chị: đặt bậc 3 ở bass (1/8 chỗ).',
+      y: `Bài ghi ${h(0, '7')} trước ${h(5, 'm')} → chị giữ, có chỗ đặt ${n(4, 3)} ở bass (${h(0, '7', 4)})`,
+      giai: `Bước ${h(0, '7')} → ${h(5, 'm')} là của bài: ${n(4, 3)} dẫn nửa cung lên ${n(5)}, ${n(10)} rơi xuống ${n(8)} — iv đến như được kéo tới. Cái của chị là cách bấm: ${n(4, 3)} chỉ nằm ở tay đệm, không ở giai điệu — giai điệu vẫn đi trong gam thứ, chỉ lớp đệm lóe sáng. Có chỗ chị đặt luôn ${n(4, 3)} ở bass: thay vì bass nhảy ${n(0)} → ${n(5)}, nó bước nửa cung ${n(4, 3)} → ${n(5)} — đường bass hát lên, nghe như được dắt từng bước vào iv. Nên đặt bậc 3 ở bass khi muốn chỗ chuyển ấy mềm và liền; giữ gốc ở bass khi đầu câu cần chắc. Chỗ nào giai điệu có ${n(3)} thì đừng nâng thành ${h(0, '7')} — ${n(4, 3)} sẽ chỏi nửa cung.`,
+      ai: 'Của bài: bản phổ biến có I7 ở 8/10 chỗ chị đặt I. Của chị: bậc 3 đặt ở bass (1/8 chỗ).',
       viDu: 'Lá Thư Trần Thế ô 23 (D7: tay trái Rê – Fa♯ – La – Đô, sang Sol thứ ở phách 4). Nỗi Buồn Hoa Phượng ô 17 → 18 (D7/F♯: bass Fa♯2 → Sol2).',
-      coSo: `8 chỗ sạch (soát tay) ở 3 bài (Lá Thư, Một Cõi, Nỗi Buồn), 8/8 vào iv. Nốt trên cùng tay phải có ${n(3)} ở 0/8 chỗ — nên giai điệu cũng không có (giai điệu nằm trên cùng). Sửa lời trước: tôi từng viết "nhiều khả năng là lựa chọn của người phối" — sai, bản phổ biến có sẵn.`,
+      coSo: `8 chỗ sạch (soát tay) ở 3 bài (Lá Thư, Một Cõi, Nỗi Buồn), 8/8 vào iv; nốt trên cùng tay phải có ${n(3)} ở 0/8 chỗ. Sửa lời trước: tôi từng viết "nhiều khả năng là lựa chọn của người phối" — sai, bản phổ biến có sẵn.`,
+      nghe: { bai: [H(0, 'm'), H(0, '7'), H(5, 'm')], thay: [H(0, 'm'), H(0, '7', 4), H(5, 'm')] },
     }
     const ii: Diem = {
-      y: 'ii°: của chị — chị chèn nó ngay trước V',
-      giai: `Ở những chỗ chị bấm ${h(2, 'm7b5')}, bài đi thẳng iv → V hay ♭VI → V, hoặc ♭VI – ♭VII – V. Chị chèn ii° (dạng m7♭5) vào ngay trước V, hoặc đặt nó thay ♭VII. Vì sao hợp: ${h(2, 'm7b5')} chính là ${h(5, 'm')} đặt trên bass ${n(2)} (chồng hợp âm: m7♭5 = hợp âm thứ trên bậc ♭3), nên từ iv sang nó chỉ cần dời bass; rồi sang V thì ${n(8)} xuống ${n(7)}, ${n(0)} xuống ${n(11, 7)} — hai nốt đi nửa cung, hai nốt đứng yên. Có chỗ chị dùng nó làm bậc bass đi lên: i – ii° – ♭III (${n(0)} – ${n(2)} – ${n(3)}).`,
+      y: `Bài đi thẳng ${h(5, 'm')} → ${h(7, '7')} → chị chèn ${h(2, 'm7b5')} vào giữa`,
+      giai: `${h(2, 'm7b5')} chính là ${h(5, 'm')} đặt trên bass ${n(2)}: tay phải giữ nguyên iv, chỉ bass hạ một quãng ba. Nghe ra: iv chưa vội đi, nó "nghiêng" thêm một nhịp — tối hơn, bấp bênh hơn — rồi mới đổ vào V: ${n(8)} xuống ${n(7)}, ${n(0)} xuống ${n(11, 7)}, hai nốt đi nửa cung, hai nốt đứng yên. Câu nhạc như bước chậm lại trước cửa, nên cái vào V nặng và buồn hơn — chất bolero cổ điển. Nên chèn khi iv kéo dài trước V (đủ chỗ chia đôi); đừng chèn khi giai điệu đang ngân ${n(3)} — trên bass ${n(2)} nốt ấy thành ♭9, cọ nửa cung rất gắt. Có chỗ chị dùng nó làm bậc thang bass đi lên: i – ii° – ♭III.`,
       ai: 'Của chị: bản phổ biến có ii° ở 0/12 chỗ chị đặt (mọi bản: 1/12) — 12 chỗ ở 4 bài của 4 nhạc sĩ.',
       viDu: 'Một Cõi Đi Về ô 49 → 51 (Sol thứ): Cm (tay trái Đô – Mi♭ – Sol) → Am7♭5 (La – Đô – Mi♭ – Sol: chỉ thêm bass La) → D7. Ô 35: ♭VI – ii° – V ở chỗ bản ghi ♭VI – ♭VII – V7.',
-      coSo: 'Số đo: 12 chỗ, 6 chỗ đứng ngay trước V. Câu solo: ii° → V7 ở 4/5 bài thứ (md 13c).',
+      coSo: '12 chỗ, 6 chỗ đứng ngay trước V. Câu solo: ii° → V7 ở 4/5 bài thứ (md 13c).',
+      nghe: { bai: [H(5, 'm'), H(7, '7'), H(0, 'm')], thay: [H(5, 'm'), H(2, 'm7b5'), H(7, '7'), H(0, 'm')] },
     }
     const bIII: Diem = {
-      y: '♭III: phần lớn của bài — maj7 và 9 là của chị',
-      giai: `Chị hay tới ${h(3, '')} từ ${h(10, '')} (V → I của giọng trưởng song song) rồi đi tiếp vào V: ${n(10)} nâng nửa cung thành ${n(11, 7)}, ${n(3)} xuống ${n(2)}, ${n(7)} đứng yên — từ trưởng song song sang V của giọng thứ chỉ bằng hai bước nửa cung.`,
+      y: `Bài ghi ${h(3, '')} → chị bấm ${h(3, 'maj7')}, ${h(3, 'add9')} — và chị hay tới nó từ ${h(10, '')}`,
+      giai: `Chị tô ${h(3, '')} bằng maj7 (${n(2)}) và 9 (${n(5)}) — cái sáng của giọng trưởng song song được phủ mềm. Đáng học hơn là đường chị đi: ${h(10, '')} → ${h(3, '')} là V → I của ${songSong}, nên khi tới ${h(3, '')} nghe như về một căn nhà khác, sáng sủa, yên ổn; rồi từ đó sang V của giọng thứ chỉ cần hai bước nửa cung (${n(10)} lên ${n(11, 7)}, ${n(3)} xuống ${n(2)}) — cửa sổ sáng khép lại, câu nhạc quay về nỗi buồn. Nên dùng khi muốn đoạn giữa câu thoáng lên rồi lắng về.`,
       ai: 'Của bài: gốc ♭III ở 26/42 chỗ. Của chị: maj7 (bản không ghi 14/14), 9 (13/13), và 12 chỗ chèn thêm ♭III.',
-      coSo: 'Số đo phần hát: ♭VII → ♭III 10 lần (4 bài), ♭III → V 9 lần (3 bài). Cách đi bè là lý thuyết — chưa đo bè thật ở bước này.',
+      coSo: 'Phần hát: ♭VII → ♭III 10 lần (4 bài), ♭III → V 9 lần (3 bài). Cách đi bè là lý thuyết — chưa đo bè thật.',
+      nghe: { bai: [H(10, ''), H(7, ''), H(0, 'm')], thay: [H(10, ''), H(3, 'maj7'), H(7, '7'), H(0, 'm')] },
     }
     const iv: Diem = {
-      y: 'iv: của bài — add9 là của chị, dày lên ở điệp khúc',
-      giai: `Nốt 9 của iv chính là ${n(7)} — bậc 5 của giọng — và nó cũng đến từ hình rải tay trái 8 – 9 – 10. Lên điệp khúc tay chị nắm dày hơn nên nốt ấy có mặt nhiều hơn. Cùng nốt ${n(7)} ấy là nốt bảy của ♭VImaj7 — bậc 5 của giọng ngân qua nhiều hợp âm.`,
-      ai: 'Của bài: gốc iv ở 34/52 chỗ. Của chị: nốt 9 (bản không ghi 23/23).',
-      coSo: 'Số đo: iv có nốt 9 ở điệp khúc 7/12 đoạn (3 bài), phiên khúc 17/45; nốt 9 ấy là bậc 5 của giọng ở 24/24 đoạn.',
+      y: `Bài ghi ${h(5, 'm')} → chị bấm ${h(5, 'madd9')} — dày lên ở điệp khúc`,
+      giai: `Nốt 9 của iv là ${n(7)} — bậc 5 của giọng — và nó cũng đến từ hình rải tay trái đi liền lên. Nốt ấy có trong i, trong V, trong ♭VImaj7: một sợi chỉ ngân qua nhiều hợp âm, nên iv có 9 nghe liền với quanh nó, không đứng riêng. Lên điệp khúc chị nắm tay dày hơn nên nốt 9 vang rõ hơn — điệp khúc đầy và sáng hơn phiên khúc dù cùng hợp âm. Nên thêm 9 cho iv ở đoạn cần đầy; phiên khúc để thưa.`,
+      ai: 'Của chị: nốt 9 bản không ghi ở 23/23 chỗ. Gốc iv là của bài (34/52).',
+      coSo: 'iv có nốt 9 ở điệp khúc 7/12 đoạn (3 bài), phiên khúc 17/45; nốt 9 ấy là bậc 5 của giọng ở 24/24 đoạn.',
+      nghe: { bai: [H(0, 'm'), H(5, 'm'), H(0, 'm')], thay: [H(0, 'm'), H(5, 'madd9'), H(0, 'm')] },
     }
     const v: Diem = {
-      y: 'V trưởng: của bài — cái của chị là màu và cách lấy nốt cảm âm',
-      giai: `V trưởng (có nốt cảm âm ${n(11, 7)}) là hòa âm của bài — bản phổ biến gần như luôn ghi ${h(7, '7')}. Cái của chị: (1) màu căng ♭9 (${n(8)}) và ♭13 (${n(3)}) — hai nốt có sẵn trong gam thứ hòa âm; (2) cách lấy nốt cảm âm: tay đệm bấm V7 đủ trong khi nốt trên cùng ngân ${n(3)} — thành ${h(7, '7b13')}, tiếng "đặc sản" của giọng thứ; hoặc treo ${h(7, '7sus4')} rồi mới thả ${n(0)} xuống ${n(11, 7)}. Bậc ♭7 của V chị bấm ở tay trái nhưng ít khi giải xuống liền bậc như sách — lực kéo về i nằm ở bass (bậc 5 → 1) và nốt cảm âm.`,
+      y: `Bài ghi ${h(7, '7')} → chị bấm ${h(7, '7b13')}, ${h(7, '7b9')}, hay treo ${h(7, '7sus4')} rồi mới thả`,
+      giai: `V trưởng có nốt cảm âm là của bài — chị giữ. Cái của chị là cách cho nó căng. ${h(7, '7b13')}: tay đệm bấm V7 đủ, còn nốt trên cùng ngân ${n(3)} — bậc ♭3 của giọng — nên V nghe như đã mang sẵn nỗi buồn của i, "đặc sản" của giọng thứ. ${h(7, '7b9')} (${n(8)}): tối và gắt hơn, như tiếng nấc. ${h(7, '7sus4')}: ${n(0)} treo thay cho ${n(11, 7)}, câu nhạc lửng một nhịp rồi mới thả xuống — người nghe chờ, rồi được giải. Nên dùng ♭13 khi giai điệu trên V đứng ở ${n(3)}; ♭9 ở chỗ kịch tính, cuối câu lớn; sus4 khi V kéo dài từ hai nhịp, muốn một hơi thở trước khi về. Bậc ♭7 của V chị ít khi giải xuống liền bậc như sách — lực kéo về i nằm ở bass và nốt cảm âm.`,
       ai: 'Của bài: V ở 33/38 chỗ cùng bản phổ biến; bản cũng ghi ♭7 ở 16/20 chỗ chị có ♭7. Của chị: ♭9 · ♭13 (bản không ghi 8/8), treo sus4.',
       viDu: 'Một Cõi ô 51 (Sol thứ): tay trái Rê – La – Rê – Fa♯ – La – Đô, nốt trên cùng Si♭ → D7♭13. Lá Thư ô 37 → 38 (Rê thứ): A7sus4 — tay phải La – Rê – Sol — rồi Đô♯ ở ô sau.',
-      coSo: 'Số đo (đã sửa lỗi đọc 7/10): V 41 đoạn, 5 bài; nốt cảm âm ở nốt trên cùng 12, chỉ ở tay đệm 18, không có 11 (treo hay bỏ bậc 3); ♭7 của V đi xuống liền bậc 2/19.',
+      coSo: 'V 41 đoạn, 5 bài: nốt cảm âm ở nốt trên cùng 12, chỉ ở tay đệm 18, không có 11 (treo hay bỏ bậc 3); ♭7 của V đi xuống liền bậc 2/19.',
+      nghe: { bai: [H(7, '7'), H(0, 'm')], thay: [H(7, '7sus4'), H(7, '7b13'), H(0, 'm')] },
     }
     const bVI: Diem = {
-      y: '♭VImaj7: hoàn toàn là của chị — i đặt trên bass ♭6',
-      giai: `Từ ${h(0, 'm')} xuống ${h(8, '')}, chị không thay tay phải: cặp nốt của i vẫn ở đó, chỉ bass bước xuống ${n(8)}. Ba nốt của i đặt trên bass ${n(8)} chính là ${h(8, 'maj7')} (chồng hợp âm: maj7 = hợp âm thứ trên bậc 3). Bass đổi thì cảnh đổi, tầng trên giữ thì tai vẫn thấy ở nhà — chuyển mà không nhảy. Lên điệp khúc tay nắm dày hơn, nốt giữ nghe rõ hơn, nên maj7 dồn về điệp khúc.`,
-      ai: 'Của bài: gốc ♭VI ở 21/42 chỗ (chỗ khác chị tự đặt ♭VI). Của chị: maj7 — bản phổ biến không ghi ở chỗ nào (0/19).',
+      y: `Bài đi ${h(0, 'm')} → ${h(8, '')} → chị bấm ${h(8, 'maj7')}: giữ nguyên tay phải của i, chỉ bass bước xuống`,
+      giai: `Từ ${h(0, 'm')} sang ${h(8, '')}, chị không đổi tay phải: ba nốt của i vẫn ở đó, chỉ bass bước xuống ${n(8)} — và ba nốt của i trên bass ${n(8)} chính là ${h(8, 'maj7')}. Nghe ra: giai điệu vẫn đứng trong nhà, mà nền dưới chân đã trượt đi — cảnh đổi mà không nhảy, buồn kiểu lặng lẽ. Lên điệp khúc chị nắm dày hơn, nốt giữ nghe rõ hơn nên maj7 dồn về điệp khúc. Nên chọn khi i → ♭VI đi liền nhau và giai điệu ngân qua chỗ đổi; để ♭VI trơn khi muốn chỗ ấy mở, sáng.`,
+      ai: 'Của chị: maj7 — bản phổ biến không ghi ở chỗ nào (0/19). Gốc ♭VI là của bài ở 21/42 chỗ (chỗ khác chị tự đặt ♭VI).',
       viDu: 'Đừng Xa Em Đêm Nay ô 15 → 16 (Rê thứ → B♭maj7): tay phải lặp cặp La3 – Fa4 qua chỗ đổi, nốt trên cùng La4 ở phách 1, bass xuống Si♭2.',
-      coSo: 'Số đo (đã sửa lỗi đọc 7/10): ♭VImaj7 23 đoạn, 4 bài; đứng ngay sau i 16/23; nốt bảy (bậc 5 của giọng) ngân qua chỗ đổi 10/23, ở nốt trên cùng 5/23; điệp khúc 14/22 đoạn ♭VI có maj7, phiên khúc 9/26. "Nắm dày làm nốt giữ rõ hơn" là suy luận.',
+      coSo: '♭VImaj7 23 đoạn, 4 bài; đứng ngay sau i 16/23; nốt bảy (bậc 5 của giọng) ngân qua chỗ đổi 10/23, ở nốt trên cùng 5/23; điệp khúc 14/22 đoạn ♭VI có maj7, phiên khúc 9/26. "Nắm dày làm nốt giữ rõ hơn" là suy luận.',
+      nghe: { bai: [H(0, 'm'), H(8, ''), H(7, '')], thay: [H(0, 'm'), H(8, 'maj7'), H(7, '')] },
     }
     const bVII: Diem = {
-      y: '♭VII: phần lớn do chị đặt — để bass đi xuống',
-      giai: `i → ♭VII là bass đi xuống liền bậc từ chủ âm (${n(0)} → ${n(10)}); chị dùng nó mở một đường đi xuống (i → ♭VII → ♭VI hay → ♭III), hoặc đặt nó vào chỗ V cho tiếng mộc, không nốt cảm âm. Chị để ♭VII trơn là chính — việc của nó là đường bass.`,
-      ai: 'Của bài: chỉ 8/28 chỗ. Của chị: 11 chỗ chèn, 9 chỗ đổi gốc (có 4 chỗ thay V, cùng một bài).',
-      coSo: 'Số đo: i → ♭VII 11 lần (4 bài), ♭VII → ♭III 10 (4 bài). "Việc của nó là đường bass" là suy luận.',
+      y: `Bài đi ${h(0, 'm')} → ${h(8, '')} (hay → ${h(7, '')}) → chị chèn ${h(10, '')} cho bass đi xuống liền bậc`,
+      giai: `Chị dùng ${h(10, '')} như một bậc thang: ${n(0)} → ${n(10)} → ${n(8)} → ${n(7)} — bass đi xuống từng bước, kiểu "cầu thang buồn" của bolero, nghe như số phận cứ trôi xuống mà không cưỡng được. Có chỗ chị đặt ${h(10, '')} vào chỗ V: mất nốt cảm âm, câu kết mộc và buông hơn — nghe dân gian, cam chịu. Chị để ${h(10, '')} trơn là chính: việc của nó là đường bass, không phải màu. Nên chèn khi bài nhảy i → ♭VI (hay → V) mà bạn muốn bass đi liền; thay V bằng ♭VII khi muốn câu kết nhẹ, không đóng mạnh.`,
+      ai: 'Của chị: 11 chỗ chèn, 9 chỗ đổi gốc (có 4 chỗ thay V, cùng một bài). Của bài: chỉ 8/28 chỗ.',
+      coSo: 'i → ♭VII 11 lần (4 bài), ♭VII → ♭III 10 (4 bài). "Việc của nó là đường bass" là suy luận.',
+      nghe: { bai: [H(0, 'm'), H(8, ''), H(7, '')], thay: [H(0, 'm'), H(10, ''), H(8, ''), H(7, '')] },
     }
     return {
       nguyenTac: [
         KHUNG,
-        { y: 'Màu nằm ở tay trái rải, không ở tên hợp âm', tom: 'Nốt 9 trên i và iv là bước liền 8 – 9 – 10 của tay trái — bản phổ biến không ghi màu nào trong số đó.', bac: [0, 5] },
-        { y: 'Đổi bass, giữ tầng trên', tom: '♭VImaj7 là i đặt trên bass ♭6; ii°7 là iv đặt trên bass ii — màu và hợp âm chèn tự hiện ra khi bass đi.', bac: [8, 2] },
-        { y: 'V và I7 là của bài — chị chỉ đổi cách bấm', tom: 'Nốt cảm âm, I7 → iv đều có trong bản phổ biến; cái của chị là ♭9 · ♭13, treo sus4, bậc 3 đặt ở bass.', bac: [7, 0] },
+        {
+          y: 'Màu nằm ở tay trái rải, không ở tên hợp âm',
+          tom: 'Nốt 9 trên i và iv là bước liền 8 – 9 – 10 của tay trái: tay trái thành dòng hát thứ hai, mềm và có hướng. Khác Cà Pháo — màu của anh nằm trong tay phải. (♭7 ở bè giữa tay phải: chị 27/253 đoạn có ♭7, Cà Pháo 145/248.)',
+          bac: [0, 5],
+        },
+        {
+          y: 'Đổi bass, giữ tầng trên',
+          tom: '♭VImaj7 là i đặt trên bass ♭6; ii°7 là iv đặt trên bass ii: tay phải đứng yên, bass đi — nghe chuyển cảnh mà không nhảy.',
+          bac: [8, 2],
+        },
+        {
+          y: 'Bass đi xuống liền bậc — "cầu thang buồn"',
+          tom: 'Chị chèn ♭VII giữa i và ♭VI cho bass bước từng bậc xuống; V và I7 thì giữ của bài, chỉ đổi cách bấm (♭9 · ♭13, treo sus4, bậc 3 ở bass).',
+          bac: [10, 7, 0],
+        },
       ],
       bac: { 0: [iMau, i7], 2: [ii], 3: [bIII], 5: [iv], 7: [v], 8: [bVI], 10: [bVII] },
     }
   }
 
   const tron: Diem = {
-    y: 'I: của bài — maj7 và 9 là của chị, và đều đến từ đường đi của bass',
-    giai: `Ở ba bài trưởng chị giữ hợp âm của bài gần như ở mọi bậc. Màu chỉ xuất hiện khi bass hay bè đang đi: ${h(0, 'maj7')} thật ra là nốt dẫn bass — I sang vi bằng đường ${n(0)} → ${n(11)} → ${n(9)}, nốt ${n(11)} rơi ở móc cuối ô; add9 trên I là bước 8 – 9 – 10 của tay trái, như ở bài thứ.`,
-    ai: 'Của bài: gốc I ở 51/58 chỗ. Của chị: maj7 (bản không ghi 13/13), 9 (14/14).',
+    y: `Bài ghi ${h(0, '')} → chị bấm ${h(0, 'add9')}, ${h(0, 'maj7')} — màu đến từ đường đi của bass và tay trái`,
+    giai: `Ở bài trưởng, màu của chị chỉ xuất hiện khi bass hay bè đang đi. add9 (${n(2)}) là bước 8 – 9 – 10 của tay trái như ở bài thứ — tay trái hát lên, I ngân mà không đứng im. ${h(0, 'maj7')} thật ra là một bước của đường bass: nốt ${n(11)} rơi ở móc cuối ô rồi bước xuống vi — I tự trượt dần sang vi, buồn dần mà không gãy (xem bậc 6). Nên dùng add9 khi I ngân dài ở nhịp chậm; maj7 khi I sắp sang vi. Tránh maj7 khi giai điệu đang ngân ${n(0)} — ${n(11)} sát dưới sẽ cọ nửa cung.`,
+    ai: 'Của chị: maj7 (bản không ghi 13/13), 9 (14/14). Gốc I là của bài (51/58).',
     viDu: 'Mùa Xuân Đầu Tiên ô 19 → 20 (Sol trưởng): tay trái kết ô bằng Fa♯3 rồi vào Mi3 của Em. Đường Xưa Lối Cũ ô 36 → 37 (Đô trưởng): tay trái Đô – Sol – Đô – Rê – Mi … Si2 → La2 của Am.',
-    coSo: 'Số đo: I có nốt 7 ở 13 đoạn (2 bài) — nốt ấy bước xuống một cung vào hợp âm sau 12/13, hợp âm sau là vi 12/13.',
+    coSo: 'I có nốt 7 ở 13 đoạn (2 bài) — nốt ấy bước xuống một cung vào hợp âm sau 12/13, hợp âm sau là vi 12/13.',
+    nghe: { bai: [H(0, ''), H(5, ''), H(0, '')], thay: [H(0, 'add9'), H(5, ''), H(0, 'add9')] },
   }
   const bacII: Diem = {
-    y: 'Bậc II: mỗi bài một chuyện — có bài là của bài, có bài là của chị',
-    giai: `Trên bậc II chị luôn để chủ âm vang làm ♭7 (ở ${giong}: ${n(0)} trên ${h(2, '')}), nên hợp âm vẫn dính với nhà. Mùa Xuân: bản phổ biến có sẵn ii – II – V; chị giữ II của bài (có chỗ bấm II7sus4 — treo bậc 4 thay bậc 3), và còn tự nâng thêm hai chỗ bản ghi ii thành II. Đường Xưa: bản ghi ii hoặc V7, chị đổi thành II7 có ♯4 rồi về thẳng I — nốt ♯4 ở đây là màu sáng chen giữa hai lần I, không phải lực kéo về V. Biển Tình: bản ghi ii, chị bấm gốc – 5 – ♭7 bỏ bậc 3 — thực chất là ii7 bỏ bậc 3.`,
+    y: `Bài ghi ${h(2, 'm')} hay ${h(7, '7')} → chị bấm ${h(2, '7')} (II7 có ♯4) rồi về thẳng I`,
+    giai: `Đường Xưa: bản ghi ii hoặc V7, chị đổi thành II7 — nốt ♯4 bất ngờ lóe lên giữa hai lần I, một tia sáng như nụ cười thoáng qua — rồi chị về thẳng I, không đi tới V. Nên nốt ♯4 ở đây là màu, không phải lực kéo về V. Trên II chị luôn để chủ âm ngân làm ♭7 (${n(0)} trên ${h(2, '')}), nên hợp âm vẫn dính với nhà. Mùa Xuân thì khác: II là của bài (bản có sẵn ii – II – V); chị chỉ thêm — có chỗ treo bậc 4 thay bậc 3, và tự nâng thêm hai chỗ bản ghi ii thành II. Nên dùng II7 khi muốn một khoảnh khắc sáng chen vào đoạn I ngân dài; tránh khi giai điệu đang có ${n(5)} — ${n(6, 4)} sẽ chỏi nửa cung.`,
     ai: 'Của bài: Mùa Xuân — bản phổ biến có II ở 3/6 chỗ chị đặt II (2 trong 3 chỗ ấy chị treo bậc 4). Của chị: 2 chỗ Mùa Xuân bản ghi ii; Đường Xưa — 0/3 bản có II7 ở cả 4 chỗ chị đặt.',
     viDu: 'Mùa Xuân ô 33: nốt trên cùng có Đô tự nhiên trên A7 — bấm Đô♯ sẽ chỏi nửa cung, nên chị treo Rê. Đường Xưa ô 35: D9/F♯ — Fa♯ ở bass, rồi về C.',
-    coSo: 'Số đo (đã sửa lỗi đọc 7/10): II 12 đoạn, 3 bài — bản phổ biến có II 3/12, ghi ii 5/12, V7 hay iii 2/12, không có 2/12; ♭7 11/12; bậc 3 trưởng vang 7/12; đi tới V 5/12. Sửa lời trước: tôi từng viết "II7 là át của V, nâng Fa lên Fa♯, 10/10" — sai.',
+    coSo: 'II 12 đoạn, 3 bài — bản phổ biến có II 3/12, ghi ii 5/12, V7 hay iii 2/12, không có 2/12; ♭7 11/12; bậc 3 trưởng vang 7/12; đi tới V 5/12. Sửa lời trước: tôi từng viết "II7 là át của V, nâng Fa lên Fa♯, 10/10" — sai.',
+    nghe: { bai: [H(0, ''), H(2, 'm'), H(0, '')], thay: [H(0, ''), H(2, '7'), H(0, '')] },
+  }
+  const ii: Diem = {
+    y: `Bài ghi ${h(2, 'm')} → chị bấm ${h(2, 'm7')}, ${h(2, 'm9')}`,
+    giai: `Chị giữ ii của bài, thêm ♭7 (${n(0)}) — chính chủ âm — và 9 (${n(4)}). Chủ âm ngân trong ii làm hợp âm dính với nhà: từ ii về I hay sang V đều có một nốt đứng yên, chuyển êm. 9 (${n(4)}) là bậc 3 của giọng — lại một nốt chung với I. Nên dùng khi ii ngân dài; để trơn khi ii chỉ lướt sang V.`,
+    ai: 'Của chị: ♭7 (bản không ghi 11/11), 9 (10/10). Gốc ii là của bài (28/30).',
+    coSo: 'Phần hát 3 bài trưởng.',
+    nghe: { bai: [H(2, 'm'), H(7, ''), H(0, '')], thay: [H(2, 'm9'), H(7, ''), H(0, '')] },
+  }
+  const iii: Diem = {
+    y: `Có chỗ bài đi ${h(9, 'm')} → ${h(2, 'm')} → chị chèn ${h(4, 'm')} ở giữa`,
+    giai: `Chị để ${h(4, 'm')} trơn, và một nửa số chỗ là chị tự chèn: chuỗi I → vi → iii → ii toàn hợp âm thứ nối nhau, đi dần về V — nghe thong thả, như kể chuyện từng đoạn, không vội về nhà. Nên chèn iii khi vi → ii có thừa một hai nhịp mà bạn không muốn đứng yên.`,
+    ai: 'Của bài: 10/20 chỗ. Của chị: 6 chỗ chèn, 4 chỗ đổi gốc.',
+    coSo: 'Phần hát; câu solo: md 13c (Biển Tình, Mùa Xuân). n nhỏ.',
+    nghe: { bai: [H(0, ''), H(9, 'm'), H(2, 'm'), H(7, '')], thay: [H(0, ''), H(9, 'm'), H(4, 'm'), H(2, 'm'), H(7, '')] },
+  }
+  const IV: Diem = {
+    y: `Bài ghi ${h(5, '')} → phần hát chị giữ; đoạn kết chị đổi thành ${h(5, 'm')} (mượn ${cungChu})`,
+    giai: `Đoạn kết không lời của Đường Xưa, chị đổi IV thành iv — mượn từ ${cungChu} — và ngân suốt năm ô: ♭6 (${n(8, 6)}) rơi xuống bậc 5 (${n(7)}). Một nốt hạ nửa cung mà cả bài trưởng tối lại, như nắng chiều tắt dần — bài khép bằng một tiếng thở dài. Nên dùng iv mượn ở đoạn kết, câu cuối, chỗ muốn lưu luyến; giữa điệp khúc vui thì đừng.`,
+    ai: 'Của chị: cả đoạn kết (bản phổ biến không có đoạn không lời). Của bài: IV ở 21/24 chỗ phần hát.',
+    coSo: 'md 13c: kết Đường Xưa vi · iv ×5.',
+    nghe: { bai: [H(9, 'm'), H(5, ''), H(0, '')], thay: [H(9, 'm'), H(5, 'm'), H(0, '')] },
+  }
+  const V: Diem = {
+    y: `Bài ghi ${h(7, '7')} → chị bấm ${h(7, '')} trơn là chính`,
+    giai: `${h(7, '')} trơn đã có nốt cảm âm ${n(11)} và bass ${n(7)} → ${n(0)} — đủ kéo về nhà, nên chị ít thêm ♭7. Nghe sạch, mộc, đúng chất bolero xưa; thêm 7 thì kéo mạnh hơn mà cũng "đường phố" hơn. Nên để trơn khi bài mộc, nhịp chậm; thêm ♭7 khi cần câu kết dứt khoát.`,
+    ai: 'Của bài: V ở 37/41 chỗ. Của chị: để trơn — V trơn 25/42, ♭7 chỉ 7/42.',
+    coSo: 'md 13d. Lý do là suy luận.',
+    nghe: { bai: [H(7, '7'), H(0, '')], thay: [H(7, ''), H(0, '')] },
   }
   const giam: Diem = {
-    y: 'Hợp âm giảm thay V: của chị — đều là V hay II bỏ gốc',
-    giai: `Ở chỗ V (hay chỗ chuẩn bị V), chị có lúc đặt hợp âm giảm: ${h(11, 'dim7')} = ${h(7, '7b9')} bỏ gốc (bảy giảm trên bậc 3 của V — công thức chồng 7♭9), hoặc ${h(6, 'm7b5')} = ${h(2, '9')} bỏ gốc. Ở Đường Xưa, bass đi nửa cung ${n(5)} → ${n(6, 4)} thay cho ${n(5)} → ${n(7)} của bản, và nốt trên cùng ở đó nằm trong hợp âm của chị chứ không nằm trong V của bản.`,
+    y: `Bài ghi ${h(7, '')} → chị đặt ${h(6, 'm7b5')} hay ${h(11, 'dim7')}: bass đi nửa cung`,
+    giai: `Chỗ bản ghi V (hay chuẩn bị V), chị có lúc đặt hợp âm giảm. ${h(6, 'm7b5')} là ${h(2, '9')} bỏ gốc; ${h(11, 'dim7')} là ${h(7, '7b9')} bỏ gốc — nên vẫn làm việc của át, mà bass đi nửa cung (${n(5)} → ${n(6, 4)} → ${n(7)}, hay về thẳng I). Nghe sang, xưa, hơi u buồn — kiểu đệm piano phòng trà. Nên dùng khi bass đang đi lên liền bậc từ IV; đừng dùng khi giai điệu đứng lâu ở ${n(7)} — hai hợp âm giảm này không có ${n(7)}, nghe lơ lửng quá.`,
     ai: 'Của chị: 0/3 bản có ♯iv° ở Đường Xưa (3 chỗ), 0/5 bản có vii° ở Mùa Xuân (4 chỗ).',
     viDu: 'Đường Xưa ô 18 → 20 (Đô trưởng): F → F♯m7♭5 (tay trái Fa♯ – Đô – Mi – La) → C. Mùa Xuân ô 50 (Sol trưởng): F♯°7 (tay trái Fa♯ – Đô – Mi – La, tay phải có Mi♭) → G.',
-    coSo: 'Số đo: Đường Xưa 3 chỗ thay V, nốt trên cùng không nằm trong V của bản ở 3/3. Mùa Xuân 4 chỗ vii° — 1 chỗ thay V7, 3 chỗ ở chỗ bản ghi ii, iii hay vi (đã soát tay ô 50, 85).',
+    coSo: 'Đường Xưa 3 chỗ thay V, nốt trên cùng không nằm trong V của bản ở 3/3. Mùa Xuân 4 chỗ vii° — 1 chỗ thay V7, 3 chỗ ở chỗ bản ghi ii, iii hay vi (đã soát tay ô 50, 85).',
+    nghe: { bai: [H(5, ''), H(7, ''), H(0, '')], thay: [H(5, ''), H(6, 'm7b5'), H(0, '')] },
+  }
+  const vi: Diem = {
+    y: `Bài đi ${h(0, '')} → ${h(9, 'm')} → chị nối bằng bass liền bậc ${n(0)} – ${n(11)} – ${n(9)}`,
+    giai: `I → vi là bước chị đi nhiều nhất ở giọng trưởng, và chị không nhảy thẳng: bass bước ${n(0)} → ${n(11)} → ${n(9)}, tay phải gần như đứng yên (I và vi chung hai nốt). Nghe như nụ cười tắt dần thành nỗi buồn — không có chỗ gãy. Nên nối liền bậc khi I → vi có đủ một nhịp; nhịp nhanh thì nhảy thẳng cho gọn.`,
+    ai: 'Của bài: vi ở 26/34 chỗ. Của chị: nốt dẫn bass ở giữa.',
+    coSo: 'I → vi 26 lần, 3 bài (md 13d); 12 chỗ có nốt 7 dẫn xuống vi (2 bài).',
+    nghe: { bai: [H(0, ''), H(9, 'm')], thay: [H(0, ''), H(0, '', 11), H(9, 'm')] },
   }
   return {
     nguyenTac: [
       KHUNG,
-      { y: tron.y, tom: 'Imaj7 là nốt dẫn bass I → vi; add9 trên I là bước 8 – 9 – 10 của tay trái — bản phổ biến không ghi màu nào.', bac: [0, 9] },
-      { y: bacII.y, tom: 'II của Mùa Xuân có trong bản phổ biến; II7 của Đường Xưa là chị tự đặt — và về I, không về V.', bac: [2] },
-      { y: giam.y, tom: 'Chỗ bản ghi V, chị đặt hợp âm giảm (V7♭9 hay II9 bỏ gốc) cho bass đi nửa cung.', bac: [7] },
+      {
+        y: 'Màu đến từ đường đi của bass và tay trái',
+        tom: 'Imaj7 là nốt dẫn bass I → vi; add9 trên I là bước 8 – 9 – 10 của tay trái — bản phổ biến không ghi màu nào. Màu của chị là chuyển động, không phải hợp âm đứng.',
+        bac: [0, 9],
+      },
+      {
+        y: 'Hai chỗ chị đổi hẳn: II7 chen giữa hai lần I, hợp âm giảm thay V',
+        tom: 'II7 của Đường Xưa là chị tự đặt — một tia sáng rồi về thẳng I; chỗ bản ghi V, chị đặt hợp âm giảm (V7♭9 hay II9 bỏ gốc) cho bass đi nửa cung. Đoạn kết thì mượn iv cho bài khép buồn.',
+        bac: [2, 7, 5],
+      },
     ],
-    bac: {
-      0: [tron],
-      2: [
-        bacII,
-        {
-          y: 'ii: của bài — ♭7 và 9 là của chị',
-          giai: `Chị giữ ii của bài; màu thì bản phổ biến không ghi: ♭7 (${n(0)}) và 9 (${n(4)}).`,
-          ai: 'Của bài: gốc ii ở 28/30 chỗ. Của chị: ♭7 (bản không ghi 11/11), 9 (10/10).',
-          coSo: 'Số đo phần hát 3 bài trưởng.',
-        },
-      ],
-      4: [
-        {
-          y: 'iii: một nửa của bài',
-          giai: 'Chị để iii trơn; một nửa số chỗ là chị chèn hoặc đặt iii vào chỗ bản ghi ii. Ở câu solo iii nằm trong chuỗi I → vi → iii → ii đi dần về V.',
-          ai: 'Của bài: 10/20 chỗ. Của chị: 6 chỗ chèn, 4 chỗ đổi gốc.',
-          coSo: 'Số đo phần hát; câu solo: md 13c (Biển Tình, Mùa Xuân).',
-        },
-      ],
-      5: [
-        {
-          y: 'IV: của bài; đoạn kết thì chị mượn iv',
-          giai: `Phần hát chị giữ IV của bài. Đoạn kết không lời của Đường Xưa thì chị đổi IV thành iv — mượn giọng thứ cùng chủ âm (ở ${giong}: ${h(5, 'm')}) — và ngân suốt năm ô: ♭6 (${n(8, 6)}) rơi xuống bậc 5 (${n(7)}) cho bài khép lại buồn.`,
-          ai: 'Của bài: IV ở 21/24 chỗ phần hát. Của chị: cả đoạn kết (bản phổ biến không có đoạn không lời).',
-          coSo: 'md 13c: kết Đường Xưa vi · iv ×5. "Khép lại buồn" là suy luận.',
-        },
-      ],
-      7: [
-        {
-          y: 'V: của bài, để trơn là chính',
-          giai: `${h(7, '')} trơn đã có nốt cảm âm ${n(11)} và bass ${n(7)} → ${n(0)} — đủ kéo về nhà, nên chị ít thêm ♭7.`,
-          ai: 'Của bài: V ở 37/41 chỗ.',
-          coSo: 'Số đo md 13d: V trơn 25/42, ♭7 chỉ 7/42. Lý do là suy luận.',
-        },
-        giam,
-      ],
-      9: [
-        {
-          y: 'vi: của bài — chị nối vào nó bằng bass liền bậc',
-          giai: `I → vi là bước chị đi nhiều nhất ở giọng trưởng, và chị nối nó bằng bass đi liền bậc (${n(0)} → ${n(11)} → ${n(9)}) chứ không nhảy thẳng.`,
-          ai: 'Của bài: vi ở 26/34 chỗ. Của chị: nốt dẫn bass ở giữa.',
-          coSo: 'Số đo: I → vi 26 lần, 3 bài (md 13d, đã sửa lỗi đọc 7/10); 12 chỗ có nốt 7 dẫn xuống vi (2 bài).',
-        },
-      ],
-    },
+    bac: { 0: [tron], 2: [bacII, ii], 4: [iii], 5: [IV], 7: [V, giam], 9: [vi] },
   }
 }
 
@@ -555,7 +587,6 @@ const MAU_CP: NguyenTac = {
 
 function lyDoCaPhao(tonic: number, thu: boolean): LyDoThay {
   const { n, h } = nguCanh(tonic, thu)
-  const H = (goc: number, chat: string): Hop => ({ goc, chat })
   if (thu) {
     const i: Diem = {
       y: `Bài ghi ${h(0, 'm')} → anh bấm ${h(0, 'm7')}, ${h(0, 'm9')}`,
@@ -714,6 +745,7 @@ function lyDoCaPhao(tonic: number, thu: boolean): LyDoThay {
   khung 12 ô và hợp âm bảy trên I · IV · V là CỦA THỂ LOẠI; Rising Sun so với hợp âm phổ biến của bài như Linh Nhi, Cà Pháo
   (`scripts/phan_tich_blues_ba_sheet.py --pho-bien`: gốc 14/14 trùng, bản phổ biến toàn hợp âm ba); phần còn lại là của người chơi.
   Số đo: md Blues mục 2, 6, 7a, 7b, 7e; ký hiệu in đếm lại 7/10/2026 (Rockhouse 116, Robert 98 — bảng Robert ở md mục 2 là số cũ).
+  Viết lại 9/10/2026 theo mẫu Cà Pháo người dùng đã duyệt: tựa "khung / bài ghi X → người chơi bấm Y"; lời nghe ra sao, vì sao, khi nào.
 */
 function lyDoBlues(tonic: number, thu: boolean): LyDoThay {
   const { n, h } = nguCanh(tonic, thu)
@@ -721,57 +753,62 @@ function lyDoBlues(tonic: number, thu: boolean): LyDoThay {
     return {
       nguyenTac: [
         {
-          y: 'Blues giọng thứ: gốc hợp âm là của bài — hợp âm bảy là của người phối',
-          tom: 'Rising Sun: gốc 14/14 hợp âm trùng bản phổ biến (2 bản, toàn hợp âm ba); bản phối biến mọi hợp âm ngoài i thành hợp âm bảy. Thầy Đức Thịnh ở La thứ cũng bấm F7, E7♯9.',
+          y: 'Blues giọng thứ: đường hợp âm là của bài — người phối biến mọi hợp âm ngoài i thành hợp âm bảy',
+          tom: 'Bài dân ca chỉ có hợp âm ba trơn; người phối giữ nguyên đường đi, chỉ thêm ♭7 cho mọi hợp âm trừ chủ thứ — cả vòng nghe đục, bụi, đậm chất blues, mà người hát vẫn hát được như bài quen. (Rising Sun: gốc 14/14 hợp âm trùng bản phổ biến — 2 bản, toàn hợp âm ba. Thầy Đức Thịnh ở La thứ cũng bấm F7, E7♯9.)',
           bac: [],
         },
         {
           y: 'Mỗi hợp âm bảy mang đúng một nốt ngoài gam thứ tự nhiên — có cái chính là nốt blue',
-          tom: '♭7 của ♭VI7 là nốt blue ♭5; bậc 3 của V7 là cảm âm, ♯9 của nó là ♭7 tự nhiên — hai bậc 7 cùng vang; bậc 3 của IV7 là bậc 6 Dorian; ♭7 của III7 là ♭2.',
+          tom: '♭7 của ♭VI7 là nốt blue ♭5; bậc 3 của V7 là cảm âm, còn ♯9 của nó là ♭7 tự nhiên — hai bậc 7 cùng vang; bậc 3 của IV7 là bậc 6 Dorian; ♭7 của III7 là ♭2. Mỗi hợp âm đổi một nốt, nên cả vòng đổi màu mà không lạc giọng.',
           bac: [8, 7, 5, 3],
         },
       ],
       bac: {
         0: [
           {
-            y: 'i: của bài — hợp âm duy nhất không thành hợp âm bảy',
-            giai: `Bản phối giữ ${h(0, 'm')} — chủ thứ là chỗ đứng yên của cả vòng, mọi hợp âm khác đều là hợp âm bảy. Màu: 11 (${n(5)}), ♭7 (${n(10)}), và nốt blue ♭5 (${n(6, 5)}) lướt trong câu rồi trượt nửa cung lên ${n(7)}.`,
+            y: `Bài ghi ${h(0, 'm')} → người phối giữ ${h(0, 'm')} (thêm 11), nốt blue ♭5 chỉ lướt`,
+            giai: `Chủ thứ là chỗ đứng yên duy nhất của bản phối — mọi hợp âm khác đều thành hợp âm bảy, nên khi về i, tai nghe như về một mặt đất vững. Màu của i: 11 (${n(5)}) làm hợp âm rộng và tối; ♭7 (${n(10)}). Nốt blue ♭5 (${n(6, 5)}) chỉ lướt trong câu rồi trượt nửa cung lên ${n(7)} — tiếng rên của blues thứ. Nên giữ i trơn hay m11 cho nhà vững; để ${n(6, 5)} chỉ lướt, đừng ngân dưới giọng hát.`,
             ai: 'Của bài: i ở cả 5 chỗ (bản phổ biến có). Của người phối: 11 vang 5/5 đơn vị i, ♭5 lướt 4/5.',
             coSo: 'Rising Sun — n rất nhỏ (5 đơn vị i). Nốt blue ♭5 đi tiếp lên 5: 77 % (n=13, md Blues 7b).',
+            nghe: { bai: [H(0, 'm'), H(3, ''), H(0, 'm')], thay: [H(0, 'm11'), H(3, '7'), H(0, 'm11')] },
           },
         ],
         3: [
           {
-            y: 'III7: gốc của bài — hợp âm bảy của người phối',
-            giai: `${h(3, '7')} thêm ${n(1)} — nốt ngoài gam thứ tự nhiên (♭2 của giọng). Bản phối biến mọi hợp âm ngoài i thành hợp âm bảy, nên đây là một lối nhất quán của người phối hơn là lý do riêng cho III; vì sao chọn đúng màu ấy ở III thì chưa rõ. Màu thêm: 9, 13.`,
+            y: `Bài ghi ${h(3, '')} → người phối bấm ${h(3, '7')}, ${h(3, '13')}`,
+            giai: `Bài dân ca ghi ${h(3, '')} trơn — sáng, giản dị. Người phối thêm ${n(1)}, một nốt ngoài gam thứ tự nhiên: ${h(3, '7')} nghe xẵng, bụi, đúng chất blues; thêm 9, 13 thành ${h(3, '13')} thì đầy và ấm. Thành thật mà nói: người phối biến mọi hợp âm ngoài i thành hợp âm bảy, nên đây là lối nhất quán của bản phối hơn là lý do riêng cho III. Nên dùng khi muốn cả vòng đậm chất blues; giữ trơn khi muốn dân ca mộc.`,
             ai: 'Của bài: gốc III ở 3/3 chỗ. Của người phối: ♭7 — 0/2 bản phổ biến ghi III7.',
             coSo: 'Rising Sun: III có ♭7 · 9 · 13 ở 3/3 đơn vị (md Blues 7e).',
+            nghe: { bai: [H(0, 'm'), H(3, ''), H(5, '')], thay: [H(0, 'm'), H(3, '13'), H(5, '7')] },
           },
         ],
         5: [
           {
-            y: 'IV trưởng là của bài (Dorian) — IV7 của người phối',
-            giai: `Ngay bản phổ biến đã ghi IV trưởng (${h(5, '')}): bậc 3 của nó là ${n(9)} — bậc 6 nâng (Dorian), sáng hơn iv của gam thứ tự nhiên. Người phối thêm ♭7 (${n(3)}) — ${n(3)} là ♭3 của giọng, nốt trong gam — nên IV7 chỉ thêm màu, không thêm nốt lạ.`,
+            y: `Bài ghi ${h(5, '')} (IV trưởng) → người phối bấm ${h(5, '7')}`,
+            giai: `Ngay bản phổ biến đã ghi IV trưởng: bậc 3 của nó là ${n(9)} — bậc 6 nâng (Dorian) — nên IV sáng lên giữa bài thứ, như một tia hy vọng. Người phối thêm ♭7 (${n(3)}): ${n(3)} là ♭3 của giọng, nốt trong gam, nên IV7 chỉ thêm màu blues, không thêm nốt lạ. Nên dùng IV7 trong vòng blues thứ; IV trơn khi muốn dân ca.`,
             ai: 'Của bài: IV trưởng ở 2/2 chỗ. Của người phối: ♭7 — 0/2 bản ghi IV7.',
             coSo: 'Rising Sun — n nhỏ.',
+            nghe: { bai: [H(3, ''), H(5, ''), H(8, '')], thay: [H(3, '7'), H(5, '7'), H(8, '7')] },
           },
         ],
         7: [
           {
-            y: 'V7♯9: V trưởng của bài — ♯9 của người phối, và của thầy Đức Thịnh',
-            giai: `${h(7, '7#9')} chứa cả ${n(11, 7)} (bậc 3 của V — cảm âm) lẫn ${n(10)} (♯9 của V — chính bậc ♭7 tự nhiên của giọng): hai bậc 7 của gam thứ vang cùng lúc, cách nửa cung — tiếng chỏi ấy là "hợp âm blues". Vào V, nốt blue ♭5 (${n(6, 5)}) trượt nửa cung lên ${n(7)}; thầy Đức Thịnh đặt bước ấy ngay ở bass.`,
+            y: `Bài ghi ${h(7, '')} → người phối bấm ${h(7, '7#9')}`,
+            giai: `${h(7, '7#9')} chứa cả ${n(11, 7)} (bậc 3 của V — cảm âm) lẫn ${n(10)} (♯9 của V — chính bậc ♭7 tự nhiên của giọng): hai bậc 7 của gam thứ vang cùng lúc, cách nửa cung — vừa kéo về nhà, vừa giữ nỗi buồn của gam thứ tự nhiên. Tiếng chỏi ấy là "hợp âm blues". Vào V, nốt blue ♭5 (${n(6, 5)}) trượt nửa cung lên ${n(7)}; thầy Đức Thịnh đặt bước ấy ngay ở bass. Nên dùng ở mọi chỗ V của blues thứ.`,
             ai: 'Của bài: V trưởng (bản phổ biến có ở 2/2 chỗ). Của người phối: ♭7 và ♯9 — ♯9 vang 3/3 đơn vị V7.',
             viDu: 'Thầy Đức Thịnh, đoạn đàn mẫu La thứ (video KN9JEiQXAHs, 02:42–03:50): E7♯9 bấm Sol3 – La♭3 – Rê4 (♯9 và bậc 3 cùng lúc); bass Mi♭2 → Mi2 vào V.',
             coSo: 'Rising Sun 3 đơn vị V7; đoạn video đọc bằng mắt từ bản máy chép, chưa đếm (md Blues mục 2).',
+            nghe: { bai: [H(8, ''), H(7, ''), H(0, 'm')], thay: [H(8, ''), H(7, '7#9'), H(0, 'm')] },
           },
         ],
         8: [
           {
-            y: '♭VI7: ♭7 của ♭VI chính là nốt blue ♭5',
-            giai: `${h(8, '7')} có ${n(6, 5)}: với ♭VI đó là ♭7, với giọng đó là nốt blue ♭5. Nên ♭VI7 → V7 là nốt blue đi nửa cung lên: ${n(6, 5)} → ${n(7)}, gốc của V. Như IV7 ở blues trưởng, hợp âm bảy ở đây là cách đưa nốt blue vào hòa âm.`,
+            y: `Bài ghi ${h(8, '')} → người phối bấm ${h(8, '7')}: ♭7 của nó chính là nốt blue ♭5`,
+            giai: `${h(8, '7')} có ${n(6, 5)}: với ♭VI đó là ♭7, với giọng đó là nốt blue ♭5. Nên ♭VI7 → V7 là nốt blue tự đi nửa cung lên: ${n(6, 5)} → ${n(7)}, gốc của V — hòa âm và giai điệu blues gặp nhau ở cùng một nốt. Nghe đục, nặng, rất "đêm". Như IV7 ở blues trưởng, hợp âm bảy ở đây là cách đưa nốt blue vào hòa âm. Nên dùng ♭VI7 ngay trước V.`,
             ai: 'Của bài: gốc ♭VI ở 2/2 chỗ. Của người phối: ♭7 — 0/2 bản ghi ♭VI7. Thầy Đức Thịnh cũng bấm F7 ở La thứ.',
             viDu: 'Thầy Đức Thịnh (La thứ): F7 bấm bè 3 – ♭7 (La3 – Mi♭4); vòng về ♭VI7 → V7(♯9) → i.',
             coSo: 'Rising Sun: ♭VI7 2 chỗ — n nhỏ. Đức Thịnh: đọc bằng mắt, chưa đếm.',
+            nghe: { bai: [H(8, ''), H(7, ''), H(0, 'm')], thay: [H(8, '7'), H(7, '7'), H(0, 'm')] },
           },
         ],
       },
@@ -782,55 +819,66 @@ function lyDoBlues(tonic: number, thu: boolean): LyDoThay {
     nguyenTac: [
       {
         y: 'Khung 12 ô và hợp âm bảy trên I · IV · V là của thể loại — người chơi tô màu và chen hợp âm lướt',
-        tom: 'Rockhouse: 5/9 vòng đi đúng khung I I I I · IV IV I I · V IV I I ở ô 1–10; ký hiệu hợp âm bảy trên I · IV · V 72/116. Phần riêng: màu 13 · 9 · ♯9 (Ray), ii – V và hợp âm lướt (Robert), cách quay vòng ở ô 11–12.',
+        tom: 'Ai chơi blues cũng đi khung I – IV – V với hợp âm bảy; cái phân biệt người chơi là màu (13, 9, ♯9), hợp âm lướt và cách quay vòng ở cuối khung. (Rockhouse: 5/9 vòng đi đúng khung I I I I · IV IV I I · V IV I I ở ô 1–10; ký hiệu hợp âm bảy trên I · IV · V 72/116.)',
         bac: [],
       },
       {
         y: 'Hợp âm bảy là cách đưa nốt blue vào hòa âm',
-        tom: '♭7 của I là ♭7 blue của giọng; ♭7 của IV là ♭3 blue; ♯9 của V lại là ♭7 blue. Câu hát, câu chạy dùng nốt blue mà không chỏi — nốt blue đã là nốt của hợp âm.',
+        tom: '♭7 của I là ♭7 blue của giọng; ♭7 của IV là ♭3 blue; ♯9 của V lại là ♭7 blue. Câu hát, câu chạy dùng nốt blue mà không chỏi — nốt blue đã là nốt của hợp âm, cả ban nhạc cùng "rên" một lúc.',
         bac: [0, 5, 7],
       },
       {
         y: 'Quay vòng bằng hợp âm lướt nửa cung',
-        tom: 'Ray: I · IV · ♯IV · V ở ô 11–12 (bass đi nửa cung lên vào V); kết bằng ♭II7 → I13 (thay ba cung cho V7). Robert: ♭II7 → I, I → ♭III° → ii.',
+        tom: 'Ray: I · IV · ♯IV° · V ở ô 11–12 (bass leo nửa cung vào V); kết bằng ♭II7 → I13 (thay ba cung cho V7). Robert: I → ♭III° → ii → V, và ♭II7 → I.',
         bac: [5, 7, 2],
       },
     ],
     bac: {
       0: [
         {
-          y: 'I7 · I13: hợp âm bảy là của thể loại — 13 và ♭3 blue là của Ray',
-          giai: `${h(0, '7')} có ${n(10)} — chính nốt blue ♭7 của giọng — nên chủ âm không đứng yên như hợp âm ba trưởng: nó mang sẵn tiếng blues, nghe như còn muốn đi tiếp. Ray tô I bằng 6/13 (${n(9)}) và để ${n(3)} — ♭3 blue, tức ♯9 của I — chen sát dưới ${n(4)}: hai nốt cách nửa cung cọ nhau, tiếng blues đặc trưng. Robert nhiều chỗ để I trơn hay Imaj7 — chỗ ấy nghe pop hơn blues.`,
+          y: `Khung ghi ${h(0, '')} → người chơi bấm ${h(0, '7')}, ${h(0, '13')}`,
+          giai: `Trong blues, chủ âm không "đứng yên" như ở bài pop: ${h(0, '7')} mang ${n(10)} — nốt blue ♭7 của giọng — nên nhà cũng có chút bụi bặm, lười nhác, như còn muốn đi tiếp. Ray tô thêm 6/13 (${n(9)}) cho tròn, ấm; và để ${n(3)} — ♭3 blue — chen sát dưới ${n(4)}: hai nốt cách nửa cung cọ nhau, cái "rên" đặc trưng của blues. Nên dùng ${h(0, '7')} ở mọi chỗ I trong khung 12 ô; ${h(0, '13')} khi I ngân dài, muốn ấm. Robert nhiều chỗ để I trơn hay ${h(0, 'maj7')} — nghe pop, sạch hơn: dùng khi bài chỉ cần chút hơi hướng blues.`,
           ai: 'Của thể loại: I7 (Ray ghi I7 ở 27/47 ký hiệu I). Của Ray: 6/13 vang ở 72 % đơn vị I (n=118), ♭3 blue 51 %. Của Robert: I trơn 21/35, Imaj7 4/35.',
           viDu: 'Rockhouse ô 113 → 115 (Sol trưởng): kết bằng I13(♯11) — tay phải Đô♯ – Fa – Si – Mi trên bass Sol.',
-          coSo: 'md Blues mục 6, 7a, 7e; màu đếm theo nốt vang hai tay, có lẫn nốt giai điệu lướt. "Nghe như còn muốn đi tiếp" là lý thuyết.',
+          coSo: 'md Blues mục 6, 7a, 7e; màu đếm theo nốt vang hai tay, có lẫn nốt giai điệu lướt.',
+          nghe: { bai: [H(0, ''), H(5, ''), H(0, '')], thay: [H(0, '7'), H(5, '7'), H(0, '13')] },
         },
       ],
       2: [
         {
-          y: 'ii – V: của Robert — Ray không dùng ii',
-          giai: `Robert chen ${h(2, 'm7')} trước ${h(7, '7')} — lối ii – V của jazz đặt vào khung blues — và nối I sang ii bằng ${h(3, 'dim')} lướt: bass ${n(4)} → ${n(3)} → ${n(2)} đi nửa cung xuống (I/3 → ♭III° → ii). Ray đi thẳng vào V, không qua ii: cùng thể loại, hai cách vào V.`,
+          y: `Khung đi thẳng vào ${h(7, '7')} → Robert chèn ${h(2, 'm7')} (ii – V), nối từ I bằng ${h(3, 'dim7')} lướt`,
+          giai: `Robert mượn lối jazz: trước V chèn ${h(2, 'm7')} — ii – V làm câu vào V mềm và "có học" hơn; và nối I sang ii bằng ${h(3, 'dim7')} lướt: bass ${n(4)} → ${n(3)} → ${n(2)} đi nửa cung xuống, nghe như trượt chân nhẹ, sang trọng. Ray thì không qua ii: đi thẳng vào V, thô và mộc hơn. Nên chọn lối Robert khi muốn blues pha jazz, phòng trà; lối Ray khi muốn blues gốc, chân chất.`,
           ai: 'Của Robert: ii 13/98 ký hiệu, ♭III° 8/98. Ray: 0/116 ký hiệu ii.',
           viDu: 'Robert (Đô trưởng): C/E → E♭dim → Dm7 (md Blues mục 6).',
           coSo: 'Ký hiệu in đếm lại 7/10/2026. Màu của ii (Robert): ♭7 53 %, 11 33 % (n=15 đơn vị).',
+          nghe: { bai: [H(0, '7'), H(7, '7'), H(0, '7')], thay: [H(0, '', 4), H(3, 'dim7'), H(2, 'm7'), H(7, '7'), H(0, '7')] },
         },
       ],
       5: [
         {
-          y: 'IV7 · IV9: hợp âm bảy là của thể loại — 9 là của Ray; ♯IV lướt ở chỗ quay vòng',
-          giai: `${h(5, '7')} có ${n(3)}: với IV đó là ♭7, với giọng đó là nốt blue ♭3 — nên sang IV, câu chạy dùng ♭3 blue mà không chỏi. Ray tô IV bằng 9 (${n(7)}) — bậc 5 của giọng, nốt chung với I — nên I → IV9 tầng trên gần như đứng yên. Ở ô 11–12, Ray đi I · IV · ♯IV · V: bass ${n(5)} → ${n(6, 4)} → ${n(7)} bước nửa cung lên vào V.`,
+          y: `Khung ghi ${h(5, '')} → người chơi bấm ${h(5, '7')}, ${h(5, '9')}; quay vòng thêm ♯IV°`,
+          giai: `${h(5, '7')} có ${n(3)}: với IV đó là ♭7, với giọng đó là nốt blue ♭3 — nên sang IV, câu chạy dùng ♭3 blue mà không chỏi, như cả hợp âm cùng "rên" với giai điệu. Ray tô IV bằng 9 (${n(7)}) — nốt chung với I — nên I → IV9 tầng trên gần như đứng yên, chỉ bass bước. Ở ô 11–12, Ray đi I · IV · ♯IV° · V: bass ${n(5)} → ${n(6, 4)} → ${n(7)} leo nửa cung vào V — quay vòng nghe như bước lên bậc thềm. Nên dùng IV7 mọi chỗ IV trong khung; IV9 khi muốn mềm; ♯IV° ở nửa sau ô 12, ngay trước V.`,
           ai: 'Của thể loại: IV7 (Ray 20/32 ký hiệu IV, Robert 15/20). Của Ray: 9 vang 74 % đơn vị IV (n=47), 13 55 %.',
           viDu: 'Rockhouse ô 11–12 của vòng 12 ô (Sol trưởng): G → C → C♯ → D.',
           coSo: 'md Blues mục 2, 7e.',
+          nghe: { bai: [H(0, '7'), H(5, ''), H(0, '7')], thay: [H(0, '7'), H(5, '9'), H(0, '7')] },
         },
       ],
       7: [
         {
-          y: 'V7: của thể loại — V lùi về IV trước khi về I; ♭II7 thay V ở chỗ kết',
-          giai: `Ở ô 9 – 11, khung đi ${h(7, '7')} → ${h(5, '7')} → ${h(0, '7')}: V không giải thẳng về I mà lùi về IV rồi mới về — câu B của khung hỏi – đáp. Màu của V: 9, 11, và ♯9 (${n(10)}) — chính nốt blue ♭7 của giọng đặt trên V. Ở đuôi kết, Ray thay V7 bằng ${h(1, '7')}: hai hợp âm chung cặp nốt ba cung ${n(11)} – ${n(5)} (bậc 3 và ♭7 của cả hai), nên vẫn kéo về I, mà bass trượt nửa cung ${n(1)} → ${n(0)}.`,
-          ai: 'Của thể loại: V7 (Ray 25/29 ký hiệu V); Ray đi V → IV 16 %, IV → V 5 % số bước (n=63). Của Ray: ♯9 vang 45 % đơn vị V (n=22), ♭II7 ở đuôi kết. Của Robert: ♭II7 → I, 5/98 ký hiệu.',
+          y: `Khung ghi ${h(7, '')} → người chơi bấm ${h(7, '7#9')}, ${h(7, '9')}; V lùi về IV rồi mới về I`,
+          giai: `Ở ô 9 – 11, khung đi V → IV → I: V không giải thẳng về I mà lùi về IV rồi mới về — câu trả lời của khung hỏi – đáp, nghe như người kể chuyện ngập ngừng trước câu chốt. Màu của V: ♯9 (${n(10)}) — chính nốt blue ♭7 của giọng — đặt trên V cùng bậc 3 trưởng: gắt, đầy sức sống; 9 thì tròn hơn. Nên dùng ♯9 khi muốn V bật lên, nhất là ở nhịp nhanh; 9 khi muốn mềm.`,
+          ai: 'Của thể loại: V7 (Ray 25/29 ký hiệu V); Ray đi V → IV 16 %, IV → V 5 % số bước (n=63). Của Ray: ♯9 vang 45 % đơn vị V (n=22).',
+          coSo: 'md Blues mục 6, 7a, 7e. "Câu trả lời của khung hỏi – đáp": md mục 6 (Ray giữ nhịp câu A khi sang IV, đổi hẳn chất liệu ở ô 9).',
+          nghe: { bai: [H(7, '7'), H(5, '7'), H(0, '7')], thay: [H(7, '7#9'), H(5, '9'), H(0, '7')] },
+        },
+        {
+          y: `Đuôi kết: khung ghi ${h(7, '7')} → ${h(0, '')} → Ray đổi thành ${h(1, '7')} → ${h(0, '13')}`,
+          giai: `Ở câu kết cuối cùng, Ray thay V7 bằng ${h(1, '7')}: hai hợp âm chung cặp nốt ba cung ${n(11)} – ${n(5)} (bậc 3 và ♭7 của cả hai), nên vẫn kéo về I, mà bass trượt nửa cung ${n(1)} → ${n(0)} thay vì nhảy quãng năm — cái kết mượt, "đắt", rất jazz. Rơi vào ${h(0, '13')} (thêm ♯11) nghe như đèn sân khấu tắt dần. Nên dùng ở câu kết cuối bài; giữa bài thì V7 thật cho khung rõ.`,
+          ai: 'Của Ray: ♭II7 ở đuôi kết. Của Robert: ♭II7 → I, 5/98 ký hiệu.',
           viDu: 'Rockhouse ô 113 → 115 (Sol trưởng): bass Rê · Mi♭ · La♭, tay phải A♭7 (Sol♭ – Đô – Mi♭), rơi nửa cung về G13(♯11).',
-          coSo: 'md Blues mục 6, 7a, 7e. "Câu B của khung hỏi – đáp": md mục 6 (Ray giữ nhịp câu A khi sang IV, đổi hẳn chất liệu ở ô 9).',
+          coSo: 'md Blues mục 6.',
+          nghe: { bai: [H(5, '7'), H(7, '7'), H(0, '7')], thay: [H(5, '7'), H(1, '7'), H(0, '13')] },
         },
       ],
     },

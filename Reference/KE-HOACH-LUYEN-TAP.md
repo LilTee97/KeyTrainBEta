@@ -461,6 +461,11 @@ giải thích tại sao nên chọn hợp âm đó ở vị trí đó, và nó m
   Cái giá: thêm một nút trên thanh trang — điện thoại cuộn ngang thêm.
 - **Thứ tự**: A làm ngay (nhỏ); B và C (một hợp âm) trước bước 4 — người dùng đang học hòa âm; C (theo vòng) + D thay Phần 2 hiện tại.
 
+**Người dùng chốt 9/10/2026:** *"Cà Pháo đã đúng hãy sửa 2 thẻ kia theo. Các mục trong "cần tôi chọn" hãy làm theo đề xuất của bạn"*
+— thẻ Linh Nhi, Blues viết lại theo mẫu Cà Pháo (xong 9/10); trang mới "Hợp âm" (tab Chồng hợp âm · Hợp âm màu · Tái hòa âm vòng;
+Căn bản gộp vào khi tới bước 6); thứ tự dựng: A → B → C (một hợp âm) → công cụ "vòng + lựa chọn thay" (C theo vòng + D, thay Phần 2)
+→ rồi mới bước 4.
+
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
    chưa đo) → đưa loại hay đặt nhất + phương án 2, kèm số lần. Cột lý thuyết thì ra một đáp án.
