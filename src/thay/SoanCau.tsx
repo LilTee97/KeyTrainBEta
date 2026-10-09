@@ -531,7 +531,11 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
     : cau && kq !== 'dang'
       ? cau
       : null
-  const hien = !dangDo ? dangXem : xem
+  /* Đang đố một tay thì tay ĐÃ CHO sáng sẵn trên phím kèm tên, tay phải tìm vẫn ẩn — người dùng 9/10/2026: "khi đố 1 bên tay trái hoặc
+     phải thì bên hiện đáp án cũng sẽ hiện trên phím đàn". Bên nào không có nốt thì `BanPhimHaiTay` không in tên. */
+  const daCho: Chong | null =
+    cau && kq === 'dang' ? (dang === 'tren' ? { ...cau, phai: [] } : dang === 'duoi' ? { ...cau, trai: [] } : { ...cau, trai: [], phai: [] }) : null
+  const hien = !dangDo ? dangXem : (xem ?? daCho)
   const dapAn = nhanCau ? `tay trái ${nhanCau.trai} (${nhanCau.traiPhu}) + tay phải ${nhanCau.phai} (${nhanCau.phaiPhu})` : ''
   const traLoi = () => {
     if (kq !== 'dang') return

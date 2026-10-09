@@ -6003,3 +6003,12 @@ tôi ko chọn hoặc ko tập được (như các hợp âm trưởng, thứ...
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 15 (3 mới: hợp âm ba, theo công thức, đủ nốt + bass là gốc cho 37 loại × 3 gốc) ·
 toàn suite **2 665 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: tên tay trái bên trái / tay phải bên phải cỡ 24px, tổng
 36px, tự chọn Am và A7♯9 đúng, đố kho "Mọi hợp âm" bấm đúng → "Đúng" — 7/7 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: đố một tay — tay đã cho sáng sẵn trên phím (9/10/2026)
+
+**Người dùng:** *"tab chồng hợp âm khi đố 1 bên tay trái hoặc phải thì bên hiện đáp án cũng sẽ hiện trên phím đàn"*.
+
+- `SoanCau.ChongHopAm`: đang đố "cho tay trái → tay phải" thì tay trái sáng sẵn trên phím kèm tên, tay phải ẩn; "cho tay phải → tay trái"
+  ngược lại; "cho hợp âm → bấm hai tay" chỉ hiện tên tổng. Trả lời xong / xem đáp án thì hiện đủ hai tay.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `src/thay/__tests__` qua · chạy thử headless 4/4 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
