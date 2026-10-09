@@ -1,6 +1,7 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { GOC } from '../vongThay'
-import { BA, chongCongThuc, CONG_THUC, tenTren, VI_TRI_TREN, type Chong, type CongThuc } from './chongHopAm'
+import { chongCongThuc, CONG_THUC, hauDep, tenTren, type Chong, type CongThuc } from './chongHopAm'
+import { HO_LOAI, meoNgan } from './meoChong'
 
 /*
   GAME "MƯA HỢP ÂM" — người dùng 9/10/2026: "đã có công thức và quy luật rồi thì hãy làm thành Quiz hoặc game để tôi học thuộc bằng cách
@@ -19,20 +20,10 @@ export type CachNhap = 'giu' | 'cham' | 'chon'
 /** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭). */
 export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
 
-const theoCach = (cach: readonly number[]) => CONG_THUC.filter((c) => !('iv' in c.tren) && cach.includes(c.tren.cach)).map((c) => c.id)
-
-/** Sáu màn theo đúng quy luật 1 của bảng công thức (vị trí tay phải); màn 6 trộn cả 26 công thức. Mọi màn mở sẵn (người dùng 9/10/2026). */
+/** Sáu màn THEO LOẠI HỢP ÂM (người dùng 9/10/2026: quy luật tính theo loại, không theo vị trí tay): năm họ của bảng mẹo + trộn cả 26. */
 export const MAN: readonly { ten: string; goiY: string; ct: readonly string[] }[] = [
-  { ten: 'Hợp âm bảy', goiY: 'tay phải trên bậc 3 hoặc ♭3', ct: theoCach(VI_TRI_TREN[0]!.cach) },
-  { ten: 'Thêm 9', goiY: 'tay phải trên bậc 5', ct: theoCach(VI_TRI_TREN[1]!.cach) },
-  { ten: '6 và 13', goiY: 'tay phải trên bậc 6', ct: theoCach(VI_TRI_TREN[2]!.cach) },
-  { ten: '11 và 13', goiY: 'tay phải cách gốc một cung', ct: theoCach([...VI_TRI_TREN[3]!.cach, ...VI_TRI_TREN[4]!.cach]) },
-  {
-    ten: 'Màu xa',
-    goiY: 'nửa cung dưới gốc · cách ba cung · bậc ♭6 · chùm nốt',
-    ct: [...theoCach([...VI_TRI_TREN[5]!.cach, ...VI_TRI_TREN[6]!.cach, ...VI_TRI_TREN[7]!.cach]), ...CONG_THUC.filter((c) => 'iv' in c.tren).map((c) => c.id)],
-  },
-  { ten: 'Trộn tất cả', goiY: 'cả 26 công thức', ct: CONG_THUC.map((c) => c.id) },
+  ...HO_LOAI.map((h) => ({ ten: h.ten, goiY: h.ids.map((id) => hauDep(CONG_THUC.find((c) => c.id === id)!.kyHieu)).join(' · '), ct: h.ids })),
+  { ten: 'Trộn tất cả', goiY: 'cả 26 loại', ct: CONG_THUC.map((c) => c.id) },
 ]
 
 export const GOC_CHOI: Readonly<Record<GocChoi, readonly number[]>> = { do: [0], trang: [0, 2, 4, 5, 7, 9, 11], tat: [...Array(12).keys()] }
@@ -41,14 +32,12 @@ export interface CauGame {
   ct: CongThuc
   g: number
   chong: Chong
-  /** "tay phải trên bậc 6 · trưởng" — gợi ý ở độ khó Dễ. */
+  /** "tay phải 13·♭9·3 · trưởng" — gợi ý theo loại ở bên luyện có mẹo. */
   goiY: string
 }
 
 export function taoCau(ct: CongThuc, g: number): CauGame {
-  const chong = chongCongThuc(ct, g, GOC[g]!, kieuGoc(g))
-  const viTri = 'iv' in ct.tren ? 'chùm nốt rời' : `${VI_TRI_TREN.find((v) => !('iv' in ct.tren) && v.cach.includes((ct.tren as { cach: number }).cach))!.ten} · ${BA[(ct.tren as { loai: keyof typeof BA }).loai].ten}`
-  return { ct, g, chong, goiY: `tay phải ${viTri}` }
+  return { ct, g, chong: chongCongThuc(ct, g, GOC[g]!, kieuGoc(g)), goiY: meoNgan(ct) }
 }
 
 /** Chọn câu kế: công thức vừa sai nặng thêm (1 + 2 × số lần sai) — câu sai quay lại nhiều hơn; không lặp đúng câu vừa rồi. */

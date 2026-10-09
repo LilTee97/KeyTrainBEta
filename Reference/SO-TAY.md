@@ -6188,3 +6188,29 @@ mẹo để tôi dựa vào đó và suy ra các hợp âm cần tìm để ch�
 qua · chạy thử headless 13/13 (mẹo của gia sư ở tab Chồng hợp âm; hai cột, mọi màn mở; bên mẹo: viên "khung Đô · lên 3 phím · tăng", bảng
 mẹo, giữ đúng → 10; bên thi: viên chỉ tên, 20 viên giữ đúng → "ĐẠT ✓ 20/20", màn ghi Đạt; chọn sai lần đầu → "Sai", sang viên 2/20) ·
 khổ điện thoại 412 px không cuộn ngang · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: quy luật và mẹo chồng hợp âm THEO LOẠI; quy luật hợp âm slash; sửa lỗi 6/9 · m(add9) · m(maj7) (9/10/2026)
+
+**Người dùng:** *"về các quy luật chồng hợp âm thì tôi muốn nó tính theo loại hợp âm (ví dụ như Maj7, 7b9, dim7, m11b5...) hơn là theo
+vị trí tay. Điều này dẫn tới các mẹo cũng phải tính theo loại hợp âm. Hãy phân tích lại và thiết kế lại quy luật và mẹo"* · *"Sao tôi
+ko thấy các quy luật về hợp âm slash"*.
+
+- `soanCau/meoChong.ts` viết lại theo loại: `HO_LOAI` (năm họ: trưởng · thứ · nửa giảm và giảm · át cơ bản · át có nốt căng, mỗi họ xếp
+  dễ → khó), `bacCua` (bậc tay trái · tay phải · cả hợp âm, đọc theo chồng quãng ba 1 · 3 · 5 · 7 · 9 · 11 · 13), mẹo riêng 26 loại,
+  `LUAT_SO` (quy luật con số — đuôi 6 → tay phải trên bậc 6; 7 → chính 3·5·7 của hợp âm; 9 → 5·7·9; 11 → ♭7·9·11, m11♭5 khác lệ; 13 →
+  9·11·13 ở hợp âm thứ, 13·1·3 ở hợp âm át; add9 → chùm; nốt căng → đổi một nốt / một chất), `bangTheoLoai`, sáu mẹo vàng theo loại.
+- `soanCau/slashChong.ts` (mới): năm quy luật slash (đọc X/Y; Y thuộc X là thế đảo cho bass đi liền bậc; Y không thuộc X là hợp âm màu
+  viết tắt; trưởng thấp hơn bass một cung = 9sus4; mẹo chèn slash cho bass liền bậc), ví dụ thế đảo (C/E · C/G · C7/B♭ · G/B · Am/C — Am/C
+  vừa là Am đảo 1 vừa là C6 thiếu 5: test bắt tôi xếp nhầm nó vào "bass lạ"), ví dụ bass lạ (Em/C = Cmaj7 · E♭/C = Cm7 · Edim/C = C7 ·
+  B♭/C = C9sus4 · F/G = G9sus4 · G/C = Cmaj9 thiếu 3), năm đoạn slash trong sheet các thầy đã soát tay từng nốt.
+- `chongHopAm.ts`: bỏ phần theo vị trí (`VI_TRI_TREN`, `KHUNG_TRAI`, `QUY_LUAT_CHAT`, `bangCongThuc`). **Sửa lỗi `BIET_DANH`**: bản cũ đổi
+  '6/9' · 'm(add9)' · 'm(maj7)' sang tên cũ nên chọn tự do ba hợp âm ấy không tìm ra công thức, báo nhầm "Không có công thức chồng riêng"
+  (ảnh C6/9 người dùng gửi trước đó là do lỗi này — đúng ra tay trái Đô – Sol + tay phải Asus4).
+- `BangCongThuc.tsx` viết lại: quy luật chung 4 bước (làm mẫu C13♭9), quy luật con số, bảng 26 loại theo họ (bậc hai tay, mẹo, Thử), khung
+  hợp âm slash (nút xem + nghe trên bàn phím hai tay), mẹo vàng.
+- Game: màn theo họ (`MAN` từ `HO_LOAI` + trộn); viên bên mẹo ghi bậc tay phải theo loại ("tay phải 13·♭9·3 · trưởng").
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 5, `slashChong.test.ts` 3, `gameChong.test.ts` 6, `chongHopAm.test.ts` 18 · toàn
+suite **2 707 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: theo loại 10/10 (4 bước C13♭9, con số, các họ; slash F/G →
+Sol + F = G9sus4; Thử Cmaj7; tự chọn C6/9 ra Đô – Sol + Asus4; game màn theo họ, viên "tay phải 7·9·♯11 · thứ"), chạy lại hai bên 12/12,
+tab vòng 17/17, Bấm như thầy 12/12, chồng tự do 7/7, đố một tay 4/4, trang Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.

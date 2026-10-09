@@ -1,48 +1,51 @@
 import { describe, expect, it } from 'vitest'
-import { BA, CONG_THUC, khungTrai, tenTren } from './chongHopAm'
-import { demPhim, meoCua, meoTheoKhung, MEO_VANG } from './meoChong'
+import { BA, CONG_THUC, tenTren } from './chongHopAm'
+import { bacCua, bangTheoLoai, demPhim, HO_LOAI, LUAT_SO, meoCua, MEO_VANG } from './meoChong'
 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
-const tim = (cach: number, loai: string) =>
-  CONG_THUC.filter((c) => !('iv' in c.tren) && c.tren.cach === cach && c.tren.loai === loai).map((c) => `${c.id}@${khungTrai(c)}`)
 const lop = (goc: number, iv: readonly number[]) => [...new Set(iv.map((x) => (goc + x) % 12))].sort((a, b) => a - b)
 
-describe('mẹo chồng hợp âm của gia sư', () => {
-  it('đếm phím từ gốc', () => {
-    expect([2, 3, 4, 6, 7, 8, 9, 10, 11].map(demPhim)).toEqual([
-      'lên 2 phím',
-      'lên 3 phím',
-      'lên 4 phím',
-      'cách 6 phím (nửa quãng tám)',
-      'lên 7 phím (hay lùi 5)',
-      'lùi 4 phím',
-      'lùi 3 phím',
-      'lùi 2 phím',
-      'lùi 1 phím',
-    ])
+describe('quy luật và mẹo theo loại hợp âm', () => {
+  it('năm họ chia hết 26 loại, không trùng', () => {
+    const ids = HO_LOAI.flatMap((h) => h.ids)
+    expect(ids.length).toBe(26)
+    expect([...ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
+    expect(bangTheoLoai().flatMap((h) => h.dong).length).toBe(26)
   })
 
-  it('mọi công thức có mẹo, câu móc gọi đúng tên tay phải ở gốc Đô', () => {
+  it('bậc hai tay đúng nốt — vd 13♭9: tay trái 1 · 3 · ♭7, tay phải 13 · ♭9 · 3', () => {
+    expect(bacCua(ct('13b9'))).toEqual({ trai: ['1', '3', '♭7'], phai: ['13', '♭9', '3'], caHai: ['1', '3', '♭7', '♭9', '13'] })
+    expect(bacCua(ct('m11b5')).phai).toEqual(['♭3', '11', '♭7'])
+    expect(bacCua(ct('dim7')).caHai).toEqual(['1', '♭3', '♭5', '𝄫7'])
+  })
+
+  it('quy luật con số đúng với mọi loại được nêu', () => {
+    for (const l of LUAT_SO) l.ids.forEach((id, k) => expect([id, bacCua(ct(id)).phai]).toEqual([id, [...l.phai[k]!]]))
+  })
+
+  it('mọi loại có mẹo; câu mẹo gọi đúng tên tay phải ở gốc Đô', () => {
     for (const c of CONG_THUC) {
       const m = meoCua(c)
-      expect(m.length).toBeGreaterThan(10)
+      expect(m.length).toBeGreaterThan(15)
       if (!('iv' in c.tren)) expect(m).toContain(tenTren(c, 'C', 'flat'))
     }
-    expect(meoCua(ct('13b9'))).toBe('lùi 3 phím · hợp âm trưởng — A trên C7 — cùng chỗ với C13 nhưng TRƯỞNG: Đô thành Đô♯ là thêm ♭9')
-    expect(meoTheoKhung().flatMap((k) => k.ds.map((d) => d.ct.id)).sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
+    expect(meoCua(ct('13b9'))).toBe('khung C7 + A TRƯỞNG: như C13 (Am) nhưng Đô → Đô♯ là thêm ♭9 (lùi 3 phím · hợp âm trưởng)')
+    expect(demPhim(9)).toBe('lùi 3 phím')
   })
 
-  it('bảy mẹo vàng đúng với công thức thật', () => {
-    expect(MEO_VANG).toHaveLength(7)
-    expect(tim(9, 'm').sort()).toEqual(['13@khung7', '6@goc5']) // mẹo 2
-    expect(tim(3, 'M')).toEqual(['m7@goc']) // mẹo 3
-    expect([tim(9, 'm'), tim(9, 'M')].map((x) => x.filter((y) => y.endsWith('khung7')))).toEqual([['13@khung7'], ['13b9@khung7']]) // mẹo 4
-    expect(tim(7, 'M')).toEqual(['maj9@ba']) // mẹo 5
-    expect(tim(7, 'm').sort()).toEqual(['9@khung7', 'm9@ba'])
-    expect(tim(10, 'M').sort()).toEqual(['9sus4@goc', 'm11@ba']) // mẹo 6
-    // mẹo 7: A♭+ cùng nốt C+; Edim7 cùng nốt C♯dim7
+  it('mẹo vàng đúng với công thức thật', () => {
+    expect(MEO_VANG).toHaveLength(6)
+    const tren = (id: string) => ct(id).tren as { loai: keyof typeof BA; cach: number }
+    // mẹo 2: chất tay phải của loại 7
+    expect(['maj7', '7', 'm7', 'm7b5', 'dim7', 'mMaj7'].map((id) => BA[tren(id).loai].ten)).toEqual(['thứ', 'giảm', 'trưởng', 'thứ', 'giảm', 'tăng'])
+    // mẹo 3: cùng chỗ, đổi chất
+    expect(['maj7', '7', 'm7', 'm7b5'].map((id) => tren(id).cach)).toEqual([4, 4, 3, 3])
+    // mẹo 4: hợp âm 9 — tay phải là hợp âm bậc V của gốc
+    expect(['maj9', 'm9', '9'].map((id) => tenTren(ct(id), 'C', 'flat'))).toEqual(['G', 'Gm', 'Gm'])
+    // mẹo 5: nốt căng = đổi một nốt
+    expect([tenTren(ct('13'), 'C', 'flat'), tenTren(ct('13b9'), 'C', 'flat')]).toEqual(['Am', 'A'])
+    // mẹo 6: tăng và bảy giảm nhiều tên cùng nốt
     expect(lop(8, BA.aug.iv)).toEqual(lop(0, BA.aug.iv))
     expect(lop(4, BA.dim7.iv)).toEqual(lop(1, BA.dim7.iv))
-    expect([tim(8, 'aug'), tim(4, 'dim7')]).toEqual([['7b13@khung7'], ['7b9@goc']])
   })
 })

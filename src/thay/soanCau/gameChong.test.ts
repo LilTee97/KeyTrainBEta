@@ -5,17 +5,18 @@ import { chonCau, diemCau, dungHaiTay, dungTayPhai, luaChonTen, MAN, soCanCham, 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
 
 describe('game Mưa hợp âm — logic', () => {
-  it('năm màn đầu chia hết 26 công thức, không trùng; màn 6 là tất cả', () => {
+  it('năm màn đầu (năm họ) chia hết 26 loại, không trùng; màn 6 là tất cả', () => {
     const nam = MAN.slice(0, 5).flatMap((m) => m.ct)
     expect(nam.length).toBe(26)
     expect(new Set(nam).size).toBe(26)
     expect([...MAN[5]!.ct].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-    expect(MAN[2]!.ct).toContain('13b9')
+    expect(MAN[4]!.ct).toContain('13b9') // họ át có nốt căng
+    expect(MAN.map((m) => m.ct.length)).toEqual([6, 7, 3, 4, 6, 26])
   })
 
   it('câu F♯13♭9: gợi ý đúng quy luật, chấm tay phải theo lớp cao độ', () => {
     const cau = taoCau(ct('13b9'), 6)
-    expect(cau.goiY).toBe('tay phải trên bậc 6 · trưởng')
+    expect(cau.goiY).toBe('tay phải 13·♭9·3 · trưởng')
     expect(cau.chong.nhan.phai).toBe('D♯')
     expect(dungTayPhai([63, 67, 70], cau.chong)).toBe(true) // Mi♭ Sol Si♭ = D♯ trưởng, thế nào cũng được
     expect(dungTayPhai([75, 79, 82], cau.chong)).toBe(true)

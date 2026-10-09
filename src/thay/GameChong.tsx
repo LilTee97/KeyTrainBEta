@@ -5,7 +5,7 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
-import { BA, cachTimTayPhai, CONG_THUC, hauDep } from './soanCau/chongHopAm'
+import { cachTimTayPhai, CONG_THUC, hauDep } from './soanCau/chongHopAm'
 import {
   chonCau,
   DAT_THI,
@@ -24,7 +24,7 @@ import {
   type CauGame,
   type GocChoi,
 } from './soanCau/gameChong'
-import { demPhim, meoCua } from './soanCau/meoChong'
+import { meoCua, meoNgan } from './soanCau/meoChong'
 import { GOC } from './vongThay'
 
 interface Vien extends CauGame {
@@ -70,8 +70,6 @@ const NHAP: readonly { id: CachNhap; ten: string; mo: string }[] = [
   { id: 'cham', ten: 'Chạm từng nốt', mo: 'chuột · cảm ứng — chạm đủ nốt là chấm' },
   { id: 'chon', ten: 'Chọn tên', mo: 'bốn nút to — hợp điện thoại' },
 ]
-/** Dòng mẹo ngắn trên viên rơi: đếm phím · chất (chùm nốt thì tên chùm). */
-const meoNgan = (v: CauGame) => ('iv' in v.ct.tren ? v.ct.tren.ten : `${demPhim(v.ct.tren.cach)} · ${BA[v.ct.tren.loai].ten}`)
 
 /**
  * GAME "MƯA HỢP ÂM" — học thuộc 26 công thức chồng bằng tay (người dùng 9/10/2026: "hãy phá lệ làm game cho phần học thuộc công thức
@@ -314,7 +312,7 @@ export function GameChong() {
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
-              Viên rơi ghi khung tay trái, đếm mấy phím từ gốc, hợp âm gì; có bảng mẹo của màn; không mất mạng, rơi chậm — dừng lúc nào cũng được.
+              Viên rơi ghi khung tay trái và các bậc tay phải của loại hợp âm ấy (vd 13♭9: tay phải 13·♭9·3 · trưởng); có bảng mẹo theo loại; không mất mạng, rơi chậm — dừng lúc nào cũng được.
             </p>
             <div className="flex flex-col gap-1.5">
               {MAN.map((m, k) => (
@@ -438,7 +436,7 @@ export function GameChong() {
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>
-          <summary className="cursor-pointer text-teal-key">Mẹo của màn này (ví dụ gốc Đô — đếm phím từ gốc tay trái, cả phím đen)</summary>
+          <summary className="cursor-pointer text-teal-key">Mẹo theo loại hợp âm của màn này (ví dụ gốc Đô)</summary>
           <ul className="mt-1 flex flex-col gap-0.5">
             {MAN[man]!.ct.map((id) => {
               const ct = CONG_THUC.find((c) => c.id === id)!
@@ -489,7 +487,7 @@ function VungRoi({ vien, dich, bayGio, tick, chay, meo }: { vien: readonly Vien[
             {meo && (
               <>
                 <p className="text-[10px] leading-tight text-cream/75 sm:text-[11px]">khung {v.chong.nhan.trai}</p>
-                <p className="text-[10px] leading-tight text-teal-key sm:text-[11px]">{meoNgan(v)}</p>
+                <p className="text-[10px] leading-tight text-teal-key sm:text-[11px]">{meoNgan(v.ct)}</p>
               </>
             )}
           </div>

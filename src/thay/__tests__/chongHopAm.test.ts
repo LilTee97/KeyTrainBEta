@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
-import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe, bangCongThuc, cachTimTayPhai, QUY_LUAT_CHAT, khungTrai, VI_TRI_TREN } from '../soanCau/chongHopAm'
+import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe, cachTimTayPhai } from '../soanCau/chongHopAm'
 import { cungTap, docTay, traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -174,46 +174,15 @@ describe('tên từng tay (người dùng 9/10/2026: "Chỉ được ghi nốt k
     expect(tenMotTay([52, 58, 62], 'flat').laHop).toBe(false)
   })
 
-  it('C6/9 chồng tự do: tay trái Đô – Rê – Sol ghi Csus2 (ảnh người dùng gửi), nốt ở dòng phụ', () => {
-    const c = chongTuDo(0, LOAI_TU_DO.find((q) => q.kyHieu === '6/9')!.id, 'sharp')!
-    expect(c.trai).toHaveLength(3)
-    expect(c.nhan.trai).toBe('Csus2')
-    expect(c.nhan.traiPhu).toContain('Đô – Rê – Sol')
+  it('chọn tự do C6/9, Cm(add9), Cm(maj7) dùng đúng công thức chồng (lỗi BIET_DANH cũ làm ba hợp âm này rơi vào lối chung)', () => {
+    const id = (k: string) => LOAI_TU_DO.find((q) => q.kyHieu === k)!.id
+    const c69 = chongTuDo(0, id('6/9'), 'sharp')!
+    expect([c69.ct?.id, c69.nhan.trai, c69.nhan.phai]).toEqual(['69', 'Đô – Sol', 'Asus4'])
+    expect([chongTuDo(0, id('m(add9)'), 'flat')!.ct?.id, chongTuDo(0, id('m(maj7)'), 'flat')!.ct?.id]).toEqual(['madd9', 'mMaj7'])
   })
 })
 
-describe('bảng công thức chồng — quy luật học thuộc (người dùng 9/10/2026)', () => {
-  it('đủ 26 công thức, mỗi công thức đúng một dòng', () => {
-    const { theoViTri, chum } = bangCongThuc()
-    const ids = [...theoViTri.flatMap((v) => v.dong), ...chum].map((d) => d.ct.id)
-    expect(ids.sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-  })
-
-  it('tay phải chứa bậc nào — đúng nốt (gốc Đô)', () => {
-    const d = (id: string) => [...bangCongThuc().theoViTri.flatMap((v) => v.dong), ...bangCongThuc().chum].find((x) => x.ct.id === id)!
-    expect([d('13b9').nhan.tong, d('13b9').nhan.trai, d('13b9').nhan.phai, d('13b9').bacPhai]).toEqual(['C13♭9', 'C7', 'A', ['13', '♭9', '3']])
-    expect([d('maj7').nhan.phai, d('maj7').bacPhai]).toEqual(['Em', ['3', '5', '7']])
-    expect([d('m11').nhan.phai, d('m11').bacPhai]).toEqual(['B♭', ['♭7', '9', '11']])
-    expect(d('9sus4').bacPhai).toEqual(['♭7', '9', '4'])
-    expect(d('13#11').bacPhai).toEqual(['9', '♯11', '13'])
-    expect(d('dim7').bacPhai).toEqual(['♭3', '♭5', '𝄫7'])
-    expect(d('13b9#11').bacPhai).toEqual(['♯11', '13', '♭9'])
-  })
-
-  it('quy luật đổi chất đúng với công thức thật', () => {
-    for (const q of QUY_LUAT_CHAT)
-      for (const x of q.doi) {
-        const ct = CONG_THUC.filter((c) => !('iv' in c.tren) && c.tren.cach === q.cach && c.tren.loai === x.loai && (q.cach !== 9 || c.nhom === 'Át'))
-        expect(ct.map((c) => c.kyHieu)).toEqual([x.ra])
-      }
-    expect(VI_TRI_TREN.flatMap((v) => v.cach).sort((a, b) => a - b)).toEqual([2, 3, 4, 6, 7, 8, 9, 10, 11])
-  })
-
-  it('khung tay trái bốn loại', () => {
-    const k = (id: string) => khungTrai(CONG_THUC.find((c) => c.id === id)!)
-    expect([k('maj7'), k('6'), k('m11b5'), k('maj9'), k('m11'), k('13b9'), k('9'), k('m13')]).toEqual(['goc', 'goc5', 'goc5', 'ba', 'ba', 'khung7', 'khung7', 'khung7'])
-  })
-
+describe('cách tìm tay phải ở mọi gốc (đếm gam trưởng của gốc)', () => {
   it('cách tìm tay phải ở mọi gốc — F♯13♭9 trong ảnh người dùng, Cm11, C13♭9♯11', () => {
     const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
     // bậc 7 ghi "Fa" chứ không "Mi♯": quy ước chung của app (`tenTheoChu`) tránh E♯ · B♯ · C♭ · F♭ cho người mới dễ đọc
