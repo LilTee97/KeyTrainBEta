@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { HopAmMau } from './HopAmMau'
 import { ChongHopAm } from './SoanCau'
-import { VongLuaChon } from './VongLuaChon'
+import { VongTab } from './VongTab'
 import { GOC } from './vongThay'
 
 /** Các tab của trang — dựng dần theo `Reference/KE-HOACH-LUYEN-TAP.md` mục "Bổ sung 8/10/2026" (B → C → vòng + lựa chọn thay). */
@@ -56,7 +56,7 @@ export function HopAmPage() {
       </div>
       {tab === 'chong' && <ChongHopAm tonic={tonic} thu={thu} />}
       {tab === 'mau' && <HopAmMau tonic={tonic} thu={thu} />}
-      {tab === 'vong' && <VongLuaChon key={String(thu)} tonic={tonic} thu={thu} />}
+      {tab === 'vong' && <VongTab tonic={tonic} thu={thu} />}
     </section>
   )
 }

@@ -6012,3 +6012,35 @@ toàn suite **2 665 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy 
   ngược lại; "cho hợp âm → bấm hai tay" chỉ hiện tên tổng. Trả lời xong / xem đáp án thì hiện đủ hai tay.
 
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `src/thay/__tests__` qua · chạy thử headless 4/4 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: vòng trong sheet các thầy → vòng phổ biến · đánh theo · tự nhập vòng (9/10/2026)
+
+**Người dùng:** *"Hãy phân tích các vòng hợp âm trong các sheet của từng thầy rồi cố gắng tổng hợp lại xem nó là vòng nào trong các vòng
+hợp âm phổ biến trong âm nhạc. Sau đó đưa vào tab để tôi có cái đánh theo. Hãy làm thêm chức năng tự nhập vòng hợp âm để đánh theo"*.
+
+- `tools/vong_trong_sheet.py` (mới) → `src/thay/soanCau/vongSheet.json`: chuỗi hợp âm từng đoạn (gốc tính từ chủ âm + chất, gộp hợp âm lặp
+  liền; đoạn y hệt gộp một). Linh Nhi 8 bài / 35 đoạn, Cà Pháo 7 / 29 — `hop_am_linh_nhi.doan_hat` (phần hát, bỏ `_mod`; hợp âm ba đọc từ
+  nốt); Blues 3 bài — ký hiệu in. Khung 12 ô blues đo riêng theo ô nhịp (trượt ba khuôn, cửa sổ ≥ 11/12): Rockhouse 2 khung trong 120 ô
+  (ô 32 chuẩn 12/12; ô 44 hòa điểm chuẩn / đổi nhanh 11/12), Robert 0 (tốt nhất 9/12). `--kiem` giữ các số này.
+- `nhanVong.ts` (mới): bộ nhận vòng dùng chung (trang Tái hòa âm dùng ở bước sau) — 16 vòng mẫu (trục, thập niên 50, 1–6–2–5, Canon và nửa
+  đầu, Royal Road, Just the Two of Us, ba hợp âm chính trưởng / thứ, ii–V–I trưởng / thứ, Andalusian, kết Aeolian, Rising Sun, quay đầu
+  I–♭iii°–ii–V, 12 ô gộp ô lặp) + chuỗi quãng 5 nhận riêng (cho chen một hợp âm; dài từ 4, hay 3 mà về chủ âm). Khớp theo gốc + họ chất;
+  vòng lặp nhận cả khi xoay; khác hệ giọng thì khớp qua giọng song song; khúc dài thắng, không chồng nhau. `tongHop`, `laMa`,
+  `LOI_TONG_HOP` (lời đọc kết quả từng thầy — mọi con số trong lời có test giữ).
+- `danhTheo.ts` (mới): thế bấm đánh theo — tay trái bass (Fa2–Mi3), tay phải thế đảo gần thế trước nhất (nốt thấp + nốt cao dời ít nhất;
+  hợp âm từ 5 nốt bỏ gốc rồi bỏ quãng 5); `doiThe` (nốt giữ / nốt dời). Lối chung của Claude, chưa phải lối thầy.
+- `VongTab.tsx` (mới) — tab Tái hòa âm vòng: khung **Đánh theo** (chip từng hợp âm kèm bậc, khúc nhận ra, bàn phím hai tay có tên, dòng
+  "tay phải từ X sang Y: giữ … · … → …", bấm đúng lớp cao độ thì tự sang, sai thì báo thiếu / thừa; ◀ ▶, nghe hợp âm / cả vòng; ô **tự nhập
+  vòng**); khung **Vòng trong sheet các thầy** (tổng hợp + lời đọc kết quả + từng bài · đoạn: khúc tô màu, "Đánh theo cả đoạn / khúc");
+  khung **Vòng phổ biến** (16 vòng ở chủ âm đang chọn, lời nghe ra sao); công cụ "Vòng + lựa chọn thay" giữ ở dưới.
+- Số đo (đoạn lặp y hệt tính một): Linh Nhi 155/605 hợp âm (26%) rơi vào vòng có tên — chuỗi quãng 5 11/35 đoạn (rõ nhất đuôi
+  ♭VI–ii°–V–i), ba hợp âm chính thứ 11/35, 1–6–2–5 7/35, IV–III7–vi 3 lần ở điệp khúc Đường Xưa. Cà Pháo 175/380 (46%) — kết Aeolian
+  ♭VI–♭VII–i 9/29 đoạn (13 lần), chuỗi quãng 5 8/29 (verse Người Hãy Quên Em Đi: chuỗi 12 hợp âm), Royal Road thật ở prechorus Chưa Bao
+  Giờ. Blues 72/216 (33%) — I–IV–V 2/3 bài (10 lần), quay đầu I–♭iii°–ii–V 3 lần (Robert), Rising Sun 2 lần.
+- Sửa khi test bắt: tôi từng viết "♭VI–♭VII–i–v ở La thứ là Royal Road" — sai, đó là IV–V–vi–iii của Đô trưởng; Royal Road ở giọng thứ là
+  ♭VI–♭VII–v–i.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `nhanVong.test.ts` 13 · `danhTheo.test.ts` 3 · `vong_trong_sheet.py --kiem` · toàn suite **2 681 qua /
+5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless 18/18 đạt (tổng hợp ba thầy; nạp khúc Người Hãy Quên Em Đi → bấm Dm, Gm sang 3/12;
+bấm Cmaj7 thay C → "thừa Si"; tự nhập Am F C G → vòng trục bắt đầu từ vi; khung 12 ô Rockhouse / Robert; Canon ở Đô trưởng) ·
+`LuyenTap.json`, `Nguon.json` không đổi.
