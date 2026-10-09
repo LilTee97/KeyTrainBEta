@@ -6101,3 +6101,25 @@ hợp âm nào"*.
 · `the_bam_thay.py --kiem` · toàn suite **2 687 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: Bấm như thầy 12/12 (nạp verse
 Người Hãy Quên Em Đi, bấm Dm9 đúng nốt → sang; Gm7 sai quãng tám bass → "khác thế … Sol2", chưa sang; đúng → sang), tab vòng 17/17, trang
 Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: mỗi tay tối đa 4 nốt; nhãn từng tay ghi tên hợp âm khi tay ấy thành hợp âm (9/10/2026)
+
+**Người dùng (hai ảnh):** *"hợp âm mỗi tay chỉ đánh tối đa 4 nốt chứ ko được đánh 5 như này"* (Đánh theo thế thầy, Dm9 tay phải 5 nốt) ·
+*"sao tay trái lại ko ghi hợp âm mà chỉ ghi nốt vậy. Chỉ được ghi nốt khi đó ko phải là hợp âm"* (Chồng hợp âm, C6/9 tay trái
+"Đô – Rê – Sol").
+
+- Đo trước khi sửa — thế bấm có tay quá 4 nốt: công thức chồng 0/312 · chồng tự do 0/444 · thế Đánh theo (Claude) 0/444 · thế nghe
+  `theBamHop` 84/444 (7 loại không có công thức: 13sus4, 7♭9sus4, 11, maj7♯11, maj13, 7♯9, 7♯11 × 12 gốc — lần đầu tôi báo 168 vì cắt
+  hai tay sai ở hợp âm có công thức) · thế thầy Cà Pháo 5/57 · Blues 8/20.
+- `danhTheo.ts`: `chonLop` (giữ tối đa 4 lớp: bậc 3 · 7 trước, rồi màu, bậc 5, gốc cuối cùng), `gonTay` (bỏ nốt trùng quãng tám trước —
+  không mất âm; còn quá thì `chonLop`; thế hẹp nhất, hòa thì giữ nốt đỉnh). `theBamHop` tay phải qua `chonLop`; Đánh theo thế thầy qua
+  `gonTay`, kèm dòng "Sheet: tay phải 5 nốt (…) — gọn còn 4 …".
+- `chongHopAm.ts`: `tenMotTay` — từ 3 lớp cao độ, mọi nốt nằm trong một hợp âm (thiếu nhiều nhất bậc 5) thì ghi tên hợp âm (gốc trùng nốt
+  thấp nhất trước: C–D–G là Csus2; tay trái có gạch chéo khi bass khác gốc), còn lại ghi nốt. Áp ở Chồng hợp âm (tay trái — công thức và
+  tự do) và Đánh theo (hai tay: tay phải ghi hợp âm riêng của tay phải, vd Dm9 thiếu gốc → Fmaj7; hợp âm tổng ở dưới).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới: `gonTay` / `chonLop` (Dm9 Cà Pháo, G Blues 6 nốt), quét mọi bộ dựng thế (1 472 thế, 0 tay
+quá 4 nốt), `tenMotTay` (Csus2, C7, Fmaj7, C/E, Đô – Sol, Rê, chùm không thành hợp âm), C6/9 tay trái Csus2 · toàn suite **2 692 qua / 5
+đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: luật mới 6/6 (C6/9 → Csus2; Chúng Ta Không Thuộc Về Nhau Dm9 tay phải gọn còn
+Fa–La–Đô–Mi, nhãn Fmaj7, có dòng "gọn còn 4", bấm đúng → sang; Canon G thế đảo → tay phải G); chạy lại: chồng tự do 7/7, đố một tay
+4/4, tab vòng 17/17, Bấm như thầy 12/12, trang Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.

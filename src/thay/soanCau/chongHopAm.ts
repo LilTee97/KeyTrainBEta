@@ -1,5 +1,6 @@
 import { bestUpperStructure } from '../../reharm/reharmEngine/staticVoicingRules'
 import { CHORD_QUALITIES, chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
+import { detectChords } from '../../shared/musicTheory/chordDetection'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { kieuDau } from '../vongThay'
@@ -426,7 +427,33 @@ export interface Chong {
 
 export function chongCongThuc(ct: CongThuc, gocPc: number, gocTen: string, style: AccidentalStyle, daoDuoi = 0, daoTren = 0): Chong {
   const b = theBamChong(ct, gocPc, daoDuoi, daoTren)
-  return { goc: pc(gocPc), trai: b.trai, phai: b.phai, nhan: nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren), ct }
+  const nhan = nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren)
+  // tay trái từ 3 nốt mà thành hợp âm (vd 1–♭7–3 = C7) thì ghi tên hợp âm, nốt xuống dòng phụ — `nhanHaiTay` chỉ gọi tên hợp âm ba
+  const t = tenMotTay(b.trai, style, true)
+  const trai = t.laHop && nhan.trai.includes('–') ? { trai: t.ten, traiPhu: tenHaiTay(ct, gocTen, style, daoDuoi, daoTren).trai.join(' – ') } : {}
+  return { goc: pc(gocPc), trai: b.trai, phai: b.phai, nhan: { ...nhan, ...trai }, ct }
+}
+
+/**
+ * Tên MỘT tay — người dùng 9/10/2026: "sao tay trái lại ko ghi hợp âm mà chỉ ghi nốt vậy. Chỉ được ghi nốt khi đó ko phải là hợp âm".
+ * Từ 3 lớp cao độ trở lên mà mọi nốt nằm trong một hợp âm (thiếu nhiều nhất bậc 5) thì ghi tên hợp âm — gốc trùng nốt thấp nhất được
+ * ưu tiên (C–D–G là Csus2, không phải Gsus4/C); `gach` thì bass khác gốc ghi gạch chéo (tay trái — bass cả hợp âm), tay phải thì không
+ * (thế đảo ghi ở dòng phụ). Còn lại — một nốt, quãng tám, hai nốt, chùm không thành hợp âm — ghi nốt.
+ */
+export function tenMotTay(notes: readonly number[], style: AccidentalStyle, gach = false): { ten: string; laHop: boolean } {
+  const ds = [...notes].sort((a, b) => a - b)
+  const lop = [...new Set(ds.map(pc))]
+  const tenNot = () => [...new Set(ds.map((m) => vn(pitchClassName(pc(m), style))))].join(' – ')
+  if (lop.length < 3) return { ten: tenNot(), laHop: false }
+  const ung = detectChords(ds, { maxResults: 12, accidentalStyle: style }).filter((x) => {
+    const du = chordPitchClasses(x.root, x.quality)
+    const thieu = du.filter((p) => !lop.includes(p))
+    return lop.every((p) => du.includes(p)) && thieu.length <= 1 && thieu.every((p) => [6, 7, 8].includes(pc(p - x.root)))
+  })
+  const m = ung.find((x) => x.root === pc(ds[0]!)) ?? ung[0]
+  if (!m) return { ten: tenNot(), laHop: false }
+  const bass = gach && m.bass !== m.root ? `/${gocDep(pitchClassName(m.bass, style))}` : ''
+  return { ten: `${gocDep(pitchClassName(m.root, style))}${hauDep(m.quality.symbol)}${bass}`, laHop: true }
 }
 
 /** Ký hiệu của bộ hợp âm app ↔ ký hiệu công thức chồng (khác cách viết, cùng nốt). */
@@ -460,13 +487,14 @@ export function chongTuDo(gocPc: number, qualityId: string, style: AccidentalSty
   while (r - 12 > Math.max(...trai)) r -= 12
   const phai = (qTren ?? q).intervals.map((iv) => r + iv)
   const tenNot = (m: number) => vn(pitchClassName(pc(m), style))
+  const tt = tenMotTay(trai, style, true)
   return {
     goc: g,
     trai,
     phai,
     nhan: {
-      trai: trai.map(tenNot).join(' – '),
-      traiPhu: thieu.length ? 'gốc + nốt hợp âm còn thiếu' : 'gốc',
+      trai: tt.laHop ? tt.ten : trai.map(tenNot).join(' – '),
+      traiPhu: tt.laHop ? `${trai.map(tenNot).join(' – ')} · gốc + nốt còn thiếu` : thieu.length ? 'gốc + nốt hợp âm còn thiếu' : 'gốc',
       phai: `${gocDep(pitchClassName(gocTren, style))}${hauDep(tren && qTren ? qTren.symbol : q.symbol)}`,
       phaiPhu: phai.map(tenNot).join(' – '),
       tong: `${gocDep(gocTen)}${hauDep(q.symbol)}`,

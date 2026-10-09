@@ -1,6 +1,7 @@
 import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import type { TeacherId } from '../teachers'
 import { CONG_THUC, gocDep, hauDep, tenTrongGiong, theBamChong, vn } from './chongHopAm'
+import { chonLop } from './danhTheo'
 
 /*
   PHẦN 1 — vì sao mỗi bậc là hợp âm ấy, thay được bằng gì, và THẦY chọn gì ở đó, VÌ SAO. Viết lại 4/10/2026 theo người dùng: "Tôi ko cần
@@ -57,7 +58,8 @@ export function theBamHop(tonic: number, x: Hop): number[] {
     not = [...t.trai, ...t.phai]
   } else {
     const q = findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!
-    not = [48 + g, ...chordPitchClasses(g, q).map((p) => 60 + p)]
+    // tay phải tối đa 4 nốt (người dùng 9/10/2026) — trước đây hợp âm 9, 11, 13 không có công thức ra 5–6 nốt một tay
+    not = [48 + g, ...chonLop(chordPitchClasses(g, q), g).map((p) => 60 + p)]
   }
   if (x.bass === undefined) return not
   const b = 36 + pc(tonic + x.bass)

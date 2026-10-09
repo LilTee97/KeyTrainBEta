@@ -6,13 +6,15 @@ import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { BAC_TREN_BASS, BAM_THAY, hopTheoNot, LOI_BAM_THAY, ngonGoiY, type ThayBam } from './soanCau/bamNhuThay'
-import { doiThe, TEN_DAO, theBamVong } from './soanCau/danhTheo'
+import { tenMotTay } from './soanCau/chongHopAm'
+import { doiThe, gonTay, TEN_DAO, theBamVong } from './soanCau/danhTheo'
 import { nguCanh, type Hop } from './soanCau/giaiThich'
 import { hopCuaMau, hopDoan, laMa, LOI_TONG_HOP, MAU_VONG, moTaKhuc, nhanVong, tongHop, type BaiSheet, type KhucVong } from './soanCau/nhanVong'
 import { dungHopAm } from './soanCau/soanCau'
 import { docVong } from './soanCau/thayTrongVong'
 import vongSheet from './soanCau/vongSheet.json'
 import { VongLuaChon } from './VongLuaChon'
+import { kieuDau } from './vongThay'
 
 type ThayId = 'linh-nhi' | 'ca-phao' | 'blues'
 const SHEET = vongSheet as unknown as Record<ThayId, BaiSheet[]>
@@ -97,9 +99,13 @@ function DanhTheoVong({ vong, tonic, thu, nap }: { vong: VongDanh | null; tonic:
       !vong
         ? []
         : vong.the
-          ? vong.the.map((y) => {
-              const pcs = [...new Set([...y.trai, ...y.phai].map(pc))]
-              return { trai: y.trai, phai: y.phai, pcs, pcsGoiY: pcs, dao: -1 }
+          ? vong.the.map((y, k) => {
+              // mỗi tay tối đa 4 nốt (người dùng 9/10/2026) — sheet có cụm 5–6 nốt (nốt trùng quãng tám, nốt giai điệu ở trên)
+              const g = pc(vong.tonic + vong.hop[k]!.goc)
+              const trai = gonTay(y.trai, g)
+              const phai = gonTay(y.phai, g)
+              const pcs = [...new Set([...trai, ...phai].map(pc))]
+              return { trai, phai, pcs, pcsGoiY: pcs, dao: -1 }
             })
           : theBamVong(vong.tonic, vong.hop),
     [vong],
@@ -196,7 +202,7 @@ function DanhTheoVong({ vong, tonic, thu, nap }: { vong: VongDanh | null; tonic:
       </h4>
       <p className="mb-3 text-xs text-dim">
         {theThay
-          ? 'Thế bấm là nốt THẬT trong sheet của thầy (cú đầu tay trái, cụm tay phải tiêu biểu của khúc). Bấm đúng từng nốt thì sang hợp âm sau. Số trong ngoặc là ngón Claude gợi ý — sheet không ghi số ngón.'
+          ? 'Thế bấm là nốt THẬT trong sheet của thầy (cú đầu tay trái, cụm tay phải tiêu biểu của khúc), mỗi tay gọn về tối đa 4 nốt. Bấm đúng từng nốt thì sang hợp âm sau. Số trong ngoặc là ngón Claude gợi ý — sheet không ghi số ngón.'
           : 'Thế gợi ý là lối chung của Claude (tay trái giữ bass, tay phải chọn thế đảo gần thế trước nhất cho tay dời ít) — chưa phải lối bấm của thầy. Bấm thế nào cũng được miễn đủ nốt; đúng thì tự sang hợp âm sau. Số trong ngoặc là ngón gợi ý.'}
       </p>
 
@@ -270,13 +276,19 @@ function DanhTheoVong({ vong, tonic, thu, nap }: { vong: VongDanh | null; tonic:
         lowNote={Math.min(36, ...tb.flatMap((y) => [...y.trai, ...y.phai]).map((m) => m - (m % 12)))}
         highNote={Math.max(84, ...tb.flatMap((y) => [...y.trai, ...y.phai]).map((m) => m - (m % 12) + 12))}
         nhan={{
-          trai: not(t.trai[0]!),
+          // tay nào bấm thành hợp âm thì ghi tên hợp âm của chính tay ấy; chỉ ghi nốt khi không thành hợp âm (người dùng 9/10/2026)
+          trai: tenMotTay(t.trai, kieuDau(vong.tonic, vong.thu), true).ten,
           traiPhu: `${coNgon(t.trai, 'trai')}${theThay ? '' : x.bass === undefined ? ' · nốt gốc' : ' · bass'}`,
-          phai: h(x.goc, x.chat),
+          phai: tenMotTay(t.phai, kieuDau(vong.tonic, vong.thu)).ten,
           phaiPhu: `${coNgon(t.phai, 'phai')}${theThay ? '' : ` · ${TEN_DAO[t.dao]}`}`,
           tong: tenHop(x),
         }}
       />
+      {theThay && vong.the && (vong.the[i]!.trai.length > t.trai.length || vong.the[i]!.phai.length > t.phai.length) && (
+        <p className="mb-1 text-xs text-dim">
+          Sheet: tay {vong.the[i]!.phai.length > t.phai.length ? `phải ${vong.the[i]!.phai.length} nốt (${vong.the[i]!.phai.map(notQ).join(' – ')})` : `trái ${vong.the[i]!.trai.length} nốt (${vong.the[i]!.trai.map(notQ).join(' – ')})`} — gọn còn 4 theo luật mỗi tay tối đa 4 nốt: bỏ nốt trùng quãng tám trước, còn quá thì bỏ gốc rồi bậc 5.
+        </p>
+      )}
       {doi && truoc && (
         <p className="mb-1 text-xs text-cream/85">
           <span className="text-amber-key">Tay phải từ {tenHop(vong.hop[(i - 1 + n) % n]!)} sang {tenHop(x)}: </span>

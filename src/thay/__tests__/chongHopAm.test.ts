@@ -1,24 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
-import {
-  chongTuDo,
-  CONG_THUC,
-  DO_DUOC,
-  KHI_CHON,
-  LOAI_TU_DO,
-  mauCuaHo,
-  nhanHaiTay,
-  nhanMau,
-  pcsDuoi,
-  pcsTong,
-  pcsTren,
-  quangTren,
-  soThe,
-  tenHaiTay,
-  tenTren,
-  tenTrongGiong,
-  theBamChong,
-} from '../soanCau/chongHopAm'
+import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe } from '../soanCau/chongHopAm'
 import { cungTap, docTay, traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -179,3 +161,24 @@ describe('Chọn hợp âm tự do — thế chồng hai tay cho mọi hợp âm
     }
   })
 })
+
+describe('tên từng tay (người dùng 9/10/2026: "Chỉ được ghi nốt khi đó ko phải là hợp âm")', () => {
+  it('tenMotTay: thành hợp âm thì ghi tên, không thì ghi nốt', () => {
+    expect(tenMotTay([48, 50, 55], 'sharp')).toEqual({ ten: 'Csus2', laHop: true })
+    expect(tenMotTay([48, 58, 64], 'flat')).toEqual({ ten: 'C7', laHop: true })
+    expect(tenMotTay([65, 69, 72, 76], 'sharp')).toEqual({ ten: 'Fmaj7', laHop: true })
+    expect(tenMotTay([52, 55, 60], 'sharp', true)).toEqual({ ten: 'C/E', laHop: true })
+    expect(tenMotTay([52, 55, 60], 'sharp')).toEqual({ ten: 'C', laHop: true })
+    expect(tenMotTay([48, 55], 'sharp')).toEqual({ ten: 'Đô – Sol', laHop: false })
+    expect(tenMotTay([38, 50], 'sharp')).toEqual({ ten: 'Rê', laHop: false })
+    expect(tenMotTay([52, 58, 62], 'flat').laHop).toBe(false)
+  })
+
+  it('C6/9 chồng tự do: tay trái Đô – Rê – Sol ghi Csus2 (ảnh người dùng gửi), nốt ở dòng phụ', () => {
+    const c = chongTuDo(0, LOAI_TU_DO.find((q) => q.kyHieu === '6/9')!.id, 'sharp')!
+    expect(c.trai).toHaveLength(3)
+    expect(c.nhan.trai).toBe('Csus2')
+    expect(c.nhan.traiPhu).toContain('Đô – Rê – Sol')
+  })
+})
+

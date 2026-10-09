@@ -63,3 +63,38 @@ export function doiThe(truoc: readonly number[], sau: readonly number[]) {
   const den = sau.filter((m) => !truoc.includes(m))
   return { giu, doi: di.map((m, k) => [m, den[k]] as const).filter((x): x is readonly [number, number] => x[1] !== undefined), them: den.slice(di.length), bo: di.slice(den.length) }
 }
+
+/* ---------------- Mỗi tay tối đa 4 nốt — người dùng 9/10/2026: "hợp âm mỗi tay chỉ đánh tối đa 4 nốt chứ ko được đánh 5 như này" ---------------- */
+
+export const TOI_DA_MOT_TAY = 4
+/** Ưu tiên giữ (khóa: quãng so với gốc): bậc 3 và 7 định chất trước, rồi màu (9, 13, 11, ♭9, ♭5, ♯5), bậc 5, cuối cùng gốc (tay trái có). */
+const UU_TIEN: Readonly<Record<number, number>> = { 4: 10, 3: 9.5, 10: 9, 11: 9, 2: 7, 9: 6.5, 5: 6, 1: 5.5, 6: 5, 8: 5, 7: 3, 0: 2 }
+
+/** Giữ tối đa `toiDa` lớp cao độ theo thứ tự ưu tiên; ít hơn thì giữ nguyên. */
+export function chonLop(pcs: readonly number[], goc: number, toiDa = TOI_DA_MOT_TAY): number[] {
+  if (pcs.length <= toiDa) return [...pcs]
+  return [...pcs].sort((a, b) => UU_TIEN[pc(b - goc)]! - UU_TIEN[pc(a - goc)]!).slice(0, toiDa)
+}
+
+/**
+ * Gọn một tay về tối đa 4 nốt: bỏ nốt trùng quãng tám trước (không mất âm nào — Dm9 Đô4 Fa4 La4 Đô5 Mi5 thành Fa4 La4 Đô5 Mi5), còn quá
+ * thì bỏ lớp ít quan trọng (`chonLop`); mỗi lớp giữ một nốt sao cho thế hẹp nhất, bằng nhau thì giữ nốt đỉnh cao hơn (giai điệu).
+ */
+export function gonTay(notes: readonly number[], goc: number): number[] {
+  const ds = [...notes].sort((a, b) => a - b)
+  if (ds.length <= TOI_DA_MOT_TAY) return ds
+  const theoLop = chonLop([...new Set(ds.map(pc))], goc).map((p) => ds.filter((m) => pc(m) === p))
+  let tot: number[] = []
+  const thu = (k: number, chon: number[]) => {
+    if (k === theoLop.length) {
+      const s = [...chon].sort((a, b) => a - b)
+      const tam = s[s.length - 1]! - s[0]!
+      const tamTot = tot.length ? tot[tot.length - 1]! - tot[0]! : Infinity
+      if (tam < tamTot || (tam === tamTot && s[s.length - 1]! > tot[tot.length - 1]!)) tot = s
+      return
+    }
+    for (const m of theoLop[k]!) thu(k + 1, [...chon, m])
+  }
+  thu(0, [])
+  return tot
+}
