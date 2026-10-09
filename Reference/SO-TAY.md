@@ -5961,3 +5961,25 @@ lựa chọn hãy giải thích khi nào nên chọn hợp âm đó"*.
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 12 (thêm: đủ 26 lời khi nào nên chọn) · toàn suite **2 655 qua / 5 đỏ** (5 đỏ
 cũ) · `vite build` qua · chạy thử headless: 7 bậc Đô trưởng, V có G9 · G13 · G7♭13 (không G7 trơn), không lựa chọn nào in hai lần, ▶ ra
 tiếng, giữ đủ thế bấm G13 → "Đúng!", vi có Am9 · Am11 — 9/9 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: công cụ "vòng + lựa chọn thay" — tab Tái hòa âm vòng và Phần 2 của tab thầy (9/10/2026)
+
+**Người dùng (8/10):** *"Hãy cho những vòng hợp âm sẵn có hoặc cho tôi tự điền vòng hợp âm rồi sau đó mỗi hợp âm bạn sẽ đưa ra các hợp âm
+thay thế để tôi chọn, mỗi khi chọn vào bạn sẽ giải thích tại sao nên chọn hợp âm đó ở vị trí đó, và nó mang lại cảm giác như thế nào khi
+chơi và sẽ biến vòng đó theo hướng nào."* Chốt 9/10: gộp với "tái hòa âm theo vòng" làm một công cụ.
+
+- `soanCau/thayTrongVong.ts` (mới): 10 loại thay — thêm màu · họ hàng (chung hai nốt, trong gam) · át phụ · ii – V phụ · thay tam cung (chỉ
+  khi ô là át của ô sau) · giảm lướt · mượn giọng cùng chủ âm · treo · cầu thang bass (Linh Nhi, i → ♭VI / V) · nghiêng trước V (Linh Nhi,
+  iv → V). Mỗi loại: lời nghe ra sao, `huong(sau)` vòng rẽ về đâu (gọi đúng tên hợp âm sau), thầy nào dùng. `canhVong`: câu TÍNH ở đúng ô —
+  bass đi (đường ngắn), nốt chung với hợp âm trước / sau, nốt dẫn nửa cung vào hợp âm sau, nốt ngoài gam. Màu lấy `KHI_CHON`.
+  `vongLyThuyetHop`, `docVong` (tự điền "C G Am F", "Dm7, G7 | Cmaj7").
+- `VongLuaChon.tsx` (mới): chọn vòng sẵn (của thầy · lý thuyết) hoặc tự điền → bấm ô → lựa chọn theo loại → thay vào vòng đang thử, ô đổi
+  ghi "gốc X" → lời giải thích; ▶ vòng gốc / vòng đã thay (mỗi hợp âm một nhịp đều); Đặt lại. Không có bàn phím (Phần 2 đã có bàn phím
+  của đố nhớ vòng — hai bàn phím thì kêu đôi).
+- Trang Hợp âm: tab "Tái hòa âm vòng". Phần 2 tab thầy: công cụ ở trên, đố nhớ vòng cũ (Linh Nhi) ở dưới; Phần 2 nay mở cho Cà Pháo, Blues —
+  vòng sẵn của họ là vòng 4 ô của các nút điệu người dùng đã duyệt (`vongThay.json`, nhãn "nút đã duyệt"), Linh Nhi là vòng đo từ sheet
+  (nhãn "sheet").
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `thayTrongVong.test.ts` 7 (lựa chọn đúng nhạc lý ở Đô trưởng / La thứ, câu tính đúng nốt, lời đủ,
+đọc vòng) · toàn suite **2 662 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: C → D7 có lời "Bass: Fa → Rê → Sol … Fa♯ →
+Sol", ▶ ra tiếng, tự điền, G7 trước C có D♭7 và treo, Phần 2 Linh Nhi / Cà Pháo đúng — 12/12 đạt · `LuyenTap.json`, `Nguon.json` không đổi.

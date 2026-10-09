@@ -45,7 +45,9 @@ import {
 } from './soanCau/soanCau'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
-import { GOC, kieuDau } from './vongThay'
+import { GOC, kieuDau, vongMau } from './vongThay'
+import { docVong } from './soanCau/thayTrongVong'
+import { VongLuaChon, type VongCoSan } from './VongLuaChon'
 
 const nut = (on: boolean) =>
   `rounded-lg border px-3 py-1.5 text-xs disabled:opacity-40 ${
@@ -93,6 +95,18 @@ export function SoanCau({
   const [loai, setLoai] = useState('m')
   const [phan, setPhan] = useState(0)
   useEffect(() => () => stopTimelineLoop(), [])
+  /* Vòng sẵn của thầy cho Phần 2: Linh Nhi — vòng đo từ sheet; thầy chưa có bảng số đo — vòng 4 ô của các nút điệu người dùng đã duyệt
+     (`vongThay.json`, lưu ở Đô trưởng / La thứ). */
+  const vongCoSan = useMemo<VongCoSan[]>(
+    () =>
+      du
+        ? du.vong.filter((v) => v.thu === thu).map((v) => ({ id: v.id, ten: v.ten, ghiChu: v.dieu, hop: v.hopAm }))
+        : vongMau(teacher.id, thu).flatMap((v, k) => {
+            const hop = docVong(v.hopAm.join(' '), thu ? 9 : 0)
+            return hop ? [{ id: `nut-${k}`, ten: `vòng ${k + 1}`, ghiChu: v.nguon, hop }] : []
+          }),
+    [du, teacher.id, thu],
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -103,7 +117,7 @@ export function SoanCau({
           <b className="text-cream">số đo từ sheet của {goi(teacher)}</b>.{' '}
           {du
             ? `Chọn nốt solo bám sheet — ${goi(teacher)} đánh nốt nào bao nhiêu phần trăm; không có đúng sai tuyệt đối, nốt ${goi(teacher)} không dùng chỉ là "khác ${goi(teacher)}".`
-            : `Hiện mới có Phần 1. Nhớ vòng · Chọn nốt · Tập solo cần bảng số đo đoạn solo của ${goi(teacher)} — chưa dựng (bước ${teacher.id === 'blues' ? 9 : 8} lộ trình).`}
+            : `Hiện có Phần 1 và Phần 2 (vòng + lựa chọn thay). Chọn nốt · Tập solo cần bảng số đo đoạn solo của ${goi(teacher)} — chưa dựng (bước ${teacher.id === 'blues' ? 9 : 8} lộ trình).`}
         </p>
       </div>
 
@@ -142,7 +156,7 @@ export function SoanCau({
           <button
             key={ten}
             type="button"
-            disabled={!du && i > 0}
+            disabled={!du && i > 1}
             onClick={() => {
               stopTimelineLoop()
               setPhan(i)
@@ -155,7 +169,18 @@ export function SoanCau({
       </div>
 
       {phan === 0 && <HopAmTheoBac teacher={teacher} du={du} tonic={tonic} thu={thu} loai={loai} />}
-      {du && phan === 1 && <NhoVong du={du} tonic={tonic} thu={thu} bay={loai === 'maj7' || loai === 'm7'} />}
+      {phan === 1 && (
+        <>
+          <VongLuaChon
+            key={String(thu)}
+            tonic={tonic}
+            thu={thu}
+            cuaThay={vongCoSan}
+            tenThay={du ? `${teacher.label} (sheet)` : `${teacher.label} (nút đã duyệt)`}
+          />
+          {du && <NhoVong du={du} tonic={tonic} thu={thu} bay={loai === 'maj7' || loai === 'm7'} />}
+        </>
+      )}
       {du && phan === 2 && <ChonNot teacher={teacher} du={du} tonic={tonic} thu={thu} />}
       {du && phan === 3 && <TapSolo teacher={teacher} du={du} tonic={tonic} thu={thu} luot={luot} onGhi={onGhi} />}
     </div>

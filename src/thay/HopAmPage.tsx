@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { HopAmMau } from './HopAmMau'
 import { ChongHopAm } from './SoanCau'
+import { VongLuaChon } from './VongLuaChon'
 import { GOC } from './vongThay'
 
 /** Các tab của trang — dựng dần theo `Reference/KE-HOACH-LUYEN-TAP.md` mục "Bổ sung 8/10/2026" (B → C → vòng + lựa chọn thay). */
 const TAB = [
   { id: 'chong', ten: 'Chồng hợp âm' },
   { id: 'mau', ten: 'Hợp âm màu' },
+  { id: 'vong', ten: 'Tái hòa âm vòng' },
 ] as const
 
 const nut = (on: boolean) =>
@@ -54,6 +56,7 @@ export function HopAmPage() {
       </div>
       {tab === 'chong' && <ChongHopAm tonic={tonic} thu={thu} />}
       {tab === 'mau' && <HopAmMau tonic={tonic} thu={thu} />}
+      {tab === 'vong' && <VongLuaChon key={String(thu)} tonic={tonic} thu={thu} />}
     </section>
   )
 }

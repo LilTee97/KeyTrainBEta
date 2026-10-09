@@ -465,6 +465,10 @@ giải thích tại sao nên chọn hợp âm đó ở vị trí đó, và nó m
 — thẻ Linh Nhi, Blues viết lại theo mẫu Cà Pháo (xong 9/10); trang mới "Hợp âm" (tab Chồng hợp âm · Hợp âm màu · Tái hòa âm vòng;
 Căn bản gộp vào khi tới bước 6); thứ tự dựng: A → B → C (một hợp âm) → công cụ "vòng + lựa chọn thay" (C theo vòng + D, thay Phần 2)
 → rồi mới bước 4.
+**Đã dựng 9/10/2026:** A nhãn hai tay (`cfc20fa`) · B trang Hợp âm, đố chồng hợp âm bốn dạng (`3b3acc3`) · C tab Hợp âm màu (`285eb82`) ·
+công cụ "vòng + lựa chọn thay" (`VongLuaChon`, `soanCau/thayTrongVong.ts` — 10 loại thay, câu tính bass / nốt chung / nốt dẫn / nốt ngoài
+gam) ở tab Tái hòa âm vòng và Phần 2 của tab thầy (Phần 2 nay mở cho cả Cà Pháo, Blues — vòng sẵn từ nút đã duyệt). **Chờ người dùng
+dùng thử.** Kế tiếp: bước 4.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
