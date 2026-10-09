@@ -3,6 +3,7 @@ import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory
 import {
   CONG_THUC,
   DO_DUOC,
+  KHI_CHON,
   mauCuaHo,
   nhanHaiTay,
   nhanMau,
@@ -138,5 +139,11 @@ describe('Trang Hợp âm — chấm đố chồng hợp âm (bước B)', () =>
     expect(docTay('F Ab C')).toEqual([[5, 8, 0]])
     expect(docTay('Do')).toEqual([[0]])
     expect(docTay('xyz')).toEqual([])
+  })
+})
+
+describe('Tab Hợp âm màu — mỗi màu có lời "khi nào nên chọn" (người dùng 8/10/2026)', () => {
+  it('đủ 26 công thức, mỗi lời đủ dài để nói khi nào', () => {
+    for (const c of CONG_THUC) expect((KHI_CHON[c.id] ?? '').length, c.id).toBeGreaterThan(40)
   })
 })

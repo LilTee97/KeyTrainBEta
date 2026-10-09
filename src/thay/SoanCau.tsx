@@ -314,7 +314,7 @@ function HopAmTheoBac({
   )
 }
 
-function DiemThay({ d, tonic, thu, ai }: { d: Diem; tonic: number; thu: boolean; ai: string }) {
+export function DiemThay({ d, tonic, thu, ai }: { d: Diem; tonic: number; thu: boolean; ai: string }) {
   const { h } = nguCanh(tonic, thu)
   const ten = (ds: readonly Hop[]) => ds.map((x) => h(x.goc, x.chat, x.bass)).join(' – ')
   return (

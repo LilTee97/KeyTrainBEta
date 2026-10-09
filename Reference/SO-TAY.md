@@ -5944,3 +5944,20 @@ chung "Hợp âm".
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 11 (3 mới: tay trái / tay phải / tổng của Fm11, nhận màu, đọc câu trả lời) · toàn
 suite **2 654 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless (cổng 5199): trang ở đúng chỗ, bốn dạng trả lời đúng bằng bấm
 và bằng gõ, nhãn ẩn khi đang đố — 12/12 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3 (C): tab "Hợp âm màu" — tái hòa âm một hợp âm, lựa chọn ở mỗi bậc để đánh theo (9/10/2026)
+
+**Người dùng (8/10):** *"Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó. Trong vai nhạc sĩ piano chuyên nghiệp bạn hãy lấy các phong cách
+đặt hòa âm của Linh Nhi, Cà Pháo và Blues để tham khảo … tái hòa âm 1 hợp âm … ở mỗi bậc hãy cho các lựa chọn sẵn để tôi đánh theo, ở mỗi
+lựa chọn hãy giải thích khi nào nên chọn hợp âm đó"*.
+
+- `HopAmMau.tsx` (mới), tab thứ hai của trang Hợp âm: chọn bậc (7 bậc theo giọng trên trang) → ba nhóm lựa chọn: **thêm màu** (công thức
+  chồng cùng họ với hợp âm của bậc — trưởng · thứ · át · nửa giảm; bỏ chính hợp âm gốc), **thay bằng hợp âm khác** (lối thay lý thuyết
+  `lyThuyetCacBac`, bỏ cái trùng tên một màu ở trên), **các thầy làm gì ở bậc này** (thẻ Phần 1 của Linh Nhi · Cà Pháo · Blues, có ▶ nghe).
+  Mỗi lựa chọn: ▶ nghe, "Đánh theo" → bàn phím sáng thế bấm hai màu tay, giữ đúng các nốt thì báo "Đúng!".
+- `chongHopAm.KHI_CHON` (mới): mỗi công thức một lời "khi nào nên chọn, khi nào không" — lời nhạc sĩ của Claude, không phải số đo; "tránh
+  khi" gắn với chỗ chỏi thật (vd maj7 khi giai điệu ngân gốc). `SoanCau.DiemThay` xuất ra để dùng lại.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 12 (thêm: đủ 26 lời khi nào nên chọn) · toàn suite **2 655 qua / 5 đỏ** (5 đỏ
+cũ) · `vite build` qua · chạy thử headless: 7 bậc Đô trưởng, V có G9 · G13 · G7♭13 (không G7 trơn), không lựa chọn nào in hai lần, ▶ ra
+tiếng, giữ đủ thế bấm G13 → "Đúng!", vi có Am9 · Am11 — 9/9 đạt · `LuyenTap.json`, `Nguon.json` không đổi.

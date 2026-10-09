@@ -374,3 +374,38 @@ export function nhanMau(pcs: readonly number[], goc: number, nhom: HoMau): CongT
   })
   return khop.sort((x, y) => pcsTong(y, goc).length - pcsTong(x, goc).length)[0] ?? null
 }
+
+
+/*
+  KHI NÀO NÊN CHỌN mỗi màu — người dùng 8/10/2026 (tab Hợp âm màu): "ở mỗi lựa chọn hãy giải thích khi nào nên chọn hợp âm đó". Lời
+  của Claude trong vai nhạc sĩ (lý thuyết hòa âm + nghe), không phải số đo; chỗ "tránh khi" gắn với một chỗ chỏi thật với giai điệu.
+  Thầy nào dùng màu ấy thì xem `thay` của công thức.
+*/
+export const KHI_CHON: Readonly<Record<string, string>> = {
+  maj7: 'Khi I hay IV ngân dài, muốn mơ màng, hoài niệm — cái sáng bị phủ một lớp sương. Tránh khi giai điệu đang ngân chính gốc: bậc 7 nằm nửa cung dưới, cọ thẳng vào giai điệu.',
+  maj9: 'Khi muốn I hay IV đầy mà vẫn trong — ballad, đầu điệp khúc. Dày hơn maj7 mà không gắt, vì 7 và 9 đều là nốt của gam. Cũng tránh khi giai điệu ngân gốc.',
+  '6': 'Khi chủ âm cần đứng yên mà vẫn có màu — kết câu, kết bài, nhất là lúc giai điệu ngân chính gốc (6 không cọ với gốc như maj7). Nghe ấm, hơi cổ điển.',
+  '69': 'Hợp âm kết rất "đã" của pop và jazz: mở, sáng, không căng. Dùng ở chủ âm cuối bài, hay chỗ cần sáng mà không ngọt như maj7.',
+  add9: 'Màu nhẹ nhất — chỉ thêm 9, hợp âm vẫn là chính nó mà trong và hiện đại hơn. Dùng gần như mọi chỗ I, IV ngân dài; hợp cả bài mộc.',
+  'maj9#11': 'Lấp lánh, lơ lửng (màu Lydian). Hợp nhất ở IV và ♭VI, nơi ♯11 có sẵn trong gam; trên I thì ♯11 lạ tai — dùng khi muốn cảm giác bay, điện ảnh.',
+  m7: 'Hợp âm thứ bớt nặng, ấm hơn — gần như luôn dùng được ở ballad (ii, iii, vi; i, iv ở bài thứ). Để trơn khi muốn mộc, dân ca, bolero xưa.',
+  m9: 'Thứ mà mềm và rộng — ii trước V, i ngân dài, iv giữa câu; nghe hiện đại, hơi R&B. Tránh khi giai điệu ngân ♭3 sát ngay trên 9 ở tay phải — hai nốt cọ nửa cung dưới giọng hát.',
+  m11: 'Rộng, tối, có "không gian" — ii trong ii – V, i trong bossa hay jazz, iv kéo dài. 11 không chỏi với hợp âm thứ như với hợp âm trưởng, nên thêm thoải mái.',
+  m13: 'Hợp âm thứ sáng nhất — có 6 trưởng (màu Dorian): ii, hay i khi bài đi Dorian; nghe jazz, hơi bí ẩn. Ở bài thứ buồn thuần thì 6 trưởng làm sáng quá.',
+  m6: 'Thứ có 6 trưởng — u buồn mà sang (tango, nhạc phim). Hợp i ở cuối câu thứ, và iv mượn trong bài trưởng.',
+  madd9: 'Thứ có 9, không 7 — buồn, trong, mơ màng (Linh Nhi rải 8 – 9 – 10 ra đúng màu này). Dùng khi muốn i, iv mềm mà không thành jazz.',
+  mMaj7: 'Thứ có 7 trưởng — căng, bí ẩn như nhạc phim trinh thám. Thường làm bước giữa của đường bè đi xuống i → i(maj7) → i7 → i6. Dùng tiết chế.',
+  m7b5: 'ii của giọng thứ trước V — u tối, nghiêng, chuẩn bị; cũng là vii của giọng trưởng. Ở giọng thứ nó chính là iv đặt trên bass ii, nên từ iv sang chỉ cần dời bass.',
+  m11b5: 'ii° thêm 11 — mềm hơn m7♭5 mà vẫn giữ màu u tối; hợp chỗ ii° ngân dài trước V.',
+  dim7: 'Hợp âm lướt: đặt nửa cung dưới hợp âm đích cho bass đi liền, hoặc thay V (bảy giảm = V7♭9 bỏ gốc). Căng, cổ điển, sang — đừng ngân lâu.',
+  '7': 'Át cơ bản — kéo về hợp âm cách một quãng năm dưới. Ở V của mọi giọng; đặt ở I thì thành át của IV (blues, gospel).',
+  '9': 'Át mềm và tròn hơn 7 — pop, soul, blues. Hợp V ngân dài, và IV trong blues (IV9).',
+  '13': 'Át ấm và sang (gospel, jazz): giữ 3 và ♭7, thêm 13. Dùng ở V trong bài trưởng; tránh ở bài thứ — 13 trưởng làm V sáng quá.',
+  '9sus4': 'Át treo — mở, lửng, hiện đại: V chưa nói hết câu. Thả về V7 hay về thẳng I đều được. Hợp cuối câu, chỗ muốn người nghe chờ một nhịp.',
+  '7b9': 'Át căng, tối — ♭9 là nốt của gam thứ: hợp V của giọng thứ, hay át đi về hợp âm thứ (V/ii, V/vi). Ở bài trưởng sáng thì gắt.',
+  '13b9': 'Át vừa ấm (13) vừa căng (♭9) — chất phòng trà, jazz; hợp V đi về i thứ, hay át phụ về hợp âm thứ.',
+  '13#11': 'Át Lydian — sáng, lơ lửng, ít kéo mà nhiều màu: II7 (át của V), ♭II7 thay tam cung, IV7 trong blues.',
+  '7b13': 'Át của giọng thứ: ♭13 chính là ♭3 của giọng, nên V như đã báo trước i buồn. Bắt buộc khi giai điệu trên V đang hát ♭3 của giọng.',
+  '7b5': 'Át có ♭5 — xẵng, lạ; trùng nốt với ♭II7 (thay tam cung). Dùng khi muốn bass hay bè đi nửa cung; tiết chế.',
+  '13b9#11': 'Át "đủ màu" của Jeff: căng nhất mà về vẫn đẹp — V trước I trong ii – V – I kiểu jazz. Ở bolero mộc thì quá tay.',
+}
