@@ -300,11 +300,13 @@ export function theBamChong(ct: CongThuc, gocPc: number, daoDuoi = 0, daoTren = 
   return { trai, phai }
 }
 
+/** Tên gốc tay phải cách gốc `cach` nửa cung, gọi theo chữ cái: Si lùi 3 phím là G♯ (không A♭), Đô cách 6 phím là G♭. */
+export const gocTren = (gocTen: string, cach: number, style: AccidentalStyle) => gocDep(tenTheoChu(gocTen, cach, cach === 6 ? 4 : CHU_CUA[pc(cach)]!, style))
+
 /** Tên tầng trên, gọi theo chữ cái tính từ tên gốc hợp âm: 'Db' + 'm' (G13♭9♯11 — đúng tên Jeff gọi); chùm nốt rời thì tên chùm. */
 export function tenTren(ct: CongThuc, gocTen: string, style: AccidentalStyle): string {
   if ('iv' in ct.tren) return ct.tren.ten
-  const { cach, loai } = ct.tren
-  return gocDep(tenTheoChu(gocTen, cach, cach === 6 ? 4 : CHU_CUA[cach]!, style)) + BA[loai].hau
+  return gocTren(gocTen, ct.tren.cach, style) + BA[ct.tren.loai].hau
 }
 
 /** Chữ cái của nốt hợp âm theo quãng: ♭5 là chữ thứ năm (Rê♭ trên Sol), không phải ♯4. */
@@ -546,19 +548,4 @@ export function tenBac(iv: number, ct: CongThuc): string {
     default:
       return '7'
   }
-}
-
-/**
- * Cách tìm tay phải ở MỌI gốc: đếm gam trưởng của gốc tới bậc cần dùng (♭ hạ nửa cung) rồi dựng hợp âm ba lên nốt ấy — vd F♯13♭9:
- * gam Fa♯ trưởng Fa♯ Sol♯ La♯ Si Đô♯ Rê♯ Mi♯ → bậc 6 là Rê♯ → tay phải D♯ (trưởng).
- */
-export function cachTimTayPhai(ct: CongThuc, gocTen: string, style: AccidentalStyle): string {
-  if ('iv' in ct.tren) return `Tay phải là chùm nốt rời ${ct.tren.ten}, không phải hợp âm ba — bấm sát nhau ngay trên tay trái.`
-  const { cach, loai } = ct.tren
-  const GAM = [0, 2, 4, 5, 7, 9, 11]
-  const bac = ({ 2: 2, 3: 3, 4: 3, 6: 5, 7: 5, 8: 6, 9: 6, 10: 7, 11: 7 } as Record<number, number>)[cach]!
-  const gam = GAM.map((s, k) => vn(tenTheoChu(gocTen, s, k, style)))
-  const lech = cach - GAM[bac - 1]!
-  const not = vn(tenTheoChu(gocTen, cach, bac - 1, style))
-  return `Gam ${vn(gocTen)} trưởng: ${gam.join(' ')} → bậc ${bac} là ${gam[bac - 1]}${lech ? `, ${lech < 0 ? 'hạ' : 'nâng'} nửa cung thành ${not}` : ''} → tay phải hợp âm ${tenTren(ct, gocTen, style)} (${BA[loai].ten} trên ${not}).`
 }

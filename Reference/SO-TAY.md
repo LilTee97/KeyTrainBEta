@@ -6235,3 +6235,39 @@ X, bass lạ khớp đúng nốt hợp âm màu; chấm hai tay; bốn lựa ch�
 chạy thử headless: màn slash 19/19 (bên mẹo D♭/F sáng đúng một phím Fa; giữ X thiếu bass không tính, bass + X là đúng; chạm từng nốt;
 thi chọn nghĩa đúng / sai; thi 20/20 Đạt; bật "hai tay" màn slash vẫn giữ Đạt; điện thoại 390 px không cuộn ngang), chạy lại hai bên 12/12,
 theo loại 10/10 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: mẹo CỘNG GỐC; bàn phím game ghi tên từng tay; chọn tên là bấm và nghe; đáp án hiện dần; mốc tốc độ; chờ đúng nốt (9/10/2026)
+
+**Người dùng** (kèm ảnh lời giải B6/9 trong game): *"Mẹo ghi như trong ảnh còn quá mơ hồ và máy móc tôi ko hiểu được. Tôi muốn tay đang
+hiện phím bấm (trường hợp trong ảnh là tay trái) thì cũng sẽ hiện tên hợp âm. Tôi muốn mẹo sẽ chỉ cho tôi cụ thể theo hướng gốc nào cộng
+gốc nào thì sẽ ra gốc tổng cần tìm. Trong piano tuy có nhiều gốc khác nhau nhưng tôi đoán là sẽ có những mẹo cộng gốc chung có thể giúp
+tìm ra nhiều gốc từ 1 dạng công thức. Ở phần chọn tên thì khi bấm vào tên sẽ bấm vào hợp âm tương ứng trên đàn và phát ra tiếng luôn.
+Khi hợp âm rơi hơn 60% quãng đường thì đáp án sẽ dần hiện ra. Có thể cho chỉnh tốc độ rơi theo từng mốc và có cơ chế chờ đúng nốt"*.
+
+- **Mẹo cộng gốc** (`meoChong.ts`): gốc tay phải = gốc hợp âm lên / lùi mấy phím. Đếm trên 26 công thức: 23 loại tay phải là hợp âm ba
+  chỉ dùng **9 cách** (lên 4 · lên 3 · lên 7 · lùi 3 · lùi 2 · lên 2 · lùi 1 · cách 6 · lùi 4 phím); 3 loại là chùm nốt rời. Số loại mỗi
+  cách: lên 3 và lùi 3 mỗi cách 5 loại, lên 4 và lên 7 mỗi cách 3, lên 2 và lùi 2 mỗi cách 2, ba cách còn lại 1 loại. Mỗi cách có cái móc
+  nhớ (nốt giữa / nốt trên cùng của hợp âm trên gốc, cặp thứ song song C ↔ Am, một cung trên / dưới …) và bảng cặp gốc 12 gốc ghi đúng chữ
+  (B→G♯, E♭→C, F♯→D♯). Lời giải ở gốc thật: "Si lùi 3 phím = Sol♯ (cặp thứ song song B ↔ G♯m) → treo 4 trên Sol♯: G♯sus4 (Sol♯ – Đô♯ –
+  Rê♯)". Bỏ bản đếm gam trưởng ("Gam Si trưởng: … → bậc 6 là Sol♯", hàm cũ ở `chongHopAm.ts` cùng test của nó) và bỏ ví dụ gốc Đô trong
+  lời giải game. Quy luật con số và mẹo vàng ghi thêm số phím; bảng ở tab Chồng hợp âm có mục "Mẹo cộng gốc" đứng đầu.
+- **Game** (`gameChong.ts`, `GameChong.tsx`): viên bên mẹo ghi "tay trái …" + "+ treo 4 · lùi 3 phím". Bàn phím dùng `BanPhimHaiTay`
+  — tay nào đang sáng phím (khung tay trái, hợp âm vừa chọn, nốt đang chạm / giữ, đáp án đã hiện đủ) thì ghi tên hợp âm của tay ấy. Mỗi
+  nút chọn tên mang nốt: bấm là hợp âm ấy sáng trên đàn 1,5 s và kêu (sai cũng nghe). Bên mẹo, quá 60% quãng rơi thì đáp án hiện dần:
+  từng nốt tay phải viền cam (kiểu phím mới `revealNotes` của `OnScreenPiano`), tên hiện rõ dần tới 90%. Mốc tốc độ 30 · 20 · 14 · 10 · 7 ·
+  5 giây, đổi được ngay khi chơi bên mẹo — viên giữ chỗ. "Chờ đúng nốt" (bên mẹo): viên đích dừng ở vạch 90%, đồng hồ game đứng, bấm đúng
+  mới rơi tiếp.
+- **Claude quyết, chưa hỏi lại**: bên thi không hiện đáp án và không có chờ — có hai thứ ấy thì "Đạt" không còn đo gì (giữ hợp âm sai vốn
+  không bị trừ). Tốc độ nay cố định theo mốc: bỏ phần tự nhanh dần (cũ: bên mẹo 14 s, nhanh 1% mỗi câu đúng, sàn 9 s; bên thi 10 s, hai tay
+  12 s, nhanh 3%, sàn 4 s). Triệu chứng để lùi: thi Đạt quá dễ → trả lại nhân 0,97 mỗi câu đúng cho bên thi. Kỷ lục thi ghi riêng theo mốc
+  (mốc 10 s giữ khóa cũ). Điện thoại chỉ hai quãng tám nên nốt đáp án gập từng nốt vào khung để hiện đủ; nốt người chơi bấm thì để nguyên.
+  Tên dài (G13♭9♯11) thu chữ trên điện thoại cho khỏi tràn viên.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 11 (9 cách phủ đủ 23 loại, mỗi loại đúng một cách, số loại mỗi cách; tên cách
+đếm đúng chiều; lời giải B6/9 · Dmaj9 · Cm11 · Emaj7 · C13♭9♯11 · chùm Badd9; bảng cặp gốc; bảng của màn) · `gameChong.test.ts` 9 (nút
+chọn mang nốt: nút đúng là chính đáp án, nút nhiễu giữ tay trái và không trùng đáp án; slash E/G♯ chứ không E/A♭; 9 mẫu × 12 bass bấm
+đúng; đáp án hiện dần theo quãng rơi) · toàn suite **2 715 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: phần mới 20/20
+(bảng cộng gốc; viên ghi tay trái + cộng gốc; nhãn tay trái; bấm nút sai → hợp âm ấy sáng + nhãn; lời giải cộng gốc; đáp án hiện 0 → 1 →
+2 → 3 phím; chờ: viên đứng yên 2,5 s không trượt, đáp án đủ; đổi mốc 5 → 30 s viên lệch 1,4 px; thi không hiện đáp án; điện thoại hợp âm
+hiện đủ, không cuộn ngang), nhãn khi giữ hợp âm 2/2, chạy lại hai bên 12/12, theo loại 10/10, slash 19/19 (câu kiểm đổi theo chữ mới) ·
+`LuyenTap.json`, `Nguon.json` không đổi.

@@ -7,7 +7,6 @@ import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { LuotTap } from '../shared/persistence/db'
 import {
-  cachTimTayPhai,
   chongCongThuc,
   chongTuDo,
   CONG_THUC,
@@ -26,6 +25,7 @@ import {
   type HoMau,
 } from './soanCau/chongHopAm'
 import { loiThay, lyDoThay, lyThuyetCacBac, nguCanh, theBamHop, type Diem, type Hop } from './soanCau/giaiThich'
+import { cachTimTayPhai, kieuGoc } from './soanCau/meoChong'
 import {
   cungTap,
   docHop,
@@ -46,7 +46,6 @@ import {
 } from './soanCau/soanCau'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { BangCongThuc } from './BangCongThuc'
-import { kieuGoc } from './soanCau/gameChong'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
 import { GOC, kieuDau, vongMau } from './vongThay'

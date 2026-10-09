@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
-import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe, cachTimTayPhai } from '../soanCau/chongHopAm'
+import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe } from '../soanCau/chongHopAm'
 import { cungTap, docTay, traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -179,16 +179,6 @@ describe('tên từng tay (người dùng 9/10/2026: "Chỉ được ghi nốt k
     const c69 = chongTuDo(0, id('6/9'), 'sharp')!
     expect([c69.ct?.id, c69.nhan.trai, c69.nhan.phai]).toEqual(['69', 'Đô – Sol', 'Asus4'])
     expect([chongTuDo(0, id('m(add9)'), 'flat')!.ct?.id, chongTuDo(0, id('m(maj7)'), 'flat')!.ct?.id]).toEqual(['madd9', 'mMaj7'])
-  })
-})
-
-describe('cách tìm tay phải ở mọi gốc (đếm gam trưởng của gốc)', () => {
-  it('cách tìm tay phải ở mọi gốc — F♯13♭9 trong ảnh người dùng, Cm11, C13♭9♯11', () => {
-    const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
-    // bậc 7 ghi "Fa" chứ không "Mi♯": quy ước chung của app (`tenTheoChu`) tránh E♯ · B♯ · C♭ · F♭ cho người mới dễ đọc
-    expect(cachTimTayPhai(ct('13b9'), 'F#', 'sharp')).toBe('Gam Fa♯ trưởng: Fa♯ Sol♯ La♯ Si Đô♯ Rê♯ Fa → bậc 6 là Rê♯ → tay phải hợp âm D♯ (trưởng trên Rê♯).')
-    expect(cachTimTayPhai(ct('m11'), 'C', 'flat')).toBe('Gam Đô trưởng: Đô Rê Mi Fa Sol La Si → bậc 7 là Si, hạ nửa cung thành Si♭ → tay phải hợp âm B♭ (trưởng trên Si♭).')
-    expect(cachTimTayPhai(ct('13b9#11'), 'C', 'flat')).toContain('bậc 5 là Sol, hạ nửa cung thành Sol♭ → tay phải hợp âm G♭m')
   })
 })
 

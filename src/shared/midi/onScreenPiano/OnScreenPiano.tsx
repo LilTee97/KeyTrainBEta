@@ -21,6 +21,7 @@ const WHITE_KEY_STYLES = {
   suggested: 'bg-teal-key/45 text-ink/60',
   leftHand: 'bg-left-hand/70 text-ink/70',
   rightHand: 'bg-right-hand/70 text-ink/70',
+  reveal: 'bg-amber-key/30 ring-2 ring-inset ring-amber-key text-ink/70',
   // Cũ: text-ink/35 — lúc chỉ phím Đô có tên. Nay mọi phím có tên (2/10/2026) nên đậm hơn cho đọc được.
   idle: 'bg-cream text-ink/55 hover:bg-white',
 } as const
@@ -29,6 +30,7 @@ const BLACK_KEY_STYLES = {
   suggested: 'bg-teal-key/60 text-ink/80',
   leftHand: 'bg-left-hand text-ink/80',
   rightHand: 'bg-right-hand text-ink/80',
+  reveal: 'bg-amber-key/70 ring-2 ring-inset ring-amber-key text-ink/80',
   idle: 'bg-neutral-900 text-cream/70 hover:bg-neutral-800',
 } as const
 
@@ -111,6 +113,8 @@ export interface OnScreenPianoProps {
    */
   leftHandNotes?: readonly MidiNote[]
   rightHandNotes?: readonly MidiNote[]
+  /** Đáp án đang hé lộ (game Mưa hợp âm) — viền cam như viên đang đố, khác màu hai tay và khác lớp phủ phím đang bấm. */
+  revealNotes?: readonly MidiNote[]
   /**
    * Chiều cao bàn phím. Bỏ trống thì tự theo bề ngang phím trắng (`KEY_HEIGHT_PER_WIDTH`); `'100%'` thì lấp khung cha
    * — chế độ toàn màn hình.
@@ -134,6 +138,7 @@ export function OnScreenPiano({
   chordTones,
   leftHandNotes,
   rightHandNotes,
+  revealNotes,
   height,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
@@ -243,6 +248,7 @@ export function OnScreenPiano({
   const suggested = new Set(highlightNotes ?? [])
   const leftHand = new Set(leftHandNotes ?? [])
   const rightHand = new Set(rightHandNotes ?? [])
+  const reveal = new Set(revealNotes ?? [])
 
   /** Nốt thuộc hợp âm — so lớp cao độ, dùng để xác nhận bấm đúng. */
   const chordToneClasses = new Set(chordTones ?? [])
@@ -259,6 +265,7 @@ export function OnScreenPiano({
     // Chỉ rõ tay nào bấm nốt nào, ưu tiên hơn cách tô một màu chung.
     if (leftHand.has(note)) return 'leftHand'
     if (rightHand.has(note)) return 'rightHand'
+    if (reveal.has(note)) return 'reveal'
     if (suggested.has(note)) return 'suggested'
     return 'idle'
   }

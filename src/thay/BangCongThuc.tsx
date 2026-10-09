@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { playChord, startAudio } from '../shared/audio/audioEngine'
 import { pitchClassName } from '../shared/musicTheory/pitch'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
-import { cachTimTayPhai, CONG_THUC, hauDep, vn } from './soanCau/chongHopAm'
-import { bacCua, bangTheoLoai, LUAT_SO, MEO_VANG } from './soanCau/meoChong'
+import { CONG_THUC, hauDep, vn } from './soanCau/chongHopAm'
+import { bacCua, bangCongGoc, bangTheoLoai, cachTimTayPhai, capGoc, LUAT_SO, MEO_VANG } from './soanCau/meoChong'
 import { QUY_LUAT_SLASH, SLASH_DAO, SLASH_MAU, SLASH_THAY, theSlash, type SlashMau, type ViDuSlash } from './soanCau/slashChong'
 
 const nutThu = 'rounded border border-line bg-white/4 px-2 py-0.5 text-[11px] text-dim hover:bg-white/8'
@@ -11,6 +11,32 @@ const nutSlash = (on: boolean) =>
   `rounded-lg border px-2.5 py-1 font-mono text-xs ${on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-cream/85 hover:bg-white/8'}`
 const tenC = (id: string) => `C${hauDep(CONG_THUC.find((c) => c.id === id)!.kyHieu)}`
 const not = (m: number) => vn(pitchClassName(((m % 12) + 12) % 12, 'flat'))
+const MUOI_HAI = [...Array(12).keys()]
+
+/**
+ * Mẹo cộng gốc — người dùng 9/10/2026: "Tôi muốn mẹo sẽ chỉ cho tôi cụ thể theo hướng gốc nào cộng gốc nào thì sẽ ra gốc tổng cần tìm …
+ * sẽ có những mẹo cộng gốc chung có thể giúp tìm ra nhiều gốc từ 1 dạng công thức". Mỗi cách: cái móc nhớ, bảng cặp gốc → gốc tay phải ở
+ * các gốc `gocs`, các loại dùng cách ấy gom theo chất tay phải. Dùng ở bảng này và ở game (bên luyện có mẹo).
+ */
+export function MeoCongGoc({ ids, gocs }: { ids: readonly string[]; gocs: readonly number[] }) {
+  const { dong, chum } = bangCongGoc(ids)
+  return (
+    <ul className="mt-1 flex flex-col gap-1.5">
+      {dong.map((d) => (
+        <li key={d.cach}>
+          <b className="text-amber-key">Gốc tay phải = gốc {d.ten.toUpperCase()}</b> <span className="text-dim">— {d.moc}</span>
+          <span className="block font-mono text-cream/85">{capGoc(d.cach, gocs).join(' · ')}</span>
+          <span className="block">{d.theoChat.map((c) => `+ ${c.chat} → ${c.loai.join(', ')}`).join(' · ')}</span>
+        </li>
+      ))}
+      {chum.map((c) => (
+        <li key={c}>
+          <b className="text-amber-key">Chùm nốt rời</b> — {c}
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 /**
  * BẢNG CÔNG THỨC CHỒNG — THEO LOẠI HỢP ÂM. Người dùng 9/10/2026: "tôi muốn nó tính theo loại hợp âm (ví dụ như Maj7, 7b9, dim7,
@@ -33,7 +59,14 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
     <details open className="mb-3 rounded-lg border border-amber-key/40 p-3 text-xs text-cream/85">
       <summary className="cursor-pointer font-semibold text-amber-key">Công thức chồng — quy luật theo loại hợp âm (ví dụ gốc Đô)</summary>
 
-      <p className="mt-2 font-semibold text-cream">Quy luật chung — 4 bước cho mọi loại</p>
+      <p className="mt-2 font-semibold text-cream">Mẹo cộng gốc — gốc tay trái + gốc tay phải = hợp âm tổng, đúng cho mọi gốc</p>
+      <p className="text-dim">
+        Chỉ có 9 cách tìm gốc tay phải (đếm phím từ gốc hợp âm, cả phím đen lẫn trắng); mỗi cách dùng cho nhiều loại — đổi chất tay phải là
+        đổi loại. Ví dụ B6/9: Si lùi 3 phím = Sol♯ → treo 4 → G♯sus4. Học thuộc bảng cặp gốc của từng cách là tìm được mọi gốc.
+      </p>
+      <MeoCongGoc ids={CONG_THUC.map((c) => c.id)} gocs={MUOI_HAI} />
+
+      <p className="mt-3 font-semibold text-cream">Quy luật chung — 4 bước cho mọi loại</p>
       <ol className="ml-5 list-decimal">
         <li>
           Viết các <b className="text-cream">bậc</b> của loại hợp âm — vd C13♭9: {b.caHai.join(' · ')}.
@@ -45,10 +78,10 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
           <b className="text-amber-key">Tay phải gom ba nốt màu trên cùng</b> thành một hợp âm ba (bậc 5 hay được bỏ) — C13♭9: {b.phai.join(' · ')} = La – Đô♯ – Mi
           = A trưởng.
         </li>
-        <li>Đọc tên hợp âm ba ấy rồi tìm nó từ gốc tay trái — {cachTimTayPhai(viDu, 'C', 'flat')}</li>
+        <li>Tìm hợp âm ba ấy bằng cộng gốc — {cachTimTayPhai(viDu, 'C', 'flat')}</li>
       </ol>
 
-      <p className="mt-3 font-semibold text-cream">Quy luật con số — nhìn đuôi tên: số càng lớn, tay phải càng leo cao trên hợp âm</p>
+      <p className="mt-3 font-semibold text-cream">Quy luật con số — nhìn đuôi tên rồi đếm phím từ gốc</p>
       <ul className="ml-5 list-disc">
         {LUAT_SO.map((l) => (
           <li key={l.so}>
@@ -57,7 +90,7 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
         ))}
       </ul>
 
-      <p className="mt-3 font-semibold text-cream">Bảng 26 loại theo họ — bậc hai tay và mẹo riêng từng loại</p>
+      <p className="mt-3 font-semibold text-cream">Bảng 26 loại theo họ — công thức cộng gốc và ví dụ gốc Đô</p>
       {bangTheoLoai().map((h) => (
         <div key={h.ten} className="mt-1.5">
           <p className="text-teal-key">{h.ten}</p>
