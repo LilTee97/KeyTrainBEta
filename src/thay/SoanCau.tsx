@@ -11,17 +11,24 @@ import {
   DO_DUOC,
   gocDep,
   hauDep,
+  HO_MAU,
+  mauCuaHo,
+  nhanHaiTay,
+  nhanMau,
+  pcsDuoi,
+  pcsTong,
   pcsTren,
   soThe,
-  nhanHaiTay,
-  tenHaiTay,
-  tenTren,
   tenTrongGiong,
   theBamChong,
   type CongThuc,
+  type HoMau,
 } from './soanCau/chongHopAm'
 import { loiThay, lyDoThay, lyThuyetCacBac, nguCanh, theBamHop, type Diem, type Hop } from './soanCau/giaiThich'
 import {
+  cungTap,
+  docHop,
+  docTay,
   dungHopAm,
   GHI_CHU_THAY,
   LOAI_BAC1,
@@ -376,12 +383,23 @@ function LoiThayThe({ tonic, thu }: { tonic: number; thu: boolean }) {
 const NHOM_CT = ['Trưởng', 'Thứ', 'Nửa giảm · giảm', 'Át'] as const
 const THE = ['nguyên vị', 'đảo 1', 'đảo 2', 'đảo 3']
 
+/** Bốn dạng đố chồng hợp âm — người dùng 8/10/2026 (bước B). */
+type DangDo = 'tong' | 'tren' | 'duoi' | 'mau'
+const DANG_DO: readonly { id: DangDo; ten: string }[] = [
+  { id: 'tong', ten: 'Cho hợp âm → bấm hai tay' },
+  { id: 'tren', ten: 'Cho tay trái → tay phải' },
+  { id: 'duoi', ten: 'Cho tay phải → tay trái' },
+  { id: 'mau', ten: 'Cho hợp âm gốc → tìm màu' },
+]
+const ngauNhien = <T,>(ds: readonly T[]) => ds[Math.floor(Math.random() * ds.length)]!
+
 /**
  * CHỒNG HỢP ÂM (Stack, Jeff Schneider) — người dùng 4/10/2026. Chọn công thức → thấy hai tầng ở giọng đang chọn (hoặc gốc tự chọn —
- * tập chuyển giọng, bước Jeff gọi là quan trọng nhất), đảo từng tầng, nghe, bàn phím tô hai màu. Đố chuyển giọng: gốc ngẫu nhiên,
- * tìm hợp âm tầng trên — gõ tên hoặc bấm trên đàn (đàn MIDI · chuột · bàn phím máy · chạm).
+ * tập chuyển giọng, bước Jeff gọi là quan trọng nhất), đảo từng tầng, nghe, bàn phím tô hai màu. Đố bốn dạng (8/10/2026): cho hợp âm →
+ * bấm hai tay · cho tay trái → tay phải · cho tay phải → tay trái · cho hợp âm gốc → tìm màu — gõ tên hoặc bấm trên đàn (đàn MIDI ·
+ * chuột · bàn phím máy · chạm). Dùng ở Phần 1 tab thầy và trang Hợp âm.
  */
-function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
+export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   // Có bàn phím thì phím bấm phải ra tiếng (người dùng 4/10/2026). Phần 1 chỉ có một bàn phím — không kêu đôi.
   useLiveSound()
   useComputerKeyboard(60)
@@ -390,10 +408,14 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const [gocTu, setGocTu] = useState<number | null>(null)
   const [daoDuoi, setDaoDuoi] = useState(0)
   const [daoTren, setDaoTren] = useState(0)
-  /* Đố chuyển giọng. */
+  /* Đố — bốn dạng (người dùng 8/10/2026: "Cho hợp âm rồi hỏi thế bấm chồng 2 tay, cho biết một bên tay rồi hỏi tay còn lại bấm gì để ra
+     được hợp âm tổng. Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó"). */
+  const [dang, setDang] = useState<DangDo>('tren')
   const [cau, setCau] = useState<{ ct: CongThuc; goc: number } | null>(null)
+  const [ho, setHo] = useState<{ nhom: HoMau; goc: number; tim: readonly string[]; vua: CongThuc | null } | null>(null)
   const [kq, setKq] = useState<'dang' | 'dung' | 'xem'>('dang')
   const [go, setGo] = useState('')
+  const [go2, setGo2] = useState('')
   const [bao, setBao] = useState('')
   const [diem, setDiem] = useState({ cau: 0, dung: 0 })
   const ct = CONG_THUC.find((c) => c.id === id)!
@@ -401,37 +423,100 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const goc = gocTu ?? (tonic + viDu) % 12
   const gocTen = gocTu === null ? tenTrongGiong(tonic, thu, viDu) : GOC[gocTu]!
   const bam = theBamChong(ct, goc, daoDuoi, daoTren)
+  const thoiDo = () => {
+    setCau(null)
+    setHo(null)
+  }
   const chonCt = (x: string) => {
     setId(x)
     setDaoDuoi(0)
     setDaoTren(0)
-    setCau(null)
+    thoiDo()
   }
   const choi = async (not: readonly number[]) => {
     await startAudio()
     playChord([...not], '2n')
   }
 
-  const cauMoi = () => {
-    setCau({ ct: DO_DUOC[Math.floor(Math.random() * DO_DUOC.length)]!, goc: Math.floor(Math.random() * 12) })
+  const cauMoi = (d: DangDo = dang) => {
     setKq('dang')
     setBao('')
     setGo('')
+    setGo2('')
+    const g = Math.floor(Math.random() * 12)
+    if (d === 'mau') {
+      setCau(null)
+      setHo({ nhom: ngauNhien(HO_MAU).nhom, goc: g, tim: [], vua: null })
+      return
+    }
+    setHo(null)
+    setCau({ ct: ngauNhien(d === 'duoi' ? CONG_THUC.filter((c) => c.duoi[0]!.length >= 2) : DO_DUOC), goc: g })
+  }
+  const doiDang = (d: DangDo) => {
+    setDang(d)
+    cauMoi(d)
   }
   const dung = () => {
     setKq('dung')
-    setDiem((d) => ({ cau: d.cau + 1, dung: d.dung + 1 }))
+    setDiem((x) => ({ cau: x.cau + 1, dung: x.dung + 1 }))
   }
+  const timThay = (r: CongThuc) => setHo((x) => (x && !x.tim.includes(r.id) ? { ...x, tim: [...x.tim, r.id], vua: r } : x))
   const held = useMidiStore((state) => state.heldNotes)
   useEffect(() => {
-    if (cau && kq === 'dang' && held.length >= 3 && dungHopAm(held, pcsTren(cau.ct, cau.goc))) dung()
-  }, [held, cau, kq])
+    if (kq !== 'dang' || held.length < 2) return
+    const bassLaGoc = (g: number) => (Math.min(...held) - g + 120) % 12 === 0
+    if (dang === 'mau') {
+      const r = ho && held.length >= 3 && bassLaGoc(ho.goc) ? nhanMau(held, ho.goc, ho.nhom) : null
+      if (r) timThay(r)
+      return
+    }
+    if (!cau) return
+    const ok =
+      dang === 'tren'
+        ? held.length >= 3 && dungHopAm(held, pcsTren(cau.ct, cau.goc))
+        : dang === 'duoi'
+          ? dungHopAm(held, pcsDuoi(cau.ct, cau.goc))
+          : bassLaGoc(cau.goc) && dungHopAm(held, pcsTong(cau.ct, cau.goc))
+    if (ok) dung()
+  }, [held, cau, ho, dang, kq])
   const cauTen = cau ? `${gocDep(GOC[cau.goc]!)}${hauDep(cau.ct.kyHieu)}` : ''
-  /* Bàn phím: đang đố thì tắt gợi ý; trả lời xong thì chỉ thế bấm của câu đố; không đố thì chỉ công thức đang xem. */
-  const hien = cau ? (kq === 'dang' ? null : theBamChong(cau.ct, cau.goc)) : bam
-  const dapAn = cau ? `${tenTren(cau.ct, GOC[cau.goc]!, style)} (${tenHaiTay(cau.ct, GOC[cau.goc]!, style).phai.join(' – ')})` : ''
-  /* Nhãn hai tay đi theo đúng thứ đang sáng trên bàn phím; đang đố thì ẩn để không lộ đáp án. */
-  const nhan = cau ? (kq === 'dang' ? null : nhanHaiTay(cau.ct, GOC[cau.goc]!, style)) : nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren)
+  const nhanCau = cau ? nhanHaiTay(cau.ct, GOC[cau.goc]!, style) : null
+  const tenGocHo = ho ? `${gocDep(GOC[ho.goc]!)}${HO_MAU.find((x) => x.nhom === ho.nhom)!.hau}` : ''
+  const tenMau = (c: CongThuc) => (ho ? `${gocDep(GOC[ho.goc]!)}${hauDep(c.kyHieu)}` : '')
+  const dangDo = cau !== null || ho !== null
+  /* Bàn phím và nhãn hai tay: không đố → công thức đang xem; đang đố → tắt gợi ý; trả lời xong → thế bấm của câu đố; đố màu → màu vừa
+     tìm được. Nhãn đi theo đúng thứ đang sáng, nên đang đố thì ẩn — không lộ đáp án. */
+  const xem = ho ? (ho.vua ? { ct: ho.vua, goc: ho.goc } : null) : cau && kq !== 'dang' ? cau : null
+  const hien = !dangDo ? bam : xem ? theBamChong(xem.ct, xem.goc) : null
+  const nhan = !dangDo ? nhanHaiTay(ct, gocTen, style, daoDuoi, daoTren) : xem ? nhanHaiTay(xem.ct, GOC[xem.goc]!, style) : null
+  const dapAn = nhanCau ? `tay trái ${nhanCau.trai} (${nhanCau.traiPhu}) + tay phải ${nhanCau.phai} (${nhanCau.phaiPhu})` : ''
+  const traLoi = () => {
+    if (kq !== 'dang') return
+    if (ho) {
+      const h = docHop(go)
+      const r = h && h.goc === ho.goc ? nhanMau(h.pcs, ho.goc, ho.nhom) : null
+      if (r) timThay(r)
+      setBao(
+        r
+          ? ''
+          : !h
+            ? `Chưa đọc được "${go}" — gõ như ${tenGocHo}maj9, ${tenGocHo}13`
+            : h.goc !== ho.goc
+              ? `Gốc phải là ${gocDep(GOC[ho.goc]!)}`
+              : `${go} — chưa phải màu của ${tenGocHo}`,
+      )
+    } else if (cau) {
+      const trai = docTay(go)
+      const traiDung = trai.some((x) => cungTap(x, pcsDuoi(cau.ct, cau.goc)))
+      const phai = dang === 'duoi' ? 'dung' : traLoiTen(dang === 'tong' ? go2 : go, pcsTren(cau.ct, cau.goc))
+      if (dang === 'tren' ? phai === 'dung' : dang === 'duoi' ? traiDung : traiDung && phai === 'dung') dung()
+      else if (dang === 'tren') setBao(phai === 'khong-doc' ? `Chưa đọc được "${go}" — gõ như C, Dbm, Bdim, Eb+` : `${go} — chưa đúng`)
+      else if (dang === 'duoi') setBao(trai.length ? `${go} — chưa đúng` : `Chưa đọc được "${go}" — gõ tên hợp âm (Fm) hay các nốt (F Ab C)`)
+      else setBao(!traiDung ? 'Tay trái chưa đúng' : phai === 'khong-doc' ? `Chưa đọc được "${go2}"` : 'Tay phải chưa đúng')
+    }
+    setGo('')
+    setGo2('')
+  }
 
   return (
     <div className={the}>
@@ -564,25 +649,30 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       </p>
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold text-cream">Đố chuyển giọng</span>
-          <button type="button" onClick={cauMoi} className={nut(false)}>
-            {cau ? 'Câu khác' : 'Bắt đầu'}
-          </button>
-          {cau && (
+          <span className="font-semibold text-cream">Đố</span>
+          {DANG_DO.map((d) => (
+            <button key={d.id} type="button" onClick={() => doiDang(d.id)} className={nut(dangDo && dang === d.id)}>
+              {d.ten}
+            </button>
+          ))}
+          {dangDo && (
             <>
-              <span>
-                <span className="font-mono text-base text-amber-key">{cauTen}</span> — tay trái {cau.ct.tenDuoi}; tay phải chồng hợp âm nào?
-              </span>
+              <button type="button" onClick={() => cauMoi()} className={nut(false)}>
+                Câu khác
+              </button>
               <button
                 type="button"
                 disabled={kq !== 'dang'}
                 onClick={() => {
                   setKq('xem')
-                  setDiem((d) => ({ ...d, cau: d.cau + 1 }))
+                  if (!ho) setDiem((x) => ({ ...x, cau: x.cau + 1 }))
                 }}
                 className={nut(false)}
               >
                 Xem đáp án
+              </button>
+              <button type="button" onClick={thoiDo} className={nut(false)}>
+                Thôi đố
               </button>
             </>
           )}
@@ -592,32 +682,92 @@ function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
             </span>
           )}
         </div>
-        {cau && (
+        {cau && nhanCau && (
+          <p className="mt-2">
+            <span className="font-mono text-base text-amber-key">{cauTen}</span> —{' '}
+            {dang === 'tong' ? (
+              'bấm cả hai tay (tay trái thấp, tay phải cao; bass là gốc), hoặc gõ tên từng tay.'
+            ) : dang === 'tren' ? (
+              <>
+                tay trái <b className="text-teal-key">{nhanCau.trai}</b> ({nhanCau.traiPhu}); tay phải chồng hợp âm nào?
+              </>
+            ) : (
+              <>
+                tay phải <b className="text-amber-key">{nhanCau.phai}</b> ({nhanCau.phaiPhu}); tay trái bấm gì để ra hợp âm này?
+              </>
+            )}
+          </p>
+        )}
+        {ho && (
+          <div className="mt-2 flex flex-col gap-1">
+            <p>
+              Hợp âm gốc <span className="font-mono text-base text-amber-key">{tenGocHo}</span> — bấm (bass là gốc) hoặc gõ tên một hợp âm
+              màu của nó. Đã tìm {ho.tim.length}/{mauCuaHo(ho.nhom).length}:
+            </p>
+            <p className="flex flex-wrap gap-2">
+              {mauCuaHo(ho.nhom).map((c) => (
+                <span key={c.id} className={`font-mono ${ho.tim.includes(c.id) ? 'text-teal-key' : 'text-dim'}`}>
+                  {ho.tim.includes(c.id) || kq === 'xem' ? tenMau(c) : '?'}
+                </span>
+              ))}
+            </p>
+            {ho.vua && nhan && (
+              <p className="text-cream/85">
+                <b className="text-teal-key">Tìm được {tenMau(ho.vua)}</b> = tay trái {nhan.trai} + tay phải {nhan.phai}. {ho.vua.viSao}
+              </p>
+            )}
+          </div>
+        )}
+        {dangDo && (
           <form
             onSubmit={(event) => {
               event.preventDefault()
-              if (kq !== 'dang') return
-              const r = traLoiTen(go, pcsTren(cau.ct, cau.goc))
-              if (r === 'dung') dung()
-              else setBao(r === 'khong-doc' ? `Chưa đọc được "${go}" — gõ như C, Dbm, Bdim, Eb+` : `${go} — chưa đúng`)
-              setGo('')
+              traLoi()
             }}
             className="mt-2 flex flex-wrap items-center gap-2"
           >
-            <span className="text-dim">Bấm hợp âm ấy trên đàn (3 nốt, quãng tám nào cũng được) hoặc gõ tên:</span>
-            <input
-              value={go}
-              onChange={(event) => setGo(event.target.value)}
-              placeholder="vd Dbm"
-              className={`${chonClass} w-24`}
-              aria-label="Gõ tên hợp âm tầng trên"
-            />
+            {dang === 'tong' ? (
+              <>
+                <span className="text-dim">Gõ tên:</span>
+                <input
+                  value={go}
+                  onChange={(event) => setGo(event.target.value)}
+                  placeholder="tay trái, vd Fm hay F"
+                  className={`${chonClass} w-36`}
+                  aria-label="Gõ tay trái"
+                />
+                <input
+                  value={go2}
+                  onChange={(event) => setGo2(event.target.value)}
+                  placeholder="tay phải, vd Eb"
+                  className={`${chonClass} w-32`}
+                  aria-label="Gõ tay phải"
+                />
+              </>
+            ) : (
+              <>
+                <span className="text-dim">
+                  {dang === 'mau'
+                    ? 'Bấm trên đàn hoặc gõ tên:'
+                    : dang === 'duoi'
+                      ? 'Bấm tay trái trên đàn hoặc gõ tên hợp âm / các nốt:'
+                      : 'Bấm hợp âm ấy trên đàn (3 nốt, quãng tám nào cũng được) hoặc gõ tên:'}
+                </span>
+                <input
+                  value={go}
+                  onChange={(event) => setGo(event.target.value)}
+                  placeholder={dang === 'mau' ? 'vd Fmaj9' : dang === 'duoi' ? 'vd Fm, hay F C' : 'vd Dbm'}
+                  className={`${chonClass} w-28`}
+                  aria-label={dang === 'mau' ? 'Gõ tên hợp âm màu' : dang === 'duoi' ? 'Gõ tay trái' : 'Gõ tên hợp âm tầng trên'}
+                />
+              </>
+            )}
             <button type="submit" disabled={kq !== 'dang' || !go.trim()} className={nut(false)}>
               Trả lời
             </button>
             {kq === 'dang' && bao && <span className="text-rose-300">{bao}</span>}
             {kq === 'dung' && <b className="text-teal-key">Đúng — {dapAn}</b>}
-            {kq === 'xem' && <span className="text-rose-300">Đáp án: {dapAn}</span>}
+            {kq === 'xem' && !ho && <span className="text-rose-300">Đáp án: {dapAn}</span>}
           </form>
         )}
       </div>

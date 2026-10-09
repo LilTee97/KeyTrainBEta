@@ -344,3 +344,33 @@ export const pcsTren = (ct: CongThuc, gocPc: number) => [...new Set(quangTren(ct
 
 /** Đố chuyển giọng được — tầng trên phải là MỘT hợp âm có tên. */
 export const DO_DUOC = CONG_THUC.filter((ct) => !('iv' in ct.tren))
+
+/* ---------------- Trang Hợp âm — đố chồng hợp âm (người dùng 8/10/2026, bước B) ---------------- */
+
+/** Lớp cao độ tay trái (thế mặc định) trên gốc `goc`. */
+export const pcsDuoi = (ct: CongThuc, goc: number) => [...new Set(ct.duoi[0]!.map((x) => pc(goc + x)))]
+/** Lớp cao độ cả hai tay — hợp âm tổng. */
+export const pcsTong = (ct: CongThuc, goc: number) => [...new Set([...pcsDuoi(ct, goc), ...pcsTren(ct, goc)])]
+
+/** Ba họ hợp âm gốc cho đố "tìm hợp âm màu": hợp âm gốc của họ và các màu của nó (công thức `7` là gốc của họ Át, không tính màu). */
+export const HO_MAU = [
+  { nhom: 'Trưởng', hau: '' },
+  { nhom: 'Thứ', hau: 'm' },
+  { nhom: 'Át', hau: '7' },
+] as const satisfies readonly { nhom: CongThuc['nhom']; hau: string }[]
+export type HoMau = (typeof HO_MAU)[number]['nhom']
+export const mauCuaHo = (nhom: HoMau) => CONG_THUC.filter((ct) => ct.nhom === nhom && ct.id !== '7')
+
+/**
+ * Nhận hợp âm màu từ một tập lớp cao độ (gốc = `goc`): đủ mọi nốt của công thức, thừa nhiều nhất bậc 5 (người chơi hay giữ bậc 5 mà
+ * công thức bỏ). Nhiều công thức khớp thì lấy công thức nhiều nốt nhất. Không khớp → null.
+ */
+export function nhanMau(pcs: readonly number[], goc: number, nhom: HoMau): CongThuc | null {
+  const co = new Set(pcs.map(pc))
+  const nam = pc(goc + 7)
+  const khop = mauCuaHo(nhom).filter((ct) => {
+    const can = new Set(pcsTong(ct, goc))
+    return [...can].every((x) => co.has(x)) && [...co].every((x) => can.has(x) || x === nam)
+  })
+  return khop.sort((x, y) => pcsTong(y, goc).length - pcsTong(x, goc).length)[0] ?? null
+}

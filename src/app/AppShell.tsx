@@ -6,6 +6,7 @@ import { ChordDrillHome } from '../reharm/chordDrill/ChordDrillHome'
 import { PracticeHome } from '../reharm/PracticeHome'
 import { ReharmHome } from '../reharm/ReharmHome'
 import { MrHaiPanel } from '../reharm/brain/MrHaiPanel'
+import { HopAmPage } from '../thay/HopAmPage'
 import { TeacherPage } from '../thay/TeacherPage'
 import { TodayPage } from '../thay/TodayPage'
 import { TEACHERS, type TeacherId } from '../thay/teachers'
@@ -39,11 +40,13 @@ type TabId = (typeof TABS)[number]['id']
  * Tuấn · Blues), trang Hôm nay mở đầu, sáu tab cũ gom vào trang Tái Hòa Âm. Mở app luôn vào Hôm nay — buổi tập mỗi ngày bắt đầu
  * bằng lượt nguội ở đó; trong trang Tái Hòa Âm thì nhớ tab mở lần cuối.
  */
-type PageId = 'hom-nay' | TeacherId | 'tai-hoa-am'
+type PageId = 'hom-nay' | TeacherId | 'hop-am' | 'tai-hoa-am'
 
 const PAGES: readonly { id: PageId; label: string }[] = [
   { id: 'hom-nay', label: 'Hôm nay' },
   ...TEACHERS.map(({ id, label }) => ({ id, label })),
+  // Trang Hợp âm — chung cho mọi thầy (người dùng chốt 9/10/2026): chồng hợp âm, hợp âm màu, tái hòa âm vòng.
+  { id: 'hop-am', label: 'Hợp âm' },
   { id: 'tai-hoa-am', label: 'Tái Hòa Âm' },
 ]
 
@@ -150,6 +153,7 @@ export function AppShell() {
         />
       )}
       {teacher && <TeacherPage key={teacher.id} teacher={teacher} moBai={moBai} />}
+      {page === 'hop-am' && <HopAmPage />}
 
       {page === 'tai-hoa-am' && (
         <>

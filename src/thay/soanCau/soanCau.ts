@@ -2,7 +2,7 @@ import { parseChordToken } from '../../reharm/input/chordInputParser'
 import { MAJOR_COLOR_OPTIONS, PALETTE_BY_TONIC_COLOR, type MajorChordColor } from '../../reharm/reharmEngine/staticVoicingRules'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import type { ChordQuality } from '../../shared/musicTheory/types'
-import { pitchClassName } from '../../shared/musicTheory/pitch'
+import { parseNoteName, pitchClassName } from '../../shared/musicTheory/pitch'
 import { buildProgression, PROGRESSION_TEMPLATES } from '../../shared/musicTheory/progressionGenerator'
 import { chordAtDegree, diatonicChords } from '../../shared/musicTheory/scales'
 import type { LuotTap } from '../../shared/persistence/db'
@@ -415,6 +415,52 @@ export function traLoiTen(ten: string, pcs: readonly number[]): 'dung' | 'sai' |
   const doc = parseChordToken(chuan)
   if (typeof doc === 'string') return 'khong-doc'
   return dungHopAm(chordPitchClasses(doc.root, doc.quality), pcs) ? 'dung' : 'sai'
+}
+
+const NOT_VIET: Record<string, number> = { do: 0, đô: 0, re: 2, rê: 2, mi: 4, fa: 5, sol: 7, la: 9, si: 11 }
+/** Một tên nốt — chữ cái ("Ab", "F#") hay tên Việt ("La♭", "Fa#", "Đô"). */
+function docNot(ten: string): number | null {
+  const chuCai = parseNoteName(ten)
+  if (chuCai) return chuCai.pitchClass
+  const m = /^(đô|do|rê|re|mi|fa|sol|la|si)([#b♯♭]*)$/i.exec(ten.trim())
+  if (!m) return null
+  return (((NOT_VIET[m[1]!.toLowerCase()]! + [...m[2]!].reduce((d, c) => d + (c === '#' || c === '♯' ? 1 : -1), 0)) % 12) + 12) % 12
+}
+
+/**
+ * Câu trả lời cho MỘT TAY ở đố chồng hợp âm: tên hợp âm ("Fm", "Eb"), một nốt ("Fa", "F") hay dãy nốt ("F Ab C", "Rê – La♭"). Trả về
+ * MỌI cách hiểu (vd "F" là nốt Fa hay hợp âm F trưởng) — đúng một cách là đúng. Rỗng nếu không đọc được.
+ */
+export function docTay(ten: string): number[][] {
+  const t = ten.trim()
+  if (!t) return []
+  const cacNot = t.split(/[\s,–-]+/).filter(Boolean)
+  if (cacNot.length >= 2) {
+    const pcs = cacNot.map(docNot)
+    return pcs.every((x) => x !== null) ? [[...new Set(pcs as number[])]] : []
+  }
+  const ra: number[][] = []
+  const motNot = docNot(t)
+  if (motNot !== null) ra.push([motNot])
+  // Tên Việt ("Do", "Fa") không đọc thành hợp âm — "Do" dễ bị hiểu là D°.
+  if (!/^(đô|do|rê|re|mi|fa|sol|la|si)/i.test(t)) {
+    const doc = parseChordToken(t.replace(/♭/g, 'b').replace(/♯/g, '#').replace(/^[a-g]/, (c) => c.toUpperCase()))
+    if (typeof doc !== 'string') ra.push([...new Set(chordPitchClasses(doc.root, doc.quality))])
+  }
+  return ra
+}
+
+/** Đọc tên hợp âm → gốc và lớp cao độ; null nếu không đọc được. */
+export function docHop(ten: string): { goc: number; pcs: number[] } | null {
+  const doc = parseChordToken(ten.trim().replace(/♭/g, 'b').replace(/♯/g, '#').replace(/^[a-g]/, (c) => c.toUpperCase()))
+  return typeof doc === 'string' ? null : { goc: doc.root, pcs: [...new Set(chordPitchClasses(doc.root, doc.quality))] }
+}
+
+/** Hai tập lớp cao độ trùng nhau. */
+export const cungTap = (a: readonly number[], b: readonly number[]) => {
+  const x = new Set(a.map(pc))
+  const y = new Set(b.map(pc))
+  return x.size === y.size && [...x].every((v) => y.has(v))
 }
 
 /* ---------------- Tập solo trên backing — thang bậc ---------------- */

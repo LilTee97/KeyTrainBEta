@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
-import { CONG_THUC, DO_DUOC, nhanHaiTay, pcsTren, quangTren, soThe, tenHaiTay, tenTren, tenTrongGiong, theBamChong } from '../soanCau/chongHopAm'
-import { traLoiTen } from '../soanCau/soanCau'
+import {
+  CONG_THUC,
+  DO_DUOC,
+  mauCuaHo,
+  nhanHaiTay,
+  nhanMau,
+  pcsDuoi,
+  pcsTong,
+  pcsTren,
+  quangTren,
+  soThe,
+  tenHaiTay,
+  tenTren,
+  tenTrongGiong,
+  theBamChong,
+} from '../soanCau/chongHopAm'
+import { cungTap, docTay, traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
@@ -93,5 +108,35 @@ describe('Nhãn hai tay — tên tay trái, tên tay phải, hợp âm tổng (n
     expect(nhanHaiTay(ct('7'), 'G', 'sharp')).toMatchObject({ trai: 'Sol', traiPhu: 'gốc', tong: 'G7' })
     expect(nhanHaiTay(ct('6'), 'C', 'sharp')).toMatchObject({ trai: 'Đô – Sol', traiPhu: 'gốc – 5', phai: 'Am', tong: 'C6' })
     expect(nhanHaiTay(ct('add9'), 'C', 'sharp').phai).toBe('chùm 9 – 3 – 5')
+  })
+})
+
+describe('Trang Hợp âm — chấm đố chồng hợp âm (bước B)', () => {
+  const F = 5
+  it('tay trái, tay phải, hợp âm tổng của Fm11 = Fm + E♭', () => {
+    expect(cungTap(pcsDuoi(ct('m11'), F), [5, 8, 0])).toBe(true)
+    expect(cungTap(pcsTren(ct('m11'), F), [3, 7, 10])).toBe(true)
+    expect(cungTap(pcsTong(ct('m11'), F), [5, 8, 0, 3, 7, 10])).toBe(true)
+  })
+
+  it('nhận hợp âm màu từ phím đang giữ — đủ nốt, thừa nhiều nhất bậc 5; hợp âm ba trơn không phải màu', () => {
+    expect(nhanMau([0, 4, 7, 11, 2], 0, 'Trưởng')?.id).toBe('maj9')
+    expect(nhanMau([0, 4, 7, 11], 0, 'Trưởng')?.id).toBe('maj7')
+    expect(nhanMau([0, 4, 7], 0, 'Trưởng')).toBeNull()
+    expect(nhanMau([2, 5, 9, 0, 4], 2, 'Thứ')?.id).toBe('m9')
+    // G13 có giữ cả bậc 5 (Rê) vẫn nhận là 13; G7 trơn là gốc của họ Át, không tính màu.
+    expect(nhanMau([7, 11, 2, 5, 4], 7, 'Át')?.id).toBe('13')
+    expect(nhanMau([7, 11, 2, 5], 7, 'Át')).toBeNull()
+    expect(mauCuaHo('Át').some((c) => c.id === '7')).toBe(false)
+  })
+
+  it('đọc câu trả lời một tay: tên hợp âm, một nốt (mọi cách hiểu), dãy nốt chữ cái hay tên Việt', () => {
+    expect(docTay('Fm').some((x) => cungTap(x, [5, 8, 0]))).toBe(true)
+    expect(docTay('F').some((x) => cungTap(x, [5]))).toBe(true)
+    expect(docTay('F').some((x) => cungTap(x, [5, 9, 0]))).toBe(true)
+    expect(docTay('Rê – La♭')).toEqual([[2, 8]])
+    expect(docTay('F Ab C')).toEqual([[5, 8, 0]])
+    expect(docTay('Do')).toEqual([[0]])
+    expect(docTay('xyz')).toEqual([])
   })
 })

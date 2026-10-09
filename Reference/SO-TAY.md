@@ -5924,3 +5924,23 @@ phải. Sau đó hãy ghi tên của hợp âm tổng ở phía dưới."*
 
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 8 (2 mới) · chạy thử headless: Dm11 = Dm + C, E7 tay trái "Mi (gốc)", đố ẩn
 nhãn, xem đáp án hiện nhãn — 4/4 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3 (B): trang "Hợp âm" — đố chồng hợp âm bốn dạng (9/10/2026)
+
+**Người dùng (8/10):** *"Hãy làm thành một trang để học cách bấm hợp âm theo kiểu chồng: Cho hợp âm rồi hỏi thế bấm chồng 2 tay, cho
+biết một bên tay rồi hỏi tay còn lại bấm gì để ra được hợp âm tổng. Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó."* Chốt 9/10: một trang
+chung "Hợp âm".
+
+- `HopAmPage.tsx` (mới) + `AppShell`: trang "Hợp âm" sau các trang thầy, trước Tái Hòa Âm; chọn giọng; tab Chồng hợp âm (tab Hợp âm màu,
+  Tái hòa âm vòng thêm ở bước sau). Tab "Học hợp âm" sẵn có ở Tái Hòa Âm luyện bấm theo tên và gam / hợp âm rải — không dạy chồng hai
+  tay, nên không trùng (phần gam / rải của nó dùng lại cho bước 4).
+- `SoanCau.ChongHopAm` (xuất ra, dùng ở Phần 1 và trang mới): phần đố bốn dạng — cho hợp âm → bấm hai tay (bass là gốc; hoặc gõ tên từng
+  tay) · cho tay trái → tay phải (dạng cũ, nay hiện tên tay trái) · cho tay phải → tay trái · cho hợp âm gốc → tìm màu (đếm đã tìm k/N,
+  tìm được thì hiện tay trái + tay phải + lời "vì sao" của công thức). Nút Câu khác · Xem đáp án · Thôi đố.
+- `chongHopAm.ts`: `pcsDuoi`, `pcsTong`, `HO_MAU` / `mauCuaHo` (Trưởng · Thứ · Át — `7` là gốc của họ Át, không tính màu), `nhanMau`
+  (đủ nốt công thức, thừa nhiều nhất bậc 5; nhiều công thức khớp lấy cái nhiều nốt nhất). `soanCau.ts`: `docTay` (tên hợp âm, một nốt, dãy
+  nốt chữ cái hay tên Việt — trả mọi cách hiểu: "F" là nốt Fa hay hợp âm F), `docHop`, `cungTap`.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 11 (3 mới: tay trái / tay phải / tổng của Fm11, nhận màu, đọc câu trả lời) · toàn
+suite **2 654 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless (cổng 5199): trang ở đúng chỗ, bốn dạng trả lời đúng bằng bấm
+và bằng gõ, nhãn ẩn khi đang đố — 12/12 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
