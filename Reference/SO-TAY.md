@@ -5877,3 +5877,22 @@ qua · chạy thử headless (cổng 5199): tab Blues, Phần 2–4 khóa, F7 c�
 
 **Chưa đo / chờ:** giọng thứ chỉ có Rising Sun 15 ký hiệu; ví dụ Đức Thịnh đọc bằng mắt; "Trong sheet" của ví dụ video là nhãn chung của
 thẻ (lời đã ghi "video"); Phần 2–4 Blues (bước 9).
+
+## Bước — GĐ 3: viết lại thẻ Cà Pháo theo lối nhạc sĩ; ghi bổ sung kế hoạch (8/10/2026)
+
+**Người dùng:** *"Chỗ giải thích của Cà Pháo đừng ghi chung chung như vậy. Hãy ghi rõ là bậc nào anh đổi thành những hòa âm gì và đóng
+vai một nhạc sĩ để phân tích lựa chọn đó của anh sẽ mang lại cảm giác gì khi nghe và tại sao nên chọn hợp âm đó … đừng liệt kê máy móc"*.
+
+- `giaiThich.ts` khối Cà Pháo viết lại: tựa mỗi ý "bài ghi X → anh bấm Y" theo bậc của BÀI (♭VI → iv9 nay nằm ở bậc 6, I → II13 ở bậc
+  1); lời = nghe ra sao, vì sao chọn, khi nào nên / không nên (chỗ chỏi với giai điệu); số đo dồn về "Ai chọn", "Cơ sở". Ví dụ V♭13 mới,
+  soát tay: Người hãy quên em đi ô 25 (A7, đỉnh Fa5 rơi Mi – Rê vào Dm). Bỏ ý "v7" riêng (2/3 bản phổ biến có — của bài), ghi ở bậc 7.
+- `Diem.nghe` (mới) + `DiemThay`: hai nút ▶ "bài ghi" / "anh bấm" — câu ngắn ở giọng đang chọn; lời dẫn thẻ ghi rõ lời cảm nhận là phân
+  tích của Claude, thế bấm để nghe chưa phải thế bấm của thầy.
+- `KE-HOACH-LUYEN-TAP.md`: mục "Bổ sung 8/10/2026" — A nhãn hai tay · B trang học chồng hợp âm · C tái hòa âm (một hợp âm, theo vòng) ·
+  D nhớ vòng có lựa chọn thay; đề xuất gộp C-vòng với D, lời theo loại thay, trang "Hợp âm"; chờ người dùng chọn.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `giaiThich.test.ts` 21 (khối Cà Pháo viết lại test theo lời mới, thêm: mọi ý có câu nghe, bài
+ghi ≠ anh bấm, mọi hợp âm phát được tiếng) · chạy thử headless (cổng 5199): 18 nút nghe, ▶ ra 22 nguồn âm, tựa bậc 6 / bậc 1 đúng —
+6/6 đạt · `LuyenTap.json`, `Nguon.json` không đổi.
+
+**Chưa làm:** thẻ Linh Nhi và Blues chưa viết lại theo lối nhạc sĩ (chờ người dùng); A–D của kế hoạch chưa dựng.

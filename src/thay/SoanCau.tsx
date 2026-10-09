@@ -210,7 +210,9 @@ function HopAmTheoBac({
               ? 'KHUNG 12 Ô của thể loại, và với HỢP ÂM PHỔ BIẾN của bài (Rising Sun): giống thì là của thể loại hay của bài, khác hay thêm thì là của người chơi (Ray, Robert, người phối Rising Sun)'
               : `HỢP ÂM PHỔ BIẾN của chính bài (vài bản cộng đồng mỗi bài — không phải hòa âm gốc của nhạc sĩ): giống thì là của bài, khác hay thêm thì là của ${goi(teacher)}`}
             ;
-            "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là số đo và nhãn suy luận.
+            "Trong sheet" là ô thật, đã soát tay từng nốt (giọng gốc của bài); "Cơ sở" là số đo và nhãn suy luận. Lời "nghe ra sao, khi
+            nào nên chọn" là phân tích của Claude trong vai nhạc sĩ — không phải số đo. ▶ nghe câu bài ghi rồi câu {goi(teacher)} bấm (thế
+            bấm để nghe là công thức chồng hay bấm mộc, chưa phải thế bấm của thầy).
           </p>
           <ul className="flex flex-col gap-1.5 text-xs">
             {ly.nguyenTac.map((d) => (
@@ -260,7 +262,7 @@ function HopAmTheoBac({
             <div>
               <h5 className="mb-1 text-xs font-semibold tracking-wide text-dim uppercase">{teacher.label} ở bậc này</h5>
               {c.thay.length > 0 ? (
-                c.thay.map((d) => <DiemThay key={d.y} d={d} />)
+                c.thay.map((d) => <DiemThay key={d.y} d={d} tonic={tonic} thu={thu} ai={goi(teacher)} />)
               ) : (
                 <p className="text-xs text-dim">Ở bậc này {goi(teacher)} không có lối riêng đáng kể trong phần hát của các sheet.</p>
               )}
@@ -304,10 +306,22 @@ function HopAmTheoBac({
   )
 }
 
-function DiemThay({ d }: { d: Diem }) {
+function DiemThay({ d, tonic, thu, ai }: { d: Diem; tonic: number; thu: boolean; ai: string }) {
+  const { h } = nguCanh(tonic, thu)
+  const ten = (ds: readonly Hop[]) => ds.map((x) => h(x.goc, x.chat, x.bass)).join(' – ')
   return (
     <div className="mb-3 text-xs last:mb-0">
       <p className="font-semibold text-cream">{d.y}</p>
+      {d.nghe && (
+        <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+          <button type="button" onClick={() => void ngheChuoi(tonic, d.nghe!.bai)} className="font-semibold text-amber-key hover:underline">
+            ▶ bài ghi: {ten(d.nghe.bai)}
+          </button>
+          <button type="button" onClick={() => void ngheChuoi(tonic, d.nghe!.thay)} className="font-semibold text-amber-key hover:underline">
+            ▶ {ai} bấm: {ten(d.nghe.thay)}
+          </button>
+        </p>
+      )}
       <p className="mt-1 text-cream/85">{d.giai}</p>
       <p className="mt-1 text-cream/85">
         <span className="text-teal-key">Ai chọn:</span> {d.ai}

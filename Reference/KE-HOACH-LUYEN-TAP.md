@@ -424,6 +424,43 @@ Mỗi bài có nút "Các thầy làm khác thế nào" sang phần 1 của tran
 9. Blues — Phần 1 (cột thầy) xong 7/10/2026; còn Phần 2–4 (nhớ vòng 12 ô, chọn nốt, tập solo) từ số đo ba sheet (md Blues mục 7).
 10. Chỉnh ngưỡng theo số đo thật khi người dùng đã tập.
 
+#### Bổ sung 8/10/2026 — người dùng: chồng hợp âm · hợp âm màu · tái hòa âm · nhớ vòng có lựa chọn thay
+
+Người dùng: *"1. về phần chồng hợp âm: Hãy viết rõ tên hợp âm của từng tay, tay trái bấm hợp âm gì thì ghi tên bên phía tay trái và
+tương tự với tay phải. Sau đó hãy ghi tên của hợp âm tổng ở phía dưới. Hãy làm thành một trang để học cách bấm hợp âm theo kiểu chồng:
+Cho hợp âm rồi hỏi thế bấm chồng 2 tay, cho biết một bên tay rồi hỏi tay còn lại bấm gì để ra được hợp âm tổng. Cho hợp âm gốc rồi bắt
+tìm hợp âm màu của nó. Trong vai nhạc sĩ piano chuyên nghiệp bạn hãy lấy các phong cách đặt hòa âm của Linh Nhi, Cà Pháo và Blues để
+tham khảo và tăng vốn kiến thức về hợp âm. Có 2 loại là tái hòa âm 1 hợp âm và tái hòa âm theo vòng và ở mỗi bậc hãy cho các lựa chọn
+sẵn để tôi đánh theo, ở mỗi lựa chọn hãy giải thích khi nào nên chọn hợp âm đó. 2. Về phần học nhớ vòng hợp âm: Hãy cho những vòng hợp
+âm sẵn có hoặc cho tôi tự điền vòng hợp âm rồi sau đó mỗi hợp âm bạn sẽ đưa ra các hợp âm thay thế để tôi chọn, mỗi khi chọn vào bạn sẽ
+giải thích tại sao nên chọn hợp âm đó ở vị trí đó, và nó mang lại cảm giác như thế nào khi chơi và sẽ biến vòng đó theo hướng nào."*
+
+- **A. Nhãn hai tay ở thẻ Chồng hợp âm** (nhỏ): tên hợp âm tay trái ghi phía tay trái, tay phải ghi phía tay phải, tên hợp âm tổng ở
+  dòng dưới. Dùng `tenHaiTay`, `tenTren` có sẵn (`soanCau/chongHopAm.ts`).
+- **B. Trang học chồng hợp âm** — ba dạng đố, trả lời bằng phím đàn (MIDI · bàn phím máy · chạm) hoặc gõ tên: (1) cho hợp âm tổng →
+  bấm cả hai tay; (2) cho một tay → tay kia bấm gì để ra hợp âm tổng; (3) cho hợp âm gốc → tìm hợp âm màu của nó. Dùng lại:
+  `CONG_THUC` (26 công thức), `theBamChong`, `dungHopAm`, `traLoiTen`, `OnScreenPiano` tô hai màu tay.
+- **C. Tái hòa âm — một hợp âm, và theo vòng**: ở mỗi bậc có sẵn các lựa chọn để đánh theo; mỗi lựa chọn có ▶ nghe, phím sáng thế bấm
+  và lời "nghe ra sao, khi nào nên chọn, khi nào không". Nguồn lựa chọn — đã có trong app, dùng lại: lối thay lý thuyết
+  (`lyThuyetCacBac`, `loiThay`); màu theo thầy (`colorCaPhao`, `mauLinhNhi`, `colorBlueSun`); hợp âm lướt (`suggestSecondaryDominants`,
+  `suggestSecondaryIiV`, `suggestDim7Passing`); lối đổi đã đo ở Phần 1 (Cà Pháo ♭VI → iv9, i → I7 trước iv, ii° → II7, I → II13 trước V;
+  Linh Nhi ♭VImaj7, ii°7, hợp âm giảm thay V; Blues hợp âm bảy, ♭II7, V7♯9); `analyzeColorConflicts` báo chỗ chỏi.
+- **D. Nhớ vòng có lựa chọn thay** (Phần 2 của tab thầy): vòng sẵn (lý thuyết · của thầy) hoặc tự điền (dùng lại ô chọn hợp âm của
+  "Vòng tự tạo"); mỗi hợp âm có danh sách thay; chọn vào → lời: vì sao hợp ở vị trí ấy, chơi lên nghe ra sao, vòng rẽ về hướng nào.
+
+**Đề xuất của Claude (chờ người dùng chọn):**
+- **C (theo vòng) và D là một công cụ — "vòng + lựa chọn thay"**: dựng một lần; trang mới dùng nó với mọi phong cách, Phần 2 của tab
+  thầy dùng nó với lựa chọn của thầy ấy đứng đầu và thêm chế độ đố để nhớ vòng. Lý do có thể không gộp: Phần 2 để NHỚ vòng, trang mới
+  để KHÁM PHÁ — nhưng một công cụ hai chế độ phục vụ được cả hai.
+- **Lời giải thích viết theo LOẠI thay, không theo từng cặp hợp âm**: chừng 12–15 loại (thêm màu 7 · 9 · 11 · 13; hạ bass một quãng ba;
+  át phụ; ii – V phụ; thay tam cung; giảm lướt; mượn giọng cùng chủ âm; treo sus; Picardy; chồng tầng trên…), mỗi loại một đoạn lời
+  nhạc sĩ, cộng MỘT câu tính từ chính vị trí ấy (nốt nào dẫn đi đâu, bass đi thế nào, chung nốt nào với hợp âm trước / sau). Lý do:
+  viết tay mọi cặp (7 bậc × 2 giọng × ~6 lựa chọn × ngữ cảnh) không làm xuể và sẽ trượt về kiểu liệt kê máy móc người dùng đã bác; sinh
+  tự động hết cũng máy móc. Rủi ro: câu tính tự động nghe khô — giữ ngắn, để lời nhạc sĩ làm chính.
+- **Đặt ở đâu**: một trang mới "Hợp âm" (tab Chồng hợp âm · Hợp âm màu · Tái hòa âm vòng); trang Căn bản (bước 6) có thể gộp vào đây.
+  Cái giá: thêm một nút trên thanh trang — điện thoại cuộn ngang thêm.
+- **Thứ tự**: A làm ngay (nhỏ); B và C (một hợp âm) trước bước 4 — người dùng đang học hòa âm; C (theo vòng) + D thay Phần 2 hiện tại.
+
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
    chưa đo) → đưa loại hay đặt nhất + phương án 2, kèm số lần. Cột lý thuyết thì ra một đáp án.

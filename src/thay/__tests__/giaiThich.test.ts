@@ -124,30 +124,44 @@ describe('Linh Nhi — chọn gì, vì sao, AI chọn (số đo `tools/ly_do_hop
   })
 })
 
-describe('Cà Pháo — chọn gì, vì sao, AI chọn (số đo `tools/tach_lua_chon.py --thay ca-phao --kiem`, soát tay 41/60 chỗ khác bản)', () => {
+describe('Cà Pháo — bài ghi gì, anh bấm gì, nghe ra sao (viết lại 8/10/2026; số đo `tach_lua_chon.py --thay ca-phao --kiem`)', () => {
   const ai = (ds: { ai: string }[]) => ds.map((d) => d.ai).join(' ')
+  const tua = (ds: { y: string }[]) => ds.map((d) => d.y).join(' | ')
 
-  it('nguyên tắc: khung của bài, màu ở tay phải — so với Linh Nhi cùng cách đo', () => {
+  it('nguyên tắc: khung của bài, màu ở tay phải — số so với Linh Nhi cùng cách đo; soát tay 41/60', () => {
     const ly = lyDoThay('ca-phao', LA, true)!
-    expect(ly.nguyenTac[0]!.tom).toMatch(/309\/400.*16 chỗ chỉ anh bấm.*12 chỗ máy đọc lệch/)
-    expect(ly.nguyenTac[1]!.tom).toMatch(/145\/248.*27\/253.*140\/172.*137\/302/)
+    const nt = ly.nguyenTac.map((x) => x.tom).join(' ')
+    expect(nt).toMatch(/309\/400.*140\/172.*137\/302.*16 chỗ chỉ anh bấm.*12 máy đọc lệch/)
+    expect(nt).toMatch(/145\/248.*27\/253/)
   })
 
-  it('giọng thứ: iv thay ♭VI và II7 là của anh; v7 ở Chúng Ta, V là của bài', () => {
+  it('giọng thứ: tựa mỗi ý ghi rõ bài ghi gì → anh bấm gì (La thứ)', () => {
     const ly = lyDoThay('ca-phao', LA, true)!
-    expect(ai(ly.bac[5]!)).toContain('8/8')
-    expect(noi(ly.bac[5]!)).toContain('Fmaj7 trên bass Rê là Dm9')
-    expect(ai(ly.bac[2]!)).toContain('3/3')
-    expect(ai(ly.bac[7]!)).toMatch(/V ở 15\/20.*2\/3 bản ghi v/)
-    expect(ai(ly.bac[0]!)).toMatch(/53\/55.*28\/28.*24\/24.*3\/5/)
-    expect(ai(ly.bac[8]!)).toContain('45/45')
+    expect(tua(ly.bac[0]!)).toContain('Bài ghi Am → anh bấm Am7, Am9')
+    expect(tua(ly.bac[0]!)).toContain('Bài ghi Am ngay trước Dm → anh bấm A7, có khi cả cụm Em7 – A7 – Dm7')
+    expect(tua(ly.bac[2]!)).toContain('Bài ghi Bdim trước V → anh bấm B7 (có chỗ B7♭5)')
+    expect(tua(ly.bac[8]!)).toContain('Bài ghi F → anh đổi hẳn thành Dm9 (hạ bass một quãng ba)')
+    expect(noi(ly.bac[8]!)).toContain('Tay phải anh vẫn bấm Fmaj7 của bài, chỉ bass hạ từ Fa xuống Rê')
+    expect(ai(ly.bac[8]!)).toMatch(/45\/45.*không bản phổ biến nào ghi iv ở cả 8 chỗ/)
+    expect(ai(ly.bac[2]!)).toContain('không bản phổ biến nào ghi II ở cả 3 chỗ')
+    expect(ai(ly.bac[7]!)).toContain('V có cảm âm là của bài (15/20)')
+    expect(ai(ly.bac[0]!)).toMatch(/28\/28.*24\/24.*53\/55.*3\/5/)
   })
 
-  it('giọng trưởng: theo bài gần như trọn — chỗ khác phần lớn là máy đọc lệch; II13 trước V là của anh', () => {
+  it('giọng thứ: lời nói khi nào nên chọn và khi nào không (chỗ chỏi với giai điệu)', () => {
+    const ly = lyDoThay('ca-phao', LA, true)!
+    expect(noi(ly.bac[2]!)).toContain('Đừng chọn nếu giai điệu đang hát Rê đúng chỗ ấy')
+    expect(noi(ly.bac[0]!)).toContain('giai điệu không có Đô — Đô♯ đụng Đô của giai điệu sẽ chỏi nửa cung')
+    expect(noi(ly.bac[7]!)).toContain('khi giai điệu trên V đang hát Đô')
+  })
+
+  it('giọng trưởng: theo bài gần như trọn; đổi hẳn chỉ I → II13 trước V (Đô trưởng)', () => {
     const ly = lyDoThay('ca-phao', 0, false)!
-    expect(ly.nguyenTac[2]!.tom).toMatch(/13\/22.*11 chỗ.*2 chỗ anh tự đổi/)
-    expect(ai(ly.bac[2]!)).toContain('2/2')
-    expect(noi(ly.bac[5]!)).toContain('Am đặt trên bass Fa chính là Fmaj7')
+    expect(ly.nguyenTac[2]!.tom).toMatch(/13\/22.*11 là máy đọc lệch/)
+    expect(tua(ly.bac[0]!)).toContain('Bài ghi C ngay trước V → anh đổi thành D13')
+    expect(ai(ly.bac[0]!)).toContain('không bản phổ biến nào ghi II ở cả 2 chỗ')
+    expect(noi(ly.bac[5]!)).toContain('Fmaj7 trong tay anh là Am đặt trên bass Fa')
+    expect(tua(ly.bac[7]!)).toContain('Bài ghi G → anh bấm G7sus4 rồi G13')
   })
 
   it('mọi ý có dòng ai chọn xưng "anh"; thẻ nguyên tắc chỉ tới bậc có lời; không lời nào in lặp', () => {
@@ -162,11 +176,28 @@ describe('Cà Pháo — chọn gì, vì sao, AI chọn (số đo `tools/tach_lua
     }
   })
 
+  it('mỗi ý có câu nghe bài ghi / anh bấm, khác nhau, và mọi hợp âm phát được tiếng', () => {
+    for (const thu of [false, true]) {
+      const ds = Object.values(lyDoThay('ca-phao', LA, thu)!.bac).flatMap((x) => x!)
+      for (const d of ds) {
+        expect(d.nghe, d.y).toBeTruthy()
+        expect(JSON.stringify(d.nghe!.bai), d.y).not.toBe(JSON.stringify(d.nghe!.thay))
+        for (const x of [...d.nghe!.bai, ...d.nghe!.thay]) {
+          expect(CONG_THUC.find((c) => c.kyHieu === x.chat) ?? findQualityBySymbol(x.chat), `"${x.chat}" ở ${d.y}`).toBeTruthy()
+          expect(theBamHop(LA, x).length).toBeGreaterThanOrEqual(3)
+        }
+      }
+    }
+  })
+
   it('lời về một bài cụ thể giữ tên thật của bài, không đổi theo giọng đang chọn', () => {
     const v = noi(lyDoThay('ca-phao', LA, false)!.bac[7]!)
-    expect(v).toContain('Hồng Kông 1: Csus4/G')
+    expect(v).toContain('sheet ghi "Csus4/G"')
     expect(v).not.toContain('Asus4/E')
-    expect(noi(lyDoThay('ca-phao', LA, true)!.bac[5]!)).toContain('Ở Chúng Ta, iv9 đứng sau v7: bass bậc 5 → bậc 4')
+    // Rê thứ đang chọn: lời chung gọi Gm9, ví dụ Chúng Ta (La thứ) vẫn là Dm9.
+    const vi = noi(lyDoThay('ca-phao', RE, true)!.bac[8]!)
+    expect(vi).toContain('thành Gm9')
+    expect(vi).toContain('Em7 → Dm9 (tay trái Rê2')
   })
 })
 
