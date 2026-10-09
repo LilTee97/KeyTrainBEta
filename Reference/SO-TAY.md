@@ -6123,3 +6123,23 @@ quá 4 nốt), `tenMotTay` (Csus2, C7, Fmaj7, C/E, Đô – Sol, Rê, chùm khô
 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: luật mới 6/6 (C6/9 → Csus2; Chúng Ta Không Thuộc Về Nhau Dm9 tay phải gọn còn
 Fa–La–Đô–Mi, nhãn Fmaj7, có dòng "gọn còn 4", bấm đúng → sang; Canon G thế đảo → tay phải G); chạy lại: chồng tự do 7/7, đố một tay
 4/4, tab vòng 17/17, Bấm như thầy 12/12, trang Tái hòa âm 4/4 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: bảng "Công thức chồng — quy luật để học thuộc" ở tab Chồng hợp âm (9/10/2026)
+
+**Người dùng (ảnh F♯13♭9: tay trái F♯7, tay phải đang đố):** *"hãy đưa ra công thức và quy luật chồng hợp âm như thế nào để tạo ra các
+hợp âm màu … Tôi là người mới học nên ko thể nào hiểu được làm sao để tạo ra hợp âm như trong ảnh nhưng nếu có công thức đơn giản hóa và
+quy luật để ghép hợp âm từ 2 tay thì tôi có thể học thuộc"*.
+
+- `chongHopAm.ts`: `tenBac` (tên bậc theo hợp âm: ♭3 hay ♯9, ♭5 hay ♯11, 6 hay 13), `VI_TRI_TREN` (tay phải đứng ở đâu → thêm màu gì:
+  bậc 3/♭3 → hợp âm bảy · bậc 5 → 9 · bậc 6 → 6/13 · dưới gốc một cung → ♭7·9·11 · trên gốc một cung → 9·11·13 · dưới gốc nửa cung →
+  7·9·♯11 · cách ba cung → ♭9·♯11·13 · bậc ♭6 → ♭13), `QUY_LUAT_CHAT` (cùng chỗ đổi chất là đổi màu — vd bậc 6 trên khung át: thứ → 13,
+  trưởng → 13♭9), `khungTrai` / `KHUNG_TRAI` (bốn khung tay trái), `bangCongThuc` (mọi dòng sinh từ 26 công thức, gốc Đô),
+  `cachTimTayPhai` (đếm gam trưởng của gốc tới bậc cần dùng — F♯13♭9: bậc 6 là Rê♯ → tay phải D♯).
+- `BangCongThuc.tsx` (mới): ba bước dựng, ba quy luật, mỗi công thức một dòng "= tay trái … + tay phải … → tay phải chứa …" kèm "Thử"
+  (đưa công thức lên bàn phím ở gốc Đô); khung công thức thêm dòng "Cách tìm tay phải ở gốc này".
+- Quy ước tên nốt của app giữ nguyên: `tenTheoChu` tránh E♯ · B♯ · C♭ · F♭ (gam Fa♯ trưởng ghi bậc 7 là "Fa") — test ghi rõ.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test mới (đủ 26 công thức đúng một dòng; bậc tay phải đúng nốt; quy luật đổi chất khớp công thức
+thật; bốn khung; cách tìm tay phải F♯13♭9 · Cm11 · C13♭9♯11) · toàn suite **2 697 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử
+headless 8/8 (bảng, ba quy luật, Thử C13♭9 → tay trái C7 + tay phải A; đổi gốc F♯ → F♯7 + D♯ = F♯13♭9 như ảnh, dòng "bậc 6 là Rê♯"),
+chạy lại chồng tự do 7/7, đố một tay 4/4, luật 4 nốt 6/6 · `LuyenTap.json`, `Nguon.json` không đổi.

@@ -8,6 +8,7 @@ import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKey
 import type { AccidentalStyle } from '../shared/musicTheory/types'
 import type { LuotTap } from '../shared/persistence/db'
 import {
+  cachTimTayPhai,
   chongCongThuc,
   chongTuDo,
   CONG_THUC,
@@ -45,6 +46,7 @@ import {
   type DuLieuSoanCau,
 } from './soanCau/soanCau'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
+import { BangCongThuc } from './BangCongThuc'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
 import { GOC, kieuDau, vongMau } from './vongThay'
@@ -452,6 +454,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const [go2, setGo2] = useState('')
   const [bao, setBao] = useState('')
   const [diem, setDiem] = useState({ cau: 0, dung: 0 })
+  const banPhim = useRef<HTMLDivElement>(null)
   const ct = CONG_THUC.find((c) => c.id === id)!
   const viDu = thu ? ct.viDu.thu : ct.viDu.truong
   const goc = gocTu ?? (tonic + viDu) % 12
@@ -588,6 +591,14 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
         </p>
       </div>
 
+      <BangCongThuc
+        onThu={(x) => {
+          chonCt(x)
+          setGocTu(0)
+          banPhim.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        }}
+      />
+
       <div className="mb-3 flex flex-col gap-1.5">
         {NHOM_CT.map((nhom) => (
           <div key={nhom} className="flex flex-wrap items-center gap-1">
@@ -690,6 +701,10 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
               {ct.quanHe}
             </p>
             <p className="mt-1 text-cream/85">
+              <span className="text-dim">Cách tìm tay phải ở gốc này: </span>
+              {cachTimTayPhai(ct, gocTen, style)}
+            </p>
+            <p className="mt-1 text-cream/85">
               <span className="text-dim">Vì sao (ví dụ chữ lấy ở Đô trưởng như video; ví dụ sheet ở giọng gốc của bài): </span>
               {ct.viSao}
             </p>
@@ -729,7 +744,9 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
         </div>
       </div>
 
-      <BanPhimHaiTay trai={hien?.trai ?? []} phai={hien?.phai ?? []} nhan={hien?.nhan ?? null} />
+      <div ref={banPhim}>
+        <BanPhimHaiTay trai={hien?.trai ?? []} phai={hien?.phai ?? []} nhan={hien?.nhan ?? null} />
+      </div>
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold text-cream">Đố</span>

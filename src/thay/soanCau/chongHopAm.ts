@@ -510,3 +510,100 @@ export function kieuCuaHop(gocPc: number, qualityId: string): AccidentalStyle {
 
 /** Các loại hợp âm chọn tự do — toàn bộ bộ hợp âm của app. */
 export const LOAI_TU_DO = CHORD_QUALITIES.map((q) => ({ id: q.id, kyHieu: q.symbol, ten: q.label }))
+
+/* ---------------- Bảng học thuộc — người dùng 9/10/2026: "hãy đưa ra công thức và quy luật chồng hợp âm như thế nào để tạo ra các hợp
+   âm màu … Tôi là người mới học … nếu có công thức đơn giản hóa và quy luật để ghép hợp âm từ 2 tay thì tôi có thể học thuộc". Mọi dòng
+   sinh từ CONG_THUC (đố và bảng không lệch nhau); câu quy luật là Claude rút từ chính 26 công thức, có test đối chiếu. ---------------- */
+
+/** Tên bậc của một nốt (nửa cung so với gốc) trong hợp âm `ct`: ♭3 hay ♯9, ♭5 hay ♯11, 6 hay 13 — tùy hợp âm. */
+export function tenBac(iv: number, ct: CongThuc): string {
+  const k = ct.kyHieu
+  switch (pc(iv)) {
+    case 0:
+      return '1'
+    case 1:
+      return '♭9'
+    case 2:
+      return '9'
+    case 3:
+      return ct.nhom === 'Át' ? '♯9' : '♭3'
+    case 4:
+      return '3'
+    case 5:
+      return k.includes('sus') ? '4' : '11'
+    case 6:
+      return ct.nhom === 'Nửa giảm · giảm' || k.includes('b5') ? '♭5' : '♯11'
+    case 7:
+      return '5'
+    case 8:
+      return ct.nhom === 'Át' ? '♭13' : '♯5'
+    case 9:
+      return k.includes('13') ? '13' : k === 'dim7' ? '𝄫7' : '6'
+    case 10:
+      return '♭7'
+    default:
+      return '7'
+  }
+}
+
+/** Vị trí tay phải (cách gốc bao nhiêu nửa cung) → thêm màu gì. Đếm bậc theo gam trưởng của gốc; ♭ là hạ nửa cung. */
+export const VI_TRI_TREN: readonly { cach: readonly number[]; ten: string; mau: string }[] = [
+  { cach: [4, 3], ten: 'trên bậc 3 hoặc ♭3', mau: 'ra hợp âm BẢY (thêm bậc 7)' },
+  { cach: [7], ten: 'trên bậc 5', mau: 'thêm 9' },
+  { cach: [9], ten: 'trên bậc 6', mau: 'thêm 6 — tay trái có ♭7 thì gọi là 13' },
+  { cach: [10], ten: 'thấp hơn gốc một cung (bậc ♭7)', mau: 'thêm ♭7 · 9 · 11 (thiếu bậc 3 thì gọi 9sus4)' },
+  { cach: [2], ten: 'cao hơn gốc một cung (bậc 2)', mau: 'thêm 9 · 11 · 13 (tay phải trưởng thì 11 thành ♯11)' },
+  { cach: [11], ten: 'thấp hơn gốc nửa cung (bậc 7)', mau: 'thêm 7 · 9 · ♯11' },
+  { cach: [6], ten: 'cách gốc ba cung (bậc ♭5)', mau: 'thêm ♭9 · ♯11 · 13' },
+  { cach: [8], ten: 'trên bậc ♭6', mau: 'thêm ♭13' },
+]
+
+/** Khung tay trái — bốn loại; cho biết hợp âm thuộc họ nào trước khi tay phải thêm màu. */
+export function khungTrai(ct: CongThuc): 'goc' | 'goc5' | 'ba' | 'khung7' {
+  const d = ct.duoi[0]!
+  if (d.length === 1) return 'goc'
+  if (d.length === 2 && (d[1] === 7 || d[1] === 6)) return 'goc5'
+  if (d.length === 3 && d[2] === 7) return 'ba'
+  return 'khung7'
+}
+export const KHUNG_TRAI: Readonly<Record<ReturnType<typeof khungTrai>, { ten: string; khi: string }>> = {
+  goc: { ten: 'Một nốt gốc', khi: 'tay phải đã đủ bậc 3 và bậc 7' },
+  goc5: { ten: 'Gốc – 5 (hay gốc – ♭5)', khi: 'hợp âm không có bậc 7 (6, 6/9, add9) — quãng năm làm nền' },
+  ba: { ten: 'Hợp âm ba của chính gốc', khi: 'tay phải chỉ lo phần màu ở trên (9, 11, ♯11)' },
+  khung7: { ten: 'Khung bảy: gốc – 3 – ♭7 (thứ: gốc – ♭3 – ♭7)', khi: 'mọi hợp âm 13 và màu át — app ghi khung này là "C7"' },
+}
+
+/** Cùng vị trí, đổi CHẤT hợp âm ba tay phải là đổi màu — mỗi dòng có test đối chiếu CONG_THUC. */
+export const QUY_LUAT_CHAT: readonly { cach: number; viTri: string; doi: readonly { loai: LoaiBa; ra: string }[] }[] = [
+  { cach: 9, viTri: 'trên bậc 6, khung át', doi: [{ loai: 'm', ra: '13' }, { loai: 'M', ra: '13b9' }] },
+  { cach: 4, viTri: 'trên bậc 3', doi: [{ loai: 'm', ra: 'maj7' }, { loai: 'dim', ra: '7' }, { loai: 'dim7', ra: '7b9' }] },
+  { cach: 3, viTri: 'trên bậc ♭3', doi: [{ loai: 'M', ra: 'm7' }, { loai: 'm', ra: 'm7b5' }, { loai: 'dim', ra: 'dim7' }, { loai: 'aug', ra: 'm(maj7)' }] },
+  { cach: 2, viTri: 'cao hơn gốc một cung', doi: [{ loai: 'm', ra: 'm13' }, { loai: 'M', ra: '13#11' }] },
+]
+
+/** Các dòng của bảng học thuộc, xếp theo vị trí tay phải — gốc Đô. */
+export function bangCongThuc() {
+  const dong = (ct: CongThuc) => {
+    const c = chongCongThuc(ct, 0, 'C', 'flat')
+    return { ct, nhan: c.nhan, khung: khungTrai(ct), bacPhai: quangTren(ct).map((iv) => tenBac(iv, ct)) }
+  }
+  return {
+    theoViTri: VI_TRI_TREN.map((v) => ({ ...v, dong: CONG_THUC.filter((ct) => !('iv' in ct.tren) && v.cach.includes(ct.tren.cach)).map(dong) })),
+    chum: CONG_THUC.filter((ct) => 'iv' in ct.tren).map(dong),
+  }
+}
+
+/**
+ * Cách tìm tay phải ở MỌI gốc: đếm gam trưởng của gốc tới bậc cần dùng (♭ hạ nửa cung) rồi dựng hợp âm ba lên nốt ấy — vd F♯13♭9:
+ * gam Fa♯ trưởng Fa♯ Sol♯ La♯ Si Đô♯ Rê♯ Mi♯ → bậc 6 là Rê♯ → tay phải D♯ (trưởng).
+ */
+export function cachTimTayPhai(ct: CongThuc, gocTen: string, style: AccidentalStyle): string {
+  if ('iv' in ct.tren) return `Tay phải là chùm nốt rời ${ct.tren.ten}, không phải hợp âm ba — bấm sát nhau ngay trên tay trái.`
+  const { cach, loai } = ct.tren
+  const GAM = [0, 2, 4, 5, 7, 9, 11]
+  const bac = ({ 2: 2, 3: 3, 4: 3, 6: 5, 7: 5, 8: 6, 9: 6, 10: 7, 11: 7 } as Record<number, number>)[cach]!
+  const gam = GAM.map((s, k) => vn(tenTheoChu(gocTen, s, k, style)))
+  const lech = cach - GAM[bac - 1]!
+  const not = vn(tenTheoChu(gocTen, cach, bac - 1, style))
+  return `Gam ${vn(gocTen)} trưởng: ${gam.join(' ')} → bậc ${bac} là ${gam[bac - 1]}${lech ? `, ${lech < 0 ? 'hạ' : 'nâng'} nửa cung thành ${not}` : ''} → tay phải hợp âm ${tenTren(ct, gocTen, style)} (${BA[loai].ten} trên ${not}).`
+}
