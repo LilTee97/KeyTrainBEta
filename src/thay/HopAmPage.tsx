@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GameChong } from './GameChong'
 import { HopAmMau } from './HopAmMau'
 import { ChongHopAm } from './SoanCau'
 import { VongTab } from './VongTab'
@@ -9,6 +10,7 @@ const TAB = [
   { id: 'chong', ten: 'Chồng hợp âm' },
   { id: 'mau', ten: 'Hợp âm màu' },
   { id: 'vong', ten: 'Tái hòa âm vòng' },
+  { id: 'game', ten: 'Game công thức' },
 ] as const
 
 const nut = (on: boolean) =>
@@ -34,29 +36,32 @@ export function HopAmPage() {
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-xs text-dim">
-        <span>Giọng — gốc ví dụ của mỗi hợp âm lấy theo giọng này</span>
-        <select
-          value={tonic}
-          onChange={(event) => setTonic(Number(event.target.value))}
-          className="rounded border border-line bg-white/6 px-1.5 py-1 text-cream"
-          aria-label="Giọng"
-        >
-          {GOC.map((ten, i) => (
-            <option key={ten} value={i}>
-              {ten}
-            </option>
+      {tab !== 'game' && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-dim">
+          <span>Giọng — gốc ví dụ của mỗi hợp âm lấy theo giọng này</span>
+          <select
+            value={tonic}
+            onChange={(event) => setTonic(Number(event.target.value))}
+            className="rounded border border-line bg-white/6 px-1.5 py-1 text-cream"
+            aria-label="Giọng"
+          >
+            {GOC.map((ten, i) => (
+              <option key={ten} value={i}>
+                {ten}
+              </option>
+            ))}
+          </select>
+          {[false, true].map((v) => (
+            <button key={String(v)} type="button" onClick={() => setThu(v)} className={nut(thu === v)}>
+              {v ? 'thứ' : 'trưởng'}
+            </button>
           ))}
-        </select>
-        {[false, true].map((v) => (
-          <button key={String(v)} type="button" onClick={() => setThu(v)} className={nut(thu === v)}>
-            {v ? 'thứ' : 'trưởng'}
-          </button>
-        ))}
-      </div>
+        </div>
+      )}
       {tab === 'chong' && <ChongHopAm tonic={tonic} thu={thu} />}
       {tab === 'mau' && <HopAmMau tonic={tonic} thu={thu} />}
       {tab === 'vong' && <VongTab tonic={tonic} thu={thu} />}
+      {tab === 'game' && <GameChong />}
     </section>
   )
 }

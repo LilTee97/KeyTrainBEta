@@ -491,6 +491,9 @@ Các hợp âm phải được chọn tự do …"*
 - **Thế bấm và cách chuyển hợp âm của từng thầy — xong 9/10/2026** (khung "Bấm như thầy" ở tab Tái hòa âm vòng; số đo ở SO-TAY) — đây là bước 5 cũ ("Chuyển hợp âm của thầy"), mở cho cả ba thầy. **Giới hạn nói trước:**
   21 sheet Cà Pháo · Linh Nhi · Blues không ghi số ngón (0 dấu `<fingering>`; chỉ Boogie Woogie có 37) — nên đo được THẾ BẤM (tay nào bấm
   nốt nào, thế đảo, slash chord, khoảng cách, nốt giữ / đi liền bậc khi chuyển), còn số ngón là Claude đề xuất từ thế bấm đo được.
+- **Bảng công thức chồng + game "Mưa hợp âm" — xong 9/10/2026.** Người dùng: *"hãy phá lệ làm game cho phần học thuộc công thức chồng
+  hợp âm này"* — NGOẠI LỆ của quyết định "không lớp game" (mục 4c), chỉ cho phần học thuộc công thức chồng: trang Hợp âm · tab Game công
+  thức (điểm, combo, mạng, màn mở dần). Các phần khác vẫn không lớp game.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

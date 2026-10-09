@@ -1,0 +1,103 @@
+import type { AccidentalStyle } from '../../shared/musicTheory/types'
+import { GOC } from '../vongThay'
+import { BA, chongCongThuc, CONG_THUC, tenTren, VI_TRI_TREN, type Chong, type CongThuc } from './chongHopAm'
+
+/*
+  GAME "MƯA HỢP ÂM" — người dùng 9/10/2026: "đã có công thức và quy luật rồi thì hãy làm thành Quiz hoặc game để tôi học thuộc bằng cách
+  thực hành vì tôi ghét học thuộc lòng lý thuyết. Có thể chơi bằng đàn Midi hoặc phím chuột hoặc cảm ứng trên Android", rồi "hãy phá lệ
+  làm game cho phần học thuộc công thức chồng hợp âm này" — ngoại lệ của luật "không lớp game", CHỈ cho phần này. Logic thuần (màn, chọn
+  câu, chấm, lựa chọn tên, điểm, tốc độ) ở đây; giao diện ở GameChong.tsx.
+*/
+
+const pc = (x: number) => ((x % 12) + 12) % 12
+
+export type DoKho = 'de' | 'vua' | 'kho'
+export type GocChoi = 'do' | 'trang' | 'tat'
+export type CachNhap = 'giu' | 'cham' | 'chon'
+
+/** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭). */
+export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
+
+const theoCach = (cach: readonly number[]) => CONG_THUC.filter((c) => !('iv' in c.tren) && cach.includes(c.tren.cach)).map((c) => c.id)
+
+/** Sáu màn theo đúng quy luật 1 của bảng công thức (vị trí tay phải); màn 6 trộn cả 26 công thức. */
+export const MAN: readonly { ten: string; goiY: string; ct: readonly string[] }[] = [
+  { ten: 'Hợp âm bảy', goiY: 'tay phải trên bậc 3 hoặc ♭3', ct: theoCach(VI_TRI_TREN[0]!.cach) },
+  { ten: 'Thêm 9', goiY: 'tay phải trên bậc 5', ct: theoCach(VI_TRI_TREN[1]!.cach) },
+  { ten: '6 và 13', goiY: 'tay phải trên bậc 6', ct: theoCach(VI_TRI_TREN[2]!.cach) },
+  { ten: '11 và 13', goiY: 'tay phải cách gốc một cung', ct: theoCach([...VI_TRI_TREN[3]!.cach, ...VI_TRI_TREN[4]!.cach]) },
+  {
+    ten: 'Màu xa',
+    goiY: 'nửa cung dưới gốc · cách ba cung · bậc ♭6 · chùm nốt',
+    ct: [...theoCach([...VI_TRI_TREN[5]!.cach, ...VI_TRI_TREN[6]!.cach, ...VI_TRI_TREN[7]!.cach]), ...CONG_THUC.filter((c) => 'iv' in c.tren).map((c) => c.id)],
+  },
+  { ten: 'Trộn tất cả', goiY: 'cả 26 công thức', ct: CONG_THUC.map((c) => c.id) },
+]
+
+export const GOC_CHOI: Readonly<Record<GocChoi, readonly number[]>> = { do: [0], trang: [0, 2, 4, 5, 7, 9, 11], tat: [...Array(12).keys()] }
+
+export interface CauGame {
+  ct: CongThuc
+  g: number
+  chong: Chong
+  /** "tay phải trên bậc 6 · trưởng" — gợi ý ở độ khó Dễ. */
+  goiY: string
+}
+
+export function taoCau(ct: CongThuc, g: number): CauGame {
+  const chong = chongCongThuc(ct, g, GOC[g]!, kieuGoc(g))
+  const viTri = 'iv' in ct.tren ? 'chùm nốt rời' : `${VI_TRI_TREN.find((v) => !('iv' in ct.tren) && v.cach.includes((ct.tren as { cach: number }).cach))!.ten} · ${BA[(ct.tren as { loai: keyof typeof BA }).loai].ten}`
+  return { ct, g, chong, goiY: `tay phải ${viTri}` }
+}
+
+/** Chọn câu kế: công thức vừa sai nặng thêm (1 + 2 × số lần sai) — câu sai quay lại nhiều hơn; không lặp đúng câu vừa rồi. */
+export function chonCau(ids: readonly string[], goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauGame {
+  const ung = ids.length > 1 && truoc ? ids.filter((x) => x !== truoc) : [...ids]
+  const nang = ung.map((id) => 1 + 2 * (sai.get(id) ?? 0))
+  let r = rand() * nang.reduce((s, x) => s + x, 0)
+  let k = 0
+  for (; k < ung.length - 1; k++) {
+    r -= nang[k]!
+    if (r < 0) break
+  }
+  return taoCau(CONG_THUC.find((c) => c.id === ung[k])!, goc[Math.floor(rand() * goc.length)]!)
+}
+
+const tapLop = (ns: readonly number[]) => new Set(ns.map(pc))
+const bang = (a: ReadonlySet<number>, b: ReadonlySet<number>) => a.size === b.size && [...a].every((x) => b.has(x))
+
+/** Tay phải đúng: đúng các lớp cao độ của tay phải — quãng tám nào, thế đảo nào cũng được (bấm kèm cả khung tay trái cũng tính). */
+export const dungTayPhai = (ns: readonly number[], c: Chong) => ns.length > 0 && (bang(tapLop(ns), tapLop(c.phai)) || bang(tapLop(ns), tapLop([...c.trai, ...c.phai])))
+
+/** Hai tay đúng (độ khó Khó): đủ lớp cao độ của cả hai tay và nốt thấp nhất là gốc. */
+export const dungHaiTay = (ns: readonly number[], c: Chong) =>
+  ns.length > 0 && pc(Math.min(...ns)) === c.goc && bang(tapLop(ns), tapLop([...c.trai, ...c.phai]))
+
+/** Số lớp cao độ phải chạm (chế độ chạm từng nốt): chạm đủ số ấy mà chưa đúng là sai. */
+export const soCanCham = (c: Chong, haiTay: boolean) => (haiTay ? tapLop([...c.trai, ...c.phai]) : tapLop(c.phai)).size
+
+const tron = <T,>(ds: readonly T[], rand: () => number) => {
+  const a = [...ds]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    ;[a[i], a[j]] = [a[j]!, a[i]!]
+  }
+  return a
+}
+
+/** Bốn tên tay phải để chọn: một đúng, ba nhiễu cùng gốc — ưu tiên công thức cùng họ; câu hợp âm ba thì không lẫn tên chùm nốt. */
+export function luaChonTen(cau: CauGame, rand: () => number = Math.random): string[] {
+  const dung = cau.chong.nhan.phai
+  const chum = 'iv' in cau.ct.tren
+  const khac = CONG_THUC.filter((c) => c.id !== cau.ct.id && (chum || !('iv' in c.tren)))
+  const thuTu = [...tron(khac.filter((c) => c.nhom === cau.ct.nhom), rand), ...tron(khac.filter((c) => c.nhom !== cau.ct.nhom), rand)]
+  const nhieu = [...new Set(thuTu.map((c) => tenTren(c, GOC[cau.g]!, kieuGoc(cau.g))))].filter((x) => x !== dung).slice(0, 3)
+  return tron([dung, ...nhieu], rand)
+}
+
+/** Điểm một câu: 10 × (1 + combo/5 làm tròn xuống). */
+export const diemCau = (combo: number) => 10 * (1 + Math.floor(combo / 5))
+/** Thời gian rơi (mili giây): nhanh dần 3% mỗi câu đúng, không dưới 4 giây. */
+export const thoiGianRoi = (doKho: DoKho, daDung: number) => Math.max(4000, { de: 14000, vua: 10000, kho: 9000 }[doKho] * 0.97 ** daDung)
+/** Điểm để mở màn sau. */
+export const DAT_MAN = 100

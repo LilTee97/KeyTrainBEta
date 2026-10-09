@@ -5,7 +5,6 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
-import type { AccidentalStyle } from '../shared/musicTheory/types'
 import type { LuotTap } from '../shared/persistence/db'
 import {
   cachTimTayPhai,
@@ -47,6 +46,7 @@ import {
 } from './soanCau/soanCau'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { BangCongThuc } from './BangCongThuc'
+import { kieuGoc } from './soanCau/gameChong'
 import { TapSolo } from './TapSolo'
 import type { Teacher } from './teachers'
 import { GOC, kieuDau, vongMau } from './vongThay'
@@ -422,7 +422,6 @@ const DANG_DO: readonly { id: DangDo; ten: string }[] = [
 ]
 const ngauNhien = <T,>(ds: readonly T[]) => ds[Math.floor(Math.random() * ds.length)]!
 /** Gốc đặt ngẫu nhiên gọi theo `GOC` (C♯, E♭, F♯, A♭, B♭). */
-const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
 const lopCao = (ds: readonly number[]) => [...new Set(ds.map((m) => ((m % 12) + 12) % 12))]
 
 /**

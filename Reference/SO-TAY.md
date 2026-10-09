@@ -6143,3 +6143,25 @@ quy luật để ghép hợp âm từ 2 tay thì tôi có thể học thuộc"*.
 thật; bốn khung; cách tìm tay phải F♯13♭9 · Cm11 · C13♭9♯11) · toàn suite **2 697 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử
 headless 8/8 (bảng, ba quy luật, Thử C13♭9 → tay trái C7 + tay phải A; đổi gốc F♯ → F♯7 + D♯ = F♯13♭9 như ảnh, dòng "bậc 6 là Rê♯"),
 chạy lại chồng tự do 7/7, đố một tay 4/4, luật 4 nốt 6/6 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: game "Mưa hợp âm" — học thuộc công thức chồng bằng tay (9/10/2026)
+
+**Người dùng:** *"đã có công thức và quy luật rồi thì hãy làm thành Quiz hoặc game để tôi học thuộc bằng cách thực hành vì tôi ghét học
+thuộc lòng lý thuyết. Có thể chơi bằng đàn Midi hoặc phím chuột hoặc cảm ứng trên Android"*, rồi *"hãy phá lệ làm game cho phần học thuộc
+công thức chồng hợp âm này"* — ngoại lệ của luật "không lớp game" (KE-HOACH mục 4c), chỉ cho phần này.
+
+- `soanCau/gameChong.ts` (mới, logic thuần): 6 màn theo quy luật 1 của bảng công thức (bảy · 9 · 6/13 · một cung · màu xa · trộn — năm màn
+  đầu chia hết 26 công thức); `chonCau` (công thức vừa sai nặng 1 + 2 × số lần sai — câu sai rơi lại nhiều hơn, không lặp câu vừa rồi);
+  `dungTayPhai` (đúng lớp cao độ tay phải, quãng tám / thế đảo nào cũng được), `dungHaiTay` (Khó: đủ hai tay, bass là gốc); `luaChonTen`
+  (bốn tên, nhiễu cùng gốc, ưu tiên cùng họ, câu hợp âm ba không lẫn chùm nốt); `diemCau` (10 × (1 + combo/5)); `thoiGianRoi` (Dễ 14 s ·
+  Vừa 10 s · Khó 9 s, nhanh 3% mỗi câu đúng, sàn 4 s); mở màn sau khi đạt 100 điểm. `kieuGoc` dời về đây (SoanCau dùng chung).
+- `GameChong.tsx` (mới) — trang Hợp âm · tab "Game công thức": viên tên hợp âm rơi trong 4 làn, viên viền cam đang đố, bàn phím sáng khung tay
+  trái; đúng → cộng điểm, combo, nghe hợp âm vừa ghép; trượt → mất mạng, hiện công thức + cách đếm gam; 3 mạng; tạm dừng (tự dừng khi ẩn
+  trang); tổng kết có "công thức cần ôn"; kỷ lục và màn đã mở lưu localStorage. Ba cách nhập: giữ hợp âm (đàn MIDI · phím máy tính · nhiều
+  ngón), chạm từng nốt (chuột · cảm ứng — chạm đủ số nốt là chấm), chọn tên (bốn nút cao 48 px cho điện thoại). Vòng khung hình chỉ vẽ lại
+  vùng mưa; trạng thái game giữ trong ref.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `gameChong.test.ts` 6 · toàn suite **2 703 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless
+10/10 (giữ hợp âm 10 viên → 150 điểm = 5 × 10 + 5 × 20 combo; tạm dừng viên đứng yên; dừng → mở màn 2; chạm sai đủ nốt → "Chưa đúng",
+chạm đúng → 10; chọn tên đúng → 10; để viên chạm đáy → "Trượt" + cách đếm gam, còn 2 mạng; tổng kết có công thức cần ôn) · khổ điện thoại
+412 px: không cuộn ngang, nút chọn 48 px · `LuyenTap.json`, `Nguon.json` không đổi (game không ghi nhật ký lượt tập).
