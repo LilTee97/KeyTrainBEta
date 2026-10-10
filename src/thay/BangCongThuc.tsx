@@ -3,7 +3,7 @@ import { playChord, startAudio } from '../shared/audio/audioEngine'
 import { pitchClassName } from '../shared/musicTheory/pitch'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { CONG_THUC, hauDep, vn } from './soanCau/chongHopAm'
-import { bacCua, bangCongLoai, bangTheoLoai, LUAT_SO, MEO_VANG } from './soanCau/meoChong'
+import { bacCua, bangCongLoai, bangTheoLoai, LUAT_SO, MEO_VANG, QUY_TAC_HO } from './soanCau/meoChong'
 import { QUY_LUAT_SLASH, SLASH_DAO, SLASH_MAU, SLASH_THAY, theSlash, type SlashMau, type ViDuSlash } from './soanCau/slashChong'
 
 const nutThu = 'rounded border border-line bg-white/4 px-2 py-0.5 text-[11px] text-dim hover:bg-white/8'
@@ -92,10 +92,22 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
         ))}
       </ul>
 
-      <p className="mt-3 font-semibold text-cream">Bảng 26 loại theo họ — phép cộng loại và ví dụ gốc Đô</p>
+      <p className="mt-3 font-semibold text-cream">Các họ giống nhau ở đâu — học một họ là kéo ra họ khác</p>
+      <ol className="ml-5 list-decimal">
+        {QUY_TAC_HO.map((q) => (
+          <li key={q}>{q}</li>
+        ))}
+      </ol>
+
+      <p className="mt-3 font-semibold text-cream">Bảng 26 loại theo họ — điểm chung của họ, phép cộng loại và ví dụ gốc Đô</p>
       {bangTheoLoai().map((h) => (
         <div key={h.ten} className="mt-1.5">
           <p className="text-teal-key">{h.ten}</p>
+          <ul className="ml-5 list-disc text-cream/85">
+            {h.chung.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
           <ul className="mt-0.5 ml-3 flex flex-col gap-1">
             {h.dong.map((d) => (
               <li key={d.ct.id}>

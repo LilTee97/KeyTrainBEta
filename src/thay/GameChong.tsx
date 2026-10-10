@@ -590,6 +590,16 @@ export function GameChong() {
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>
           <summary className="cursor-pointer text-teal-key">{MAN[man]!.meo ? 'Quy luật của màn này' : 'Mẹo cộng loại của màn này — tay trái + tay phải'}</summary>
+          {MAN[man]!.chung && (
+            <div className="mt-1 rounded border border-teal-key/20 p-1.5">
+              <p className="font-semibold text-teal-key">{MAN[man]!.chung!.tieuDe}</p>
+              <ul className="ml-4 list-disc">
+                {MAN[man]!.chung!.ds.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           {MAN[man]!.meo ? (
             <ul className="mt-1 flex flex-col gap-0.5">
               {MAN[man]!.meo!.map((m) => (

@@ -6300,3 +6300,26 @@ nốt; luật slash không đếm phím) · toàn suite **2 714 qua / 5 đỏ** 
 ô thông tin, viên "F7 + Bm · khung 7 + thứ", lời sai / đúng, khung mẹo của màn, phím đáp án vẫn sáng dần, viên slash, điện thoại không cuộn
 ngang), chạy lại hai bên 12/12, theo loại 10/10, slash 19/19, nhãn khi giữ 2/2 (câu kiểm đổi theo chữ mới) · `LuyenTap.json`, `Nguon.json`
 không đổi.
+
+## Bước — GĐ 3: điểm chung theo HỌ hợp âm — quy tắc và mẹo cùng họ (10/10/2026)
+
+**Người dùng:** *"hãy phân tích theo các loại hợp âm cùng họ để đưa ra quy tắc và mẹo khi cùng họ thì có những điểm chung gì để dễ học"*.
+
+- **Số đo trên 26 công thức (gốc Đô):** nốt có ở MỌI loại của họ — họ trưởng (6 loại): Đô Mi Sol, tức nguyên hợp âm C, và 0/6 có Si♭; họ
+  thứ (7): Đô Mi♭ (m13 không có Sol); họ nửa giảm & giảm (3): Đô Mi♭ Sol♭ = nguyên Cdim; họ át cơ bản (4): Đô Si♭ (9sus4 thay Mi bằng Fa);
+  họ át nốt căng (6): Đô Mi Si♭ + ít nhất một nốt căng (Rê♭ / Sol♭ / La♭). Cặp loại cùng tay trái mà tay phải chỉ khác MỘT nốt: **19 cặp**.
+  Tay phải dùng chung giữa các họ: 3 cặp (C6 · C13 = Am; Cm9 · C9 = Gm; Cm11 · C9sus4 = B♭). Cầu thang 7 → 9 → 11 → 13 ở họ trưởng (Em →
+  G → Bm), họ thứ (E♭ → Gm → B♭ → Dm), họ át (Edim → Gm → B♭): tay phải loại sau giữ đúng hai nốt trên của loại trước. Bảy giảm: 3 hợp âm
+  khác nhau trên 12 gốc. Họ trưởng ở gốc Đô toàn phím trắng, trừ maj9♯11 (Fa♯).
+- **Sửa một lời Claude đã nói (10/10/2026, khi hỏi chọn kiểu mẹo):** "Amaj9 + ♯11 phải đổi cả hợp âm (E → G♯m)" là sai — đo lại thì maj9 →
+  maj9♯11 chỉ đổi một nốt (G thành Bm: Sol thành Fa♯, giữ Si – Rê).
+- `meoChong.ts`: `HO_LOAI` thêm `chung` (4 câu mỗi họ: dấu hiệu · cầu thang hay nhóm không 7 · đổi một nốt · mẹo nhớ); `QUY_TAC_HO` (4 điểm
+  chung giữa các họ). Lời và cách gom là của Claude; mỗi câu có test đối chiếu công thức.
+- Bảng tab Chồng hợp âm: mục "Các họ giống nhau ở đâu" và điểm chung dưới tên từng họ. Game: khung mẹo bên luyện của màn theo họ có "Điểm
+  chung của họ …", màn trộn có "Điểm chung giữa các họ", màn slash giữ quy luật riêng.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 14 (thêm 5: nốt dấu hiệu từng họ; cầu thang giữ hai nốt trên và lời ghi đúng
+nốt; đúng 19 cặp đổi một nốt, gồm mọi cặp lời đã nêu; 3 tay phải dùng chung; bảy giảm 3 cái, họ trưởng phím trắng, nốt căng hai dạng tay
+trái) · `gameChong.test.ts` 10 · toàn suite **2 719 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless 7/7 (bảng: mục giữa các
+họ, 5 dòng dấu hiệu, cầu thang ghi đúng nốt; game: màn họ trưởng có điểm chung, màn slash không, màn trộn có điểm chung giữa các họ; điện
+thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

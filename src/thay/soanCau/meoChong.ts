@@ -17,13 +17,70 @@ import { BA, CONG_THUC, chongCongThuc, hauDep, quangTren, tenBac, type CongThuc 
 /** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭) — đúng cách ghi của `GOC`. */
 export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
 
-/** Năm họ, mỗi họ xếp từ dễ tới khó — thứ tự học và thứ tự màn game. */
-export const HO_LOAI: readonly { ten: string; ids: readonly string[] }[] = [
-  { ten: 'Họ trưởng', ids: ['maj7', '6', 'add9', '69', 'maj9', 'maj9#11'] },
-  { ten: 'Họ thứ', ids: ['m7', 'm6', 'madd9', 'mMaj7', 'm9', 'm11', 'm13'] },
-  { ten: 'Họ nửa giảm và giảm', ids: ['m7b5', 'm11b5', 'dim7'] },
-  { ten: 'Họ át — cơ bản', ids: ['7', '9', '13', '9sus4'] },
-  { ten: 'Họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)', ids: ['7b9', '7b5', '7b13', '13b9', '13#11', '13b9#11'] },
+/**
+ * Năm họ, mỗi họ xếp từ dễ tới khó — thứ tự học và thứ tự màn game. `chung`: điểm chung của các loại trong họ — người dùng 10/10/2026:
+ * "hãy phân tích theo các loại hợp âm cùng họ để đưa ra quy tắc và mẹo khi cùng họ thì có những điểm chung gì để dễ học". Mỗi câu là số
+ * đo trên chính 26 công thức (gốc Đô), có test trong meoChong.test.ts; lời và cách gom là của Claude.
+ */
+export const HO_LOAI: readonly { ten: string; ids: readonly string[]; chung: readonly string[] }[] = [
+  {
+    ten: 'Họ trưởng',
+    ids: ['maj7', '6', 'add9', '69', 'maj9', 'maj9#11'],
+    chung: [
+      'Dấu hiệu: cả 6 loại đều chứa nguyên hợp âm C (Đô – Mi – Sol) rồi thêm màu; không loại nào có Si♭ — có 7 thì là Si.',
+      'Có 7 — tay phải leo cầu thang: Cmaj7 = Đô + Em → Cmaj9 = C + G → Cmaj9♯11 = C + Bm. Bậc sau giữ hai nốt trên của bậc trước: Mi Sol Si → Sol Si Rê → Si Rê Fa♯.',
+      'Không 7 — tay trái Đô – Sol, tay phải quanh La – Rê – Mi, mỗi loại đổi một nốt: C6 = Am (La Đô Mi) → C6/9 = Asus4 (Đô thành Rê) → Cadd9 = chùm Rê Mi Sol (La thành Sol).',
+      'Ở gốc Đô cả họ toàn phím trắng — trừ Fa♯ của Cmaj9♯11, màu lạ duy nhất của họ.',
+    ],
+  },
+  {
+    ten: 'Họ thứ',
+    ids: ['m7', 'm6', 'madd9', 'mMaj7', 'm9', 'm11', 'm13'],
+    chung: [
+      'Dấu hiệu: cả 7 loại đều có Đô và Mi♭ (3 thứ).',
+      'Có 7 — cầu thang: Cm7 = Đô + E♭ → Cm9 = Cm + Gm → Cm11 = Cm + B♭ → Cm13 = Cm7 + Dm. Bậc sau giữ hai nốt trên của bậc trước: Mi♭ Sol Si♭ → Sol Si♭ Rê → Si♭ Rê Fa → Rê Fa La.',
+      'Không 7 = họ trưởng hạ Mi xuống Mi♭: Cm6 = Adim (C6 là Am), Cm(add9) = chùm Rê Mi♭ Sol (Cadd9 là Rê Mi Sol).',
+      'Cm(maj7) = Cm7 nâng Si♭ lên Si: E♭ thành E♭+ (Mi♭ Sol Si).',
+    ],
+  },
+  {
+    ten: 'Họ nửa giảm và giảm',
+    ids: ['m7b5', 'm11b5', 'dim7'],
+    chung: [
+      'Dấu hiệu: cả 3 loại đều chứa nguyên Cdim (Đô – Mi♭ – Sol♭).',
+      'Tay phải luôn đứng trên Mi♭, chỉ đổi loại: E♭m (m7♭5) · E♭sus2 (m11♭5) · E♭dim (dim7).',
+      'Đi từ Cm7, mỗi bước hạ một nốt: Cm7 (E♭: Mi♭ Sol Si♭) → Cm7♭5 (E♭m: Sol thành Sol♭) → Cdim7 (E♭dim: Si♭ thành La).',
+      'Bảy giảm cách đều nhau nên cả bàn phím chỉ có 3 hợp âm bảy giảm khác nhau: Cdim7 = E♭dim7 = G♭dim7 = Adim7.',
+    ],
+  },
+  {
+    ten: 'Họ át — cơ bản',
+    ids: ['7', '9', '13', '9sus4'],
+    chung: [
+      'Dấu hiệu: cả 4 loại đều có Đô và Si♭ (♭7); 3 loại có Mi, riêng 9sus4 thay Mi bằng Fa.',
+      'Cầu thang: C7 = Đô + Edim → C9 = Đô – Mi + Gm → C9sus4 = Đô + B♭ (Mi Sol Si♭ → Sol Si♭ Rê → Si♭ Rê Fa). Không leo tiếp lên Dm vì Fa chọi Mi — C13 lấy Am.',
+      'Mượn tay phải của họ khác, chỉ đổi tay trái: C9 dùng Gm như Cm9 · C13 dùng Am như C6 · C9sus4 dùng B♭ như Cm11.',
+      'C7 = Cmaj7 hạ Si xuống Si♭ (Em thành Edim) = Cm7 nâng Mi♭ lên Mi (E♭ thành Edim).',
+    ],
+  },
+  {
+    ten: 'Họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)',
+    ids: ['7b9', '7b5', '7b13', '13b9', '13#11', '13b9#11'],
+    chung: [
+      'Dấu hiệu: cả 6 loại vẫn có Đô – Mi – Si♭ (vẫn là át), thêm nốt căng: Rê♭ (♭9), Fa♯ = Sol♭ (♭5 · ♯11), La♭ (♭13).',
+      'Tay trái một nốt gốc = sửa C7 (Edim): C7♭9 thêm Rê♭ (Edim7); C7♭5 hạ Sol xuống Sol♭.',
+      'Tay trái khung C7 (Đô – Mi – Si♭) = sửa C13 (Am), mỗi bước đổi một nốt: Am → A (Đô thành Đô♯) = 13♭9; A → G♭m (Mi thành Sol♭) = 13♭9♯11; G♭m → D (Rê♭ thành Rê) = 13♯11; Am → A♭+ (La thành La♭) = 7♭13.',
+      'Nốt căng là nốt lệch nửa cung khỏi nốt quen (Rê♭ sát Rê, Fa♯ sát Fa, La♭ sát La) — nghe căng, đòi giải về.',
+    ],
+  },
+]
+
+/** Điểm chung GIỮA các họ — số đo trên 26 công thức, gốc Đô (test ở meoChong.test.ts). */
+export const QUY_TAC_HO: readonly string[] = [
+  'Mỗi họ có nốt dấu hiệu: họ trưởng chứa nguyên C (Đô – Mi – Sol); họ thứ có Mi♭; họ nửa giảm & giảm chứa nguyên Cdim (Đô – Mi♭ – Sol♭); họ át có Si♭ (cả 10 loại). Nhìn đuôi tên là biết họ, biết nốt nào chắc chắn có.',
+  'Cầu thang 7 → 9 → 11 → 13 (họ trưởng, thứ, át): tay phải loại sau giữ hai nốt trên của tay phải loại trước — thuộc loại 7 là kéo ra cả họ.',
+  'Đổi một nốt là sang loại khác, tay trái giữ nguyên — trong 26 công thức có 19 cặp như vậy, vd Mi ↔ Mi♭ (C6 ↔ Cm6, C7 ↔ Cm7), Si ↔ Si♭ (Cmaj7 ↔ C7), Sol → Sol♭ (Cm7 → Cm7♭5), Đô → Đô♯ (C13 → C13♭9).',
+  'Ba tay phải dùng chung giữa các họ — chỉ tay trái khác: Gm (Cm9 · C9), Am (C6 · C13), B♭ (Cm11 · C9sus4).',
 ]
 
 /** Thứ tự đọc công thức như sách — chồng quãng ba: 1 · 3 · 5 · 7 · 9 · 11 · 13 (sus4 thế chỗ bậc 3, 6 đứng trước 7). */
