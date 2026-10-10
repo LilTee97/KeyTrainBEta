@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { BA, CONG_THUC, pcsDuoi, pcsTong, pcsTren, quangTren, tenHaiTay, tenTren } from './chongHopAm'
-import { bacCua, bangCongLoai, bangTheoLoai, congLoai, dangTrai, HO_LOAI, LUAT_SO, meoCua, MEO_VANG, QUY_TAC_HO, trungCongLoai } from './meoChong'
+import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
+import { CONG_THUC, pcsDuoi, pcsTong, pcsTren, quangTren, tenTren } from './chongHopAm'
+import { bacCua, bangCongLoai, bangTheoDuoi, congLoai, dangTrai, duoiCua, HO_LOAI, NHOM_DUOI, QUY_TAC_DUOI, trungCongLoai } from './meoChong'
 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
-const lop = (goc: number, iv: readonly number[]) => [...new Set(iv.map((x) => (goc + x) % 12))].sort((a, b) => a - b)
+/** Lớp cao độ ở gốc Đô của một hàng bảng: công thức chồng, hay hợp âm ba cơ bản `q:<loại>`. */
+const nhac = (id: string) => (id.startsWith('q:') ? chordPitchClasses(0, getChordQuality(id.slice(2))!) : pcsTong(ct(id), 0))
 
-describe('quy luật và mẹo theo loại hợp âm', () => {
-  it('năm họ chia hết 26 loại, không trùng', () => {
+describe('quy luật và mẹo', () => {
+  it('năm họ (chia màn game) chia hết 26 loại, không trùng', () => {
     const ids = HO_LOAI.flatMap((h) => h.ids)
     expect(ids.length).toBe(26)
     expect([...ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-    expect(bangTheoLoai().flatMap((h) => h.dong).length).toBe(26)
   })
 
   it('bậc hai tay đúng nốt — vd 13♭9: tay trái 1 · 3 · ♭7, tay phải 13 · ♭9 · 3', () => {
@@ -18,36 +19,104 @@ describe('quy luật và mẹo theo loại hợp âm', () => {
     expect(bacCua(ct('m11b5')).phai).toEqual(['♭3', '11', '♭7'])
     expect(bacCua(ct('dim7')).caHai).toEqual(['1', '♭3', '♭5', '𝄫7'])
   })
+})
 
-  it('quy luật con số đúng với mọi loại được nêu', () => {
-    for (const l of LUAT_SO) l.ids.forEach((id, k) => expect([id, bacCua(ct(id)).phai]).toEqual([id, [...l.phai[k]!]]))
+describe('theo đuôi — muốn chồng ra loại nào (gốc Đô)', () => {
+  it('16 nhóm phủ đủ 26 công thức và 6 hợp âm ba cơ bản, mỗi hợp âm đúng một nhóm', () => {
+    const ids = NHOM_DUOI.flatMap((n) => n.ids)
+    expect(NHOM_DUOI).toHaveLength(16)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids.filter((id) => !id.startsWith('q:')).sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
+    expect(ids.filter((id) => id.startsWith('q:')).sort()).toEqual(['q:aug', 'q:dim', 'q:maj', 'q:min', 'q:sus2', 'q:sus4'])
+    expect(ids.filter((id) => id.startsWith('q:')).every((id) => getChordQuality(id.slice(2)))).toBe(true)
   })
 
-  it('mọi loại có mẹo; câu mẹo gọi đúng tên tay phải ở gốc Đô', () => {
-    for (const c of CONG_THUC) {
-      const m = meoCua(c)
-      expect(m.length).toBeGreaterThan(15)
-      if (!('iv' in c.tren)) expect(m).toContain(tenTren(c, 'C', 'flat'))
+  it('nốt dấu hiệu của từng nhóm đúng với mọi hợp âm trong nhóm', () => {
+    for (const n of NHOM_DUOI)
+      for (const id of n.ids) {
+        const p = nhac(id)
+        expect([n.ten, id, n.co.filter((x) => !p.includes(x)), n.khong.filter((x) => p.includes(x)), !n.coMot || n.coMot.some((x) => p.includes(x))]).toEqual([
+          n.ten,
+          id,
+          [],
+          [],
+          true,
+        ])
+      }
+  })
+
+  it('cách chồng: lời ghi đúng tên tay phải của từng công thức, và đúng chỗ dựng tay phải', () => {
+    for (const n of bangTheoDuoi()) for (const d of n.dong.filter((x) => !x.id.startsWith('q:'))) expect([n.ten, d.id, n.cach.includes(d.phai)]).toEqual([n.ten, d.id, true])
+    const cach = (id: string) => (ct(id).tren as { cach: number }).cach
+    expect(['6', 'm6', '69', 'add9', 'madd9'].map((id) => dangTrai(ct(id)))).toEqual(Array(5).fill('gốc – 5')) // nhóm 6 và add9: tay trái Đô – Sol
+    expect(['6', 'm6', '69'].map(cach)).toEqual([9, 9, 9]) // tay phải dựng trên La
+    expect(['m7b5', 'dim7', 'm11b5'].map(cach)).toEqual([3, 3, 3]) // nhóm giảm: tay phải đứng trên Mi♭
+    expect(['maj9', '9', 'm9'].map(cach)).toEqual([7, 7, 7]) // nhóm 9: tay phải dựng trên Sol
+    expect(['7', 'm7', 'maj7', 'mMaj7'].map(cach)).toEqual([4, 3, 4, 3]) // nhóm 7, maj7: tay phải dựng trên nốt 3
+    expect(['13', 'm13'].map((id) => [dangTrai(ct(id)), pcsTren(ct(id), 0).includes(9)])).toEqual([['khung 7', true], ['khung m7', true]])
+  })
+
+  it('hợp âm ba cơ bản: trưởng đổi một nốt ra thứ / tăng / sus4 / sus2; thứ hạ Sol ra giảm; tăng chia đều', () => {
+    const q = (id: string, g = 0) => [...chordPitchClasses(g, getChordQuality(id)!)].sort((a, b) => a - b)
+    const khac = (a: number[], b: number[]) => [a.filter((x) => !b.includes(x)), b.filter((x) => !a.includes(x))]
+    expect(['min', 'aug', 'sus4', 'sus2'].map((id) => khac(q('maj'), q(id)))).toEqual([
+      [[4], [3]],
+      [[7], [8]],
+      [[4], [5]],
+      [[4], [2]],
+    ])
+    expect(khac(q('min'), q('dim'))).toEqual([[7], [6]])
+    expect([q('aug', 4), q('aug', 8)]).toEqual([q('aug'), q('aug')])
+    expect(new Set([...Array(12).keys()].map((g) => [...pcsTong(ct('dim7'), g)].sort((a, b) => a - b).join())).size).toBe(3) // 3 hợp âm bảy giảm
+  })
+
+  it('cầu thang 7 → 9 → 11 → 13: tay phải loại sau giữ đúng hai nốt trên của loại trước; lời ghi đúng tên', () => {
+    const phai = (id: string) => quangTren(ct(id)).map((x) => x % 12)
+    for (const day of [['maj7', 'maj9', 'maj9#11'], ['m7', 'm9', 'm11', 'm13'], ['7', '9', '9sus4']]) {
+      for (let i = 1; i < day.length; i++) {
+        const [a, b] = [phai(day[i - 1]!), phai(day[i]!)]
+        expect([day[i], b[0], new Set(b.filter((p) => a.includes(p)))]).toEqual([day[i], a[1], new Set(a.slice(1))])
+      }
+      expect(QUY_TAC_DUOI[1]).toContain(day.map((id) => tenTren(ct(id), 'C', 'flat')).join(' → '))
     }
-    expect(meoCua(ct('13b9'))).toBe('khung 7 + trưởng — gốc Đô: khung C7 + A — như C13 (Am) nhưng Đô lên Đô♯')
   })
 
-  it('mẹo vàng đúng với công thức thật', () => {
-    expect(MEO_VANG).toHaveLength(6)
-    const tren = (id: string) => ct(id).tren as { loai: keyof typeof BA; cach: number }
-    // mẹo 1: đuôi số → bậc tay phải (6 → bậc 6, 7 → bậc 3 / ♭3, 9 → bậc 5, 11 → ♭7, 13 → bậc 9 hay 13)
-    expect(['6', 'maj7', 'm7', 'maj9', 'm11', 'm13', '13'].map((id) => tren(id).cach)).toEqual([9, 4, 3, 7, 10, 2, 9])
-    // mẹo 2: chất tay phải của loại 7
-    expect(['maj7', '7', 'm7', 'm7b5', 'dim7', 'mMaj7'].map((id) => BA[tren(id).loai].ten)).toEqual(['thứ', 'giảm', 'trưởng', 'thứ', 'giảm', 'tăng'])
-    // mẹo 3: cùng chỗ, đổi chất
-    expect(['maj7', '7', 'm7', 'm7b5'].map((id) => tren(id).cach)).toEqual([4, 4, 3, 3])
-    // mẹo 4: hợp âm 9 — tay phải là hợp âm bậc V của gốc
-    expect(['maj9', 'm9', '9'].map((id) => tenTren(ct(id), 'C', 'flat'))).toEqual(['G', 'Gm', 'Gm'])
-    // mẹo 5: nốt căng = đổi một nốt
-    expect([tenTren(ct('13'), 'C', 'flat'), tenTren(ct('13b9'), 'C', 'flat')]).toEqual(['Am', 'A'])
-    // mẹo 6: tăng và bảy giảm nhiều tên cùng nốt
-    expect(lop(8, BA.aug.iv)).toEqual(lop(0, BA.aug.iv))
-    expect(lop(4, BA.dim7.iv)).toEqual(lop(1, BA.dim7.iv))
+  it('đổi một nốt tay phải, tay trái giữ nguyên: đúng 19 cặp, gồm mọi cặp lời đã nêu', () => {
+    const motNot = (a: string, b: string) => {
+      if (pcsDuoi(ct(a), 0).join() !== pcsDuoi(ct(b), 0).join()) return false
+      const [A, B] = [pcsTren(ct(a), 0), pcsTren(ct(b), 0)]
+      const bo = A.filter((p) => !B.includes(p)).length
+      const them = B.filter((p) => !A.includes(p)).length
+      return bo <= 1 && them <= 1 && bo + them > 0
+    }
+    const ids = CONG_THUC.map((c) => c.id)
+    expect(ids.flatMap((a, i) => ids.slice(i + 1).filter((b) => motNot(a, b))).length).toBe(19)
+    expect(QUY_TAC_DUOI[2]).toContain('19 cặp')
+    for (const [a, b] of [
+      ['6', '69'], ['6', 'm6'], ['69', 'add9'], ['maj7', '7'], ['maj7', 'mMaj7'], ['m7', '7'], ['m7', 'm7b5'], ['m7b5', 'dim7'],
+      ['7', '7b9'], ['7', '7b5'], ['13', '13b9'], ['13b9', '13b9#11'], ['maj9', 'maj9#11'], ['13', '7b13'],
+    ] as const)
+      expect([a, b, motNot(a, b)]).toEqual([a, b, true])
+  })
+
+  it('ba tay phải dùng chung, chỉ tay trái khác', () => {
+    const theoPhai = new Map<string, string[]>()
+    for (const c of CONG_THUC) {
+      const k = [...pcsTren(c, 0)].sort((x, y) => x - y).join()
+      theoPhai.set(k, [...(theoPhai.get(k) ?? []), c.id])
+    }
+    const chung = [...theoPhai.values()].filter((v) => v.length > 1)
+    expect(chung.map((v) => [...v].sort()).sort()).toEqual([['13', '6'], ['9', 'm9'], ['9sus4', 'm11']])
+    expect(chung.every(([a, b]) => pcsDuoi(ct(a!), 0).join() !== pcsDuoi(ct(b!), 0).join())).toBe(true)
+  })
+
+  it('bảng: tên hai tay ở gốc Đô; chùm nốt rời gọi bằng nốt; dòng ngắn cho màn game', () => {
+    const dong = bangTheoDuoi().flatMap((n) => n.dong)
+    const lay = (id: string) => dong.find((d) => d.id === id)!
+    expect([lay('q:maj').tong, lay('q:maj').trai, lay('q:maj').phai]).toEqual(['C', 'Đô', 'C'])
+    expect([lay('maj7').tong, lay('maj7').trai, lay('maj7').phai, lay('maj7').phaiPhu]).toEqual(['Cmaj7', 'Đô', 'Em', 'Mi – Sol – Si'])
+    expect([lay('add9').phai, lay('add9').phaiPhu]).toEqual(['Rê – Mi – Sol', 'chùm nốt rời'])
+    expect(duoiCua(['maj7', '6', 'add9', '69', 'maj9', 'maj9#11']).map((s) => s.split(' (')[0])).toEqual(['6', 'add9', 'maj7', '9', '♯11'])
   })
 })
 
@@ -86,84 +155,9 @@ describe('mẹo cộng loại — loại tay trái + loại tay phải = loại 
         { chat: 'tăng', loai: [{ ten: '7♭13', viDu: 'C7 + A♭+' }] },
       ],
     })
-    expect(b[2]!.theoChat.find((c) => c.chat === 'chùm')!.loai).toEqual([
-      { ten: 'add9', viDu: 'Đô – Sol + Rê – Mi – Sol' },
-      { ten: 'm(add9)', viDu: 'Đô – Sol + Rê – Mi♭ – Sol' },
-    ])
-    // một màn chỉ lấy loại của màn, giữ thứ tự dạng tay trái
     expect(bangCongLoai(['maj9', 'maj9#11', '6']).map((d) => [d.dang, d.viDu])).toEqual([
       ['gốc – 5', 'Đô – Sol'],
       ['trưởng', 'C'],
     ])
-  })
-})
-
-describe('điểm chung theo họ — mỗi câu đối chiếu 26 công thức (gốc Đô)', () => {
-  const nhac = (id: string) => pcsTong(ct(id), 0)
-  const ho = (k: number) => HO_LOAI[k]!.ids
-  const coDu = (id: string, ps: readonly number[]) => ps.every((p) => nhac(id).includes(p))
-  const tenPhai = (id: string) => tenHaiTay(ct(id), 'C', 'flat').phai.join(' ')
-
-  it('mỗi họ có nốt dấu hiệu', () => {
-    expect(ho(0).every((id) => coDu(id, [0, 4, 7]) && !nhac(id).includes(10))).toBe(true) // trưởng: nguyên C, không Si♭
-    expect(ho(1).every((id) => coDu(id, [0, 3]))).toBe(true) // thứ: Đô, Mi♭
-    expect(ho(1).filter((id) => !nhac(id).includes(7))).toEqual(['m13']) // nên không nói "nguyên Cm"
-    expect(ho(2).every((id) => coDu(id, [0, 3, 6]))).toBe(true) // nửa giảm & giảm: nguyên Cdim
-    expect([...ho(3), ...ho(4)].every((id) => coDu(id, [0, 10]))).toBe(true) // cả 10 loại át có Si♭
-    expect(ho(3).filter((id) => nhac(id).includes(4))).toEqual(['7', '9', '13'])
-    expect(coDu('9sus4', [5]) && !nhac('9sus4').includes(4)).toBe(true)
-    expect(ho(4).every((id) => coDu(id, [0, 4, 10]) && [1, 6, 8].some((p) => nhac(id).includes(p)))).toBe(true)
-  })
-
-  it('cầu thang 7 → 9 → 11 → 13: tay phải loại sau giữ đúng hai nốt trên của loại trước; lời ghi đúng nốt', () => {
-    const phai = (id: string) => quangTren(ct(id)).map((x) => x % 12)
-    const CAU_THANG: readonly (readonly string[])[] = [
-      ['maj7', 'maj9', 'maj9#11'],
-      ['m7', 'm9', 'm11', 'm13'],
-      ['7', '9', '9sus4'],
-    ]
-    CAU_THANG.forEach((day, k) => {
-      for (let i = 1; i < day.length; i++) {
-        const [a, b] = [phai(day[i - 1]!), phai(day[i]!)]
-        expect([day[i], b[0], new Set(b.filter((p) => a.includes(p)))]).toEqual([day[i], a[1], new Set(a.slice(1))])
-      }
-      expect(HO_LOAI[[0, 1, 3][k]!]!.chung.join(' ')).toContain(day.map(tenPhai).join(' → '))
-    })
-  })
-
-  it('đổi một nốt tay phải, tay trái giữ nguyên: đúng 19 cặp, gồm mọi cặp lời đã nêu', () => {
-    const motNot = (a: string, b: string) => {
-      if (pcsDuoi(ct(a), 0).join() !== pcsDuoi(ct(b), 0).join()) return false
-      const [A, B] = [pcsTren(ct(a), 0), pcsTren(ct(b), 0)]
-      const bo = A.filter((p) => !B.includes(p)).length
-      const them = B.filter((p) => !A.includes(p)).length
-      return bo <= 1 && them <= 1 && bo + them > 0
-    }
-    const ids = CONG_THUC.map((c) => c.id)
-    expect(ids.flatMap((a, i) => ids.slice(i + 1).filter((b) => motNot(a, b))).length).toBe(19)
-    for (const [a, b] of [
-      ['6', '69'], ['69', 'add9'], ['6', 'm6'], ['add9', 'madd9'], ['m7', 'mMaj7'], ['m7', 'm7b5'], ['m7b5', 'dim7'], ['maj7', '7'],
-      ['m7', '7'], ['7', '7b9'], ['7', '7b5'], ['13', '13b9'], ['13b9', '13b9#11'], ['13#11', '13b9#11'], ['13', '7b13'],
-    ] as const)
-      expect([a, b, motNot(a, b)]).toEqual([a, b, true])
-  })
-
-  it('ba tay phải dùng chung giữa các họ, chỉ tay trái khác', () => {
-    const theoPhai = new Map<string, string[]>()
-    for (const c of CONG_THUC) {
-      const k = [...pcsTren(c, 0)].sort((x, y) => x - y).join()
-      theoPhai.set(k, [...(theoPhai.get(k) ?? []), c.id])
-    }
-    const chung = [...theoPhai.values()].filter((v) => v.length > 1)
-    expect(chung.map((v) => [...v].sort()).sort()).toEqual([['13', '6'], ['9', 'm9'], ['9sus4', 'm11']])
-    expect(chung.every(([a, b]) => pcsDuoi(ct(a!), 0).join() !== pcsDuoi(ct(b!), 0).join())).toBe(true)
-    expect(QUY_TAC_HO).toHaveLength(4)
-  })
-
-  it('bảy giảm chỉ có 3 hợp âm khác nhau; họ trưởng ở gốc Đô toàn phím trắng trừ maj9♯11; nốt căng chia hai dạng tay trái', () => {
-    expect(new Set([...Array(12).keys()].map((g) => [...pcsTong(ct('dim7'), g)].sort((x, y) => x - y).join())).size).toBe(3)
-    const trang = [0, 2, 4, 5, 7, 9, 11]
-    expect(ho(0).filter((id) => !nhac(id).every((p) => trang.includes(p)))).toEqual(['maj9#11'])
-    expect(ho(4).map((id) => dangTrai(ct(id)))).toEqual(['nốt gốc', 'nốt gốc', 'khung 7', 'khung 7', 'khung 7', 'khung 7'])
   })
 })

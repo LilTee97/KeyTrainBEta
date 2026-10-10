@@ -6323,3 +6323,27 @@ nốt; đúng 19 cặp đổi một nốt, gồm mọi cặp lời đã nêu; 3 
 trái) · `gameChong.test.ts` 10 · toàn suite **2 719 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless 7/7 (bảng: mục giữa các
 họ, 5 dòng dấu hiệu, cầu thang ghi đúng nốt; game: màn họ trưởng có điểm chung, màn slash không, màn trộn có điểm chung giữa các họ; điện
 thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: bảng công thức chia theo ĐUÔI — muốn chồng ra loại nào (10/10/2026)
+
+**Người dùng:** *"sao bạn ko chia theo kiểu Maj7 là một loại, Add9 là một loại, rồi dim rồi sus rồi 7b5 ... Sau đó thì hãy chia công thức
+và quy tắc theo kiểu làm sao để chồng ra Maj7, hoặc dim7, hoặc Trưởng, hoặc 13...."*
+
+- Claude hiểu "họ" ở yêu cầu trước là họ chất (trưởng · thứ · giảm · át — commit 3a354b7); người dùng muốn mỗi ĐUÔI là một nhóm. Bảng nay
+  chia **16 nhóm đuôi**: Trưởng · Thứ · Treo (sus2 · sus4 · 9sus4) · Giảm (dim · m7♭5 · dim7 · m11♭5) · Tăng · 6 · add9 · 7 · maj7 · 9 · 11 ·
+  13 · 7♭5 · ♭9 · ♯11 · ♭13 — gồm 26 công thức chồng + 6 hợp âm ba cơ bản (trưởng, thứ, giảm, tăng, sus2, sus4 — bấm thẳng một tay, "Thử"
+  đưa vào ô tự chọn). Mỗi nhóm: **đuôi mang lại** nốt nào (gốc Đô: maj7 → Si, 7 → Si♭, 6 → La…), **cách chồng**, từng hợp âm với tên hai
+  tay và gợi nhớ, **điểm chung** (họ hàng đổi một nốt). Quy tắc chung giữa các đuôi: đọc đuôi → nốt; cầu thang 7 → 9 → 11 → 13; 19 cặp đổi
+  một nốt; 3 tay phải dùng chung.
+- Bỏ khỏi bảng (gộp vào nhóm đuôi, tránh hai nguồn): bảng 26 loại theo họ, điểm chung theo họ, quy luật con số, mẹo vàng. Giữ: mẹo cộng
+  loại (gom theo tay trái), 4 bước (đổi tên "Vì sao chồng được"), hợp âm slash. `HO_LOAI` chỉ còn chia màn game; khung mẹo của màn theo họ
+  nay hiện các nhóm đuôi của loại trong màn (`duoiCua`), màn trộn hiện quy tắc chung giữa các đuôi.
+- Các loại khác của app chưa có công thức riêng (7sus4, 13sus4, 7♭9sus4, 11, maj7♯11, maj13, 7♯5, 7♯9, 7♯11 — 9 loại) vẫn xem ở ô tự chọn
+  (lối chung, chưa đưa vào bảng).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 14 (16 nhóm phủ đủ 26 công thức + 6 hợp âm ba, mỗi cái đúng một nhóm; nốt dấu
+hiệu đúng với mọi hợp âm trong nhóm — phải có / không được có; lời "cách chồng" ghi đúng tên tay phải của từng công thức và đúng chỗ dựng;
+hợp âm ba cơ bản đổi một nốt; cầu thang; 19 cặp đổi một nốt; 3 tay phải dùng chung; bảng tên hai tay) · `gameChong.test.ts` 10 · toàn suite
+**2 719 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: bảng 16 nhóm, mục cũ đã bỏ, nhóm maj7 / add9 đúng, game khung mẹo
+theo đuôi + màn trộn, điện thoại không cuộn ngang; "Thử" 6/6 khi bấm thẳng nút (C · Cmaj7 · Csus4 · C13♭9 · Cdim · Cm7♭5). Một lượt bấm bằng
+tọa độ ngay sau khi trang cuộn mượt đã trượt nút (lỗi của script chạy thử, không phải app) · `LuyenTap.json`, `Nguon.json` không đổi.

@@ -17,17 +17,15 @@ describe('game Mưa hợp âm — logic', () => {
     expect(MAN[5]!.ids).toEqual(MAU_SLASH.map((m) => `slash:${m.id}`))
     expect(MAN[5]!.meo!.length).toBeGreaterThan(MAU_SLASH.length)
     expect([...MAN[6]!.ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-    // bảng mẹo: màn theo họ có điểm chung của họ, màn trộn có điểm chung giữa các họ, màn slash có quy luật riêng
-    expect(MAN.map((m) => m.chung?.tieuDe ?? null)).toEqual([
-      'Điểm chung của họ trưởng',
-      'Điểm chung của họ thứ',
-      'Điểm chung của họ nửa giảm và giảm',
-      'Điểm chung của họ át — cơ bản',
-      'Điểm chung của họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)',
-      null,
-      'Điểm chung giữa các họ',
+    // bảng mẹo: màn theo họ có quy tắc theo đuôi của các loại trong màn, màn trộn có quy tắc chung giữa các đuôi, màn slash có quy luật riêng
+    expect(MAN.map((m) => m.chung?.tieuDe ?? null)).toEqual([...Array(5).fill('Theo đuôi — muốn chồng ra loại nào'), null, 'Quy tắc chung giữa các đuôi'])
+    expect(MAN.slice(0, 5).map((m) => m.chung!.ds.map((s) => s.split(' (')[0]))).toEqual([
+      ['6', 'add9', 'maj7', '9', '♯11'],
+      ['6', 'add9', '7', 'maj7', '9', '11', '13'],
+      ['Giảm'],
+      ['Treo', '7', '9', '13'],
+      ['7♭5', '♭9', '♯11', '♭13'],
     ])
-    expect(MAN.every((m) => !m.chung || m.chung.ds.length === 4)).toBe(true)
   })
 
   it('câu chồng F♯13♭9: viên ghi tên hai tay + phép cộng loại (không đếm phím), chấm tay phải theo lớp cao độ', () => {

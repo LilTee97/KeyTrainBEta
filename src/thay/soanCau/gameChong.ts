@@ -1,7 +1,7 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { GOC } from '../vongThay'
 import { chongCongThuc, CONG_THUC, gocDep, hauDep, tenHaiTay, tenTheoChu, tenTren, theBamChong, vn, type Chong, type CongThuc } from './chongHopAm'
-import { congLoai, HO_LOAI, kieuGoc, QUY_TAC_HO, trungCongLoai } from './meoChong'
+import { congLoai, duoiCua, HO_LOAI, kieuGoc, QUY_TAC_DUOI, trungCongLoai } from './meoChong'
 import { QUY_LUAT_SLASH, theSlash } from './slashChong'
 
 /*
@@ -256,20 +256,20 @@ export interface Man {
   ids: readonly string[]
   /** Bảng quy luật riêng (màn slash); màn hợp âm chồng dùng bảng cộng loại (`bangCongLoai`). */
   meo?: readonly string[]
-  /** Điểm chung của họ (màn theo họ) hay giữa các họ (màn trộn) — hiện trên bảng mẹo bên luyện. */
+  /** Quy tắc theo đuôi của các loại trong màn (màn theo họ) hay quy tắc chung giữa các đuôi (màn trộn) — hiện trên bảng mẹo bên luyện. */
   chung?: { tieuDe: string; ds: readonly string[] }
 }
 
 /** Bảy màn: năm họ hợp âm (theo loại), hợp âm slash, trộn cả 26 loại. */
 export const MAN: readonly Man[] = [
-  ...HO_LOAI.map((h) => ({ ten: h.ten, goiY: h.ids.map((id) => hauDep(CONG_THUC.find((c) => c.id === id)!.kyHieu)).join(' · '), ids: h.ids, chung: { tieuDe: `Điểm chung của ${h.ten.toLowerCase()}`, ds: h.chung } })),
+  ...HO_LOAI.map((h) => ({ ten: h.ten, goiY: h.ids.map((id) => hauDep(CONG_THUC.find((c) => c.id === id)!.kyHieu)).join(' · '), ids: h.ids, chung: { tieuDe: 'Theo đuôi — muốn chồng ra loại nào', ds: duoiCua(h.ids) } })),
   {
     ten: 'Hợp âm slash',
     goiY: 'thế đảo · bass lạ = hợp âm màu viết tắt',
     ids: MAU_SLASH.map((m) => `slash:${m.id}`),
     meo: [...QUY_LUAT_SLASH, ...MAU_SLASH.map((m) => m.luat)],
   },
-  { ten: 'Trộn tất cả', goiY: 'cả 26 loại', ids: CONG_THUC.map((c) => c.id), chung: { tieuDe: 'Điểm chung giữa các họ', ds: QUY_TAC_HO } },
+  { ten: 'Trộn tất cả', goiY: 'cả 26 loại', ids: CONG_THUC.map((c) => c.id), chung: { tieuDe: 'Quy tắc chung giữa các đuôi', ds: QUY_TAC_DUOI } },
 ]
 
 /** Chọn câu kế: câu vừa sai nặng thêm (1 + 2 × số lần sai) — câu sai quay lại nhiều hơn; không lặp đúng câu vừa rồi. */

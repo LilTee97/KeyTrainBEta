@@ -591,8 +591,12 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
 
       <BangCongThuc
         onThu={(x) => {
-          chonCt(x)
-          setGocTu(0)
+          // `q:<loại>` là hợp âm ba cơ bản (trưởng, thứ, sus…) — chưa có công thức chồng riêng, xem ở chế độ tự chọn
+          if (x.startsWith('q:')) setTuDo({ goc: 0, q: x.slice(2) })
+          else {
+            chonCt(x)
+            setGocTu(0)
+          }
           banPhim.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
         }}
       />

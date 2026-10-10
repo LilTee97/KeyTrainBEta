@@ -1,86 +1,28 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
-import { BA, CONG_THUC, chongCongThuc, hauDep, quangTren, tenBac, type CongThuc } from './chongHopAm'
+import { BA, CONG_THUC, chongCongThuc, chongTuDo, hauDep, quangTren, tenBac, type CongThuc } from './chongHopAm'
 
 /*
-  QUY LUẬT VÀ MẸO CHỒNG HỢP ÂM — THEO LOẠI HỢP ÂM. Người dùng 9/10/2026: "về các quy luật chồng hợp âm thì tôi muốn nó tính theo loại hợp
-  âm (ví dụ như Maj7, 7b9, dim7, m11b5...) hơn là theo vị trí tay. Điều này dẫn tới các mẹo cũng phải tính theo loại hợp âm. Hãy phân
-  tích lại và thiết kế lại quy luật và mẹo" (bản trước xếp theo vị trí tay phải — bỏ). Lời là của Claude (gia sư), rút từ 26 công thức
-  chồng; mỗi quy luật có test đối chiếu công thức thật (meoChong.test.ts).
-
-  MẸO CỘNG LOẠI — người dùng 9/10/2026 (ảnh lời giải B6/9 trong game): "Mẹo ghi như trong ảnh còn quá mơ hồ và máy móc tôi ko hiểu được …
-  Tôi muốn mẹo sẽ chỉ cho tôi cụ thể theo hướng gốc nào cộng gốc nào thì sẽ ra gốc tổng cần tìm"; 10/10/2026 người dùng nói rõ chữ "gốc" ở
-  đó là LOẠI (maj7, dim7, m7♭5, 13…) và chê bản Claude đã làm theo nghĩa nốt gốc (gốc tay phải lên / lùi mấy phím, commit 526a1fe): "các
-  mẹo trong hình đã tính từ nốt trên tay trái hoặc phải và tôi ko muốn tìm cái đó" — rồi chọn kiểu "ghi tên cả hai tay". Nay: loại tay
-  trái + loại tay phải = loại tổng; viên rơi ghi luôn tên hai tay; bảng gom theo dạng tay trái (26 công thức chỉ có 8 dạng — test).
+  QUY LUẬT VÀ MẸO CHỒNG HỢP ÂM. Lời là của Claude (gia sư), rút từ 26 công thức chồng; mỗi câu có test đối chiếu công thức thật
+  (meoChong.test.ts). Lịch sử theo lời người dùng:
+  - 9/10/2026: "tôi muốn nó tính theo loại hợp âm (ví dụ như Maj7, 7b9, dim7, m11b5...) hơn là theo vị trí tay" — bỏ bản theo vị trí tay.
+  - 9–10/10/2026 MẸO CỘNG LOẠI: "gốc nào cộng gốc nào thì sẽ ra gốc tổng" (chữ "gốc" ở đó là LOẠI); chê mẹo đếm phím "tính từ nốt trên tay
+    trái hoặc phải" (commit 526a1fe), chọn kiểu "ghi tên cả hai tay": loại tay trái + loại tay phải = loại tổng.
+  - 10/10/2026 THEO ĐUÔI: "sao bạn ko chia theo kiểu Maj7 là một loại, Add9 là một loại, rồi dim rồi sus rồi 7b5 ... Sau đó thì hãy chia
+    công thức và quy tắc theo kiểu làm sao để chồng ra Maj7, hoặc dim7, hoặc Trưởng, hoặc 13". Bản chia theo họ (trưởng · thứ · giảm · át —
+    commit 3a354b7) bỏ khỏi bảng, cùng quy luật con số và mẹo vàng (đã gộp vào các nhóm đuôi). Nay 16 nhóm đuôi gồm 26 công thức chồng và
+    6 hợp âm ba cơ bản (trưởng · thứ · giảm · tăng · sus2 · sus4).
 */
 
 /** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭) — đúng cách ghi của `GOC`. */
 export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
 
-/**
- * Năm họ, mỗi họ xếp từ dễ tới khó — thứ tự học và thứ tự màn game. `chung`: điểm chung của các loại trong họ — người dùng 10/10/2026:
- * "hãy phân tích theo các loại hợp âm cùng họ để đưa ra quy tắc và mẹo khi cùng họ thì có những điểm chung gì để dễ học". Mỗi câu là số
- * đo trên chính 26 công thức (gốc Đô), có test trong meoChong.test.ts; lời và cách gom là của Claude.
- */
-export const HO_LOAI: readonly { ten: string; ids: readonly string[]; chung: readonly string[] }[] = [
-  {
-    ten: 'Họ trưởng',
-    ids: ['maj7', '6', 'add9', '69', 'maj9', 'maj9#11'],
-    chung: [
-      'Dấu hiệu: cả 6 loại đều chứa nguyên hợp âm C (Đô – Mi – Sol) rồi thêm màu; không loại nào có Si♭ — có 7 thì là Si.',
-      'Có 7 — tay phải leo cầu thang: Cmaj7 = Đô + Em → Cmaj9 = C + G → Cmaj9♯11 = C + Bm. Bậc sau giữ hai nốt trên của bậc trước: Mi Sol Si → Sol Si Rê → Si Rê Fa♯.',
-      'Không 7 — tay trái Đô – Sol, tay phải quanh La – Rê – Mi, mỗi loại đổi một nốt: C6 = Am (La Đô Mi) → C6/9 = Asus4 (Đô thành Rê) → Cadd9 = chùm Rê Mi Sol (La thành Sol).',
-      'Ở gốc Đô cả họ toàn phím trắng — trừ Fa♯ của Cmaj9♯11, màu lạ duy nhất của họ.',
-    ],
-  },
-  {
-    ten: 'Họ thứ',
-    ids: ['m7', 'm6', 'madd9', 'mMaj7', 'm9', 'm11', 'm13'],
-    chung: [
-      'Dấu hiệu: cả 7 loại đều có Đô và Mi♭ (3 thứ).',
-      'Có 7 — cầu thang: Cm7 = Đô + E♭ → Cm9 = Cm + Gm → Cm11 = Cm + B♭ → Cm13 = Cm7 + Dm. Bậc sau giữ hai nốt trên của bậc trước: Mi♭ Sol Si♭ → Sol Si♭ Rê → Si♭ Rê Fa → Rê Fa La.',
-      'Không 7 = họ trưởng hạ Mi xuống Mi♭: Cm6 = Adim (C6 là Am), Cm(add9) = chùm Rê Mi♭ Sol (Cadd9 là Rê Mi Sol).',
-      'Cm(maj7) = Cm7 nâng Si♭ lên Si: E♭ thành E♭+ (Mi♭ Sol Si).',
-    ],
-  },
-  {
-    ten: 'Họ nửa giảm và giảm',
-    ids: ['m7b5', 'm11b5', 'dim7'],
-    chung: [
-      'Dấu hiệu: cả 3 loại đều chứa nguyên Cdim (Đô – Mi♭ – Sol♭).',
-      'Tay phải luôn đứng trên Mi♭, chỉ đổi loại: E♭m (m7♭5) · E♭sus2 (m11♭5) · E♭dim (dim7).',
-      'Đi từ Cm7, mỗi bước hạ một nốt: Cm7 (E♭: Mi♭ Sol Si♭) → Cm7♭5 (E♭m: Sol thành Sol♭) → Cdim7 (E♭dim: Si♭ thành La).',
-      'Bảy giảm cách đều nhau nên cả bàn phím chỉ có 3 hợp âm bảy giảm khác nhau: Cdim7 = E♭dim7 = G♭dim7 = Adim7.',
-    ],
-  },
-  {
-    ten: 'Họ át — cơ bản',
-    ids: ['7', '9', '13', '9sus4'],
-    chung: [
-      'Dấu hiệu: cả 4 loại đều có Đô và Si♭ (♭7); 3 loại có Mi, riêng 9sus4 thay Mi bằng Fa.',
-      'Cầu thang: C7 = Đô + Edim → C9 = Đô – Mi + Gm → C9sus4 = Đô + B♭ (Mi Sol Si♭ → Sol Si♭ Rê → Si♭ Rê Fa). Không leo tiếp lên Dm vì Fa chọi Mi — C13 lấy Am.',
-      'Mượn tay phải của họ khác, chỉ đổi tay trái: C9 dùng Gm như Cm9 · C13 dùng Am như C6 · C9sus4 dùng B♭ như Cm11.',
-      'C7 = Cmaj7 hạ Si xuống Si♭ (Em thành Edim) = Cm7 nâng Mi♭ lên Mi (E♭ thành Edim).',
-    ],
-  },
-  {
-    ten: 'Họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)',
-    ids: ['7b9', '7b5', '7b13', '13b9', '13#11', '13b9#11'],
-    chung: [
-      'Dấu hiệu: cả 6 loại vẫn có Đô – Mi – Si♭ (vẫn là át), thêm nốt căng: Rê♭ (♭9), Fa♯ = Sol♭ (♭5 · ♯11), La♭ (♭13).',
-      'Tay trái một nốt gốc = sửa C7 (Edim): C7♭9 thêm Rê♭ (Edim7); C7♭5 hạ Sol xuống Sol♭.',
-      'Tay trái khung C7 (Đô – Mi – Si♭) = sửa C13 (Am), mỗi bước đổi một nốt: Am → A (Đô thành Đô♯) = 13♭9; A → G♭m (Mi thành Sol♭) = 13♭9♯11; G♭m → D (Rê♭ thành Rê) = 13♯11; Am → A♭+ (La thành La♭) = 7♭13.',
-      'Nốt căng là nốt lệch nửa cung khỏi nốt quen (Rê♭ sát Rê, Fa♯ sát Fa, La♭ sát La) — nghe căng, đòi giải về.',
-    ],
-  },
-]
-
-/** Điểm chung GIỮA các họ — số đo trên 26 công thức, gốc Đô (test ở meoChong.test.ts). */
-export const QUY_TAC_HO: readonly string[] = [
-  'Mỗi họ có nốt dấu hiệu: họ trưởng chứa nguyên C (Đô – Mi – Sol); họ thứ có Mi♭; họ nửa giảm & giảm chứa nguyên Cdim (Đô – Mi♭ – Sol♭); họ át có Si♭ (cả 10 loại). Nhìn đuôi tên là biết họ, biết nốt nào chắc chắn có.',
-  'Cầu thang 7 → 9 → 11 → 13 (họ trưởng, thứ, át): tay phải loại sau giữ hai nốt trên của tay phải loại trước — thuộc loại 7 là kéo ra cả họ.',
-  'Đổi một nốt là sang loại khác, tay trái giữ nguyên — trong 26 công thức có 19 cặp như vậy, vd Mi ↔ Mi♭ (C6 ↔ Cm6, C7 ↔ Cm7), Si ↔ Si♭ (Cmaj7 ↔ C7), Sol → Sol♭ (Cm7 → Cm7♭5), Đô → Đô♯ (C13 → C13♭9).',
-  'Ba tay phải dùng chung giữa các họ — chỉ tay trái khác: Gm (Cm9 · C9), Am (C6 · C13), B♭ (Cm11 · C9sus4).',
+/** Năm họ — nay chỉ để chia màn game (bảng đã chia theo đuôi từ 10/10/2026). */
+export const HO_LOAI: readonly { ten: string; ids: readonly string[] }[] = [
+  { ten: 'Họ trưởng', ids: ['maj7', '6', 'add9', '69', 'maj9', 'maj9#11'] },
+  { ten: 'Họ thứ', ids: ['m7', 'm6', 'madd9', 'mMaj7', 'm9', 'm11', 'm13'] },
+  { ten: 'Họ nửa giảm và giảm', ids: ['m7b5', 'm11b5', 'dim7'] },
+  { ten: 'Họ át — cơ bản', ids: ['7', '9', '13', '9sus4'] },
+  { ten: 'Họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)', ids: ['7b9', '7b5', '7b13', '13b9', '13#11', '13b9#11'] },
 ]
 
 /** Thứ tự đọc công thức như sách — chồng quãng ba: 1 · 3 · 5 · 7 · 9 · 11 · 13 (sus4 thế chỗ bậc 3, 6 đứng trước 7). */
@@ -138,87 +80,240 @@ export function bangCongLoai(ids: readonly string[]) {
   }).filter((d) => d.theoChat.length > 0)
 }
 
-/** Ví dụ gốc Đô + cái móc nhớ của từng loại — lời gia sư. */
-const MEO: Readonly<Record<string, string>> = {
-  maj7: 'Đô + Em — hai hợp âm ba nối đuôi (C rồi Em), chung hai nốt Mi – Sol',
-  '6': 'Đô – Sol + Am — Am là cặp thứ song song của C',
-  add9: 'Đô – Sol + chùm Rê – Mi – Sol — Rê kẹp sát dưới Mi',
-  '69': 'Đô – Sol + Asus4 (La – Rê – Mi) — như C6 (Am) nhưng Đô lên thành Rê',
-  maj9: 'C + G — chồng hợp âm bậc V lên hợp âm chủ',
-  'maj9#11': 'C + Bm — màu Lydian sáng lung linh',
-  m7: 'Đô + E♭ — E♭ là cặp trưởng song song của Cm',
-  m6: 'Đô – Sol + Adim (La – Đô – Mi♭)',
-  madd9: 'Đô – Sol + chùm Rê – Mi♭ – Sol — Rê kẹp sát dưới Mi♭',
-  mMaj7: 'Đô + E♭+ (Mi♭ – Sol – Si) — nốt Si cho tiếng phim trinh thám',
-  m9: 'Cm + Gm — hai hợp âm thứ',
-  m11: 'Cm + B♭',
-  m13: 'khung Cm7 (Đô – Mi♭ – Si♭) + Dm',
-  m7b5: 'Đô + E♭m — như Cm7 (Đô + E♭) nhưng tay phải đổi sang thứ',
-  m11b5: 'Đô – Sol♭ + E♭sus2 (Mi♭ – Fa – Si♭)',
-  dim7: 'Đô + E♭dim (Mi♭ – Sol♭ – La) — bốn nốt cách đều nhau',
-  '7': 'Đô + Edim (Mi – Sol – Si♭) — như Cmaj7 (Đô + Em) nhưng tay phải đổi sang giảm',
-  '9': 'Đô – Mi + Gm — như Cm9 nhưng tay trái có Mi',
-  '13': 'khung C7 (Đô – Mi – Si♭) + Am — tay phải giống C6',
-  '9sus4': 'Đô + B♭ — chính là hợp âm slash B♭/C',
-  '7b9': 'Đô + Edim7 — như C7 (Edim) thêm Rê♭ thành bảy giảm',
-  '7b5': 'Đô + chùm Mi – Sol♭ – Si♭ — như C7 nhưng Sol hạ xuống Sol♭',
-  '7b13': 'khung C7 + A♭+ (cùng nốt C+)',
-  '13b9': 'khung C7 + A — như C13 (Am) nhưng Đô lên Đô♯',
-  '13#11': 'khung C7 + D',
-  '13b9#11': 'khung C7 + G♭m (cũng là F♯m)',
+/* ---------------- Theo đuôi — muốn chồng ra loại nào ---------------- */
+
+export interface NhomDuoi {
+  ten: string
+  /** Các đuôi trong nhóm, ghi như tên hợp âm. */
+  duoi: string
+  /** Nốt đuôi mang lại (gốc Đô) — đọc đuôi là biết nốt phải có. */
+  dauHieu: string
+  /** Cách chồng ra các loại trong nhóm. */
+  cach: string
+  /** Điểm chung, họ hàng đổi một nốt. */
+  chung: string
+  /** Công thức chồng (`CONG_THUC.id`) hay hợp âm ba cơ bản (`q:<id loại của app>`). */
+  ids: readonly string[]
+  /** Lớp cao độ (gốc Đô) mọi hợp âm trong nhóm phải có / không được có / phải có ít nhất một — test đối chiếu `dauHieu`. */
+  co: readonly number[]
+  khong: readonly number[]
+  coMot?: readonly number[]
 }
 
-/** Mẹo của một loại ở bảng: phép cộng loại + ví dụ gốc Đô. */
-export function meoCua(ct: CongThuc): string {
-  return `${congLoai(ct)} — gốc Đô: ${MEO[ct.id] ?? ''}`
+/** 16 nhóm đuôi, từ dễ tới khó; mỗi hợp âm nằm ở đúng một nhóm (theo phần đuôi nổi nhất của tên). */
+export const NHOM_DUOI: readonly NhomDuoi[] = [
+  {
+    ten: 'Trưởng',
+    duoi: 'C (không đuôi)',
+    dauHieu: 'Đô – Mi – Sol',
+    cach: 'Một tay bấm đủ C; hai tay thì tay trái Đô, tay phải C.',
+    chung: 'Đổi một nốt ra các hợp âm ba khác: Mi thành Mi♭ = Cm · Sol thành Sol♯ = Caug · Mi thành Fa = Csus4 · Mi thành Rê = Csus2.',
+    ids: ['q:maj'],
+    co: [0, 4, 7],
+    khong: [3],
+  },
+  {
+    ten: 'Thứ',
+    duoi: 'm',
+    dauHieu: 'Mi♭ thay Mi (Đô – Mi♭ – Sol)',
+    cach: 'Tay trái Đô, tay phải Cm.',
+    chung: 'Hạ tiếp Sol xuống Sol♭ là ra Cdim.',
+    ids: ['q:min'],
+    co: [0, 3, 7],
+    khong: [4],
+  },
+  {
+    ten: 'Treo',
+    duoi: 'sus2 · sus4 · 9sus4',
+    dauHieu: 'không có Mi — sus2 thay bằng Rê, sus4 thay bằng Fa',
+    cach: 'sus2, sus4 một tay bấm đủ (Đô Rê Sol · Đô Fa Sol); C9sus4: tay trái Đô, tay phải B♭ (Si♭ Rê Fa) — chính là hợp âm slash B♭/C.',
+    chung: 'Không có Mi nên nghe lơ lửng, chưa trưởng chưa thứ.',
+    ids: ['q:sus2', 'q:sus4', '9sus4'],
+    co: [0],
+    khong: [3, 4],
+    coMot: [2, 5],
+  },
+  {
+    ten: 'Giảm',
+    duoi: 'dim · m7♭5 · dim7 · m11♭5',
+    dauHieu: 'Mi♭ + Sol♭ (không có Mi, không có Sol)',
+    cach: 'Cdim một tay bấm đủ (Đô Mi♭ Sol♭); còn lại tay trái Đô, tay phải đứng trên Mi♭, chỉ đổi loại: E♭m (m7♭5) · E♭dim (dim7) · E♭sus2 (m11♭5 — tay trái thêm Sol♭).',
+    chung: 'Từ Cm7 (Đô + E♭) hạ Sol xuống Sol♭ = Cm7♭5, hạ tiếp Si♭ xuống La = Cdim7. Bảy giảm cách đều nhau nên cả bàn phím chỉ có 3 cái: Cdim7 = E♭dim7 = G♭dim7 = Adim7.',
+    ids: ['q:dim', 'm7b5', 'dim7', 'm11b5'],
+    co: [3, 6],
+    khong: [4, 7],
+  },
+  {
+    ten: 'Tăng',
+    duoi: 'aug (+)',
+    dauHieu: 'Sol♯ thay Sol (Đô – Mi – Sol♯, cũng viết La♭)',
+    cach: 'Một tay bấm đủ Caug; hai tay thì tay trái Đô, tay phải Caug.',
+    chung: 'Hợp âm tăng chia đều nên Caug = Eaug = A♭aug — gặp lại ở C7♭13 (tay phải A♭+) và Cm(maj7) (tay phải E♭+).',
+    ids: ['q:aug'],
+    co: [4, 8],
+    khong: [7],
+  },
+  {
+    ten: '6',
+    duoi: '6 · m6 · 6/9',
+    dauHieu: 'La, không có 7',
+    cach: 'Tay trái Đô – Sol; tay phải dựng trên La: Am (C6) · Adim (Cm6 — Mi thành Mi♭) · Asus4 (C6/9 — Đô thành Rê).',
+    chung: 'C6 và C13 cùng tay phải Am — C13 chỉ thêm khung 7 ở tay trái.',
+    ids: ['6', 'm6', '69'],
+    co: [9],
+    khong: [10, 11],
+  },
+  {
+    ten: 'add9',
+    duoi: 'add9 · m(add9)',
+    dauHieu: 'Rê, không có 7',
+    cach: 'Tay trái Đô – Sol; tay phải chùm nốt, Rê kẹp sát dưới Mi: Rê – Mi – Sol (Cadd9) · Rê – Mi♭ – Sol (Cm(add9)).',
+    chung: 'Cadd9 và C6/9 chung Rê – Mi: đổi Sol thành La là sang C6/9.',
+    ids: ['add9', 'madd9'],
+    co: [2],
+    khong: [9, 10, 11],
+  },
+  {
+    ten: '7',
+    duoi: '7 · m7',
+    dauHieu: 'Si♭ (7 không ghi "maj" là Si♭)',
+    cach: 'Tay trái Đô; tay phải dựng trên nốt 3: Edim (Mi Sol Si♭) cho C7 · E♭ (Mi♭ Sol Si♭) cho Cm7 — hai cái chỉ khác Mi / Mi♭.',
+    chung: 'C7 = Cmaj7 hạ Si xuống Si♭ (Em thành Edim).',
+    ids: ['7', 'm7'],
+    co: [10],
+    khong: [2, 9, 11],
+  },
+  {
+    ten: 'maj7',
+    duoi: 'maj7 · m(maj7)',
+    dauHieu: 'Si (sát dưới Đô)',
+    cach: 'Tay trái Đô; tay phải dựng trên nốt 3, mang Si lên trên: Em (Mi Sol Si) cho Cmaj7 · E♭+ (Mi♭ Sol Si) cho Cm(maj7).',
+    chung: 'Cmaj7 → C7: Si thành Si♭; Cmaj7 → Cm(maj7): Mi thành Mi♭.',
+    ids: ['maj7', 'mMaj7'],
+    co: [11],
+    khong: [2, 10],
+  },
+  {
+    ten: '9',
+    duoi: '9 · m9 · maj9',
+    dauHieu: 'Rê cùng với 7 (Si hay Si♭)',
+    cach: 'Tay phải dựng trên Sol: G (Sol Si Rê) cho Cmaj9 · Gm (Sol Si♭ Rê) cho C9 và Cm9; tay trái giữ nốt 3: C (Cmaj9) · Đô – Mi (C9) · Cm (Cm9).',
+    chung: 'C9 và Cm9 cùng tay phải Gm, chỉ khác tay trái Mi hay Mi♭.',
+    ids: ['maj9', '9', 'm9'],
+    co: [2],
+    khong: [5, 9],
+    coMot: [10, 11],
+  },
+  {
+    ten: '11',
+    duoi: 'm11',
+    dauHieu: 'Fa cùng với 7',
+    cach: 'Tay trái Cm, tay phải B♭ (Si♭ Rê Fa).',
+    chung: 'C9sus4 (nhóm treo) cùng tay phải B♭ nhưng tay trái chỉ Đô — hợp âm có Mi tránh Fa vì Fa chọi Mi. Cm11♭5 ở nhóm giảm.',
+    ids: ['m11'],
+    co: [5, 10],
+    khong: [],
+  },
+  {
+    ten: '13',
+    duoi: '13 · m13',
+    dauHieu: 'La cùng với 7',
+    cach: 'Tay trái khung 7: Đô – Mi – Si♭ (C13) · Đô – Mi♭ – Si♭ (Cm13); tay phải hợp âm có La: Am (C13) · Dm (Cm13).',
+    chung: 'C13 = C6 thêm khung 7 (cùng tay phải Am). C13 lấy Am chứ không lấy Dm vì Fa chọi Mi.',
+    ids: ['13', 'm13'],
+    co: [9, 10],
+    khong: [],
+  },
+  {
+    ten: '7♭5',
+    duoi: '7♭5',
+    dauHieu: 'Sol♭ thay Sol, có Si♭',
+    cach: 'Tay trái Đô; tay phải chùm Mi – Sol♭ – Si♭ — chính là C7 (Edim) hạ Sol xuống Sol♭.',
+    chung: 'Cm7♭5 (nhóm giảm) cũng có ♭5: Đô + E♭m.',
+    ids: ['7b5'],
+    co: [6, 10],
+    khong: [7],
+  },
+  {
+    ten: '♭9',
+    duoi: '7♭9 · 13♭9 · 13♭9♯11',
+    dauHieu: 'Rê♭ (= Đô♯)',
+    cach: 'Lấy loại gốc, đổi đúng một nốt: C7 (Edim) thêm Rê♭ = Edim7 → C7♭9; C13 (Am) Đô thành Đô♯ = A → C13♭9; từ A đổi Mi thành Sol♭ = G♭m → C13♭9♯11.',
+    chung: 'Nốt căng lệch nửa cung khỏi nốt quen (Rê♭ sát Rê) — nghe căng, đòi giải về.',
+    ids: ['7b9', '13b9', '13b9#11'],
+    co: [1],
+    khong: [],
+  },
+  {
+    ten: '♯11',
+    duoi: 'maj9♯11 · 13♯11',
+    dauHieu: 'Fa♯ (= Sol♭)',
+    cach: 'Cmaj9♯11: từ Cmaj9 (C + G) đổi Sol thành Fa♯ → tay phải Bm (Si Rê Fa♯). C13♯11: tay trái khung C7, tay phải D (Rê Fa♯ La).',
+    chung: 'C13♭9♯11 (nhóm ♭9) có cả Rê♭ lẫn Fa♯.',
+    ids: ['maj9#11', '13#11'],
+    co: [6],
+    khong: [],
+  },
+  {
+    ten: '♭13',
+    duoi: '7♭13',
+    dauHieu: 'La♭, có Si♭',
+    cach: 'Tay trái khung C7; tay phải A♭+ (La♭ Đô Mi) — C13 (Am) hạ La xuống La♭.',
+    chung: 'A♭+ cùng nốt Caug (nhóm tăng).',
+    ids: ['7b13'],
+    co: [8, 10],
+    khong: [],
+  },
+]
+
+/** Quy tắc chung giữa các đuôi — số đo trên 26 công thức, gốc Đô (test ở meoChong.test.ts). */
+export const QUY_TAC_DUOI: readonly string[] = [
+  'Đọc đuôi là biết nốt phải có: m → Mi♭ · dim → Mi♭ + Sol♭ · aug → Sol♯ · sus → bỏ Mi · 6 → La · add9 → Rê · 7 → Si♭ · maj7 → Si · 9 → Rê · 11 → Fa · 13 → La · ♭5 → Sol♭ · ♭9 → Rê♭ · ♯11 → Fa♯ · ♭13 → La♭. Tay phải gom các nốt ấy thành một hợp âm ba.',
+  'Cầu thang 7 → 9 → 11 → 13: tay phải loại sau giữ hai nốt trên của tay phải loại trước — Em → G → Bm (maj7 → maj9 → maj9♯11), E♭ → Gm → B♭ → Dm (m7 → m9 → m11 → m13), Edim → Gm → B♭ (7 → 9 → 9sus4).',
+  'Đổi một nốt là sang loại khác, tay trái giữ nguyên — trong 26 công thức có 19 cặp như vậy, vd Mi ↔ Mi♭ (C6 ↔ Cm6, C7 ↔ Cm7), Si ↔ Si♭ (Cmaj7 ↔ C7), Sol → Sol♭ (Cm7 → Cm7♭5), Đô → Đô♯ (C13 → C13♭9).',
+  'Ba tay phải dùng chung giữa các đuôi — chỉ tay trái khác: Am (C6 · C13), Gm (Cm9 · C9), B♭ (Cm11 · C9sus4).',
+]
+
+/** Gợi nhớ ngắn từng công thức (tiếng nghe, quan hệ quen) — hiện dưới dòng công thức ở bảng theo đuôi. */
+const GOI_NHO: Readonly<Record<string, string>> = {
+  maj7: 'hai hợp âm ba nối đuôi (C rồi Em), chung Mi – Sol',
+  '6': 'Am là cặp thứ song song của C',
+  add9: 'Rê kẹp sát dưới Mi',
+  '69': 'như C6 nhưng Đô lên thành Rê',
+  maj9: 'chồng hợp âm bậc V lên hợp âm chủ',
+  'maj9#11': 'màu Lydian sáng lung linh',
+  m7: 'E♭ là cặp trưởng song song của Cm',
+  madd9: 'Rê kẹp sát dưới Mi♭',
+  mMaj7: 'nốt Si cho tiếng phim trinh thám',
+  m7b5: 'như Cm7 nhưng tay phải đổi sang thứ',
+  dim7: 'bốn nốt cách đều nhau',
+  '7': 'như Cmaj7 nhưng tay phải đổi sang giảm',
+  '9': 'như Cm9 nhưng tay trái có Mi',
+  '13': 'tay phải giống C6',
+  '9sus4': 'chính là hợp âm slash B♭/C',
+  '7b9': 'như C7 thêm Rê♭',
+  '7b5': 'như C7 nhưng Sol hạ xuống Sol♭',
+  '7b13': 'A♭+ cùng nốt C+',
+  '13b9': 'như C13 nhưng Đô lên Đô♯',
+  '13b9#11': 'G♭m cũng là F♯m',
 }
 
-/** Bảng 26 loại theo họ (gốc Đô). */
-export function bangTheoLoai() {
-  return HO_LOAI.map((h) => ({
-    ...h,
-    dong: h.ids.map((id) => {
+/** Bảng theo đuôi (gốc Đô): mỗi nhóm kèm từng hợp âm — tên, tay trái, tay phải (tên + nốt), gợi nhớ. Chùm nốt rời gọi bằng các nốt. */
+export function bangTheoDuoi() {
+  return NHOM_DUOI.map((n) => ({
+    ...n,
+    dong: n.ids.map((id) => {
+      if (id.startsWith('q:')) {
+        const c = chongTuDo(0, id.slice(2), 'flat')!
+        return { id, tong: c.nhan.tong, trai: c.nhan.trai, phai: c.nhan.phai, phaiPhu: c.nhan.phaiPhu, goiNho: '' }
+      }
       const ct = CONG_THUC.find((c) => c.id === id)!
-      return { ct, nhan: chongCongThuc(ct, 0, 'C', 'flat').nhan, bac: bacCua(ct), meo: meoCua(ct) }
+      const c = chongCongThuc(ct, 0, 'C', 'flat')
+      const chum = 'iv' in ct.tren
+      return { id, tong: c.nhan.tong, trai: c.nhan.trai, phai: chum ? c.nhan.phaiPhu : c.nhan.phai, phaiPhu: chum ? 'chùm nốt rời' : c.nhan.phaiPhu, goiNho: GOI_NHO[id] ?? '' }
     }),
   }))
 }
 
-/**
- * Quy luật CON SỐ (đuôi tên hợp âm): số càng lớn, tay phải càng leo cao trên hợp âm. `phai` là các bậc tay phải; mọi loại trong `ids`
- * có test kiểm đúng các bậc ấy. (526a1fe chèn số phím vào lời — gỡ 10/10/2026, vì người dùng không muốn mẹo đếm phím.)
- */
-export const LUAT_SO: readonly { so: string; luat: string; ids: readonly string[]; phai: readonly (readonly string[])[] }[] = [
-  { so: '6', luat: 'tay phải dựng trên bậc 6 (6 · 1 · 3)', ids: ['6', '69', 'm6'], phai: [['6', '1', '3'], ['6', '9', '3'], ['6', '1', '♭3']] },
-  {
-    so: '7',
-    luat: 'tay phải chính là 3 · 5 · 7 của hợp âm (dựng trên bậc 3 hay ♭3)',
-    ids: ['maj7', '7', 'm7', 'm7b5', 'dim7', 'mMaj7'],
-    phai: [['3', '5', '7'], ['3', '5', '♭7'], ['♭3', '5', '♭7'], ['♭3', '♭5', '♭7'], ['♭3', '♭5', '𝄫7'], ['♭3', '5', '7']],
-  },
-  { so: '9', luat: 'tay phải 5 · 7 · 9 (dựng trên bậc 5)', ids: ['maj9', 'm9', '9'], phai: [['5', '7', '9'], ['5', '♭7', '9'], ['5', '♭7', '9']] },
-  { so: '11', luat: 'tay phải ♭7 · 9 · 11 (dựng trên bậc ♭7 — thấp hơn gốc một cung); riêng m11♭5 khác lệ', ids: ['m11', '9sus4'], phai: [['♭7', '9', '11'], ['♭7', '9', '4']] },
-  {
-    so: '13',
-    luat: 'hợp âm thứ: tay phải 9 · 11 · 13 (trên bậc 9); hợp âm át: 13 · 1 · 3 (trên bậc 13 — tránh 11 chọi bậc 3)',
-    ids: ['m13', '13'],
-    phai: [['9', '11', '13'], ['13', '1', '3']],
-  },
-  { so: 'add9', luat: 'chùm 9 · 3 · 5 — kẹp 9 sát dưới bậc 3', ids: ['add9', 'madd9'], phai: [['9', '3', '5'], ['9', '♭3', '5']] },
-  {
-    so: 'nốt căng',
-    luat: 'đổi đúng MỘT nốt hay MỘT chất của tay phải loại gốc: 13 → 13♭9 (Am → A), 7 → 7♭9 (Edim → Edim7), 7 → 7♭5 (Sol → Sol♭)',
-    ids: ['13b9', '7b9', '7b5'],
-    phai: [['13', '♭9', '3'], ['3', '5', '♭7', '♭9'], ['3', '♭5', '♭7']],
-  },
-]
-
-/** Mẹo vàng theo loại — mỗi câu có test. */
-export const MEO_VANG: readonly string[] = [
-  'Nhìn ĐUÔI tên trước: 6 → tay phải trên bậc 6; 7 → trên bậc 3; 9 → trên bậc 5; 11 → trên bậc ♭7; 13 → trên bậc 9 (thứ) hay 13 (át). Số càng lớn, tay phải càng leo cao.',
-  'Loại "7": tay phải chính là ba nốt 3 · 5 · 7 của hợp âm — chỉ cần biết chất của ba nốt ấy: maj7 → thứ, 7 → giảm, m7 → trưởng, m7♭5 → thứ, dim7 → giảm, m(maj7) → tăng.',
-  'Đổi họ chỉ đổi CHẤT tay phải, không đổi chỗ: Cmaj7 = C + Em, C7 = C + Edim — cùng trên Mi; Cm7 = C + E♭, Cm7♭5 = C + E♭m — cùng trên Mi♭.',
-  'Hợp âm 9 nào cũng có tay phải là hợp âm bậc V của gốc: Cmaj9 → G, Cm9 và C9 → Gm.',
-  'Nốt căng = đổi một nốt: C13 (Am) → C13♭9 (A, Đô thành Đô♯); C7 (Edim) → C7♭9 (Edim7, thêm Rê♭).',
-  'Hợp âm tăng và bảy giảm có nhiều tên cùng nốt: A♭+ = C+ (C7♭13 = C7 + C+); Edim7 = C♯dim7 (C7♭9 = gốc + bảy giảm nửa cung trên gốc).',
-]
+/** Các nhóm đuôi có mặt trong một bộ công thức (màn game) — dòng ngắn cho bảng mẹo. */
+export const duoiCua = (ids: readonly string[]) => NHOM_DUOI.filter((n) => n.ids.some((id) => ids.includes(id))).map((n) => `${n.ten} (${n.duoi}): ${n.dauHieu} — ${n.cach}`)
