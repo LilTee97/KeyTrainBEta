@@ -244,7 +244,10 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   let seed = Math.imul(take + 1, 7919) + key.tonic * 101 + kind.length * 47
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 }
   const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(random() * xs.length)]
-  const bars = options.caPhaoFull ? kind === 'interlude' ? 12 : kind === 'intro' ? 8 : 6 : kind === 'interlude' ? 8 : 4
+  // Vòng cho sẵn (`cpVongCoDinh`, game chạy ngón): độ dài theo vòng, không tự dựng vòng hòa âm.
+  const coDinh = options.cpVongCoDinh?.length ? options.cpVongCoDinh : null
+  const bars = coDinh ? Math.max(1, Math.round(coDinh.reduce((s, x) => s + x.beats, 0) / 4))
+    : options.caPhaoFull ? kind === 'interlude' ? 12 : kind === 'intro' ? 8 : 6 : kind === 'interlude' ? 8 : 4
   const lengthBeats = bars * 4
   const ownSong = style.cpSoloSong ?? ''
   const textured = !!style.cpSoloSheetTexture
@@ -257,7 +260,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const bodyOnly = textured && kind !== 'outro' ? allNative.filter(g => g.source.kind !== 'outro') : []
   const native = bodyOnly.length ? bodyOnly : allNative
   const routes = harmonicGestures.filter(g => g.source.mode === key.scale)
-  if (!routes.length || !native.length) return empty('Chưa đủ câu ballad có giọng/hòa âm kiểm chứng.')
+  if ((!coDinh && !routes.length) || !native.length) return empty('Chưa đủ câu ballad có giọng/hòa âm kiểm chứng.')
   const harmony: Array<Harmony & { source: string }> = []
   const routeIds: string[] = []
   const canJoin = (a: Harmony, b: Harmony) => functionOf(a) === functionOf(b) ||
@@ -269,7 +272,7 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
     if (!viability.has(id)) viability.set(id, routes.some(g => canJoin(previous, g.harmony[0]) && canContinue(g.harmony.at(-1)!, blocks - 1)))
     return viability.get(id)!
   }
-  for (let at = 0; at < lengthBeats - 8; at += 8) {
+  for (let at = 0; !coDinh && at < lengthBeats - 8; at += 8) {
     const previous = harmony.at(-1)
     const joined = routes.filter(g => (!previous || canJoin(previous, g.harmony[0])) &&
       canContinue(g.harmony.at(-1)!, (lengthBeats - at - 16) / 8))
@@ -300,7 +303,13 @@ export function composeCpBallad(options: PhraseSectionOptions): PhraseSection {
   const ownCadence = thu && key.scale === 'minor' ? cpBalladGestures.filter(t => t.source.song === ownSong &&
     t.source.kind === kind && t.harmony.at(-1)?.root === 0 && reliableHarmony(t))
     .reduce<Gesture | undefined>((a, b) => !a || b.from > a.from ? b : a, undefined) : undefined
-  if (ownCadence) harmony.push(...ownCadence.harmony.map(h => ({ ...h, at: cadenceAt + h.at, source: `cadence:${ownCadence.id}` })))
+  if (coDinh) {
+    let at = 0
+    for (const x of coDinh) {
+      harmony.push({ at, root: x.root, suffix: x.suffix, bass: x.bass, source: 'vong-co-dinh' })
+      at += x.beats
+    }
+  } else if (ownCadence) harmony.push(...ownCadence.harmony.map(h => ({ ...h, at: cadenceAt + h.at, source: `cadence:${ownCadence.id}` })))
   else if (kind === 'outro') harmony.push(
     { at: cadenceAt, root: 7, suffix: take % 2 ? '7sus4' : '7', bass: null, source: 'cadence:ACDD-V-i/CEC-V-I' },
     ...(take % 2 ? [{ at: cadenceAt + 2, root: 7, suffix: '7', bass: null, source: 'cadence:sus-resolution' }] : []),

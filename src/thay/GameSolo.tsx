@@ -312,7 +312,7 @@ export function GameChayNgon() {
                 </button>
               ))}
               <span className="text-dim">
-                hai ô cùng một hợp âm · {loaiDon === '7' ? (thay === 'blues' ? 'hợp âm 7 là hợp âm chủ của blues' : 'hợp âm 7 hiểu là V7 của giọng trưởng') : loaiDon === 'thu' ? 'hợp âm chủ giọng thứ' : 'hợp âm chủ giọng trưởng'}
+                {thay === 'ca-phao' ? 'bốn' : 'hai'} ô cùng một hợp âm · {loaiDon === '7' ? (thay === 'blues' ? 'hợp âm 7 là hợp âm chủ của blues' : 'hợp âm 7 hiểu là V7 của giọng trưởng') : loaiDon === 'thu' ? 'hợp âm chủ giọng thứ' : 'hợp âm chủ giọng trưởng'}
               </span>
             </div>
           </div>

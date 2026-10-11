@@ -6764,3 +6764,39 @@ ngoài gam chỉ là nốt dẫn nửa cung ở phách nhẹ cách nốt sau đ�
 `vite build` qua · chạy thử headless 8/8 (vòng C A7 Dm G7; đầu ô ghi gam A Mixolydian ♭13; mục Gam trên từng hợp âm đủ vai, bốn cách,
 chỗ chưa có, từng ô C Ionian · A Mixolydian ♭13 (C → C♯) · D Dorian · G Mixolydian; quy luật có gamHop và chrom; điện thoại không cuộn
 ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game chạy ngón: Cà Pháo dùng bộ soạn của tab Tái hòa âm, soạn câu MỚI trên vòng người dùng (12/10/2026)
+
+**Người dùng:** *"Trong phần học Solo khi tôi chọn thầy Cà Pháo thì tôi muốn bạn sẽ sử dụng bộ soạn của Cà Pháo để sinh ra câu solo để
+tôi đánh theo, giống như trong tab Tái hòa âm mỗi lần tái hòa âm theo màu Cà Pháo thì bạn sinh câu solo chứ ko phải bạn lặp lại câu Cà
+Pháo có trong sheet."*
+
+Bản trước (`e2d2340`): Cà Pháo trong game dùng bộ ghép ô thật `giaiDieuDaoLinhNhi` — mỗi ô của vòng chép một ô nhịp có thật trong sheet,
+nên nghe ra câu sheet lặp lại.
+
+- `composeCpBallad` (bộ soạn ballad tab Tái hòa âm gọi khi tái hòa âm màu Cà Pháo) thêm tùy chọn `cpVongCoDinh` (`phraseSection.ts`): có
+  thì KHÔNG tự dựng vòng (tuyến hòa âm đã học + câu kết ii–V) mà soạn trên đúng vòng cho sẵn, dài bằng vòng. Bỏ trống = như cũ — tab Tái
+  hòa âm không truyền, không đổi hành vi.
+- `baiCauThay` Cà Pháo gọi `composeCpBallad` như tab Tái hòa âm: điệu Ballad cứ đi, tầm `BALLAD_SOLO_RANGE` 58–77, ô tick lượt 4 bật như
+  mặc định ở đó, BPM của điệu (đổi tốc độ game không đổi câu), đoạn giang tấu, câu dẫn về hợp âm đầu vòng. Hai tay đều của bộ soạn. Giọng
+  thứ cũng dùng ballad (bản trước: đệm Bossa sheet 9–10). Khác tab Tái hòa âm ở một chỗ: hòa âm là vòng của người dùng.
+- Vòng ngắn lặp tới ≥ 4 ô và chẵn ô — bộ soạn soạn theo khung 2 ô, khung cuối là câu đóng. Đo (8 lượt mỗi vòng) trước khi lặp: C – C ra 2
+  câu khác nhau, Am – Am 4, G7 – G7 5; sau khi lặp: 7 · 7 · 8. Phần hợp âm lẻ ghi "bốn ô cùng một hợp âm".
+- Lời bộ soạn dưới nút viết lại theo số đo dưới đây.
+
+**Số đo của bộ soạn trên vòng game** (64 câu: 8 vòng × 8 lượt): 2 751 cú tay phải, 219 cú nhiều nốt (8,0 %). Kỹ thuật: nốt màu 294 · bè
+quãng 4 76 · quãng 6 60 · quãng tám 14 · quãng 3 12; KHÔNG có nốt láy, cụm nửa cung, nốt dẫn nửa cung — đọc code (chưa đo riêng): ba kỹ
+thuật ấy chỉ giữ khi tiết tấu là của chính câu nguồn, mà điệu này lấy tiết tấu từ Anh Cứ Đi Đi. Nguồn hình câu (đếm nửa khung): Ngày mai
+em đi 88 · Chúng Ta Không Thuộc Về Nhau 54 · Có Em Chờ 40 · Hồng Kông 1 32 · Anh Cứ Đi Đi 30 · Để Em Rời Xa 10 · Chưa Bao Giờ 2. Trên 12
+vòng mẫu (lượt 0): đỉnh tay phải là nốt hợp âm 70–89 % số cú, mật độ 2,25–3,0 cú mỗi phách. 132/132 vòng sẵn (12 giọng × trưởng / thứ)
+ra câu.
+
+**Chưa đo — lỗ còn lại:** tai người dùng chưa nghe câu Cà Pháo trên vòng game; bộ soạn chọn hình câu theo chức năng hợp âm của câu nguồn,
+vòng nhiều hợp âm ngoài giọng thì nhiều nốt phải dò lại cao độ — chưa đo riêng; mật độ 2,25–3,0 cú mỗi phách dày cho người tập, chưa có nút
+thưa; bộ soạn bossa của Cà Pháo chưa nối (giọng thứ dùng ballad); câu thầy Linh Nhi vẫn là bộ ghép ô thật, Blues vẫn chép ô Rising Sun.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 27 (thêm 2: bộ soạn soạn trên ĐÚNG vòng cho sẵn — 4 vòng, hợp âm và số phách mỗi
+hợp âm khớp; mọi vòng sẵn có ra câu, tay phải trong tầm 58–77, C – C lặp thành 16 phách và ≥ 6 câu khác nhau / 8 lượt, vòng 3 hợp âm 24
+phách) · toàn suite 2 762 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 15/15 (C – C chờ đúng nốt 28/28 chặng không vấp,
+bấm đúng chặng đầu thì máy đánh tay trái của bộ soạn; Đổi câu ra câu khác, tới câu số 4 không báo hết câu; Am Dm E7 Am 28/28; C F G tên
+giữ ba hợp âm, 24 phách; theo nhịp C Am F G phát đệm và chấm; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

@@ -39,6 +39,13 @@ export interface PhraseSectionOptions {
   caPhaoSimulate?: boolean
   /** Opt-in complete CP sheet sections; false/absent leaves the existing solo untouched. */
   caPhaoFull?: boolean
+  /**
+   * VÒNG CHO SẴN cho bộ soạn ballad Cà Pháo (`composeCpBallad`) — game chạy ngón trang Học Solo (người dùng 11/10/2026: "khi tôi chọn
+   * thầy Cà Pháo … sử dụng bộ soạn của Cà Pháo để sinh ra câu solo … giống như trong tab Tái hòa âm … chứ ko phải bạn lặp lại câu Cà
+   * Pháo có trong sheet"). Có thì bộ soạn KHÔNG tự dựng vòng (tuyến hòa âm đã học + câu kết ii–V) mà soạn câu trên đúng vòng này; gốc ·
+   * bass tính từ chủ âm. Bỏ trống = như cũ (tab Tái hòa âm không truyền).
+   */
+  cpVongCoDinh?: readonly { root: number; suffix: string; bass: number | null; beats: number }[]
   caPhaoFullSource?: string
   /** Actual available keys for full CP solos, independent of the short-solo range. */
   caPhaoKeyboardRange?: { low: MidiNote; high: MidiNote }

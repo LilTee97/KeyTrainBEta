@@ -518,6 +518,8 @@ Các hợp âm phải được chọn tự do …"*
   đổi câu khi bấm "Đổi câu" — và vòng tự nhập; tab Mẹo & quy tắc phân tích riêng từng thầy; phím mờ tương phản hơn, tên nốt to và nổi.
   Cập nhật 11/10 (lượt 3, người dùng): chạy ngón cơ bản có "Sinh nốt Solo" — bộ soạn gia sư soạn câu trên vòng, ghi lý do từng nốt và
   dạy quy luật chung (mỗi luật trỏ về một mẹo có số đo).
+  Cập nhật 12/10 (người dùng): câu thầy Cà Pháo trong game do bộ soạn ballad của tab Tái hòa âm soạn MỚI trên vòng người dùng — không
+  còn chép ô nhịp sheet.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
