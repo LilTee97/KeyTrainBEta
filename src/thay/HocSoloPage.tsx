@@ -3,6 +3,7 @@ import { playChord, playChordSequence, startAudio } from '../shared/audio/audioE
 import { buildKeyboardLayout } from '../shared/midi/onScreenPiano/layout'
 import { GameChayNgon, GameScale } from './GameSolo'
 import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
+import { PHAN_TICH_THAY, type MucThay, type PhanTichThay } from './hocSolo/meoThay'
 import { ARP, GAM, ngonArp, ngonGam, tenNot, type LoaiArp, type LoaiGam, type Tay } from './hocSolo/gamNgon'
 import { nguCanh } from './soanCau/giaiThich'
 import { GOC } from './vongThay'
@@ -17,7 +18,7 @@ import { GOC } from './vongThay'
 const TAB = [
   { id: 'chon-not', ten: 'Chọn nốt theo thầy' },
   { id: 'scale', ten: 'Scale & Arpeggio' },
-  { id: 'meo', ten: 'Mẹo' },
+  { id: 'meo', ten: 'Mẹo & quy tắc' },
   { id: 'game-ngon', ten: 'Game chạy ngón' },
   { id: 'game-scale', ten: 'Game Scale' },
 ] as const
@@ -46,17 +47,38 @@ const mucCua = (x: NotHoc): Muc =>
   x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
 const NEN: Readonly<Record<Muc, { trang: CSSProperties; den: CSSProperties; chu: string }>> = {
   dam: { trang: { background: 'var(--color-teal-key)' }, den: { background: 'var(--color-teal-key)' }, chu: 'text-teal-key' },
+  /* Người dùng 11/10/2026 (lượt 2): "đổi màu của các phím mờ sao cho tương phản tốt hơn". Cũ: teal 32 % pha kem (#c3d3c6) — gần như lẫn
+     với phím trắng thường; phím đen teal 42 % pha đen. Nay teal 55 % pha trắng + viền teal. Lùi nếu phím mờ nhìn như phím đậm. */
   mo: {
-    trang: { background: 'color-mix(in srgb, var(--color-teal-key) 32%, var(--color-cream))' },
-    den: { background: 'color-mix(in srgb, var(--color-teal-key) 42%, #111)' },
-    chu: 'text-teal-key/60',
+    trang: { background: 'color-mix(in srgb, var(--color-teal-key) 55%, white)', boxShadow: 'inset 0 0 0 2px var(--color-teal-key)' },
+    den: { background: 'color-mix(in srgb, var(--color-teal-key) 55%, #111)', boxShadow: 'inset 0 0 0 2px var(--color-teal-key)' },
+    chu: 'text-teal-key/75',
   },
   khong: { trang: { background: 'var(--color-cream)' }, den: { background: '#0b0b0b' }, chu: 'text-dim' },
 }
 const CHU_PHIM: Readonly<Record<Muc, { trang: string; den: string }>> = {
   dam: { trang: 'text-ink', den: 'text-ink' },
-  mo: { trang: 'text-ink/80', den: 'text-cream' },
-  khong: { trang: 'text-ink/60', den: 'text-dim' },
+  mo: { trang: 'text-ink', den: 'text-cream' },
+  khong: { trang: 'text-ink/70', den: 'text-cream/80' },
+}
+/* Tên nốt trên phím — người dùng 11/10/2026: "tăng kích thước của tên nốt và đổi màu chúng cho thật nổi bật dễ nhìn". Thẻ tối chữ vàng
+   đậm: nổi trên cả phím teal, phím kem lẫn phím đen. Cũ: chữ mono 10 px (phím đen 9 px), cùng màu với số bậc. */
+const TEN_NOT = 'rounded bg-ink px-1 py-0.5 font-sans font-bold leading-none text-yellow-300 shadow'
+
+/** Chữ trên một phím: tên nốt (thẻ nổi bật) · dòng phụ (bậc, %, ngón). */
+interface NhanPhim {
+  ten: string
+  phu?: ReactNode
+}
+
+function ChuPhim({ nhan, co }: { nhan: NhanPhim | null; co: string }) {
+  if (!nhan) return null
+  return (
+    <>
+      <span className={`${TEN_NOT} ${co}`}>{nhan.ten}</span>
+      {nhan.phu}
+    </>
+  )
 }
 
 /** Bàn phím để XEM: tô màu theo vai, chữ trên phím, bấm để nghe — không đổ vào kho MIDI (không phải bàn phím chơi). */
@@ -70,7 +92,7 @@ function BanPhimMau({
   thap: number
   cao: number
   muc: (m: number) => Muc
-  nhan: (m: number) => ReactNode
+  nhan: (m: number) => NhanPhim | null
   onBam?: (m: number) => void
 }) {
   const { whiteKeys, blackKeys } = buildKeyboardLayout(thap, cao)
@@ -83,9 +105,9 @@ function BanPhimMau({
             type="button"
             onClick={() => onBam?.(note)}
             style={NEN[muc(note)].trang}
-            className={`flex flex-1 flex-col items-center justify-end gap-0.5 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight ${CHU_PHIM[muc(note)].trang}`}
+            className={`flex flex-1 flex-col items-center justify-end gap-1 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight font-semibold sm:text-xs ${CHU_PHIM[muc(note)].trang}`}
           >
-            {nhan(note)}
+            <ChuPhim nhan={nhan(note)} co="text-[10px] sm:text-[15px]" />
           </button>
         ))}
       </div>
@@ -95,9 +117,9 @@ function BanPhimMau({
           type="button"
           onClick={() => onBam?.(note)}
           style={{ left: `${position * 100}%`, width: `${(100 / whiteKeys.length) * 0.66}%`, ...NEN[muc(note)].den }}
-          className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight ${CHU_PHIM[muc(note)].den}`}
+          className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end gap-0.5 rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight font-semibold sm:text-[11px] ${CHU_PHIM[muc(note)].den}`}
         >
-          {nhan(note)}
+          <ChuPhim nhan={nhan(note)} co="text-[9px] sm:text-[13px]" />
         </button>
       ))}
     </div>
@@ -215,13 +237,15 @@ function ChonNotTab() {
           thap={60}
           cao={84}
           muc={(m) => mucCua(notCua(m))}
-          nhan={(m) => (
-            <>
-              <span>{tenPhim(m)}</span>
-              <span>{notCua(m).bac}</span>
-              {notCua(m).pct !== null && <b>{notCua(m).pct}%</b>}
-            </>
-          )}
+          nhan={(m) => ({
+            ten: tenPhim(m),
+            phu: (
+              <>
+                <span>{notCua(m).bac}</span>
+                {notCua(m).pct !== null && <b>{notCua(m).pct}%</b>}
+              </>
+            ),
+          })}
           onBam={(m) => void bamNghe(m)}
         />
         <p className="mt-1 text-[11px] text-dim">
@@ -351,13 +375,17 @@ function ScaleTab() {
           cao={tay === 'phai' ? 84 : 72}
           muc={(m) => (len.includes(m) ? 'dam' : 'khong')}
           nhan={(m) =>
-            len.includes(m) ? (
-              <>
-                <span>{tenNot(m, goc, dl.thu)}</span>
-                <span>{bacCua(m)}</span>
-                {ngonCua(m) !== undefined && <b className="rounded-full bg-ink/80 px-1 text-amber-key">{ngonCua(m)}</b>}
-              </>
-            ) : null
+            len.includes(m)
+              ? {
+                  ten: tenNot(m, goc, dl.thu),
+                  phu: (
+                    <>
+                      <span>{bacCua(m)}</span>
+                      {ngonCua(m) !== undefined && <b className="rounded-full bg-ink/80 px-1 text-amber-key">{ngonCua(m)}</b>}
+                    </>
+                  ),
+                }
+              : null
           }
           onBam={(m) => void ngheNot([m])}
         />
@@ -381,11 +409,84 @@ function ScaleTab() {
   )
 }
 
-/** Tab MẸO — quy luật rút từ số đo các thầy, viết thành mẹo. */
+function DanhSachMuc({ ds }: { ds: readonly MucThay[] }) {
+  return (
+    <ul className="flex flex-col gap-2">
+      {ds.map((m) => (
+        <li key={m.ten}>
+          <p className="font-semibold text-amber-key">{m.ten}</p>
+          <p className="text-cream/85">{m.cau}</p>
+          <p className="text-xs text-dim">Cơ sở: {m.coSo}</p>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/**
+ * Phân tích + quy tắc + mẹo riêng của MỘT thầy (người dùng 11/10/2026: "phân tích theo từng thầy, sau đó làm mẹo riêng để học cách soạn
+ * nốt của từng thầy"). Số chép từ md của thầy — `hocSolo/meoThay.ts`.
+ */
+function MeoMotThay({ t }: { t: PhanTichThay }) {
+  const goiThay = t.id === 'ca-phao' ? 'anh' : t.id === 'linh-nhi' ? 'chị' : 'người chơi Blues'
+  return (
+    <>
+      <div className={the}>
+        <h3 className="mb-1 font-semibold text-cream">Chân dung — {t.ten}</h3>
+        <p className="text-cream/90">{t.chanDung}</p>
+        <p className="mt-2 text-xs text-dim">Nguồn: {t.nguon} Lời chân dung, quy tắc, mẹo là lời gia sư của Claude viết trên các số ấy.</p>
+      </div>
+      <div className={the}>
+        <h3 className="mb-2 font-semibold text-cream">Phân tích — số đo</h3>
+        <dl className="grid grid-cols-1 gap-x-4 gap-y-1.5 text-xs sm:grid-cols-[minmax(9rem,15rem)_1fr]">
+          {t.soDo.map((x) => (
+            <div key={x.muc} className="contents">
+              <dt className="font-semibold text-teal-key">{x.muc}</dt>
+              <dd className="text-cream/85">{x.so}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div className={the}>
+        <h3 className="mb-2 font-semibold text-cream">Quy tắc soạn nốt của {goiThay}</h3>
+        <DanhSachMuc ds={t.quyTac} />
+      </div>
+      <div className={the}>
+        <h3 className="mb-2 font-semibold text-cream">Mẹo riêng — soạn nốt như {t.ten}</h3>
+        <DanhSachMuc ds={t.meo} />
+        <p className="mt-3 text-xs text-dim">
+          Tập ngay: tab Game chạy ngón → nút {t.ten} → bộ soạn của {goiThay} soạn câu trên hợp âm hay vòng của bạn để bạn bấm theo.
+        </p>
+      </div>
+    </>
+  )
+}
+
+/** Tab MẸO & QUY TẮC — chung (quy luật rút từ số đo các thầy) hoặc riêng từng thầy. */
 function MeoTab() {
+  const [xem, setXem] = useState<'chung' | PhanTichThay['id']>('chung')
   const nhom = [...new Set(MEO_SOLO.map((m) => m.nhom))]
+  const t = PHAN_TICH_THAY.find((x) => x.id === xem)
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <button type="button" onClick={() => setXem('chung')} className={nut(xem === 'chung')}>
+          Chung — gia sư
+        </button>
+        {PHAN_TICH_THAY.map((x) => (
+          <button key={x.id} type="button" onClick={() => setXem(x.id)} className={nut(xem === x.id)}>
+            {x.ten}
+          </button>
+        ))}
+      </div>
+      {t ? <MeoMotThay t={t} /> : <MeoChung nhom={nhom} />}
+    </div>
+  )
+}
+
+function MeoChung({ nhom }: { nhom: readonly string[] }) {
+  return (
+    <>
       <div className={the}>
         <p className="text-cream/90">
           Mẹo dưới đây tổng hợp từ số đo câu solo của các thầy (Cà Pháo, Linh Nhi, Blues — và Tôn Hùng trong luật chung). Mỗi mẹo kèm cơ sở:
@@ -395,18 +496,10 @@ function MeoTab() {
       {nhom.map((nh) => (
         <div key={nh} className={the}>
           <h3 className="mb-2 font-semibold text-cream">{nh}</h3>
-          <ul className="flex flex-col gap-2">
-            {MEO_SOLO.filter((m) => m.nhom === nh).map((m) => (
-              <li key={m.ten}>
-                <p className="font-semibold text-amber-key">{m.ten}</p>
-                <p className="text-cream/85">{m.cau}</p>
-                <p className="text-xs text-dim">Cơ sở: {m.coSo}</p>
-              </li>
-            ))}
-          </ul>
+          <DanhSachMuc ds={MEO_SOLO.filter((m) => m.nhom === nh)} />
         </div>
       ))}
-    </div>
+    </>
   )
 }
 

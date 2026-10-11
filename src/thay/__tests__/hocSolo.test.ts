@@ -16,6 +16,9 @@ import {
   saoChoDung,
   saoTheoNhip,
 } from '../hocSolo/gamNgon'
+import { baiCauThay, loiBoSoan } from '../hocSolo/cauThay'
+import { PHAN_TICH_THAY } from '../hocSolo/meoThay'
+import { docVong } from '../soanCau/thayTrongVong'
 
 const den = (m: number) => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12)
 
@@ -212,5 +215,59 @@ describe('Chọn nốt theo thầy', () => {
           }
     expect(MEO_SOLO.length).toBeGreaterThanOrEqual(15)
     for (const m of MEO_SOLO) expect(m.coSo.length).toBeGreaterThan(20)
+  })
+})
+
+describe('Game chạy ngón — câu theo thầy (bộ soạn của app trên vòng người dùng)', () => {
+  const VONG: [string, number, boolean][] = [
+    ['C Am F G', 0, false],
+    ['Am Dm E7 Am', 9, true],
+  ]
+  it('ba thầy × hai vòng: có câu tay phải trong tầm đàn 61 phím, có đệm tay trái, đúng số phách mỗi hợp âm', () => {
+    for (const thay of ['ca-phao', 'linh-nhi', 'blues'] as const)
+      for (const [chu, tonic, thu] of VONG) {
+        const hop = docVong(chu, tonic)!
+        const bai = baiCauThay(thay, hop, tonic, thu, 0, 'x')!
+        const o = thay === 'blues' ? 3 : 4
+        expect(bai, `${thay} ${chu}`).not.toBeNull()
+        expect(bai.perBeat.length).toBe(hop.length * o)
+        expect(bai.meter).toBe(thay === 'blues' ? 3 : 4)
+        const phai = bai.timeline.filter((e) => e.hand === 'right')
+        expect(phai.length, `${thay} ${chu}`).toBeGreaterThan(hop.length * 3)
+        expect(bai.timeline.some((e) => e.hand === 'left')).toBe(true)
+        for (const e of phai) {
+          expect(e.startBeat).toBeLessThan(hop.length * o)
+          for (const m of e.notes) expect(m >= 36 && m <= 96, `${thay} ${chu} ${m}`).toBe(true)
+        }
+        expect(loiBoSoan(thay, thu)).toMatch(/Đệm: /)
+      }
+  })
+  it('cùng lượt ra cùng một câu (giữ câu tới khi bấm Đổi câu); Cà Pháo · Linh Nhi đổi lượt là đổi câu', () => {
+    const hop = docVong('C Am F G', 0)!
+    for (const thay of ['ca-phao', 'linh-nhi', 'blues'] as const)
+      expect(JSON.stringify(baiCauThay(thay, hop, 0, false, 2, 'x'))).toBe(JSON.stringify(baiCauThay(thay, hop, 0, false, 2, 'x')))
+    for (const thay of ['ca-phao', 'linh-nhi'] as const) {
+      const cau = [0, 1, 2, 3].map((t) => JSON.stringify(baiCauThay(thay, hop, 0, false, t, 'x')!.timeline.filter((e) => e.hand === 'right')))
+      expect(new Set(cau).size, thay).toBeGreaterThanOrEqual(3)
+    }
+  })
+})
+
+describe('Mẹo & quy tắc theo từng thầy', () => {
+  it('ba thầy, mỗi thầy đủ phân tích · quy tắc · mẹo; mọi cơ sở có số; ký hiệu đẹp; không gọi nhịp lệch là "giật"', () => {
+    expect(PHAN_TICH_THAY.map((t) => t.id)).toEqual(['ca-phao', 'linh-nhi', 'blues'])
+    for (const t of PHAN_TICH_THAY) {
+      expect(t.soDo.length, t.id).toBeGreaterThanOrEqual(10)
+      expect(t.quyTac.length, t.id).toBeGreaterThanOrEqual(7)
+      expect(t.meo.length, t.id).toBeGreaterThanOrEqual(8)
+      expect(t.nguon).toMatch(/\d/)
+      for (const x of t.soDo) expect(x.so, `${t.id} ${x.muc}`).toMatch(/\d/)
+      for (const m of [...t.quyTac, ...t.meo]) {
+        expect(m.coSo, `${t.id} ${m.ten}`).toMatch(/\d/)
+        expect(m.cau.length, `${t.id} ${m.ten}`).toBeGreaterThan(30)
+      }
+      const chu = JSON.stringify(t)
+      expect(chu).not.toMatch(/#|\bb\d|phách giật/)
+    }
   })
 })

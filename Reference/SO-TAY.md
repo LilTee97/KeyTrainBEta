@@ -6567,3 +6567,55 @@ không màu, Mi♭ đậm; Cà Pháo: ≥ 10 % đậm, Fa 5 % mờ; nốt rơi g
 [36 48 52 55]; 9/9 → Đạt ★★★; vòng Dm – G – C chờ đúng nốt: 9 nốt đầu → đủ 9 tiếng đệm, bấm sai không qua và không đệm, 23/24 chặng; theo
 nhịp ♩ = 100: nốt rơi ghi ngón, backing 37 tiếng, hết hai lượt chấm 0/48; điện thoại không cuộn ngang) · `LuyenTap.json` sao lưu trước, trả
 lại sau (md5 khớp), `Nguon.json` không đổi.
+
+## Bước — GĐ 3: Học Solo lượt 2 — game chạy ngón theo thầy (nút ba thầy · vòng tự nhập · câu của bộ soạn thầy · Đổi câu) · Mẹo & quy tắc theo từng thầy · phím mờ và tên nốt (11/10/2026)
+
+**Người dùng:** *"1.game chạy ngón hãy thêm các mục sau: -thêm 3 nút của 3 thầy CP Linh Nhi và Blues, nếu ko chọn nút nào thì chạy ngón
+theo cơ bản -Thêm tính năng nhập vòng tùy chọn và vì đã có bộ soạn nốt cho từng thầy nên hãy soạn nốt solo theo từng thầy và đố tôi bấm
+theo. Ko cần tự động đổi câu mỗi khi phát, chỉ đổi khi nào tôi bấm nút đổi câu 2. Mục Mẹo và quy tắc thì bạn hãy phân tích theo từng thầy,
+sau đó làm mẹo riêng để học cách soạn nốt của từng thầy 3. Hãy đổi màu của các phím mờ sao cho tương phản tốt hơn, tăng kích thước của
+tên nốt và đổi màu chúng cho thật nổi bật dễ nhìn"*.
+
+- **Game chạy ngón — nút ba thầy** (`GameSolo.tsx`, `hocSolo/cauThay.ts`): Cà Pháo · Linh Nhi · Blues, bấm lại để bỏ; không chọn = chạy
+  ngón cơ bản như cũ (năm ngón · gam · rải, có số ngón).
+  - Chọn thầy → câu solo do BỘ SOẠN CỦA APP soạn trên hợp âm / vòng của người dùng — không soạn mới ở game:
+    - Cà Pháo, Linh Nhi: bộ ghép ô thật `giaiDieuDaoLinhNhi`, đoạn giang tấu (ô nhịp thật của bản ký âm; cùng bậc → cùng chức năng, nối
+      giọng, ở lại một bài; không nắn nốt). Đệm: tay trái dưới solo (`soloLeftHand`) của Ballad cứ đi (ô `soloCell`) giọng trưởng /
+      Bossa sheet 9–10 giọng thứ (vốn giang thứ của anh là bossa nova) · Bolero rải bản ký âm của chị.
+    - Blues: Bộ Soạn Blues `chayBlueSun` đoạn đàn (mặc định của Slow Blues — chép trọn ô Rising Sun theo chức năng) trên tay trái Slow
+      Blues; mỗi hợp âm một ô 6/8 = 3 phách đen; theo nhịp đếm vào 3 (`BaiChay.meter`).
+    - Vốn ô (đếm 11/10 trong `tuyenSolo.ts`): Cà Pháo giang trưởng 3 tuyến · 31 ô, giang thứ 1 tuyến · 8 ô; Linh Nhi giang trưởng 3 · 27,
+      giang thứ 4 · 31 (có tuyến 6/8 và 8 phách); Blues 16 ô Rising Sun.
+  - Khối nốt rơi ghi TÊN nốt (bộ soạn không đặt ngón — đặt ngón cho câu thầy chưa làm).
+  - Phần hợp âm riêng lẻ khi có thầy: gốc + trưởng · thứ · 7 → vòng 2 ô một hợp âm (trưởng = I · thứ = i · 7 = V7 giọng trưởng với Cà
+    Pháo, Linh Nhi; I7 với Blues — cách hiểu của Claude).
+  - **Đổi câu**: câu giữ nguyên tới khi bấm (đổi nhịp, đổi chế độ không đổi câu); nút thử tới 12 lượt để ra câu KHÁC (so vân tay tay
+    phải), hết câu khác thì báo. Đo 11/10 (6 vòng): Cà Pháo, Linh Nhi 4 lượt ra 4 câu khác nhau ở cả 6 vòng; Blues hay trùng — chép ô
+    18/36 câu khác nhau (6 lượt × 6 vòng), ô tick "soạn từ nhóm ba" 27/36 (không dùng: ô tick chưa được duyệt làm mặc định).
+  - **Vòng tự nhập** (phần theo vòng, cả chạy ngón cơ bản): ô nhập + "Dùng vòng này" — `docHop` đọc, `doanGiong` đoán giọng (đổi được ở ô
+    Giọng); đọc không được thì báo và giữ vòng cũ.
+- **Mẹo & quy tắc** (tab đổi tên từ "Mẹo"): Chung — gia sư (17 mẹo cũ) · Cà Pháo · Linh Nhi · Blues. Mỗi thầy: chân dung (lời gia sư) ·
+  phân tích — số đo (12–13 dòng) · quy tắc soạn nốt (8–9) · mẹo riêng (8–10) — `hocSolo/meoThay.ts`. KHÔNG đo mới: số chép từ md Cà Pháo
+  (mục 2, 4, 5b), md Linh Nhi (Luật soạn nốt, 4, 5, 6, 6b, 7, 13c), `BLUES-CHON-HOP-AM-VA-NOT.md` (3, 4, 7), mỗi số kèm cỡ mẫu; chỉ so hai
+  thầy ở chỗ md ghi là đo cùng cách.
+  - Thử đo lại ba thầy cùng một cách trên vốn ô của game rồi BỎ: bảng tuyến gộp chất hợp âm về ba nhãn (mất maj7 · m7) và giữ đuôi nốt
+    nối thành cú riêng — Cà Pháo ra 46,4 % nốt hợp âm (n=291) so với 70,8 % của md (n=828): lệch vì cách lấy dữ liệu, không vì thầy.
+  - "Phách giật" của bảng kết cấu Cà Pháo (`x..x`) ghi thành "nhịp lệch" — "đánh giật" của người dùng là giật ngón (ghi nhớ 3/10).
+- **Phím mờ và tên nốt** (`HocSoloPage.tsx`): mờ = teal 55 % pha trắng + viền teal (phím đen: teal 55 % pha đen + viền). Cũ: teal 32 %
+  pha kem (#c3d3c6) — gần như lẫn phím trắng; lùi nếu phím mờ nhìn như phím đậm. Tên nốt: thẻ nền tối chữ vàng đậm, 15 px phím trắng /
+  13 px phím đen trên màn rộng, 10 / 9 px trên điện thoại. Cũ: chữ mono 10 / 9 px cùng màu số bậc.
+
+**Chưa đo — lỗ còn lại:**
+- 2 trong 5 test đỏ cũ là NEO TẦM ÂM của bộ ghép ô (`tuyenSolo.test.ts`): câu Cà Pháo đang cao hơn tầm thật — trưởng tâm 72,6 so với neo
+  70,8; thứ 74,0 so với 68,0. Game dùng đúng bộ ấy nên câu Cà Pháo trong game có thể cao hơn anh đánh; chưa đo riêng trong game (tầm game
+  57–84).
+- Đặt ngón cho câu thầy chưa làm; câu Blues nhanh (Rising Sun thật 7,8 nốt/giây) — ở ♩ 50–100 vẫn có cú cách nhau 1/12 móc đơn; ngưỡng
+  sao cho câu thầy chưa thử; "7 = V7" ở hợp âm lẻ là Claude chọn; backing chạy ngón cơ bản vẫn là khuôn bùm – chát của Claude.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 20 (thêm 3: ba thầy × hai vòng có câu trong tầm 61 phím, có đệm, đúng số phách;
+cùng lượt cùng câu, Cà Pháo · Linh Nhi đổi lượt là đổi câu ≥ 3/4 lượt; mẹo theo thầy đủ mục, mọi cơ sở có số, không "#", không "phách
+giật") · toàn suite 2 755 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 30/30 (Fa 5 % của Cà Pháo mờ kiểu mới, ≥ 10 % đậm;
+thẻ tên nốt vàng 15 px; Blues F7; nút ba thầy; Cà Pháo hợp âm C hai ô, nốt rơi ghi tên nốt; bấm đúng chặng đầu → máy đánh bass; 17/17
+chặng; Đổi câu → câu 2 khác câu 1, đổi nhịp giữ câu; vòng tự nhập Am Dm E7 Am → đoán La thứ; Linh Nhi cùng vòng; nhập sai báo lỗi, giữ
+vòng; Blues theo nhịp đếm vào 3, backing chạy, có chấm; bỏ chọn thầy về cơ bản; Mẹo & quy tắc Chung · Cà Pháo · Linh Nhi · Blues; điện
+thoại 3 tab không cuộn ngang) · `LuyenTap.json` sao lưu trước, trả lại sau (md5 khớp), `Nguon.json` không đổi.

@@ -514,6 +514,8 @@ Các hợp âm phải được chọn tự do …"*
   Game Scale. Hai game là NGOẠI LỆ thứ hai của "không lớp game" — người dùng tự xin. Số đo, lỗ còn lại ở SO-TAY.
   Cập nhật 11/10 (người dùng): game chạy ngón sang khung nốt rơi của app — hai phần (hợp âm riêng lẻ · theo vòng hợp âm có backing),
   chờ đúng nốt / theo nhịp, nốt rơi ghi số ngón; bàn phím chọn nốt ba mức màu (đậm · mờ · không màu), bỏ màu hồng.
+  Cập nhật 11/10 (lượt 2, người dùng): game chạy ngón có nút ba thầy — câu do bộ soạn của thầy soạn trên hợp âm / vòng người dùng, chỉ
+  đổi câu khi bấm "Đổi câu" — và vòng tự nhập; tab Mẹo & quy tắc phân tích riêng từng thầy; phím mờ tương phản hơn, tên nốt to và nổi.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

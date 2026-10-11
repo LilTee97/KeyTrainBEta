@@ -235,6 +235,8 @@ export interface BaiChay {
   perBeat: string[]
   voicings: TwoHandVoicing[]
   beatsPerChord: number
+  /** Phách đếm vào / ô của khung theo nhịp — bỏ trống = 4 (Blues 6/8 = 3 phách đen). */
+  meter?: 3 | 4
 }
 
 const tenHop = (goc: number, thu: boolean) => gocDep(pitchClassName(pc(goc), kieuDau(pc(goc), thu))) + (thu ? 'm' : '')
