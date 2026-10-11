@@ -6667,3 +6667,41 @@ nút "Tự nhập" ở cuối hàng Vòng — nhìn vào chỉ thấy vòng mặ
 C" khi vào; không còn nút giấu; gõ chưa Enter thì vòng chưa đổi; Enter "Am F C G" → Cà Pháo trên Am – F – C – G, đoán La thứ; đổi Linh
 Nhi · Blues giữ vòng; bấm vòng mặc định → ô ghi lại vòng ấy; "Dm7 G7 | Cmaj7, A7" → bốn ô; bỏ chọn thầy giữ vòng; điện thoại không cuộn
 ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — game chạy ngón: SINH NỐT SOLO — bộ soạn gia sư ghi lý do từng nốt (11/10/2026)
+
+**Người dùng:** *"khi chạy ngón cơ bản hãy tạo thêm tính năng Sinh nốt Solo khi nhập vòng hợp âm (cả vòng sẵn có hoặc tự nhập). Dùng
+bộ soạn để soạn ra những câu ngẫu nhiên và giải thích quy tắc cho tôi biết tại sao lại chọn những nốt đó, có điểm chung hay quy luật gì
+khi soạn nốt solo hãy dạy cho tôi"*.
+
+- Nút **✦ Sinh nốt Solo** ở hàng Kiểu chạy (chạy ngón cơ bản, phần theo vòng — vòng sẵn có hay tự điền); **↻ Sinh câu mới** (dùng chung
+  cơ chế Đổi câu: bỏ câu trùng, tới 12 lượt). Câu giữ nguyên khi đổi nhịp / chế độ; tập chờ đúng nốt hay theo nhịp như mọi bài, tay trái
+  máy đệm "bùm – chát" (`demBumChat`, tách từ `baiChayVong`).
+- **Bộ soạn gia sư** `hocSolo/sinhSolo.ts` — Claude viết, KHÔNG phải lối thầy nào. Không dùng `generateSolo` của app: bộ ấy không ghi lý
+  do từng nốt, giải thích ngược sau khi soạn thì không phải lý do thật. Ở đây mỗi nốt chọn bằng một luật nói ra được và ghi lại ngay lúc
+  chọn: mở câu (trụ giữa tầm) · phách mạnh 1, 3 = nốt hợp âm gần nốt trước theo hướng câu · phách nhẹ = nốt trong gam của bài đi liền bậc
+  (mặt cầu) hay rải quãng 3 sang nốt hợp âm kế · nhảy ≥ 5 nửa cung thì nốt sau quay đầu (ép ở mọi loại nốt) · nốt tránh (bậc 4 trên hợp
+  âm có 3 trưởng, ♭6 trên hợp âm thứ) chỉ lướt ở phách nhẹ, nốt sau đi tiếp cùng hướng hay đánh lại vì nó là nốt của hợp âm sau (lời này
+  viết SAU khi soạn xong câu) · nốt dẫn cuối ô để ô sau rơi đúng vạch vào nốt hợp âm mới · đỉnh câu ở 30–45 % câu rồi thả xuống · câu 2
+  ô, kết bậc 5 / 3 (treo / lửng), câu cuối vòng kết gốc, ngân 1,5 phách rồi nghỉ nửa phách · bài thứ trên V dùng gam thứ hòa thanh (nốt
+  cảm). Mỗi luật trỏ về một mẹo có số đo (`MEO_SOLO`); nhịp (ô 4/4 đen xen móc đơn, câu 2 ô) và xác suất nhảy 0,2 · rải 0,3 là Claude
+  chọn, chưa đo. Tầm C4–C6.
+- **Giải thích dưới khung tập**: từng nốt theo ô (tên nốt, phách, lý do) · bảng "câu này so với số đo câu solo của các thầy" · quy luật
+  chung (lời + cơ sở của mẹo, kèm số lần câu này dùng).
+- **Số đo của bộ soạn** (180 câu: 6 vòng × 30 câu số) so với các thầy: nốt hợp âm 68,3 % (1936/2835; thầy 60–75 %) · phách mạnh là nốt
+  hợp âm 100 % (thầy 64–83 % — cố ý, cho dễ thấy khung) · bước ≤ 2 nửa cung 68,3 % (thầy 45 %) · ≤ 4 nửa cung 90,4 % (thầy 66 %) · nhảy
+  rồi quay đầu 100 % (193/193; thầy 62 %) · câu kết 1 / 5 81,3 % · câu khác nhau 159/180. Câu gia sư mượt và chặt hơn câu thầy — dễ tập,
+  nhưng chưa phải lối thầy. Lượt đầu (trước khi sửa): liền bậc 81,8 %, quay đầu 31,7 % (ép ở phách nhẹ thôi) — lời "nhảy thì quay đầu"
+  nói hơn việc bộ soạn làm; sửa trước khi giao.
+- Lỗi tự bắt trong lúc làm (test mới bắt): nốt tránh hứa "nốt sau đi tiếp" mà đáy tầm C4 không cho đi; nốt dẫn đánh lặp lại nốt tránh
+  (C5 trên G7 rồi C5); số đo nhảy nối qua hai câu.
+
+**Chưa đo — lỗ còn lại:** nhịp câu (ô đen / móc đơn, câu 2 ô) chưa đo trên sheet; chưa đặt ngón cho câu sinh; bộ soạn chưa có nốt màu ở
+phách mạnh, nốt blue, câu chạy móc kép dài như thầy; tai người dùng chưa nghe.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 23 (thêm 2: 6 vòng × 30 câu — phách mạnh là nốt hợp âm, mọi nốt trong gam (thứ
+trên V: hòa thanh), nốt tránh không ở phách mạnh và đi tiếp hay vào hợp âm sau, tầm C4–C6, nốt nào cũng có lý do, câu cuối vòng kết gốc,
+quay đầu ≥ 70 %; cùng câu số cùng câu, 6 câu số ≥ 5 câu khác, luật nào cũng có cơ sở) · toàn suite 2 758 qua / 5 đỏ (5 đỏ cũ) · `vite
+build` qua · chạy thử headless 11/11 (nút Sinh nốt Solo; Dm – G – C; giải thích từng nốt theo ô; bảng so; quy luật kèm số lần; Sinh câu
+mới → câu số 2, giải thích đổi; vòng tự điền Am F C G; bấm đúng 3 nốt đầu → máy đệm; điện thoại không cuộn ngang) · `LuyenTap.json`,
+`Nguon.json` không đổi.

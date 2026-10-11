@@ -314,10 +314,8 @@ export function baiChayVong(hop: readonly Hop[], tonic: number, thu: boolean, ki
           : [goc, goc + ba, goc + nam, goc + 12, goc + nam, goc + ba, goc, goc + ba]
     const buoc = 4 / notes.length
     notes.forEach((m, t) => timeline.push({ notes: [m], startBeat: i * 4 + t * buoc, durationBeats: buoc, hand: 'right', velocity: 85, ngon: k.ngon[t] }))
-    const bass = 36 + r
-    for (const p of [0, 2]) timeline.push({ notes: [bass], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 72 })
-    for (const p of [1, 3]) timeline.push({ notes: [bass + 7, bass + 12, bass + 12 + ba], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 52 })
   })
+  timeline.push(...demBumChat(hop, tonic))
   const ten = hop.map((x) => h(x.goc, x.chat, x.bass))
   return {
     id: `vong-${id}-${pc(tonic)}-${thu ? 'thu' : 'truong'}-${kieu}`,
@@ -328,6 +326,19 @@ export function baiChayVong(hop: readonly Hop[], tonic: number, thu: boolean, ki
     voicings: ten.map((symbol) => ({ left: [], right: [], symbol })),
     beatsPerChord: 4,
   }
+}
+
+/** Tay trái máy đệm "bùm – chát" cho vòng, mỗi hợp âm một ô 4 phách: bass phách 1 · 3, chồng 5 – 8 – 10 phách 2 · 4 (khuôn của Claude). */
+export function demBumChat(hop: readonly Hop[], tonic: number): TimelineEvent[] {
+  return hop.flatMap((x, i) => {
+    const iv = (findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!).intervals
+    const ba = iv.includes(4) ? 4 : iv.includes(3) ? 3 : 5
+    const bass = 36 + pc(tonic + x.goc)
+    return [
+      ...[0, 2].map((p): TimelineEvent => ({ notes: [bass], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 72 })),
+      ...[1, 3].map((p): TimelineEvent => ({ notes: [bass + 7, bass + 12, bass + 12 + ba], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 52 })),
+    ]
+  })
 }
 
 /** Nối `lan` lượt liền nhau (chế độ theo nhịp chơi vòng nhiều lượt). */

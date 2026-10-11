@@ -28,6 +28,7 @@ import {
   type Tay,
 } from './hocSolo/gamNgon'
 import { baiCauThay, loiBoSoan, THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
+import { LUAT_SINH, sinhSolo, type CauSinh, type LuatSinh } from './hocSolo/sinhSolo'
 import { doanGiong } from './soanCau/doTaiHoaAm'
 import { nguCanh, type Hop } from './soanCau/giaiThich'
 import { docHop, docVong, vongLyThuyetHop } from './soanCau/thayTrongVong'
@@ -130,7 +131,7 @@ export function GameChayNgon() {
   const [tuDien, setTuDien] = useState<string | null>(null)
   const [vongTu, setVongTu] = useState<string | null>(null)
   const [baoDien, setBaoDien] = useState<{ loi: boolean; chu: string } | null>(null)
-  const [kieu, setKieu] = useState<KieuChay>('nam-ngon')
+  const [kieu, setKieu] = useState<KieuChay | 'sinh'>('nam-ngon')
   const [kyLuc, setKyLuc] = useState<Record<string, number>>(() => docKho(KHO_NGON, {}))
 
   const tuNhap = vongId === 'tu-nhap' && vongTu !== null
@@ -150,16 +151,21 @@ export function GameChayNgon() {
           : { tonic, thu, hop: hopVong, id: idVong },
     [thay, phan, gocDon, loaiDon, tonic, thu, hopVong, idVong],
   )
+  /** Sinh nốt Solo (chạy ngón cơ bản, phần theo vòng): bộ soạn gia sư soạn câu và ghi lý do từng nốt — `hocSolo/sinhSolo.ts`. */
+  const sinh = !thay && phan === 'vong' && kieu === 'sinh'
+  const cauSinh = useMemo(() => (sinh && hopVong.length ? sinhSolo(hopVong, tonic, thu, take, idVong) : null), [sinh, hopVong, tonic, thu, take, idVong])
   const bai = useMemo(
     () =>
       nenThay && thay
         ? baiCauThay(thay, nenThay.hop, nenThay.tonic, nenThay.thu, take, nenThay.id)
         : phan === 'don'
           ? baiChayDon(ds[Math.min(chiSo, ds.length - 1)]!)
-          : hopVong.length
-            ? baiChayVong(hopVong, tonic, thu, kieu, idVong)
-            : null,
-    [nenThay, thay, take, phan, ds, chiSo, hopVong, tonic, thu, kieu, idVong],
+          : sinh
+            ? (cauSinh?.bai ?? null)
+            : hopVong.length && kieu !== 'sinh'
+              ? baiChayVong(hopVong, tonic, thu, kieu, idVong)
+              : null,
+    [nenThay, thay, take, phan, ds, chiSo, sinh, cauSinh, hopVong, tonic, thu, kieu, idVong],
   )
   const khoa = `${bai?.id ?? 'trong'}|${cheDo}`
   const timelineNhip = useMemo(
@@ -183,11 +189,18 @@ export function GameChayNgon() {
     }
     f()
   }
+  /** Câu số `t` của bộ soạn đang dùng — câu thầy hay câu sinh của gia sư. */
+  const taoCau = (t: number) =>
+    thay && nenThay
+      ? baiCauThay(thay, nenThay.hop, nenThay.tonic, nenThay.thu, t, nenThay.id)
+      : sinh
+        ? (sinhSolo(hopVong, tonic, thu, t, idVong)?.bai ?? null)
+        : null
   const doiCau = () => {
-    if (!thay || !nenThay) return
+    if (!thay && !sinh) return
     const cu = vanTay(bai)
     for (let t = take + 1; t <= take + THU_DOI_CAU; t += 1) {
-      const moi = baiCauThay(thay, nenThay.hop, nenThay.tonic, nenThay.thu, t, nenThay.id)
+      const moi = taoCau(t)
       if (moi && vanTay(moi) !== cu) return doi(() => setTake(t))
     }
     setHetCau(true)
@@ -404,33 +417,42 @@ export function GameChayNgon() {
                     ) : null}
                   </button>
                 ))}
+                <button type="button" onClick={() => doi(() => setKieu('sinh'), true)} className={nut(kieu === 'sinh')}>
+                  ✦ Sinh nốt Solo
+                </button>
               </div>
               <p className="text-cream/80">
-                {KIEU_CHAY.find((x) => x.id === kieu)!.mo}. Mỗi hợp âm một ô 4 phách; tay trái máy đệm "bùm – chát" (bass phách 1 · 3, chồng phách
-                2 · 4){cheDo === 'nhip' ? ', vòng chơi hai lượt' : ''}.
+                {kieu === 'sinh'
+                  ? 'Bộ soạn gia sư (Claude) soạn một câu solo mới trên vòng — mỗi nốt chọn bằng một luật nói ra được, luật lấy từ số đo câu solo của các thầy. Giải thích từng nốt và các quy luật ở dưới khung tập'
+                  : KIEU_CHAY.find((x) => x.id === kieu)?.mo}
+                . Mỗi hợp âm một ô 4 phách; tay trái máy đệm "bùm – chát" (bass phách 1 · 3, chồng phách 2 · 4)
+                {cheDo === 'nhip' ? ', vòng chơi hai lượt' : ''}.
               </p>
             </>
           )}
         </div>
       )}
 
-      {thay && (
+      {(thay || sinh) && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <button type="button" onClick={doiCau} disabled={!bai} className={nut(false)}>
-            ↻ Đổi câu
+            {thay ? '↻ Đổi câu' : '↻ Sinh câu mới'}
           </button>
           <span className="text-dim">câu số {take + 1}</span>
           {hetCau && <span className="text-rose-300">Bộ soạn chưa ra câu nào khác cho {phan === 'don' ? 'hợp âm' : 'vòng'} này (thử {THU_DOI_CAU} lượt).</span>}
-          <p className="w-full text-cream/80">
-            {loiBoSoan(thay, nenThay?.thu ?? thu)}
-            {cheDo === 'nhip' ? ' Theo nhịp: câu chơi hai lượt.' : ''}
-          </p>
+          {thay && (
+            <p className="w-full text-cream/80">
+              {loiBoSoan(thay, nenThay?.thu ?? thu)}
+              {cheDo === 'nhip' ? ' Theo nhịp: câu chơi hai lượt.' : ''}
+            </p>
+          )}
         </div>
       )}
 
       {bai ? (
         <p className="text-xs text-cream/85">
           Đang chạy: <b className="text-amber-key">{bai.ten}</b> · {bai.tay === 'right' ? 'tay phải' : 'tay trái'} · ♩ = {bpm}
+          {cauSinh ? <span className="ml-2 text-teal-key">↓ vì sao chọn từng nốt: dưới khung tập</span> : null}
           {kyLuc[khoa] ? <span className="ml-2 text-amber-key">kỷ lục {sao(kyLuc[khoa]!)}</span> : null}
         </p>
       ) : (
@@ -485,6 +507,81 @@ export function GameChayNgon() {
           }}
         />
       )}
+      {cauSinh && <GiaiThichSinh cau={cauSinh} />}
+    </div>
+  )
+}
+
+const THE = 'rounded-xl border border-line bg-black/25 p-4'
+const phanTram = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} % (${a}/${b})` : '—')
+
+/**
+ * Giải thích câu Sinh nốt Solo: vì sao từng nốt (lý do bộ soạn ghi lúc chọn), câu này so với số đo các thầy, và các quy luật chung — mỗi
+ * luật kèm số lần câu này dùng (người dùng 11/10/2026: "giải thích quy tắc … có điểm chung hay quy luật gì khi soạn nốt solo hãy dạy").
+ */
+function GiaiThichSinh({ cau }: { cau: CauSinh }) {
+  const s = cau.soDo
+  const dem = (id: LuatSinh) => cau.not.filter((x) => x.luat.includes(id)).length
+  const so: readonly [string, string, string][] = [
+    ['Nốt của hợp âm đang vang', phanTram(s.notHop, s.n), 'khoảng 60–75 % — Linh Nhi 63,6 % · Cà Pháo 70,8 % · Tôn Hùng 73,0 %'],
+    ['Phách mạnh (1, 3) là nốt hợp âm', phanTram(s.phachManhHop, s.phachManh), 'Linh Nhi 64–83 % — bộ soạn gia sư đặt 100 % cho dễ thấy khung; thầy thật để vài phách mạnh cho nốt màu'],
+    ['Bước nhỏ (lặp hay liền bậc, ≤ 2 nửa cung)', phanTram(s.lapLien, s.buoc), '45 % (13 bản ký âm) — câu gia sư mượt hơn thầy, dễ tập hơn'],
+    ['Bước không quá quãng ba (≤ 4 nửa cung)', phanTram(s.duoi4, s.buoc), '66 % (13 bản ký âm)'],
+    ['Nhảy ≥ 5 nửa cung rồi quay đầu', phanTram(s.quay, s.nhay), '62 % (13 bản ký âm)'],
+    ['Câu dừng ở bậc 1 hay 5', phanTram(s.ketDong, s.soCau), 'đoạn kết Linh Nhi co về 1 + 5 (47–51 % nốt); Ray kết gốc 19 · bậc 5 15 trên 74 câu'],
+  ]
+  return (
+    <div className="flex flex-col gap-3 text-xs">
+      <details open className={THE}>
+        <summary className="cursor-pointer text-sm font-semibold text-cream">Vì sao chọn những nốt này — từng nốt</summary>
+        {cau.hopO.map((ten, o) => (
+          <div key={o} className="mt-2">
+            <p className="font-semibold text-amber-key">
+              Ô {o + 1} · {ten}
+            </p>
+            <ol className="mt-1 flex flex-col gap-1">
+              {cau.not
+                .filter((x) => x.o === o)
+                .map((x) => (
+                  <li key={x.t} className="text-cream/85">
+                    <span className="mr-1.5 rounded bg-ink px-1 py-0.5 font-mono font-bold text-yellow-300">{x.ten}</span>
+                    <span className="mr-1 text-dim">phách {x.phach}</span>
+                    {x.ly}
+                  </li>
+                ))}
+            </ol>
+          </div>
+        ))}
+      </details>
+      <div className={THE}>
+        <p className="mb-2 text-sm font-semibold text-cream">Câu này so với số đo câu solo của các thầy</p>
+        <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-[minmax(10rem,16rem)_8rem_1fr]">
+          {so.map(([muc, cauNay, thay]) => (
+            <div key={muc} className="contents">
+              <span className="font-semibold text-teal-key">{muc}</span>
+              <span className="font-mono text-cream">{cauNay}</span>
+              <span className="text-dim">{thay}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <details open className={THE}>
+        <summary className="cursor-pointer text-sm font-semibold text-cream">Quy luật chung khi soạn nốt solo — bộ soạn dùng những luật này</summary>
+        <ul className="mt-2 flex flex-col gap-2">
+          {LUAT_SINH.map((l) => (
+            <li key={l.id}>
+              <p className="font-semibold text-amber-key">
+                {l.ten}
+                <span className="ml-2 font-normal text-teal-key">{dem(l.id) ? `câu này dùng ${dem(l.id)} lần` : 'câu này chưa dùng'}</span>
+              </p>
+              <p className="text-cream/85">{l.cau}</p>
+              <p className="text-dim">
+                {l.doDuoc ? 'Cơ sở' : 'Ghi chú'}: {l.coSo}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   )
 }

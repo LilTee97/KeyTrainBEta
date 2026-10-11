@@ -18,6 +18,8 @@ import {
 } from '../hocSolo/gamNgon'
 import { baiCauThay, loiBoSoan } from '../hocSolo/cauThay'
 import { PHAN_TICH_THAY } from '../hocSolo/meoThay'
+import { LUAT_SINH, sinhSolo } from '../hocSolo/sinhSolo'
+import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { docVong } from '../soanCau/thayTrongVong'
 
 const den = (m: number) => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12)
@@ -285,5 +287,68 @@ describe('Tên chữ trên bàn phím xem nốt — theo bậc ghi dưới phím
     expect(tenChu(67, 'E♭', '3')).toBe('G4')
     expect(tenChu(60, 'C', null)).toBeNull()
     expect(tenChu(61, 'C', '1')).toBe('C♯4')
+  })
+})
+
+describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
+  const VONG: [string, number, boolean][] = [
+    ['C Am F G', 0, false],
+    ['Am Dm E7 Am', 9, true],
+    ['Dm7 G7 Cmaj7', 0, false],
+    ['Em C G D', 7, false],
+    ['Am F C G E7', 9, true],
+    ['C', 0, false],
+  ]
+  const pc = (m: number) => ((m % 12) + 12) % 12
+  it('mọi vòng × 30 câu: phách mạnh là nốt hợp âm, mọi nốt trong gam, nốt tránh không ở phách mạnh, tầm C4–C6, nốt nào cũng có lý do', () => {
+    let nhay = 0
+    let quay = 0
+    for (const [chu, tonic, thu] of VONG) {
+      const hop = docVong(chu, tonic)!
+      for (let s = 0; s < 30; s += 1) {
+        const c = sinhSolo(hop, tonic, thu, s, 'x')!
+        expect(c.bai.perBeat.length).toBe(hop.length * 4)
+        expect(c.bai.timeline.some((e) => e.hand === 'left')).toBe(true)
+        c.not.forEach((x, k) => {
+          const h = hop[x.o]!
+          const iv = findQualityBySymbol(h.chat)!.intervals
+          const goc = tonic + h.goc
+          const hopAm = iv.map((i) => pc(goc + i))
+          const gam = thu ? (h.goc === 7 && iv.includes(4) ? [0, 2, 3, 5, 7, 8, 11] : [0, 2, 3, 5, 7, 8, 10]) : [0, 2, 4, 5, 7, 9, 11]
+          expect(x.m >= 60 && x.m <= 84, `${chu} ${s} ${x.m}`).toBe(true)
+          expect(gam.includes(pc(x.m - tonic)) || hopAm.includes(pc(x.m)), `${chu} câu ${s} nốt ${k} ngoài gam`).toBe(true)
+          if (x.t % 2 === 0) expect(hopAm.includes(pc(x.m)), `${chu} câu ${s} phách mạnh ${x.t}`).toBe(true)
+          expect(x.ly.length).toBeGreaterThan(30)
+          expect(x.luat.length).toBeGreaterThan(0)
+          const sau = c.not[k + 1]
+          const truoc = c.not[k - 1]
+          if (x.vai === 'tranh') {
+            expect(sau && sau.cau === x.cau, `${chu} câu ${s} nốt tránh cuối câu`).toBe(true)
+            const diTiep = Math.sign(sau!.m - x.m) === Math.sign(x.m - truoc!.m)
+            const vaoSom = sau!.m === x.m && sau!.o !== x.o
+            expect(diTiep || vaoSom, `${chu} câu ${s} nốt tránh ${x.ten} phải đi tiếp hay vào hợp âm sau sớm`).toBe(true)
+            expect(x.ly).toMatch(/Nốt sau (đi tiếp|đánh lại)/)
+          }
+          if (truoc && sau && truoc.cau === x.cau && sau.cau === x.cau && Math.abs(x.m - truoc.m) >= 5) {
+            nhay += 1
+            if (Math.sign(sau.m - x.m) === -Math.sign(x.m - truoc.m)) quay += 1
+          }
+        })
+        const cuoi = c.not.at(-1)!
+        expect(pc(cuoi.m - (tonic + hop[cuoi.o]!.goc)), `${chu} câu ${s} nốt cuối`).toBe(0)
+        expect(c.soDo.phachManhHop).toBe(c.soDo.phachManh)
+      }
+    }
+    expect(quay / nhay, `quay đầu ${quay}/${nhay}`).toBeGreaterThanOrEqual(0.7)
+  })
+  it('cùng câu số ra cùng câu; câu số khác ra câu khác; luật nào cũng có cơ sở', () => {
+    const hop = docVong('C Am F G', 0)!
+    expect(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x'))).toBe(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x')))
+    const cau = new Set([0, 1, 2, 3, 4, 5].map((s) => sinhSolo(hop, 0, false, s, 'x')!.not.map((x) => x.m).join(',')))
+    expect(cau.size).toBeGreaterThanOrEqual(5)
+    for (const l of LUAT_SINH) {
+      expect(l.cau.length, l.id).toBeGreaterThan(30)
+      if (l.doDuoc) expect(l.coSo, l.id).toMatch(/\d/)
+    }
   })
 })
