@@ -6725,3 +6725,42 @@ khung tập (nốt rơi + bàn phím cao) — phải cuộn xa mới thấy; dò
 với 1071 px; ba mục; bắt đầu luyện → lý do A4; bấm đúng 4 nốt → lý do chuyển sang F5; tô sáng đúng một nốt, trang không nhảy; theo
 nhịp không còn dòng đang chờ; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi. Script chạy thử lượt trước
 (`sinh.mjs`) hỏng 3 mục vì tìm khối `details` cũ — bố cục đổi, không phải lỗi app.
+
+## Bước — Sinh nốt Solo: gam trên TỪNG hợp âm (mode), nốt dẫn nửa cung, tên nốt theo gam hợp âm (11/10/2026)
+
+**Người dùng:** *"tôi cần bạn giải thích thêm cách chọn nốt theo hướng: bạn đã áp dụng Scale nào trong từng hợp âm tương ứng, có chỗ nào
+dùng chromatic hoặc các loại scale nào đặc biệt ko vì mỗi thầy có màu hợp âm rất đa dạng và mang tính Jazz và Blues rất nhiều. Trích
+nốt từ scale theo quy tắc nào. Ngoài Scale ra thì còn dùng phương pháp nào để lấy nốt solo nữa."*
+
+Trả lời thật về bản `7277fc6`: bộ soạn gia sư dùng MỘT gam của bài cho cả vòng (bài thứ: thứ tự nhiên, trên V có 3 trưởng thì thứ hòa
+thanh); KHÔNG chromatic, không nốt blue, không altered / bebop. Soi lại lộ lỗi: hợp âm ngoài giọng (A7 trong Đô trưởng có C♯) thì nốt
+lướt lấy từ gam Đô trưởng có thể là C thường — chỏi nửa cung với C♯ của hợp âm.
+
+- `gamTrenHop` (`hocSolo/sinhSolo.ts`): gam trên TỪNG hợp âm = gam của bài viết theo chữ (bảy chữ từ chữ chủ âm), nốt hợp âm thay đúng
+  nốt CÙNG CHỮ (A7: C → C♯) → đọc từ gốc ra tên mode (bảng 16 mode: Ionian … Locrian, thứ hòa thanh, Phrygian dominant, Mixolydian ♭13,
+  Lydian dominant, thứ giai điệu, altered …). Vai nốt trong gam: trụ = nốt hợp âm; tránh = nốt đứng nửa cung trên một nốt trụ (hợp âm át
+  — có 3 trưởng và ♭7 — thì ♭9, ♭13 là màu, chỉ bậc 4 là tránh, theo mẹo "trên V màu thêm Fa (♭9), Đô (♭13)"); còn lại là màu. Bộ soạn
+  đi bậc trong gam của hợp âm thay cho gam chung; gam thứ hòa thanh trên V nay là hệ quả tự nhiên (E7 trong La thứ → E Phrygian dominant).
+  Luật `gamHop` ghi là lý thuyết chord-scale của Claude, chưa đo riêng trên thầy.
+- **Nốt dẫn nửa cung (chromatic)** — luật `chrom`: ở nốt dẫn cuối ô, xác suất 0,25 (Claude chọn) lấy nốt NGOÀI gam sát đích nửa cung
+  rồi rơi đúng vạch. Cơ sở: ba sheet Blues — câu chạy xuyên vạch có nốt cuối là nốt dẫn nửa cung: Ray 12 % (41 câu) · Rising Sun 17 % (12)
+  · Robert 20 % (25); Cà Pháo 4,7 % nốt ngoài gam (n=828).
+- **Tên nốt theo gam của hợp âm**: bậc 3 của A7 ghi C♯5 (bản trước "D♭5" theo dấu của giọng); nốt dẫn nửa cung đi lên ghi thăng, đi
+  xuống ghi giáng; nốt trước gọi theo gam ô của nó.
+- Thẻ giải thích: mục mới **Gam trên từng hợp âm** — cách trích nốt theo vai (trụ · màu · tránh · ngoài gam), bốn cách lấy nốt ngoài
+  gam (rải hợp âm · dẫn giọng · hình câu · nốt nhà trên V), chỗ CHƯA có (nốt blue, ngũ cung của chủ, altered trên V7 — các thầy có dùng),
+  rồi từng ô: tên mode, bảy nốt tô theo vai, nốt đã đổi so với gam bài. Đầu mỗi ô ở mục "Vì sao từng nốt" ghi gam của ô.
+- **Số đo của bộ soạn** (180 câu: 6 vòng × 30 câu số): nốt hợp âm 69,7 % (1971/2829) · bước ≤ 2 nửa cung 63,7 % · ≤ 4 nửa cung 89,8 % ·
+  nhảy rồi quay đầu 100 % (210/210) · câu kết 1 / 5 80,0 % · nốt nửa cung ngoài gam 2,2 % (61/2829; Linh Nhi 1,8 %, Cà Pháo 4,7 % nốt
+  ngoài gam). Vòng C A7 Dm G7, 30 câu: 0/110 nốt C thường trên A7.
+
+**Chưa đo — lỗ còn lại:** phép "đổi nốt cùng chữ" là lý thuyết, chưa so với thầy trên hợp âm ngoài giọng; hợp âm mượn kiểu Fm trong Đô
+trưởng ra "trưởng hòa thanh" (A♭ thay A) — thầy có thể dùng Dorian / Aeolian; nốt blue, ngũ cung, altered vẫn chưa có trong bộ soạn gia
+sư.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 25 (thêm: tên mode C Dm Em F G7 Am Bdim trong Đô trưởng, A7 → A Mixolydian ♭13
+đổi C → C♯, E7 La thứ → Phrygian dominant tránh A · màu F C, B♭ → B♭ Lydian, E♭ → E♭ Lydian; mọi nốt trong gam của chính hợp âm, nốt
+ngoài gam chỉ là nốt dẫn nửa cung ở phách nhẹ cách nốt sau đúng nửa cung; bậc 3 của A7 ghi C♯) · toàn suite 2 760 qua / 5 đỏ (5 đỏ cũ) ·
+`vite build` qua · chạy thử headless 8/8 (vòng C A7 Dm G7; đầu ô ghi gam A Mixolydian ♭13; mục Gam trên từng hợp âm đủ vai, bốn cách,
+chỗ chưa có, từng ô C Ionian · A Mixolydian ♭13 (C → C♯) · D Dorian · G Mixolydian; quy luật có gamHop và chrom; điện thoại không cuộn
+ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

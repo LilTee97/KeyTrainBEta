@@ -1,5 +1,6 @@
 import type { TimelineEvent } from '../../reharm/style/types'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
+import { pitchClassName } from '../../shared/musicTheory/pitch'
 import { nguCanh, type Hop } from '../soanCau/giaiThich'
 import { tenBac } from '../soanCau/soanCau'
 import { MEO_SOLO } from './chonNot'
@@ -19,10 +20,10 @@ import { demBumChat, type BaiChay } from './gamNgon'
   cho nốt màu (số đo ở mẹo "Phách mạnh đặt nốt hợp âm"): đơn giản hoá có chủ ý để người học thấy rõ khung.
 */
 
-export type LuatSinh = 'tru' | 'gam' | 'buoc' | 'rai' | 'quay' | 'dinh' | 'tranh' | 'nha' | 'noi' | 'cam' | 'ket' | 'nhip'
+export type LuatSinh = 'tru' | 'gam' | 'gamHop' | 'buoc' | 'rai' | 'quay' | 'dinh' | 'tranh' | 'nha' | 'noi' | 'chrom' | 'cam' | 'ket' | 'nhip'
 export type VaiSinh = 'mo' | 'tru' | 'noi' | 'dan' | 'duong' | 'rai' | 'tranh' | 'nhay' | 'quay' | 'ket'
 
-const TU_MEO: Readonly<Record<Exclude<LuatSinh, 'nhip'>, string>> = {
+const TU_MEO: Readonly<Record<Exclude<LuatSinh, 'nhip' | 'gamHop' | 'chrom'>, string>> = {
   tru: 'Phách mạnh đặt nốt hợp âm, phách nhẹ đi bằng nốt gam',
   gam: 'Giữ MỘT gam cho cả bài',
   buoc: 'Bước nhỏ là chính',
@@ -38,10 +39,24 @@ const TU_MEO: Readonly<Record<Exclude<LuatSinh, 'nhip'>, string>> = {
 
 /** Luật bộ soạn dùng — lời và cơ sở lấy thẳng từ mẹo có số đo; `nhip` là lựa chọn của Claude. */
 export const LUAT_SINH: readonly { id: LuatSinh; ten: string; cau: string; coSo: string; doDuoc: boolean }[] = [
-  ...(Object.entries(TU_MEO) as [Exclude<LuatSinh, 'nhip'>, string][]).map(([id, ten]) => {
+  ...(Object.entries(TU_MEO) as [Exclude<LuatSinh, 'nhip' | 'gamHop' | 'chrom'>, string][]).map(([id, ten]) => {
     const m = MEO_SOLO.find((x) => x.ten === ten)
     return { id, ten, cau: m?.cau ?? '', coSo: m?.coSo ?? '', doDuoc: true }
   }),
+  {
+    id: 'gamHop',
+    ten: 'Gam trên từng hợp âm: giữ gam của bài, chỉnh cho khớp hợp âm đang vang',
+    cau: 'Lấy gam của bài; hợp âm nào có nốt ngoài gam thì đổi ĐÚNG nốt cùng tên chữ (bài Đô trưởng, A7 có Đô♯ → đổi Đô thành Đô♯). Đọc gam ấy từ gốc hợp âm ra một "mode": Dm → Rê Dorian, G7 → Sol Mixolydian, F → Fa Lydian, A7 → La Mixolydian ♭13, bài La thứ E7 → Mi Phrygian dominant. Trong gam ấy: nốt hợp âm là TRỤ, nốt cách nốt trụ một bậc là MÀU (9 · 11 · 13), nốt đứng nửa cung trên một nốt trụ là nốt TRÁNH — riêng hợp âm át thì ♭9, ♭13 là màu.',
+    coSo: 'Lý thuyết chord-scale — Claude áp, chưa đo riêng trên thầy. Số đo gần nhất: 97,2 % nốt nằm trong gam của bài (13 bản ký âm); Linh Nhi trên V giọng thứ dùng nốt cảm (bậc 7 nâng) và ♭9 có sẵn trong gam 20/22 nốt — đúng phép "đổi nốt cùng tên chữ"; bậc 4 trên hợp âm trưởng thầy chỉ dùng 5–6 %.',
+    doDuoc: false,
+  },
+  {
+    id: 'chrom',
+    ten: 'Nốt dẫn nửa cung (chromatic) vào hợp âm mới',
+    cau: 'Cuối ô, đôi khi lướt một nốt NGOÀI gam đứng sát nốt đích nửa cung, rồi rơi đúng vạch vào nốt của hợp âm mới. Nốt ngoài gam chỉ đứng ở phách nhẹ và đi ngay vào nốt hợp âm — tai nghe nó như một lực kéo, không phải nốt sai.',
+    coSo: 'Ba sheet Blues — trong các câu chạy xuyên vạch đổi hợp âm, nốt cuối trước vạch là nốt dẫn nửa cung: Ray 12 % (41 câu) · Rising Sun 17 % (12) · Robert 20 % (25). Cà Pháo 4,7 % nốt ngoài gam (n=828). Tần suất 0,25 trong bộ soạn là Claude chọn.',
+    doDuoc: true,
+  },
   {
     id: 'nhip',
     ten: 'Nhịp và hơi câu: câu 2 ô, đen xen móc đơn, nghỉ thở cuối câu',
@@ -72,6 +87,8 @@ export interface CauSinh {
   bai: BaiChay
   not: NotSinh[]
   hopO: string[]
+  /** Gam trên từng hợp âm (cùng thứ tự với `hopO`). */
+  gamO: GamHop[]
   /** Số đo của chính câu này — để so với số đo các thầy. */
   soDo: { n: number; notHop: number; phachManh: number; phachManhHop: number; buoc: number; lapLien: number; duoi4: number; nhay: number; quay: number; soCau: number; ketDong: number }
 }
@@ -79,7 +96,92 @@ export interface CauSinh {
 const pc = (x: number) => ((x % 12) + 12) % 12
 const GAM_TRUONG = [0, 2, 4, 5, 7, 9, 11]
 const GAM_THU = [0, 2, 3, 5, 7, 8, 10]
-const GAM_THU_HOA_THANH = [0, 2, 3, 5, 7, 8, 11]
+const CHU = 'CDEFGAB'
+const TU_NHIEN = [0, 2, 4, 5, 7, 9, 11]
+/** Quãng (nửa cung, kể cả nốt căng ≥ 12) → số chữ đếm từ gốc: 3 trưởng/thứ → 2 chữ, ♭5/5/♯5 → 4, 9 → 1, 11 → 3, 13 → 5. */
+const BUOC_CHU: Readonly<Record<number, number>> = { 0: 0, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 7: 4, 8: 4, 9: 5, 10: 6, 11: 6, 13: 1, 14: 1, 15: 1, 17: 3, 18: 3, 20: 5, 21: 5 }
+const TEN_MODE: Readonly<Record<string, string>> = {
+  '0,2,4,5,7,9,11': 'Ionian (gam trưởng)',
+  '0,2,3,5,7,9,10': 'Dorian (thứ, 6 trưởng)',
+  '0,1,3,5,7,8,10': 'Phrygian (thứ, ♭2)',
+  '0,2,4,6,7,9,11': 'Lydian (trưởng, ♯4)',
+  '0,2,4,5,7,9,10': 'Mixolydian (trưởng, ♭7)',
+  '0,2,3,5,7,8,10': 'Aeolian (thứ tự nhiên)',
+  '0,1,3,5,6,8,10': 'Locrian',
+  '0,2,3,5,7,8,11': 'thứ hòa thanh',
+  '0,1,4,5,7,8,10': 'Phrygian dominant (thứ hòa thanh đọc từ bậc 5)',
+  '0,2,4,5,7,8,10': 'Mixolydian ♭13',
+  '0,2,4,6,7,9,10': 'Lydian dominant',
+  '0,2,3,5,7,9,11': 'thứ giai điệu',
+  '0,2,3,6,7,9,10': 'Dorian ♯4',
+  '0,2,3,5,6,8,10': 'Locrian ♮2',
+  '0,2,4,5,7,8,11': 'trưởng hòa thanh',
+  '0,1,3,4,6,8,10': 'altered (siêu Locrian)',
+}
+const tenChuPc = (chu: number, p: number) => {
+  const lech = ((((p - TU_NHIEN[chu]!) % 12) + 18) % 12) - 6
+  return CHU[chu]! + (lech < 0 ? '♭'.repeat(-lech) : '♯'.repeat(lech))
+}
+
+/** Gam trên một hợp âm — xem luật `gamHop`. */
+export interface GamHop {
+  hop: string
+  /** Tên gam đọc từ gốc hợp âm, vd "D Dorian (thứ, 6 trưởng)". */
+  ten: string
+  /** Bảy nốt gam (lớp cao độ) từ gốc hợp âm đi lên, kèm tên chữ và vai. */
+  not: { p: number; ten: string; vai: 'tru' | 'mau' | 'tranh' }[]
+  /** Nốt đã đổi so với gam của bài, vd "C → C♯ (bậc 3 của A7)". */
+  doi: string[]
+  pcs: number[]
+  tru: number[]
+  tranh: number[]
+}
+
+/**
+ * Gam trên hợp âm `x` (gốc tính từ chủ âm) trong giọng `tonic` / `thu`: gam của bài theo chữ (bảy chữ từ chữ chủ âm), nốt hợp âm thay
+ * đúng nốt cùng chữ (A7 trong Đô trưởng: Đô → Đô♯). Nốt tránh = nốt gam đứng nửa cung trên một nốt hợp âm; hợp âm át (3 trưởng + ♭7)
+ * thì ♭9, ♭13 là màu (nốt căng biến âm), chỉ bậc 4 là tránh.
+ */
+export function gamTrenHop(tonic: number, thu: boolean, x: Hop): GamHop {
+  const { h } = nguCanh(tonic, thu)
+  const q = findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!
+  const goc = pc(tonic + x.goc)
+  const chuChu = CHU.indexOf(h(0, '')[0] ?? 'C')
+  const chuGoc = CHU.indexOf(h(x.goc, '')[0] ?? 'C')
+  const gamBai = thu ? GAM_THU : GAM_TRUONG
+  const theoChu = new Map<number, number>()
+  gamBai.forEach((d, k) => theoChu.set((chuChu + k) % 7, pc(tonic + d)))
+  const doi: string[] = []
+  const tru: number[] = []
+  for (const iv of q.intervals) {
+    const buoc = x.chat === 'dim7' && iv === 9 ? 6 : BUOC_CHU[iv]
+    const p = pc(goc + iv)
+    tru.push(p)
+    if (buoc === undefined) continue
+    const chu = (chuGoc + buoc) % 7
+    const cu = theoChu.get(chu)!
+    if (cu !== p) {
+      doi.push(`${tenChuPc(chu, cu)} → ${tenChuPc(chu, p)} (bậc ${tenBac(pc(p - goc), x.chat)} của ${h(x.goc, x.chat, x.bass)})`)
+      theoChu.set(chu, p)
+    }
+  }
+  const at = q.intervals.includes(4) && q.intervals.includes(10)
+  const mien = at ? [pc(goc + 1), pc(goc + 8)] : []
+  const thuTu = Array.from({ length: 7 }, (_, k) => (chuGoc + k) % 7)
+  const pcs = thuTu.map((c) => theoChu.get(c)!)
+  const tranh = pcs.filter((p) => !tru.includes(p) && tru.includes(pc(p - 1)) && !mien.includes(p))
+  const tenGoc = tenChuPc(chuGoc, goc)
+  const khoa = [...new Set(pcs.map((p) => pc(p - goc)))].sort((a, c) => a - c).join(',')
+  return {
+    hop: h(x.goc, x.chat, x.bass),
+    ten: `${tenGoc} ${TEN_MODE[khoa] ?? 'gam bài đã chỉnh cho khớp hợp âm'}`,
+    not: thuTu.map((c, k) => ({ p: pcs[k]!, ten: tenChuPc(c, pcs[k]!), vai: tru.includes(pcs[k]!) ? 'tru' : tranh.includes(pcs[k]!) ? 'tranh' : 'mau' })),
+    doi,
+    pcs,
+    tru,
+    tranh,
+  }
+}
 /** Tầm câu C4–C6 — Claude chọn, như tầm câu solo của app (62–84). */
 const SAN = 60
 const TRAN = 84
@@ -106,6 +208,8 @@ const KET_NGAN = 1.5
 */
 const XAC_SUAT_NHAY = 0.2
 const XAC_SUAT_RAI = 0.3
+/** Nốt dẫn nửa cung ngoài gam ở chỗ đổi hợp âm — Claude chọn 0,25 (ba sheet Blues: 12–20 % câu chạy xuyên vạch). Lùi nếu câu nghe phô. */
+const XAC_SUAT_NUA_CUNG = 0.25
 
 /** Rải đều tất định (mulberry32) — cùng câu số thì ra cùng một câu. */
 function rng(seed: number) {
@@ -134,28 +238,35 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
   if (hop.length === 0) return null
   const { h } = nguCanh(tonic, thu)
   const r = rng(bam(id) ^ Math.imul(seed + 1, 2654435761))
-  const ten = (m: number) => `${h(pc(m - tonic), '')}${Math.floor(m / 12) - 1}`
-  const tenGam = `${h(0, '')} ${thu ? 'thứ' : 'trưởng'}`
-  const hopAm = hop.map((x) => {
-    const q = findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!
-    const goc = pc(tonic + x.goc)
-    const ba = q.intervals.includes(4) ? 4 : q.intervals.includes(3) ? 3 : null
-    const gam = thu ? (x.goc === 7 && ba === 4 ? GAM_THU_HOA_THANH : GAM_THU) : GAM_TRUONG
-    return {
-      ten: h(x.goc, x.chat, x.bass),
-      goc,
-      chat: x.chat,
-      pcs: q.intervals.map((i) => pc(goc + i)),
-      gam,
-      // Nốt tránh: đứng sát trên một nốt khung nửa cung — hợp âm có 3 trưởng: bậc 4 (11); hợp âm thứ: ♭6 (♭13).
-      tranh: ba === 4 ? pc(goc + 5) : ba === 3 ? pc(goc + 8) : null,
-      hoaThanh: gam === GAM_THU_HOA_THANH,
+  const gamO = hop.map((x) => gamTrenHop(tonic, thu, x))
+  const hopAm = hop.map((x, i) => ({
+    ten: h(x.goc, x.chat, x.bass),
+    goc: pc(tonic + x.goc),
+    chat: x.chat,
+    pcs: gamO[i]!.tru,
+    gam: gamO[i]!.pcs,
+    tenGam: gamO[i]!.ten.replace(/ \(.*\)$/, ''),
+    tranh: gamO[i]!.tranh,
+  }))
+  /* Tên nốt (ký hiệu chữ + quãng tám) theo GAM CỦA HỢP ÂM ô đang soạn — bậc 3 của A7 là C♯5, không phải D♭5 theo dấu của giọng. Nốt
+     ngoài gam ấy (nốt dẫn nửa cung): đi lên ghi thăng, đi xuống ghi giáng. */
+  let oTen = 0
+  const ten = (m: number, o: number = oTen, len?: boolean) => {
+    const g = gamO[o]!
+    const k = g.pcs.indexOf(pc(m))
+    if (k >= 0) {
+      const t = g.not[k]!.ten
+      const chu = CHU.indexOf(t[0]!)
+      const lech = ((((m - TU_NHIEN[chu]!) % 12) + 18) % 12) - 6
+      return `${t}${Math.floor((m - lech) / 12) - 1}`
     }
-  })
+    const t = len === undefined ? h(pc(m - tonic), '') : pitchClassName(pc(m) as never, len ? 'sharp' : 'flat').replace('#', '♯').replace(/(?<=[A-G])b/, '♭')
+    return `${t}${Math.floor(m / 12) - 1}`
+  }
   const tam = Array.from({ length: TRAN - SAN + 1 }, (_, k) => SAN + k)
   const notHop = (o: number) => tam.filter((m) => hopAm[o]!.pcs.includes(pc(m)))
   const bac = (m: number, o: number) => tenBac(pc(m - hopAm[o]!.goc), hopAm[o]!.chat)
-  const trongGam = (m: number, o: number) => hopAm[o]!.gam.includes(pc(m - tonic))
+  const trongGam = (m: number, o: number) => hopAm[o]!.gam.includes(pc(m))
   /** Nốt trong `ds` gần `tu + huong·2` nhất, ưu tiên nốt đi đúng hướng trong vòng 5 nửa cung. */
   const gan = (ds: readonly number[], tu: number, huong: number) => {
     const dung = ds.filter((m) => (m - tu) * huong > 0 && Math.abs(m - tu) <= 5)
@@ -184,6 +295,8 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
 
   const out: NotSinh[] = []
   let truoc: number | null = null
+  /** Ô của nốt trước — gọi tên nốt trước theo gam của chính ô ấy. */
+  let truocO = 0
   for (const [ci, oCau] of cau.entries()) {
     const on = oCau.flatMap((o, k) => (k === oCau.length - 1 ? O_CUOI : O_GIUA)[Math.floor(r() * (k === oCau.length - 1 ? O_CUOI : O_GIUA).length)]!.map((t) => ({ o, t })))
     const dinh = Math.max(1, Math.floor(on.length * (0.3 + r() * 0.15)))
@@ -193,6 +306,7 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
     let diTiep = 0
     for (const [j, { o, t }] of on.entries()) {
       const hp = hopAm[o]!
+      oTen = o
       const sau = on[j + 1]
       const cuoi = j === on.length - 1
       const manh = t === 0 || t === 2
@@ -210,7 +324,7 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
         m = notHop(o).reduce((a, c) => (Math.abs(c - tamCau) < Math.abs(a - tamCau) ? c : a))
         vai = 'mo'
         luat = ['tru', 'dinh']
-        ly = `${truoc === null ? 'Mở câu' : 'Câu mới (sau chỗ thở)'} ở phách 1 bằng TRỤ: ${ten(m)} là bậc ${bac(m, o)} của ${hp.ten} — nốt của hợp âm${truoc === null ? ', đặt giữa tầm tay để câu còn chỗ đi lên' : `, gần ${ten(truoc)} nơi câu trước dừng`}. Câu sẽ đi lên tới đỉnh rồi thả xuống.`
+        ly = `${truoc === null ? 'Mở câu' : 'Câu mới (sau chỗ thở)'} ở phách 1 bằng TRỤ: ${ten(m)} là bậc ${bac(m, o)} của ${hp.ten} — nốt của hợp âm${truoc === null ? ', đặt giữa tầm tay để câu còn chỗ đi lên' : `, gần ${ten(truoc, truocO)} nơi câu trước dừng`}. Câu sẽ đi lên tới đỉnh rồi thả xuống.`
       } else if (cuoi) {
         const muon = cuoiVong ? [0] : [7, 4, 3]
         let ds = notHop(o).filter((x) => muon.includes(pc(x - hp.goc)))
@@ -232,38 +346,43 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
         m = gan(notHop(o), truoc!, huong)
         vai = 'tru'
         luat = ['tru', 'buoc']
-        ly = `Phách ${ph} là phách mạnh — đặt TRỤ: ${ten(m)} là bậc ${bac(m, o)} của ${hp.ten}. Chọn nốt hợp âm gần ${ten(truoc!)} nhất, đi ${m === truoc ? 'tại chỗ' : m > truoc! ? 'lên' : 'xuống'}.`
+        ly = `Phách ${ph} là phách mạnh — đặt TRỤ: ${ten(m)} là bậc ${bac(m, o)} của ${hp.ten}. Chọn nốt hợp âm gần ${ten(truoc!, truocO)} nhất, đi ${m === truoc ? 'tại chỗ' : m > truoc! ? 'lên' : 'xuống'}.`
       } else if (vuaNhay) {
         m = buocGam(truoc!, -vuaNhay, o)
         vai = 'quay'
         luat = ['quay', 'gam']
-        ly = `Vừa nhảy xa nên QUAY ĐẦU: đi liền bậc ${m > truoc! ? 'lên' : 'xuống'} về ${ten(m)}, nốt trong gam ${tenGam}.`
+        ly = `Vừa nhảy xa nên QUAY ĐẦU: đi liền bậc ${m > truoc! ? 'lên' : 'xuống'} về ${ten(m)}, nốt trong gam ${hp.tenGam}.`
       } else if (sau && sau.o !== o && sau.t === 0) {
         const oSau = sau.o
         let dan: number
         let dich: number
+        let nuaCung = false
         if (diTiep) {
           // Ngay sau nốt tránh: đi tiếp cùng hướng trước, rồi mới chọn đích cho ô sau.
           dan = buocGam(truoc!, diTiep, o)
           dich = gan(notHop(oSau), dan, diTiep)
         } else {
           dich = gan(notHop(oSau), truoc!, huong)
-          dan = buocGam(dich, dich > truoc! ? -1 : 1, o)
-          if (dan === dich || dan === truoc || Math.abs(dan - truoc!) > 4) dan = buocGam(truoc!, Math.sign(dich - truoc!) || huong, o)
+          const nc = dich + (dich > truoc! ? -1 : 1)
+          nuaCung = r() < XAC_SUAT_NUA_CUNG && nc !== truoc && nc >= SAN && nc <= TRAN && Math.abs(nc - truoc!) <= 4 && !trongGam(nc, o) && !hp.pcs.includes(pc(nc))
+          dan = nuaCung ? nc : buocGam(dich, dich > truoc! ? -1 : 1, o)
+          if (!nuaCung && (dan === dich || dan === truoc || Math.abs(dan - truoc!) > 4)) dan = buocGam(truoc!, Math.sign(dich - truoc!) || huong, o)
           // Nốt trước đã sát đích (bước tới là trúng đích): vòng qua phía bên kia đích rồi rơi về — nốt dẫn không được trùng đích.
-          if (dan === dich) dan = buocGam(dich, dich >= truoc! ? 1 : -1, o)
+          if (!nuaCung && dan === dich) dan = buocGam(dich, dich >= truoc! ? 1 : -1, o)
         }
         m = dan
         if (dich !== dan && Math.abs(dich - dan) <= 3) {
           datTruoc = dich
           vai = 'dan'
-          luat = ['noi', 'gam']
-          ly = `Nốt DẪN cuối ô — ${ten(m)} (trong gam ${tenGam}) đứng sát ${ten(dich)}; ô sau sẽ rơi đúng vạch vào ${ten(dich)}, bậc ${bac(dich, oSau)} của ${hopAm[oSau]!.ten}.`
+          luat = nuaCung ? ['noi', 'chrom'] : ['noi', 'gam']
+          ly = nuaCung
+            ? `Nốt DẪN NỬA CUNG (chromatic) cuối ô — ${ten(m, o, dich > m)} KHÔNG có trong gam ${hp.tenGam}: chỉ lướt nửa cung vào ${ten(dich, oSau)}, ô sau rơi đúng vạch vào ${ten(dich, oSau)} (bậc ${bac(dich, oSau)} của ${hopAm[oSau]!.ten}). Nốt ngoài gam đứng phách nhẹ và đi ngay vào nốt hợp âm thì tai nghe là lực kéo, không phải nốt sai.`
+            : `Nốt DẪN cuối ô — ${ten(m)} (trong gam ${hp.tenGam}) đứng sát ${ten(dich, oSau)}; ô sau sẽ rơi đúng vạch vào ${ten(dich, oSau)}, bậc ${bac(dich, oSau)} của ${hopAm[oSau]!.ten}.`
         } else {
           // Không có nốt hợp âm mới nào sát nốt này (cách 1–3 nửa cung): không gọi là nốt dẫn — chỉ là nốt đi qua, ô sau chọn trụ như thường.
           vai = 'duong'
           luat = ['gam', 'buoc']
-          ly = `Phách ${ph} (nhẹ) — MẶT CẦU: đi liền bậc ${m > truoc! ? 'lên' : 'xuống'} tới ${ten(m)}, nốt trong gam ${tenGam} (bậc ${bac(m, o)} của ${hp.ten}).`
+          ly = `Phách ${ph} (nhẹ) — MẶT CẦU: đi liền bậc ${m > truoc! ? 'lên' : 'xuống'} tới ${ten(m)}, nốt trong gam ${hp.tenGam} (bậc ${bac(m, o)} của ${hp.ten}).`
         }
       } else {
         const xs = r()
@@ -282,21 +401,21 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
         } else {
           m = buocGam(truoc!, huong, o)
           // Nốt tránh chỉ lướt khi còn đi tiếp được cùng hướng trong tầm — sát mép tầm thì đi phía kia (lời hứa "nốt sau đi tiếp" phải đúng).
-          if (pc(m) === hp.tranh && (j + 1 >= on.length - 1 || buocGam(m, Math.sign(m - truoc!), o) * Math.sign(m - truoc!) <= m * Math.sign(m - truoc!))) m = buocGam(truoc!, -huong, o)
+          if (hp.tranh.includes(pc(m)) && (j + 1 >= on.length - 1 || buocGam(m, Math.sign(m - truoc!), o) * Math.sign(m - truoc!) <= m * Math.sign(m - truoc!))) m = buocGam(truoc!, -huong, o)
           const b = bac(m, o)
           const len = m > truoc! ? 'lên' : 'xuống'
-          if (pc(m) === hp.tranh) {
+          if (hp.tranh.includes(pc(m))) {
             vai = 'tranh'
             luat = ['tranh', 'gam']
             ly = `Phách ${ph} (nhẹ) — ${ten(m)} là bậc ${b} của ${hp.ten}: nốt TRÁNH, đứng sát trên một nốt khung nửa cung. Chỉ LƯỚT qua ở phách nhẹ, không ngân.`
           } else if (hp.pcs.includes(pc(m))) {
             vai = 'duong'
             luat = ['gam', 'buoc']
-            ly = `Phách ${ph} (nhẹ) — đi liền bậc ${len} tới ${ten(m)}: nốt trong gam ${tenGam}, cũng là bậc ${b} của ${hp.ten}.`
+            ly = `Phách ${ph} (nhẹ) — đi liền bậc ${len} tới ${ten(m)}: nốt trong gam ${hp.tenGam}, cũng là bậc ${b} của ${hp.ten}.`
           } else {
             vai = 'duong'
             luat = ['gam', 'buoc']
-            ly = `Phách ${ph} (nhẹ) — MẶT CẦU: đi liền bậc ${len} tới ${ten(m)}, nốt trong gam ${tenGam} (bậc ${b} của ${hp.ten} — nốt màu, đi qua).`
+            ly = `Phách ${ph} (nhẹ) — MẶT CẦU: đi liền bậc ${len} tới ${ten(m)}, nốt trong gam ${hp.tenGam} (bậc ${b} của ${hp.ten} — nốt MÀU, đi qua).`
           }
         }
       }
@@ -308,17 +427,19 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
         luat = [...luat, 'dinh']
         ly += ' Đây là ĐỈNH câu — từ đây câu thả xuống.'
       }
-      if (hp.hoaThanh && pc(m - tonic) === 11) {
+      if (thu && pc(m - tonic) === 11) {
         luat = [...luat, 'cam']
         ly += ` Bài thứ, trên ${hp.ten}: dùng nốt cảm ${ten(m)} (bậc 7 nâng nửa cung) — nó kéo về ${h(0, '')}.`
       }
       const tAt = o * 4 + t
       const tSau = sau ? sau.o * 4 + sau.t : tAt + KET_NGAN
-      out.push({ m, t: tAt, d: cuoi ? KET_NGAN : Math.min(tSau, (o + 1) * 4) - tAt, o, cau: ci, vai, ly, luat, ten: ten(m), phach: ph })
+      const tenM = luat.includes('chrom') && datTruoc !== null ? ten(m, o, datTruoc > m) : ten(m, o)
+      out.push({ m, t: tAt, d: cuoi ? KET_NGAN : Math.min(tSau, (o + 1) * 4) - tAt, o, cau: ci, vai, ly, luat, ten: tenM, phach: ph })
       vuaNhay = truoc !== null && j > 0 && Math.abs(m - truoc) >= 5 ? Math.sign(m - truoc) : 0
       diTiep = vai === 'tranh' ? Math.sign(m - truoc!) : 0
       if (vai === 'noi') datTruoc = null
       truoc = m
+      truocO = o
     }
   }
 
@@ -369,6 +490,7 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
     },
     not: out,
     hopO: tenHop,
+    gamO,
     soDo: {
       n: out.length,
       notHop: out.filter(laHop).length,

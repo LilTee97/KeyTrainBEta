@@ -18,7 +18,7 @@ import {
 } from '../hocSolo/gamNgon'
 import { baiCauThay, loiBoSoan } from '../hocSolo/cauThay'
 import { PHAN_TICH_THAY } from '../hocSolo/meoThay'
-import { LUAT_SINH, sinhSolo } from '../hocSolo/sinhSolo'
+import { gamTrenHop, LUAT_SINH, sinhSolo } from '../hocSolo/sinhSolo'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { docVong } from '../soanCau/thayTrongVong'
 
@@ -314,9 +314,15 @@ describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
           const iv = findQualityBySymbol(h.chat)!.intervals
           const goc = tonic + h.goc
           const hopAm = iv.map((i) => pc(goc + i))
-          const gam = thu ? (h.goc === 7 && iv.includes(4) ? [0, 2, 3, 5, 7, 8, 11] : [0, 2, 3, 5, 7, 8, 10]) : [0, 2, 4, 5, 7, 9, 11]
+          const gh = gamTrenHop(tonic, thu, h)
           expect(x.m >= 60 && x.m <= 84, `${chu} ${s} ${x.m}`).toBe(true)
-          expect(gam.includes(pc(x.m - tonic)) || hopAm.includes(pc(x.m)), `${chu} câu ${s} nốt ${k} ngoài gam`).toBe(true)
+          if (x.luat.includes('chrom')) {
+            // Nốt ngoài gam chỉ được là nốt dẫn nửa cung: phách nhẹ, nốt sau cách đúng nửa cung.
+            expect(x.vai).toBe('dan')
+            expect(x.t % 1 !== 0 || x.t % 2 === 1).toBe(true)
+            expect(gh.pcs.includes(pc(x.m))).toBe(false)
+            expect(Math.abs(c.not[k + 1]!.m - x.m)).toBe(1)
+          } else expect(gh.pcs.includes(pc(x.m)) || hopAm.includes(pc(x.m)), `${chu} câu ${s} nốt ${k} ${x.ten} ngoài gam ${gh.ten}`).toBe(true)
           if (x.t % 2 === 0) expect(hopAm.includes(pc(x.m)), `${chu} câu ${s} phách mạnh ${x.t}`).toBe(true)
           expect(x.ly.length).toBeGreaterThan(30)
           expect(x.luat.length).toBeGreaterThan(0)
@@ -346,6 +352,23 @@ describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
     }
     expect(quay / nhay, `quay đầu ${quay}/${nhay}`).toBeGreaterThanOrEqual(0.7)
   })
+  it('gam trên từng hợp âm: gam bài đổi đúng nốt cùng chữ, gọi tên mode; nốt tránh, hợp âm át để ♭9 ♭13 làm màu', () => {
+    const ten = (chu: string, tonic: number, thu: boolean) => docVong(chu, tonic)!.map((x) => gamTrenHop(tonic, thu, x).ten.replace(/ \(.*\)$/, ''))
+    expect(ten('C Dm Em F G7 Am Bdim', 0, false)).toEqual(['C Ionian', 'D Dorian', 'E Phrygian', 'F Lydian', 'G Mixolydian', 'A Aeolian', 'B Locrian'])
+    const a7 = gamTrenHop(0, false, docVong('A7', 0)![0]!)
+    expect(a7.ten).toMatch(/^A Mixolydian ♭13/)
+    expect(a7.doi.join()).toMatch(/^C → C♯/)
+    expect(a7.not.map((x) => x.ten)).toEqual(['A', 'B', 'C♯', 'D', 'E', 'F', 'G'])
+    const e7 = gamTrenHop(9, true, docVong('E7', 9)![0]!)
+    expect(e7.ten).toMatch(/^E Phrygian dominant/)
+    expect(e7.not.filter((x) => x.vai === 'tranh').map((x) => x.ten)).toEqual(['A'])
+    expect(e7.not.filter((x) => x.vai === 'mau').map((x) => x.ten)).toEqual(['F', 'C'])
+    const bb = gamTrenHop(0, false, docVong('Bb', 0)![0]!)
+    expect(bb.ten).toMatch(/^B♭ Lydian/)
+    expect(bb.doi.join()).toMatch(/^B → B♭/)
+    expect(gamTrenHop(0, false, docVong('C', 0)![0]!).not.filter((x) => x.vai === 'tranh').map((x) => x.ten)).toEqual(['F'])
+    expect(gamTrenHop(0, false, docVong('Eb', 0)![0]!).ten).toMatch(/^E♭ Lydian/)
+  })
   it('cùng câu số ra cùng câu; câu số khác ra câu khác; luật nào cũng có cơ sở', () => {
     const hop = docVong('C Am F G', 0)!
     expect(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x'))).toBe(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x')))
@@ -355,5 +378,22 @@ describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
       expect(l.cau.length, l.id).toBeGreaterThan(30)
       if (l.doDuoc) expect(l.coSo, l.id).toMatch(/\d/)
     }
+  })
+})
+
+describe('Sinh nốt Solo — tên nốt theo gam của hợp âm', () => {
+  it('bậc 3 của A7 trong Đô trưởng ghi C♯ (không phải D♭); nốt dẫn nửa cung: lên ghi thăng, xuống ghi giáng', () => {
+    let thay = 0
+    for (let s = 0; s < 30; s += 1) {
+      const c = sinhSolo(docVong('C A7 Dm G7', 0)!, 0, false, s, 'x')!
+      c.not.forEach((x, k) => {
+        if (x.o === 1 && x.m % 12 === 1) {
+          thay += 1
+          expect(x.ten.startsWith('C♯'), `câu ${s} ${x.ten}`).toBe(true)
+        }
+        if (x.luat.includes('chrom') && /[♯♭]/.test(x.ten)) expect(x.ten.includes(c.not[k + 1]!.m > x.m ? '♯' : '♭'), `câu ${s} ${x.ten}`).toBe(true)
+      })
+    }
+    expect(thay).toBeGreaterThan(0)
   })
 })

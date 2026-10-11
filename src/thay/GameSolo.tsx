@@ -516,6 +516,23 @@ export function GameChayNgon() {
 }
 
 const THE = 'rounded-xl border border-line bg-black/25 p-4'
+
+/** Bảy nốt gam trên một hợp âm, tô theo vai: trụ (nốt hợp âm) · màu · tránh (chỉ lướt). */
+function NotGam({ g }: { g: CauSinh['gamO'][number] }) {
+  return (
+    <>
+      {g.not.map((x) => (
+        <span
+          key={x.ten}
+          title={x.vai === 'tru' ? 'trụ — nốt của hợp âm' : x.vai === 'mau' ? 'màu — đi qua ở phách nhẹ' : 'tránh — chỉ lướt qua'}
+          className={`mr-1.5 font-mono text-sm ${x.vai === 'tru' ? 'font-bold text-teal-key' : x.vai === 'mau' ? 'text-amber-key' : 'text-dim italic'}`}
+        >
+          {x.ten}
+        </span>
+      ))}
+    </>
+  )
+}
 const phanTram = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} % (${a}/${b})` : '—')
 
 /**
@@ -525,7 +542,7 @@ const phanTram = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} % 
  * hiện to ở đầu thẻ và được tô sáng trong danh sách.
  */
 function GiaiThichSinh({ cau, dangCho }: { cau: CauSinh; dangCho: number | null }) {
-  const [muc, setMuc] = useState<'not' | 'so' | 'luat'>('not')
+  const [muc, setMuc] = useState<'not' | 'gam' | 'so' | 'luat'>('not')
   const hop = useRef<HTMLDivElement>(null)
   const notCho = dangCho === null ? null : (cau.not.find((x) => Math.abs(x.t - dangCho) < 1e-6) ?? null)
   useEffect(() => {
@@ -552,6 +569,7 @@ function GiaiThichSinh({ cau, dangCho }: { cau: CauSinh; dangCho: number | null 
         {(
           [
             ['not', 'Vì sao từng nốt'],
+            ['gam', 'Gam trên từng hợp âm'],
             ['so', 'So với các thầy'],
             ['luat', 'Cách chọn nốt — quy luật chung'],
           ] as const
@@ -578,6 +596,9 @@ function GiaiThichSinh({ cau, dangCho }: { cau: CauSinh; dangCho: number | null 
             <div key={o} className="mb-2">
               <p className="font-semibold text-amber-key">
                 Ô {o + 1} · {ten}
+                <span className="ml-2 font-normal text-cream/75">
+                  gam {cau.gamO[o]!.ten}: <NotGam g={cau.gamO[o]!} />
+                </span>
               </p>
               <ol className="mt-1 flex flex-col gap-1">
                 {cau.not
@@ -594,6 +615,53 @@ function GiaiThichSinh({ cau, dangCho }: { cau: CauSinh; dangCho: number | null 
                     </li>
                   ))}
               </ol>
+            </div>
+          ))}
+        </div>
+      )}
+      {muc === 'gam' && (
+        <div className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-1">
+          <div className="text-cream/85">
+            <p className="font-semibold text-cream">Mỗi hợp âm một gam — lấy gam của bài rồi chỉnh cho khớp hợp âm đang vang</p>
+            <p>
+              Bộ soạn lấy gam của bài; hợp âm nào có nốt ngoài gam thì đổi ĐÚNG nốt cùng tên chữ (bài Đô trưởng gặp A7: Đô → Đô♯). Đọc gam ấy
+              từ gốc hợp âm ra một <i>mode</i>. Trích nốt từ gam theo VAI:
+            </p>
+            <ul className="mt-1 ml-4 list-disc">
+              <li>
+                <b className="text-teal-key">Trụ</b> — nốt của hợp âm (rải hợp âm, arpeggio): phách mạnh 1 và 3, nốt đáp đầu ô, nốt kết câu.
+              </li>
+              <li>
+                <b className="text-amber-key">Màu</b> — nốt gam cách nốt trụ một bậc (9 · 11 · 13): đi qua ở phách nhẹ, làm câu "sang".
+              </li>
+              <li>
+                <b className="text-dim">Tránh</b> — nốt gam đứng nửa cung trên một nốt trụ (Fa trên C): chỉ lướt ở phách nhẹ, nốt sau đi tiếp. Hợp
+                âm át thì ♭9, ♭13 là màu (nốt căng biến âm), chỉ bậc 4 là tránh.
+              </li>
+              <li>
+                <b className="text-rose-300">Ngoài gam (chromatic)</b> — chỉ một chỗ: nốt dẫn NỬA CUNG ngay trước vạch đổi hợp âm, rồi rơi vào nốt
+                hợp âm mới.
+              </li>
+            </ul>
+            <p className="mt-1">
+              Ngoài gam còn bốn cách lấy nốt: <b>rải hợp âm</b> (nhảy quãng 3 sang nốt trụ kế) · <b>dẫn giọng</b> (đầu ô mới chọn nốt hợp âm gần
+              nốt trước nhất, đáp đúng vạch) · <b>hình câu</b> (lên đỉnh sớm rồi thả; nhảy xa thì quay đầu; câu 2 ô, kết bậc 1 / 5, nghỉ thở) ·{' '}
+              <b>nốt nhà trên V</b> (đánh sớm chủ âm rồi giữ sang hợp âm chủ).
+            </p>
+            <p className="mt-1 text-dim">
+              Chưa có trong bộ soạn gia sư (các thầy có dùng): nốt blue ♭3 · ♭5 · ♭7 trên hợp âm trưởng (Cà Pháo 4,7 % nốt ngoài gam, n=828),
+              ngũ cung của chủ (Ray 81 % nốt câu lick, n=503), màu altered trên V7 (Cà Pháo ♭13 9 %, n=66). Muốn nghe màu ấy: chọn nút thầy.
+            </p>
+          </div>
+          {cau.gamO.map((g, o) => (
+            <div key={o} className="rounded border border-line/60 p-2">
+              <p className="font-semibold text-amber-key">
+                Ô {o + 1} · {g.hop} — gam {g.ten}
+              </p>
+              <p className="text-cream/85">
+                <NotGam g={g} />
+              </p>
+              <p className="text-dim">{g.doi.length ? `Đổi so với gam của bài: ${g.doi.join('; ')}.` : 'Đúng gam của bài, không đổi nốt nào.'}</p>
             </div>
           ))}
         </div>
