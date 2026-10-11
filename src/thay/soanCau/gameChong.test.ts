@@ -30,9 +30,9 @@ describe('game Mưa hợp âm — logic', () => {
     const cau = taoCau(ct('13b9'), 6)
     expect([cau.ten, cau.khungTen, cau.goiY, cau.dapAnTen]).toEqual(['F♯13♭9', 'F♯7 + D♯', '♭9 → Sol', 'D♯'])
     expect([cau.loi, cau.nho]).toEqual(['F♯13♭9 = F♯7 + D♯', '♭9 → Sol'])
-    expect(cau.meo).toBe('Đuôi ♭9 mang lại Sol — nằm ở tay phải D♯.')
+    expect(cau.meo).toBe('Nốt của đuôi ♭9: Sol — nằm ở tay phải D♯.')
     expect(taoCau(ct('maj7'), 9).goiY).toBe('maj7 → Sol♯')
-    expect(taoCau(ct('m11b5'), 0).meo).toBe('Đuôi Giảm mang lại Mi♭ (tay phải E♭sus2) + Sol♭ (tay trái Đô – Sol♭).')
+    expect(taoCau(ct('m11b5'), 0).meo).toBe('Nốt của đuôi Giảm: Mi♭ (tay phải E♭sus2) + Sol♭ (tay trái Đô – Sol♭).')
     expect(`${cau.khungTen} ${cau.goiY} ${cau.meo}`).not.toMatch(/phím|bậc|gam/)
     expect(cau.nhan).toEqual({ trai: 'F♯7', traiPhu: 'Fa♯ – La♯ – Mi', phai: 'D♯', phaiPhu: 'Rê♯ – Sol – La♯' })
     expect(dungTayPhai([63, 67, 70], cau)).toBe(true) // Mi♭ Sol Si♭ = D♯ trưởng, thế nào cũng được
@@ -60,12 +60,12 @@ describe('game Mưa hợp âm — logic', () => {
     const cau = taoCau(ct('add9'), 4)
     expect([cau.khungTen, cau.goiY, cau.dapAnTen, cau.nhan.phai]).toEqual(['Mi – Si + Fa♯ – Sol♯ – Si', 'add9 → Fa♯', 'Fa♯ – Sol♯ – Si', 'chùm'])
     expect(cau.luaChon.map((l) => l.ten)).toContain('Fa♯ – Sol♯ – Si')
-    expect(cau.meo).toBe('Đuôi add9 mang lại Fa♯ — nằm ở tay phải Fa♯ – Sol♯ – Si.')
+    expect(cau.meo).toBe('Nốt của đuôi add9: Fa♯ — nằm ở tay phải Fa♯ – Sol♯ – Si.')
   })
 
   it('hợp âm ba cơ bản: tay trái gốc, tay phải cả hợp âm; bốn nút là các hợp âm ba cùng gốc', () => {
     const c = chonCau(['q:min'], [9], new Map(), null, () => 0.4)
-    expect([c.id, c.ten, c.khungTen, c.goiY, c.dapAnTen, c.meo]).toEqual(['q:min', 'Am', 'La + Am', 'Thứ → Đô', 'Am', 'Đuôi Thứ mang lại Đô — nằm ở tay phải Am.'])
+    expect([c.id, c.ten, c.khungTen, c.goiY, c.dapAnTen, c.meo]).toEqual(['q:min', 'Am', 'La + Am', 'Thứ → Đô', 'Am', 'Nốt của đuôi Thứ: Đô — nằm ở tay phải Am.'])
     expect(dungTayPhai([57, 60, 64], c)).toBe(true) // La Đô Mi
     expect(dungTayPhai([57, 61, 64], c)).toBe(false) // A trưởng
     expect(c.luaChon.every((l) => l.trai.join() === c.trai.join() && Math.min(...l.phai) > Math.max(...l.trai))).toBe(true)

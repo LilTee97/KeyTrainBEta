@@ -47,7 +47,7 @@ export function TheNhomDuoi({ n, onThu }: { n: ReturnType<typeof bangTheoDuoi>[n
         <b className="text-base text-amber-key">{n.ten}</b> <span className="font-mono text-cream/85">{n.duoi}</span>
       </p>
       <p>
-        <span className="text-dim">Đuôi mang lại: </span>
+        <span className="text-dim">Đuôi thêm / đổi nốt (so với Đô – Mi – Sol): </span>
         {n.dauHieu}
       </p>
       <p>
@@ -64,7 +64,8 @@ export function TheNhomDuoi({ n, onThu }: { n: ReturnType<typeof bangTheoDuoi>[n
             )}
             <b className="w-24 font-mono text-cream">{d.tong}</b>
             <span>
-              = <b className="font-mono text-teal-key">{d.trai}</b> + <b className="font-mono text-amber-key">{d.phai}</b>{' '}
+              = <span className="text-dim">tay trái</span> <b className="font-mono text-teal-key">{d.trai}</b> + <span className="text-dim">tay phải</span>{' '}
+              <b className="font-mono text-amber-key">{d.phai}</b>{' '}
               <span className="text-dim">({d.phaiPhu})</span>
             </span>
             {d.goiNho && <span className="text-cream/70">— {d.goiNho}</span>}
@@ -102,7 +103,10 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
       <summary className="cursor-pointer font-semibold text-amber-key">Công thức chồng — muốn chồng ra loại nào (ví dụ gốc Đô)</summary>
 
       <p className="mt-2 font-semibold text-cream">Muốn chồng ra loại nào — chia theo đuôi</p>
-      <p className="text-dim">Mỗi nhóm: nốt mà đuôi mang lại, cách chồng, rồi từng hợp âm với tên hai tay. "Thử" đưa hợp âm lên bàn phím ở gốc Đô.</p>
+      <p className="text-dim">
+        Tên hợp âm = gốc + đuôi (Cmaj7 = gốc C + đuôi maj7). Gốc cho hợp âm ba Đô – Mi – Sol; đuôi thêm hay đổi vài nốt — dòng "Đuôi thêm / đổi
+        nốt" ghi đúng mấy nốt ấy. Chữ xanh là tay trái, chữ cam là tay phải. "Thử" đưa hợp âm lên bàn phím ở gốc Đô.
+      </p>
       {bangTheoDuoi().map((n) => (
         <TheNhomDuoi key={n.ten} n={n} onThu={onThu} />
       ))}

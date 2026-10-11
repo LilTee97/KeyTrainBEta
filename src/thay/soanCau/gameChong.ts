@@ -113,13 +113,13 @@ function luaChonTen(ct: CongThuc, g: number, dung: Chong, rand: () => number): L
   return tron([{ ten: tenDung, trai: dung.trai, phai: dung.phai, nhan: nhanCua(dung, ct, g) }, ...nhieu], rand)
 }
 
-/** Mẹo khi sai: đuôi mang lại nốt nào (ở gốc đang đố) và nốt ấy nằm ở tay nào — "Đuôi maj7 mang lại Sol♯ — nằm ở tay phải C♯m". */
+/** Mẹo khi sai: đuôi thêm / đổi nốt nào (ở gốc đang đố) và nốt ấy nằm ở tay nào — "Nốt của đuôi maj7: Sol♯ — nằm ở tay phải C♯m". */
 function meoDuoi(id: string, g: number, phai: readonly number[], tenTrai: string, tenPhaiTay: string): string {
   const tay = (iv: number) => (phai.some((m) => pc(m) === pc(g + iv)) ? `tay phải ${tenPhaiTay}` : `tay trái ${tenTrai}`)
   const ds = dauDuoi(id, g)
   const cung = new Set(ds.map((d) => tay(d.iv))).size === 1
   const noi = cung ? `${ds.map((d) => d.ten).join(' + ')} — nằm ở ${tay(ds[0]!.iv)}` : ds.map((d) => `${d.ten} (${tay(d.iv)})`).join(' + ')
-  return `Đuôi ${nhomCua(id).ten} mang lại ${noi}.`
+  return `Nốt của đuôi ${nhomCua(id).ten}: ${noi}.`
 }
 
 /** Hợp âm ba cơ bản (`trưởng · thứ · giảm · tăng · sus2 · sus4`): tay trái gốc, tay phải cả hợp âm; bốn nút là các hợp âm ba cùng gốc. */

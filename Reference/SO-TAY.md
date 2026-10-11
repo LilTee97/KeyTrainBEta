@@ -6366,3 +6366,16 @@ khớp lời bảng và có thật trong hợp âm; gọi tên ở gốc La: maj
 (5 đỏ cũ) · `vite build` qua · chạy thử headless 10/10 (18 màn ở hai cột; màn maj7: viên "Mi + G♯m · maj7 → Rê♯", khung mẹo thẻ nhóm, lời
 sai / đúng theo đuôi; màn Trưởng giữ hợp âm ba → đúng; thi màn Giảm 20/20 Đạt; màn slash; màn trộn; điện thoại không cuộn ngang) ·
 `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: bảng theo đuôi nói rõ hơn — màu hai tay, "đuôi thêm / đổi nốt" (11/10/2026)
+
+**Người dùng** (ảnh bảng nhóm Tăng · 6): *"Hai màu xanh và cam đó tượng trung cho cái gì. Đuôi mang lại nghĩa là gì, nói rõ hơn đi"*.
+
+- Dòng mỗi hợp âm ghi chữ "tay trái … + tay phải …" (xanh = tay trái, cam = tay phải — bảng không có chú thích nên người dùng không biết).
+  Lời dẫn mục: tên hợp âm = gốc + đuôi; gốc cho Đô – Mi – Sol, đuôi thêm hay đổi vài nốt.
+- "Đuôi mang lại" đổi thành "Đuôi thêm / đổi nốt (so với Đô – Mi – Sol)", lời 16 nhóm viết thành việc làm: "thêm La (không thêm 7)", "đổi
+  Sol thành Sol♯", "bỏ Mi — sus2 thay bằng Rê…". Lời sai trong game: "Nốt của đuôi maj7: Sol♯ — nằm ở tay phải C♯m".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · test phần thầy 178 qua (nốt ở lời mới vẫn khớp nốt đuôi gọi ở gốc Đô) · toàn suite 2 720 qua / 5 đỏ
+(5 đỏ cũ) · `vite build` qua · chạy thử headless 3/3 (lời dẫn, dòng "thêm / đổi", dòng "tay trái … + tay phải …") · `LuyenTap.json`,
+`Nguon.json` không đổi.

@@ -81,7 +81,8 @@ export interface NhomDuoi {
   ten: string
   /** Các đuôi trong nhóm, ghi như tên hợp âm. */
   duoi: string
-  /** Nốt đuôi mang lại (gốc Đô) — đọc đuôi là biết nốt phải có. */
+  /** Đuôi làm gì với hợp âm Đô trưởng (Đô – Mi – Sol): thêm / đổi / bỏ nốt nào — đọc đuôi là biết nốt phải có. Lời viết lại 11/10/2026 (người
+   *  dùng hỏi "Đuôi mang lại nghĩa là gì, nói rõ hơn đi"). */
   dauHieu: string
   /** Cách chồng ra các loại trong nhóm. */
   cach: string
@@ -103,7 +104,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'Trưởng',
     duoi: 'C (không đuôi)',
-    dauHieu: 'Đô – Mi – Sol',
+    dauHieu: 'không có đuôi — giữ nguyên Đô – Mi – Sol',
     cach: 'Một tay bấm đủ C; hai tay thì tay trái Đô, tay phải C.',
     chung: 'Đổi một nốt ra các hợp âm ba khác: Mi thành Mi♭ = Cm · Sol thành Sol♯ = Caug · Mi thành Fa = Csus4 · Mi thành Rê = Csus2.',
     ids: ['q:maj'],
@@ -114,7 +115,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'Thứ',
     duoi: 'm',
-    dauHieu: 'Mi♭ thay Mi (Đô – Mi♭ – Sol)',
+    dauHieu: 'đổi Mi thành Mi♭ (Đô – Mi♭ – Sol)',
     cach: 'Tay trái Đô, tay phải Cm.',
     chung: 'Hạ tiếp Sol xuống Sol♭ là ra Cdim.',
     ids: ['q:min'],
@@ -125,7 +126,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'Treo',
     duoi: 'sus2 · sus4 · 9sus4',
-    dauHieu: 'không có Mi — sus2 thay bằng Rê, sus4 thay bằng Fa',
+    dauHieu: 'bỏ Mi — sus2 thay bằng Rê, sus4 thay bằng Fa',
     cach: 'sus2, sus4 một tay bấm đủ (Đô Rê Sol · Đô Fa Sol); C9sus4: tay trái Đô, tay phải B♭ (Si♭ Rê Fa) — chính là hợp âm slash B♭/C.',
     chung: 'Không có Mi nên nghe lơ lửng, chưa trưởng chưa thứ.',
     ids: ['q:sus2', 'q:sus4', '9sus4'],
@@ -137,7 +138,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'Giảm',
     duoi: 'dim · m7♭5 · dim7 · m11♭5',
-    dauHieu: 'Mi♭ + Sol♭ (không có Mi, không có Sol)',
+    dauHieu: 'đổi Mi thành Mi♭ và Sol thành Sol♭ (Đô – Mi♭ – Sol♭)',
     cach: 'Cdim một tay bấm đủ (Đô Mi♭ Sol♭); còn lại tay trái Đô, tay phải đứng trên Mi♭, chỉ đổi loại: E♭m (m7♭5) · E♭dim (dim7) · E♭sus2 (m11♭5 — tay trái thêm Sol♭).',
     chung: 'Từ Cm7 (Đô + E♭) hạ Sol xuống Sol♭ = Cm7♭5, hạ tiếp Si♭ xuống La = Cdim7. Bảy giảm cách đều nhau nên cả bàn phím chỉ có 3 cái: Cdim7 = E♭dim7 = G♭dim7 = Adim7.',
     ids: ['q:dim', 'm7b5', 'dim7', 'm11b5'],
@@ -148,7 +149,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'Tăng',
     duoi: 'aug (+)',
-    dauHieu: 'Sol♯ thay Sol (Đô – Mi – Sol♯, cũng viết La♭)',
+    dauHieu: 'đổi Sol thành Sol♯ (Đô – Mi – Sol♯, cũng viết La♭)',
     cach: 'Một tay bấm đủ Caug; hai tay thì tay trái Đô, tay phải Caug.',
     chung: 'Hợp âm tăng chia đều nên Caug = Eaug = A♭aug — gặp lại ở C7♭13 (tay phải A♭+) và Cm(maj7) (tay phải E♭+).',
     ids: ['q:aug'],
@@ -159,7 +160,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '6',
     duoi: '6 · m6 · 6/9',
-    dauHieu: 'La, không có 7',
+    dauHieu: 'thêm La (không thêm 7)',
     cach: 'Tay trái Đô – Sol; tay phải dựng trên La: Am (C6) · Adim (Cm6 — Mi thành Mi♭) · Asus4 (C6/9 — Đô thành Rê).',
     chung: 'C6 và C13 cùng tay phải Am — C13 chỉ thêm khung 7 ở tay trái.',
     ids: ['6', 'm6', '69'],
@@ -170,7 +171,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'add9',
     duoi: 'add9 · m(add9)',
-    dauHieu: 'Rê, không có 7',
+    dauHieu: 'thêm Rê (không thêm 7)',
     cach: 'Tay trái Đô – Sol; tay phải chùm nốt, Rê kẹp sát dưới Mi: Rê – Mi – Sol (Cadd9) · Rê – Mi♭ – Sol (Cm(add9)).',
     chung: 'Cadd9 và C6/9 chung Rê – Mi: đổi Sol thành La là sang C6/9.',
     ids: ['add9', 'madd9'],
@@ -181,7 +182,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '7',
     duoi: '7 · m7',
-    dauHieu: 'Si♭ (7 không ghi "maj" là Si♭)',
+    dauHieu: 'thêm Si♭ (số 7 không kèm chữ "maj" là Si♭)',
     cach: 'Tay trái Đô; tay phải dựng trên nốt 3: Edim (Mi Sol Si♭) cho C7 · E♭ (Mi♭ Sol Si♭) cho Cm7 — hai cái chỉ khác Mi / Mi♭.',
     chung: 'C7 = Cmaj7 hạ Si xuống Si♭ (Em thành Edim).',
     ids: ['7', 'm7'],
@@ -192,7 +193,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: 'maj7',
     duoi: 'maj7 · m(maj7)',
-    dauHieu: 'Si (sát dưới Đô)',
+    dauHieu: 'thêm Si (phím sát dưới Đô)',
     cach: 'Tay trái Đô; tay phải dựng trên nốt 3, mang Si lên trên: Em (Mi Sol Si) cho Cmaj7 · E♭+ (Mi♭ Sol Si) cho Cm(maj7).',
     chung: 'Cmaj7 → C7: Si thành Si♭; Cmaj7 → Cm(maj7): Mi thành Mi♭.',
     ids: ['maj7', 'mMaj7'],
@@ -203,7 +204,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '9',
     duoi: '9 · m9 · maj9',
-    dauHieu: 'Rê cùng với 7 (Si hay Si♭)',
+    dauHieu: 'thêm 7 (Si♭, hay Si ở maj9) rồi thêm Rê',
     cach: 'Tay phải dựng trên Sol: G (Sol Si Rê) cho Cmaj9 · Gm (Sol Si♭ Rê) cho C9 và Cm9; tay trái giữ nốt 3: C (Cmaj9) · Đô – Mi (C9) · Cm (Cm9).',
     chung: 'C9 và Cm9 cùng tay phải Gm, chỉ khác tay trái Mi hay Mi♭.',
     ids: ['maj9', '9', 'm9'],
@@ -215,7 +216,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '11',
     duoi: 'm11',
-    dauHieu: 'Fa cùng với 7',
+    dauHieu: 'thêm 7 (Si♭) rồi thêm Fa',
     cach: 'Tay trái Cm, tay phải B♭ (Si♭ Rê Fa).',
     chung: 'C9sus4 (nhóm treo) cùng tay phải B♭ nhưng tay trái chỉ Đô — hợp âm có Mi tránh Fa vì Fa chọi Mi. Cm11♭5 ở nhóm giảm.',
     ids: ['m11'],
@@ -226,7 +227,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '13',
     duoi: '13 · m13',
-    dauHieu: 'La cùng với 7',
+    dauHieu: 'thêm 7 (Si♭) rồi thêm La',
     cach: 'Tay trái khung 7: Đô – Mi – Si♭ (C13) · Đô – Mi♭ – Si♭ (Cm13); tay phải hợp âm có La: Am (C13) · Dm (Cm13).',
     chung: 'C13 = C6 thêm khung 7 (cùng tay phải Am). C13 lấy Am chứ không lấy Dm vì Fa chọi Mi.',
     ids: ['13', 'm13'],
@@ -237,7 +238,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '7♭5',
     duoi: '7♭5',
-    dauHieu: 'Sol♭ thay Sol, có Si♭',
+    dauHieu: 'thêm Si♭, đổi Sol thành Sol♭',
     cach: 'Tay trái Đô; tay phải chùm Mi – Sol♭ – Si♭ — chính là C7 (Edim) hạ Sol xuống Sol♭.',
     chung: 'Cm7♭5 (nhóm giảm) cũng có ♭5: Đô + E♭m.',
     ids: ['7b5'],
@@ -248,7 +249,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '♭9',
     duoi: '7♭9 · 13♭9 · 13♭9♯11',
-    dauHieu: 'Rê♭ (= Đô♯)',
+    dauHieu: 'thêm Rê♭ (= Đô♯) vào hợp âm 7',
     cach: 'Lấy loại gốc, đổi đúng một nốt: C7 (Edim) thêm Rê♭ = Edim7 → C7♭9; C13 (Am) Đô thành Đô♯ = A → C13♭9; từ A đổi Mi thành Sol♭ = G♭m → C13♭9♯11.',
     chung: 'Nốt căng lệch nửa cung khỏi nốt quen (Rê♭ sát Rê) — nghe căng, đòi giải về.',
     ids: ['7b9', '13b9', '13b9#11'],
@@ -259,7 +260,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '♯11',
     duoi: 'maj9♯11 · 13♯11',
-    dauHieu: 'Fa♯ (= Sol♭)',
+    dauHieu: 'thêm Fa♯ (= Sol♭)',
     cach: 'Cmaj9♯11: từ Cmaj9 (C + G) đổi Sol thành Fa♯ → tay phải Bm (Si Rê Fa♯). C13♯11: tay trái khung C7, tay phải D (Rê Fa♯ La).',
     chung: 'C13♭9♯11 (nhóm ♭9) có cả Rê♭ lẫn Fa♯.',
     ids: ['maj9#11', '13#11'],
@@ -270,7 +271,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
   {
     ten: '♭13',
     duoi: '7♭13',
-    dauHieu: 'La♭, có Si♭',
+    dauHieu: 'thêm La♭ vào hợp âm 7',
     cach: 'Tay trái khung C7; tay phải A♭+ (La♭ Đô Mi) — C13 (Am) hạ La xuống La♭.',
     chung: 'A♭+ cùng nốt Caug (nhóm tăng).',
     ids: ['7b13'],
