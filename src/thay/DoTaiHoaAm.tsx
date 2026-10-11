@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { playChordSequence, startAudio } from '../shared/audio/audioEngine'
-import { doanGiong, PHONG_CACH, taoDo, type Giong, type PhongCach } from './soanCau/doTaiHoaAm'
+import { doanGiong, MEO_CHUNG, meoCua, PHONG_CACH, taoDo, type Giong, type Meo, type PhongCach } from './soanCau/doTaiHoaAm'
 import { nguCanh, theBamHop, type Hop } from './soanCau/giaiThich'
 import { docHop, docVong } from './soanCau/thayTrongVong'
 
@@ -19,6 +19,38 @@ const nghe = async (tonic: number, ds: readonly Hop[]) => {
   playChordSequence(
     ds.map((x) => theBamHop(tonic, x)),
     1.2,
+  )
+}
+
+const NHOM_MEO: readonly Meo['nhom'][] = ['Theo vị trí trong vòng', 'Theo đuôi và cách bấm', 'Nhận ra từng thầy']
+
+/** Bảng mẹo chung — người dùng 11/10/2026: "tìm ra mẹo từ các điểm chung … ở những vị trí nhất định thì thường sẽ là dạng hợp âm nào, những loại
+ *  đuôi giống nhau thì sẽ xuất hiện thế nào". Ví dụ viết ở Đô trưởng / La thứ; số đo ghi ở mỗi mẹo. */
+function BangMeo() {
+  return (
+    <details className="mb-3 rounded-lg border border-line/60 p-3 text-xs">
+      <summary className="cursor-pointer font-semibold text-amber-key">Bảng mẹo chung — điểm chung giữa các thầy ({MEO_CHUNG.length} mẹo)</summary>
+      <p className="mt-2 text-dim">
+        Số đo 11/10/2026: phần hát 7 bài Cà Pháo (428 hợp âm) và 8 bài Linh Nhi (616 hợp âm); hợp âm liền nhau cùng gốc gộp làm một; "có màu" = nốt
+        đệm (tay trái + nốt dưới giai điệu tay phải) vang từ 8 % thời lượng hợp âm. Cách đếm này khác cách đếm "đoạn" trong lời thầy — đừng so hai
+        loại số. Blues lấy số trong md Blues. Ví dụ viết ở Đô trưởng và La thứ.
+      </p>
+      {NHOM_MEO.map((nhom) => (
+        <div key={nhom} className="mt-3">
+          <p className="font-semibold text-cream">{nhom}</p>
+          <ul className="mt-1 flex flex-col gap-2">
+            {MEO_CHUNG.filter((m) => m.nhom === nhom).map((m) => (
+              <li key={m.id} className="rounded border border-line/40 p-2">
+                <p className="font-semibold text-amber-key">{m.ten}</p>
+                <p className="mt-0.5 text-cream/85">{m.cau}</p>
+                <p className="mt-0.5 text-cream/70">Nghe: {m.nghe}</p>
+                <p className="mt-0.5 text-dim">Cơ sở: {m.coSo}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </details>
   )
 }
 
@@ -77,6 +109,7 @@ export function DoTaiHoaAm() {
         ))}
       </div>
       <p className="mb-2 text-xs text-cream/70">{PHONG_CACH.find((q) => q.id === p)!.tom}</p>
+      <BangMeo />
       {g && hop ? (
         <>
           <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
@@ -207,11 +240,22 @@ function BaiDo({ p, g, hop }: { p: PhongCach; g: Giong; hop: Hop[] }) {
               </p>
             )}
             <p className="font-semibold text-cream">{c.dap.y}</p>
-            <p className="mt-1 text-cream/85">{c.dap.giai}</p>
-            {c.dap.viDu && <p className="mt-1 text-dim">Ví dụ trong sheet: {c.dap.viDu}</p>}
-            {c.dap.ai && <p className="mt-1 text-dim">Ai chọn: {c.dap.ai}</p>}
-            <p className="mt-1 text-dim">Cơ sở: {c.dap.coSo}</p>
+            <p className="mt-1 text-cream/90">
+              <span className="text-teal-key">Gia sư giảng: </span>
+              {c.dap.giang}
+            </p>
+            <p className="mt-1 text-cream/85">
+              <span className="text-amber-key">Mẹo — {meoCua(c.dap.meo).ten}: </span>
+              {meoCua(c.dap.meo).cau}
+            </p>
             {c.dap.cung.length > 0 && <p className="mt-1 text-dim">Cũng đúng lối này: {c.dap.cung.map(ten).join(' · ')}</p>}
+            <p className="mt-1 text-dim">Cơ sở: {c.dap.coSo}</p>
+            <details className="mt-1">
+              <summary className="cursor-pointer text-dim">Lời chi tiết của thầy (nhạc lý)</summary>
+              <p className="mt-1 text-cream/80">{c.dap.giai}</p>
+              {c.dap.viDu && <p className="mt-1 text-dim">Ví dụ trong sheet: {c.dap.viDu}</p>}
+              {c.dap.ai && <p className="mt-1 text-dim">Ai chọn: {c.dap.ai}</p>}
+            </details>
             <p className="mt-1 text-[10px] text-dim">{NGUON[c.dap.nguon]}</p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button type="button" onClick={() => void nghe(g.tonic, trongVong(o, c.dap.dap))} className={nut(false)}>

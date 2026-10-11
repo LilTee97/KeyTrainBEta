@@ -49,7 +49,7 @@ export const LOAI: Readonly<Record<LoaiThay, { ten: string; nghe: string; huong:
   },
   'giam-luot': {
     ten: 'Giảm lướt — chèn nửa cung dưới hợp âm sau',
-    nghe: 'Giữ hợp âm này nửa đầu, nửa sau chèn hợp âm bảy giảm nằm nửa cung dưới gốc hợp âm sau: mọi nốt của nó dẫn nửa cung vào hợp âm sau. Nghe cổ điển, sang, hơi u buồn.',
+    nghe: 'Giữ hợp âm này nửa đầu, nửa sau chèn hợp âm bảy giảm nằm nửa cung dưới gốc hợp âm sau: ba trong bốn nốt của nó dẫn nửa cung vào hợp âm sau. Nghe cổ điển, sang, hơi u buồn.',
     huong: () => 'Vòng chảy liền hơn — bass đi từng bậc thay vì nhảy.',
     thay: 'Linh Nhi: hợp âm giảm thay V ở Đường Xưa, Mùa Xuân; Robert (Blues): I → ♭III° → ii.',
   },

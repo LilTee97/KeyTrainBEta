@@ -6447,3 +6447,37 @@ với tư duy của bạn để ra thêm phong cách thứ 4 … xác định đ
 không lộ tên đáp án; dịch giọng thì đáp án dịch theo) · toàn suite 2 734 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 23/23 (Dm G
 C Am → Đô trưởng, ô 3 sẵn Cadd9; gợi ý; chọn đúng / sai, lời thầy, màu ô; đố lại; F G Em Am → La thứ; đổi phong cách; đổi chủ âm; vòng lỗi;
 C E7 Am F G → Đô trưởng; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: Đố tái hòa âm — lời gia sư (mức lớp 6) và bảng mẹo chung (11/10/2026)
+
+**Người dùng** (ảnh lời giải Dm11 của phong cách thứ tư): *"Trong vai một gia sư piano tận tâm, hãy giải thích tại sao ở lại chọn các hợp âm
+đó ở những chỗ tương ứng, áp dụng lên tất cả các thầy — Hãy giải thích rõ ràng làm sao cho một học sinh lớp 6 hiểu được — Hãy giải thích bằng
+cách kết hợp cảm giác nghe sẽ như nào, đừng quá máy móc — Hãy tìm ra mẹo từ các điểm chung, ví dụ như ở những vị trí nhất định thì thường sẽ
+là dạng hợp âm nào, những loại đuôi giống nhau thì sẽ xuất hiện thế nào... Phân tích kỹ để tìm ra các mẹo"*.
+
+- Mỗi luật của bốn phong cách (cả giọng trưởng, giọng thứ) có `giang` — lời gia sư: chỗ ấy là chỗ gì trong câu (nhà, ô lấy đà, kéo về…), thầy
+  thêm / đổi nốt nào (tên nốt ở giọng đang đố), nghe ra sao, vì sao; nhiều chỗ có "mẹo tay" (Am7 = tay phải C, tay trái La). Bậc không có
+  luật cũng có lời gia sư theo họ hợp âm. Lời nhạc lý cũ gập vào "Lời chi tiết của thầy".
+- Mỗi luật trỏ một mẹo (`meo`); sau khi chọn hiện "Mẹo — tên: câu". Bảng mẹo chung (15 mẹo, ba nhóm: theo vị trí trong vòng · theo đuôi và
+  cách bấm · nhận ra từng thầy), mỗi mẹo: câu dễ hiểu, nghe ra sao, cơ sở có số. Gợi ý KHÔNG kèm tên mẹo — tên như "maj7 và ♯11…" lộ đáp án.
+- **Số đo** — `tools/meo_chung_thay.py` (mới): phần hát 7 bài Cà Pháo (428 hợp âm) và 8 bài Linh Nhi (616 hợp âm); hợp âm liền nhau cùng
+  gốc + loại gộp một; "có màu" = nốt đệm vang ≥ 8 % thời lượng. Khác cách đếm "đoạn" trong lời thầy — không so hai loại số. Điểm chung rõ nhất:
+  maj7 nằm ở I · IV (trưởng) hay ♭III · ♭VI (thứ) — Cà Pháo 42/49, Linh Nhi 48/58, trên V chỉ 1/49 · 4/58; ♭VI có maj7 — 23/46 · 19/42; ♯11
+  nằm ở ♭VI bài thứ — 8/15 · 7/24; V bài trưởng có ♭9 · ♭13 — 0/35 · 2/42, bài thứ — 8/21 · 8/42 (nốt căng của V lấy từ gam của bài); át phụ
+  ngoài V → I — 21 · 15 chỗ, ba lối chung I7 → IV/iv, II7 → V, ♭VII7 → ♭III. Khác nhau rõ nhất: hợp âm thứ có ♭7 — Cà Pháo 99/166, Linh Nhi 64/269.
+- **Một ý tôi định viết mà sai**: "màu hay gặp nhất ở mỗi bậc đều là nốt của hợp âm nhà" — sai ở V (màu hay gặp nhất của V là ♭7, Cà Pháo
+  19/35, không phải nốt nhà). Mẹo "mượn nốt của nhà" chỉ ghi những bậc đo thấy (ii, IV, vi, V-13, ♭VI, ♭VII) và ghi rõ chỗ không đúng.
+- **Sửa hai chỗ sai nhạc lý** (soát khi viết lời gia sư): (1) hợp âm bảy giảm lướt — chỉ BA trong bốn nốt dẫn nửa cung vào hợp âm sau, không
+  phải "mọi nốt" (C♯dim7 → Dm: Sol cách Fa, La một cung) — sửa ở lời phong cách thứ tư và ở `LOAI['giam-luot']` (thayTrongVong.ts); (2) Cà Pháo
+  ii° → II7 không phải "đổi đúng một nốt" mà nâng bậc 3 và bậc 5, thêm ♭7 (chỉ II7♭5 mới đổi một nốt) — sửa trong lời thầy đã duyệt
+  (giaiThich.ts, Cà Pháo bậc 2) và trong gợi ý.
+
+**Chưa đo — lỗ còn lại:** mức "lớp 6" chưa qua mắt người dùng; mẹo là tương quan trên phần hát của hai thầy, chưa tách theo bài (một bài
+nhiều hợp âm có thể kéo số); Blues không có trong kho đo, số lấy từ md Blues; lời gia sư không kiểm được giai điệu (các câu "đừng dùng khi
+giọng hát ngân …" app không tự soát).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `doTaiHoaAm.test.ts` 13 (thêm 1: luật nào cũng có lời gia sư > 40 ký tự và mẹo có thật, ký hiệu
+đẹp không lộ "b13" / "#"; mọi đáp án ở 14 vòng × mọi giọng ứng viên × 4 phong cách có lời gia sư; mẹo nào cũng có chỗ dùng) · toàn suite
+2 735 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 15/15 (bảng mẹo đóng sẵn, 15 mẹo, 3 nhóm, số đo; gợi ý không kèm tên
+mẹo; Cà Pháo Dm7 có lời gia sư + mẹo tay + mẹo "đổi bass"; lời chi tiết gập / mở; phong cách thứ tư Dm11, D♭9 đúng lời; điện thoại không
+cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

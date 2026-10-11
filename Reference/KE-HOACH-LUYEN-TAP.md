@@ -507,6 +507,8 @@ Các hợp âm phải được chọn tự do …"*
   chủ âm tái hòa âm sẵn → mỗi ô khác trắc nghiệm bốn phương án, gợi ý bật khi cần, chọn xong có lời giải thích và nghe trong vòng.
   Cà Pháo · Linh Nhi · Blues theo lời "bài ghi X → thầy bấm Y" đã duyệt; phong cách thứ tư "Nhạc sĩ (Claude)" là tư duy của Claude.
   **Chờ người dùng** nghe và duyệt phong cách thứ tư; lỗ còn lại ở SO-TAY.
+  Cập nhật 11/10 (người dùng): lời giải viết lại theo giọng gia sư cho học sinh lớp 6 (cảm giác nghe, mẹo tay), mỗi lời trỏ một mẹo; thêm
+  bảng 15 mẹo chung giữa các thầy có số đo (`tools/meo_chung_thay.py`).
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

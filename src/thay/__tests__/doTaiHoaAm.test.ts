@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { CONG_THUC } from '../soanCau/chongHopAm'
-import { dapAn, doanGiong, LUAT, oChu, PHONG_CACH, taoDo, type PhongCach } from '../soanCau/doTaiHoaAm'
+import { dapAn, doanGiong, LUAT, MEO_CHUNG, oChu, PHONG_CACH, taoDo, type PhongCach } from '../soanCau/doTaiHoaAm'
 import { lyDoThay, nguCanh, type Hop } from '../soanCau/giaiThich'
 import { docHop, docVong } from '../soanCau/thayTrongVong'
 
@@ -115,6 +115,37 @@ describe('Bảng luật', () => {
           const { h } = nguCanh(tonic, thu)
           for (const x of l.dap) if (x.chat) expect(l.goiY, `${p.id} bậc ${l.bac}`).not.toContain(h(x.goc, x.chat, x.bass))
         }
+  })
+  it('lời gia sư và mẹo (người dùng 11/10/2026): luật nào cũng có lời gia sư và một mẹo có thật; ký hiệu viết đẹp (♭, ♯), không lộ "b13", "#11"', () => {
+    const ids = new Set(MEO_CHUNG.map((m) => m.id))
+    expect(ids.size).toBe(MEO_CHUNG.length)
+    const dung = new Set<string>()
+    for (const p of PHONG_CACH)
+      for (const [tonic, thu] of [
+        [0, false],
+        [9, true],
+        [3, false],
+        [6, true],
+      ] as const)
+        for (const l of LUAT[p.id](tonic, thu)) {
+          expect(l.giang.length, `${p.id} bậc ${l.bac}`).toBeGreaterThan(40)
+          expect(l.giang, `${p.id} bậc ${l.bac}`).not.toMatch(/#|\db\d|\bb\d/)
+          expect(ids.has(l.meo)).toBe(true)
+          dung.add(l.meo)
+        }
+    // Mẹo nào cũng có chỗ dùng: trong luật, hay ở lối chung (bậc không có luật) của từng thầy.
+    for (const chu of VONG)
+      for (const g of doanGiong(docHop(chu)!))
+        for (const p of PHONG_CACH) {
+          const v = docVong(chu, g.tonic)!
+          v.forEach((_, i) => {
+            const d = dapAn(p.id, v, i, g.tonic, g.thu)
+            expect(d.giang.length).toBeGreaterThan(30)
+            expect(d.giang).not.toMatch(/#|\db\d|\bb\d/)
+            dung.add(d.meo)
+          })
+        }
+    expect([...ids].filter((id) => !dung.has(id))).toEqual([])
   })
   it('đáp án không phụ thuộc giọng đang gõ: vòng dịch giọng thì đáp án dịch theo (Đô → Mi♭)', () => {
     for (const p of PHONG_CACH) {
