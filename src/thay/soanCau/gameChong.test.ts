@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { CONG_THUC } from './chongHopAm'
+import { NHOM_DUOI, QUY_TAC_DUOI } from './meoChong'
 import { chonCau, diemCau, DONG_CHO, dungHaiTay, dungTayPhai, LO_TU, MAN, MAU_SLASH, MOC_MAC_DINH, MOC_ROI, soCanCham, soNotLo, taoCau, taoCauSlash, thoiGianRoi } from './gameChong'
 import { lopHop } from './slashChong'
 
@@ -9,30 +10,29 @@ const mau = (id: string) => MAU_SLASH.find((m) => m.id === id)!
 const pc = (x: number) => ((x % 12) + 12) % 12
 
 describe('game Mưa hợp âm — logic', () => {
-  it('bảy màn: năm họ chia hết 26 loại, màn slash có bảng quy luật riêng, màn trộn', () => {
-    const nam = MAN.slice(0, 5).flatMap((m) => m.ids)
-    expect(nam.length).toBe(26)
-    expect(new Set(nam).size).toBe(26)
-    expect(MAN.map((m) => m.ten)).toContain('Hợp âm slash')
-    expect(MAN[5]!.ids).toEqual(MAU_SLASH.map((m) => `slash:${m.id}`))
-    expect(MAN[5]!.meo!.length).toBeGreaterThan(MAU_SLASH.length)
-    expect([...MAN[6]!.ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-    // bảng mẹo: màn theo họ có quy tắc theo đuôi của các loại trong màn, màn trộn có quy tắc chung giữa các đuôi, màn slash có quy luật riêng
-    expect(MAN.map((m) => m.chung?.tieuDe ?? null)).toEqual([...Array(5).fill('Theo đuôi — muốn chồng ra loại nào'), null, 'Quy tắc chung giữa các đuôi'])
-    expect(MAN.slice(0, 5).map((m) => m.chung!.ds.map((s) => s.split(' (')[0]))).toEqual([
-      ['6', 'add9', 'maj7', '9', '♯11'],
-      ['6', 'add9', '7', 'maj7', '9', '11', '13'],
-      ['Giảm'],
-      ['Treo', '7', '9', '13'],
-      ['7♭5', '♭9', '♯11', '♭13'],
-    ])
+  it('18 màn: 16 nhóm đuôi đúng thứ tự bảng, màn slash có quy luật riêng, màn trộn cả 32 hợp âm', () => {
+    expect(MAN).toHaveLength(18)
+    expect(MAN.slice(0, 16).map((m) => [m.ten, m.nhom, m.ids])).toEqual(NHOM_DUOI.map((n) => [n.ten, n.ten, n.ids]))
+    expect(MAN[16]!.ids).toEqual(MAU_SLASH.map((m) => `slash:${m.id}`))
+    expect(MAN[16]!.meo!.length).toBeGreaterThan(MAU_SLASH.length)
+    expect(MAN[17]!.ids).toHaveLength(32)
+    expect(MAN[17]!.ids.filter((id) => !id.startsWith('q:')).sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
+    expect(MAN[17]!.quyTac).toBe(QUY_TAC_DUOI)
+    // mọi hợp âm của mọi màn đều tạo được viên rơi ở cả 12 gốc
+    for (const id of MAN[17]!.ids)
+      for (let g = 0; g < 12; g++) {
+        const c = chonCau([id], [g], new Map(), null, () => 0.4)
+        expect([id, g, c.luaChon.length, new Set(c.luaChon.map((l) => l.ten)).size, c.luaChon.some((l) => l.ten === c.dapAnTen)]).toEqual([id, g, 4, 4, true])
+      }
   })
 
-  it('câu chồng F♯13♭9: viên ghi tên hai tay + phép cộng loại (không đếm phím), chấm tay phải theo lớp cao độ', () => {
+  it('câu chồng F♯13♭9: viên ghi tên hai tay + đuôi mang lại nốt nào ở chính gốc ấy (không đếm phím), chấm tay phải theo lớp cao độ', () => {
     const cau = taoCau(ct('13b9'), 6)
-    expect([cau.ten, cau.khungTen, cau.goiY, cau.dapAnTen]).toEqual(['F♯13♭9', 'F♯7 + D♯', 'khung 7 + trưởng', 'D♯'])
-    expect([cau.loi, cau.nho]).toEqual(['F♯13♭9 = F♯7 + D♯', 'khung 7 + trưởng'])
-    expect(cau.meo).toBe('13♭9 = tay trái khung 7 + tay phải trưởng. Cùng phép cộng này còn ra F♯13♯11 = F♯7 + G♯ — nhìn tên tay phải mà phân biệt.')
+    expect([cau.ten, cau.khungTen, cau.goiY, cau.dapAnTen]).toEqual(['F♯13♭9', 'F♯7 + D♯', '♭9 → Sol', 'D♯'])
+    expect([cau.loi, cau.nho]).toEqual(['F♯13♭9 = F♯7 + D♯', '♭9 → Sol'])
+    expect(cau.meo).toBe('Đuôi ♭9 mang lại Sol — nằm ở tay phải D♯.')
+    expect(taoCau(ct('maj7'), 9).goiY).toBe('maj7 → Sol♯')
+    expect(taoCau(ct('m11b5'), 0).meo).toBe('Đuôi Giảm mang lại Mi♭ (tay phải E♭sus2) + Sol♭ (tay trái Đô – Sol♭).')
     expect(`${cau.khungTen} ${cau.goiY} ${cau.meo}`).not.toMatch(/phím|bậc|gam/)
     expect(cau.nhan).toEqual({ trai: 'F♯7', traiPhu: 'Fa♯ – La♯ – Mi', phai: 'D♯', phaiPhu: 'Rê♯ – Sol – La♯' })
     expect(dungTayPhai([63, 67, 70], cau)).toBe(true) // Mi♭ Sol Si♭ = D♯ trưởng, thế nào cũng được
@@ -58,9 +58,19 @@ describe('game Mưa hợp âm — logic', () => {
 
   it('chùm nốt rời gọi bằng các nốt, không ghi bậc', () => {
     const cau = taoCau(ct('add9'), 4)
-    expect([cau.khungTen, cau.goiY, cau.dapAnTen, cau.nhan.phai]).toEqual(['Mi – Si + Fa♯ – Sol♯ – Si', 'gốc – 5 + chùm', 'Fa♯ – Sol♯ – Si', 'chùm'])
+    expect([cau.khungTen, cau.goiY, cau.dapAnTen, cau.nhan.phai]).toEqual(['Mi – Si + Fa♯ – Sol♯ – Si', 'add9 → Fa♯', 'Fa♯ – Sol♯ – Si', 'chùm'])
     expect(cau.luaChon.map((l) => l.ten)).toContain('Fa♯ – Sol♯ – Si')
-    expect(cau.meo).toContain('Cùng phép cộng này còn ra Em(add9) = Mi – Si + Fa♯ – Sol – Si')
+    expect(cau.meo).toBe('Đuôi add9 mang lại Fa♯ — nằm ở tay phải Fa♯ – Sol♯ – Si.')
+  })
+
+  it('hợp âm ba cơ bản: tay trái gốc, tay phải cả hợp âm; bốn nút là các hợp âm ba cùng gốc', () => {
+    const c = chonCau(['q:min'], [9], new Map(), null, () => 0.4)
+    expect([c.id, c.ten, c.khungTen, c.goiY, c.dapAnTen, c.meo]).toEqual(['q:min', 'Am', 'La + Am', 'Thứ → Đô', 'Am', 'Đuôi Thứ mang lại Đô — nằm ở tay phải Am.'])
+    expect(dungTayPhai([57, 60, 64], c)).toBe(true) // La Đô Mi
+    expect(dungTayPhai([57, 61, 64], c)).toBe(false) // A trưởng
+    expect(c.luaChon.every((l) => l.trai.join() === c.trai.join() && Math.min(...l.phai) > Math.max(...l.trai))).toBe(true)
+    const sus = (q: string) => chonCau([`q:${q}`], [0], new Map(), null, () => 0.4).goiY
+    expect([sus('sus2'), sus('sus4'), sus('aug'), sus('dim')]).toEqual(['Treo → Rê', 'Treo → Fa', 'Tăng → Sol♯', 'Giảm → Mi♭ + Sol♭'])
   })
 
   it('hai tay: đủ nốt và nốt thấp nhất là gốc', () => {

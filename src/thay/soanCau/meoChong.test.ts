@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { CONG_THUC, pcsDuoi, pcsTong, pcsTren, quangTren, tenTren } from './chongHopAm'
-import { bacCua, bangCongLoai, bangTheoDuoi, congLoai, dangTrai, duoiCua, HO_LOAI, NHOM_DUOI, QUY_TAC_DUOI, trungCongLoai } from './meoChong'
+import { bacCua, bangCongLoai, bangTheoDuoi, congLoai, dangTrai, dauDuoi, duoiNgan, NHOM_DUOI, QUY_TAC_DUOI, trungCongLoai } from './meoChong'
 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
 /** Lớp cao độ ở gốc Đô của một hàng bảng: công thức chồng, hay hợp âm ba cơ bản `q:<loại>`. */
 const nhac = (id: string) => (id.startsWith('q:') ? chordPitchClasses(0, getChordQuality(id.slice(2))!) : pcsTong(ct(id), 0))
 
 describe('quy luật và mẹo', () => {
-  it('năm họ (chia màn game) chia hết 26 loại, không trùng', () => {
-    const ids = HO_LOAI.flatMap((h) => h.ids)
-    expect(ids.length).toBe(26)
-    expect([...ids].sort()).toEqual(CONG_THUC.map((c) => c.id).sort())
-  })
-
   it('bậc hai tay đúng nốt — vd 13♭9: tay trái 1 · 3 · ♭7, tay phải 13 · ♭9 · 3', () => {
     expect(bacCua(ct('13b9'))).toEqual({ trai: ['1', '3', '♭7'], phai: ['13', '♭9', '3'], caHai: ['1', '3', '♭7', '♭9', '13'] })
     expect(bacCua(ct('m11b5')).phai).toEqual(['♭3', '11', '♭7'])
@@ -116,7 +110,25 @@ describe('theo đuôi — muốn chồng ra loại nào (gốc Đô)', () => {
     expect([lay('q:maj').tong, lay('q:maj').trai, lay('q:maj').phai]).toEqual(['C', 'Đô', 'C'])
     expect([lay('maj7').tong, lay('maj7').trai, lay('maj7').phai, lay('maj7').phaiPhu]).toEqual(['Cmaj7', 'Đô', 'Em', 'Mi – Sol – Si'])
     expect([lay('add9').phai, lay('add9').phaiPhu]).toEqual(['Rê – Mi – Sol', 'chùm nốt rời'])
-    expect(duoiCua(['maj7', '6', 'add9', '69', 'maj9', 'maj9#11']).map((s) => s.split(' (')[0])).toEqual(['6', 'add9', 'maj7', '9', '♯11'])
+  })
+
+  it('đuôi mang lại nốt nào, gọi tên ở mọi gốc: ở gốc Đô khớp lời "Đuôi mang lại" của nhóm; nốt ấy có thật trong hợp âm', () => {
+    for (const n of NHOM_DUOI)
+      for (const id of n.ids) {
+        const ds = dauDuoi(id, 0)
+        expect([id, ds.length > 0, ds.every((d) => n.dauHieu.includes(d.ten)), ds.every((d) => nhac(id).includes(d.iv))]).toEqual([id, true, true, true])
+      }
+    expect(['maj7', '7', '6', '13', '7b13', 'maj9#11', '7b5', '7b9'].map((id) => duoiNgan(id, 9))).toEqual([
+      'maj7 → Sol♯',
+      '7 → Sol',
+      '6 → Fa♯',
+      '13 → Fa♯',
+      '♭13 → Fa',
+      '♯11 → Rê♯',
+      '7♭5 → Mi♭',
+      '♭9 → Si♭',
+    ])
+    expect([duoiNgan('q:aug', 0), duoiNgan('q:sus4', 2), duoiNgan('9sus4', 0)]).toEqual(['Tăng → Sol♯', 'Treo → Sol', 'Treo → Rê + Fa'])
   })
 })
 

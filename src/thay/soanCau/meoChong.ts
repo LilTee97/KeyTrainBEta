@@ -1,5 +1,7 @@
+import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
-import { BA, CONG_THUC, chongCongThuc, chongTuDo, hauDep, quangTren, tenBac, type CongThuc } from './chongHopAm'
+import { GOC } from '../vongThay'
+import { BA, CONG_THUC, chongCongThuc, chongTuDo, hauDep, pcsTong, quangTren, tenBac, tenTheoChu, vn, type CongThuc } from './chongHopAm'
 
 /*
   QUY LUẬT VÀ MẸO CHỒNG HỢP ÂM. Lời là của Claude (gia sư), rút từ 26 công thức chồng; mỗi câu có test đối chiếu công thức thật
@@ -11,19 +13,12 @@ import { BA, CONG_THUC, chongCongThuc, chongTuDo, hauDep, quangTren, tenBac, typ
     công thức và quy tắc theo kiểu làm sao để chồng ra Maj7, hoặc dim7, hoặc Trưởng, hoặc 13". Bản chia theo họ (trưởng · thứ · giảm · át —
     commit 3a354b7) bỏ khỏi bảng, cùng quy luật con số và mẹo vàng (đã gộp vào các nhóm đuôi). Nay 16 nhóm đuôi gồm 26 công thức chồng và
     6 hợp âm ba cơ bản (trưởng · thứ · giảm · tăng · sus2 · sus4).
+  - 11/10/2026: "màn game chia theo nhóm đuôi và áp dụng mẹo tìm theo nhóm đuôi luôn" — màn game = nhóm đuôi; viên rơi và lời giải nói
+    đuôi mang lại nốt nào ở chính gốc đang đố (`dauDuoi`). Bỏ `HO_LOAI` (năm họ chỉ còn dùng chia màn).
 */
 
 /** Ghi dấu theo gốc: Đô♯, Fa♯ ghi thăng, còn lại ghi giáng (Mi♭, La♭, Si♭) — đúng cách ghi của `GOC`. */
 export const kieuGoc = (g: number): AccidentalStyle => (g === 1 || g === 6 ? 'sharp' : 'flat')
-
-/** Năm họ — nay chỉ để chia màn game (bảng đã chia theo đuôi từ 10/10/2026). */
-export const HO_LOAI: readonly { ten: string; ids: readonly string[] }[] = [
-  { ten: 'Họ trưởng', ids: ['maj7', '6', 'add9', '69', 'maj9', 'maj9#11'] },
-  { ten: 'Họ thứ', ids: ['m7', 'm6', 'madd9', 'mMaj7', 'm9', 'm11', 'm13'] },
-  { ten: 'Họ nửa giảm và giảm', ids: ['m7b5', 'm11b5', 'dim7'] },
-  { ten: 'Họ át — cơ bản', ids: ['7', '9', '13', '9sus4'] },
-  { ten: 'Họ át — có nốt căng (♭9 · ♯11 · ♭13 · ♭5)', ids: ['7b9', '7b5', '7b13', '13b9', '13#11', '13b9#11'] },
-]
 
 /** Thứ tự đọc công thức như sách — chồng quãng ba: 1 · 3 · 5 · 7 · 9 · 11 · 13 (sus4 thế chỗ bậc 3, 6 đứng trước 7). */
 const THU_TU_BAC = ['1', '♭3', '3', '4', '♭5', '5', '♯5', '6', '𝄫7', '♭7', '7', '♭9', '9', '♯9', '11', '♯11', '♭13', '13']
@@ -98,6 +93,9 @@ export interface NhomDuoi {
   co: readonly number[]
   khong: readonly number[]
   coMot?: readonly number[]
+  /** Quãng (nửa cung từ gốc) của nốt đuôi mang lại — để gọi tên ở mọi gốc; `chu` ép số chữ cái khi khác lệ (♯11 là chữ thứ tư, ♯5 thứ năm). */
+  dauIv: readonly number[]
+  chu?: Readonly<Record<number, number>>
 }
 
 /** 16 nhóm đuôi, từ dễ tới khó; mỗi hợp âm nằm ở đúng một nhóm (theo phần đuôi nổi nhất của tên). */
@@ -110,6 +108,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Đổi một nốt ra các hợp âm ba khác: Mi thành Mi♭ = Cm · Sol thành Sol♯ = Caug · Mi thành Fa = Csus4 · Mi thành Rê = Csus2.',
     ids: ['q:maj'],
     co: [0, 4, 7],
+    dauIv: [4],
     khong: [3],
   },
   {
@@ -120,6 +119,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Hạ tiếp Sol xuống Sol♭ là ra Cdim.',
     ids: ['q:min'],
     co: [0, 3, 7],
+    dauIv: [3],
     khong: [4],
   },
   {
@@ -130,6 +130,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Không có Mi nên nghe lơ lửng, chưa trưởng chưa thứ.',
     ids: ['q:sus2', 'q:sus4', '9sus4'],
     co: [0],
+    dauIv: [2, 5],
     khong: [3, 4],
     coMot: [2, 5],
   },
@@ -141,6 +142,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Từ Cm7 (Đô + E♭) hạ Sol xuống Sol♭ = Cm7♭5, hạ tiếp Si♭ xuống La = Cdim7. Bảy giảm cách đều nhau nên cả bàn phím chỉ có 3 cái: Cdim7 = E♭dim7 = G♭dim7 = Adim7.',
     ids: ['q:dim', 'm7b5', 'dim7', 'm11b5'],
     co: [3, 6],
+    dauIv: [3, 6],
     khong: [4, 7],
   },
   {
@@ -151,6 +153,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Hợp âm tăng chia đều nên Caug = Eaug = A♭aug — gặp lại ở C7♭13 (tay phải A♭+) và Cm(maj7) (tay phải E♭+).',
     ids: ['q:aug'],
     co: [4, 8],
+    dauIv: [8], chu: { 8: 4 },
     khong: [7],
   },
   {
@@ -161,6 +164,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C6 và C13 cùng tay phải Am — C13 chỉ thêm khung 7 ở tay trái.',
     ids: ['6', 'm6', '69'],
     co: [9],
+    dauIv: [9],
     khong: [10, 11],
   },
   {
@@ -171,6 +175,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Cadd9 và C6/9 chung Rê – Mi: đổi Sol thành La là sang C6/9.',
     ids: ['add9', 'madd9'],
     co: [2],
+    dauIv: [2],
     khong: [9, 10, 11],
   },
   {
@@ -181,6 +186,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C7 = Cmaj7 hạ Si xuống Si♭ (Em thành Edim).',
     ids: ['7', 'm7'],
     co: [10],
+    dauIv: [10],
     khong: [2, 9, 11],
   },
   {
@@ -191,6 +197,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Cmaj7 → C7: Si thành Si♭; Cmaj7 → Cm(maj7): Mi thành Mi♭.',
     ids: ['maj7', 'mMaj7'],
     co: [11],
+    dauIv: [11],
     khong: [2, 10],
   },
   {
@@ -201,6 +208,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C9 và Cm9 cùng tay phải Gm, chỉ khác tay trái Mi hay Mi♭.',
     ids: ['maj9', '9', 'm9'],
     co: [2],
+    dauIv: [2],
     khong: [5, 9],
     coMot: [10, 11],
   },
@@ -212,6 +220,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C9sus4 (nhóm treo) cùng tay phải B♭ nhưng tay trái chỉ Đô — hợp âm có Mi tránh Fa vì Fa chọi Mi. Cm11♭5 ở nhóm giảm.',
     ids: ['m11'],
     co: [5, 10],
+    dauIv: [5],
     khong: [],
   },
   {
@@ -222,6 +231,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C13 = C6 thêm khung 7 (cùng tay phải Am). C13 lấy Am chứ không lấy Dm vì Fa chọi Mi.',
     ids: ['13', 'm13'],
     co: [9, 10],
+    dauIv: [9],
     khong: [],
   },
   {
@@ -232,6 +242,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Cm7♭5 (nhóm giảm) cũng có ♭5: Đô + E♭m.',
     ids: ['7b5'],
     co: [6, 10],
+    dauIv: [6],
     khong: [7],
   },
   {
@@ -242,6 +253,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'Nốt căng lệch nửa cung khỏi nốt quen (Rê♭ sát Rê) — nghe căng, đòi giải về.',
     ids: ['7b9', '13b9', '13b9#11'],
     co: [1],
+    dauIv: [1],
     khong: [],
   },
   {
@@ -252,6 +264,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'C13♭9♯11 (nhóm ♭9) có cả Rê♭ lẫn Fa♯.',
     ids: ['maj9#11', '13#11'],
     co: [6],
+    dauIv: [6], chu: { 6: 3 },
     khong: [],
   },
   {
@@ -262,6 +275,7 @@ export const NHOM_DUOI: readonly NhomDuoi[] = [
     chung: 'A♭+ cùng nốt Caug (nhóm tăng).',
     ids: ['7b13'],
     co: [8, 10],
+    dauIv: [8],
     khong: [],
   },
 ]
@@ -315,5 +329,16 @@ export function bangTheoDuoi() {
   }))
 }
 
-/** Các nhóm đuôi có mặt trong một bộ công thức (màn game) — dòng ngắn cho bảng mẹo. */
-export const duoiCua = (ids: readonly string[]) => NHOM_DUOI.filter((n) => n.ids.some((id) => ids.includes(id))).map((n) => `${n.ten} (${n.duoi}): ${n.dauHieu} — ${n.cach}`)
+/** Nhóm đuôi chứa một hợp âm (công thức hay `q:<loại>`). */
+export const nhomCua = (id: string) => NHOM_DUOI.find((n) => n.ids.includes(id))!
+/** Số chữ cái tính từ gốc của nốt đuôi mang lại: ♭9 · 9 chữ thứ hai, ♭3 · 3 thứ ba, 11 thứ tư, ♭5 thứ năm, ♭13 · 13 thứ sáu, 7 thứ bảy. */
+const CHU_DAU: Readonly<Record<number, number>> = { 1: 1, 2: 1, 3: 2, 4: 2, 5: 3, 6: 4, 8: 5, 9: 5, 10: 6, 11: 6 }
+const lopCua = (id: string) => (id.startsWith('q:') ? chordPitchClasses(0, getChordQuality(id.slice(2))!) : pcsTong(CONG_THUC.find((c) => c.id === id)!, 0))
+/** Nốt mà đuôi mang lại, gọi tên ở gốc `g` (maj7 ở gốc La là Sol♯) — chỉ những nốt hợp âm này thật có (sus2 có Rê, sus4 có Fa). */
+export function dauDuoi(id: string, g: number): { iv: number; ten: string }[] {
+  const n = nhomCua(id)
+  const lop = lopCua(id)
+  return n.dauIv.filter((iv) => lop.includes(iv)).map((iv) => ({ iv, ten: vn(tenTheoChu(GOC[g]!, iv, n.chu?.[iv] ?? CHU_DAU[iv]!, kieuGoc(g))) }))
+}
+/** Dòng ngắn trên viên rơi: "maj7 → Sol♯". */
+export const duoiNgan = (id: string, g: number) => `${nhomCua(id).ten} → ${dauDuoi(id, g).map((d) => d.ten).join(' + ')}`

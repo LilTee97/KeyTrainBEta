@@ -6347,3 +6347,22 @@ hợp âm ba cơ bản đổi một nốt; cầu thang; 19 cặp đổi một n�
 **2 719 qua / 5 đỏ** (5 đỏ cũ) · `vite build` qua · chạy thử headless: bảng 16 nhóm, mục cũ đã bỏ, nhóm maj7 / add9 đúng, game khung mẹo
 theo đuôi + màn trộn, điện thoại không cuộn ngang; "Thử" 6/6 khi bấm thẳng nút (C · Cmaj7 · Csus4 · C13♭9 · Cdim · Cm7♭5). Một lượt bấm bằng
 tọa độ ngay sau khi trang cuộn mượt đã trượt nút (lỗi của script chạy thử, không phải app) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: màn game Mưa hợp âm chia theo NHÓM ĐUÔI, mẹo tìm theo nhóm đuôi (11/10/2026)
+
+**Người dùng:** *"màn game chia theo nhóm đuôi và áp dụng mẹo tìm theo nhóm đuôi luôn"*.
+
+- 18 màn: 16 nhóm đuôi đúng thứ tự bảng (Trưởng · Thứ · Treo · Giảm · Tăng · 6 · add9 · 7 · maj7 · 9 · 11 · 13 · 7♭5 · ♭9 · ♯11 · ♭13), hợp
+  âm slash, trộn cả 32 hợp âm. Game nay có cả 6 hợp âm ba cơ bản (`q:<loại>`: tay trái gốc, tay phải cả hợp âm; bốn nút là các hợp âm ba
+  cùng gốc). Bỏ 5 màn theo họ và `HO_LOAI`.
+- Mẹo theo nhóm đuôi: dòng ba trên viên = đuôi mang lại nốt nào ở CHÍNH gốc đang đố (`duoiNgan`: Amaj7 → "maj7 → Sol♯", F♯13♭9 → "♭9 →
+  Sol"); sai thì "Đuôi maj7 mang lại Sol♯ — nằm ở tay phải C♯m" (nốt ở hai tay thì ghi tay của từng nốt); khung mẹo bên luyện là thẻ của
+  nhóm (`TheNhomDuoi`, dùng chung với bảng, không nút Thử); màn trộn hiện quy tắc chung giữa các đuôi. Bỏ dòng phép cộng loại trên viên.
+- Kỷ lục thi đổi khóa `keytrain.mua-hop-am.v3` — khóa cũ là số thứ tự màn theo họ, không còn đúng màn (kỷ lục cũ trên máy người dùng mất).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `gameChong.test.ts` 11 (18 màn đúng nhóm; 32 hợp âm × 12 gốc đều ra viên có 4 nút, đúng một nút
+đáp án; viên hợp âm ba cơ bản; dòng đuôi và lời sai ở F♯13♭9 · Amaj7 · Cm11♭5 · Eadd9) · `meoChong.test.ts` 14 (nốt đuôi mang lại ở gốc Đô
+khớp lời bảng và có thật trong hợp âm; gọi tên ở gốc La: maj7 → Sol♯, ♭13 → Fa, ♯11 → Rê♯, 7♭5 → Mi♭…) · toàn suite **2 720 qua / 5 đỏ**
+(5 đỏ cũ) · `vite build` qua · chạy thử headless 10/10 (18 màn ở hai cột; màn maj7: viên "Mi + G♯m · maj7 → Rê♯", khung mẹo thẻ nhóm, lời
+sai / đúng theo đuôi; màn Trưởng giữ hợp âm ba → đúng; thi màn Giảm 20/20 Đạt; màn slash; màn trộn; điện thoại không cuộn ngang) ·
+`LuyenTap.json`, `Nguon.json` không đổi.

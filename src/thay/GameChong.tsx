@@ -5,7 +5,7 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import { pitchClassName } from '../shared/musicTheory/pitch'
-import { MeoCongLoai } from './BangCongThuc'
+import { TheNhomDuoi } from './BangCongThuc'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { tenMotTay, vn } from './soanCau/chongHopAm'
 import {
@@ -29,7 +29,7 @@ import {
   type GocChoi,
   type LuaChon,
 } from './soanCau/gameChong'
-import { kieuGoc } from './soanCau/meoChong'
+import { bangTheoDuoi, kieuGoc } from './soanCau/meoChong'
 
 interface Vien extends CauGame {
   khoa: number
@@ -43,8 +43,9 @@ type Pha = 'chuan-bi' | 'choi' | 'dung' | 'het'
 const pc = (x: number) => ((x % 12) + 12) % 12
 /** Màn chỉ có câu slash — luôn bấm hai tay, nên kỷ lục không tách "hai tay". */
 const manSlash = (k: number) => MAN[k]!.ids.every((id) => id.startsWith('slash:'))
-/* Kỷ lục bên thi theo màn — bộ nhớ trình duyệt, chỉ là tiện (không có thì vẫn chơi được). v1 (có khóa màn) bỏ 9/10/2026. */
-const KHO = 'keytrain.mua-hop-am.v2'
+/* Kỷ lục bên thi theo màn — bộ nhớ trình duyệt, chỉ là tiện (không có thì vẫn chơi được). v1 (có khóa màn) bỏ 9/10/2026; v2 (màn theo
+   họ, khóa là số thứ tự màn) bỏ 11/10/2026 khi màn chia theo nhóm đuôi — số thứ tự cũ không còn đúng màn. */
+const KHO = 'keytrain.mua-hop-am.v3'
 type KyLuc = Record<string, { tot: number; diem: number }>
 const docKyLuc = (): KyLuc => {
   try {
@@ -402,7 +403,7 @@ export function GameChong() {
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
-              Viên rơi ghi tên hai tay và phép cộng loại (vd Amaj9♯11: "A + G♯m · trưởng + thứ"). Rơi quá 60% thì phím đáp án sáng dần chỉ chỗ
+              Viên rơi ghi tên hai tay và đuôi mang lại nốt nào (vd Amaj7: "La + C♯m · maj7 → Sol♯"). Rơi quá 60% thì phím đáp án sáng dần chỉ chỗ
               đặt tay. Không mất mạng — dừng lúc nào cũng được.
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
@@ -589,25 +590,16 @@ export function GameChong() {
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>
-          <summary className="cursor-pointer text-teal-key">{MAN[man]!.meo ? 'Quy luật của màn này' : 'Mẹo cộng loại của màn này — tay trái + tay phải'}</summary>
-          {MAN[man]!.chung && (
-            <div className="mt-1 rounded border border-teal-key/20 p-1.5">
-              <p className="font-semibold text-teal-key">{MAN[man]!.chung!.tieuDe}</p>
-              <ul className="ml-4 list-disc">
-                {MAN[man]!.chung!.ds.map((c) => (
-                  <li key={c}>{c}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {MAN[man]!.meo ? (
-            <ul className="mt-1 flex flex-col gap-0.5">
-              {MAN[man]!.meo!.map((m) => (
+          <summary className="cursor-pointer text-teal-key">
+            {MAN[man]!.nhom ? `Mẹo nhóm đuôi ${MAN[man]!.nhom}` : MAN[man]!.meo ? 'Quy luật của màn này' : 'Quy tắc chung giữa các đuôi'}
+          </summary>
+          {MAN[man]!.nhom && <TheNhomDuoi n={bangTheoDuoi().find((n) => n.ten === MAN[man]!.nhom)!} />}
+          {(MAN[man]!.meo ?? MAN[man]!.quyTac) && (
+            <ul className="mt-1 ml-4 flex list-disc flex-col gap-0.5">
+              {(MAN[man]!.meo ?? MAN[man]!.quyTac)!.map((m) => (
                 <li key={m}>{m}</li>
               ))}
             </ul>
-          ) : (
-            <MeoCongLoai ids={MAN[man]!.ids} />
           )}
         </details>
       )}

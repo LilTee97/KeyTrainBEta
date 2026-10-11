@@ -501,6 +501,8 @@ Các hợp âm phải được chọn tự do …"*
   độ và chờ đúng nốt; chọn tên là bấm hợp âm và nghe. Bên thi không hiện đáp án, không chờ (Claude quyết).
   Cập nhật 10/10 (người dùng): mẹo cộng gốc (đếm phím) là Claude hiểu nhầm chữ "gốc" — thay bằng mẹo CỘNG LOẠI (loại tay trái + loại
   tay phải = loại tổng), viên rơi ghi luôn tên hai tay.
+  Cập nhật 11/10 (người dùng): bảng chia theo 16 nhóm đuôi; màn game cũng theo nhóm đuôi (18 màn, có hợp âm ba cơ bản), mẹo trên viên
+  = đuôi mang lại nốt nào ở chính gốc đang đố.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

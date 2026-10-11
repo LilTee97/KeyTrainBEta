@@ -39,6 +39,46 @@ export function MeoCongLoai({ ids }: { ids: readonly string[] }) {
   )
 }
 
+/** Thẻ một nhóm đuôi: đuôi mang lại nốt nào, cách chồng, từng hợp âm (tên hai tay, gợi nhớ), điểm chung. Dùng ở bảng và ở game. */
+export function TheNhomDuoi({ n, onThu }: { n: ReturnType<typeof bangTheoDuoi>[number]; onThu?: (id: string) => void }) {
+  return (
+    <div className="mt-2 rounded border border-line/60 p-2">
+      <p>
+        <b className="text-base text-amber-key">{n.ten}</b> <span className="font-mono text-cream/85">{n.duoi}</span>
+      </p>
+      <p>
+        <span className="text-dim">Đuôi mang lại: </span>
+        {n.dauHieu}
+      </p>
+      <p>
+        <span className="text-dim">Cách chồng: </span>
+        {n.cach}
+      </p>
+      <ul className="mt-1 ml-1 flex flex-col gap-0.5">
+        {n.dong.map((d) => (
+          <li key={d.id} className="flex flex-wrap items-center gap-x-2">
+            {onThu && (
+              <button type="button" onClick={() => onThu(d.id)} className={nutThu}>
+                Thử
+              </button>
+            )}
+            <b className="w-24 font-mono text-cream">{d.tong}</b>
+            <span>
+              = <b className="font-mono text-teal-key">{d.trai}</b> + <b className="font-mono text-amber-key">{d.phai}</b>{' '}
+              <span className="text-dim">({d.phaiPhu})</span>
+            </span>
+            {d.goiNho && <span className="text-cream/70">— {d.goiNho}</span>}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-1 text-cream/75">
+        <span className="text-dim">Điểm chung: </span>
+        {n.chung}
+      </p>
+    </div>
+  )
+}
+
 /**
  * BẢNG CÔNG THỨC CHỒNG — CHIA THEO ĐUÔI. Người dùng 10/10/2026: "sao bạn ko chia theo kiểu Maj7 là một loại, Add9 là một loại, rồi dim rồi
  * sus rồi 7b5 ... Sau đó thì hãy chia công thức và quy tắc theo kiểu làm sao để chồng ra Maj7, hoặc dim7, hoặc Trưởng, hoặc 13". Thứ tự:
@@ -64,38 +104,7 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
       <p className="mt-2 font-semibold text-cream">Muốn chồng ra loại nào — chia theo đuôi</p>
       <p className="text-dim">Mỗi nhóm: nốt mà đuôi mang lại, cách chồng, rồi từng hợp âm với tên hai tay. "Thử" đưa hợp âm lên bàn phím ở gốc Đô.</p>
       {bangTheoDuoi().map((n) => (
-        <div key={n.ten} className="mt-2 rounded border border-line/60 p-2">
-          <p>
-            <b className="text-base text-amber-key">{n.ten}</b> <span className="font-mono text-cream/85">{n.duoi}</span>
-          </p>
-          <p>
-            <span className="text-dim">Đuôi mang lại: </span>
-            {n.dauHieu}
-          </p>
-          <p>
-            <span className="text-dim">Cách chồng: </span>
-            {n.cach}
-          </p>
-          <ul className="mt-1 ml-1 flex flex-col gap-0.5">
-            {n.dong.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center gap-x-2">
-                <button type="button" onClick={() => onThu(d.id)} className={nutThu}>
-                  Thử
-                </button>
-                <b className="w-24 font-mono text-cream">{d.tong}</b>
-                <span>
-                  = <b className="font-mono text-teal-key">{d.trai}</b> + <b className="font-mono text-amber-key">{d.phai}</b>{' '}
-                  <span className="text-dim">({d.phaiPhu})</span>
-                </span>
-                {d.goiNho && <span className="text-cream/70">— {d.goiNho}</span>}
-              </li>
-            ))}
-          </ul>
-          <p className="mt-1 text-cream/75">
-            <span className="text-dim">Điểm chung: </span>
-            {n.chung}
-          </p>
-        </div>
+        <TheNhomDuoi key={n.ten} n={n} onThu={onThu} />
       ))}
 
       <p className="mt-3 font-semibold text-cream">Quy tắc chung giữa các đuôi</p>

@@ -1,7 +1,7 @@
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { GOC } from '../vongThay'
-import { chongCongThuc, CONG_THUC, gocDep, hauDep, tenHaiTay, tenTheoChu, tenTren, theBamChong, vn, type Chong, type CongThuc } from './chongHopAm'
-import { congLoai, duoiCua, HO_LOAI, kieuGoc, QUY_TAC_DUOI, trungCongLoai } from './meoChong'
+import { chongCongThuc, chongTuDo, CONG_THUC, gocDep, tenHaiTay, tenTheoChu, tenTren, theBamChong, vn, type Chong, type CongThuc } from './chongHopAm'
+import { dauDuoi, duoiNgan, kieuGoc, nhomCua, NHOM_DUOI, QUY_TAC_DUOI } from './meoChong'
 import { QUY_LUAT_SLASH, theSlash } from './slashChong'
 
 /*
@@ -9,8 +9,10 @@ import { QUY_LUAT_SLASH, theSlash } from './slashChong'
   thực hành vì tôi ghét học thuộc lòng lý thuyết. Có thể chơi bằng đàn Midi hoặc phím chuột hoặc cảm ứng trên Android", rồi "hãy phá lệ
   làm game cho phần học thuộc công thức chồng hợp âm này" — ngoại lệ của luật "không lớp game", CHỈ cho phần này. Logic thuần (màn, chọn
   câu, chấm, lựa chọn, điểm, tốc độ, đáp án hiện dần) ở đây; giao diện ở GameChong.tsx. Câu có hai dạng: hợp âm chồng (26 công thức) và
-  hợp âm slash (người dùng 9/10/2026 đồng ý thêm màn slash) — chung một kiểu `CauGame`. Gợi ý theo lối CỘNG LOẠI, ghi luôn tên hai tay
-  (người dùng chọn 10/10/2026 — meoChong.ts).
+  hợp âm slash (người dùng 9/10/2026 đồng ý thêm màn slash) — chung một kiểu `CauGame`. Viên rơi ghi luôn tên hai tay (người dùng chọn
+  10/10/2026). 11/10/2026 người dùng: "màn game chia theo nhóm đuôi và áp dụng mẹo tìm theo nhóm đuôi luôn" — mỗi nhóm đuôi một màn (16
+  màn, có cả hợp âm ba cơ bản), dòng mẹo trên viên = đuôi mang lại nốt nào ở chính gốc ấy ("maj7 → Sol♯"), lời giải chỉ nốt ấy nằm ở tay
+  nào. Bản trước chia 5 màn theo họ chất và ghi phép cộng loại ("trưởng + thứ") — bỏ.
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -51,13 +53,13 @@ export interface CauGame {
   nhan: NhanTay
   /** Dòng hai trên viên bên mẹo — tên hai tay: "A + G♯m", "Đô + Em" (slash). */
   khungTen: string
-  /** Dòng ba — phép cộng loại: "trưởng + thứ", "bass + thứ = Cmaj7" (slash). */
+  /** Dòng ba — đuôi mang lại nốt nào: "maj7 → Sol♯"; slash: "bass + thứ = Cmaj7". */
   goiY: string
   /** Đáp án ở chế độ chọn tên: tên tay phải (câu chồng) hay nghĩa của slash. */
   dapAnTen: string
   /** Lời giải: "B6/9 = Si – Fa♯ + G♯sus4". */
   loi: string
-  /** Nhắc ngắn sau khi đúng: phép cộng loại. */
+  /** Nhắc ngắn sau khi đúng — như dòng ba. */
   nho: string
   /** Mẹo đầy đủ — hiện khi sai và trong tổng kết. */
   meo: string
@@ -111,14 +113,41 @@ function luaChonTen(ct: CongThuc, g: number, dung: Chong, rand: () => number): L
   return tron([{ ten: tenDung, trai: dung.trai, phai: dung.phai, nhan: nhanCua(dung, ct, g) }, ...nhieu], rand)
 }
 
-/** Mẹo khi sai: phép cộng loại; cùng phép cộng mà ra loại khác thì chỉ tên tay phải để phân biệt (ở chính gốc đang đố). */
-function meoLoai(ct: CongThuc, g: number): string {
-  const ten = (c: CongThuc) => {
-    const x = chongCongThuc(c, g, GOC[g]!, kieuGoc(g)).nhan
-    return `${x.tong} = ${x.trai} + ${tenPhai(c, g)}`
+/** Mẹo khi sai: đuôi mang lại nốt nào (ở gốc đang đố) và nốt ấy nằm ở tay nào — "Đuôi maj7 mang lại Sol♯ — nằm ở tay phải C♯m". */
+function meoDuoi(id: string, g: number, phai: readonly number[], tenTrai: string, tenPhaiTay: string): string {
+  const tay = (iv: number) => (phai.some((m) => pc(m) === pc(g + iv)) ? `tay phải ${tenPhaiTay}` : `tay trái ${tenTrai}`)
+  const ds = dauDuoi(id, g)
+  const cung = new Set(ds.map((d) => tay(d.iv))).size === 1
+  const noi = cung ? `${ds.map((d) => d.ten).join(' + ')} — nằm ở ${tay(ds[0]!.iv)}` : ds.map((d) => `${d.ten} (${tay(d.iv)})`).join(' + ')
+  return `Đuôi ${nhomCua(id).ten} mang lại ${noi}.`
+}
+
+/** Hợp âm ba cơ bản (`trưởng · thứ · giảm · tăng · sus2 · sus4`): tay trái gốc, tay phải cả hợp âm; bốn nút là các hợp âm ba cùng gốc. */
+const CO_BAN = ['maj', 'min', 'dim', 'aug', 'sus2', 'sus4'] as const
+function taoCauBa(q: string, g: number, rand: () => number): CauGame {
+  const st = kieuGoc(g)
+  const c = chongTuDo(g, q, st)!
+  const lc = (x: string): LuaChon => {
+    const k = chongTuDo(g, x, st)!
+    return { ten: k.nhan.phai, trai: c.trai, phai: k.phai, nhan: { trai: c.nhan.trai, traiPhu: c.nhan.traiPhu, phai: k.nhan.phai, phaiPhu: k.nhan.phaiPhu } }
   }
-  const trung = trungCongLoai(ct)
-  return `${hauDep(ct.kyHieu)} = tay trái ${congLoai(ct).replace(' + ', ' + tay phải ')}.${trung.length ? ` Cùng phép cộng này còn ra ${trung.map(ten).join('; ')} — nhìn tên tay phải mà phân biệt.` : ''}`
+  const id = `q:${q}`
+  return {
+    id,
+    ten: c.nhan.tong,
+    g,
+    trai: c.trai,
+    phai: c.phai,
+    nhan: lc(q).nhan,
+    khungTen: `${c.nhan.trai} + ${c.nhan.phai}`,
+    goiY: duoiNgan(id, g),
+    dapAnTen: c.nhan.phai,
+    loi: `${c.nhan.tong} = ${c.nhan.trai} + ${c.nhan.phai}`,
+    nho: duoiNgan(id, g),
+    meo: meoDuoi(id, g, c.phai, c.nhan.trai, c.nhan.phai),
+    luaChon: tron([lc(q), ...tron(CO_BAN.filter((x) => x !== q), rand).slice(0, 3).map(lc)], rand),
+    haiTayBuoc: false,
+  }
 }
 
 /** Câu hợp âm chồng: gốc `g`, công thức `ct`. */
@@ -133,11 +162,11 @@ export function taoCau(ct: CongThuc, g: number, rand: () => number = Math.random
     phai: c.phai,
     nhan: nhanCua(c, ct, g),
     khungTen: `${c.nhan.trai} + ${phai}`,
-    goiY: congLoai(ct),
+    goiY: duoiNgan(ct.id, g),
     dapAnTen: phai,
     loi: `${c.nhan.tong} = ${c.nhan.trai} + ${phai}`,
-    nho: congLoai(ct),
-    meo: meoLoai(ct, g),
+    nho: duoiNgan(ct.id, g),
+    meo: meoDuoi(ct.id, g, c.phai, c.nhan.trai, phai),
     luaChon: luaChonTen(ct, g, c, rand),
     haiTayBuoc: false,
   }
@@ -252,24 +281,26 @@ export function taoCauSlash(m: MauSlash, y: number, rand: () => number = Math.ra
 export interface Man {
   ten: string
   goiY: string
-  /** id công thức chồng, hay `slash:<mẫu>`. */
+  /** id công thức chồng, `q:<loại>` (hợp âm ba cơ bản) hay `slash:<mẫu>`. */
   ids: readonly string[]
-  /** Bảng quy luật riêng (màn slash); màn hợp âm chồng dùng bảng cộng loại (`bangCongLoai`). */
+  /** Màn theo nhóm đuôi: tên nhóm — bảng mẹo bên luyện hiện thẻ của nhóm ấy. */
+  nhom?: string
+  /** Bảng quy luật riêng (màn slash). */
   meo?: readonly string[]
-  /** Quy tắc theo đuôi của các loại trong màn (màn theo họ) hay quy tắc chung giữa các đuôi (màn trộn) — hiện trên bảng mẹo bên luyện. */
-  chung?: { tieuDe: string; ds: readonly string[] }
+  /** Quy tắc chung giữa các đuôi (màn trộn). */
+  quyTac?: readonly string[]
 }
 
-/** Bảy màn: năm họ hợp âm (theo loại), hợp âm slash, trộn cả 26 loại. */
+/** 18 màn: 16 nhóm đuôi (đúng thứ tự bảng), hợp âm slash, trộn cả 32 hợp âm. */
 export const MAN: readonly Man[] = [
-  ...HO_LOAI.map((h) => ({ ten: h.ten, goiY: h.ids.map((id) => hauDep(CONG_THUC.find((c) => c.id === id)!.kyHieu)).join(' · '), ids: h.ids, chung: { tieuDe: 'Theo đuôi — muốn chồng ra loại nào', ds: duoiCua(h.ids) } })),
+  ...NHOM_DUOI.map((n) => ({ ten: n.ten, goiY: n.duoi, ids: n.ids, nhom: n.ten })),
   {
     ten: 'Hợp âm slash',
     goiY: 'thế đảo · bass lạ = hợp âm màu viết tắt',
     ids: MAU_SLASH.map((m) => `slash:${m.id}`),
     meo: [...QUY_LUAT_SLASH, ...MAU_SLASH.map((m) => m.luat)],
   },
-  { ten: 'Trộn tất cả', goiY: 'cả 26 loại', ids: CONG_THUC.map((c) => c.id), chung: { tieuDe: 'Quy tắc chung giữa các đuôi', ds: QUY_TAC_DUOI } },
+  { ten: 'Trộn tất cả', goiY: 'cả 32 hợp âm', ids: NHOM_DUOI.flatMap((n) => n.ids), quyTac: QUY_TAC_DUOI },
 ]
 
 /** Chọn câu kế: câu vừa sai nặng thêm (1 + 2 × số lần sai) — câu sai quay lại nhiều hơn; không lặp đúng câu vừa rồi. */
@@ -284,6 +315,7 @@ export function chonCau(ids: readonly string[], goc: readonly number[], sai: Rea
   }
   const id = ung[k]!
   const g = goc[Math.floor(rand() * goc.length)]!
+  if (id.startsWith('q:')) return taoCauBa(id.slice(2), g, rand)
   const mau = MAU_SLASH.find((m) => `slash:${m.id}` === id)
   return mau ? taoCauSlash(mau, g, rand) : taoCau(CONG_THUC.find((c) => c.id === id)!, g, rand)
 }
