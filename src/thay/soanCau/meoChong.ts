@@ -1,7 +1,7 @@
 import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import type { AccidentalStyle } from '../../shared/musicTheory/types'
 import { GOC } from '../vongThay'
-import { BA, CONG_THUC, chongCongThuc, chongTuDo, hauDep, pcsTong, quangTren, tenBac, tenTheoChu, vn, type CongThuc } from './chongHopAm'
+import { BA, CONG_THUC, chongCongThuc, chongTuDo, pcsTong, quangTren, tenBac, tenTheoChu, vn, type CongThuc } from './chongHopAm'
 
 /*
   QUY LUẬT VÀ MẸO CHỒNG HỢP ÂM. Lời là của Claude (gia sư), rút từ 26 công thức chồng; mỗi câu có test đối chiếu công thức thật
@@ -54,25 +54,34 @@ export const congLoai = (ct: CongThuc) => `${dangTrai(ct)} + ${loaiPhai(ct)}`
 /** Các loại khác có CÙNG phép cộng (cùng dạng tay trái, cùng loại tay phải) — chỉ tên tay phải mới phân biệt được. */
 export const trungCongLoai = (ct: CongThuc) => CONG_THUC.filter((c) => c.id !== ct.id && khoaTrai(c) === khoaTrai(ct) && loaiPhai(c) === loaiPhai(ct))
 
-/** Bảng cộng loại gom theo dạng tay trái (chỉ các loại trong `ids`): một dạng tay trái + đổi loại tay phải = nhiều loại. Ví dụ gốc Đô. */
+/**
+ * Bảng cộng loại gom theo dạng tay trái (chỉ các loại trong `ids`), ví dụ gốc Đô. Mỗi dạng: tay trái bấm gì (tên + nốt), rồi từng hàng là một
+ * phép cộng đọc thẳng được — tay phải (tên, loại) = hợp âm; `trung`: các loại tay phải có hai hàng trở lên (cùng loại, khác hợp âm). Trình
+ * bày lại 11/10/2026 — người dùng: "ý tưởng của mẹo thấy đã hợp lý nhưng cách trình bày cần rõ ràng dễ hiểu hơn".
+ */
 export function bangCongLoai(ids: readonly string[]) {
   const ds = CONG_THUC.filter((ct) => ids.includes(ct.id))
   return DANG_TRAI.map((d) => {
     const nhom = ds.filter((ct) => khoaTrai(ct) === d.iv)
+    const chat = [...new Set(nhom.map(loaiPhai))]
+    const hang = chat.flatMap((c) =>
+      nhom
+        .filter((ct) => loaiPhai(ct) === c)
+        .map((ct) => {
+          const n = chongCongThuc(ct, 0, 'C', 'flat').nhan
+          return { chat: c, phai: 'iv' in ct.tren ? n.phaiPhu : n.phai, tong: n.tong }
+        }),
+    )
+    const dau = nhom.length ? chongCongThuc(nhom[0]!, 0, 'C', 'flat').nhan : null
     return {
       dang: d.ten,
-      viDu: nhom.length ? chongCongThuc(nhom[0]!, 0, 'C', 'flat').nhan.trai : '',
-      theoChat: [...new Set(nhom.map(loaiPhai))].map((chat) => ({
-        chat,
-        loai: nhom
-          .filter((ct) => loaiPhai(ct) === chat)
-          .map((ct) => {
-            const n = chongCongThuc(ct, 0, 'C', 'flat').nhan
-            return { ten: hauDep(ct.kyHieu), viDu: `${n.trai} + ${'iv' in ct.tren ? n.phaiPhu : n.phai}` }
-          }),
-      })),
+      viDu: dau?.trai ?? '',
+      /** Các nốt tay trái khi tên tay trái là tên hợp âm (C7 → Đô – Mi – Si♭); tay trái ghi nốt sẵn thì trống. */
+      not: dau && dau.traiPhu.includes('–') && !dau.trai.includes('–') ? dau.traiPhu : '',
+      hang,
+      trung: chat.map((c) => ({ chat: c, phai: hang.filter((h) => h.chat === c).map((h) => h.phai) })).filter((t) => t.phai.length > 1),
     }
-  }).filter((d) => d.theoChat.length > 0)
+  }).filter((d) => d.hang.length > 0)
 }
 
 /* ---------------- Theo đuôi — muốn chồng ra loại nào ---------------- */

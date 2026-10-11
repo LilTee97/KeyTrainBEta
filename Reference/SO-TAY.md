@@ -6396,3 +6396,17 @@ sai / đúng theo đuôi; màn Trưởng giữ hợp âm ba → đúng; thi màn
 Cadd9 · Dm11 · G9sus4 · F♯m7♭5 · F♯m7; hai nốt và chùm không thành hợp âm ghi nốt) · toàn suite 2 722 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua ·
 chạy thử headless 8/8 (giữ MIDI C7 + A → tay trái C7, tay phải A, tổng C13♭9; nhả là hết; chạm Mi – Sol – Đô → C/E; chạm lại bỏ nốt; Xoá;
 chọn công thức là thoát; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: trình bày lại "Mẹo cộng loại" cho dễ đọc (11/10/2026)
+
+**Người dùng** (ảnh mục mẹo cộng loại): *"ý tưởng của mẹo thấy đã hợp lý nhưng cách trình bày cần rõ ràng dễ hiểu hơn"*.
+
+- Giữ ý, đổi cách bày. Bản cũ "Tay trái NỐT GỐC (gốc Đô: Đô) · + thứ → maj7 (Đô + Em) · m7♭5 (Đô + E♭m)" khó đọc. Nay mỗi cách bấm tay trái
+  một thẻ: "Tay trái giữ C7 (Đô – Mi – Si♭) · khung 7", rồi từng hàng là một phép cộng thẳng hàng: `C7 + Am (thứ) = C13` — tay trái xanh, tay
+  phải cam, hợp âm đậm. Chỗ cùng loại tay phải mà ra hợp âm khác thì có câu riêng: "Cùng tay phải thứ mà ra hợp âm khác: nhìn tên — Em hay
+  E♭m". Tiêu đề "Mẹo cộng loại — giữ tay trái, đổi tay phải là ra hợp âm khác"; lời dẫn đọc mẫu hàng đầu.
+- `bangCongLoai` trả về `{ dang, viDu, not, hang: [{ chat, phai, tong }], trung }`.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 14 (8 thẻ, đủ 26 hàng; thẻ khung 7 đúng từng hàng và nốt tay trái; hàng đầu đúng lời
+dẫn; đúng 6 chỗ cùng loại) · toàn suite 2 722 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 5/5 (tiêu đề, 8 thẻ có nốt tay trái,
+hàng "Đô + Em (thứ) = Cmaj7", câu nhắc cùng loại, điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

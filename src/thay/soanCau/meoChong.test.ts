@@ -155,18 +155,29 @@ describe('mẹo cộng loại — loại tay trái + loại tay phải = loại 
     expect(cap).toEqual(['13|13b9#11', '13#11|13b9', '7|dim7', '9sus4|m7', 'add9|madd9', 'm7b5|maj7'].sort())
   })
 
-  it('bảng gom theo tay trái: một dạng tay trái + đổi loại tay phải = nhiều loại, ví dụ gốc Đô ghi tên hai tay', () => {
+  it('bảng gom theo tay trái: mỗi hàng một phép cộng tay trái + tay phải (loại) = hợp âm, ví dụ gốc Đô; ghi rõ chỗ cùng loại tay phải', () => {
     const b = bangCongLoai(CONG_THUC.map((c) => c.id))
     expect(b.map((d) => d.dang)).toEqual(['nốt gốc', 'khung 7', 'gốc – 5', 'trưởng', 'thứ', 'khung m7', 'gốc – 3', 'gốc – ♭5'])
+    expect(b.reduce((s, d) => s + d.hang.length, 0)).toBe(26)
     expect(b[1]).toEqual({
       dang: 'khung 7',
       viDu: 'C7',
-      theoChat: [
-        { chat: 'thứ', loai: [{ ten: '13', viDu: 'C7 + Am' }, { ten: '13♭9♯11', viDu: 'C7 + G♭m' }] },
-        { chat: 'trưởng', loai: [{ ten: '13♭9', viDu: 'C7 + A' }, { ten: '13♯11', viDu: 'C7 + D' }] },
-        { chat: 'tăng', loai: [{ ten: '7♭13', viDu: 'C7 + A♭+' }] },
+      not: 'Đô – Mi – Si♭',
+      hang: [
+        { chat: 'thứ', phai: 'Am', tong: 'C13' },
+        { chat: 'thứ', phai: 'G♭m', tong: 'C13♭9♯11' },
+        { chat: 'trưởng', phai: 'A', tong: 'C13♭9' },
+        { chat: 'trưởng', phai: 'D', tong: 'C13♯11' },
+        { chat: 'tăng', phai: 'A♭+', tong: 'C7♭13' },
+      ],
+      trung: [
+        { chat: 'thứ', phai: ['Am', 'G♭m'] },
+        { chat: 'trưởng', phai: ['A', 'D'] },
       ],
     })
+    expect([b[0]!.viDu, b[0]!.not, b[0]!.hang[0]]).toEqual(['Đô', '', { chat: 'thứ', phai: 'Em', tong: 'Cmaj7' }]) // hàng đầu lời dẫn nêu
+    expect(b[2]!.hang.find((h) => h.chat === 'chùm')).toEqual({ chat: 'chùm', phai: 'Rê – Mi – Sol', tong: 'Cadd9' })
+    expect(b.flatMap((d) => d.trung).length).toBe(6) // đúng 6 cặp trùng
     expect(bangCongLoai(['maj9', 'maj9#11', '6']).map((d) => [d.dang, d.viDu])).toEqual([
       ['gốc – 5', 'Đô – Sol'],
       ['trưởng', 'C'],

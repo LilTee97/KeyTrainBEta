@@ -13,29 +13,42 @@ const not = (m: number) => vn(pitchClassName(((m % 12) + 12) % 12, 'flat'))
 
 /**
  * Mẹo cộng loại — người dùng 9–10/2026: "loại nào cộng loại nào thì sẽ ra loại tổng" (chữ "gốc" trong lời người dùng là LOẠI), không đếm
- * phím từ nốt. Gom theo dạng tay trái: một dạng tay trái + đổi loại tay phải = nhiều loại; ví dụ gốc Đô ghi tên hai tay. Dùng ở bảng này
- * và ở game (bên luyện có mẹo).
+ * phím từ nốt. Mỗi dạng tay trái một thẻ; mỗi hàng là một phép cộng đọc thẳng: tay trái + tay phải (loại) = hợp âm, ví dụ gốc Đô. Trình bày
+ * lại 11/10/2026 (người dùng: "cách trình bày cần rõ ràng dễ hiểu hơn") — bản cũ "+ thứ → maj7 (Đô + Em)" khó đọc.
  */
 export function MeoCongLoai({ ids }: { ids: readonly string[] }) {
   return (
-    <ul className="mt-1 flex flex-col gap-1.5">
+    <div className="mt-1 grid gap-2 sm:grid-cols-2">
       {bangCongLoai(ids).map((d) => (
-        <li key={d.dang}>
-          <b className="text-teal-key">Tay trái {d.dang.toUpperCase()}</b> <span className="text-dim">(gốc Đô: {d.viDu})</span>
-          {d.theoChat.map((c) => (
-            <span key={c.chat} className="ml-3 block">
-              + <b className="text-amber-key">{c.chat}</b> →{' '}
-              {c.loai.map((l, k) => (
-                <span key={l.ten}>
-                  {k > 0 && ' · '}
-                  <b className="font-mono text-cream">{l.ten}</b> <span className="text-dim">({l.viDu})</span>
-                </span>
+        <div key={d.dang} className="rounded border border-line/60 p-2">
+          <p>
+            <span className="text-dim">Tay trái giữ </span>
+            <b className="font-mono text-teal-key">{d.viDu}</b>
+            {d.not && <span className="text-dim"> ({d.not})</span>}
+            <span className="text-dim"> · {d.dang}</span>
+          </p>
+          <table className="mt-1">
+            <tbody>
+              {d.hang.map((h) => (
+                <tr key={h.tong}>
+                  <td className="pr-1 font-mono text-teal-key">{d.viDu}</td>
+                  <td className="px-1 text-dim">+</td>
+                  <td className="pr-1 font-mono text-amber-key">{h.phai}</td>
+                  <td className="pr-2 text-dim">({h.chat})</td>
+                  <td className="px-1 text-dim">=</td>
+                  <td className="font-mono font-bold text-cream">{h.tong}</td>
+                </tr>
               ))}
-            </span>
+            </tbody>
+          </table>
+          {d.trung.map((t) => (
+            <p key={t.chat} className="mt-1 text-cream/70">
+              Cùng tay phải {t.chat} mà ra hợp âm khác: nhìn tên — {t.phai.join(' hay ')}.
+            </p>
           ))}
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }
 
@@ -118,10 +131,10 @@ export function BangCongThuc({ onThu }: { onThu: (id: string) => void }) {
         ))}
       </ol>
 
-      <p className="mt-3 font-semibold text-cream">Mẹo cộng loại — loại tay trái + loại tay phải = loại tổng</p>
+      <p className="mt-3 font-semibold text-cream">Mẹo cộng loại — giữ tay trái, đổi tay phải là ra hợp âm khác</p>
       <p className="text-dim">
-        26 loại chỉ dùng 8 dạng tay trái. Giữ một dạng tay trái, đổi loại tay phải là ra loại khác — vd tay trái khung 7: + thứ → 13, + trưởng →
-        13♭9. Có chỗ cùng một phép cộng ra hai loại (nốt gốc + thứ: Cmaj7 = Đô + Em, Cm7♭5 = Đô + E♭m) — khi ấy nhìn tên tay phải mà phân biệt.
+        26 công thức chỉ có 8 cách bấm tay trái. Mỗi thẻ là một cách: giữ nguyên tay trái, đổi hợp âm tay phải thì ra hợp âm khác. Đọc mỗi hàng
+        như phép cộng — hàng đầu: tay trái Đô + tay phải Em (hợp âm thứ) = Cmaj7. Ví dụ ở gốc Đô.
       </p>
       <MeoCongLoai ids={CONG_THUC.map((c) => c.id)} />
 
