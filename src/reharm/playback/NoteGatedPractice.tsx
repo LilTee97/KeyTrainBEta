@@ -60,6 +60,11 @@ export interface NoteGatedPracticeProps {
     tay: PracticeHand
     onXong: (ketQua: { chang: number; vap: number }) => { dat: boolean; tomTat: string }
   }
+  /**
+   * Chờ đúng nốt mà vẫn nghe nền (game chạy ngón, người dùng 11/10/2026: "vòng hợp âm có backing … có chế độ chờ đánh đúng"): bấm đúng
+   * chặng nào thì máy đánh luôn các tiếng TAY KIA bắt đầu từ chặng ấy tới trước chặng sau. Không bật thì tay kia im như cũ.
+   */
+  nenTayKia?: boolean
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -82,6 +87,7 @@ export function NoteGatedPractice({
   perBeat = [],
   vongBpm,
   bac,
+  nenTayKia = false,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
@@ -233,6 +239,13 @@ export function NoteGatedPractice({
     if (!armedRef.current) return
 
     if (isStepMatched(heldNotes, step, { ignoreOctave })) {
+      if (nenTayKia && hand !== 'both') {
+        const sau = session.steps[session.currentIndex + 1]?.startBeat ?? Infinity
+        const giay = 60 / (vongBpm ?? bpm)
+        for (const event of timeline)
+          if (event.hand !== hand && event.startBeat >= step.startBeat && event.startBeat < sau)
+            playChord(event.notes, event.durationBeats * giay, event.velocity)
+      }
       setSession((current) => advance(current))
       return
     }
@@ -242,7 +255,7 @@ export function NoteGatedPractice({
       armedRef.current = false
       setSession((current) => registerMiss(current))
     }
-  }, [heldNotes, step, active, ignoreOctave])
+  }, [heldNotes, step, active, ignoreOctave, nenTayKia, hand, session, timeline, vongBpm, bpm])
 
   /* Lộ trình: hết lượt thì chấm một lần cho mỗi lượt (lượt = đối tượng `session`). */
   const bacRef = useRef(bac)

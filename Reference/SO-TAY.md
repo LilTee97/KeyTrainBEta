@@ -6524,3 +6524,46 @@ Scale; vai nốt C · G7 · E7 · F7 blues; phân bố Blues đổi từ chủ �
 / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 25/25 (5 tab; lời gia sư; số Cà Pháo trên phím; Linh Nhi Đô thứ; Blues F7 "Mi đổi thành
 Mi♭", phím Mi màu tránh; Fa trưởng ngón; Game chạy ngón đánh đều 9 nốt → 3★, bấm sai báo nốt cần; Game Scale gam Đô → câu 2 Sol, gợi ý, báo sai;
 điện thoại 5 tab không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: game chạy ngón sang khung NỐT RƠI (hai phần, có backing) · màu bàn phím chọn nốt ba mức (11/10/2026)
+
+**Người dùng:** *"-game chạy ngón làm kiểu nốt rơi và hiện bàn phím giống như game công thức -Nốt nào ko đánh được của các thầy thì ko in
+màu chứ đừng làm màu hồng. Nốt nào chính thì màu đậm còn nốt dùng được để thêm đẹp hợp âm thì làm mờ đi -Trong game Chạy ngón thì hãy chia
+ra làm 2 phần là chơi hợp âm riêng lẻ và chơi theo vòng hợp âm. Cho một vòng hợp âm có backing track và khi hợp âm nào rơi xuống thì hãy bắt
+tôi đánh solo các nốt tương ứng của hợp âm đó để cho khớp nhịp của track. Có chế độ chờ đánh đúng"*.
+
+- **Game chạy ngón** viết lại trên khung tập của app (như tab Điệu): `NoteGatedPractice` (chờ đúng nốt) · `TimedPractice` (theo nhịp: đếm
+  vào, backing chạy liên tục, chấm trúng nốt + lệch ms). Nốt rơi ghi **số ngón** thay tên nốt (trường mới `ngon` của `TimelineEvent`;
+  `FallingNotes` ưu tiên nó). ♩ = 50 · 60 · 80 · 100.
+  - **Hợp âm riêng lẻ** (`baiChayDon`): 45 bài mỗi tay như cũ (năm ngón · gam · rải), nốt móc đơn; máy giữ hợp âm của bài ở tay kia mỗi ô
+    4 phách.
+  - **Theo vòng hợp âm** (`baiChayVong`): chọn giọng (12 gốc, trưởng / thứ) + vòng lý thuyết của app (`vongLyThuyetHop`) + kiểu chạy — mỗi
+    phách một nốt hợp âm (1 3 5 3) · năm ngón quanh hợp âm (móc đơn 1 2 3 4 5 4 3 2: đầu phách nốt hợp âm, giữa phách nốt gam của bài;
+    giọng thứ, trên V có bậc 3 trưởng thì gam thứ hòa thanh) · rải lên–xuống (1 2 3 5 3 2 1 2). Mỗi hợp âm 4 phách; gốc tay phải trong
+    Sol3–Sol4, gần gốc hợp âm trước. Tay trái máy đệm "bùm – chát" (bass phách 1 · 3, chồng 5–8–10 phách 2 · 4) — **khuôn đệm của Claude,
+    không phải điệu thầy**. Theo nhịp: vòng chơi hai lượt.
+  - **Chờ đúng nốt vẫn có backing**: prop mới `nenTayKia` của `NoteGatedPractice` (chỉ game này bật) — bấm đúng chặng nào thì máy đánh luôn
+    các tiếng tay kia từ chặng ấy tới trước chặng sau. Không bật thì tay kia im như cũ (tab Điệu, lộ trình không đổi).
+  - Sao (`saoTheoNhip`, `saoChoDung`): theo nhịp 3★ trúng ≥ 90 % và lệch trung vị ≤ 40 ms (bằng ngưỡng đạt tạm của app), 2★ ≥ 75 % và
+    ≤ 80 ms, 1★ ≥ 50 %; chờ đúng nốt 3★ không vấp, 2★ vấp ≤ 10 % số chặng. Claude đặt, CHƯA ĐO. Sao ở localStorage
+    (`keytrain.chay-ngon.v2`); lượt theo nhịp ghi vào `LuyenTap.json` như mọi lượt theo nhịp (bài "Chạy ngón · …").
+  - Bỏ `chamNgon` (chấm đều tay / nốt mỗi giây của game cũ) cùng test của nó — khung mới chấm bằng bộ chấm của app.
+- **Màu bàn phím ba mức** (tab Chọn nốt theo thầy) thay bảy màu theo vai: **đậm** = nốt của hợp âm (khung) hay nốt thầy dùng ≥ 10 % (mốc
+  10 % Claude chọn); **mờ** = nốt màu, nốt gam đi qua, nốt nhà, nốt blue, và nốt tránh / ngoài gam mà thầy vẫn có số đo đánh; **không màu**
+  = nốt tránh / ngoài gam thầy không có số đo đánh. Bỏ màu hồng. **Số đo:** 11/160 nốt có phần trăm là nốt tránh / ngoài gam mà thầy vẫn
+  đánh 5–12 % (Cà Pháo 10, Linh Nhi 1) → tô mờ (nốt 12 % → đậm); để không màu thì app nói "thầy không đánh" — sai với số đo. Danh sách
+  dưới phím xếp theo mức rồi theo %. Tab Scale & Arpeggio: nốt của gam / hợp âm rải đậm, còn lại không màu.
+
+**Chưa đo — lỗ còn lại:** ngưỡng sao chưa thử trên tay người dùng; backing là khuôn của Claude — chưa dùng điệu thầy (dựng được từ
+`dungVong` của tab Tái hòa âm); "năm ngón quanh hợp âm" đặt ngón 1–5 cả khi gốc là phím đen (thế năm ngón, không phải ngón chạy gam chuẩn);
+vòng chỉ lấy vòng lý thuyết của app, chưa cho tự điền; app không thấy ngón tay — số ngón chỉ là hướng dẫn; mốc 10 % của mức đậm chưa hỏi
+người dùng.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 17 (bỏ 1 test `chamNgon`, thêm 4: hợp âm riêng lẻ — nốt móc đơn mang ngón, tay kia
+giữ hợp âm mỗi 4 phách, tên hợp âm từng phách; theo vòng năm ngón — đầu phách nốt hợp âm, giữa phách nốt gam, ngón 1 2 3 4 5 4 3 2, tay trái
+bùm – chát; giọng thứ E7 → Mi Fa Sol♯ La Si, rải và mỗi phách một nốt đúng ngón; lặp lượt + ngưỡng sao) · toàn suite 2 752 qua / 5 đỏ (5 đỏ
+cũ) · `vite build` qua · chạy thử headless 20/20 (chú giải ba mức; Gia sư C: Đô đậm, Rê mờ, Fa không màu; không phím hồng; Blues F7: Mi
+không màu, Mi♭ đậm; Cà Pháo: ≥ 10 % đậm, Fa 5 % mờ; nốt rơi ghi ngón 1 2 3 4 5 4 3 2 1; bấm đúng nốt đầu → máy đánh C tay trái
+[36 48 52 55]; 9/9 → Đạt ★★★; vòng Dm – G – C chờ đúng nốt: 9 nốt đầu → đủ 9 tiếng đệm, bấm sai không qua và không đệm, 23/24 chặng; theo
+nhịp ♩ = 100: nốt rơi ghi ngón, backing 37 tiếng, hết hai lượt chấm 0/48; điện thoại không cuộn ngang) · `LuyenTap.json` sao lưu trước, trả
+lại sau (md5 khớp), `Nguon.json` không đổi.

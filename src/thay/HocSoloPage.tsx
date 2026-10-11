@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { buildKeyboardLayout } from '../shared/midi/onScreenPiano/layout'
 import { GameChayNgon, GameScale } from './GameSolo'
-import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, VAI, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
+import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
 import { ARP, GAM, ngonArp, ngonGam, tenNot, type LoaiArp, type LoaiGam, type Tay } from './hocSolo/gamNgon'
 import { nguCanh } from './soanCau/giaiThich'
 import { GOC } from './vongThay'
@@ -33,29 +33,43 @@ const nut = (on: boolean) =>
 const the = 'rounded-xl border border-line bg-black/25 p-4 text-sm'
 const pc = (x: number) => ((x % 12) + 12) % 12
 
-/** Màu phím theo vai nốt — trắng / đen. */
-const MAU_VAI: Readonly<Record<VaiNot | 'tat', { trang: string; den: string; chu: string }>> = {
-  khung: { trang: 'bg-teal-key text-ink', den: 'bg-teal-key text-ink', chu: 'text-teal-key' },
-  mau: { trang: 'bg-amber-key text-ink', den: 'bg-amber-key text-ink', chu: 'text-amber-key' },
-  gam: { trang: 'bg-cream text-ink', den: 'bg-neutral-600 text-cream', chu: 'text-cream' },
-  tranh: { trang: 'bg-rose-300 text-ink', den: 'bg-rose-500 text-ink', chu: 'text-rose-300' },
-  nha: { trang: 'bg-sky-300 text-ink', den: 'bg-sky-500 text-ink', chu: 'text-sky-300' },
-  blue: { trang: 'bg-indigo-300 text-ink', den: 'bg-indigo-500 text-cream', chu: 'text-indigo-300' },
-  ngoai: { trang: 'bg-cream/25 text-ink/60', den: 'bg-black text-dim', chu: 'text-dim' },
-  tat: { trang: 'bg-cream/25 text-ink/60', den: 'bg-black text-dim', chu: 'text-dim' },
+/*
+  BA MỨC MÀU — người dùng 11/10/2026: "Nốt nào ko đánh được của các thầy thì ko in màu chứ đừng làm màu hồng. Nốt nào chính thì màu đậm
+  còn nốt dùng được để thêm đẹp hợp âm thì làm mờ đi". Đậm = nốt của hợp âm, hay nốt thầy dùng từ 10 % trở lên (mốc 10 % Claude chọn);
+  mờ = nốt màu, nốt gam đi qua, nốt nhà, nốt blue; không màu = nốt tránh ngân / ngoài gam mà thầy KHÔNG có số đo đánh. Số đo 11/10/2026:
+  11/160 nốt có phần trăm là nốt tránh / ngoài gam mà thầy vẫn đánh 5–12 % (Cà Pháo 10, Linh Nhi 1) → mờ (12 % → đậm), vì "thầy không
+  đánh" là sai với chúng. Cũ: bảy màu theo vai, nốt tránh màu hồng; bản đầu ba mức để mọi nốt tránh / ngoài không màu — lùi về đó nếu
+  người dùng muốn nốt tránh luôn trắng dù thầy có lướt qua.
+*/
+type Muc = 'dam' | 'mo' | 'khong'
+const mucCua = (x: NotHoc): Muc =>
+  x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
+const NEN: Readonly<Record<Muc, { trang: CSSProperties; den: CSSProperties; chu: string }>> = {
+  dam: { trang: { background: 'var(--color-teal-key)' }, den: { background: 'var(--color-teal-key)' }, chu: 'text-teal-key' },
+  mo: {
+    trang: { background: 'color-mix(in srgb, var(--color-teal-key) 32%, var(--color-cream))' },
+    den: { background: 'color-mix(in srgb, var(--color-teal-key) 42%, #111)' },
+    chu: 'text-teal-key/60',
+  },
+  khong: { trang: { background: 'var(--color-cream)' }, den: { background: '#0b0b0b' }, chu: 'text-dim' },
+}
+const CHU_PHIM: Readonly<Record<Muc, { trang: string; den: string }>> = {
+  dam: { trang: 'text-ink', den: 'text-ink' },
+  mo: { trang: 'text-ink/80', den: 'text-cream' },
+  khong: { trang: 'text-ink/60', den: 'text-dim' },
 }
 
 /** Bàn phím để XEM: tô màu theo vai, chữ trên phím, bấm để nghe — không đổ vào kho MIDI (không phải bàn phím chơi). */
 function BanPhimMau({
   thap,
   cao,
-  vai,
+  muc,
   nhan,
   onBam,
 }: {
   thap: number
   cao: number
-  vai: (m: number) => VaiNot | 'tat'
+  muc: (m: number) => Muc
   nhan: (m: number) => ReactNode
   onBam?: (m: number) => void
 }) {
@@ -68,7 +82,8 @@ function BanPhimMau({
             key={note}
             type="button"
             onClick={() => onBam?.(note)}
-            className={`flex flex-1 flex-col items-center justify-end gap-0.5 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight ${MAU_VAI[vai(note)].trang}`}
+            style={NEN[muc(note)].trang}
+            className={`flex flex-1 flex-col items-center justify-end gap-0.5 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight ${CHU_PHIM[muc(note)].trang}`}
           >
             {nhan(note)}
           </button>
@@ -79,8 +94,8 @@ function BanPhimMau({
           key={note}
           type="button"
           onClick={() => onBam?.(note)}
-          style={{ left: `${position * 100}%`, width: `${(100 / whiteKeys.length) * 0.66}%` }}
-          className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight ${MAU_VAI[vai(note)].den}`}
+          style={{ left: `${position * 100}%`, width: `${(100 / whiteKeys.length) * 0.66}%`, ...NEN[muc(note)].den }}
+          className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight ${CHU_PHIM[muc(note)].den}`}
         >
           {nhan(note)}
         </button>
@@ -199,7 +214,7 @@ function ChonNotTab() {
         <BanPhimMau
           thap={60}
           cao={84}
-          vai={(m) => notCua(m).vai}
+          muc={(m) => mucCua(notCua(m))}
           nhan={(m) => (
             <>
               <span>{tenPhim(m)}</span>
@@ -213,19 +228,31 @@ function ChonNotTab() {
           Bấm một phím: nghe hợp âm {ten} cùng nốt ấy — tai nhận ra nốt khung, nốt màu, nốt tránh.{' '}
           {thay === 'blues' ? 'Bậc ghi theo CHỦ ÂM (Blues nghĩ theo chủ âm).' : 'Bậc ghi theo gốc hợp âm.'}
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px]">
-          {THU_TU_VAI.filter((v) => nots.some((x) => x.vai === v)).map((v) => (
-            <span key={v} className={MAU_VAI[v].chu}>
-              ■ {VAI[v].ten} — <span className="text-dim">{VAI[v].mo}</span>
-            </span>
-          ))}
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-cream/85">
+          <span>
+            <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm" style={NEN.dam.trang} />
+            Đậm — nốt chính: nốt của hợp âm, và nốt thầy dùng từ 10 % trở lên
+          </span>
+          <span>
+            <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm" style={NEN.mo.trang} />
+            Mờ — dùng được, thêm đẹp: nốt màu, nốt đi qua, nốt thầy có lướt qua
+          </span>
+          <span>
+            <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm border border-line" style={NEN.khong.trang} />
+            Không màu — nên tránh, thầy không đánh
+          </span>
         </div>
         <ul className="mt-2 grid grid-cols-1 gap-x-4 text-xs sm:grid-cols-2">
           {[...nots]
             .filter((x) => x.vai !== 'ngoai' || x.pct !== null)
-            .sort((a, b) => (b.pct ?? -1) - (a.pct ?? -1) || THU_TU_VAI.indexOf(a.vai) - THU_TU_VAI.indexOf(b.vai))
+            .sort(
+              (a, b) =>
+                ['dam', 'mo', 'khong'].indexOf(mucCua(a)) - ['dam', 'mo', 'khong'].indexOf(mucCua(b)) ||
+                (b.pct ?? -1) - (a.pct ?? -1) ||
+                THU_TU_VAI.indexOf(a.vai) - THU_TU_VAI.indexOf(b.vai),
+            )
             .map((x) => (
-              <li key={x.iv} className={MAU_VAI[x.vai].chu}>
+              <li key={x.iv} className={NEN[mucCua(x)].chu}>
                 {tenPhim(60 + goc + x.iv)} <span className="text-dim">bậc {x.bac}</span> — {VAI[x.vai].ten}
                 {x.pct !== null && <b className="ml-1">{x.pct} %</b>}
               </li>
@@ -322,7 +349,7 @@ function ScaleTab() {
         <BanPhimMau
           thap={tay === 'phai' ? 60 : 48}
           cao={tay === 'phai' ? 84 : 72}
-          vai={(m) => (len.includes(m) ? 'khung' : 'tat')}
+          muc={(m) => (len.includes(m) ? 'dam' : 'khong')}
           nhan={(m) =>
             len.includes(m) ? (
               <>

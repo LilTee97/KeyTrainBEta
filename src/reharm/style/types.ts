@@ -311,4 +311,6 @@ export interface TimelineEvent {
   giat?: boolean
   /** Trường độ ghi trên sheet khi khác độ vang (tiếng giật). Bỏ trống = bằng `durationBeats`. */
   ghiBeats?: number
+  /** Số ngón gợi ý (1–5) — game chạy ngón trang Học Solo; khối nốt rơi ghi số ngón thay cho tên nốt. */
+  ngon?: number
 }

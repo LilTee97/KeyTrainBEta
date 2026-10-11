@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { giangHop, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, vaiNot, type HopHoc } from '../hocSolo/chonNot'
-import { baiArp, baiGam, baiNamNgon, baiTapNgon, cauScale, chamNgon, GAM, ngonArp, ngonGam, notDung } from '../hocSolo/gamNgon'
+import {
+  baiArp,
+  baiChayDon,
+  baiChayVong,
+  baiGam,
+  baiNamNgon,
+  baiTapNgon,
+  cauScale,
+  GAM,
+  lapLai,
+  ngonArp,
+  ngonGam,
+  notDung,
+  saoChoDung,
+  saoTheoNhip,
+} from '../hocSolo/gamNgon'
 
 const den = (m: number) => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12)
 
@@ -59,16 +74,82 @@ describe('Bài tập game chạy ngón', () => {
       for (const b of ds) expect(b.ngon.length).toBe(b.notes.length)
     }
   })
-  it('chấm: đều và đủ nhanh 3★; lệch nhịp hay sai nốt thì ít sao', () => {
-    const deu = Array.from({ length: 15 }, (_, k) => 1000 + k * 250)
-    expect(chamNgon(deu, 0, 4).sao).toBe(3)
-    expect(chamNgon(deu, 0, 5).sao).toBe(2)
-    expect(chamNgon(deu, 0, 6).sao).toBe(1)
-    const lech = deu.map((t, k) => t + (k % 2 ? 120 : 0))
-    expect(chamNgon(lech, 0, 4).sao).toBeLessThan(3)
-    expect(chamNgon(deu, 3, 4).sao).toBe(1)
-    expect(chamNgon(deu, 5, 4).sao).toBe(0)
-    expect(chamNgon(deu, 0, 4).chinhXac).toBe(1)
+})
+
+describe('Game chạy ngón — dòng thời gian cho khung nốt rơi', () => {
+  const pc = (m: number) => ((m % 12) + 12) % 12
+  it('hợp âm riêng lẻ: nốt bài tập móc đơn mang số ngón; máy giữ hợp âm ở tay kia mỗi ô 4 phách', () => {
+    const bai = baiNamNgon(0, false, 'phai')
+    const c = baiChayDon(bai)
+    const tap = c.timeline.filter((x) => x.hand === 'right')
+    expect(c.tay).toBe('right')
+    expect(tap.map((x) => x.notes[0])).toEqual(bai.notes)
+    expect(tap.map((x) => x.ngon)).toEqual(bai.ngon)
+    expect(tap.map((x) => x.startBeat)).toEqual(bai.notes.map((_, k) => k * 0.5))
+    expect(c.beatsPerChord).toBe(8)
+    expect(c.timeline.filter((x) => x.hand === 'left').map((x) => [x.startBeat, x.notes])).toEqual([
+      [0, [36, 48, 52, 55]],
+      [4, [36, 48, 52, 55]],
+    ])
+    expect(c.perBeat).toEqual(Array(8).fill('C'))
+    const t = baiChayDon(baiNamNgon(9, true, 'trai'))
+    expect(t.tay).toBe('left')
+    expect(t.timeline.find((x) => x.hand === 'right')!.notes).toEqual([81, 84, 88])
+    expect(t.perBeat[0]).toBe('Am')
+  })
+  it('theo vòng, năm ngón: mỗi hợp âm 4 phách; đầu phách nốt hợp âm, giữa phách nốt gam; tay trái bùm – chát', () => {
+    const hop = [
+      { goc: 0, chat: '' },
+      { goc: 9, chat: 'm' },
+      { goc: 5, chat: '' },
+      { goc: 7, chat: '7' },
+    ]
+    const v = baiChayVong(hop, 0, false, 'nam-ngon', 'x')
+    expect(v.id).toBe('vong-x-0-truong-nam-ngon')
+    expect(v.beatsPerChord).toBe(4)
+    expect(v.perBeat).toEqual(['C', 'Am', 'F', 'G7'].flatMap((x) => [x, x, x, x]))
+    const tap = v.timeline.filter((x) => x.hand === 'right')
+    expect(tap.length).toBe(32)
+    expect(tap.slice(0, 8).map((x) => x.notes[0])).toEqual([60, 62, 64, 65, 67, 65, 64, 62])
+    hop.forEach((x, i) => {
+      const tru = x.chat === 'm' ? [0, 3, 7] : [0, 4, 7]
+      tap.slice(i * 8, i * 8 + 8).forEach((e, t) => {
+        expect(e.ngon).toBe([1, 2, 3, 4, 5, 4, 3, 2][t])
+        expect(e.startBeat).toBe(i * 4 + t * 0.5)
+        if (t % 2 === 0) expect(tru, `${i} ${t}`).toContain(pc(e.notes[0]! - x.goc))
+        else expect([0, 2, 4, 5, 7, 9, 11], `${i} ${t}`).toContain(pc(e.notes[0]!))
+      })
+    })
+    expect(v.timeline.filter((x) => x.hand === 'left' && x.startBeat < 4).map((x) => [x.startBeat, x.notes])).toEqual([
+      [0, [36]],
+      [1, [43, 48, 52]],
+      [2, [36]],
+      [3, [43, 48, 52]],
+    ])
+  })
+  it('giọng thứ: trên V7 nốt đi qua lấy gam thứ hòa thanh (E7 ở La thứ: Mi Fa Sol♯ La Si); rải và mỗi phách một nốt đúng ngón', () => {
+    const e7 = baiChayVong([{ goc: 7, chat: '7' }], 9, true, 'nam-ngon', 'y')
+    expect(e7.timeline.filter((x) => x.hand === 'right').map((x) => x.notes[0])).toEqual([64, 65, 68, 69, 71, 69, 68, 65])
+    const rai = baiChayVong([{ goc: 0, chat: '' }], 0, false, 'rai', 'z').timeline.filter((x) => x.hand === 'right')
+    expect(rai.map((x) => x.notes[0])).toEqual([60, 64, 67, 72, 67, 64, 60, 64])
+    expect(rai.map((x) => x.ngon)).toEqual([1, 2, 3, 5, 3, 2, 1, 2])
+    const phach = baiChayVong([{ goc: 0, chat: '' }], 0, false, 'phach', 'z').timeline.filter((x) => x.hand === 'right')
+    expect(phach.map((x) => [x.startBeat, x.notes[0], x.ngon])).toEqual([
+      [0, 60, 1],
+      [1, 64, 3],
+      [2, 67, 5],
+      [3, 64, 3],
+    ])
+  })
+  it('lặp lượt nối liền; sao theo nhịp và sao chờ đúng nốt đúng ngưỡng', () => {
+    const v = baiChayVong([{ goc: 0, chat: '' }], 0, false, 'phach', 'z')
+    const hai = lapLai(v.timeline, 4, 2)
+    expect(hai.length).toBe(v.timeline.length * 2)
+    expect(hai.slice(v.timeline.length).map((x) => x.startBeat)).toEqual(v.timeline.map((x) => x.startBeat + 4))
+    const s = (hit: number, medianAbsMs: number | null) => saoTheoNhip({ total: 20, hit, medianAbsMs })
+    expect([s(18, 40), s(18, 41), s(15, 80), s(15, 81), s(10, null), s(9, 10)]).toEqual([3, 2, 2, 1, 1, 0])
+    expect(saoTheoNhip({ total: 0, hit: 0, medianAbsMs: null })).toBe(0)
+    expect([saoChoDung({ chang: 20, vap: 0 }), saoChoDung({ chang: 20, vap: 2 }), saoChoDung({ chang: 20, vap: 3 }), saoChoDung({ chang: 5, vap: 1 })]).toEqual([3, 2, 1, 2])
   })
 })
 

@@ -1,26 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { playChordSequence, startAudio } from '../shared/audio/audioEngine'
+import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
+import { TimedPractice } from '../reharm/playback/TimedPractice'
+import { playChordSequence, startAudio, stopTimelineLoop } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import {
+  baiChayDon,
+  baiChayVong,
   baiTapNgon,
   cauScale,
-  chamNgon,
+  KIEU_CHAY,
+  lapLai,
   NHOM_SCALE,
   ngonArp,
   ngonGam,
   notDung,
+  saoChoDung,
+  saoTheoNhip,
   tenNot,
-  TOC_DO,
   VONG_5_THU,
   VONG_5_TRUONG,
-  type BaiNgon,
+  type KieuChay,
   type NhomScale,
   type Tay,
 } from './hocSolo/gamNgon'
+import { vongLyThuyetHop } from './soanCau/thayTrongVong'
+import { GOC } from './vongThay'
 
 /*
   Hai game của trang Học Solo — người dùng 11/10/2026: "Hãy thêm Game chạy ngón và Game Scale". NGOẠI LỆ thứ hai của quyết định "không lớp
@@ -70,196 +78,218 @@ const nghe = async (notes: readonly number[], giay: number) => {
   )
 }
 
-/** Khung bàn phím ôm trọn các nốt: từ Đô dưới nốt thấp nhất tới Đô trên nốt cao nhất. */
-const khungPhim = (notes: readonly number[]) => ({
-  lowNote: 12 * Math.floor(Math.min(...notes) / 12),
-  highNote: 12 * Math.ceil((Math.max(...notes) + 1) / 12),
-})
-
 /* ---------------- Game chạy ngón ---------------- */
 
-const KHO_NGON = 'keytrain.chay-ngon.v1'
+const KHO_NGON = 'keytrain.chay-ngon.v2'
+const NHIP = [50, 60, 80, 100] as const
 
 /**
- * GAME CHẠY NGÓN — năm ngón · gam một quãng tám · rải hợp âm, lên rồi xuống, có số ngón trên phím. Bấm đúng nốt kế thì đi tiếp (sai thì
- * đứng chờ); hết bài chấm ba thứ: đúng bao nhiêu, đều tay (khoảng cách giữa các nốt đều không), và tốc độ so với mục tiêu.
+ * GAME CHẠY NGÓN — khung nốt rơi của app (như tab Điệu): nốt rơi xuống bàn phím, khối nốt ghi số ngón; máy chơi tay kia làm backing.
+ * Hai phần (người dùng 11/10/2026): HỢP ÂM RIÊNG LẺ — năm ngón · gam · rải trên một hợp âm; THEO VÒNG HỢP ÂM — vòng có backing, hợp âm nào
+ * rơi xuống thì chạy nốt của hợp âm ấy cho khớp nhịp. Hai chế độ: chờ đánh đúng (đứng chờ tới khi bấm đúng) · theo nhịp (chấm trúng nốt và
+ * lệch mili giây — lượt ghi vào LuyenTap.json như mọi lượt tập theo nhịp). Sao lưu ở bộ nhớ trình duyệt.
  */
 export function GameChayNgon() {
-  useLiveSound()
-  useComputerKeyboard(60)
+  const [phan, setPhan] = useState<'don' | 'vong'>('don')
+  const [cheDo, setCheDo] = useState<'cho' | 'nhip'>('cho')
+  const [bpm, setBpm] = useState<number>(60)
   const [tay, setTay] = useState<Tay>('phai')
   const ds = useMemo(() => baiTapNgon(tay), [tay])
   const [chiSo, setChiSo] = useState(0)
-  const bai: BaiNgon = ds[Math.min(chiSo, ds.length - 1)]!
-  const [muc, setMuc] = useState<number>(TOC_DO[0].nps)
-  const [i, setI] = useState(0)
-  const [luc, setLuc] = useState<number[]>([])
-  const [sai, setSai] = useState(0)
-  const [saiNot, setSaiNot] = useState<number | null>(null)
+  const [tonic, setTonic] = useState(0)
+  const [thu, setThu] = useState(false)
+  const vongs = useMemo(() => vongLyThuyetHop(tonic, thu), [tonic, thu])
+  const [vongId, setVongId] = useState<string | null>(null)
+  const vong = vongs.find((x) => x.id === vongId) ?? vongs[0]!
+  const [kieu, setKieu] = useState<KieuChay>('nam-ngon')
   const [kyLuc, setKyLuc] = useState<Record<string, number>>(() => docKho(KHO_NGON, {}))
-  const xong = i >= bai.notes.length
-  const kq = xong ? chamNgon(luc, sai, muc) : null
 
-  const lamLai = () => {
-    setI(0)
-    setLuc([])
-    setSai(0)
-    setSaiNot(null)
+  const bai = useMemo(
+    () => (phan === 'don' ? baiChayDon(ds[Math.min(chiSo, ds.length - 1)]!) : baiChayVong(vong.hop, tonic, thu, kieu, vong.id)),
+    [phan, ds, chiSo, vong, tonic, thu, kieu],
+  )
+  const khoa = `${bai.id}|${cheDo}`
+  const timelineNhip = useMemo(() => (phan === 'vong' ? lapLai(bai.timeline, bai.perBeat.length, 2) : bai.timeline), [bai, phan])
+  const ghiSao = (s: number) => {
+    setKyLuc((cu) => {
+      if (s <= (cu[khoa] ?? 0)) return cu
+      const moi = { ...cu, [khoa]: s }
+      ghiKho(KHO_NGON, moi)
+      return moi
+    })
   }
-  const chonBai = (k: number) => {
-    setChiSo(k)
-    lamLai()
+  const doi = (f: () => void) => {
+    stopTimelineLoop()
+    f()
   }
-
-  useNotBam((not, t) => {
-    if (xong) return
-    if (not === bai.notes[i]) {
-      setLuc((x) => [...x, t])
-      setSaiNot(null)
-      const ke = i + 1
-      setI(ke)
-      if (ke >= bai.notes.length) {
-        const k = chamNgon([...luc, t], sai, muc)
-        const khoa = `${bai.id}|${muc}`
-        if (k.sao > (kyLuc[khoa] ?? 0)) {
-          const moi = { ...kyLuc, [khoa]: k.sao }
-          setKyLuc(moi)
-          ghiKho(KHO_NGON, moi)
-        }
-      }
-    } else if (i > 0) {
-      // Bấm sai trước nốt đầu thì không tính — chưa bắt đầu.
-      setSai((x) => x + 1)
-      setSaiNot(not)
-    }
-  })
-
-  const ngonCua: Record<number, number> = {}
-  bai.notes.forEach((m, k) => {
-    ngonCua[m] = bai.ngon[k]!
-  })
-  const nhom = [...new Set(ds.map((b) => b.nhom))]
+  const saoCua = (id: string) => kyLuc[`${id}|${cheDo}`]
+  const nhom = [...new Set(ds.map((x) => x.nhom))]
 
   return (
     <div className="flex flex-col gap-3 text-sm">
       <div className="rounded-xl border border-line bg-black/25 p-4">
         <h3 className="mb-1 font-semibold text-cream">Game chạy ngón</h3>
         <p className="text-xs text-dim">
-          Bấm lần lượt từng nốt theo số ngón trên phím — lên rồi xuống. Bấm đúng thì đi tiếp, sai thì đứng chờ. Hết bài: chấm đúng bao nhiêu,
-          đều tay không (khoảng cách giữa các nốt), và nhanh tới đâu so với mục tiêu. Ngón là ngón chuẩn sách piano; app không thấy ngón tay
-          bạn — nhìn số mà bấm cho đúng thói quen. Ngưỡng sao là Claude đặt, chưa đo.
+          Nốt rơi xuống bàn phím, số trên khối nốt là ngón. Máy chơi tay kia làm backing. <b>Chờ đúng nốt</b>: mọi thứ đứng chờ tới khi bạn bấm
+          đúng — bấm đúng nốt nào thì máy đánh luôn phần đệm của chỗ ấy. <b>Theo nhịp</b>: có đếm vào, backing chạy liên tục, hết lượt chấm
+          trúng bao nhiêu nốt và lệch bao nhiêu mili giây. Ngón là ngón
+          chuẩn sách piano; app không thấy ngón tay — nhìn số mà bấm cho đúng thói quen. Ngưỡng sao là Claude đặt, chưa đo.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-dim">Tay:</span>
-        {(['phai', 'trai'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => {
-              setTay(t)
-              lamLai()
-            }}
-            className={nut(tay === t)}
-          >
-            {t === 'phai' ? 'Tay phải' : 'Tay trái'}
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        {(
+          [
+            ['don', 'Hợp âm riêng lẻ'],
+            ['vong', 'Theo vòng hợp âm'],
+          ] as const
+        ).map(([v, ten]) => (
+          <button key={v} type="button" onClick={() => doi(() => setPhan(v))} className={nut(phan === v)}>
+            {ten}
           </button>
         ))}
-        <span className="ml-2 text-dim">Mục tiêu:</span>
-        {TOC_DO.map((x) => (
-          <button key={x.nps} type="button" onClick={() => setMuc(x.nps)} className={nut(muc === x.nps)} title={x.mo}>
-            {x.ten} · {x.nps} nốt/giây
+        <span className="ml-3 text-dim">Chế độ:</span>
+        {(
+          [
+            ['cho', 'Chờ đúng nốt'],
+            ['nhip', 'Theo nhịp'],
+          ] as const
+        ).map(([v, ten]) => (
+          <button key={v} type="button" onClick={() => doi(() => setCheDo(v))} className={nut(cheDo === v)}>
+            {ten}
           </button>
         ))}
-        <MidiConnect />
+        <span className="ml-3 text-dim">♩ =</span>
+        {NHIP.map((x) => (
+          <button key={x} type="button" onClick={() => doi(() => setBpm(x))} className={nut(bpm === x)} title={`móc đơn ${(x / 30).toFixed(1).replace('.', ',')} nốt/giây`}>
+            {x}
+          </button>
+        ))}
       </div>
 
-      <div className="flex flex-col gap-1.5 text-xs">
-        {nhom.map((nh) => (
-          <div key={nh} className="flex flex-wrap items-center gap-1.5">
-            <span className="w-24 text-dim">{nh}</span>
-            {ds.map((b, k) =>
-              b.nhom === nh ? (
-                <button key={b.id} type="button" onClick={() => chonBai(k)} className={nut(k === chiSo)}>
-                  {b.ten.replace(/^(Năm ngón|Gam|Rải) /, '')}
-                  {kyLuc[`${b.id}|${muc}`] ? <span className="ml-1 text-amber-key">{sao(kyLuc[`${b.id}|${muc}`]!)}</span> : null}
-                </button>
-              ) : null,
-            )}
+      {phan === 'don' ? (
+        <div className="flex flex-col gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="w-24 text-dim">Tay</span>
+            {(['phai', 'trai'] as const).map((t) => (
+              <button key={t} type="button" onClick={() => doi(() => setTay(t))} className={nut(tay === t)}>
+                {t === 'phai' ? 'Tay phải' : 'Tay trái'}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-
-      <div className="rounded-xl border border-line bg-black/25 p-3">
-        <p className="mb-2 font-semibold text-cream">
-          {bai.ten} — {tay === 'phai' ? 'tay phải' : 'tay trái'}
-        </p>
-        <div className="mb-2 flex flex-wrap gap-1">
-          {bai.notes.map((m, k) => (
-            <span
-              key={k}
-              className={`rounded border px-1.5 py-0.5 font-mono text-xs ${
-                k < i ? 'border-teal-key/60 text-teal-key' : k === i ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line text-dim'
-              }`}
-            >
-              {tenNot(m, bai.goc, bai.thu)}
-              <sup className="ml-0.5">{bai.ngon[k]}</sup>
-            </span>
+          {nhom.map((nh) => (
+            <div key={nh} className="flex flex-wrap items-center gap-1.5">
+              <span className="w-24 text-dim">{nh}</span>
+              {ds.map((x, k) =>
+                x.nhom === nh ? (
+                  <button key={x.id} type="button" onClick={() => doi(() => setChiSo(k))} className={nut(k === chiSo)}>
+                    {x.ten.replace(/^(Năm ngón|Gam|Rải) /, '')}
+                    {saoCua(`don-${x.id}`) ? <span className="ml-1 text-amber-key">{sao(saoCua(`don-${x.id}`)!)}</span> : null}
+                  </button>
+                ) : null,
+              )}
+            </div>
           ))}
         </div>
-        <p className="mb-2 text-xs">
-          {xong ? (
-            <span className="text-teal-key">Xong bài.</span>
-          ) : saiNot !== null ? (
-            <span className="text-rose-300">
-              Sai: {tenNot(saiNot, bai.goc, bai.thu)} — cần {tenNot(bai.notes[i]!, bai.goc, bai.thu)} (ngón {bai.ngon[i]}).
-            </span>
-          ) : (
-            <span className="text-cream/80">
-              {i === 0 ? 'Bấm nốt đầu để bắt đầu: ' : 'Tiếp: '}
-              <b className="text-amber-key">{tenNot(bai.notes[i]!, bai.goc, bai.thu)}</b> bằng ngón <b className="text-amber-key">{bai.ngon[i]}</b>
-            </span>
-          )}
-        </p>
-        <OnScreenPiano
-          {...khungPhim(bai.notes)}
-          highlightNotes={xong ? [] : [bai.notes[i]!]}
-          fingerLabels={ngonCua}
-          accidentalStyle={bai.notes.some((m) => tenNot(m, bai.goc, bai.thu).includes('♭')) ? 'flat' : 'sharp'}
-        />
-        <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <button type="button" onClick={() => void nghe(bai.notes, 1 / muc)} className={nut(false)}>
-            ▶ Nghe mẫu ở tốc độ mục tiêu
-          </button>
-          <button type="button" onClick={lamLai} className={nut(false)}>
-            Làm lại
-          </button>
-          {xong && chiSo + 1 < ds.length && (
-            <button type="button" onClick={() => chonBai(chiSo + 1)} className={nut(false)}>
-              Bài tiếp →
-            </button>
-          )}
-        </div>
-        {kq && (
-          <div className="mt-3 rounded-lg border border-line/60 p-3 text-xs">
-            <p className="text-lg text-amber-key">{sao(kq.sao)}</p>
-            <p className="text-cream/85">
-              Đúng {kq.dung}/{kq.dung + kq.sai} cú ({Math.round(kq.chinhXac * 100)} %) · đều tay: lệch {kq.lech === null ? '—' : `${Math.round(kq.lech * 100)} %`} · tốc độ{' '}
-              {kq.tocDo === null ? '—' : `${kq.tocDo.toFixed(1).replace('.', ',')} nốt/giây`} (mục tiêu {muc}).
-            </p>
-            <p className="mt-1 text-dim">
-              {kq.sao === 3
-                ? 'Đều và đủ nhanh — lên mục tiêu kế tiếp.'
-                : kq.chinhXac < 0.9
-                  ? 'Còn sai nốt: chậm lại, nhìn số ngón, đánh đúng trước rồi mới nhanh.'
-                  : kq.lech !== null && kq.lech > 0.35
-                    ? 'Đúng nốt rồi nhưng chưa đều: đếm thầm "một – hai – ba – bốn", mỗi nốt một tiếng đếm; chỗ luồn ngón cái hay bị hụt nhịp.'
-                    : 'Đúng và khá đều — tăng tốc dần tới mục tiêu.'}
-            </p>
+      ) : (
+        <div className="flex flex-col gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="w-24 text-dim">Giọng</span>
+            <select
+              value={tonic}
+              onChange={(event) => doi(() => setTonic(Number(event.target.value)))}
+              className="rounded border border-line bg-white/6 px-1.5 py-1 text-cream"
+              aria-label="Giọng của vòng"
+            >
+              {GOC.map((ten, k) => (
+                <option key={ten} value={k}>
+                  {ten}
+                </option>
+              ))}
+            </select>
+            {[false, true].map((v) => (
+              <button key={String(v)} type="button" onClick={() => doi(() => setThu(v))} className={nut(thu === v)}>
+                {v ? 'thứ' : 'trưởng'}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="w-24 text-dim">Vòng</span>
+            {vongs.map((x) => (
+              <button key={x.id} type="button" onClick={() => doi(() => setVongId(x.id))} className={nut(x.id === vong.id)} title={x.ghiChu}>
+                {x.ten}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="w-24 text-dim">Kiểu chạy</span>
+            {KIEU_CHAY.map((x) => (
+              <button key={x.id} type="button" onClick={() => doi(() => setKieu(x.id))} className={nut(kieu === x.id)}>
+                {x.ten}
+                {saoCua(`vong-${vong.id}-${tonic}-${thu ? 'thu' : 'truong'}-${x.id}`) ? (
+                  <span className="ml-1 text-amber-key">{sao(saoCua(`vong-${vong.id}-${tonic}-${thu ? 'thu' : 'truong'}-${x.id}`)!)}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+          <p className="text-cream/80">
+            {KIEU_CHAY.find((x) => x.id === kieu)!.mo}. Mỗi hợp âm một ô 4 phách; tay trái máy đệm "bùm – chát" (bass phách 1 · 3, chồng phách 2 ·
+            4){cheDo === 'nhip' ? ', vòng chơi hai lượt' : ''}.
+          </p>
+        </div>
+      )}
+
+      <p className="text-xs text-cream/85">
+        Đang chạy: <b className="text-amber-key">{bai.ten}</b> · {bai.tay === 'right' ? 'tay phải' : 'tay trái'} · ♩ = {bpm}
+        {kyLuc[khoa] ? <span className="ml-2 text-amber-key">kỷ lục {sao(kyLuc[khoa]!)}</span> : null}
+      </p>
+
+      {cheDo === 'cho' ? (
+        <NoteGatedPractice
+          key={`${khoa}|${bpm}`}
+          timeline={bai.timeline}
+          voicings={bai.voicings}
+          beatsPerChord={bai.beatsPerChord}
+          perBeat={bai.perBeat}
+          vongBpm={bpm}
+          nenTayKia
+          bac={{
+            tay: bai.tay,
+            onXong: (k) => {
+              const s = saoChoDung(k)
+              ghiSao(s)
+              return { dat: s >= 2, tomTat: `${sao(s)} — ${k.chang - k.vap}/${k.chang} chặng không vấp` }
+            },
+          }}
+        />
+      ) : (
+        <TimedPractice
+          key={`${khoa}|${bpm}`}
+          title={`Chạy ngón · ${bai.ten}`}
+          timeline={timelineNhip}
+          voicings={bai.voicings}
+          beatsPerChord={bai.beatsPerChord}
+          perBeat={bai.perBeat}
+          meter={4}
+          vongBpm={bpm}
+          anTempo
+          bac={{
+            tay: bai.tay,
+            tempo: 100,
+            boQuaQuangTam: false,
+            anNotRoi: false,
+            theoHopAm: false,
+            onXong: (score) => {
+              const s = saoTheoNhip(score)
+              ghiSao(s)
+              return {
+                dat: s >= 2,
+                tomTat: `${sao(s)} — trúng ${score.hit}/${score.total} nốt, lệch trung vị ${score.medianAbsMs === null ? '—' : `${Math.round(score.medianAbsMs)} ms`}`,
+              }
+            },
+          }}
+        />
+      )}
     </div>
   )
 }

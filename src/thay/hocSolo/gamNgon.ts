@@ -1,5 +1,9 @@
+import type { TimelineEvent } from '../../reharm/style/types'
+import type { TwoHandVoicing } from '../../reharm/voicingGenerator/handSplitVoicing'
+import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { pitchClassName } from '../../shared/musicTheory/pitch'
-import { vn } from '../soanCau/chongHopAm'
+import { gocDep, vn } from '../soanCau/chongHopAm'
+import { nguCanh, type Hop } from '../soanCau/giaiThich'
 import { kieuDau } from '../vongThay'
 
 /*
@@ -213,54 +217,133 @@ export function baiTapNgon(tay: Tay): BaiNgon[] {
   ]
 }
 
-/* ---------------- Chấm game chạy ngón ---------------- */
+/* ---------------- Game chạy ngón — dòng thời gian cho khung nốt rơi ----------------
+  Người dùng 11/10/2026: "game chạy ngón làm kiểu nốt rơi và hiện bàn phím … chia ra làm 2 phần là chơi hợp âm riêng lẻ và chơi theo vòng
+  hợp âm. Cho một vòng hợp âm có backing track và khi hợp âm nào rơi xuống thì hãy bắt tôi đánh solo các nốt tương ứng của hợp âm đó để cho
+  khớp nhịp của track. Có chế độ chờ đánh đúng". Khung nốt rơi, chế độ chờ đúng nốt / theo nhịp, máy chơi tay kia là của app (tab Điệu) —
+  ở đây chỉ dựng dòng thời gian: tay tập (có số ngón) + tay kia làm backing.
+*/
 
-/** Tốc độ đặt mục tiêu — nốt mỗi giây (móc đơn ở ♩ = 60 là 2 nốt/giây). */
-export const TOC_DO = [
-  { nps: 2, ten: 'Chậm', mo: 'móc đơn ở ♩ = 60' },
-  { nps: 3, ten: 'Vừa', mo: 'móc đơn ở ♩ = 90' },
-  { nps: 4, ten: 'Nhanh', mo: 'móc kép ở ♩ = 60' },
-  { nps: 6, ten: 'Rất nhanh', mo: 'móc kép ở ♩ = 90' },
-] as const
-
-export interface KetQuaNgon {
-  dung: number
-  sai: number
-  /** Tỉ lệ cú bấm đúng trên mọi cú bấm. */
-  chinhXac: number
-  /** Đều tay: độ lệch chuẩn khoảng cách giữa hai nốt chia trung bình (càng nhỏ càng đều). null khi chưa đủ 3 nốt. */
-  lech: number | null
-  /** Nốt mỗi giây (trung bình khoảng cách). */
-  tocDo: number | null
-  sao: 0 | 1 | 2 | 3
+export interface BaiChay {
+  id: string
+  ten: string
+  /** Tay tập — máy chơi tay kia. */
+  tay: 'left' | 'right'
+  /** Một lượt. */
+  timeline: TimelineEvent[]
+  /** Tên hợp âm từng phách, một lượt. */
+  perBeat: string[]
+  voicings: TwoHandVoicing[]
+  beatsPerChord: number
 }
 
-/**
- * Chấm một lượt. `luc`: thời điểm (mili giây) của các cú bấm đúng theo thứ tự. NGƯỠNG SAO — Claude đặt, CHƯA ĐO: 3★ chính xác ≥ 98 %,
- * lệch ≤ 0,20, đủ tốc độ mục tiêu; 2★ ≥ 90 %, lệch ≤ 0,35, ≥ 75 % tốc độ; 1★ ≥ 80 %. Lùi khi: người dùng đàn đều mà mãi không lên 3★
- * → nới ngưỡng lệch (0,20 → 0,25).
- */
-export function chamNgon(luc: readonly number[], sai: number, mucTieu: number): KetQuaNgon {
-  const dung = luc.length
-  const chinhXac = dung + sai ? dung / (dung + sai) : 0
-  const kc = luc.slice(1).map((t, i) => t - luc[i]!)
-  let lech: number | null = null
-  let tocDo: number | null = null
-  if (kc.length >= 2) {
-    const tb = kc.reduce((a, b) => a + b, 0) / kc.length
-    const dl = Math.sqrt(kc.reduce((a, b) => a + (b - tb) ** 2, 0) / kc.length)
-    lech = tb > 0 ? dl / tb : null
-    tocDo = tb > 0 ? 1000 / tb : null
+const tenHop = (goc: number, thu: boolean) => gocDep(pitchClassName(pc(goc), kieuDau(pc(goc), thu))) + (thu ? 'm' : '')
+
+/** Phần 1 — một hợp âm: nốt bài tập móc đơn (ngón trên khối nốt rơi); tay kia giữ hợp âm của bài mỗi ô 4 phách. */
+export function baiChayDon(bai: BaiNgon): BaiChay {
+  const tay = bai.tay === 'phai' ? 'right' : 'left'
+  const doDai = Math.ceil((bai.notes.length * 0.5) / 4) * 4
+  const g = pc(bai.goc)
+  const ba = bai.thu ? [0, 3, 7] : [0, 4, 7]
+  const dem: TimelineEvent[] = []
+  for (let phach = 0; phach < doDai; phach += 4)
+    dem.push(
+      tay === 'right'
+        ? { notes: [36 + g, ...ba.map((x) => 48 + g + x)], startBeat: phach, durationBeats: 4, hand: 'left', velocity: 60 }
+        : { notes: ba.map((x) => 72 + g + x), startBeat: phach, durationBeats: 4, hand: 'right', velocity: 55 },
+    )
+  const ten = tenHop(g, bai.thu)
+  return {
+    id: `don-${bai.id}`,
+    ten: bai.ten,
+    tay,
+    timeline: [...dem, ...bai.notes.map((m, k): TimelineEvent => ({ notes: [m], startBeat: k * 0.5, durationBeats: 0.5, hand: tay, velocity: 85, ngon: bai.ngon[k] }))],
+    perBeat: Array.from({ length: doDai }, () => ten),
+    voicings: [{ left: [], right: [], symbol: ten }],
+    beatsPerChord: doDai,
   }
-  const sao: KetQuaNgon['sao'] =
-    chinhXac >= 0.98 && lech !== null && lech <= 0.2 && tocDo !== null && tocDo >= mucTieu
-      ? 3
-      : chinhXac >= 0.9 && lech !== null && lech <= 0.35 && tocDo !== null && tocDo >= 0.75 * mucTieu
-        ? 2
-        : chinhXac >= 0.8
-          ? 1
-          : 0
-  return { dung, sai, chinhXac, lech, tocDo, sao }
+}
+
+export type KieuChay = 'phach' | 'nam-ngon' | 'rai'
+export const KIEU_CHAY: readonly { id: KieuChay; ten: string; mo: string; ngon: readonly number[] }[] = [
+  { id: 'phach', ten: 'Mỗi phách một nốt hợp âm', mo: 'nốt đen: gốc – 3 – 5 – 3 — chỉ đánh trụ, tập bám hợp âm và bám nhịp', ngon: [1, 3, 5, 3] },
+  {
+    id: 'nam-ngon',
+    ten: 'Năm ngón quanh hợp âm',
+    mo: 'móc đơn 1 2 3 4 5 4 3 2: đầu phách là nốt hợp âm (trụ), giữa phách là nốt gam đi qua (đường) — đúng mẹo "phách mạnh đặt nốt hợp âm"',
+    ngon: [1, 2, 3, 4, 5, 4, 3, 2],
+  },
+  { id: 'rai', ten: 'Rải lên – xuống', mo: 'móc đơn gốc – 3 – 5 – 8 – 5 – 3 – gốc – 3: rải hợp âm (arpeggio) liền tay', ngon: [1, 2, 3, 5, 3, 2, 1, 2] },
+]
+
+const GAM_TRUONG = [0, 2, 4, 5, 7, 9, 11]
+const GAM_THU = [0, 2, 3, 5, 7, 8, 10]
+const GAM_THU_HOA_THANH = [0, 2, 3, 5, 7, 8, 11]
+
+/**
+ * Phần 2 — theo vòng: mỗi hợp âm một ô 4 phách. Tay phải chạy nốt CỦA HỢP ÂM ẤY theo `kieu` (gốc chọn quãng tám gần gốc hợp âm trước,
+ * trong Sol3–Sol4); nốt đi qua lấy từ gam của bài (bài thứ, trên V có bậc 3 trưởng: gam thứ hòa thanh). Tay trái làm backing "bùm – chát":
+ * phách 1 · 3 bass, phách 2 · 4 chồng 5 – 8 – 10 (khuôn đệm của Claude, không phải điệu thầy).
+ */
+export function baiChayVong(hop: readonly Hop[], tonic: number, thu: boolean, kieu: KieuChay, id: string): BaiChay {
+  const { h } = nguCanh(tonic, thu)
+  const k = KIEU_CHAY.find((x) => x.id === kieu)!
+  const timeline: TimelineEvent[] = []
+  let truoc = 60
+  hop.forEach((x, i) => {
+    const iv = (findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!).intervals
+    const ba = iv.includes(4) ? 4 : iv.includes(3) ? 3 : 5
+    const nam = iv.includes(7) ? 7 : iv.includes(6) ? 6 : 8
+    const r = pc(tonic + x.goc)
+    const goc = [r + 48, r + 60, r + 72].filter((m) => m >= 55 && m <= 67).sort((a, c) => Math.abs(a - truoc) - Math.abs(c - truoc))[0]!
+    truoc = goc
+    const gam = thu ? (x.goc === 7 && ba === 4 ? GAM_THU_HOA_THANH : GAM_THU) : GAM_TRUONG
+    const trongGam = (m: number) => gam.includes(pc(m - tonic))
+    /** Nốt gam nằm giữa hai nốt (gần chính giữa nhất); không có thì nốt giữa. */
+    const giua = (a: number, c: number) => {
+      const ds = Array.from({ length: Math.abs(c - a) - 1 }, (_, t) => Math.min(a, c) + 1 + t).filter(trongGam)
+      return ds.sort((u, v) => Math.abs(u - (a + c) / 2) - Math.abs(v - (a + c) / 2))[0] ?? Math.round((a + c) / 2)
+    }
+    const notes =
+      kieu === 'phach'
+        ? [goc, goc + ba, goc + nam, goc + ba]
+        : kieu === 'nam-ngon'
+          ? [goc, giua(goc, goc + ba), goc + ba, giua(goc + ba, goc + nam), goc + nam, giua(goc + ba, goc + nam), goc + ba, giua(goc, goc + ba)]
+          : [goc, goc + ba, goc + nam, goc + 12, goc + nam, goc + ba, goc, goc + ba]
+    const buoc = 4 / notes.length
+    notes.forEach((m, t) => timeline.push({ notes: [m], startBeat: i * 4 + t * buoc, durationBeats: buoc, hand: 'right', velocity: 85, ngon: k.ngon[t] }))
+    const bass = 36 + r
+    for (const p of [0, 2]) timeline.push({ notes: [bass], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 72 })
+    for (const p of [1, 3]) timeline.push({ notes: [bass + 7, bass + 12, bass + 12 + ba], startBeat: i * 4 + p, durationBeats: 1, hand: 'left', velocity: 52 })
+  })
+  const ten = hop.map((x) => h(x.goc, x.chat, x.bass))
+  return {
+    id: `vong-${id}-${pc(tonic)}-${thu ? 'thu' : 'truong'}-${kieu}`,
+    ten: ten.join(' – '),
+    tay: 'right',
+    timeline: timeline.sort((a, c) => a.startBeat - c.startBeat),
+    perBeat: ten.flatMap((t) => [t, t, t, t]),
+    voicings: ten.map((symbol) => ({ left: [], right: [], symbol })),
+    beatsPerChord: 4,
+  }
+}
+
+/** Nối `lan` lượt liền nhau (chế độ theo nhịp chơi vòng nhiều lượt). */
+export const lapLai = (timeline: readonly TimelineEvent[], doDai: number, lan: number): TimelineEvent[] =>
+  Array.from({ length: lan }, (_, k) => timeline.map((x) => ({ ...x, startBeat: x.startBeat + k * doDai }))).flat()
+
+/*
+  SAO — Claude đặt, CHƯA ĐO. Theo nhịp: 3★ trúng ≥ 90 % nốt và lệch trung vị ≤ 40 ms (bằng ngưỡng đạt tạm của app, `PASS_HIT_RATIO`,
+  `PASS_MEDIAN_ABS_MS`); 2★ ≥ 75 % và ≤ 80 ms; 1★ ≥ 50 %. Chờ đúng nốt: 3★ không vấp chặng nào; 2★ vấp ≤ 10 % số chặng; còn lại 1★.
+  Lùi khi: người dùng đàn đều mà mãi kẹt 2★ → nới 40 ms lên 50 ms.
+*/
+export function saoTheoNhip(score: { total: number; hit: number; medianAbsMs: number | null }): 0 | 1 | 2 | 3 {
+  const trung = score.total ? score.hit / score.total : 0
+  const lech = score.medianAbsMs ?? Infinity
+  return trung >= 0.9 && lech <= 40 ? 3 : trung >= 0.75 && lech <= 80 ? 2 : trung >= 0.5 ? 1 : 0
+}
+export function saoChoDung(k: { chang: number; vap: number }): 1 | 2 | 3 {
+  return k.vap === 0 ? 3 : k.vap <= Math.max(1, Math.round(k.chang * 0.1)) ? 2 : 1
 }
 
 /* ---------------- Game Scale ---------------- */

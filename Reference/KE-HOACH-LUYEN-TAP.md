@@ -512,6 +512,8 @@ Các hợp âm phải được chọn tự do …"*
 - **Trang Học Solo — xong 11/10/2026** (thanh trang, sau Hợp âm): chọn nốt theo thầy (Gia sư · Cà Pháo · Linh Nhi · Blues — bàn phím tô
   vai nốt kèm % thầy chọn, lời gia sư) · Scale & Arpeggio (cơ sở chọn nốt + xem gam, hợp âm rải với ngón) · Mẹo (17) · Game chạy ngón ·
   Game Scale. Hai game là NGOẠI LỆ thứ hai của "không lớp game" — người dùng tự xin. Số đo, lỗ còn lại ở SO-TAY.
+  Cập nhật 11/10 (người dùng): game chạy ngón sang khung nốt rơi của app — hai phần (hợp âm riêng lẻ · theo vòng hợp âm có backing),
+  chờ đúng nốt / theo nhịp, nốt rơi ghi số ngón; bàn phím chọn nốt ba mức màu (đậm · mờ · không màu), bỏ màu hồng.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

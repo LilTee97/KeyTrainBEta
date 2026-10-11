@@ -171,7 +171,7 @@ export function FallingNotes({
                   event.hand === 'left' ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
                 } ${event.grace ? 'opacity-40' : waiting ? 'ring-2 ring-cream' : 'opacity-80'}`}
               >
-                {!event.grace && height >= LABEL_PX ? midiToName(note) : null}
+                {!event.grace && height >= LABEL_PX ? (event.ngon ?? midiToName(note)) : null}
               </div>
             )
           }),
