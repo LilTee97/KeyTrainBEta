@@ -5,6 +5,7 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { OnScreenPiano } from '../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
+import { pitchClassName } from '../shared/musicTheory/pitch'
 import type { LuotTap } from '../shared/persistence/db'
 import {
   chongCongThuc,
@@ -18,8 +19,10 @@ import {
   mauCuaHo,
   nhanMau,
   soThe,
+  tenBam,
   tenTrongGiong,
   LOAI_TU_DO,
+  vn,
   type Chong,
   type CongThuc,
   type HoMau,
@@ -441,6 +444,10 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   /* Chọn tự do — người dùng 9/10/2026: "Các hợp âm phải được chọn tự do chứ ko chỉ gói gọn trong khung các thầy". null = đang xem công
      thức chồng. */
   const [tuDo, setTuDo] = useState<{ goc: number; q: string } | null>(null)
+  /* Bấm tự do — người dùng 11/10/2026: "phần này hãy cho thêm tính năng bấm hợp âm tùy ý và sẽ hiện ra tên hợp âm đang bấm". Đàn MIDI,
+     phím máy tính: giữ là hiện; chuột, cảm ứng (chỉ giữ được một phím): chạm từng nốt để chọn, chạm lại để bỏ (`chonBam`). */
+  const [tuBam, setTuBam] = useState(false)
+  const [chonBam, setChonBam] = useState<number[]>([])
   /* Đố — bốn dạng (người dùng 8/10/2026: "Cho hợp âm rồi hỏi thế bấm chồng 2 tay, cho biết một bên tay rồi hỏi tay còn lại bấm gì để ra
      được hợp âm tổng. Cho hợp âm gốc rồi bắt tìm hợp âm màu của nó"); kho đố: công thức chồng, hay mọi hợp âm của app (9/10). */
   const [dang, setDang] = useState<DangDo>('tren')
@@ -463,6 +470,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
     setHo(null)
   }
   const chonCt = (x: string) => {
+    setTuBam(false)
     setId(x)
     setDaoDuoi(0)
     setDaoTren(0)
@@ -502,6 +510,11 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   }
   const timThay = (r: CongThuc) => setHo((x) => (x && !x.tim.includes(r.id) ? { ...x, tim: [...x.tim, r.id], vua: r } : x))
   const held = useMidiStore((state) => state.heldNotes)
+  const suKien = useMidiStore((state) => state.lastEvent)
+  useEffect(() => {
+    if (!tuBam || !suKien || suKien.velocity === 0 || suKien.source !== 'onscreen') return
+    setChonBam((x) => (x.includes(suKien.note) ? x.filter((m) => m !== suKien.note) : [...x, suKien.note]))
+  }, [suKien, tuBam])
   useEffect(() => {
     if (kq !== 'dang' || held.length === 0) return
     const bassLaGoc = (g: number) => (Math.min(...held) - g + 120) % 12 === 0
@@ -537,6 +550,22 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
   const daCho: Chong | null =
     cau && kq === 'dang' ? (dang === 'tren' ? { ...cau, phai: [] } : dang === 'duoi' ? { ...cau, trai: [] } : { ...cau, trai: [], phai: [] }) : null
   const hien = !dangDo ? dangXem : (xem ?? daCho)
+  /* Bấm tự do: tay trái là các nốt thấp hơn Đô giữa (C4), tay phải từ C4 trở lên — tách theo chỗ, đoán của Claude, không đọc được tay thật. */
+  const notBam = [...new Set([...held, ...chonBam])].sort((a, b) => a - b)
+  const tenNotBam = (ns: readonly number[]) => ns.map((m) => vn(pitchClassName(((m % 12) + 12) % 12, 'flat'))).join(' – ')
+  const traiBam = notBam.filter((m) => m < 60)
+  const phaiBam = notBam.filter((m) => m >= 60)
+  const tongBam = tenBam(notBam)
+  const nhanBam = notBam.length
+    ? {
+        trai: traiBam.length ? tenBam(traiBam).ten : '',
+        traiPhu: tenBam(traiBam).laHop ? tenNotBam(traiBam) : '',
+        phai: phaiBam.length ? tenBam(phaiBam, false).ten : '',
+        phaiPhu: tenBam(phaiBam, false).laHop ? tenNotBam(phaiBam) : '',
+        tong: tongBam.ten,
+      }
+    : null
+  const banPhimDu = tuBam && !dangDo ? { trai: traiBam, phai: phaiBam, nhan: nhanBam } : { trai: hien?.trai ?? [], phai: hien?.phai ?? [], nhan: hien?.nhan ?? null }
   const dapAn = nhanCau ? `tay trái ${nhanCau.trai} (${nhanCau.traiPhu}) + tay phải ${nhanCau.phai} (${nhanCau.phaiPhu})` : ''
   const traLoi = () => {
     if (kq !== 'dang') return
@@ -592,8 +621,10 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       <BangCongThuc
         onThu={(x) => {
           // `q:<loại>` là hợp âm ba cơ bản (trưởng, thứ, sus…) — chưa có công thức chồng riêng, xem ở chế độ tự chọn
-          if (x.startsWith('q:')) setTuDo({ goc: 0, q: x.slice(2) })
-          else {
+          if (x.startsWith('q:')) {
+            setTuBam(false)
+            setTuDo({ goc: 0, q: x.slice(2) })
+          } else {
             chonCt(x)
             setGocTu(0)
           }
@@ -619,6 +650,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
             value={tuDo?.goc ?? goc}
             onChange={(event) => {
               setTuDo({ goc: Number(event.target.value), q: tuDo?.q ?? 'maj' })
+              setTuBam(false)
               thoiDo()
             }}
             className={chonClass}
@@ -634,6 +666,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
             value={tuDo?.q ?? ''}
             onChange={(event) => {
               setTuDo({ goc: tuDo?.goc ?? goc, q: event.target.value })
+              setTuBam(false)
               thoiDo()
             }}
             className={chonClass}
@@ -650,10 +683,36 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
           </select>
           <span className="text-xs text-dim">gốc nào, loại nào cũng được — kể cả hợp âm ba trưởng, thứ</span>
         </div>
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="w-28 text-xs text-dim">Bấm tự do</span>
+          <button
+            type="button"
+            onClick={() => {
+              setTuBam((x) => !x)
+              setChonBam([])
+              thoiDo()
+            }}
+            className={nut(tuBam)}
+          >
+            Bấm hợp âm tùy ý — hiện tên
+          </button>
+        </div>
       </div>
 
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
-        {tuDo ? (
+        {tuBam ? (
+          <>
+            <p className="mb-1 font-mono text-lg text-amber-key">{notBam.length ? tongBam.ten : 'Bấm một hợp âm…'}</p>
+            <p className="text-cream/85">
+              Đàn MIDI, phím máy tính: giữ cả hợp âm. Chuột, cảm ứng: chạm từng nốt để chọn, chạm lại để bỏ. Tên hiện ngay trên phím: tay trái là các
+              nốt thấp hơn Đô giữa (C4), tay phải từ C4 trở lên; "Hợp âm tổng" đọc cả hai tay — bass khác gốc thì ghi gạch chéo (C/E).
+            </p>
+            <p className="mt-1 text-dim">
+              Đọc được mọi loại của app và 26 công thức chồng, kể cả thế chồng thiếu nốt 5 hay 9 (Đô – Mi – Si♭ + Am = C13). Không khớp hợp âm nào thì
+              ghi tên nốt.
+            </p>
+          </>
+        ) : tuDo ? (
           <>
             <p className="mb-2 font-mono text-lg text-amber-key">{dangXem.nhan.tong}</p>
             {dangXem.ct ? (
@@ -714,16 +773,21 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
           </>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void choi(dangXem.trai)} className={nut(false)}>
+          <button type="button" onClick={() => void choi(tuBam ? traiBam : dangXem.trai)} className={nut(false)}>
             ▶ Tay trái
           </button>
-          <button type="button" onClick={() => void choi(dangXem.phai)} className={nut(false)}>
+          <button type="button" onClick={() => void choi(tuBam ? phaiBam : dangXem.phai)} className={nut(false)}>
             ▶ Tay phải
           </button>
-          <button type="button" onClick={() => void choi([...dangXem.trai, ...dangXem.phai])} className={nut(false)}>
+          <button type="button" onClick={() => void choi(tuBam ? notBam : [...dangXem.trai, ...dangXem.phai])} className={nut(false)}>
             ▶ Cả hai
           </button>
-          {!tuDo && ct.duoi.length > 1 && (
+          {tuBam && chonBam.length > 0 && (
+            <button type="button" onClick={() => setChonBam([])} className={nut(false)}>
+              Xoá nốt đã chạm
+            </button>
+          )}
+          {!tuBam && !tuDo && ct.duoi.length > 1 && (
             <>
               <span className="ml-2 text-dim">Tay trái:</span>
               {ct.duoi.map((_, i) => (
@@ -733,7 +797,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
               ))}
             </>
           )}
-          {!tuDo && soThe(ct) > 1 && (
+          {!tuBam && !tuDo && soThe(ct) > 1 && (
             <>
               <span className="ml-2 text-dim">Tay phải:</span>
               {Array.from({ length: soThe(ct) }, (_, i) => (
@@ -747,7 +811,7 @@ export function ChongHopAm({ tonic, thu }: { tonic: number; thu: boolean }) {
       </div>
 
       <div ref={banPhim}>
-        <BanPhimHaiTay trai={hien?.trai ?? []} phai={hien?.phai ?? []} nhan={hien?.nhan ?? null} />
+        <BanPhimHaiTay trai={banPhimDu.trai} phai={banPhimDu.phai} nhan={banPhimDu.nhan} />
       </div>
       <div className="mb-2 rounded-lg border border-line/60 p-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">

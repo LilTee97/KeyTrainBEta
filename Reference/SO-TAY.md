@@ -6379,3 +6379,20 @@ sai / đúng theo đuôi; màn Trưởng giữ hợp âm ba → đúng; thi màn
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · test phần thầy 178 qua (nốt ở lời mới vẫn khớp nốt đuôi gọi ở gốc Đô) · toàn suite 2 720 qua / 5 đỏ
 (5 đỏ cũ) · `vite build` qua · chạy thử headless 3/3 (lời dẫn, dòng "thêm / đổi", dòng "tay trái … + tay phải …") · `LuyenTap.json`,
 `Nguon.json` không đổi.
+
+## Bước — GĐ 3: Chồng hợp âm — "Bấm tự do": bấm hợp âm tùy ý, hiện tên (11/10/2026)
+
+**Người dùng** (ảnh phần chọn công thức + bàn phím): *"phần này hãy cho thêm tính năng bấm hợp âm tùy ý và sẽ hiện ra tên hợp âm đang bấm"*.
+
+- Nút "Bấm hợp âm tùy ý — hiện tên" (dòng "Bấm tự do" dưới ô tự chọn). Đàn MIDI, phím máy tính: giữ cả hợp âm là hiện; chuột, cảm ứng (chỉ
+  giữ được một phím): chạm từng nốt để chọn, chạm lại để bỏ, có nút "Xoá nốt đã chạm". Bàn phím ghi tên tay trái, tay phải và "Hợp âm tổng";
+  nút ▶ nghe đúng các nốt đang bấm. Chọn công thức hay ô tự chọn là thoát.
+- Tách hai tay ở Đô giữa (C4): thấp hơn là tay trái — đoán theo chỗ của Claude, app không biết tay thật.
+- `tenBam` (chongHopAm.ts): xét mọi gốc có trong các nốt — khớp đúng nốt một công thức chồng (có cả loại app chưa có như 13♯11), hay khớp một
+  loại của app được thiếu nhiều nhất hai nốt trong bậc 5 · 9 · 11 (thế chồng hay bỏ: C7 + Am = C13 dù thiếu Sol, Rê); ưu tiên gốc trùng bass,
+  rồi thiếu ít nốt; bass khác gốc ghi gạch chéo (C/E). Dưới 3 lớp cao độ hay không khớp thì ghi nốt.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `chongHopAm.test.ts` 19 (thêm 2: C · Cmaj7 · Cm7 · C7 · C/E · Am7 · C6 · C13♭9 · C13 · C13♯11 · C6/9 ·
+Cadd9 · Dm11 · G9sus4 · F♯m7♭5 · F♯m7; hai nốt và chùm không thành hợp âm ghi nốt) · toàn suite 2 722 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua ·
+chạy thử headless 8/8 (giữ MIDI C7 + A → tay trái C7, tay phải A, tổng C13♭9; nhả là hết; chạm Mi – Sol – Đô → C/E; chạm lại bỏ nốt; Xoá;
+chọn công thức là thoát; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

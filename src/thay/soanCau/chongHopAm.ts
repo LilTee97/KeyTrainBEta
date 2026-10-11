@@ -456,6 +456,39 @@ export function tenMotTay(notes: readonly number[], style: AccidentalStyle, gach
   return { ten: `${gocDep(pitchClassName(m.root, style))}${hauDep(m.quality.symbol)}${bass}`, laHop: true }
 }
 
+/**
+ * Tên hợp âm của các nốt đang bấm (bấm tự do) — người dùng 11/10/2026: "phần này hãy cho thêm tính năng bấm hợp âm tùy ý và sẽ hiện ra tên
+ * hợp âm đang bấm". Xét mọi gốc có trong các nốt: (1) khớp đúng nốt một công thức chồng (có cả loại app chưa có như 13♯11); (2) khớp một
+ * loại hợp âm của app, được thiếu nhiều nhất hai nốt trong bậc 5 · 9 · 11 (nốt hay bỏ khi chồng — C7 + A = C13 dù thiếu Sol, Rê). Ưu tiên gốc
+ * trùng nốt thấp nhất, rồi thiếu ít nốt; `gach` thì bass khác gốc ghi gạch chéo. Dưới 3 lớp cao độ hay không khớp gì thì ghi nốt.
+ */
+export function tenBam(notes: readonly number[], gach = true): { ten: string; laHop: boolean } {
+  const ds = [...notes].sort((a, b) => a - b)
+  const lop = [...new Set(ds.map(pc))]
+  const tenNot = () => [...new Set(ds.map((m) => vn(pitchClassName(pc(m), 'flat'))))].join(' – ')
+  if (lop.length < 3) return { ten: tenNot(), laHop: false }
+  const bass = pc(ds[0]!)
+  const laThu = (k: string) => (k.startsWith('m') && !k.startsWith('maj')) || k.startsWith('dim')
+  const ung: { goc: number; hau: string; thieu: number }[] = []
+  for (const g of lop) {
+    for (const ct of CONG_THUC) {
+      const p = pcsTong(ct, g)
+      if (p.length === lop.length && p.every((x) => lop.includes(x))) ung.push({ goc: g, hau: ct.kyHieu, thieu: 0 })
+    }
+    for (const q of CHORD_QUALITIES) {
+      const du = chordPitchClasses(g, q)
+      if (!lop.every((p) => du.includes(p))) continue
+      const thieu = du.filter((p) => !lop.includes(p))
+      if (thieu.length <= 2 && thieu.every((p) => [7, 2, 5].includes(pc(p - g)))) ung.push({ goc: g, hau: q.symbol === 'add2' ? 'add9' : q.symbol, thieu: thieu.length })
+    }
+  }
+  if (!ung.length) return { ten: tenNot(), laHop: false }
+  const tot = [...ung].sort((a, b) => Number(a.goc !== bass) - Number(b.goc !== bass) || a.thieu - b.thieu)[0]!
+  const style = kieuDau(tot.goc, laThu(tot.hau))
+  const duoi = gach && tot.goc !== bass ? `/${gocDep(pitchClassName(bass, style))}` : ''
+  return { ten: `${gocDep(pitchClassName(tot.goc, style))}${hauDep(tot.hau)}${duoi}`, laHop: true }
+}
+
 /** Ký hiệu của bộ hợp âm app ↔ ký hiệu công thức chồng (khác cách viết, cùng nốt). */
 /* Sửa 9/10/2026: bản cũ { '6/9': '69', 'm(add9)': 'madd9', 'm(maj7)': 'mMaj7', … } đổi sang tên cũ nên ba hợp âm ấy không tìm ra công
    thức (ký hiệu công thức nay trùng ký hiệu app) — tab Chồng hợp âm báo nhầm "Không có công thức chồng riêng" cho C6/9. */

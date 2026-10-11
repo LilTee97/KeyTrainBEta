@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chordPitchClasses, findQualityBySymbol, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
-import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe } from '../soanCau/chongHopAm'
+import { chongTuDo, CONG_THUC, pcsDuoi, pcsTong, pcsTren, DO_DUOC, theBamChong, KHI_CHON, LOAI_TU_DO, mauCuaHo, tenBam, tenHaiTay, nhanHaiTay, nhanMau, tenMotTay, tenTren, tenTrongGiong, quangTren, soThe } from '../soanCau/chongHopAm'
 import { cungTap, docTay, traLoiTen } from '../soanCau/soanCau'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -182,3 +182,24 @@ describe('tên từng tay (người dùng 9/10/2026: "Chỉ được ghi nốt k
   })
 })
 
+
+describe('bấm tự do — đọc tên hợp âm đang bấm', () => {
+  it('hợp âm ba, bảy, thế đảo, thế chồng thiếu nốt 5 / 9, công thức app chưa có loại', () => {
+    const t = (ns: number[], gach = true) => tenBam(ns, gach).ten
+    expect([t([48, 52, 55]), t([48, 52, 55, 59]), t([48, 51, 55, 58]), t([48, 52, 58])]).toEqual(['C', 'Cmaj7', 'Cm7', 'C7'])
+    expect([t([52, 55, 60]), t([52, 55, 60], false), t([45, 60, 64, 67]), t([48, 60, 64, 67, 69])]).toEqual(['C/E', 'C', 'Am7', 'C6'])
+    expect(t([48, 52, 58, 69, 73, 76])).toBe('C13♭9') // C7 + A
+    expect(t([48, 52, 58, 69, 72, 76])).toBe('C13') // C7 + Am, thiếu Sol và Rê
+    expect(t([48, 52, 58, 62, 66, 69])).toBe('C13♯11') // C7 + D — loại chỉ có trong công thức chồng
+    expect(t([48, 55, 57, 62, 64])).toBe('C6/9')
+    expect(t([48, 55, 62, 64, 67])).toBe('Cadd9')
+    expect(t([50, 55, 60, 65, 69, 72])).toBe('Dm11') // Dm + C
+    expect(t([43, 53, 57, 60])).toBe('G9sus4') // F/G
+    expect([t([42, 57, 60, 64]), t([42, 57, 61, 64])]).toEqual(['F♯m7♭5', 'F♯m7']) // gốc phím đen ghi thăng
+  })
+
+  it('dưới ba nốt hay không thành hợp âm thì ghi nốt', () => {
+    expect(tenBam([48, 55])).toEqual({ ten: 'Đô – Sol', laHop: false })
+    expect(tenBam([48, 49, 50]).laHop).toBe(false)
+  })
+})
