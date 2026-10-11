@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { giangHop, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, vaiNot, type HopHoc } from '../hocSolo/chonNot'
+import { giangHop, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, tenChu, THAY_HOC, vaiNot, type HopHoc } from '../hocSolo/chonNot'
 import {
   baiArp,
   baiChayDon,
@@ -269,5 +269,21 @@ describe('Mẹo & quy tắc theo từng thầy', () => {
       const chu = JSON.stringify(t)
       expect(chu).not.toMatch(/#|\bb\d|phách giật/)
     }
+  })
+})
+
+describe('Tên chữ trên bàn phím xem nốt — theo bậc ghi dưới phím', () => {
+  it('chữ đếm từ gốc theo số bậc, dấu khớp nửa cung, quãng tám theo chữ', () => {
+    expect(tenChu(60, 'C', '1')).toBe('C4')
+    expect(tenChu(63, 'C', '♯9')).toBe('D♯4')
+    expect(tenChu(63, 'C', '♭3')).toBe('E♭4')
+    expect(tenChu(70, 'C', '♭7')).toBe('B♭4')
+    expect(tenChu(66, 'C', '♯11')).toBe('F♯4')
+    expect(tenChu(68, 'C', '♭13')).toBe('A♭4')
+    expect(tenChu(71, 'G♭', '4')).toBe('C♭5')
+    expect(tenChu(60, 'F♯', '♯11')).toBe('B♯3')
+    expect(tenChu(67, 'E♭', '3')).toBe('G4')
+    expect(tenChu(60, 'C', null)).toBeNull()
+    expect(tenChu(61, 'C', '1')).toBe('C♯4')
   })
 })

@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { buildKeyboardLayout } from '../shared/midi/onScreenPiano/layout'
 import { GameChayNgon, GameScale } from './GameSolo'
-import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
+import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, tenChu, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
 import { PHAN_TICH_THAY, type MucThay, type PhanTichThay } from './hocSolo/meoThay'
 import { ARP, GAM, ngonArp, ngonGam, tenNot, type LoaiArp, type LoaiGam, type Tay } from './hocSolo/gamNgon'
 import { nguCanh } from './soanCau/giaiThich'
@@ -47,12 +47,13 @@ const mucCua = (x: NotHoc): Muc =>
   x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
 const NEN: Readonly<Record<Muc, { trang: CSSProperties; den: CSSProperties; chu: string }>> = {
   dam: { trang: { background: 'var(--color-teal-key)' }, den: { background: 'var(--color-teal-key)' }, chu: 'text-teal-key' },
-  /* Người dùng 11/10/2026 (lượt 2): "đổi màu của các phím mờ sao cho tương phản tốt hơn". Cũ: teal 32 % pha kem (#c3d3c6) — gần như lẫn
-     với phím trắng thường; phím đen teal 42 % pha đen. Nay teal 55 % pha trắng + viền teal. Lùi nếu phím mờ nhìn như phím đậm. */
+  /* Người dùng 11/10/2026, lượt 3: "màu phím đừng để giống nhau như vậy, hãy làm cho nó khác rõ rệt" — mờ đổi sang MÀU KHÁC: cam
+     (amber 70 % pha trắng; phím đen amber 70 % pha đen). Lượt 2: teal 55 % pha trắng + viền teal — vẫn cùng màu với phím đậm, người
+     dùng thấy giống nhau. Lượt 1: teal 32 % pha kem (#c3d3c6) — lẫn phím trắng. Lùi nếu cam bị đọc nhầm thành phím đang bấm sai. */
   mo: {
-    trang: { background: 'color-mix(in srgb, var(--color-teal-key) 55%, white)', boxShadow: 'inset 0 0 0 2px var(--color-teal-key)' },
-    den: { background: 'color-mix(in srgb, var(--color-teal-key) 55%, #111)', boxShadow: 'inset 0 0 0 2px var(--color-teal-key)' },
-    chu: 'text-teal-key/75',
+    trang: { background: 'color-mix(in srgb, var(--color-amber-key) 70%, white)' },
+    den: { background: 'color-mix(in srgb, var(--color-amber-key) 70%, #111)' },
+    chu: 'text-amber-key',
   },
   khong: { trang: { background: 'var(--color-cream)' }, den: { background: '#0b0b0b' }, chu: 'text-dim' },
 }
@@ -61,8 +62,9 @@ const CHU_PHIM: Readonly<Record<Muc, { trang: string; den: string }>> = {
   mo: { trang: 'text-ink', den: 'text-cream' },
   khong: { trang: 'text-ink/70', den: 'text-cream/80' },
 }
-/* Tên nốt trên phím — người dùng 11/10/2026: "tăng kích thước của tên nốt và đổi màu chúng cho thật nổi bật dễ nhìn". Thẻ tối chữ vàng
-   đậm: nổi trên cả phím teal, phím kem lẫn phím đen. Cũ: chữ mono 10 px (phím đen 9 px), cùng màu với số bậc. */
+/* Tên nốt trên phím — người dùng 11/10/2026: "tăng kích thước của tên nốt và đổi màu chúng cho thật nổi bật dễ nhìn", rồi "tất cả tên
+   nốt … phải được viết to hơn". Thẻ tối chữ vàng đậm: nổi trên phím xanh, phím cam, phím kem lẫn phím đen; 17 px phím trắng · 14 px phím
+   đen trên màn rộng. Cũ: 15 · 13 px (lượt 2); trước nữa chữ mono 10 px (phím đen 9 px), cùng màu với số bậc. */
 const TEN_NOT = 'rounded bg-ink px-1 py-0.5 font-sans font-bold leading-none text-yellow-300 shadow'
 
 /** Chữ trên một phím: tên nốt (thẻ nổi bật) · dòng phụ (bậc, %, ngón). */
@@ -105,9 +107,9 @@ function BanPhimMau({
             type="button"
             onClick={() => onBam?.(note)}
             style={NEN[muc(note)].trang}
-            className={`flex flex-1 flex-col items-center justify-end gap-1 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight font-semibold sm:text-xs ${CHU_PHIM[muc(note)].trang}`}
+            className={`flex flex-1 flex-col items-center justify-end gap-1 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight font-semibold sm:text-sm ${CHU_PHIM[muc(note)].trang}`}
           >
-            <ChuPhim nhan={nhan(note)} co="text-[10px] sm:text-[15px]" />
+            <ChuPhim nhan={nhan(note)} co="text-[10px] sm:text-[17px]" />
           </button>
         ))}
       </div>
@@ -119,7 +121,7 @@ function BanPhimMau({
           style={{ left: `${position * 100}%`, width: `${(100 / whiteKeys.length) * 0.66}%`, ...NEN[muc(note)].den }}
           className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end gap-0.5 rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight font-semibold sm:text-[11px] ${CHU_PHIM[muc(note)].den}`}
         >
-          <ChuPhim nhan={nhan(note)} co="text-[9px] sm:text-[13px]" />
+          <ChuPhim nhan={nhan(note)} co="text-[9px] sm:text-[14px]" />
         </button>
       ))}
     </div>
@@ -178,6 +180,9 @@ function ChonNotTab() {
   const notCua = (m: number) => nots[ivCua(m)]!
   /* Tên nốt theo giọng (Mi♭ chứ không Rê♯ ở Đô trưởng) — như lời giảng; nốt blue ♭5 ghi giáng. */
   const tenPhim = (m: number) => n(pc(m - tonic), notCua(m).vai === 'blue' && pc(m - tonic) === 6 ? 5 : undefined)
+  /* Trên phím: ký hiệu chữ theo bậc ghi dưới phím (`tenChu`) — bậc Blues tính từ chủ âm, thầy khác từ gốc hợp âm. */
+  const chuGoc = thay === 'blues' ? h(0, '') : h(hop.goc, '')
+  const chuPhim = (m: number) => tenChu(m, chuGoc, notCua(m).bac) ?? `${h(pc(m - tonic), '')}${Math.floor(m / 12) - 1}`
   const ten = h(hop.goc, hop.chat)
   const KHUNG_IV = hop.loai === 'truong' ? [0, 4, 7] : hop.loai === 'thu' ? [0, 3, 7] : hop.loai === 'at' ? [0, 4, 7, 10] : [0, 3, 6]
   const hopAm = KHUNG_IV.map((x) => 48 + goc + x)
@@ -238,7 +243,7 @@ function ChonNotTab() {
           cao={84}
           muc={(m) => mucCua(notCua(m))}
           nhan={(m) => ({
-            ten: tenPhim(m),
+            ten: chuPhim(m),
             phu: (
               <>
                 <span>{notCua(m).bac}</span>
@@ -255,11 +260,11 @@ function ChonNotTab() {
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-cream/85">
           <span>
             <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm" style={NEN.dam.trang} />
-            Đậm — nốt chính: nốt của hợp âm, và nốt thầy dùng từ 10 % trở lên
+            Xanh — nốt chính: nốt của hợp âm, và nốt thầy dùng từ 10 % trở lên
           </span>
           <span>
             <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm" style={NEN.mo.trang} />
-            Mờ — dùng được, thêm đẹp: nốt màu, nốt đi qua, nốt thầy có lướt qua
+            Cam — dùng được, thêm đẹp: nốt màu, nốt đi qua, nốt thầy có lướt qua
           </span>
           <span>
             <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm border border-line" style={NEN.khong.trang} />
@@ -277,7 +282,7 @@ function ChonNotTab() {
             )
             .map((x) => (
               <li key={x.iv} className={NEN[mucCua(x)].chu}>
-                {tenPhim(60 + goc + x.iv)} <span className="text-dim">bậc {x.bac}</span> — {VAI[x.vai].ten}
+                {chuPhim(60 + goc + x.iv).replace(/-?\d+$/, '')} <span className="text-dim">({tenPhim(60 + goc + x.iv)}) bậc {x.bac}</span> — {VAI[x.vai].ten}
                 {x.pct !== null && <b className="ml-1">{x.pct} %</b>}
               </li>
             ))}
@@ -377,7 +382,7 @@ function ScaleTab() {
           nhan={(m) =>
             len.includes(m)
               ? {
-                  ten: tenNot(m, goc, dl.thu),
+                  ten: tenChu(m, nguCanh(goc, dl.thu).h(0, ''), bacCua(m)) ?? tenNot(m, goc, dl.thu),
                   phu: (
                     <>
                       <span>{bacCua(m)}</span>

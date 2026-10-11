@@ -6619,3 +6619,35 @@ thẻ tên nốt vàng 15 px; Blues F7; nút ba thầy; Cà Pháo hợp âm C ha
 chặng; Đổi câu → câu 2 khác câu 1, đổi nhịp giữ câu; vòng tự nhập Am Dm E7 Am → đoán La thứ; Linh Nhi cùng vòng; nhập sai báo lỗi, giữ
 vòng; Blues theo nhịp đếm vào 3, backing chạy, có chấm; bỏ chọn thầy về cơ bản; Mẹo & quy tắc Chung · Cà Pháo · Linh Nhi · Blues; điện
 thoại 3 tab không cuộn ngang) · `LuyenTap.json` sao lưu trước, trả lại sau (md5 khớp), `Nguon.json` không đổi.
+
+## Bước — tên nốt to và nổi trên mọi bàn phím và nốt rơi · bàn phím xem nốt ghi ký hiệu chữ · phím mờ đổi sang cam (11/10/2026)
+
+**Người dùng** (kèm ảnh khung nốt rơi và ảnh bàn phím Chọn nốt): *"tất cả tên nốt ở mọi chỗ có phím đàn và nốt rơi phải được viết to
+hơn và màu nổi bật hơn — tên nốt ở ảnh 2 hãy ghi bằng ký hiệu như ảnh 1 và màu phím đừng để giống nhau như vậy, hãy làm cho nó khác rõ
+rệt"*.
+
+- **Bàn phím dùng chung** `OnScreenPiano` (mọi trang tập, game, trang thầy, trang Hợp âm…): tên nốt trong thẻ nền tối chữ vàng đậm
+  (`TEN_NOT`); phím trắng 0,42 × bề ngang phím (8–18 px), phím đen 0,5 × bề ngang phím đen (7–15 px). Cũ: chữ mono xám (ink 55 % ·
+  kem 70 %), 0,3 × (8–14 px) và 0,42 × (7–12 px), chữ đổi màu theo lực bấm (`LIGHT_TEXT_DEPTH` — bỏ, thẻ tối đọc được trên mọi lớp phủ).
+  Một dòng khi phím rộng ≥ 1,5 × cỡ chữ + 8 px (cũ ≥ 20 px). Số ngón trên phím 11 → 13 px. Đo: khung 61 phím, màn 1400 px — phím trắng
+  15 px, phím đen 11 px; điện thoại 390 px — 8 px hai dòng, phím đen không ghi (hẹp dưới 9 px, như cũ).
+- **Nốt rơi** `FallingNotes`: nhãn khối (tên nốt hay số ngón) cùng kiểu thẻ; cỡ 1,1 × bề ngang khối / số ký tự (9–16 px, số ngón tới
+  18 px) nhưng không quá chiều cao khối − 3 px; dưới 9 px thì không ghi. Bề ngang khung nay luôn đo (ResizeObserver). Cũ: chữ 9 px màu
+  mực, ghi khi khối cao ≥ 12 px. Đo: móc đơn ghi số ngón 13 px; khối dài ghi tên nốt 16 px.
+- **Bàn phím xem nốt (Học Solo)**: tên ghi KÝ HIỆU CHỮ kèm quãng tám như khung nốt rơi, đặt theo SỐ của bậc ghi dưới phím (`tenChu`,
+  `hocSolo/chonNot.ts`): bậc ♯9 của C là D♯4, ♭7 là B♭4, ♭3 của Blues Đô là E♭4 — tên và bậc nói cùng một nốt. Cũ: tên Việt theo dấu
+  của giọng ("Mi♭" mà bậc ghi ♯9). Danh sách dưới phím ghi chữ kèm tên Việt ("E (Mi) bậc 3"); lời giảng giữ tên Việt. Tab Scale &
+  Arpeggio cũng ghi chữ theo bậc của gam. Thẻ tên 15 → 17 px (phím đen 13 → 14 px).
+- **Phím mờ đổi sang CAM** (amber 70 % pha trắng; phím đen amber 70 % pha đen) — khác hẳn xanh của nốt chính và kem của nốt tránh.
+  Lượt 2 (teal 55 % pha trắng + viền): người dùng thấy giống phím đậm; lượt 1 (teal 32 % pha kem): lẫn phím trắng. Chú giải: "Xanh — nốt
+  chính", "Cam — dùng được, thêm đẹp", "Không màu — nên tránh". Lùi nếu cam bị đọc nhầm thành phím bấm sai (lớp phủ bấm sai của bàn
+  phím chơi cũng cam).
+
+**Chưa đo — lỗ còn lại:** điện thoại với khung 61 phím không to thêm được (phím trắng ~9 px); nhãn tay của `BanPhimHaiTay` và viên
+rơi game Mưa hợp âm vốn đã to (2xl–4xl) — không đổi; bàn phím trang gỡ lỗi MIDI dùng chung `OnScreenPiano` nên đổi theo.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 21 (thêm `tenChu`: ♯9 → D♯4, ♭3 → E♭4, ♭7 → B♭4, ♯11 → F♯4, ♭13 → A♭4, C♭5,
+B♯3) · toàn suite 2 756 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 14/14 (Học Solo Gia sư C: C4 … C6, D♯4, B♭4, chữ
+17 px; C4 xanh · D4 cam · F4 không màu; chú giải mới; danh sách "E (Mi)"; Blues F7: E♭4 · G♭4 · B♭4; Scale C4 … C5; bàn phím dùng chung
+61 phím đều có thẻ vàng, 15 · 11 px; nốt rơi số ngón 13 px, tên nốt ≥ 10 px; trang Hợp âm 49 phím có thẻ; điện thoại không cuộn
+ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

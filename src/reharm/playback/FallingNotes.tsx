@@ -28,7 +28,15 @@ const MIN_BLOCK_PX = 5
 /** Khe giữa hai nốt liền nhau — nốt giật và nốt nối phân biệt được bằng mắt. */
 const GAP_PX = 2
 /** Khối đủ cao mới ghi tên nốt. */
-const LABEL_PX = 12
+/*
+  NHÃN KHỐI NỐT — tên nốt hay số ngón — người dùng 11/10/2026: "tất cả tên nốt ở mọi chỗ có phím đàn và nốt rơi phải được viết to hơn
+  và màu nổi bật hơn". Thẻ nền tối chữ vàng đậm như tên nốt trên phím; cỡ chữ theo bề ngang khối (1,1 × bề ngang / số ký tự, 9–16 px,
+  số ngón tới 18 px) nhưng không quá chiều cao khối − 3 px; nhỏ hơn 9 px thì không ghi. Cũ: chữ 9 px màu mực, ghi khi khối cao ≥ 12 px.
+  Lùi khi: thẻ che kín khối ngắn.
+*/
+const TEN_NOT = 'rounded bg-ink/85 px-[3px] font-sans font-bold leading-none text-yellow-300'
+const coChu = (chu: string, rongPx: number, cao: number) =>
+  Math.round(Math.min(cao - 3, chu.length === 1 ? 18 : 16, Math.max(9, (rongPx * 1.1) / Math.max(1, chu.length))))
 
 /** Đỉnh khối: đáy (= lúc tiếng vào) cách vạch (đáy khung, cao `frame` px) `away` phách. */
 const topOf = (away: number, height: number, pxPerBeat: number, frame: number) =>
@@ -76,12 +84,16 @@ export function FallingNotes({
   const parked = steps[index]?.startBeat
   const pxPerBeat = useMemo(() => pxPerBeatFor(events), [events])
 
-  /* Lấp khung cha thì đo chiều cao thật (đổi theo xoay ngang/dọc); không thì cao cố định. */
+  /* Lấp khung cha thì đo chiều cao thật (đổi theo xoay ngang/dọc); không thì cao cố định. Bề ngang luôn đo — cỡ chữ nhãn khối. */
   const [measured, setMeasured] = useState(HEIGHT)
+  const [rong, setRong] = useState(0)
   const frameRef = useCallback(
     (el: HTMLDivElement | null) => {
-      if (!el || !fill || typeof ResizeObserver === 'undefined') return
-      const update = () => setMeasured(Math.max(60, el.clientHeight))
+      if (!el || typeof ResizeObserver === 'undefined') return
+      const update = () => {
+        setRong(el.clientWidth)
+        if (fill) setMeasured(Math.max(60, el.clientHeight))
+      }
       update()
       const observer = new ResizeObserver(update)
       observer.observe(el)
@@ -154,6 +166,8 @@ export function FallingNotes({
             const away = event.startBeat - origin
             const height = Math.max(MIN_BLOCK_PX, event.durationBeats * pxPerBeat - GAP_PX)
             const waiting = !live && Math.abs(event.startBeat - (parked ?? 0)) < 1e-3
+            const chu = String(event.ngon ?? midiToName(note))
+            const co = coChu(chu, (place.width / 100) * rong, height)
             return (
               <div
                 key={`${at}-${note}`}
@@ -167,11 +181,15 @@ export function FallingNotes({
                   height,
                   transform: `translate3d(0,${topOf(away, height, pxPerBeat, frame)}px,0)`,
                 }}
-                className={`absolute top-0 flex items-end justify-center overflow-hidden rounded-sm pb-0.5 text-[9px] leading-none font-semibold ${
+                className={`absolute top-0 flex items-end justify-center overflow-hidden rounded-sm pb-0.5 ${
                   event.hand === 'left' ? 'bg-left-hand text-ink' : 'bg-right-hand text-ink'
                 } ${event.grace ? 'opacity-40' : waiting ? 'ring-2 ring-cream' : 'opacity-80'}`}
               >
-                {!event.grace && height >= LABEL_PX ? (event.ngon ?? midiToName(note)) : null}
+                {!event.grace && co >= 9 ? (
+                  <span className={TEN_NOT} style={{ fontSize: co }}>
+                    {chu}
+                  </span>
+                ) : null}
               </div>
             )
           }),

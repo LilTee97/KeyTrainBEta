@@ -381,3 +381,24 @@ export const MEO_SOLO: readonly MeoSolo[] = [
     coSo: 'Ngón chuẩn sách piano — kỹ thuật chung, không phải số đo thầy.',
   },
 ]
+
+/* ---------------- Tên chữ trên bàn phím xem nốt ---------------- */
+
+const CHU = 'CDEFGAB'
+const TU_NHIEN = [0, 2, 4, 5, 7, 9, 11]
+
+/**
+ * Tên nốt bằng KÝ HIỆU CHỮ kèm quãng tám, như bàn phím của khung nốt rơi (C4, F♯4) — người dùng 11/10/2026: "tên nốt ở ảnh 2 hãy ghi
+ * bằng ký hiệu như ảnh 1". Chữ đếm từ chữ của nốt gốc theo SỐ của bậc ghi dưới phím, rồi thêm dấu cho khớp nửa cung — bậc ♯9 của C là
+ * D♯, ♭7 là B♭, ♭3 của Blues Đô là E♭ — nên tên và bậc luôn nói cùng một nốt. Cũ: tên Việt theo dấu của giọng (Mi♭ mà bậc ghi ♯9).
+ * `null` khi bậc không đọc được hay cần hơn hai dấu.
+ */
+export function tenChu(m: number, gocChu: string, bac: string | null): string | null {
+  const so = bac?.match(/(\d+)$/)
+  const i0 = CHU.indexOf(gocChu[0] ?? '')
+  if (!so || i0 < 0) return null
+  const i = (i0 + Number(so[1]) - 1) % 7
+  const lech = ((((m - TU_NHIEN[i]!) % 12) + 18) % 12) - 6
+  if (Math.abs(lech) > 2) return null
+  return `${CHU[i]}${lech < 0 ? '♭'.repeat(-lech) : '♯'.repeat(lech)}${Math.floor((m - lech) / 12) - 1}`
+}

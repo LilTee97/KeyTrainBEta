@@ -59,16 +59,22 @@ const pressOpacity = (velocity: number) =>
 /** Phần tông sẫm pha vào màu phím đang bấm, 0 … DEEP_MAX. */
 const pressDepth = (velocity: number) =>
   DEEP_MAX * clamp01((velocity - DEEP_FROM_VELOCITY) / (DEEP_FULL_VELOCITY - DEEP_FROM_VELOCITY))
-/** Đã sẫm tới mức này thì chữ trên phím đổi sang sáng cho đọc được. */
-const LIGHT_TEXT_DEPTH = 0.2
+/*
+  TÊN NỐT TO VÀ NỔI — người dùng 11/10/2026: "tất cả tên nốt ở mọi chỗ có phím đàn và nốt rơi phải được viết to hơn và màu nổi bật
+  hơn". Thẻ nền tối chữ vàng đậm: đọc được trên phím trắng, phím đen, phím đang sáng màu tay lẫn phím đang bấm (khỏi đổi màu chữ theo
+  lực nữa). Cỡ chữ theo bề ngang phím: phím trắng 0,42 × (8–18 px), phím đen 0,5 × bề ngang phím đen (7–15 px). Cũ: chữ mono xám
+  (ink 55 % · kem 70 %), phím trắng 0,3 × (8–14 px), phím đen 0,42 × (7–12 px), bấm mạnh thì chữ đổi sáng (`LIGHT_TEXT_DEPTH` 0,2).
+  Lùi khi: thẻ che gần hết phím hay chữ tràn sang phím bên — hạ hai hệ số.
+*/
+const TEN_NOT = 'rounded bg-ink px-[3px] py-[2px] font-sans font-bold leading-none text-yellow-300 shadow'
 
 /*
   Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt", rồi "các phím C đã có đánh số, hãy
-  cho các phím còn lại cũng đánh số". MỌI phím ghi tên kèm quãng tám: phím trắng rộng ≥ 20 px ghi một dòng (D4), hẹp hơn
-  thì chữ trên số dưới cho lọt; phím đen rộng ≥ 9 px ghi chữ trên số dưới (C# / 4), hẹp hơn chữ tràn ra ngoài phím.
+  cho các phím còn lại cũng đánh số". MỌI phím ghi tên kèm quãng tám: phím trắng đủ rộng cho cả thẻ (≥ 1,5 × cỡ chữ + 8 px — cũ
+  ≥ 20 px) ghi một dòng (D4), hẹp hơn thì chữ trên số dưới cho lọt; phím đen rộng ≥ 9 px ghi chữ trên số dưới (C# / 4), hẹp hơn chữ
+  tràn ra ngoài phím.
   Cũ: lần 1 phím trắng hẹp chỉ ghi chữ cái, phím đen ≥ 13 px chỉ ghi C#; trước nữa chỉ phím Đô.
 */
-const ONE_LINE_MIN_PX = 20
 const BLACK_NAME_MIN_PX = 9
 
 /**
@@ -168,22 +174,24 @@ export function OnScreenPiano({
       ? Math.round(Math.min(MAX_KEYBOARD_PX, Math.max(MIN_KEYBOARD_PX, whiteWidth * KEY_HEIGHT_PER_WIDTH)))
       : 150
 
-  /** Tên nốt kèm quãng tám: một dòng (D4) khi đủ rộng, không thì chữ trên số dưới. */
-  const label = (note: MidiNote, oneLine: boolean) => {
+  // Chữ to theo bề ngang phím: phím to (toàn màn hình, màn rộng) thì chữ to, điện thoại thì nhỏ cho lọt (xem TEN_NOT).
+  const whiteFontPx = Math.round(Math.min(18, Math.max(8, whiteWidth * 0.42)))
+  const blackFontPx = Math.round(Math.min(15, Math.max(7, whiteWidth * 0.62 * 0.5)))
+  /** Tên nốt kèm quãng tám trong thẻ: một dòng (D4) khi đủ rộng, không thì chữ trên số dưới. */
+  const label = (note: MidiNote, oneLine: boolean, fontSize: number) => {
     const name = pitchClassName(pitchClassOf(note), accidentalStyle)
     return oneLine ? (
-      `${name}${octaveOf(note)}`
+      <span className={`relative ${TEN_NOT}`} style={{ fontSize }}>
+        {`${name}${octaveOf(note)}`}
+      </span>
     ) : (
-      <>
+      <span className={`relative flex flex-col items-center gap-px ${TEN_NOT}`} style={{ fontSize }}>
         <span>{name}</span>
         <span>{octaveOf(note)}</span>
-      </>
+      </span>
     )
   }
   const blackNamed = showNoteNames && whiteWidth * 0.62 >= BLACK_NAME_MIN_PX
-  // Chữ to theo bề ngang phím: phím to (toàn màn hình, màn rộng) thì chữ to, điện thoại thì nhỏ cho lọt. Cũ: 9 · 8 px.
-  const whiteFontPx = Math.round(Math.min(14, Math.max(8, whiteWidth * 0.3)))
-  const blackFontPx = Math.round(Math.min(12, Math.max(7, whiteWidth * 0.62 * 0.42)))
 
   /** Con trỏ đang được giữ — dùng để rê tay qua nhiều phím liền nhau. */
   const pointerDown = useRef(false)
@@ -275,9 +283,6 @@ export function OnScreenPiano({
 
   /** Lớp phủ phím đang bấm: xanh ngọc nếu trúng nốt hợp âm, cam nếu không; đậm theo lực nhấn. */
   const velocityOf = (note: MidiNote) => velocities[note] ?? POINTER_VELOCITY
-  /** Đang bấm mạnh tới mức màu đã sẫm — chữ trên phím phải đổi sang sáng. */
-  const pressedDark = (note: MidiNote) => isHeld(note) && pressDepth(velocityOf(note)) >= LIGHT_TEXT_DEPTH
-
   const pressLayer = (note: MidiNote) => {
     if (!isHeld(note)) return null
     const velocity = velocityOf(note)
@@ -300,7 +305,7 @@ export function OnScreenPiano({
   /** Số ngón trên đầu phím — vòng tròn nhỏ, đọc được cả khi phím đang sáng. */
   const finger = (note: MidiNote) =>
     fingerLabels?.[note] === undefined ? null : (
-      <span className="pointer-events-none absolute top-1 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-ink/85 px-1.5 font-sans text-[11px] leading-[18px] font-bold text-amber-key">
+      <span className="pointer-events-none absolute top-1 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-ink/85 px-1.5 font-sans text-[13px] leading-[20px] font-bold text-amber-key">
         {fingerLabels[note]}
       </span>
     )
@@ -334,14 +339,7 @@ export function OnScreenPiano({
           >
             {pressLayer(note)}
             {finger(note)}
-            {showNoteNames ? (
-              <span
-                className={`relative flex flex-col items-center leading-none ${pressedDark(note) ? 'text-cream' : ''}`}
-                style={{ fontSize: whiteFontPx }}
-              >
-                {label(note, whiteWidth >= ONE_LINE_MIN_PX)}
-              </span>
-            ) : null}
+            {showNoteNames ? label(note, whiteWidth >= whiteFontPx * 1.5 + 8, whiteFontPx) : null}
           </button>
         ))}
       </div>
@@ -363,17 +361,7 @@ export function OnScreenPiano({
         >
           {pressLayer(note)}
           {finger(note)}
-          {blackNamed ? (
-            // Đang bấm thì lớp phủ sáng màu — chữ sáng trên phím đen khó đọc, đổi sang chữ tối.
-            <span
-              className={`relative flex flex-col items-center leading-none ${
-                pressedDark(note) ? 'text-cream' : isHeld(note) ? 'text-ink/80' : ''
-              }`}
-              style={{ fontSize: blackFontPx }}
-            >
-              {label(note, false)}
-            </span>
-          ) : null}
+          {blackNamed ? label(note, false, blackFontPx) : null}
         </button>
       ))}
     </div>
