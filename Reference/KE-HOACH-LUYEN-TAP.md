@@ -509,6 +509,9 @@ Các hợp âm phải được chọn tự do …"*
   **Chờ người dùng** nghe và duyệt phong cách thứ tư; lỗ còn lại ở SO-TAY.
   Cập nhật 11/10 (người dùng): lời giải viết lại theo giọng gia sư cho học sinh lớp 6 (cảm giác nghe, mẹo tay), mỗi lời trỏ một mẹo; thêm
   bảng 15 mẹo chung giữa các thầy có số đo (`tools/meo_chung_thay.py`).
+- **Trang Học Solo — xong 11/10/2026** (thanh trang, sau Hợp âm): chọn nốt theo thầy (Gia sư · Cà Pháo · Linh Nhi · Blues — bàn phím tô
+  vai nốt kèm % thầy chọn, lời gia sư) · Scale & Arpeggio (cơ sở chọn nốt + xem gam, hợp âm rải với ngón) · Mẹo (17) · Game chạy ngón ·
+  Game Scale. Hai game là NGOẠI LỆ thứ hai của "không lớp game" — người dùng tự xin. Số đo, lỗ còn lại ở SO-TAY.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

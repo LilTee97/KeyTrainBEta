@@ -6481,3 +6481,46 @@ giọng hát ngân …" app không tự soát).
 2 735 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 15/15 (bảng mẹo đóng sẵn, 15 mẹo, 3 nhóm, số đo; gợi ý không kèm tên
 mẹo; Cà Pháo Dm7 có lời gia sư + mẹo tay + mẹo "đổi bass"; lời chi tiết gập / mở; phong cách thứ tư Dm11, D♭9 đúng lời; điện thoại không
 cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: trang HỌC SOLO — chọn nốt theo thầy · scale & arpeggio · mẹo · game chạy ngón · game scale (11/10/2026)
+
+**Người dùng:** *"1. Hãy làm thêm một tab Học Solo để: Bạn trong vai gia sư piano dạy cho tôi cách chọn nốt từ mỗi hợp âm để chạy nốt trên
+đàn Piano — Phân tích cách chọn nốt của 3 thầy để dạy tôi chọn và tại sao ở mỗi hợp âm lại nên chọn những nốt đó. Vậy là có 3 thầy và 1 gia
+sư, hãy làm thành 4 lựa chọn để học theo từng thầy — Có phải Scales và Apreggios là cơ sở để chọn nốt ko, nếu đúng thì hãy dạy tôi về chúng
+luôn — Sau khi phân tích lý thuyết thì hãy tổng hợp ra các quy luật rồi làm thành mẹo để tôi dễ học. 2. Hãy thêm Game chạy ngón và Game Scale
+(Nếu có phân tích về Scale và Apreggio)"*.
+
+- Trang mới **Học Solo** (thanh trang, sau Hợp âm) — `HocSoloPage.tsx`, năm tab:
+  - **Chọn nốt theo thầy**: 4 lựa chọn Gia sư (Claude) · Cà Pháo · Linh Nhi · Blues; chọn giọng, chọn hợp âm của giọng (Blues: I · IV · V,
+    thứ: i · IV7 · V7 · ♭VI7) → bàn phím tô màu vai nốt (khung · màu · gam · tránh ngân · nốt nhà · nốt blue · ngoài gam) kèm % thầy chọn,
+    bấm phím nghe hợp âm cùng nốt ấy, lời gia sư mức lớp 6, ▶ rải hợp âm · gam của bài. Vai nốt là lý thuyết (nốt tránh = nốt gam đứng sát
+    trên một nốt khung nửa cung; bài thứ trên V dùng gam thứ hòa thanh; Blues: ngũ cung trưởng của chủ + nốt blue, sang IV thì 3 là nốt tránh).
+  - **Scale & Arpeggio**: trả lời "có phải cơ sở để chọn nốt không" — *đúng, mỗi thứ một việc* (arpeggio = trụ ở phách mạnh, scale = đường
+    đi; gam của BÀI, không đổi theo hợp âm; thầy không chạy scale từ đầu đến cuối; ngoài gam chỉ là nốt blue / nốt cảm) — rồi xem 6 gam và 6
+    hợp âm rải với ngón từng tay.
+  - **Mẹo**: 17 mẹo, 6 nhóm (trụ và đường · bước đi · theo loại hợp âm · nối hợp âm — câu chạy · Blues · ngón tay), mỗi mẹo kèm cơ sở có số.
+  - **Game chạy ngón** (`GameSolo.tsx`): 45 bài mỗi tay — năm ngón 7 · gam trưởng 12 · gam thứ 12 · rải hợp âm 14 — lên rồi xuống, số ngón
+    trên phím (prop mới `fingerLabels` của `OnScreenPiano`); bấm đúng thì đi tiếp; hết bài chấm chính xác, đều tay (độ lệch chuẩn khoảng cách
+    nốt / trung bình), tốc độ so với mục tiêu 2 · 3 · 4 · 6 nốt/giây; sao lưu ở localStorage. App không thấy ngón tay — chấm theo nốt và thời
+    điểm (thời điểm của chính sự kiện MIDI).
+  - **Game Scale**: đố gam 10 câu — 6 gam + rải hợp âm trưởng / thứ; gốc theo vòng quãng năm hay ngẫu nhiên; nốt đầu là gốc ở quãng tám nào
+    cũng được; gợi ý hiện nốt · hiện ngón · nghe mẫu.
+- **Số đo** — không đo mới; chép từ md đã chốt: Cà Pháo mục 2 (bậc nốt theo loại hợp âm, 828 nốt, `tools/sheet/bac_not.py`), Linh Nhi
+  "Luật soạn nốt" + mục 6b (1045 nốt; bài trưởng / thứ), Blues mục 3 + 7 (Rockhouse 810 nốt theo chức năng, Rising Sun n=49 · 35),
+  `LUAT-SOAN-NOT.md` (13 bản ký âm, 2169 nốt). Bảng Linh Nhi mục 6b chỉ ghi các bậc đầu — app ghi "các bậc còn lại rải rác, md không ghi".
+- **Ngón** — ngón chuẩn sách piano (kiểu ABRSM), không phải số đo thầy: 12 gam trưởng + 12 gam thứ (thứ hòa thanh dùng cùng ngón), hai tay;
+  rải hợp âm ba gốc phím trắng 1 2 3 5 / 5 4 2 1. Kho PianoBrain chỉ có ngón gam Đô trưởng — khớp. Si♭ tay phải: nốt đầu ngón 4 (có sách cho
+  ngón 2). Ngũ cung, blues, rải gốc phím đen: app ghi "chưa có ngón chuẩn".
+- Ngưỡng sao hai game là Claude đặt, CHƯA ĐO (ghi ở chú thích `chamNgon` kèm triệu chứng để lùi).
+- **Ngoại lệ "không lớp game" thứ hai** (sau Mưa hợp âm 9/10) — người dùng tự xin.
+
+**Chưa đo — lỗ còn lại:** ví dụ câu chạy THẬT của thầy chưa đưa vào trang (đã có ở tab Kỹ thuật đánh của từng thầy); Cà Pháo, Linh Nhi chưa có
+số đo nốt trên hợp âm giảm; Blues thứ chỉ Rising Sun (n nhỏ); các số "hợp âm thứ có ♭7" ở trang này đếm theo hợp âm gộp, khác cách đếm đoạn
+trong lời thầy; ngưỡng sao chưa thử trên tay người dùng.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 14 (ngón Đô trưởng khớp kho PianoBrain; 12 gốc × 3 gam × 2 tay: ngón cái không lên phím
+đen, luồn ngón đúng kiểu; Fa trưởng 1 2 3 4 1 2 3 4; Si♭ ngón cái trên Đô · Fa; bài tập lên–xuống, 45 bài mỗi tay; chấm sao; nốt đúng của game
+Scale; vai nốt C · G7 · E7 · F7 blues; phân bố Blues đổi từ chủ âm sang gốc hợp âm; lời gia sư mọi thầy × hợp âm × giọng) · toàn suite 2 749 qua
+/ 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 25/25 (5 tab; lời gia sư; số Cà Pháo trên phím; Linh Nhi Đô thứ; Blues F7 "Mi đổi thành
+Mi♭", phím Mi màu tránh; Fa trưởng ngón; Game chạy ngón đánh đều 9 nốt → 3★, bấm sai báo nốt cần; Game Scale gam Đô → câu 2 Sol, gợi ý, báo sai;
+điện thoại 5 tab không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

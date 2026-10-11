@@ -115,6 +115,8 @@ export interface OnScreenPianoProps {
   rightHandNotes?: readonly MidiNote[]
   /** Đáp án đang hé lộ (game Mưa hợp âm) — viền cam như viên đang đố, khác màu hai tay và khác lớp phủ phím đang bấm. */
   revealNotes?: readonly MidiNote[]
+  /** Số ngón ghi trên phím (game chạy ngón, trang Học Solo) — theo nốt tuyệt đối, như `highlightNotes`. */
+  fingerLabels?: Readonly<Partial<Record<MidiNote, number | string>>>
   /**
    * Chiều cao bàn phím. Bỏ trống thì tự theo bề ngang phím trắng (`KEY_HEIGHT_PER_WIDTH`); `'100%'` thì lấp khung cha
    * — chế độ toàn màn hình.
@@ -139,6 +141,7 @@ export function OnScreenPiano({
   leftHandNotes,
   rightHandNotes,
   revealNotes,
+  fingerLabels,
   height,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
@@ -294,6 +297,14 @@ export function OnScreenPiano({
     )
   }
 
+  /** Số ngón trên đầu phím — vòng tròn nhỏ, đọc được cả khi phím đang sáng. */
+  const finger = (note: MidiNote) =>
+    fingerLabels?.[note] === undefined ? null : (
+      <span className="pointer-events-none absolute top-1 left-1/2 z-[1] -translate-x-1/2 rounded-full bg-ink/85 px-1.5 font-sans text-[11px] leading-[18px] font-bold text-amber-key">
+        {fingerLabels[note]}
+      </span>
+    )
+
   const keyHandlers = (note: MidiNote) => ({
     onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
       handlePointerDown(event, note),
@@ -322,6 +333,7 @@ export function OnScreenPiano({
             }`}
           >
             {pressLayer(note)}
+            {finger(note)}
             {showNoteNames ? (
               <span
                 className={`relative flex flex-col items-center leading-none ${pressedDark(note) ? 'text-cream' : ''}`}
@@ -350,6 +362,7 @@ export function OnScreenPiano({
           }`}
         >
           {pressLayer(note)}
+          {finger(note)}
           {blackNamed ? (
             // Đang bấm thì lớp phủ sáng màu — chữ sáng trên phím đen khó đọc, đổi sang chữ tối.
             <span

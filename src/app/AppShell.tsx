@@ -6,6 +6,7 @@ import { ChordDrillHome } from '../reharm/chordDrill/ChordDrillHome'
 import { PracticeHome } from '../reharm/PracticeHome'
 import { ReharmHome } from '../reharm/ReharmHome'
 import { MrHaiPanel } from '../reharm/brain/MrHaiPanel'
+import { HocSoloPage } from '../thay/HocSoloPage'
 import { HopAmPage } from '../thay/HopAmPage'
 import { TeacherPage } from '../thay/TeacherPage'
 import { TodayPage } from '../thay/TodayPage'
@@ -40,13 +41,15 @@ type TabId = (typeof TABS)[number]['id']
  * Tuấn · Blues), trang Hôm nay mở đầu, sáu tab cũ gom vào trang Tái Hòa Âm. Mở app luôn vào Hôm nay — buổi tập mỗi ngày bắt đầu
  * bằng lượt nguội ở đó; trong trang Tái Hòa Âm thì nhớ tab mở lần cuối.
  */
-type PageId = 'hom-nay' | TeacherId | 'hop-am' | 'tai-hoa-am'
+type PageId = 'hom-nay' | TeacherId | 'hop-am' | 'hoc-solo' | 'tai-hoa-am'
 
 const PAGES: readonly { id: PageId; label: string }[] = [
   { id: 'hom-nay', label: 'Hôm nay' },
   ...TEACHERS.map(({ id, label }) => ({ id, label })),
   // Trang Hợp âm — chung cho mọi thầy (người dùng chốt 9/10/2026): chồng hợp âm, hợp âm màu, tái hòa âm vòng.
   { id: 'hop-am', label: 'Hợp âm' },
+  // Trang Học Solo (người dùng 11/10/2026): chọn nốt theo thầy · scale & arpeggio · mẹo · game chạy ngón · game scale.
+  { id: 'hoc-solo', label: 'Học Solo' },
   { id: 'tai-hoa-am', label: 'Tái Hòa Âm' },
 ]
 
@@ -154,6 +157,7 @@ export function AppShell() {
       )}
       {teacher && <TeacherPage key={teacher.id} teacher={teacher} moBai={moBai} />}
       {page === 'hop-am' && <HopAmPage />}
+      {page === 'hoc-solo' && <HocSoloPage />}
 
       {page === 'tai-hoa-am' && (
         <>
