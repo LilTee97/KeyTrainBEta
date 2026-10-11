@@ -6410,3 +6410,40 @@ chọn công thức là thoát; điện thoại không cuộn ngang) · `LuyenTa
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `meoChong.test.ts` 14 (8 thẻ, đủ 26 hàng; thẻ khung 7 đúng từng hàng và nốt tay trái; hàng đầu đúng lời
 dẫn; đúng 6 chỗ cùng loại) · toàn suite 2 722 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 5/5 (tiêu đề, 8 thẻ có nốt tay trái,
 hàng "Đô + Em (thứ) = Cmaj7", câu nhắc cùng loại, điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — GĐ 3: Tái hòa âm vòng — "Đố tái hòa âm" theo bốn phong cách (11/10/2026)
+
+**Người dùng:** *"Khi tôi nhập một vòng hòa âm vào thì bạn hãy đố tôi chọn các hợp âm nào để tái hòa âm. Bạn sẽ đố tôi theo từng phong cách
+của CP, Linh Nhi và Blues. Bạn trong vai một nhạc sĩ Piano chuyên nghiệp sẽ phân tích lối đặt hòa âm trong sheet của các thầy sau đó kết hợp
+với tư duy của bạn để ra thêm phong cách thứ 4 … xác định đâu là chủ âm (vì ko phải lúc nào âm chủ cũng nằm ở ngay đầu vòng) sau đó tái hòa
+âm chủ âm sẵn cho tôi. Các hợp âm còn lại bạn sẽ cho tôi chọn trắc nghiệm và có tính năng gợi ý để tôi bật khi cần"*.
+
+- Thẻ mới đầu tab "Tái hòa âm vòng" (`DoTaiHoaAm.tsx`, luật ở `soanCau/doTaiHoaAm.ts`). Nhập vòng → app đoán chủ âm, hiện mọi giọng ứng viên
+  để bấm đổi → ô chủ âm tái hòa âm sẵn → mỗi ô khác bốn phương án; bấm là chấm và nghe phương án ấy trong vòng (ô trước – nó – ô sau); hiện lời
+  giải thích (tựa, lời, ví dụ sheet, ai chọn, cơ sở, các hợp âm "cũng đúng lối này", nhãn nguồn). Nút bật / tắt gợi ý; ▶ vòng bài ghi, ▶ vòng
+  đã tái hòa âm; điểm "Đúng x/y"; đố lại. Giọng đoán từ chính vòng nhập, không theo ô "Giọng" của trang.
+- **Đoán chủ âm** (`doanGiong`) — chỉ xét giọng có hợp âm chủ nằm trong vòng. Không dùng `detectKey` của bộ tái hòa âm: hàm ấy trừ 4 điểm giọng
+  thứ không có nốt cảm âm nên đọc "F G Am" ra Fa trưởng (tính tay 11/10/2026). Điểm: −3 mỗi hợp âm ngoài giọng (trừ át phụ đi xuống quãng
+  năm), +2 mỗi bước kéo về chủ (V, ♭II7 → I: 1; v, IV, ♭VII, vii° → I: 0,5; vòng lặp nên ô cuối nối ô đầu), + phần ô là hợp âm chủ, +1 hợp
+  âm cuối là chủ, +0,5 hợp âm đầu, +0,25 cho giọng trưởng khi hòa. Trọng số do Claude đặt, soát trên 9 vòng trong test — **chưa đo trên bài
+  thật**. "Am F C G" ra La thứ (hợp âm đầu nghiêng cán cân) — vòng lặp hiểu được hai cách, nên có nút đổi.
+- **Luật ba thầy:** mỗi luật theo bậc + họ hợp âm + hợp âm trước / sau, trỏ về lời "bài ghi X → thầy bấm Y" đã duyệt (`lyDoThay`) — số đo nằm
+  ở đó. Ví dụ Cà Pháo: i trước iv → I7; ii° trước V → II7; V (thứ) → V7♭13; ♭VI → maj7; I trước V → Iadd9 – II13; V trước I → V7sus4 – V13.
+  Linh Nhi: i trước ♭VI / V → chèn ♭VII; iv trước V → chèn ii°; I trước vi → I – I/7; vi trước ii → chèn iii; V → V trơn. Blues: I7 / I13,
+  IV trước V → IV7 – ♯IV°7, V → V7♯9, I trước ii → I/3 – ♭III°7. Bậc không có luật: đáp án suy từ lối chung của thầy, lời ghi "Suy luận của
+  Claude — chưa đo bậc này".
+- **Phong cách thứ tư "Nhạc sĩ (Claude)"** — tư duy của Claude, không phải số đo: màu tay phải của Cà Pháo (maj9, m9, m11) + bass liền bậc của
+  Linh Nhi (I – V/7 – vi, vi – vi/5 – IV, i – i/♭7 – ♭VI, I7/3 trước IV và iv) + nửa cung của Blues (♭II9 thay V về I, ♯I°7 trước ii, ♯IV°7
+  trước V, ♭VI7 trước V ở giọng thứ), át phụ căng (III7♭9 → vi, VI7♭9 → ii), mượn iv6 trước I. Mỗi lời ghi gốc ý từ thầy nào và cơ sở.
+- **Phương án sai** lấy theo thứ tự: giữ nguyên, đáp án của ba phong cách kia, các lối thay của "Vòng + lựa chọn thay" (lối màu sau cùng); không
+  bao giờ đưa hợp âm "cũng đúng lối này" làm phương án sai. Thứ tự xáo cố định theo tên.
+- `thayTrongVong.ts`: tách `docHop` (chuỗi → hợp âm đã phân tích) ra khỏi `docVong`; xuất `ho`.
+
+**Chưa đo — lỗ còn lại:** luật chỉ nhìn hợp âm trước / sau, không biết độ dài ô hay giai điệu (lời thầy nhiều chỗ "tránh khi giai điệu ngân …"
+— app không kiểm được); trọng số đoán chủ âm chưa thử trên bài thật; phong cách thứ tư chưa qua tai người dùng.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `doTaiHoaAm.test.ts` 12 (đoán chủ âm 9 vòng; đáp án đúng luật ở 5 vòng — 2 vòng đủ bốn phong cách; 14 vòng × mọi giọng ứng viên
+× 4 phong cách: 2–4 phương án khác tên, đúng một đáp án, không lẫn "cũng đúng", hợp âm nào cũng bấm được; luật trỏ đúng lời đã duyệt; gợi ý
+không lộ tên đáp án; dịch giọng thì đáp án dịch theo) · toàn suite 2 734 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 23/23 (Dm G
+C Am → Đô trưởng, ô 3 sẵn Cadd9; gợi ý; chọn đúng / sai, lời thầy, màu ô; đố lại; F G Em Am → La thứ; đổi phong cách; đổi chủ âm; vòng lỗi;
+C E7 Am F G → Đô trưởng; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

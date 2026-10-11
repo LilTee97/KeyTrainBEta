@@ -5,6 +5,7 @@ import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
+import { DoTaiHoaAm } from './DoTaiHoaAm'
 import { BAC_TREN_BASS, BAM_THAY, hopTheoNot, LOI_BAM_THAY, ngonGoiY, type ThayBam } from './soanCau/bamNhuThay'
 import { tenMotTay } from './soanCau/chongHopAm'
 import { doiThe, gonTay, TEN_DAO, theBamVong } from './soanCau/danhTheo'
@@ -70,6 +71,7 @@ export function VongTab({ tonic, thu }: { tonic: number; thu: boolean }) {
   }
   return (
     <div className="flex flex-col gap-4">
+      <DoTaiHoaAm />
       <div ref={neo}>
         <DanhTheoVong key={lan} vong={dang} tonic={tonic} thu={thu} nap={nap} />
       </div>

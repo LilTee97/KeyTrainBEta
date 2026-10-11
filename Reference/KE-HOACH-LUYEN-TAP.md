@@ -503,6 +503,10 @@ Các hợp âm phải được chọn tự do …"*
   tay phải = loại tổng), viên rơi ghi luôn tên hai tay.
   Cập nhật 11/10 (người dùng): bảng chia theo 16 nhóm đuôi; màn game cũng theo nhóm đuôi (18 màn, có hợp âm ba cơ bản), mẹo trên viên
   = đuôi mang lại nốt nào ở chính gốc đang đố.
+- **Đố tái hòa âm theo bốn phong cách — xong 11/10/2026** (thẻ đầu tab Tái hòa âm vòng): nhập vòng → app đoán chủ âm (đổi được) → ô
+  chủ âm tái hòa âm sẵn → mỗi ô khác trắc nghiệm bốn phương án, gợi ý bật khi cần, chọn xong có lời giải thích và nghe trong vòng.
+  Cà Pháo · Linh Nhi · Blues theo lời "bài ghi X → thầy bấm Y" đã duyệt; phong cách thứ tư "Nhạc sĩ (Claude)" là tư duy của Claude.
+  **Chờ người dùng** nghe và duyệt phong cách thứ tư; lỗ còn lại ở SO-TAY.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

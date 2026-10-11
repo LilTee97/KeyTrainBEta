@@ -1,4 +1,5 @@
 import { parseChordToken } from '../../reharm/input/chordInputParser'
+import type { ParsedChord } from '../../reharm/types'
 import { buildProgression, PROGRESSION_TEMPLATES } from '../../shared/musicTheory/progressionGenerator'
 import { CONG_THUC, KHI_CHON, type CongThuc } from './chongHopAm'
 import { nguCanh, theBamHop, type Hop } from './giaiThich'
@@ -87,7 +88,7 @@ export interface LuaChonThay {
 }
 
 const pc = (x: number) => ((x % 12) + 12) % 12
-const ho = (chat: string): CongThuc['nhom'] =>
+export const ho = (chat: string): CongThuc['nhom'] =>
   chat === 'dim' || chat === 'dim7' || chat.startsWith('m7b5')
     ? 'Nửa giảm · giảm'
     : chat.startsWith('m') && !chat.startsWith('maj')
@@ -192,15 +193,24 @@ export function vongLyThuyetHop(tonic: number, thu: boolean): { id: string; ten:
   }))
 }
 
-/** Đọc vòng tự điền ("C Am F G", "Dm7 G7 Cmaj7") → gốc + chất tính từ chủ âm; null nếu có hợp âm không đọc được. */
-export function docVong(chu: string, tonic: number): Hop[] | null {
+/** Đọc chuỗi hợp âm tự điền ("C Am F G", "Dm7, G7 | Cmaj7") → hợp âm đã phân tích; null nếu có hợp âm không đọc được. */
+export function docHop(chu: string): ParsedChord[] | null {
   const ds = chu.split(/[\s,|–-]+/).filter(Boolean)
   if (!ds.length) return null
-  const ra: Hop[] = []
+  const ra: ParsedChord[] = []
   for (const t of ds) {
     const doc = parseChordToken(t.replace(/♭/g, 'b').replace(/♯/g, '#').replace(/^[a-g]/, (c) => c.toUpperCase()))
     if (typeof doc === 'string') return null
-    ra.push(doc.bass === undefined ? { goc: pc(doc.root - tonic), chat: doc.quality.symbol } : { goc: pc(doc.root - tonic), chat: doc.quality.symbol, bass: pc(doc.bass - tonic) })
+    ra.push(doc)
   }
   return ra
+}
+
+/** Đọc vòng tự điền → gốc + chất tính từ chủ âm; null nếu có hợp âm không đọc được. */
+export function docVong(chu: string, tonic: number): Hop[] | null {
+  return (
+    docHop(chu)?.map((doc) =>
+      doc.bass === undefined ? { goc: pc(doc.root - tonic), chat: doc.quality.symbol } : { goc: pc(doc.root - tonic), chat: doc.quality.symbol, bass: pc(doc.bass - tonic) },
+    ) ?? null
+  )
 }
