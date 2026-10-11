@@ -29,7 +29,7 @@ import {
 } from './hocSolo/gamNgon'
 import { baiCauThay, loiBoSoan, THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
 import { doanGiong } from './soanCau/doTaiHoaAm'
-import type { Hop } from './soanCau/giaiThich'
+import { nguCanh, type Hop } from './soanCau/giaiThich'
 import { docHop, docVong, vongLyThuyetHop } from './soanCau/thayTrongVong'
 import { GOC } from './vongThay'
 
@@ -126,7 +126,8 @@ export function GameChayNgon() {
   const [thu, setThu] = useState(false)
   const vongs = useMemo(() => vongLyThuyetHop(tonic, thu), [tonic, thu])
   const [vongId, setVongId] = useState<string | null>(null)
-  const [tuDien, setTuDien] = useState('')
+  /** Chữ đang gõ trong ô điền vòng; `null` = chưa gõ — ô hiện hợp âm của vòng đang dùng. */
+  const [tuDien, setTuDien] = useState<string | null>(null)
   const [vongTu, setVongTu] = useState<string | null>(null)
   const [baoDien, setBaoDien] = useState<{ loi: boolean; chu: string } | null>(null)
   const [kieu, setKieu] = useState<KieuChay>('nam-ngon')
@@ -136,6 +137,9 @@ export function GameChayNgon() {
   const vong = vongs.find((x) => x.id === vongId) ?? vongs[0]!
   const hopVong = useMemo(() => (tuNhap ? (docVong(vongTu, tonic) ?? []) : vong.hop), [tuNhap, vongTu, tonic, vong])
   const idVong = tuNhap ? `tu:${vongTu}` : vong.id
+  /* Ô điền vòng LUÔN HIỆN (người dùng 11/10/2026: "chưa có tính năng tự điền vòng hợp âm … chỉ thấy có vòng mặc định" — bản trước giấu ô
+     sau nút "Tự nhập"): chưa gõ thì ô ghi sẵn hợp âm của vòng đang dùng để sửa thẳng; Enter là dùng. */
+  const chuVong = tuDien ?? (tuNhap ? vongTu : vong.hop.map((x) => nguCanh(tonic, thu).h(x.goc, x.chat, x.bass)).join(' '))
   /** Câu thầy: vòng · giọng · mã — phần hợp âm lẻ thì vòng 2 ô của một hợp âm. */
   const nenThay = useMemo(
     () =>
@@ -189,7 +193,7 @@ export function GameChayNgon() {
     setHetCau(true)
   }
   const dungVongTu = () => {
-    const chu = tuDien.trim()
+    const chu = chuVong.trim()
     const dsHop = docHop(chu)
     if (!dsHop) {
       setBaoDien({ loi: true, chu: 'Không đọc được — gõ tên hợp âm cách nhau bằng dấu cách, vd "Am F C G" hay "Dm7 G7 Cmaj7".' })
@@ -199,6 +203,7 @@ export function GameChayNgon() {
     doi(() => {
       setVongId('tu-nhap')
       setVongTu(chu)
+      setTuDien(null)
       if (g) {
         setTonic(g.tonic)
         setThu(g.thu)
@@ -346,36 +351,47 @@ export function GameChayNgon() {
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="w-24 text-dim">Vòng</span>
             {vongs.map((x) => (
-              <button key={x.id} type="button" onClick={() => doi(() => setVongId(x.id), true)} className={nut(!tuNhap && x.id === vong.id)} title={x.ghiChu}>
+              <button
+                key={x.id}
+                type="button"
+                onClick={() =>
+                  doi(() => {
+                    setVongId(x.id)
+                    setTuDien(null)
+                    setBaoDien(null)
+                  }, true)
+                }
+                className={nut(!tuNhap && x.id === vong.id)}
+                title={x.ghiChu}
+              >
                 {x.ten}
               </button>
             ))}
-            <button type="button" onClick={() => doi(() => setVongId('tu-nhap'), true)} className={nut(vongId === 'tu-nhap')}>
-              Tự nhập
-            </button>
           </div>
-          {vongId === 'tu-nhap' && (
-            <form
-              onSubmit={(event) => {
-                event.preventDefault()
-                dungVongTu()
-              }}
-              className="flex flex-wrap items-center gap-1.5"
-            >
-              <span className="w-24 text-dim">Nhập vòng</span>
-              <input
-                value={tuDien}
-                onChange={(event) => setTuDien(event.target.value)}
-                placeholder="vd Am F C G · Dm7 G7 Cmaj7"
-                aria-label="Nhập vòng hợp âm"
-                className="w-56 rounded border border-line bg-white/6 px-2 py-1 text-cream placeholder:text-dim"
-              />
-              <button type="submit" className={nut(false)}>
-                Dùng vòng này
-              </button>
-              {baoDien && <span className={baoDien.loi ? 'text-rose-300' : 'text-dim'}>{baoDien.chu}</span>}
-            </form>
-          )}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              dungVongTu()
+            }}
+            className="flex flex-wrap items-center gap-1.5"
+          >
+            <span className="w-24 text-dim">Tự điền vòng</span>
+            <input
+              value={chuVong}
+              onChange={(event) => setTuDien(event.target.value)}
+              placeholder="vd Am F C G · Dm7 G7 Cmaj7"
+              aria-label="Nhập vòng hợp âm"
+              className="w-72 max-w-full rounded border border-amber-key/50 bg-white/6 px-2 py-1 font-mono text-sm text-cream placeholder:text-dim"
+            />
+            <button type="submit" className={nut(tuNhap)}>
+              {tuNhap ? 'Đang dùng vòng tự điền' : 'Dùng vòng này'}
+            </button>
+            {baoDien ? (
+              <span className={baoDien.loi ? 'text-rose-300' : 'text-dim'}>{baoDien.chu}</span>
+            ) : (
+              <span className="text-dim">gõ hợp âm cách nhau bằng dấu cách, Enter để dùng — mỗi hợp âm một ô, như ô nhập của Tái hòa âm</span>
+            )}
+          </form>
           {!thay && (
             <>
               <div className="flex flex-wrap items-center gap-1.5">

@@ -6651,3 +6651,19 @@ B♯3) · toàn suite 2 756 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · c
 17 px; C4 xanh · D4 cam · F4 không màu; chú giải mới; danh sách "E (Mi)"; Blues F7: E♭4 · G♭4 · B♭4; Scale C4 … C5; bàn phím dùng chung
 61 phím đều có thẻ vàng, 15 · 11 px; nốt rơi số ngón 13 px, tên nốt ≥ 10 px; trang Hợp âm 49 phím có thẻ; điện thoại không cuộn
 ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — game chạy ngón: ô "Tự điền vòng" luôn hiện (11/10/2026)
+
+**Người dùng** (kèm ảnh game, đã chọn Cà Pháo, phần theo vòng): *"sao chọn từng thầy để học solo mà chưa có tính năng tự điền vòng hợp
+âm để bộ soạn sinh nốt giống như trong phần Tái Hòa Âm, chỉ thấy có vòng mặc định"*. Tính năng đã có từ `e2d2340` nhưng ô gõ giấu sau
+nút "Tự nhập" ở cuối hàng Vòng — nhìn vào chỉ thấy vòng mặc định.
+
+- `GameSolo.tsx`: bỏ nút "Tự nhập"; ô **Tự điền vòng** luôn hiện ngay dưới hàng Vòng, ghi sẵn hợp âm của vòng đang dùng (bấm vòng mặc
+  định nào thì ô ghi vòng ấy) — sửa thẳng rồi Enter / "Dùng vòng này". Đang dùng vòng tự điền thì nút đổi thành "Đang dùng vòng tự điền"
+  (sáng). Đọc như ô nhập của Tái hòa âm (`chordInputParser`: dấu cách · dấu phẩy · `|` đều là dấu ngăn, mỗi hợp âm một ô); vẫn đoán giọng
+  (`doanGiong`), đọc không được thì báo, giữ vòng cũ. Đổi thầy, đổi phần, bỏ chọn thầy đều giữ vòng tự điền.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · toàn suite 2 756 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 10/10 (ô hiện sẵn "Dm G
+C" khi vào; không còn nút giấu; gõ chưa Enter thì vòng chưa đổi; Enter "Am F C G" → Cà Pháo trên Am – F – C – G, đoán La thứ; đổi Linh
+Nhi · Blues giữ vòng; bấm vòng mặc định → ô ghi lại vòng ấy; "Dm7 G7 | Cmaj7, A7" → bốn ô; bỏ chọn thầy giữ vòng; điện thoại không cuộn
+ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
