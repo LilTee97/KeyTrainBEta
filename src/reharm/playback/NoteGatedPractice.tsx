@@ -65,6 +65,11 @@ export interface NoteGatedPracticeProps {
    * chặng nào thì máy đánh luôn các tiếng TAY KIA bắt đầu từ chặng ấy tới trước chặng sau. Không bật thì tay kia im như cũ.
    */
   nenTayKia?: boolean
+  /**
+   * Báo ra ngoài phách của chặng đang chờ bấm (`null` khi chưa luyện / đã xong) — Sinh nốt Solo hiện lý do của đúng nốt ấy (người dùng
+   * 11/10/2026: "phần giải thích và dạy cách chọn nốt đâu").
+   */
+  onChang?: (startBeat: number | null) => void
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -88,6 +93,7 @@ export function NoteGatedPractice({
   vongBpm,
   bac,
   nenTayKia = false,
+  onChang,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
@@ -189,6 +195,11 @@ export function NoteGatedPractice({
   }, [steps])
 
   const step = currentStep(session)
+  const changDangCho = active && step ? step.startBeat : null
+  useEffect(() => {
+    onChang?.(changDangCho)
+  }, [changDangCho, onChang])
+  useEffect(() => () => onChang?.(null), [onChang])
 
   const [hitting, setHitting] = useState<{
     left: number[]

@@ -322,6 +322,11 @@ describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
           expect(x.luat.length).toBeGreaterThan(0)
           const sau = c.not[k + 1]
           const truoc = c.not[k - 1]
+          if (x.vai === 'dan') {
+            expect(sau?.vai, `${chu} câu ${s} nốt dẫn ${x.ten}`).toBe('noi')
+            const cach = Math.abs(sau!.m - x.m)
+            expect(cach >= 1 && cach <= 3, `${chu} câu ${s} nốt dẫn ${x.ten} → ${sau!.ten}`).toBe(true)
+          }
           if (x.vai === 'tranh') {
             expect(sau && sau.cau === x.cau, `${chu} câu ${s} nốt tránh cuối câu`).toBe(true)
             const diTiep = Math.sign(sau!.m - x.m) === Math.sign(x.m - truoc!.m)

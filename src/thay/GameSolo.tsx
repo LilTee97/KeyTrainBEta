@@ -133,6 +133,8 @@ export function GameChayNgon() {
   const [baoDien, setBaoDien] = useState<{ loi: boolean; chu: string } | null>(null)
   const [kieu, setKieu] = useState<KieuChay | 'sinh'>('nam-ngon')
   const [kyLuc, setKyLuc] = useState<Record<string, number>>(() => docKho(KHO_NGON, {}))
+  /** Phách của chặng đang chờ bấm (khung chờ đúng nốt báo ra) — Sinh nốt Solo hiện lý do của nốt ấy. */
+  const [dangCho, setDangCho] = useState<number | null>(null)
 
   const tuNhap = vongId === 'tu-nhap' && vongTu !== null
   const vong = vongs.find((x) => x.id === vongId) ?? vongs[0]!
@@ -452,7 +454,6 @@ export function GameChayNgon() {
       {bai ? (
         <p className="text-xs text-cream/85">
           Đang chạy: <b className="text-amber-key">{bai.ten}</b> · {bai.tay === 'right' ? 'tay phải' : 'tay trái'} · ♩ = {bpm}
-          {cauSinh ? <span className="ml-2 text-teal-key">↓ vì sao chọn từng nốt: dưới khung tập</span> : null}
           {kyLuc[khoa] ? <span className="ml-2 text-amber-key">kỷ lục {sao(kyLuc[khoa]!)}</span> : null}
         </p>
       ) : (
@@ -460,6 +461,8 @@ export function GameChayNgon() {
           {thay ? `${tenThay} chưa có ô nào cho ${phan === 'don' ? 'hợp âm' : 'vòng'} này — thử hợp âm / vòng / giọng khác.` : 'Chưa có vòng — nhập vòng rồi bấm "Dùng vòng này".'}
         </p>
       )}
+
+      {cauSinh && <GiaiThichSinh cau={cauSinh} dangCho={cheDo === 'cho' ? dangCho : null} />}
 
       {!bai ? null : cheDo === 'cho' ? (
         <NoteGatedPractice
@@ -470,6 +473,7 @@ export function GameChayNgon() {
           perBeat={bai.perBeat}
           vongBpm={bpm}
           nenTayKia
+          onChang={setDangCho}
           bac={{
             tay: bai.tay,
             onXong: (k) => {
@@ -507,7 +511,6 @@ export function GameChayNgon() {
           }}
         />
       )}
-      {cauSinh && <GiaiThichSinh cau={cauSinh} />}
     </div>
   )
 }
@@ -516,10 +519,21 @@ const THE = 'rounded-xl border border-line bg-black/25 p-4'
 const phanTram = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)} % (${a}/${b})` : '—')
 
 /**
- * Giải thích câu Sinh nốt Solo: vì sao từng nốt (lý do bộ soạn ghi lúc chọn), câu này so với số đo các thầy, và các quy luật chung — mỗi
- * luật kèm số lần câu này dùng (người dùng 11/10/2026: "giải thích quy tắc … có điểm chung hay quy luật gì khi soạn nốt solo hãy dạy").
+ * GIẢI THÍCH & DẠY CHỌN NỐT cho câu Sinh nốt Solo — NGAY TRÊN khung tập (người dùng 11/10/2026: "phần giải thích và dạy cách chọn nốt
+ * đâu" — bản đầu đặt dưới khung tập, phải cuộn xa mới thấy). Ba mục: vì sao từng nốt (lý do bộ soạn ghi lúc chọn) · câu này so với số
+ * đo các thầy · cách chọn nốt — quy luật chung (mỗi luật kèm số lần câu này dùng). Đang luyện chờ đúng nốt thì lý do của nốt ĐANG CHỜ
+ * hiện to ở đầu thẻ và được tô sáng trong danh sách.
  */
-function GiaiThichSinh({ cau }: { cau: CauSinh }) {
+function GiaiThichSinh({ cau, dangCho }: { cau: CauSinh; dangCho: number | null }) {
+  const [muc, setMuc] = useState<'not' | 'so' | 'luat'>('not')
+  const hop = useRef<HTMLDivElement>(null)
+  const notCho = dangCho === null ? null : (cau.not.find((x) => Math.abs(x.t - dangCho) < 1e-6) ?? null)
+  useEffect(() => {
+    // Cuộn TRONG hộp tới nốt đang chờ — không cuộn cả trang (khung tập ở ngay dưới).
+    const box = hop.current
+    const el = box?.querySelector<HTMLElement>('[data-dang-cho="1"]')
+    if (box && el) box.scrollTop = Math.max(0, el.offsetTop - box.clientHeight / 3)
+  }, [dangCho, muc])
   const s = cau.soDo
   const dem = (id: LuatSinh) => cau.not.filter((x) => x.luat.includes(id)).length
   const so: readonly [string, string, string][] = [
@@ -530,44 +544,73 @@ function GiaiThichSinh({ cau }: { cau: CauSinh }) {
     ['Nhảy ≥ 5 nửa cung rồi quay đầu', phanTram(s.quay, s.nhay), '62 % (13 bản ký âm)'],
     ['Câu dừng ở bậc 1 hay 5', phanTram(s.ketDong, s.soCau), 'đoạn kết Linh Nhi co về 1 + 5 (47–51 % nốt); Ray kết gốc 19 · bậc 5 15 trên 74 câu'],
   ]
+  const chip = 'mr-1.5 rounded bg-ink px-1 py-0.5 font-mono font-bold text-yellow-300'
   return (
-    <div className="flex flex-col gap-3 text-xs">
-      <details open className={THE}>
-        <summary className="cursor-pointer text-sm font-semibold text-cream">Vì sao chọn những nốt này — từng nốt</summary>
-        {cau.hopO.map((ten, o) => (
-          <div key={o} className="mt-2">
-            <p className="font-semibold text-amber-key">
-              Ô {o + 1} · {ten}
-            </p>
-            <ol className="mt-1 flex flex-col gap-1">
-              {cau.not
-                .filter((x) => x.o === o)
-                .map((x) => (
-                  <li key={x.t} className="text-cream/85">
-                    <span className="mr-1.5 rounded bg-ink px-1 py-0.5 font-mono font-bold text-yellow-300">{x.ten}</span>
-                    <span className="mr-1 text-dim">phách {x.phach}</span>
-                    {x.ly}
-                  </li>
-                ))}
-            </ol>
-          </div>
+    <div className={`${THE} text-xs`}>
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <span className="mr-1 text-sm font-semibold text-cream">Giải thích &amp; dạy chọn nốt</span>
+        {(
+          [
+            ['not', 'Vì sao từng nốt'],
+            ['so', 'So với các thầy'],
+            ['luat', 'Cách chọn nốt — quy luật chung'],
+          ] as const
+        ).map(([v, ten]) => (
+          <button key={v} type="button" onClick={() => setMuc(v)} className={nut(muc === v)}>
+            {ten}
+          </button>
         ))}
-      </details>
-      <div className={THE}>
-        <p className="mb-2 text-sm font-semibold text-cream">Câu này so với số đo câu solo của các thầy</p>
+      </div>
+      {notCho ? (
+        <p className="mb-2 rounded-lg border border-amber-key/60 bg-amber-key/10 p-2 text-sm text-cream">
+          <span className={chip}>{notCho.ten}</span>
+          <span className="mr-1 font-semibold text-amber-key">
+            Nốt đang chờ bấm · ô {notCho.o + 1} ({cau.hopO[notCho.o]}) · phách {notCho.phach}:
+          </span>
+          {notCho.ly}
+        </p>
+      ) : (
+        <p className="mb-2 text-dim">Bấm "Bắt đầu luyện" ở khung tập dưới (chế độ chờ đúng nốt): lý do của nốt đang chờ bấm hiện ngay đây.</p>
+      )}
+      {muc === 'not' && (
+        <div ref={hop} className="relative max-h-72 overflow-y-auto pr-1">
+          {cau.hopO.map((ten, o) => (
+            <div key={o} className="mb-2">
+              <p className="font-semibold text-amber-key">
+                Ô {o + 1} · {ten}
+              </p>
+              <ol className="mt-1 flex flex-col gap-1">
+                {cau.not
+                  .filter((x) => x.o === o)
+                  .map((x) => (
+                    <li
+                      key={x.t}
+                      data-dang-cho={x === notCho ? '1' : undefined}
+                      className={`rounded px-1 py-0.5 text-cream/85 ${x === notCho ? 'bg-amber-key/15 ring-1 ring-amber-key' : ''}`}
+                    >
+                      <span className={chip}>{x.ten}</span>
+                      <span className="mr-1 text-dim">phách {x.phach}</span>
+                      {x.ly}
+                    </li>
+                  ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      )}
+      {muc === 'so' && (
         <div className="grid grid-cols-1 gap-x-3 gap-y-1 sm:grid-cols-[minmax(10rem,16rem)_8rem_1fr]">
-          {so.map(([muc, cauNay, thay]) => (
-            <div key={muc} className="contents">
-              <span className="font-semibold text-teal-key">{muc}</span>
+          {so.map(([ten, cauNay, thay]) => (
+            <div key={ten} className="contents">
+              <span className="font-semibold text-teal-key">{ten}</span>
               <span className="font-mono text-cream">{cauNay}</span>
               <span className="text-dim">{thay}</span>
             </div>
           ))}
         </div>
-      </div>
-      <details open className={THE}>
-        <summary className="cursor-pointer text-sm font-semibold text-cream">Quy luật chung khi soạn nốt solo — bộ soạn dùng những luật này</summary>
-        <ul className="mt-2 flex flex-col gap-2">
+      )}
+      {muc === 'luat' && (
+        <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-1">
           {LUAT_SINH.map((l) => (
             <li key={l.id}>
               <p className="font-semibold text-amber-key">
@@ -581,7 +624,7 @@ function GiaiThichSinh({ cau }: { cau: CauSinh }) {
             </li>
           ))}
         </ul>
-      </details>
+      )}
     </div>
   )
 }

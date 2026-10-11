@@ -6705,3 +6705,23 @@ quay đầu ≥ 70 %; cùng câu số cùng câu, 6 câu số ≥ 5 câu khác, 
 build` qua · chạy thử headless 11/11 (nút Sinh nốt Solo; Dm – G – C; giải thích từng nốt theo ô; bảng so; quy luật kèm số lần; Sinh câu
 mới → câu số 2, giải thích đổi; vòng tự điền Am F C G; bấm đúng 3 nốt đầu → máy đệm; điện thoại không cuộn ngang) · `LuyenTap.json`,
 `Nguon.json` không đổi.
+
+## Bước — Sinh nốt Solo: giải thích lên TRÊN khung tập, theo nốt đang chờ bấm (11/10/2026)
+
+**Người dùng** (kèm ảnh, đang ở Sinh nốt Solo): *"phần giải thích và dạy cách chọn nốt đâu"*. Phần ấy có từ `7277fc6` nhưng nằm DƯỚI
+khung tập (nốt rơi + bàn phím cao) — phải cuộn xa mới thấy; dòng gợi ý "↓ vì sao chọn từng nốt: dưới khung tập" không đủ.
+
+- `GameSolo.tsx`: thẻ **Giải thích & dạy chọn nốt** đặt ngay trên khung tập, ba mục bấm: Vì sao từng nốt (hộp cuộn riêng, cao tối đa
+  18 rem) · So với các thầy · Cách chọn nốt — quy luật chung (kèm số lần câu dùng). Bỏ dòng gợi ý cũ.
+- **Theo nốt đang chờ bấm** (chế độ chờ đúng nốt): `NoteGatedPractice` có prop mới `onChang` — báo phách của chặng đang chờ (null khi
+  chưa luyện / gỡ khung). Thẻ hiện to lý do của nốt ấy ở đầu và tô sáng nốt ấy trong danh sách, cuộn trong hộp (trang không nhảy).
+  Theo nhịp: không có dòng nốt đang chờ.
+- **Bộ soạn sửa thêm** (ảnh của người dùng lộ ra "Nốt DẪN — G5 đứng sát G5"): nốt dẫn từng trùng đích khi nốt trước đã sát đích → nay
+  vòng qua phía bên kia đích rồi rơi về; nốt không cách nốt hợp âm mới 1–3 nửa cung thì không gọi là nốt dẫn (nốt đi qua, ô sau chọn trụ
+  như thường) — ca sau nốt tránh: B4 → G4 (4 nửa cung) từng ghi "đứng sát".
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `hocSolo.test.ts` 23 (thêm điều kiện: nốt dẫn cách đích 1–3 nửa cung và nốt sau là nốt rơi vào
+đích — 180 câu) · toàn suite 2 758 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 9/9 (thẻ nằm trên khung tập: 697 px so
+với 1071 px; ba mục; bắt đầu luyện → lý do A4; bấm đúng 4 nốt → lý do chuyển sang F5; tô sáng đúng một nốt, trang không nhảy; theo
+nhịp không còn dòng đang chờ; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi. Script chạy thử lượt trước
+(`sinh.mjs`) hỏng 3 mục vì tìm khối `details` cũ — bố cục đổi, không phải lỗi app.

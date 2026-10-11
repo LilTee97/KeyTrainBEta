@@ -250,12 +250,21 @@ export function sinhSolo(hop: readonly Hop[], tonic: number, thu: boolean, seed:
           dich = gan(notHop(oSau), truoc!, huong)
           dan = buocGam(dich, dich > truoc! ? -1 : 1, o)
           if (dan === dich || dan === truoc || Math.abs(dan - truoc!) > 4) dan = buocGam(truoc!, Math.sign(dich - truoc!) || huong, o)
+          // Nốt trước đã sát đích (bước tới là trúng đích): vòng qua phía bên kia đích rồi rơi về — nốt dẫn không được trùng đích.
+          if (dan === dich) dan = buocGam(dich, dich >= truoc! ? 1 : -1, o)
         }
         m = dan
-        datTruoc = dich
-        vai = 'dan'
-        luat = ['noi', 'gam']
-        ly = `Nốt DẪN cuối ô — ${ten(m)} (trong gam ${tenGam}) đứng sát ${ten(dich)}; ô sau sẽ rơi đúng vạch vào ${ten(dich)}, bậc ${bac(dich, oSau)} của ${hopAm[oSau]!.ten}.`
+        if (dich !== dan && Math.abs(dich - dan) <= 3) {
+          datTruoc = dich
+          vai = 'dan'
+          luat = ['noi', 'gam']
+          ly = `Nốt DẪN cuối ô — ${ten(m)} (trong gam ${tenGam}) đứng sát ${ten(dich)}; ô sau sẽ rơi đúng vạch vào ${ten(dich)}, bậc ${bac(dich, oSau)} của ${hopAm[oSau]!.ten}.`
+        } else {
+          // Không có nốt hợp âm mới nào sát nốt này (cách 1–3 nửa cung): không gọi là nốt dẫn — chỉ là nốt đi qua, ô sau chọn trụ như thường.
+          vai = 'duong'
+          luat = ['gam', 'buoc']
+          ly = `Phách ${ph} (nhẹ) — MẶT CẦU: đi liền bậc ${m > truoc! ? 'lên' : 'xuống'} tới ${ten(m)}, nốt trong gam ${tenGam} (bậc ${bac(m, o)} của ${hp.ten}).`
+        }
       } else {
         const xs = r()
         const nhay = xs < XAC_SUAT_NHAY && j < on.length - 2 ? notHop(o).filter((x) => (x - truoc!) * huong >= 5 && Math.abs(x - truoc!) <= 9) : []
