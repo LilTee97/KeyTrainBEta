@@ -42,8 +42,8 @@ type Doan = 'intro' | 'interlude' | 'outro'
 type H = OSR['h'][number]
 type Go = OSR['r'][number]
 type O6 = OSR
-/** Một ô đem ghép: `src.o[i]`; `giaiDieu` · `nhip` ghi nguồn cho `compositionSources`. */
-type Nguon = { src: NguonSR; i: number; mo: boolean; giaiDieu: string; nhip: string; lai: boolean; khoa: string }
+/** Một ô đem ghép: `src.o[i]`; `giaiDieu` · `nhip` ghi nguồn cho `compositionSources`; `nhomMau` (ô lai) = nhóm chất hợp âm của ô tiết tấu — tay trái lấy từ ô ấy. */
+type Nguon = { src: NguonSR; i: number; mo: boolean; giaiDieu: string; nhip: string; lai: boolean; khoa: string; nhomMau?: string }
 type Not = { at: number; dur: number; notes: number[] }
 
 const O = 3
@@ -325,7 +325,7 @@ function laiO(dSrc: NguonSR, di: number, mau: Nguon): Nguon {
     id: `lai:${dSrc.id}#${di + 1}~${mau.src.id}#${mau.i + 1}`, bai: dSrc.bai, doan: dSrc.doan, thu: dSrc.thu,
     dieu: 'bolero', chuGoc: dSrc.chuGoc, oPhach: O, o: [{ d: O, h: [[0, hD[1], hD[2], hD[3]]], r, l }],
   }
-  return { src, i: 0, mo: di === 0, giaiDieu: tenO(dSrc, di), nhip: mau.nhip, lai: true, khoa: `${dSrc.id}#${di}` }
+  return { src, i: 0, mo: di === 0, giaiDieu: tenO(dSrc, di), nhip: mau.nhip, lai: true, khoa: `${dSrc.id}#${di}`, nhomMau: nhomHau(mO.h[0]![2]) }
 }
 
 const KHO = new Map<boolean, readonly Nguon[]>()
@@ -554,6 +554,12 @@ export function soanSlowRockLinhNhi(options: {
   take?: number
   /** Một ô 6/8 dài mấy phách trong điệu (Lá Thư 3, điệu 6/8 không `gridUnit` 6). */
   oDieu?: number
+  /**
+   * VÒNG CHO SẴN — game chạy ngón trang Học Solo (người dùng 12/10/2026: áp bộ soạn của thầy như Cà Pháo — soạn câu mới trên vòng của
+   * người dùng, không chép câu sheet). Mỗi hợp âm một ô 6/8, gốc · bass tính từ chủ âm. Có thì không dựng vòng mới, không ô kết, không
+   * cú dặm V7: mọi ô chọn từ kho như ô thân. Bỏ trống = như cũ (tab Tái hòa âm không truyền).
+   */
+  vongCoDinh?: readonly { goc: number; hau: string; bass: number | null }[]
 }): PhraseSection {
   const { kind, key } = options
   const take = Math.max(0, options.take ?? 0)
@@ -565,11 +571,12 @@ export function soanSlowRockLinhNhi(options: {
   const doiGiong = (s: NguonSR) => ((((key.tonic - s.chuGoc) % 12) + 18) % 12) - 6
   const mocCua = (s: NguonSR) => 60 + s.chuGoc + doiGiong(s)
   const bai = vonCuaBai(key.tonic, options.songChords ?? [])
+  const coDinh = options.vongCoDinh?.length ? options.vongCoDinh.map((x): H => [0, x.goc, x.hau, x.bass]) : null
 
   // Ô kết: cử chỉ kết thật của chị (đã nắn nhịp), xoay theo lượt; giữ hợp âm của chính nó.
   const ketUng = SLOW.filter((s) => s.doan === kind)
   const ketSrc = ketUng[(take + (kind === 'outro' ? 0 : 1)) % ketUng.length]!
-  const soKet = SO_O_KET[ketSrc.id] ?? 1
+  const soKet = coDinh ? 0 : SO_O_KET[ketSrc.id] ?? 1
   const oKet: Nguon[] = Array.from({ length: soKet }, (_, j) => {
     const i = ketSrc.o.length - soKet + j
     return { src: ketSrc, i, mo: false, giaiDieu: tenO(ketSrc, i), nhip: nhipO(ketSrc, i), lai: false, khoa: `${ketSrc.id}#${i}` }
@@ -577,10 +584,13 @@ export function soanSlowRockLinhNhi(options: {
   const ket = oKet.map((ng) => hopAmKet(ng.src.o[ng.i]!.h[0]!, thu))
 
   // Vòng hợp âm mới, xoay theo lượt. Không ghép được thì dùng vòng thật khớp vốn bài nhất.
-  const moi = vongMoi(kind, thu, bai, ket)
+  const moi = coDinh ? [] : vongMoi(kind, thu, bai, ket)
   let vongTu: string
   let than: H[]
-  if (moi.length > 0) {
+  if (coDinh) {
+    than = coDinh
+    vongTu = 'cho sẵn'
+  } else if (moi.length > 0) {
     const v = moi[take % moi.length]!
     than = v.hs.slice(0, v.hs.length - soKet)
     vongTu = v.tu
@@ -613,6 +623,11 @@ export function soanSlowRockLinhNhi(options: {
     for (const ng of laKet ? [oKet[i - (n - soKet)]!] : kho) {
       if (!laKet && daDung.has(ng.khoa)) continue
       if (!laKet && !cungHinh(ng.src.o[ng.i]!.h, dich, gamCua(ng.src.thu), gam)) continue
+      /* Vòng cho sẵn: bỏ ô LAI có ô tiết tấu khác nhóm chất (trưởng · thứ · 7 · giảm · sus) với chính ô ấy. `laiO` dời tay trái của ô
+         tiết tấu theo nửa cung (`doiTrai`), nên ô lai cao độ Mùa Xuân Đầu Tiên (I trưởng) trên tiết tấu dạo Lá Thư ô 7 (hợp âm GIẢM) mang
+         tay trái C – E♭ – F♯ dưới C trưởng. Số đo ở SO-TAY (bước 14/10/2026). Vòng tự dựng (tab Tái hòa âm) chưa lọc — đường ấy tai người
+         dùng có thể đã duyệt: hỏi trước khi đổi. */
+      if (coDinh && ng.lai && ng.nhomMau !== nhomHau(ng.src.o[ng.i]!.h[0]![2])) continue
       for (const tam of [-12, 0, 12]) {
         const d = datO(ng, dich, thu, mocCua(ng.src), tam)
         // Ô kết được phép không gõ tay phải (Lá Thư c142–c143 ngân hợp âm Picardy từ ô trước).
@@ -688,7 +703,7 @@ export function soanSlowRockLinhNhi(options: {
     chỗ ca sĩ vào). Hợp âm, thế tay lấy từ cú dập đầu ô kết + bậc 7. Độ ngân nửa ô là BIÊN SOẠN.
   */
   const hKet = vong[n - 1]![vong[n - 1]!.length - 1]!
-  const damV7 = kind !== 'outro' && ketSrc.id.startsWith('la-thu-tran-the-') && hKet[1] === 7 && /7/.test(hKet[2])
+  const damV7 = !coDinh && kind !== 'outro' && ketSrc.id.startsWith('la-thu-tran-the-') && hKet[1] === 7 && /7/.test(hKet[2])
   const cuoi = ra[n - 1]!
   const dam: { phai: number[]; trai: number[] } | null = damV7 && cuoi.phai.length > 0
     ? (() => {
@@ -748,6 +763,6 @@ export function soanSlowRockLinhNhi(options: {
       melody: 'cú dặm V7 thêm theo ý người dùng #70', rhythm: 'một cú dặm, ngân nửa ô',
       donorGenre: 'slow rock', mode: thu ? 'minor' : 'major', sourceKind: kind,
     }] : []),
-    adaptationNote: `Vòng mới ${vongTu}; ô slow rock của Linh Nhi và giai điệu bolero đặt lên tiết tấu slow rock; kết bằng ${ketSrc.bai}.`,
+    adaptationNote: `Vòng ${coDinh ? 'cho sẵn' : `mới ${vongTu}`}; ô slow rock của Linh Nhi và giai điệu bolero đặt lên tiết tấu slow rock${coDinh ? '' : `; kết bằng ${ketSrc.bai}`}.`,
   }
 }

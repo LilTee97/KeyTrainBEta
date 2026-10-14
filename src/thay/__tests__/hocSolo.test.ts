@@ -23,6 +23,7 @@ import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { docHop, docVong, vongLyThuyetHop } from '../soanCau/thayTrongVong'
 import { BALLAD_SOLO_RANGE } from '../../reharm/style/balladFamily'
 import { composeCpBallad } from '../../reharm/style/cpBalladComposition'
+import { soanSlowRockLinhNhi } from '../../reharm/style/soanSlowRockLinhNhi'
 import { getStyle } from '../../reharm/style/styleLibrary'
 import type { PitchClass } from '../../shared/musicTheory/types'
 
@@ -234,10 +235,11 @@ describe('Game chạy ngón — câu theo thầy (bộ soạn của app trên v�
       for (const [chu, tonic, thu] of VONG) {
         const hop = docVong(chu, tonic)!
         const bai = baiCauThay(thay, hop, tonic, thu, 0, 'x')!
-        const o = thay === 'blues' ? 3 : 4
+        // Cà Pháo một ô 4/4 mỗi hợp âm; Linh Nhi (slow rock) · Blues một ô 6/8 = 3 phách đen.
+        const o = thay === 'ca-phao' ? 4 : 3
         expect(bai, `${thay} ${chu}`).not.toBeNull()
         expect(bai.perBeat.length).toBe(hop.length * o)
-        expect(bai.meter).toBe(thay === 'blues' ? 3 : 4)
+        expect(bai.meter).toBe(o)
         const phai = bai.timeline.filter((e) => e.hand === 'right')
         expect(phai.length, `${thay} ${chu}`).toBeGreaterThan(hop.length * 3)
         expect(bai.timeline.some((e) => e.hand === 'left')).toBe(true)
@@ -248,11 +250,11 @@ describe('Game chạy ngón — câu theo thầy (bộ soạn của app trên v�
         expect(loiBoSoan(thay, thu)).toMatch(/Đệm: /)
       }
   })
-  it('cùng lượt ra cùng một câu (giữ câu tới khi bấm Đổi câu); Cà Pháo · Linh Nhi đổi lượt là đổi câu', () => {
+  it('cùng lượt ra cùng một câu (giữ câu tới khi bấm Đổi câu); đổi lượt là đổi câu', () => {
     const hop = docVong('C Am F G', 0)!
     for (const thay of ['ca-phao', 'linh-nhi', 'blues'] as const)
       expect(JSON.stringify(baiCauThay(thay, hop, 0, false, 2, 'x'))).toBe(JSON.stringify(baiCauThay(thay, hop, 0, false, 2, 'x')))
-    for (const thay of ['ca-phao', 'linh-nhi'] as const) {
+    for (const thay of ['ca-phao', 'linh-nhi', 'blues'] as const) {
       const cau = [0, 1, 2, 3].map((t) => JSON.stringify(baiCauThay(thay, hop, 0, false, t, 'x')!.timeline.filter((e) => e.hand === 'right')))
       expect(new Set(cau).size, thay).toBeGreaterThanOrEqual(3)
     }
@@ -277,15 +279,37 @@ describe('Game chạy ngón — câu theo thầy (bộ soạn của app trên v�
       expect(cau.lengthBeats).toBe(16)
     }
   })
-  it('Cà Pháo: mọi vòng sẵn có (12 giọng × trưởng / thứ) ra câu; tay phải trong tầm solo ballad; vòng ngắn lặp tới 4 ô mới đủ câu khác nhau', () => {
-    for (let tonic = 0; tonic < 12; tonic++)
-      for (const thu of [false, true])
-        for (const v of vongLyThuyetHop(tonic, thu)) {
-          const bai = baiCauThay('ca-phao', v.hop, tonic, thu, 0, v.id)
-          expect(bai, `${tonic} ${thu} ${v.id}`).not.toBeNull()
-          for (const e of bai!.timeline.filter((x) => x.hand === 'right'))
-            for (const m of e.notes) expect(m >= BALLAD_SOLO_RANGE.low && m <= BALLAD_SOLO_RANGE.high, `${v.id} ${m}`).toBe(true)
-        }
+  it('Linh Nhi: bộ soạn slow rock soạn trên ĐÚNG vòng cho sẵn — mỗi hợp âm một ô 6/8, không ô kết, không cú dặm V7', () => {
+    const doc = (ds: readonly string[]) => docHop(ds.join(' '))!.map((c) => `${c.root}:${c.quality.symbol}:${c.bass ?? ''}`)
+    for (const [chu, tonic, thu] of [...VONG, ['C A7 Dm G7', 0, false], ['Dm7 G7 Cmaj7', 0, false], ['Am Am E7 E7', 9, true]] as const) {
+      const hop = docVong(chu, tonic)!
+      const cau = soanSlowRockLinhNhi({
+        kind: 'interlude',
+        key: { tonic: tonic as PitchClass, scale: thu ? 'minor' : 'major' },
+        oDieu: 3,
+        vongCoDinh: hop.map((x) => ({ goc: x.goc, hau: x.chat, bass: x.bass ?? null })),
+      })
+      expect(cau.unavailableReason, chu).toBeUndefined()
+      // Hợp âm đứng liền gộp làm một (Am Am → Am), như mọi câu của bộ soạn.
+      expect(doc(cau.chords), chu).toEqual(doc(chu.split(' ').filter((x, k, ds) => x !== ds[k - 1])))
+      expect(cau.lengthBeats).toBe(hop.length * 3)
+      expect(cau.events.every((e) => e.startBeat < hop.length * 3)).toBe(true)
+    }
+  })
+  it('mọi vòng sẵn có (12 giọng × trưởng / thứ; Blues 3 giọng) ra câu của cả ba thầy; tay phải trong tầm; Cà Pháo: vòng ngắn lặp tới 4 ô mới đủ câu khác nhau', { timeout: 30000 }, () => {
+    for (const thay of ['ca-phao', 'linh-nhi', 'blues'] as const) {
+      const [lo, hi] = thay === 'ca-phao' ? [BALLAD_SOLO_RANGE.low, BALLAD_SOLO_RANGE.high] : [36, 96]
+      /* Blues: ba giọng (C · F · B♭) — bộ soạn kẹp tay phải trong 55–96 (`tam`) và đọc vòng theo chủ âm. Đủ 12 giọng tốn 2,1 s (Cà Pháo
+         1,3 s · Linh Nhi 0,75 s), dồn tải lên các test soạn nặng khác khi chạy cả bộ (đo 14/10/2026). */
+      for (const tonic of thay === 'blues' ? [0, 5, 10] : Array.from({ length: 12 }, (_, k) => k))
+        for (const thu of [false, true])
+          for (const v of vongLyThuyetHop(tonic, thu)) {
+            const bai = baiCauThay(thay, v.hop, tonic, thu, 0, v.id)
+            expect(bai, `${thay} ${tonic} ${thu} ${v.id}`).not.toBeNull()
+            for (const e of bai!.timeline.filter((x) => x.hand === 'right'))
+              for (const m of e.notes) expect(m >= lo && m <= hi, `${thay} ${v.id} ${m}`).toBe(true)
+          }
+    }
     // Hợp âm lẻ (vòng 2 ô một hợp âm): trước khi lặp tới 4 ô chỉ ra 2 câu khác nhau / 8 lượt.
     const don = docVong('C C', 0)!
     const cau = Array.from({ length: 8 }, (_, t) => baiCauThay('ca-phao', don, 0, false, t, 'don')!)

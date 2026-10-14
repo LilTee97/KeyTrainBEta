@@ -520,6 +520,8 @@ Các hợp âm phải được chọn tự do …"*
   dạy quy luật chung (mỗi luật trỏ về một mẹo có số đo).
   Cập nhật 12/10 (người dùng): câu thầy Cà Pháo trong game do bộ soạn ballad của tab Tái hòa âm soạn MỚI trên vòng người dùng — không
   còn chép ô nhịp sheet.
+  Cập nhật 14/10 (người dùng 12/10): Linh Nhi (bộ soạn slow rock — game đổi sang ô 6/8) và Blues (Bộ Soạn lượt 6) cũng soạn câu mới trên
+  vòng người dùng.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

@@ -319,6 +319,8 @@ export function chayBlueSun(chords: readonly ParsedChord[], o: {
   doan?: 'hat' | 'dan'
   /** Lượt 6 (ô tick): SOẠN từ nhóm ba thay cho chép trọn ô — cùng luật chỗ đặt ô dày như lượt 3. */
   soan?: boolean
+  /** Trọng số lượt khi soạn (`soanCauBlues` `doiLuot`, mặc định 0,8). Game chạy ngón: 2,5 như lượt 12 — 0,8 thì đổi lượt hay ra lại câu cũ. */
+  doiLuot?: number
   /** "Bản Blues rút gọn" (lượt 12, ô tick): câu chạy cuối câu hát rơi đúng phách 1 hợp âm mới, nốt nhẹ đều trong câu hát, TAY
    *  TRÁI nối sang hợp âm sau (`traiNoiBlueSun`). Trả cả nốt tay trái. */
   luot12?: boolean
@@ -378,6 +380,7 @@ export function chayBlueSun(chords: readonly ParsedChord[], o: {
       key: g, take: o.take, mocDon: MOC, uuTien: 'sun', tam: [55, 96], chiGiaiDieu: true,
       day: (j, i, cuoi) => o.doan === 'dan' ? j % 2 === 1 : o.breaths?.size ? cuoi && o.breaths.has(i) : j % 4 === 3,
       muc: { thua: [3, 6], day: [5, 9], dap: [2, 4] }, luc: manh => (manh ? 74 : 66),
+      ...(o.doiLuot === undefined ? {} : { doiLuot: o.doiLuot }),
     }).events
   }
   const OO = 6 * MOC

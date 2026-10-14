@@ -6800,3 +6800,58 @@ hợp âm khớp; mọi vòng sẵn có ra câu, tay phải trong tầm 58–77,
 phách) · toàn suite 2 762 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless 15/15 (C – C chờ đúng nốt 28/28 chặng không vấp,
 bấm đúng chặng đầu thì máy đánh tay trái của bộ soạn; Đổi câu ra câu khác, tới câu số 4 không báo hết câu; Am Dm E7 Am 28/28; C F G tên
 giữ ba hợp âm, 24 phách; theo nhịp C Am F G phát đệm và chấm; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game chạy ngón: Linh Nhi và Blues cũng soạn câu MỚI bằng bộ soạn của thầy (14/10/2026)
+
+**Người dùng (12/10/2026, sau bước Cà Pháo `a7834c9`):** *"câu soạn đã đạt. Tôi muốn bạn áp dụng cho Linh Nhi và Blues"*.
+
+**Linh Nhi** — chị chỉ có MỘT bộ soạn câu mới: `soanSlowRockLinhNhi`. Ở tab Tái hòa âm màu Linh Nhi, họ Slow Rock soạn câu mới, còn họ
+Bolero chép nguyên một đoạn giang thật (`linhNhiSolo`). Nên game Linh Nhi đổi từ Bolero 4/4 (bộ ghép ô thật `giaiDieuDaoLinhNhi`) sang
+slow rock: mỗi hợp âm một ô 6/8 (3 phách đen, đếm 3), đệm Slow Rock Lá thư, hai tay của bộ soạn.
+- `soanSlowRockLinhNhi` thêm `vongCoDinh`: không dựng vòng mới, không ô kết, không cú dặm V7 — mọi ô chọn từ kho như ô thân. Bỏ trống =
+  như cũ.
+- **Lỗi lộ ra khi soi** (tay trái C – E♭ – F♯ dưới C trưởng): ô LAI (cao độ một ô bolero trên tiết tấu một ô slow rock) lấy tay trái
+  của ô tiết tấu dời theo nửa cung (`laiO`, `doiTrai`) — ô lai Mùa Xuân Đầu Tiên (I trưởng) trên tiết tấu dạo Lá Thư ô 7 (hợp âm
+  GIẢM). Với vòng cho sẵn: bỏ ô lai có ô tiết tấu khác nhóm chất (trưởng · thứ · 7 · giảm · sus) với chính nó (`nhomMau`). Đo 14/10,
+  12 vòng × 8 lượt, nốt ngoài cả hợp âm lẫn giọng (tay trái · tay phải · số câu khác nhau):
+
+  | | tay trái | tay phải | câu khác nhau |
+  |---|---|---|---|
+  | chưa lọc | 40/1079 | 2/2399 | 96/96 |
+  | **lọc ô lai (dùng)** | **0/919** | **14/2401** | **96/96** |
+  | lọc thêm mọi ô theo nhóm chất hợp âm đích | 0/941 | 63/2349 | 80/96 — bỏ |
+
+  14 nốt tay phải còn lại cùng một hình: C♯ (bè quãng tám) móc kép đi lên D liền sau — nốt lướt nửa cung có giải, một ô mở ở lượt 3.
+- **Tab Tái hòa âm CHƯA sửa:** cùng lỗi ô lai có thể vang ở câu solo slow rock màu Linh Nhi; đường ấy tai người dùng có thể đã duyệt —
+  hỏi trước khi đổi.
+
+**Blues** — Bộ Soạn Blues lượt 6 (`chayBlueSun({ soan: true })`): soạn từ nhóm ba thật của Rockhouse và Rising Sun, như tab Tái hòa
+âm bật ô tick "Bộ Soạn Blues lượt 6" (người dùng nghe 28/9: phối hai tay ổn, giai điệu 6/10). Bản trước chép trọn ô Rising Sun.
+`chayBlueSun` thêm `doiLuot` (trọng số lượt truyền tới `soanCauBlues`; bỏ trống = 0,8 như cũ); game dùng 2,5 như lượt 12. Đo 12/10
+(`chayBlueSun` trực tiếp, 12 vòng × 8 lượt, trong đó có A7 D7 A7 E7 · E7 A7 E7 B7):
+
+| `doiLuot` | câu khác nhau | nốt hợp âm phách 1 · 4 |
+|---|---|---|
+| 0,8 (mặc định) | 61/96 (Am – Am 1/8 — "Đổi câu" ra lại câu cũ) | 63,0 % (442/702) |
+| 1,5 | 72/96 | 61,3 % (430/701) |
+| **2,5 (dùng)** | **88/96** | **59,2 % (407/687)** |
+
+**Số đo câu trong game** (`baiCauThay`, 14/10, 12 vòng mẫu × 8 lượt; phách 1 · 4 = ±0,2 móc quanh tiếng 1 và 4 của ô 6/8):
+- Linh Nhi: 96/96 câu khác nhau · 1,87 cú mỗi phách (1795/960) · đỉnh là nốt hợp âm 88,6 % (1591/1795) · phách 1 · 4 95,9 % (606/632)
+  — sheet slow rock của chị 83 % (67/81, phách mạnh, md 13e: đo khác cách, không so thẳng) · tầm tay phải 48–96.
+- Blues: 88/96 · 3,69 cú mỗi phách (3545/960) · đỉnh là nốt hợp âm 52,5 % (1861/3545) · phách 1 · 4 60,6 % (407/672) — ba sheet 65–73 %
+  (Rockhouse n=304 · Rising Sun n=26 · Robert n=164, cùng định nghĩa ±0,2 móc) · tầm tay phải 55–96.
+- Cả hai: 132/132 vòng sẵn (12 giọng × trưởng / thứ) ra câu.
+
+**Chưa đo — lỗ còn lại:** tai người dùng chưa nghe câu Linh Nhi · Blues trên vòng game; game Linh Nhi mất màu Bolero (chưa có bộ soạn
+câu mới cho Bolero); Blues bám hợp âm kém sheet (60,6 % so với 65–73 % ở phách 1 · 4) — chấm `bamHop` (lượt 12 đang dùng) chưa bật cho
+game; mật độ Blues 3,69 cú mỗi phách dày cho người tập; lỗi ô lai ở tab Tái hòa âm (trên).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi ở các file đã sửa (`boSoanBlues.ts:169` lỗi cũ từ 291d555) · `hocSolo.test.ts` 28 (Linh Nhi một ô
+6/8 = 3 phách, đếm 3; Linh Nhi soạn trên đúng vòng cho sẵn — 5 vòng, hợp âm khớp, dài 3 phách mỗi hợp âm; mọi vòng sẵn có ra câu cả ba thầy
+— Blues 3 giọng; đổi lượt là đổi câu cả ba thầy) · toàn suite chạy khi máy đang chạy game (CPU 51 %): 15–22 test soạn nặng quá 5 s; với
+`--testTimeout=20000`: 2 763 qua / 5 đỏ (5 đỏ cũ), 0 quá giờ · `vite build` qua · chạy thử headless 19/19 (Linh Nhi C – C: 6 phách, đếm 3,
+tay trái 8 lượt không nốt ngoài giọng, 12/12 chặng không vấp, Đổi câu ra câu khác; Am Dm E7 Am 20/20; Blues Am Dm E7 Am 51/51, Đổi câu tới
+câu số 4 không báo hết câu, theo nhịp phát đệm và chấm; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+**Sự cố:** lượt chạy thử Blues theo nhịp ngày 12/10 (10:45) ghi một lượt máy-bấm vào `LuyenTap.json` mà phiên dừng trước khi trả lại —
+14/10 đã so từng mục với bản sao lưu (chỉ thêm đúng lượt số 9 "Chạy ngón · Blues", 0/148, tám lượt cũ nguyên) rồi trả lại.
