@@ -522,6 +522,9 @@ Các hợp âm phải được chọn tự do …"*
   còn chép ô nhịp sheet.
   Cập nhật 14/10 (người dùng 12/10): Linh Nhi (bộ soạn slow rock — game đổi sang ô 6/8) và Blues (Bộ Soạn lượt 6) cũng soạn câu mới trên
   vòng người dùng.
+  Cập nhật 15/10 (người dùng 14/10): Game chạy ngón làm lại — không còn nốt rơi; hai kiểu: làm quen khung nốt từng loại hợp âm (28 loại,
+  nốt chính / phụ, nốt đỉnh, chồng hai tay) · solo trên vòng có nền kiểu clip "Rải Ngón" của SSA (gợi ý nốt đỉnh + thế chồng tay phải).
+  Lối nốt rơi cũ dời tab "Đánh theo nốt rơi".
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

@@ -435,6 +435,18 @@ describe('Sinh nốt Solo — bộ soạn gia sư, lý do từng nốt', () => {
     expect(gamTrenHop(0, false, docVong('C', 0)![0]!).not.filter((x) => x.vai === 'tranh').map((x) => x.ten)).toEqual(['F'])
     expect(gamTrenHop(0, false, docVong('Eb', 0)![0]!).ten).toMatch(/^E♭ Lydian/)
   })
+  it('gam trên hợp âm ở mọi giọng: 7 nốt khác nhau — kể cả giọng app gọi bằng dấu thăng (Rê♯ thứ, Fa♯ trưởng: gốc E♯ · B♯)', () => {
+    const truong: [number, string][] = [[0, 'maj7'], [2, 'm7'], [4, 'm7'], [5, 'maj7'], [7, '7'], [9, 'm7'], [11, 'm7b5'], [2, '7'], [4, '7'], [9, '7']]
+    const thu: [number, string][] = [[0, 'm7'], [2, 'm7b5'], [3, 'maj7'], [5, 'm7'], [7, '7'], [8, 'maj7'], [10, '7'], [11, 'dim7']]
+    for (let tonic = 0; tonic < 12; tonic++)
+      for (const [laThu, ds] of [[false, truong], [true, thu]] as const)
+        for (const [goc, chat] of ds) {
+          const g = gamTrenHop(tonic, laThu, { goc, chat })
+          expect(new Set(g.pcs).size, `${tonic}${laThu ? 'm' : ''} ${g.hop}: ${g.not.map((n) => n.ten).join(' ')}`).toBe(7)
+        }
+    // Fm7♭5 ở Rê♯ thứ: gốc là E♯ — trước khi sửa ra F G♯ A♭ B C♭ D♯ E♭.
+    expect(gamTrenHop(3, true, { goc: 2, chat: 'm7b5' }).not.map((n) => n.ten)).toEqual(['E♯', 'F♯', 'G♯', 'A♯', 'B', 'C♯', 'D♯'])
+  })
   it('cùng câu số ra cùng câu; câu số khác ra câu khác; luật nào cũng có cơ sở', () => {
     const hop = docVong('C Am F G', 0)!
     expect(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x'))).toBe(JSON.stringify(sinhSolo(hop, 0, false, 3, 'x')))

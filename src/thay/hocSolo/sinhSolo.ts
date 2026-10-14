@@ -147,24 +147,36 @@ export function gamTrenHop(tonic: number, thu: boolean, x: Hop): GamHop {
   const q = findQualityBySymbol(x.chat) ?? findQualityBySymbol('')!
   const goc = pc(tonic + x.goc)
   const chuChu = CHU.indexOf(h(0, '')[0] ?? 'C')
-  const chuGoc = CHU.indexOf(h(x.goc, '')[0] ?? 'C')
   const gamBai = thu ? GAM_THU : GAM_TRUONG
-  const theoChu = new Map<number, number>()
-  gamBai.forEach((d, k) => theoChu.set((chuChu + k) % 7, pc(tonic + d)))
-  const doi: string[] = []
-  const tru: number[] = []
-  for (const iv of q.intervals) {
-    const buoc = x.chat === 'dim7' && iv === 9 ? 6 : BUOC_CHU[iv]
-    const p = pc(goc + iv)
-    tru.push(p)
-    if (buoc === undefined) continue
-    const chu = (chuGoc + buoc) % 7
-    const cu = theoChu.get(chu)!
-    if (cu !== p) {
-      doi.push(`${tenChuPc(chu, cu)} → ${tenChuPc(chu, p)} (bậc ${tenBac(pc(p - goc), x.chat)} của ${h(x.goc, x.chat, x.bass)})`)
-      theoChu.set(chu, p)
+  const gamGoc = new Map<number, number>()
+  gamBai.forEach((d, k) => gamGoc.set((chuChu + k) % 7, pc(tonic + d)))
+  /*
+    Chữ của gốc hợp âm: theo tên app gọi (như cũ); tên ấy làm gam ra nốt trùng thì lấy chữ của gam — chữ mang đúng nốt gốc, rồi chữ ngay dưới
+    (nốt nâng: cảm âm B♯ của Đô♯ thứ), rồi chữ ngay trên. Bản cũ chỉ theo tên: app gọi giọng Rê♯ thứ, Fa♯ trưởng bằng dấu thăng mà gọi gốc
+    E♯ là "F", B♯ là "C" — 6/216 gam hợp âm diatonic (12 giọng × trưởng / thứ) ra nốt trùng, vd Fm7♭5 ở Rê♯ thứ: F G♯ A♭ B C♭ D♯ E♭.
+  */
+  const dung = (chuGoc: number) => {
+    const theoChu = new Map(gamGoc)
+    const doi: string[] = []
+    const tru: number[] = []
+    for (const iv of q.intervals) {
+      const buoc = x.chat === 'dim7' && iv === 9 ? 6 : BUOC_CHU[iv]
+      const p = pc(goc + iv)
+      tru.push(p)
+      if (buoc === undefined) continue
+      const chu = (chuGoc + buoc) % 7
+      const cu = theoChu.get(chu)!
+      if (cu !== p) {
+        doi.push(`${tenChuPc(chu, cu)} → ${tenChuPc(chu, p)} (bậc ${tenBac(pc(p - goc), x.chat)} của ${h(x.goc, x.chat, x.bass)})`)
+        theoChu.set(chu, p)
+      }
     }
+    return { chuGoc, theoChu, doi, tru, du: new Set(theoChu.values()).size === 7 }
   }
+  const chuCua = (p: number) => [...gamGoc].find(([, v]) => v === p)?.[0]
+  const ung = [CHU.indexOf(h(x.goc, '')[0] ?? 'C'), chuCua(goc), chuCua(pc(goc - 1)), chuCua(pc(goc + 1))].filter((c): c is number => c !== undefined && c >= 0)
+  const thu7 = ung.map(dung)
+  const { chuGoc, theoChu, doi, tru } = thu7.find((r) => r.du) ?? thu7[0]!
   const at = q.intervals.includes(4) && q.intervals.includes(10)
   const mien = at ? [pc(goc + 1), pc(goc + 8)] : []
   const thuTu = Array.from({ length: 7 }, (_, k) => (chuGoc + k) % 7)

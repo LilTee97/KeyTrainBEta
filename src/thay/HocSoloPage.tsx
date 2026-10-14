@@ -1,7 +1,9 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useState } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
-import { buildKeyboardLayout } from '../shared/midi/onScreenPiano/layout'
-import { GameChayNgon, GameScale } from './GameSolo'
+import { GameChayNgon } from './GameKhungNot'
+import { GameNotRoi, GameScale } from './GameSolo'
+import { BanPhimMau } from './hocSolo/BanPhimMau'
+import { NEN, type Muc } from './hocSolo/mauPhim'
 import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, tenChu, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
 import { PHAN_TICH_THAY, type MucThay, type PhanTichThay } from './hocSolo/meoThay'
 import { ARP, GAM, ngonArp, ngonGam, tenNot, type LoaiArp, type LoaiGam, type Tay } from './hocSolo/gamNgon'
@@ -20,6 +22,7 @@ const TAB = [
   { id: 'scale', ten: 'Scale & Arpeggio' },
   { id: 'meo', ten: 'Mẹo & quy tắc' },
   { id: 'game-ngon', ten: 'Game chạy ngón' },
+  { id: 'not-roi', ten: 'Đánh theo nốt rơi' },
   { id: 'game-scale', ten: 'Game Scale' },
 ] as const
 
@@ -34,99 +37,8 @@ const nut = (on: boolean) =>
 const the = 'rounded-xl border border-line bg-black/25 p-4 text-sm'
 const pc = (x: number) => ((x % 12) + 12) % 12
 
-/*
-  BA MỨC MÀU — người dùng 11/10/2026: "Nốt nào ko đánh được của các thầy thì ko in màu chứ đừng làm màu hồng. Nốt nào chính thì màu đậm
-  còn nốt dùng được để thêm đẹp hợp âm thì làm mờ đi". Đậm = nốt của hợp âm, hay nốt thầy dùng từ 10 % trở lên (mốc 10 % Claude chọn);
-  mờ = nốt màu, nốt gam đi qua, nốt nhà, nốt blue; không màu = nốt tránh ngân / ngoài gam mà thầy KHÔNG có số đo đánh. Số đo 11/10/2026:
-  11/160 nốt có phần trăm là nốt tránh / ngoài gam mà thầy vẫn đánh 5–12 % (Cà Pháo 10, Linh Nhi 1) → mờ (12 % → đậm), vì "thầy không
-  đánh" là sai với chúng. Cũ: bảy màu theo vai, nốt tránh màu hồng; bản đầu ba mức để mọi nốt tránh / ngoài không màu — lùi về đó nếu
-  người dùng muốn nốt tránh luôn trắng dù thầy có lướt qua.
-*/
-type Muc = 'dam' | 'mo' | 'khong'
 const mucCua = (x: NotHoc): Muc =>
   x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
-const NEN: Readonly<Record<Muc, { trang: CSSProperties; den: CSSProperties; chu: string }>> = {
-  dam: { trang: { background: 'var(--color-teal-key)' }, den: { background: 'var(--color-teal-key)' }, chu: 'text-teal-key' },
-  /* Người dùng 11/10/2026, lượt 3: "màu phím đừng để giống nhau như vậy, hãy làm cho nó khác rõ rệt" — mờ đổi sang MÀU KHÁC: cam
-     (amber 70 % pha trắng; phím đen amber 70 % pha đen). Lượt 2: teal 55 % pha trắng + viền teal — vẫn cùng màu với phím đậm, người
-     dùng thấy giống nhau. Lượt 1: teal 32 % pha kem (#c3d3c6) — lẫn phím trắng. Lùi nếu cam bị đọc nhầm thành phím đang bấm sai. */
-  mo: {
-    trang: { background: 'color-mix(in srgb, var(--color-amber-key) 70%, white)' },
-    den: { background: 'color-mix(in srgb, var(--color-amber-key) 70%, #111)' },
-    chu: 'text-amber-key',
-  },
-  khong: { trang: { background: 'var(--color-cream)' }, den: { background: '#0b0b0b' }, chu: 'text-dim' },
-}
-const CHU_PHIM: Readonly<Record<Muc, { trang: string; den: string }>> = {
-  dam: { trang: 'text-ink', den: 'text-ink' },
-  mo: { trang: 'text-ink', den: 'text-cream' },
-  khong: { trang: 'text-ink/70', den: 'text-cream/80' },
-}
-/* Tên nốt trên phím — người dùng 11/10/2026: "tăng kích thước của tên nốt và đổi màu chúng cho thật nổi bật dễ nhìn", rồi "tất cả tên
-   nốt … phải được viết to hơn". Thẻ tối chữ vàng đậm: nổi trên phím xanh, phím cam, phím kem lẫn phím đen; 17 px phím trắng · 14 px phím
-   đen trên màn rộng. Cũ: 15 · 13 px (lượt 2); trước nữa chữ mono 10 px (phím đen 9 px), cùng màu với số bậc. */
-const TEN_NOT = 'rounded bg-ink px-1 py-0.5 font-sans font-bold leading-none text-yellow-300 shadow'
-
-/** Chữ trên một phím: tên nốt (thẻ nổi bật) · dòng phụ (bậc, %, ngón). */
-interface NhanPhim {
-  ten: string
-  phu?: ReactNode
-}
-
-function ChuPhim({ nhan, co }: { nhan: NhanPhim | null; co: string }) {
-  if (!nhan) return null
-  return (
-    <>
-      <span className={`${TEN_NOT} ${co}`}>{nhan.ten}</span>
-      {nhan.phu}
-    </>
-  )
-}
-
-/** Bàn phím để XEM: tô màu theo vai, chữ trên phím, bấm để nghe — không đổ vào kho MIDI (không phải bàn phím chơi). */
-function BanPhimMau({
-  thap,
-  cao,
-  muc,
-  nhan,
-  onBam,
-}: {
-  thap: number
-  cao: number
-  muc: (m: number) => Muc
-  nhan: (m: number) => NhanPhim | null
-  onBam?: (m: number) => void
-}) {
-  const { whiteKeys, blackKeys } = buildKeyboardLayout(thap, cao)
-  return (
-    <div className="relative h-40 w-full select-none sm:h-48" role="group" aria-label="Bàn phím tô màu nốt">
-      <div className="flex h-full w-full gap-px">
-        {whiteKeys.map(({ note }) => (
-          <button
-            key={note}
-            type="button"
-            onClick={() => onBam?.(note)}
-            style={NEN[muc(note)].trang}
-            className={`flex flex-1 flex-col items-center justify-end gap-1 rounded-b-md pb-1.5 text-center font-mono text-[10px] leading-tight font-semibold sm:text-sm ${CHU_PHIM[muc(note)].trang}`}
-          >
-            <ChuPhim nhan={nhan(note)} co="text-[10px] sm:text-[17px]" />
-          </button>
-        ))}
-      </div>
-      {blackKeys.map(({ note, position }) => (
-        <button
-          key={note}
-          type="button"
-          onClick={() => onBam?.(note)}
-          style={{ left: `${position * 100}%`, width: `${(100 / whiteKeys.length) * 0.66}%`, ...NEN[muc(note)].den }}
-          className={`absolute top-0 flex h-[58%] -translate-x-1/2 flex-col items-center justify-end gap-0.5 rounded-b-md border border-black/60 pb-1 text-center font-mono text-[9px] leading-tight font-semibold sm:text-[11px] ${CHU_PHIM[muc(note)].den}`}
-        >
-          <ChuPhim nhan={nhan(note)} co="text-[9px] sm:text-[14px]" />
-        </button>
-      ))}
-    </div>
-  )
-}
 
 const ngheNot = async (ds: readonly number[], giay = 0.32) => {
   await startAudio()
@@ -525,6 +437,7 @@ export function HocSoloPage() {
       {tab === 'scale' && <ScaleTab />}
       {tab === 'meo' && <MeoTab />}
       {tab === 'game-ngon' && <GameChayNgon />}
+      {tab === 'not-roi' && <GameNotRoi />}
       {tab === 'game-scale' && <GameScale />}
     </section>
   )

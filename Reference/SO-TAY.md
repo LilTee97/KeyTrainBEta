@@ -6855,3 +6855,57 @@ tay trái 8 lượt không nốt ngoài giọng, 12/12 chặng không vấp, Đ�
 câu số 4 không báo hết câu, theo nhịp phát đệm và chấm; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
 **Sự cố:** lượt chạy thử Blues theo nhịp ngày 12/10 (10:45) ghi một lượt máy-bấm vào `LuyenTap.json` mà phiên dừng trước khi trả lại —
 14/10 đã so từng mục với bản sao lưu (chỉ thêm đúng lượt số 9 "Chạy ngón · Blues", 0/148, tám lượt cũ nguyên) rồi trả lại.
+
+## Bước — Game chạy ngón làm lại: tự chọn nốt theo KHUNG, học từ ba clip "Rải Ngón" của SSA (15/10/2026)
+
+**Người dùng (14/10/2026):** *"Tôi vừa thêm vào clip Rai 2 và Rai 3 bạn hãy phân tích rồi dựa trên 3 video Rải ngón … Tại sao từ những
+hợp âm màu mà anh SSA lại có thể chọn ra những nốt để tạo thành câu nhạc · Khi chồng 2 tay trái phải … Có phải ở những nhóm đuôi nhất
+định thì sẽ có những khung nốt tương ứng để solo ko · chỉnh sửa game chạy ngón lại ko phải kiểu đưa ra nốt rơi sẵn để tôi đánh nữa mà
+hãy đổi sang hướng dạy tôi … Khi gặp các nhóm đuôi hợp âm (maj7, m7b5, dim7, 13b9, 11, 13...) thì bạn sẽ đưa ra khung nốt và gợi ý …
+game chạy ngón sẽ xoay quanh 2 kiểu: 1 là cho tôi làm quen với các nhóm đuôi … 2 là sẽ học solo theo kiểu giống trong các clip Rai Ngon"*.
+
+**Phân tích ba clip** (nguồn riêng SSA — md PianoBrain `knowledge/teachers/ssa-rai-ngon.md`, tool `tools/do_rai_ssa.py`, đoạn hợp âm
+`tools/du_lieu/doan_hop_am_rai_ssa.json`): nốt chép bằng piano_transcription_inference, hợp âm đọc từ nhãn màn hình (gọi tên nốt đang
+giữ) 2 khung/giây → 111 đoạn; 1087/1101 nốt chép (98,7 %) nằm trong nhãn. Kết quả:
+- tay trái chỉ giữ bass — trung vị 1 nốt mỗi hợp âm, rải ≥ 3 nốt 29/111;
+- tay phải mỗi nhóm đuôi là một hợp âm ba quen trên một bậc: maj7/maj9 → thứ trên bậc 3 (22 đoạn), m7/m9/m11 → trưởng trên ♭3 (37),
+  7sus/9sus/13sus → trưởng trên ♭7 (12), m7♭5 → thứ trên ♭3 (4);
+- nốt giai điệu (nốt tay phải cao nhất đang vang) là nốt hợp âm 175/241, nốt căng có trong tên 63/241; maj7/maj9 hay đặt 7 (26/64), 9
+  (14/64); m7 họ hay đặt ♭3 (27/83), 9 (16/83), ♭7 (15/83);
+- đổi bass giữ ≥ 2 nốt tay phải 32/94 chỗ.
+
+**Game mới** (`src/thay/GameKhungNot.tsx`, dữ liệu `src/thay/hocSolo/khungNot.ts`) — không còn nốt rơi:
+- **Kiểu 1 · Làm quen loại hợp âm**: 28 loại trong 6 nhóm (trưởng màu · thứ màu · át · át treo · át có nốt căng · giảm), gốc tuỳ chọn hay
+  ngẫu nhiên. Khung = gam trên hợp âm (`gamTrenHop`) ở "giọng nhà" của loại (maj7 ở I, m7 ở ii, 7♭9 ở V giọng thứ …) tính MẪU ở gốc Đô rồi
+  chuyển gốc; năm loại dùng gam riêng (dim7 giảm cung–nửa cung, 13♭9 · 7♯9 giảm nửa cung–cung, 7♯5 toàn cung, m(maj7) thứ giai điệu).
+  Ba mức như mọi bàn phím của trang: xanh = nốt hợp âm (cả nốt căng có trong tên), cam = nốt khung còn lại, không màu = nốt tránh (nửa cung
+  trên nốt hợp âm; hợp âm treo: bậc 3). Nốt đỉnh nên chọn xếp theo số đo SSA (họ có số đo) hay lý thuyết (họ chưa có), kèm dòng các thầy
+  trong app. Chồng hai tay theo `CONG_THUC` (tay trái + tay phải = tổng), nút Đổi đỉnh xoay tay phải. Tự đánh: tên hợp âm hai tay đang
+  bấm (`tenBam` — như nhãn trên clip SSA), vai từng nốt, ba nhiệm vụ ✓ (chồng ra hợp âm · đổi đỉnh 3 lần · chạy 7 nốt khung).
+- **Kiểu 2 · Solo trên vòng kiểu SSA**: 4 vòng trích clip SSA (4536251 làm đẹp · ballad Hồng Kông · giữ giai điệu đổi hợp âm · mượn hợp
+  âm về trưởng) + 3 vòng cơ bản + vòng tự điền (đoán giọng). Nền: bass ngân + rải 5 · 8 · 5 (hay thêm tay phải đệm). Hợp âm đang vang theo
+  phách đang phát; bàn phím khung của hợp âm ấy, ★ ba nốt đỉnh gợi ý — đi liền bậc từ nốt trước · nốt màu nên chọn · giữ được sang hợp âm
+  sau — mỗi nốt kèm thế chồng tay phải dưới nó; dòng nốt chung với hợp âm sau; đếm nốt chính / phụ / không màu đã bấm.
+- Lối nốt rơi cũ (câu thầy đã duyệt, Sinh nốt Solo) dời sang tab **Đánh theo nốt rơi** — chưa xoá.
+- `BanPhimMau` dời ra `hocSolo/BanPhimMau.tsx` (màu ở `hocSolo/mauPhim.ts`), thêm vòng vàng phím đang giữ, bấm phím là đánh nốt, ★ phím
+  gợi ý; trên điện thoại bàn phím khung giữ tối thiểu 640 px, vuốt ngang trong khung.
+
+**Lỗi bắt được khi làm:**
+- `gamTrenHop` (dùng chung với Sinh nốt Solo): app gọi giọng Rê♯ thứ, Fa♯ trưởng bằng dấu thăng mà gọi gốc E♯ là "F", B♯ là "C" — 6/216
+  gam hợp âm diatonic ra nốt trùng (vd Fm7♭5 ở Rê♯ thứ: F G♯ A♭ B C♭ D♯ E♭). Nay chữ của gốc theo tên như cũ, ra nốt trùng thì lấy chữ của
+  gam → 0/216; 210 gam đang đúng không đổi.
+- Khung theo loại tính thẳng ở giọng nhà từng gốc ra nốt trùng (m7♭5 gốc Fa) → tính mẫu ở gốc Đô rồi chuyển gốc.
+- Gợi ý nốt đỉnh bản đầu cộng điểm một lượt: nốt màu xa 4 nửa cung thắng nốt sát bên → chia ba ô có lý do riêng.
+- Đếm nốt qua `lastEvent` của React: bấm 4 nốt cùng lúc chỉ đếm 1 → nghe thẳng kho MIDI (`subscribe`).
+
+**Chưa đo — lỗ còn lại:** tai và tay người dùng chưa thử game; nhãn SSA đọc 2 khung/giây (hợp âm < 0,5 s có thể sót); tách tay ở clip là
+đoán theo cao độ; trọng số và ba ô gợi ý là của Claude; khung các loại át có nốt căng là lý thuyết jazz, chưa đo trên thầy; lối nốt rơi cũ
+còn giữ — hỏi người dùng có xoá không; bản sửa `gamTrenHop` đổi tên gam 6 chỗ trong Sinh nốt Solo (giọng Rê♯ thứ · Đô♯ thứ · Fa♯ · Sol♯ thứ).
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi ở file đã sửa · `khungNot.test.ts` 7 (28 loại × 12 gốc: nốt hợp âm là nốt chính, không trùng lớp cao
+độ, 6–8 nốt, nốt đỉnh trong khung; công thức chồng đủ nốt; lý thuyết nốt tránh / tên gam / gam riêng; tổng số đo SSA bằng cỡ mẫu; gợi ý
+đỉnh trong khung, khác tên, trong tầm, thế chồng là nốt hợp âm dưới đỉnh; đi liền bậc khi có; nền đúng bass) · `hocSolo.test.ts` 29
+(thêm: gam trên hợp âm ở mọi giọng 7 nốt khác nhau) · toàn suite (máy đang chạy máy chủ dev + Chrome): giới hạn 20 s mỗi test 2 771 qua /
+5 đỏ (5 đỏ cũ), 0 quá giờ · `vite build` qua · chạy thử headless 30/30, hai lần liền (màu phím B4 xanh · D4 cam · F4 không màu; ba nhiệm vụ
+✓; Fm7♭5 khung F Locrian; nền chạy chuyển G♭maj9 → A♭13sus4 đúng phách, bass G♭ · A♭; đếm đủ 4 nốt bấm cùng lúc; vòng tự điền đoán Đô
+trưởng; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.

@@ -111,7 +111,7 @@ const vanTay = (bai: { timeline: readonly { hand: string; startBeat: number; not
  * Lượt 2 (người dùng 11/10/2026): nút ba thầy — không chọn = chạy ngón cơ bản (năm ngón · gam · rải, có số ngón); chọn thầy = câu solo do
  * bộ soạn của thầy soạn trên hợp âm / vòng đang chọn (`cauThay.ts`), câu giữ nguyên cho tới khi bấm "Đổi câu". Vòng tự nhập.
  */
-export function GameChayNgon() {
+export function GameNotRoi() {
   const [phan, setPhan] = useState<'don' | 'vong'>('don')
   const [cheDo, setCheDo] = useState<'cho' | 'nhip'>('cho')
   const [bpm, setBpm] = useState<number>(60)
@@ -233,7 +233,11 @@ export function GameChayNgon() {
   return (
     <div className="flex flex-col gap-3 text-sm">
       <div className="rounded-xl border border-line bg-black/25 p-4">
-        <h3 className="mb-1 font-semibold text-cream">Game chạy ngón</h3>
+        <h3 className="mb-1 font-semibold text-cream">Đánh theo nốt rơi</h3>
+        <p className="mb-1 text-xs text-amber-key">
+          Lối cũ của Game chạy ngón (trước 15/10/2026) — nay game dạy tự chọn nốt theo khung ở tab Game chạy ngón; đây giữ lại câu các thầy đã
+          duyệt.
+        </p>
         <p className="text-xs text-dim">
           Nốt rơi xuống bàn phím, máy chơi tay kia làm backing. Không chọn thầy: chạy ngón cơ bản, số trên khối nốt là ngón (ngón chuẩn sách
           piano — app không thấy ngón tay, nhìn số mà bấm cho đúng thói quen). Chọn thầy: câu solo do bộ soạn của thầy soạn trên hợp âm / vòng
