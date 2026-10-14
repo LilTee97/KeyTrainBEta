@@ -6909,3 +6909,39 @@ còn giữ — hỏi người dùng có xoá không; bản sửa `gamTrenHop` đ
 5 đỏ (5 đỏ cũ), 0 quá giờ · `vite build` qua · chạy thử headless 30/30, hai lần liền (màu phím B4 xanh · D4 cam · F4 không màu; ba nhiệm vụ
 ✓; Fm7♭5 khung F Locrian; nền chạy chuyển G♭maj9 → A♭13sus4 đúng phách, bass G♭ · A♭; đếm đủ 4 nốt bấm cùng lúc; vòng tự điền đoán Đô
 trưởng; điện thoại không cuộn ngang) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game nốt rơi mới "Mưa khung nốt": học khung theo QUY TẮC nối các nhóm đuôi, rơi như Game công thức (15/10/2026)
+
+**Người dùng:** *"có phải các nhóm đuôi có những quy tắc mà khi học được từ nhóm này rồi sẽ biết để học nhóm khác nhanh hơn ko, nếu có
+thì hãy đưa vào game nốt rơi mới hãy thiết kế rơi như game công thức, tôi thích kiểu khi nhấn vào thì mở hẳn ra một phần game và có bàn
+phím dài giống Game Công Thức vậy"*.
+
+**Trả lời: có.** Mỗi loại có một loại CHA (`CHA` trong `hocSolo/mauKhung.ts`) — học cha rồi suy ra con bằng một thay đổi nhỏ:
+- hợp âm: đổi một nốt (maj7 → 7: B → B♭ · 7 → m7: E → E♭ · m7 → m7♭5: G → G♭ · m7 → m6: B♭ → A …) hay thêm một nốt (cầu thang 7 → 9 → 11
+  → 13); app đo trên 26 công thức chồng: 19 cặp chỉ khác một nốt, tay trái giữ nguyên (`QUY_TAC_DUOI`);
+- khung: thêm 9 · 11 · 13 không đổi khung (nốt phụ thành nốt chính); nốt căng đổi đúng nốt cùng tên (7 → 7♯11: F → F♯); treo: 4 thay 3,
+  khung giữ nguyên; bảy khung của giọng trưởng xếp sáng → tối, mỗi bước hạ đúng một nốt (Lydian → Ionian → Mixolydian → Dorian → Aeolian
+  → Phrygian → Locrian; từ Đô: F♯ → F → B♭ → E♭ → A♭ → D♭ → G♭). Phần khung là lý thuyết — test kiểm từng bước một nốt ở cả 12 gốc.
+
+**Game** (tab Học Solo → **Game nốt rơi**, `src/thay/GameKhungRoi.tsx`, logic `src/thay/hocSolo/mauKhung.ts`) — khuôn Mưa hợp âm: màn chọn
+hai bên (Luyện có mẹo · Thi), bấm màn là mở hẳn màn chơi; vùng mưa (`VungRoi` · `ChonMoc` xuất từ `GameChong.tsx`, dùng chung); bàn phím
+dài `BanPhimHaiTay` C2–C6 (điện thoại C3–C5). Viên = tên hợp âm; bấm đủ các nốt KHUNG (thứ tự, quãng tám nào cũng được — nốt ngoài khung
+là sai) hay chọn đúng tên khung (bốn nút: đáp án + ba khung gần nhất cùng gốc, xếp theo số nốt khác). Bên luyện: viên ghi quy tắc so với
+cha / bước trước do máy so ("từ Cmaj7: B → B♭") + tên khung; quá 60 % quãng rơi thì phím khung sáng dần; chờ đúng nốt; bảng quy tắc của
+màn. Bên thi: chỉ tên, 20 viên, sai lần đầu là tính sai, đúng từ 16 là Đạt, kỷ lục `keytrain.mua-khung.v1`. 9 màn: ba khung gốc ·
+cầu thang 9 · 11 · 13 · trưởng màu · treo · át có nốt căng · thứ màu · giảm · bảy khung một nốt mỗi bước (m7 ở ii · vi · iii — `khungLoai`
+nhận chỗ đứng khác) · trộn 28 loại. Rơi mặc định bên luyện 20 s, bên thi 14 s, tối đa 3 viên (Claude chọn — khung 6–8 nốt dài hơn hợp
+âm của Mưa hợp âm; chưa đo trên tay người dùng).
+- Tab cũ "Đánh theo nốt rơi" đổi tên **Nốt rơi cũ (câu thầy)**, dời cuối hàng — vẫn chưa xoá, chờ người dùng.
+- `khungLoai` gọi tên theo chữ của nút loại (Cadd9, C13sus — trước là Cadd2, C13sus4).
+
+**Chưa đo — lỗ còn lại:** người dùng chưa chơi; mốc rơi 20 / 14 s và tối đa 3 viên là của Claude; ba khung nhiễu chọn theo số nốt khác —
+chưa thử độ khó; khung các loại át có nốt căng · giảm là lý thuyết jazz, chưa đo trên thầy.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `mauKhung.test.ts` 6 (mọi màn × bước × 12 gốc tạo được câu, 4 tên khác nhau có đáp án; mọi loại có
+cha; bảy khung mỗi bước đúng một nốt ở 12 gốc, lời quy tắc một mũi tên; cầu thang giữ khung của cha; maj7 → 7 → m7 → 7♯11 một nốt; chấm
+đủ khung / nốt ngoài khung; chọn câu không lặp, câu sai quay lại nhiều hơn) · `khungNot.test.ts` 7 · `hocSolo.test.ts` 29 · toàn suite
+(giới hạn 20 s mỗi test): 2 777 qua / 5 đỏ (5 đỏ cũ), 0 quá giờ · `vite build` qua · chạy thử headless 15/15 (tab mới; màn chọn hai bên,
+9 màn; bấm màn mở màn chơi; Đô♯ ngoài khung báo chưa đúng; chạy đủ khung Cmaj7 → Đúng +10; viên C7 ghi "từ Cmaj7: B → B♭"; bảng quy tắc;
+chọn tên khung đúng ở màn bảy khung; bên thi viên chỉ có tên, sai lần đầu tính sai; điện thoại không cuộn ngang) · `LuyenTap.json`,
+`Nguon.json` không đổi.

@@ -524,7 +524,9 @@ Các hợp âm phải được chọn tự do …"*
   vòng người dùng.
   Cập nhật 15/10 (người dùng 14/10): Game chạy ngón làm lại — không còn nốt rơi; hai kiểu: làm quen khung nốt từng loại hợp âm (28 loại,
   nốt chính / phụ, nốt đỉnh, chồng hai tay) · solo trên vòng có nền kiểu clip "Rải Ngón" của SSA (gợi ý nốt đỉnh + thế chồng tay phải).
-  Lối nốt rơi cũ dời tab "Đánh theo nốt rơi".
+  Lối nốt rơi cũ dời tab "Nốt rơi cũ (câu thầy)".
+  Cập nhật 15/10 (người dùng): tab "Game nốt rơi" — Mưa khung nốt, rơi như Game công thức; 9 màn theo quy tắc nối các nhóm đuôi (mỗi loại
+  có loại cha, đổi một nốt / thêm một nốt; bảy khung mỗi bước hạ một nốt).
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

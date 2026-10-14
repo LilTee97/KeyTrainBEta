@@ -233,7 +233,7 @@ export function GameNotRoi() {
   return (
     <div className="flex flex-col gap-3 text-sm">
       <div className="rounded-xl border border-line bg-black/25 p-4">
-        <h3 className="mb-1 font-semibold text-cream">Đánh theo nốt rơi</h3>
+        <h3 className="mb-1 font-semibold text-cream">Nốt rơi cũ — đánh theo câu thầy</h3>
         <p className="mb-1 text-xs text-amber-key">
           Lối cũ của Game chạy ngón (trước 15/10/2026) — nay game dạy tự chọn nốt theo khung ở tab Game chạy ngón; đây giữ lại câu các thầy đã
           duyệt.

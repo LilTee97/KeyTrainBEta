@@ -36,7 +36,8 @@ import { GOC } from './vongThay'
   GAME CHẠY NGÓN — làm lại 15/10/2026 theo người dùng: không còn nốt rơi sẵn để đánh theo, mà dạy nhận ra KHUNG NỐT của từng loại hợp âm
   rồi tự chọn nốt. Hai kiểu: (1) làm quen từng loại — khung, nốt chính / phụ, nốt đỉnh nên chọn, chồng hai tay; (2) solo trên vòng có
   nền, kiểu clip "Rải Ngón" của SSA — khung đổi theo hợp âm đang vang, gợi ý nốt đỉnh và thế chồng tay phải dưới nó. Dữ liệu và số đo:
-  `hocSolo/khungNot.ts`. Lối nốt rơi cũ (câu thầy đã duyệt) dời sang tab "Đánh theo nốt rơi" (`GameSolo.tsx`), chưa xoá.
+  `hocSolo/khungNot.ts`. Lối nốt rơi cũ (câu thầy đã duyệt) dời sang tab "Nốt rơi cũ (câu thầy)" (`GameSolo.tsx`), chưa xoá. Game rơi
+  kiểu Game công thức cho khung nốt: tab "Game nốt rơi" (`GameKhungRoi.tsx`).
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12

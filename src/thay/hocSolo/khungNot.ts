@@ -283,11 +283,13 @@ export function khungCua(tonic: number, thu: boolean, x: Hop): Khung {
   Sol trưởng, Đô · Fa · Si♭ thứ). Khung chỉ phụ thuộc quãng so gốc nên chuyển gốc không đổi vai nốt.
 */
 const MAU = new Map<string, Khung>()
-export function khungLoai(loai: LoaiKhung, goc: number): Khung {
-  let mau = MAU.get(loai.id)
+/** `nha` đổi chỗ đứng của loại (m7 ở vi hay iii thay cho ii) — màn "bảy khung" của Mưa khung nốt. */
+export function khungLoai(loai: LoaiKhung, goc: number, nha: LoaiKhung['nha'] = loai.nha): Khung {
+  const khoa = `${loai.id}|${nha.goc}|${nha.thu}`
+  let mau = MAU.get(khoa)
   if (!mau) {
-    mau = khungCua(pc(-loai.nha.goc), loai.nha.thu, { goc: loai.nha.goc, chat: loai.id })
-    MAU.set(loai.id, mau)
+    mau = khungCua(pc(-nha.goc), nha.thu, { goc: nha.goc, chat: loai.id })
+    MAU.set(khoa, mau)
   }
   const g = pc(goc)
   const tenGoc = gocDep(GOC_TEN[g]!)
@@ -299,10 +301,11 @@ export function khungLoai(loai: LoaiKhung, goc: number): Khung {
   return {
     ...mau,
     goc: g,
-    ten: `${tenGoc}${mau.ten.replace(/^[A-G][♭♯]?/, '')}`,
+    // Tên theo chữ của nút loại (Cadd9, C13sus) — tên app gọi từ ký hiệu là Cadd2, C13sus4.
+    ten: `${tenGoc}${loai.ten}`,
     gam: `${tenGoc} ${mau.gam.replace(/^[A-G][♭♯]*\s/, '')}`,
     not,
-    tonic: pc(g - loai.nha.goc),
+    tonic: pc(g - nha.goc),
   }
 }
 

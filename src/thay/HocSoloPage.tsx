@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { GameChayNgon } from './GameKhungNot'
+import { GameKhungRoi } from './GameKhungRoi'
 import { GameNotRoi, GameScale } from './GameSolo'
 import { BanPhimMau } from './hocSolo/BanPhimMau'
 import { NEN, type Muc } from './hocSolo/mauPhim'
@@ -22,8 +23,9 @@ const TAB = [
   { id: 'scale', ten: 'Scale & Arpeggio' },
   { id: 'meo', ten: 'Mẹo & quy tắc' },
   { id: 'game-ngon', ten: 'Game chạy ngón' },
-  { id: 'not-roi', ten: 'Đánh theo nốt rơi' },
+  { id: 'mua-khung', ten: 'Game nốt rơi' },
   { id: 'game-scale', ten: 'Game Scale' },
+  { id: 'not-roi', ten: 'Nốt rơi cũ (câu thầy)' },
 ] as const
 
 const nutTab = (on: boolean) =>
@@ -437,6 +439,7 @@ export function HocSoloPage() {
       {tab === 'scale' && <ScaleTab />}
       {tab === 'meo' && <MeoTab />}
       {tab === 'game-ngon' && <GameChayNgon />}
+      {tab === 'mua-khung' && <GameKhungRoi />}
       {tab === 'not-roi' && <GameNotRoi />}
       {tab === 'game-scale' && <GameScale />}
     </section>

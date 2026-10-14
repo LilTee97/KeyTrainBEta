@@ -79,8 +79,8 @@ const NHAP: readonly { id: CachNhap; ten: string; mo: string }[] = [
   { id: 'chon', ten: 'Chọn tên', mo: 'bốn nút to — bấm nút là bấm hợp âm ấy trên đàn và nghe; hợp điện thoại' },
 ]
 
-/** Hàng nút mốc tốc độ rơi. */
-function ChonMoc({ giay, doi }: { giay: number; doi: (s: number) => void }) {
+/** Hàng nút mốc tốc độ rơi — dùng chung với Mưa khung nốt (trang Học Solo). */
+export function ChonMoc({ giay, doi }: { giay: number; doi: (s: number) => void }) {
   return (
     <span className="flex flex-wrap items-center gap-1 text-xs text-dim">
       Rơi trong
@@ -608,8 +608,33 @@ export function GameChong() {
   )
 }
 
+/** Một viên đang rơi — đủ cho `VungRoi` vẽ (Mưa hợp âm · Mưa khung nốt). */
+export interface VienRoi {
+  khoa: number
+  sinh: number
+  roi: number
+  lan: number
+  ten: string
+  khungTen: string
+  goiY: string
+}
+
 /** Vùng mưa: tự vẽ lại mỗi khung hình (chỉ vùng này), gọi `tick` để game xét trượt / sinh viên mới / dừng chờ. */
-function VungRoi({ vien, dich, bayGio, tick, chay, meo }: { vien: readonly Vien[]; dich: Vien | null; bayGio: () => number; tick: () => void; chay: boolean; meo: boolean }) {
+export function VungRoi({
+  vien,
+  dich,
+  bayGio,
+  tick,
+  chay,
+  meo,
+}: {
+  vien: readonly VienRoi[]
+  dich: VienRoi | null
+  bayGio: () => number
+  tick: () => void
+  chay: boolean
+  meo: boolean
+}) {
   const [, setKhung] = useState(0)
   const tickRef = useRef(tick)
   tickRef.current = tick
