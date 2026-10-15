@@ -7378,3 +7378,73 @@ Chạy thử headless:
   đánh là sai, chồng thế + chạy 4 nốt là Đúng, dòng "thế Cà Pháo (rút từ sheet của anh)";
 - Mưa khung nốt màn quy tắc cũ 16/16 · Game chạy ngón 40/40;
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Backing track cho Lối SSA và ba thầy (15/10/2026)
+
+**Người dùng** (ý thứ tư của tin nhắn ở bước trước): *"Cho Mục lối SSA và các thầy khác có nhạc backing track để solo trên đó"*.
+
+**Màn mới — Mưa khung nốt có backing track** (`MuaKhungNen.tsx`). Mở từ khung "Solo trên backing track" trên màn chọn của Lối SSA và của
+từng thầy.
+- Nền phát lặp theo vòng. Viên rơi khớp nhịp: rơi suốt ô trước và ô của nó, chạm đáy đúng lúc hết hợp âm. Đếm vào = min(4, số phách hợp
+  âm đầu). Máy rơi theo nền chép từ phần 2 Game chạy ngón (`getPlaybackBeats`).
+- Trong ô của hợp âm: chồng rồi chạy, chấm như Mưa khung nốt (`chamSsa`). Hết ô mà chưa xong là trượt. Bấm sớm tới 0,25 phách vẫn tính cho
+  ô sau (như phần 2 Game chạy ngón).
+- Bên luyện: gợi ý hai tay hiện đủ ngay khi viên xuất hiện, kể cả lúc đếm vào. Bên thi: 20 hợp âm, không gợi ý, nốt sai mất ô, đúng từ 16
+  là Đạt.
+- Nhịp chọn ♩ 40 – 80. "Dừng" tắt nền.
+
+**Lối SSA — "Solo trên backing track — đúng vòng anh chơi"**: ba nút Rai 1 · Rai 2 · Rai 3 (`vongNhuAnh`).
+- Vòng là đúng các hợp âm anh chơi, theo thứ tự trong clip (`ssaNhuAnh.json`). Gợi ý là đúng phím anh bấm.
+- Mỗi hợp âm dài bằng khoảng cách tới hợp âm sau trong clip, quy ra phách của clip rồi làm tròn; tối thiểu 2 phách; hợp âm cuối 4 phách.
+  Phách clip (librosa): Rai 2 0,906 s · Rai 3 0,859 s · Rai 1 librosa ra 0,418 s, nhân đôi thành 0,836 s.
+- Nền: bass giữ cả ô (quãng tám 2), rồi 5 · 8 · 5 nhẹ ở các phách sau — bậc 5 biến thì lấy ♭5 / ♯5; hợp âm gạch chéo thì chỉ 8. Không có
+  tay phải — tay phải là của bạn.
+- Nhịp mặc định ♩ 50.
+
+| Clip | Hợp âm | Phách một vòng | Một vòng ở ♩ 50 | Hợp âm kéo lên 2 phách |
+|---|---|---|---|---|
+| Rai 1 | 25 | 64 | 77 s | 3/25 |
+| Rai 2 | 49 | 109 | 131 s | 18/49 |
+| Rai 3 | 36 | 112 | 134 s | 5/36 |
+
+**Ba thầy — "Solo trên backing track của <thầy>"** (`vongThay`): chọn Đoạn (Dạo · Giang tấu · Kết) và Giọng (Đô trưởng · La thứ · Fa
+trưởng · Rê thứ · Sol trưởng · Mi thứ).
+- Vòng do bộ soạn của thầy tự chọn (`soanTuDo`, như nghe – đáp ở Game chạy ngón). "Đổi câu" lấy lượt soạn kế tiếp.
+- Viên mỗi hợp âm theo lối chồng + chạy của thầy (`taoCauThayChong`). Hợp âm gạch chéo: bass là nốt sau gạch.
+- Nền: tay trái của bộ soạn + thế tay phải có màu, như lượt bạn ở nghe – đáp.
+- Nhịp mặc định ♩ 60.
+- Số đo trên 3 thầy × 3 đoạn × 2 giọng (Đô trưởng, La thứ) × 12 lượt = 216 lượt:
+  - 216/216 lượt ra vòng;
+  - 0 hợp âm rơi vào chỗ đứng bộ soạn chưa đo (lúc ấy nốt chính chỉ là nốt hợp âm);
+  - 13 hợp âm gạch chéo, đều ở Cà Pháo giọng trưởng.
+
+**Mã:**
+- `BanPhimChong.tsx` — tách từ `GameKhungRoi`: bàn phím hai tay hai màu + khung chữ gợi ý; Mưa khung nốt và màn backing dùng chung.
+- `loiSsa.ts` — `VongNen`, `vongNhuAnh`, `vongThay`, `nenBass`.
+- Sửa khi chạy thử: viên sinh ra lúc đếm vào không được vẽ lại nên chưa hiện gợi ý; nay vẽ lại ngay khi sinh viên.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Nhịp mặc định (♩ 50 cho SSA, ♩ 60 cho thầy) là của Claude. Anh chơi ở khoảng ♩ 66 – 72 (từ phách clip).
+- Tối thiểu 2 phách mỗi hợp âm là của Claude, để kịp chồng. Rai 2 bị kéo 18/49 hợp âm, nên hợp âm đổi chậm hơn anh.
+- Phách Rai 1 là đoán: librosa ra 0,418 s, Claude nhân đôi.
+- Nền SSA: "bass rồi rải 5 – 8" đo bằng hình. Tiết tấu rải trong nền (mỗi phách một nốt, nhẹ dần) là của Claude, không đo.
+- Nền thầy là bộ soạn, không phải bản ghi thầy đánh.
+- Chưa chấm phách trong ô. Anh SSA chạy ngay sau cú chồng và ở phách cuối trước khi đổi hợp âm (Rai 2: 45/96 · 42/96 nốt chạy); màn này chỉ
+  chấm "chồng trước, chạy sau, trong ô".
+- Người dùng chưa nghe thử backing.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi.
+- `loiSsa.test.ts` 18 (+2):
+  - vòng như anh: 3 clip, số viên bằng số hợp âm, mỗi hợp âm ≥ 2 phách, nền có bass đúng ở mỗi ô, nền không vượt vòng; Rai 3 hơn một phần
+    ba hợp âm dài 4 phách;
+  - vòng thầy: 3 thầy × 3 đoạn × 2 giọng ra vòng, có nền; mọi viên bấm phím gợi ý + chạy là Đúng.
+- Toàn suite (giới hạn 20 s mỗi test): 2 817 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+
+Chạy thử headless:
+- lối SSA 51/51 (+9: khung backing có 3 nút; màn backing có nút nhịp · Luyện · Thi · Quay lại; lúc đếm vào đã hiện viên đầu + gợi ý; nền phát
+  lặp; bấm đúng phím anh trong ô Rai 3 là Đúng; Dừng có tổng kết và tắt nền; Quay lại về màn chọn);
+- nút thầy 45/45 (+5: khung backing Cà Pháo có đoạn + giọng; mở Giang tấu · Đô trưởng; nền phát lặp, có "Đổi câu"; chồng thế Cà Pháo + chạy
+  trong ô là Đúng; Dừng tắt nền);
+- Mưa khung nốt màn quy tắc cũ 16/16 · Game chạy ngón 40/40 (sau khi tách `BanPhimChong`);
+- `LuyenTap.json`, `Nguon.json` không đổi.

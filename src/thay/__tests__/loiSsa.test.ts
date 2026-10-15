@@ -19,7 +19,8 @@ import duNhuAnh from '../hocSolo/ssaNhuAnh.json'
 import { THAY_CHAY } from '../hocSolo/cauThay'
 import { MAN_KHUNG } from '../hocSolo/mauKhung'
 import { manThay } from '../hocSolo/thayNhac'
-import { chonCauQuyTacChong, taoCauChong, taoCauThayChong, type CauSsa } from '../hocSolo/loiSsa'
+import { chonCauQuyTacChong, taoCauChong, taoCauThayChong, vongNhuAnh, vongThay, type CauSsa } from '../hocSolo/loiSsa'
+import { DOAN as DOAN_THAY } from '../hocSolo/thayNhac'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
@@ -242,5 +243,43 @@ describe('lối chồng + chạy cho màn quy tắc và ba thầy (người dùn
     expect(new Set(ln.ssa.chong.map((p) => pc(p - ln.g)))).toEqual(new Set([0, 4, 7]))
     const bl = taoCauThayChong('blues', cho('blues', '13'), 0)
     expect(bl.ssa.the.every((t) => t[t.length - 1]! - t[0]! <= 12)).toBe(true)
+  })
+})
+
+describe('backing track — vòng nền (người dùng 15/10/2026: "có nhạc backing track để solo trên đó")', () => {
+  it('Lối SSA: vòng đúng clip — mỗi hợp âm ≥ 2 phách, nền bass mỗi đầu ô đúng bass của viên, rải 5 – 8 sau đó', () => {
+    const ds = MAN_SSA.flatMap((m, mi) => (m.clip ? [mi] : []))
+    expect(ds).toHaveLength(3)
+    for (const mi of ds) {
+      const v = vongNhuAnh(mi)!
+      expect(v.cau.length).toBe(MAN_SSA[mi]!.doan!.length)
+      expect(v.nhip.every((x) => x >= 2)).toBe(true)
+      let t = 0
+      v.cau.forEach((c, i) => {
+        const bass = v.nen.find((h) => h.startBeat === t && h.durationBeats === v.nhip[i])!
+        expect(pc(bass.notes[0]!)).toBe(pc(c.ssa.bass ?? c.g))
+        t += v.nhip[i]!
+      })
+      expect(Math.max(...v.nen.map((h) => h.startBeat + h.durationBeats))).toBeLessThanOrEqual(t)
+    }
+    // Rai 3 — mỗi ô một hợp âm, ~3,5 s ở phách 0,86 s → 4 phách
+    const rai3 = vongNhuAnh(ds[2]!)!
+    expect(rai3.nhip.filter((x) => x === 4).length).toBeGreaterThan(rai3.nhip.length / 3)
+  })
+
+  it('ba thầy × ba đoạn × hai giọng: bộ soạn ra vòng, mỗi viên bấm phím gợi ý + chạy là đúng; nền là tay trái + thế màu của thầy', () => {
+    for (const t of THAY_CHAY)
+      for (const kind of DOAN_THAY)
+        for (const [tonic, thu] of [
+          [0, false],
+          [9, true],
+        ] as const) {
+          let v = null
+          for (let take = 0; take < 6 && !v; take++) v = vongThay(t.id, tonic, thu, kind, take)
+          expect(v, `${t.id} ${kind} ${tonic}`).not.toBeNull()
+          expect(v!.cau.length).toBe(v!.nhip.length)
+          expect(v!.nen.length).toBeGreaterThan(0)
+          for (const c of v!.cau) kiemVien(c)
+        }
   })
 })

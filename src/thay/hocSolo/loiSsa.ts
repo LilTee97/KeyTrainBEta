@@ -1,12 +1,15 @@
 import { CA_PHAO_VOICINGS } from '../../reharm/reharmEngine/caPhaoHarmony'
+import type { ScheduledHit } from '../../shared/audio/audioEngine'
 import { CHORD_QUALITIES, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
+import type { MidiNote } from '../../shared/musicTheory/types'
 import { tenBam } from '../soanCau/chongHopAm'
+import { docHop } from '../soanCau/thayTrongVong'
 import type { ThayChay } from './cauThay'
 import { chongSsa } from './chayNgonRoi'
 import { khungCua, khungLoai, LOAI_KHUNG, mucCua, tenBacKhung, tenPhim, type Khung, type LoaiKhung, type MucKhung } from './khungNot'
 import { chonCauKhung, chonNang, MAN_KHUNG, type CauKhung } from './mauKhung'
 import duNhuAnh from './ssaNhuAnh.json'
-import { khungCho, manThay, tenCho, tenThayCua, THE_BLUES, type ChoThay } from './thayNhac'
+import { khungCho, manThay, soanTuDo, tenCho, tenThayCua, THE_BLUES, timCho, type ChoThay, type Doan } from './thayNhac'
 
 /*
   LỐI CHỒNG + CHẠY (Mưa khung nốt) — mở đầu là Lối SSA, người dùng 15/10/2026: "trong game nốt rơi, ở mục mưa khung nốt để học chạy ngón
@@ -377,11 +380,6 @@ export function taoCauNhuAnh(i: number): CauSsa {
   }
 }
 
-/** Đoạn "như anh" của màn `mi` (theo thứ tự clip) — để dựng backing track. */
-export const doanCuaMan = (mi: number): readonly number[] => MAN_SSA[mi]?.doan ?? []
-/** Giây bắt đầu và loại nhãn của đoạn `i` — để chia phách backing track. */
-export const doanNhuAnh = (i: number) => NHU_ANH.doan[i]!
-
 /* ---------------- Màn quy tắc nhóm đuôi theo lối chồng + chạy (thử) ---------------- */
 
 /**
@@ -606,4 +604,84 @@ export function mauSsa(c: Pick<CauSsa, 'g' | 'ssa'>): number[][] {
     return [m]
   })
   return [[c.ssa.loTrai[0] ?? 36 + pc(c.g), ...the], ...chay]
+}
+
+/* ---------------- Backing track — Mưa khung nốt có nền (người dùng 15/10/2026: "Cho Mục lối SSA và các thầy khác có nhạc backing track
+   để solo trên đó") ---------------- */
+
+export interface VongNen {
+  ten: string
+  /** Viên của từng hợp âm trong vòng, theo thứ tự. */
+  cau: CauSsa[]
+  /** Số phách từng hợp âm. */
+  nhip: number[]
+  /** Nền một lượt (máy đánh — tay trái), phát lặp theo vòng. */
+  nen: readonly ScheduledHit[]
+}
+
+/** Phách mỗi clip SSA (giây, librosa — `tools/do_tay_ssa.py`): Rai 2 0,906 · Rai 3 0,859; Rai 1 librosa ra 0,418 — nhân đôi, mức móc đơn (đoán). */
+const PHACH_CLIP: Readonly<Record<string, number>> = { rai1: 0.836, rai2: 0.906, rai3: 0.859 }
+
+/**
+ * Nền tay trái như anh SSA (đo bằng hình: bass rồi rải 5 – 8 – 10): bass giữ cả ô, rồi 5 · 8 · 5 nhẹ ở các phách sau (bậc 5 biến thì lấy ♭5
+ * / ♯5; bass không phải gốc — hợp âm gạch chéo — thì chỉ 8). Không có thế tay phải — tay phải là của bạn.
+ */
+function nenBass(cau: readonly CauSsa[], nhip: readonly number[]): ScheduledHit[] {
+  const ra: ScheduledHit[] = []
+  let t = 0
+  cau.forEach((c, i) => {
+    const bassPc = c.ssa.bass ?? c.g
+    const bass = 36 + pc(bassPc)
+    const nam = [7, 6, 8].find((x) => c.k.quang.includes(x))
+    const rai = pc(bassPc) === pc(c.g) && nam !== undefined ? [bass + nam, bass + 12, bass + nam] : [bass + 12, bass + 12, bass + 12]
+    ra.push({ notes: [bass as MidiNote], startBeat: t, durationBeats: nhip[i]!, velocity: 70 })
+    rai.slice(0, Math.max(0, nhip[i]! - 1)).forEach((m, j) => ra.push({ notes: [m as MidiNote], startBeat: t + j + 1, durationBeats: 1, velocity: 48 - 2 * j }))
+    t += nhip[i]!
+  })
+  return ra
+}
+
+/**
+ * Vòng nền "như anh" của màn `mi` (Rai 1 · 2 · 3): đúng hợp âm anh chơi theo thứ tự clip, mỗi hợp âm dài theo clip quy ra phách ở nhịp clip
+ * (`PHACH_CLIP`; tối thiểu 2 phách để kịp chồng — anh có hợp âm chỉ 0,5 s); nền bass rồi rải 5 – 8.
+ */
+export function vongNhuAnh(mi: number): VongNen | null {
+  const man = MAN_SSA[mi]
+  if (!man?.clip || !man.doan?.length) return null
+  const beat = PHACH_CLIP[man.clip]!
+  const ds = man.doan
+  const cau = ds.map(taoCauNhuAnh)
+  const nhip = ds.map((i, j) => {
+    const sau = ds[j + 1]
+    const dai = sau !== undefined ? NHU_ANH.doan[sau]!.t - NHU_ANH.doan[i]!.t : 4 * beat
+    return Math.max(2, Math.round(dai / beat))
+  })
+  return { ten: man.ten, cau, nhip, nen: nenBass(cau, nhip) }
+}
+
+const TEN_DOAN: Readonly<Record<Doan, string>> = { intro: 'Dạo', interlude: 'Giang tấu', outro: 'Kết' }
+
+/**
+ * Vòng nền của thầy: bộ soạn của thầy tự chọn vòng (`soanTuDo` — như nghe – đáp của Game chạy ngón), viên từng hợp âm theo lối chồng + chạy
+ * của thầy (chỗ đứng bộ soạn chưa đo thì nốt chính là nốt hợp âm); nền là tay trái của bộ soạn + thế tay phải có màu (như lượt bạn ở nghe –
+ * đáp). Hợp âm gạch chéo: bass là nốt sau gạch.
+ */
+export function vongThay(thay: ThayChay, tonic: number, thu: boolean, kind: Doan, take: number): VongNen | null {
+  const c = soanTuDo(thay, tonic, thu, kind, take)
+  const hop = c ? docHop(c.chords.join(' ')) : null
+  if (!c || !hop || hop.length !== c.chords.length) return null
+  const cau = hop.map((h, i) => {
+    const goc = pc(h.root - tonic)
+    const cho = timCho(thay, h.quality.symbol, goc, thu) ?? { duoi: h.quality.symbol, goc, thu, soLan: 0, n: 0, dem: Array<number>(12).fill(0) }
+    const v = taoCauThayChong(thay, cho, tonic, `nen:${i}`)
+    if (h.bass === undefined || pc(h.bass) === pc(h.root)) return v
+    const b = pc(h.bass)
+    const tenB = bo8(tenPhim(v.k, 60 + b))
+    return {
+      ...v,
+      ten: `${v.ten}/${tenB}`,
+      ssa: { ...v.ssa, bass: b, loTrai: [36 + b], lo: [36 + b, ...v.ssa.lo.filter((m) => !v.ssa.loTrai.includes(m))] },
+    }
+  })
+  return { ten: `${tenThayCua(thay)} · ${TEN_DOAN[kind]}`, cau, nhip: [...c.beatsEach], nen: [...c.events.filter((e) => e.hand === 'left'), ...c.nen] }
 }

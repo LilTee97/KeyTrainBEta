@@ -547,6 +547,9 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 15/10 (người dùng: "game nốt rơi làm theo lối SSA tôi thấy rất ổn · Sao 3 thầy còn lại ko làm theo lối SSA · Cho mục quy tắc nhóm
   đuôi học theo kiểu chồng hợp âm và chạy nốt giống SSA"): Lối SSA duyệt; ba nút thầy chơi chồng + chạy (thế tay phải của thầy, chạy nốt
   chính của thầy); nút thử "Quy tắc · chồng + chạy" cạnh màn quy tắc cũ.
+  Cập nhật 15/10 (người dùng: "Cho Mục lối SSA và các thầy khác có nhạc backing track để solo trên đó"): Mưa khung nốt có backing track —
+  viên rơi khớp nhịp nền, chồng + chạy trong ô của hợp âm. Lối SSA: đúng vòng anh chơi trong clip Rai 1 · 2 · 3, nền bass rồi rải 5 – 8.
+  Thầy: vòng bộ soạn của thầy (đoạn · giọng chọn được, "Đổi câu"), nền tay trái thầy + thế màu.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
