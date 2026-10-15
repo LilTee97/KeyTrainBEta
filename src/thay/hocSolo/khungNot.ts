@@ -237,7 +237,8 @@ export function khungCua(tonic: number, thu: boolean, x: Hop): Khung {
   const quang = [...new Set(q.intervals.map(pc))]
   const goc = pc(tonic + x.goc)
   const rieng = GAM_RIENG[x.chat]
-  const tenHop = nguCanh(tonic, thu).h(x.goc, x.chat, x.bass)
+  // Tên hiện ra theo chữ quen (Cadd9) — ký hiệu nội bộ của app là add2 (người dùng 15/10 thấy "Cadd2" trong game).
+  const tenHop = nguCanh(tonic, thu).h(x.goc, x.chat, x.bass).replace(/add2(?=$|\/)/, 'add9')
   const treo = !quang.includes(3) && !quang.includes(4) && quang.includes(5)
   const dau = (iv: number) => quang.includes(iv) && ![0, 3, 4, 7].includes(iv)
   let not: NotKhung[]

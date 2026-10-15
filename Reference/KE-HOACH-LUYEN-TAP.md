@@ -535,6 +535,8 @@ Các hợp âm phải được chọn tự do …"*
   của giọng, số đo tab Chọn nốt theo thầy) · Game chạy ngón "3 · Nghe – đáp thầy (thử)" (lượt thầy đánh câu của bộ soạn, lượt bạn đáp).
   Cập nhật 15/10 (người dùng bác bản gộp): MỖI THẦY MỘT NÚT RIÊNG ở cả hai game — hợp âm (loại + bậc) và khung nốt đo trên bộ soạn của thầy
   (`thayNhac.ts`); học theo nhóm đuôi của thầy; Game chạy ngón thêm nghe – đáp trên vòng bộ soạn của thầy tự chọn.
+  Cập nhật 15/10 (người dùng: vòng Cà Pháo "quanh quẩn hợp âm cơ bản"): vòng bộ soạn Cà Pháo tô màu theo bậc (md "Màu bản không ghi") và
+  soạn lại câu trên vòng ấy; nền thêm thế tay phải có màu (Cà Pháo · Blues) để màu vang thật; phím gợi ý có nhãn.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

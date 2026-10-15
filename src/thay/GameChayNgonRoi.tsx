@@ -1366,11 +1366,20 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
       : []
   const phai = ban ? giu : s.vangPhai
   const ca = [...s.vangTrai, ...phai]
+  /* Lượt bạn, chưa bấm gì: nhãn tay phải đặt trên các phím viền cam — "Cà Pháo đã đánh: C D E G" (người dùng 15/10 hỏi "mấy phím màu
+     vàng nâu đó là gì"). */
+  const goiYThay = ban && !phai.length && loThay.length > 0
   const nhan: NhanHaiTay = {
     trai: s.vangTrai.length ? tenBam(s.vangTrai).ten : '',
     traiPhu: s.vangTrai.length ? 'nền' : '',
-    phai: phai.length ? tenBam(phai, false).ten : '',
-    phaiPhu: phai.length ? (ban ? 'bạn' : tenThay) : '',
+    phai: phai.length ? tenBam(phai, false).ten : goiYThay ? `${tenThay} đã đánh` : '',
+    phaiPhu: phai.length
+      ? ban
+        ? 'bạn'
+        : tenThay
+      : goiYThay
+        ? [...new Set([...loThay].sort((a, b) => a - b).map((m) => bo8(tenPhim(s.ks[j]!, m))))].join(' ')
+        : '',
     tong: ca.length >= 3 ? tenBam(ca).ten : '…',
   }
 
@@ -1423,6 +1432,23 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
             : ban
               ? `Tới bạn — phách 1 mỗi hợp âm đặt một nốt chính của ${tenThay} (★ là nốt thầy vào ô).`
               : `${tenThay} đánh — nghe và nhìn tay phải; lượt sau tới bạn.`)}
+      </p>
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-cream/85">
+        <span>
+          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" /> nền (máy đánh: bass + thế tay phải có màu)
+        </span>
+        {ban ? (
+          !thi && (
+            <span>
+              <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-amber-key/30 ring-2 ring-amber-key ring-inset" /> viền cam: nốt {tenThay} đã đánh trên hợp âm
+              này ở lượt trước — gợi ý, không bắt buộc
+            </span>
+          )
+        ) : (
+          <span>
+            <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-right-hand" /> tay phải {tenThay} đang đánh
+          </span>
+        )}
       </p>
       <BanPhimHaiTay trai={vua(s.vangTrai, thap, cao)} phai={vua(phai, thap, cao)} lo={vua(loThay, thap, cao)} nhan={nhan} lowNote={thap} highNote={cao} />
       <p className="text-xs text-dim">

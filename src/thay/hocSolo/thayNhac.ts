@@ -1,3 +1,4 @@
+import { CA_PHAO_VOICINGS } from '../../reharm/reharmEngine/caPhaoHarmony'
 import { BALLAD_SOLO_RANGE } from '../../reharm/style/balladFamily'
 import { bluesClaudeSolo } from '../../reharm/style/boSoanBlues'
 import { composeCpBallad } from '../../reharm/style/cpBalladComposition'
@@ -5,7 +6,7 @@ import { soanSlowRockLinhNhi } from '../../reharm/style/soanSlowRockLinhNhi'
 import { getStyle } from '../../reharm/style/styleLibrary'
 import type { TimelineEvent } from '../../reharm/style/types'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
-import type { PitchClass } from '../../shared/musicTheory/types'
+import type { MidiNote, PitchClass } from '../../shared/musicTheory/types'
 import { nguCanh } from '../soanCau/giaiThich'
 import { docHop } from '../soanCau/thayTrongVong'
 import { THAY_CHAY, type ThayChay } from './cauThay'
@@ -52,31 +53,108 @@ function mauBlues(goc: number, thu: boolean): string | null {
   return goc === 0 ? 'm9' : goc === 7 ? '7#9' : goc === 3 ? '13' : goc === 8 || goc === 5 ? '9' : null
 }
 
+/*
+  MÀU CÀ PHÁO THEO BẬC — người dùng 15/10/2026: "Cà Pháo chơi có rất nhiều hợp âm màu khác nhau sao bộ soạn Cà Pháo trong game chạy ngón lại
+  đưa ra các vòng hợp âm quanh quẩn ở các hợp âm cơ bản và đơn điệu vậy". Đo: bộ soạn ballad tự chọn vòng từ KÝ HIỆU các sheet ballad —
+  m7 31,1 % · hợp âm ba 18,8 % · 7 16,2 % (n=901 hợp âm, 144 câu); tiếng thật dưới giai điệu thì nốt 9 ở gần mọi ô mà nốt 7 hiếm (♭7 vang
+  8/72 ô V7, 19/63 ô IIm7). Màu của anh nằm ở tay phải, không ở ký hiệu (md Cà Pháo mục 3, "Màu nằm ở đâu"). Nên tô vòng bộ soạn chọn theo
+  chỗ anh tự thêm màu mà bản phổ biến không ghi (md mục 3 "Màu bản không ghi", phần hát 7 bài, số chỗ): giọng thứ i ♭7 28 · 9 24 → m9;
+  ♭VI maj7 23 · 9 19 → maj9; ♭VII ♭7 13 · 9 11 → 9; V 9 7 · ♭13 7 → 7♭13 (app chưa có 9♭13); giọng trưởng I 9 15 → add9 (đã maj7 → maj9);
+  V 9 12 · 13 6 → 9, xen 13; hợp âm thứ → m7 (140/172 đoạn hợp âm thứ của anh có ♭7 vang); IV · ♭III trơn → maj7 (như `colorCaPhao`). Đây
+  là biên soạn của Claude trên số đo ấy — số đo ở phần hát, áp sang câu solo là suy luận.
+*/
+function mauCaPhao(goc: number, thu: boolean, duoi: string, lan: number): string {
+  if (duoi === 'm') return thu && goc === 0 ? 'm9' : 'm7'
+  if (thu) {
+    if (goc === 0 && duoi === 'm7') return 'm9'
+    if (goc === 8 && (duoi === '' || duoi === 'maj7')) return 'maj9'
+    if (goc === 10 && (duoi === '' || duoi === '7')) return '9'
+    if (goc === 7 && (duoi === '' || duoi === '7')) return '7b13'
+    if (goc === 3 && duoi === '') return 'maj7'
+    return duoi
+  }
+  if (goc === 0 && duoi === '') return 'add2'
+  if (goc === 0 && duoi === 'maj7') return 'maj9'
+  if (goc === 5 && duoi === '') return 'maj7'
+  if (goc === 7 && (duoi === '' || duoi === '7')) return lan % 2 ? '13' : '9'
+  return duoi
+}
+
+/*
+  THẾ TAY PHẢI LÀM NỀN — màu hợp âm phải VANG chứ không chỉ nằm ở nhãn. Đo 15/10/2026 (tiếng hai tay bộ soạn, bỏ nốt đỉnh, nốt vang ≥ 8 %
+  thời lượng ô): nền bộ soạn Cà Pháo chỉ rải 1 · 9 · 3 · 5 — nốt 13 của G13 vang 0/39 ô, nốt 7 của Fmaj9 6/87, ♭7 của Am9 7/73; Blues
+  nhãn C13 mà 13 vang 12/75 ô, 9 của G9 0/36, ♯9 của E7♯9 0/36. Nên thêm một thế tay phải giữ suốt ô, nhẹ, dưới giai điệu (tay "left" để
+  lượt bạn vẫn nghe — nền là hai tay của máy, giai điệu là của bạn). Cà Pháo: thế rút từ sheet của anh (`CA_PHAO_VOICINGS`; md: "màu của
+  anh nằm trong tay phải", vd Dm9 = D2 | C4 E4 F4 A4); Blues: thế vỏ 3 – ♭7 – màu (md Blues "Thế bấm tay phải": thế bậc 9 2 + 3 + 5 + ♭7,
+  9/187 cụm); loại chưa có thế thì lấy nốt hợp âm trừ gốc. Chọn thế, giữ suốt ô và lực 46 là biên soạn của Claude.
+*/
+const THE_BLUES: Readonly<Record<string, readonly number[]>> = {
+  '13': [4, 10, 21],
+  '9': [4, 10, 14],
+  '7#9': [4, 10, 15],
+  m9: [3, 10, 14],
+  m6: [3, 9, 14],
+  '7': [4, 7, 10],
+}
+function nenMau(thay: ThayChay, chords: readonly string[], beatsEach: readonly number[]): TimelineEvent[] {
+  const hop = docHop(chords.join(' '))
+  if (!hop || hop.length !== beatsEach.length) return []
+  const ra: TimelineEvent[] = []
+  let dau = 0
+  hop.forEach((h, i) => {
+    // Cà Pháo chưa có thế 13 trong bảng của anh → thế vỏ 3 – ♭7 – 13 (bỏ 9 như công thức C13 = 1 – 3 – ♭7 + Am của app).
+    const iv = (thay === 'blues' ? THE_BLUES[h.quality.symbol] : (CA_PHAO_VOICINGS[h.quality.id] ?? THE_BLUES[h.quality.symbol])) ?? h.quality.intervals.filter((x) => pc(x) !== 0).slice(0, 4)
+    let goc = 48 + pc(h.root)
+    if (goc + Math.max(...iv) > 70) goc -= 12
+    ra.push({ notes: iv.map((x) => goc + x) as MidiNote[], startBeat: dau, durationBeats: Math.max(0.5, beatsEach[i]! - 0.1), hand: 'left', velocity: 46 })
+    dau += beatsEach[i]!
+  })
+  return ra
+}
+
 /** Bộ soạn của thầy tự chọn vòng và soạn câu (đoạn `kind`, lượt `take`) — null nếu bộ soạn không soạn được. */
 export function soanTuDo(thay: ThayChay, tonic: number, thu: boolean, kind: Doan, take: number): CauTuDo | null {
   const key = { tonic: pc(tonic) as PitchClass, scale: thu ? 'minor' : 'major' } as const
   const mo = docHop(nguCanh(tonic, thu).h(0, thu ? 'm' : ''))
+  const cp = (cpVongCoDinh?: { root: number; suffix: string; bass: number | null; beats: number }[]) =>
+    composeCpBallad({
+      kind,
+      key,
+      style: getStyle('ca-phao-ballad-cu-di')!,
+      beatsPerChord: 4,
+      dropRoot: false,
+      // Câu dẫn về hợp âm chủ của giọng (như dẫn vào câu hát kế).
+      opening: mo?.[0] ?? null,
+      take,
+      range: BALLAD_SOLO_RANGE,
+      solo: () => [],
+      cpBalladThu: true,
+      ...(cpVongCoDinh ? { cpVongCoDinh } : {}),
+    })
+  /* Cà Pháo: bộ soạn chọn vòng → tô màu theo bậc (`mauCaPhao`) → bộ soạn soạn lại câu trên vòng đã tô (thế bấm hai tay dựng từ hợp âm có
+     màu, giai điệu coi nốt màu là nốt hợp âm). */
+  const caPhao = () => {
+    const vong = cp()
+    const hop = vong.unavailableReason ? null : docHop(vong.chords.join(' '))
+    if (!hop || hop.length !== vong.chords.length) return vong
+    return cp(
+      hop.map((h, i) => ({
+        root: pc(h.root - tonic),
+        suffix: mauCaPhao(pc(h.root - tonic), thu, h.quality.symbol, i + take),
+        bass: h.bass === undefined || h.bass === h.root ? null : pc(h.bass - tonic),
+        beats: vong.beatsEach[i]!,
+      })),
+    )
+  }
   const r =
     thay === 'linh-nhi'
       ? soanSlowRockLinhNhi({ kind, key, take, oDieu: 3 })
       : thay === 'ca-phao'
-        ? composeCpBallad({
-            kind,
-            key,
-            style: getStyle('ca-phao-ballad-cu-di')!,
-            beatsPerChord: 4,
-            dropRoot: false,
-            // Câu dẫn về hợp âm chủ của giọng (như dẫn vào câu hát kế).
-            opening: mo?.[0] ?? null,
-            take,
-            range: BALLAD_SOLO_RANGE,
-            solo: () => [],
-            cpBalladThu: true,
-          })
+        ? caPhao()
         : bluesClaudeSolo({ kind, key, style: getStyle('blue-sun')!, beatsPerChord: 3, dropRoot: false, opening: null, take, solo: () => [], bluesSoan: true })
   if (r.unavailableReason || !r.chords.length || !r.events.some((e) => e.hand === 'right')) return null
   // Bộ đọc hợp âm của app chưa có m6/9 (hợp âm chót Blues giọng thứ — md Blues: Claude suy) → đọc là m6 (giữ bậc 6, bỏ 9).
-  let chords = r.chords.map((x) => x.replace(/m6\/9$/, 'm6'))
+  let chords = r.chords.map((x) => x.replace(/m6\/9$/, 'm6').replace(/add2(?=$|\/)/, 'add9'))
   if (thay === 'blues') {
     const ds = docHop(chords.join(' '))
     if (ds)
@@ -85,7 +163,8 @@ export function soanTuDo(thay: ThayChay, tonic: number, thu: boolean, kind: Doan
         return m ? ten.replace(/(m7|7)$/, m) : ten
       })
   }
-  return { chords, beatsEach: [...r.beatsEach], events: [...r.events].sort((a, b) => a.startBeat - b.startBeat) }
+  const nen = thay === 'linh-nhi' ? [] : nenMau(thay, chords, r.beatsEach)
+  return { chords, beatsEach: [...r.beatsEach], events: [...r.events, ...nen].sort((a, b) => a.startBeat - b.startBeat) }
 }
 
 /** Một chỗ đứng của hợp âm trong phong cách thầy: loại (ký hiệu app), gốc so chủ âm, giọng. */

@@ -7109,3 +7109,40 @@ phần + 3 nút thầy, không còn nút gộp; học nhóm đuôi Cà Pháo —
 im → Trượt; Đổi câu ra vòng mới; Linh Nhi · Blues tự chọn vòng và chạy; Blues Kết giọng thứ chạy được; thi "Ô bạn 1/20"; rời tab tắt nền;
 điện thoại không cuộn ngang) · kịch bản cũ: Game chạy ngón phần 1–2 40/40 (hai lượt), Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`,
 `Nguon.json` không đổi.
+
+## Bước — "Phím vàng nâu là gì" và "sao vòng Cà Pháo đơn điệu": tô màu vòng Cà Pháo theo bậc, nền thêm thế tay phải có màu, ghi nhãn phím gợi ý (15/10/2026)
+
+**Người dùng** (kèm hai ảnh màn nghe – đáp Cà Pháo): *"mấy phím màu vàng nâu đó là gì. Cà Pháo chơi có rất nhiều hợp âm màu khác nhau sao bộ
+soạn Cà Pháo trong game chạy ngón lại đưa ra các vòng hợp âm quanh quẩn ở các hợp âm cơ bản và đơn điệu vậy"*.
+
+- **Phím vàng nâu** là viền cam gợi ý: các nốt Cà Pháo đã đánh trên hợp âm ấy ở lượt thầy trước (chỉ bên luyện, lượt bạn). Trước chỉ ghi ở
+  dòng chữ nhỏ dưới bàn phím → nay có dòng chú thích màu phím ngay trên bàn phím, và nhãn tay phải "Cà Pháo đã đánh — C D E G B" đặt trên các
+  phím ấy khi bạn chưa bấm.
+- **Vì sao đơn điệu — đo trên bộ soạn (144 câu, n=901 hợp âm):** (1) bộ soạn ballad chọn vòng từ KÝ HIỆU các sheet ballad: m7 31,1 % · hợp âm
+  ba 18,8 % · 7 16,2 % (75 %); vốn jazz dày (m11 · m9 · 11 · m7♭5) nằm ở một bài bossa, không trong bộ soạn ballad; (2) nền "Ballad cứ đi" rải
+  1 · 9 · 3 · 5 trên gần mọi ô (tiếng hai tay, bỏ nốt đỉnh, vang ≥ 8 % ô): ô C vang Đô Rê Mi Sol 54/54, ♭7 của G7 chỉ vang 8/72 ô, của IIm7
+  19/63 → ô nào nghe cũng "add9"; (3) giang tấu luôn đóng ở V để dẫn về câu hát. Màu thật của anh nằm ở tay phải, không ở ký hiệu (md Cà Pháo
+  mục 3, "Màu nằm ở đâu").
+- **Sửa (nút thử Cà Pháo, `hocSolo/thayNhac.ts`):** (a) tô màu vòng bộ soạn chọn theo chỗ anh tự thêm màu mà bản phổ biến không ghi (md mục 3
+  "Màu bản không ghi", phần hát 7 bài — i ♭7 28 · 9 24; ♭VI maj7 23 · 9 19; ♭VII ♭7 13 · 9 11; V thứ 9 7 · ♭13 7; I trưởng 9 15; V trưởng 9 12 ·
+  13 6): giọng thứ i → m9 · ♭VI → maj9 · ♭VII → 9 · V → 7♭13 · ♭III → maj7; giọng trưởng I → add9 (maj7 → maj9) · V → 9 xen 13 · IV → maj7;
+  hợp âm thứ → m7 — rồi bộ soạn soạn lại câu trên vòng đã tô (`cpVongCoDinh`: thế bấm hai tay dựng từ hợp âm có màu); (b) thêm thế tay phải
+  làm nền dưới giai điệu, giữ suốt ô, nhẹ — vì nhãn có màu mà nền không vang (G13 nốt 13 vang 0/39 ô; Blues G9 nốt 9 0/36, E7♯9 nốt ♯9 0/36):
+  Cà Pháo thế rút từ sheet của anh (`CA_PHAO_VOICINGS`; 13 chưa có thì vỏ 3 – ♭7 – 13), Blues thế vỏ 3 – ♭7 – màu (md Blues "Thế bấm tay
+  phải": thế bậc 9). Sau sửa (48 câu mỗi thầy): màu trong nhãn vang đủ 285/300 ô Cà Pháo (trước khi thêm thế 13 — 15 ô thiếu là G13) · 344/440
+  ô Blues (thiếu 9 của hợp âm 13 — bỏ 9 như công thức C13 của app).
+- **Vốn hợp âm Cà Pháo sau khi tô** (n=901): m7 27,7 % · maj9 14,0 % · 9 10,1 % · m9 8,7 % · 7♭13 8,0 % · add9 6,5 % · 9sus4 5,7 % · m7♭5
+  5,3 % · 13 4,8 % … (trước: m7 31,1 · hợp âm ba 18,8 · 7 16,2). Vòng ví dụ: trưởng "Cadd9 · G13 · Cadd9 · Dm7 · G9", "Cadd9 · Fmaj7 · G13 ·
+  G9 · G13 · Dm7 · G9sus4 · G9"; thứ "Am9 · Fmaj9 · Em7 · Dm7 · Em7 · Am9 · Bm7♭5 · E9sus4 · E7♭13". `thayNhac.json` đo lại (Cà Pháo 25 chỗ
+  đứng). Linh Nhi giữ nguyên — hợp âm ba ~79 % là lối của chị (md: đoạn không lời 78 % trơn).
+- Tên hợp âm hiện "add9" thay ký hiệu nội bộ "add2" (`khungCua`, vòng bộ soạn).
+
+**Cơ sở / chưa đo — lỗ còn lại:** màu theo bậc đo ở PHẦN HÁT (7 bài) — áp sang câu solo là suy luận của Claude; chọn một màu chính mỗi bậc (V
+trưởng xen 9 / 13 theo lượt; V thứ 7♭13 vì app chưa có 9♭13), thế 13 cho Cà Pháo, giữ thế suốt ô và lực 46 là biên soạn; người dùng chưa
+nghe bản có màu.
+
+**Kiểm:** `tsc -b` sạch · eslint các file của lần này 0 lỗi · `thayNhac.test.ts` 4 (+1 ghi dữ liệu, bỏ qua) — thêm: vòng Cà Pháo có m9 · maj9 ·
+9 · 13 · 7♭13 · add9, hợp âm ba trơn dưới 5 % · `chayNgonRoi` 13 · `mauKhung` 6 · `khungNot` 7 · `hocSolo` 29 · toàn suite (giới hạn 20 s mỗi
+test): 2 794 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua · chạy thử headless ba nút thầy 38/38, hai lượt (thêm: nhãn "Cà Pháo đã
+đánh" + dòng chú thích màu phím; vòng Cà Pháo có hợp âm màu "Cadd9 · G13 · Cadd9 · Dm7 · G9") · kịch bản cũ: Game chạy ngón phần 1–2 40/40,
+Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.

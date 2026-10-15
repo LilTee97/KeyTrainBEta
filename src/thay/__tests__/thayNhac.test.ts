@@ -19,9 +19,13 @@ describe('Phong cách thầy — đo trên bộ soạn của thầy', () => {
   it('thayNhac.json khớp bộ soạn hiện tại (bộ soạn đổi thì chạy lại với TAO_THAY_NHAC=1)', () => {
     for (const t of THAY) expect(choThay(t), t).toEqual(doThay(t))
   }, 120000)
-  it('mỗi thầy: vốn hợp âm riêng — Cà Pháo có m7 · maj7 · treo · m7♭5; Linh Nhi phần lớn hợp âm ba; Blues hợp âm bảy có màu ở I · IV · V', () => {
+  it('mỗi thầy: vốn hợp âm riêng — Cà Pháo m7 · treo · m7♭5 · maj9 · m9 · 9 · 13 · 7♭13 · add9; Linh Nhi phần lớn hợp âm ba; Blues hợp âm bảy có màu ở I · IV · V', () => {
     const duoi = (t: (typeof THAY)[number]) => new Set(choThay(t).map((c) => c.duoi))
-    expect([...duoi('ca-phao')]).toEqual(expect.arrayContaining(['m7', 'maj7', '9sus4', 'm7b5']))
+    expect([...duoi('ca-phao')]).toEqual(expect.arrayContaining(['m7', '9sus4', 'm7b5', 'maj9', 'm9', '9', '13', '7b13', 'add2']))
+    // Cà Pháo tô màu theo bậc (md "Màu bản không ghi"): hợp âm ba trơn còn dưới 5 % (trước khi tô: 18,8 %, n=901).
+    const cp = choThay('ca-phao')
+    const tron = cp.filter((c) => c.duoi === '' || c.duoi === 'm').reduce((s, c) => s + c.soLan, 0)
+    expect(tron / cp.reduce((s, c) => s + c.soLan, 0)).toBeLessThan(0.05)
     const ln = choThay('linh-nhi')
     const ba = ln.filter((c) => nhomDuoi(c.duoi) === 'Hợp âm ba').reduce((s, c) => s + c.soLan, 0)
     expect(ba / ln.reduce((s, c) => s + c.soLan, 0)).toBeGreaterThan(0.6)
