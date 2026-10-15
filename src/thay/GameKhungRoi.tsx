@@ -8,6 +8,7 @@ import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi } from './GameChong'
 import { chonCauKhung, duKhung, MAN_KHUNG, ngoaiKhung, type CauKhung, type LuaChonKhung } from './hocSolo/mauKhung'
 import { tenPhim } from './hocSolo/khungNot'
+import { chamSsa, chonCauSsa, MAN_SSA, mauSsa, SO_NOT_CHAY, xongChong, type PhanSsa } from './hocSolo/loiSsa'
 import { THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
 import { chamThay, chonCauThay, manThay, tenThayCua } from './hocSolo/thayNhac'
 import { DAT_THI, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
@@ -23,10 +24,13 @@ import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRo
   theo từng nhóm đuôi … Bộ soạn nốt … biết khung nốt solo của từng thầy"): mỗi thầy một nút; màn là các nhóm đuôi của thầy, hợp âm đúng
   loại và bậc bộ soạn của thầy hay đặt, bấm đủ nốt CHÍNH của thầy (`hocSolo/thayNhac.ts` — đo trên bộ soạn); nốt thầy không đánh là sai,
   nốt thầy đánh ít không tính. Duyệt đạt thì bỏ chữ "(thử)". (Bản gộp ba thầy một nút trước đó — người dùng bác, đã bỏ.)
+  Nút lối SSA (thử, 15/10/2026 — người dùng: "làm giống như cách mà SSA đã solo trong các clip … đưa ra gợi ý khắp đàn chứ ko phải 1 vị
+  trí"): mỗi viên chồng bass + hợp âm ba của anh rồi chạy nốt trên đỉnh; gợi ý thế chồng khắp tầm tay phải của anh (`hocSolo/loiSsa.ts`,
+  đo bằng hình — tools/do_tay_ssa.py).
 */
 
-type Vien = CauKhung & { khungTen: string; chinh?: number[]; tranh?: number[] }
-type Bo = 'quy-tac' | ThayChay
+type Vien = CauKhung & { khungTen: string; chinh?: number[]; tranh?: number[]; ssa?: PhanSsa }
+type Bo = 'quy-tac' | 'ssa' | ThayChay
 type CachNhap = 'chay' | 'chon'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -46,6 +50,13 @@ const NHAP: readonly { id: CachNhap; ten: string; mo: string }[] = [
 
 /** Nốt khung đặt từ gốc ở quãng tám 4, đi lên — để nghe và để hé lộ trên bàn phím. */
 const khungLen = (g: number, pcs: readonly number[]) => pcs.map((p) => 60 + g + pc(p - g)).sort((a, b) => a - b)
+const ngheMau = async (ds: readonly (readonly number[])[]) => {
+  await startAudio()
+  playChordSequence(
+    ds.map((x) => x as MidiNote[]),
+    0.3,
+  )
+}
 const ngheKhung = async (g: number, pcs: readonly number[]) => {
   await startAudio()
   const ds = khungLen(g, pcs)
@@ -67,29 +78,37 @@ export function GameKhungRoi() {
   const [choNot, setChoNot] = useState(false)
   const [bo, setBo] = useState<Bo>('quy-tac')
   const thi = ben === 'thi'
-  const laThay = bo !== 'quy-tac'
-  const tenThay = laThay ? tenThayCua(bo) : ''
-  const DS: readonly { ten: string; goiY: string; quyTac: readonly string[] }[] = useMemo(() => (bo === 'quy-tac' ? MAN_KHUNG : manThay(bo)), [bo])
-  /** Màn thầy chỉ chạy nốt (chưa có bốn nút chọn). */
-  const cachNhap: CachNhap = laThay ? 'chay' : nhap
-  const khoaKyLuc = (k: number) => `${laThay ? `${bo}|` : ''}${k}${moc.thi !== MOC_MAC_DINH.thi ? `|${moc.thi}s` : ''}`
+  const thay: ThayChay | null = bo === 'quy-tac' || bo === 'ssa' ? null : bo
+  const laThay = thay !== null
+  const laSsa = bo === 'ssa'
+  const tenThay = thay ? tenThayCua(thay) : ''
+  const DS: readonly { ten: string; goiY: string; quyTac: readonly string[] }[] = useMemo(
+    () => (bo === 'quy-tac' ? MAN_KHUNG : bo === 'ssa' ? MAN_SSA : manThay(bo)),
+    [bo],
+  )
+  /** Màn thầy và lối SSA chỉ chạy nốt (chưa có bốn nút chọn). */
+  const cachNhap: CachNhap = laThay || laSsa ? 'chay' : nhap
+  const khoaKyLuc = (k: number) => `${bo !== 'quy-tac' ? `${bo}|` : ''}${k}${moc.thi !== MOC_MAC_DINH.thi ? `|${moc.thi}s` : ''}`
   /* Máy rơi chung (`useMuaRoi`) — đồng hồ, sinh viên, trượt, chờ, chấm; tách từ file này 15/10/2026, hành vi giữ nguyên. */
   const may = useMuaRoi<Vien>({
     thi,
     choNot,
     giay: moc[ben],
     tao: (sai, truoc) => {
+      if (bo === 'ssa') return chonCauSsa(man, GOC_CHOI[gocChoi], sai, truoc)
       if (bo !== 'quy-tac') return chonCauThay(bo, man, GOC_CHOI[gocChoi], sai, truoc)
       const cau = chonCauKhung(man, GOC_CHOI[gocChoi], sai, truoc)
       return { ...cau, khungTen: cau.quyTac }
     },
-    soLo: (v) => (v.chinh ? v.chinh.length : v.k.not.length),
+    soLo: (v) => (v.ssa ? v.ssa.lo.length : v.chinh ? v.chinh.length : v.k.not.length),
     choChu: (d) =>
-      d.chinh
+      d.ssa
+        ? `Viên ${d.ten} đang chờ — chồng ${d.khungTen} rồi chạy ${SO_NOT_CHAY} nốt trên đỉnh để mưa rơi tiếp.`
+        : d.chinh
         ? `Viên ${d.ten} đang chờ — bấm đủ ${d.chinh.length} nốt chính của thầy để mưa rơi tiếp.`
         : `Viên ${d.ten} đang chờ — chạy đủ khung (${d.goiY.replace(/^khung /, '')}) để mưa rơi tiếp.`,
     khiXong: (v, dung) => {
-      if (dung) void ngheKhung(v.g, v.chinh ?? v.k.not.map((n) => n.p))
+      if (dung) void (v.ssa ? ngheMau(mauSsa({ g: v.g, ssa: v.ssa })) : ngheKhung(v.g, v.chinh ?? v.k.not.map((n) => n.p)))
     },
     khiXongThi: (dung, diem) =>
       setKyLuc((cu) => {
@@ -135,6 +154,17 @@ export function GameKhungRoi() {
   useNotXuong((note) => {
     const v = may.dangDich()
     if (cachNhap !== 'chay' || g.pha !== 'choi' || !v) return
+    if (v.ssa) {
+      const r = chamSsa({ g: v.g, k: v.k, ssa: v.ssa }, g.daChay, note)
+      if (r.kq === 'dung') return may.giai(v)
+      if (r.kq === 'sai') return may.saiLan(v, `Chưa đúng — ${r.chu}`)
+      if (r.kq === 'bo') g.bao = { loai: 'sai', chu: r.chu }
+      else {
+        g.daChay = r.daChay
+        if (r.chu) g.bao = { loai: 'dung', chu: r.chu }
+      }
+      return may.ve()
+    }
     if (v.chinh && v.tranh) {
       const r = chamThay({ chinh: v.chinh, tranh: v.tranh }, note, g.daChay)
       if (r.kq === 'dung') return may.giai(v)
@@ -158,12 +188,19 @@ export function GameKhungRoi() {
     return (
       <div className="flex flex-col gap-3 rounded-xl border border-line bg-black/25 p-4 text-sm">
         <h4 className="text-lg font-semibold text-cream">
-          {laThay ? `Mưa nốt ${tenThay} — học theo nhóm đuôi của ${tenThay}` : 'Mưa khung nốt — học khung theo quy tắc nối các nhóm đuôi'}
+          {laThay
+            ? `Mưa nốt ${tenThay} — học theo nhóm đuôi của ${tenThay}`
+            : laSsa
+              ? 'Mưa khung nốt · lối SSA — chồng hợp âm màu rồi chạy ngón, theo nhóm đuôi'
+              : 'Mưa khung nốt — học khung theo quy tắc nối các nhóm đuôi'}
         </h4>
         {/* Nút thầy (thử, 15/10/2026): mỗi thầy một nút — duyệt đạt thì bỏ chữ "(thử)". */}
         <div className="flex flex-wrap gap-1.5">
-          <button type="button" onClick={() => setBo('quy-tac')} className={nut(!laThay)} aria-pressed={!laThay}>
+          <button type="button" onClick={() => setBo('quy-tac')} className={nut(bo === 'quy-tac')} aria-pressed={bo === 'quy-tac'}>
             Màn quy tắc nhóm đuôi
+          </button>
+          <button type="button" onClick={() => setBo('ssa')} className={nut(laSsa)} aria-pressed={laSsa}>
+            Lối SSA (thử)
           </button>
           {THAY_CHAY.map((t) => (
             <button key={t.id} type="button" onClick={() => setBo(t.id)} className={nut(bo === t.id)} aria-pressed={bo === t.id}>
@@ -201,7 +238,15 @@ export function GameKhungRoi() {
             )}
           </div>
         )}
-        {laThay ? (
+        {laSsa ? (
+          <p className="text-xs text-dim">
+            Lối chơi đo bằng hình trong ba clip "Rải Ngón" của anh SSA: tay trái gõ bass (rải thêm 5 – 8 nếu muốn), tay phải CHỒNG một hợp âm
+            ba quen lên trên bass thành hợp âm màu (Cmaj7 = Đô + Em), rồi CHẠY {SO_NOT_CHAY} nốt trên đỉnh trong lúc ngón dưới còn giữ thế. Viên
+            viền cam là viên đang đố: chồng trước (bấm cùng lúc hay rải từng nốt đều được), chạy sau. Thế chồng đặt ở đâu cũng được — rơi quá
+            60 % thì phím gợi ý sáng dần khắp đàn, từ bass lên mọi chỗ đặt thế. Nốt tránh / ngoài khung là sai; nốt khung anh ít đặt trên đỉnh
+            không tính.
+          </p>
+        ) : laThay ? (
           <p className="text-xs text-dim">
             Hợp âm rơi theo đúng LOẠI và BẬC mà bộ soạn của {tenThay} hay đặt — mỗi màn một nhóm đuôi của {tenThay}. Viên viền cam là viên
             đang đố: bấm đủ các nốt CHÍNH của {tenThay} trên hợp âm ấy — nốt hợp âm và nốt bộ soạn của thầy đánh từ 10 % (thứ tự nào, quãng tám
@@ -219,15 +264,17 @@ export function GameKhungRoi() {
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
-              {laThay
-                ? 'Viên ghi bậc, giọng và số nốt chính của thầy. Rơi quá 60 % thì phím nốt chính sáng dần. Không mất mạng.'
-                : 'Viên ghi quy tắc so với loại cha ("từ Cmaj7: B → B♭") và tên khung. Rơi quá 60 % thì phím khung sáng dần. Không mất mạng.'}
+              {laSsa
+                ? 'Viên ghi thế chồng ("Đô + Em"). Rơi quá 60 % thì phím bass và thế chồng sáng dần khắp đàn. Không mất mạng.'
+                : laThay
+                  ? 'Viên ghi bậc, giọng và số nốt chính của thầy. Rơi quá 60 % thì phím nốt chính sáng dần. Không mất mạng.'
+                  : 'Viên ghi quy tắc so với loại cha ("từ Cmaj7: B → B♭") và tên khung. Rơi quá 60 % thì phím khung sáng dần. Không mất mạng.'}
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
               <ChonMoc giay={moc.meo} doi={(s) => setMoc((m) => ({ ...m, meo: s }))} />
               <label className="flex items-center gap-2 text-xs text-cream/85">
                 <input type="checkbox" checked={choNot} onChange={() => setChoNot((x) => !x)} />
-                Chờ đúng nốt — viên dừng ở gần đáy, đợi bạn {laThay ? 'bấm đủ nốt chính' : 'chạy đủ khung'} mới rơi tiếp
+                Chờ đúng nốt — viên dừng ở gần đáy, đợi bạn {laSsa ? 'chồng và chạy xong' : laThay ? 'bấm đủ nốt chính' : 'chạy đủ khung'} mới rơi tiếp
               </label>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -241,7 +288,7 @@ export function GameKhungRoi() {
           <div className="rounded-lg border border-amber-key/40 p-3">
             <p className="font-semibold text-amber-key">Thi không mẹo — chấm đạt</p>
             <p className="mb-2 text-xs text-dim">
-              Chỉ tên hợp âm, không hiện {laThay ? 'nốt thầy' : 'khung'}. {SO_CAU_THI} viên một lượt, sai lần đầu là tính sai; đúng từ {DAT_THI} là Đạt màn. Kỷ lục ghi
+              Chỉ tên hợp âm, không hiện {laSsa ? 'thế chồng' : laThay ? 'nốt thầy' : 'khung'}. {SO_CAU_THI} viên một lượt, sai lần đầu là tính sai; đúng từ {DAT_THI} là Đạt màn. Kỷ lục ghi
               riêng theo mốc tốc độ.
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
@@ -273,7 +320,7 @@ export function GameKhungRoi() {
               ))}
             </div>
           </div>
-          {!laThay && (
+          {!laThay && !laSsa && (
           <div>
             <p className="mb-1 text-xs text-dim">Cách nhập</p>
             <div className="flex flex-wrap gap-1.5">
@@ -301,10 +348,33 @@ export function GameKhungRoi() {
     })
   const daBam = phu.daBam && performance.now() < phu.daBam.het ? phu.daBam.lc : null
   const loN = may.loCua(dich)
-  const banTrai = dich ? vua([48 + dich.g]) : []
-  const banPhai = daBam && dich ? vua(khungLen(dich.g, daBam.pcs)) : vua(g.daChay)
-  const banLo = dich && loN > 0 && !daBam ? vua(khungLen(dich.g, dich.chinh ?? dich.k.not.map((n) => n.p)).slice(0, loN)) : []
-  const nhan = {
+  /* Lối SSA: tay trái = nốt gốc thấp nhất bạn đã bấm (bass), tay phải = các nốt còn lại (thế chồng rồi nốt chạy); gợi ý = bass + thế
+     chồng khắp tầm tay phải của anh, sáng dần từ thấp lên. */
+  const ssa = dich?.ssa ?? null
+  const goc8 = ssa && dich ? g.daChay.filter((m) => pc(m) === dich.g) : []
+  const bassM = goc8.length ? Math.min(...goc8) : null
+  const xong = ssa && dich ? xongChong({ g: dich.g, ssa }, g.daChay) : -1
+  const tenN = (m: number) => (dich ? tenPhim(dich.k, m).replace(/-?\d+$/, '') : '')
+  const banTrai = ssa ? (bassM !== null ? vua([bassM]) : []) : dich ? vua([48 + dich.g]) : []
+  const banPhai = ssa ? vua(g.daChay.filter((m) => m !== bassM)) : daBam && dich ? vua(khungLen(dich.g, daBam.pcs)) : vua(g.daChay)
+  const banLo =
+    dich && loN > 0 && !daBam ? vua(ssa ? ssa.lo.slice(0, loN) : khungLen(dich.g, dich.chinh ?? dich.k.not.map((n) => n.p)).slice(0, loN)) : []
+  const nhanSsa = ssa &&
+    dich && {
+      trai: bassM !== null ? tenN(bassM) : '',
+      traiPhu: bassM !== null ? 'bass' : '',
+      // Dòng to ngắn (tên thế / số nốt chạy) — điện thoại: nhãn dài "Em7 2/4" đè lên nhãn bass (chạy thử 15/10/2026).
+      phai: xong >= 0 ? `${g.daChay.length - xong - 1}/${SO_NOT_CHAY}` : g.daChay.some((m) => m !== bassM) ? ssa.tenChong : '',
+      phaiPhu:
+        xong >= 0
+          ? `chạy · ${g.daChay.slice(xong + 1).map(tenN).join(' ')}`
+          : `${ssa.chong.filter((p) => g.daChay.some((m) => m !== bassM && pc(m) === p)).length}/${ssa.chong.length} · ${g.daChay
+              .filter((m) => m !== bassM)
+              .map(tenN)
+              .join(' ')}`,
+      tong: '',
+    }
+  const nhan = nhanSsa || {
     trai: dich ? dich.ten.replace(/ · .*$/, '').match(/^[A-G][♭♯]?/)?.[0] ?? '' : '',
     traiPhu: dich ? 'gốc' : '',
     phai: daBam ? daBam.ten : dich && g.daChay.length ? `${new Set(g.daChay.map(pc)).size}/${dich.chinh?.length ?? dich.k.not.length}` : '',
@@ -358,7 +428,10 @@ export function GameKhungRoi() {
       >
         {g.pha === 'dung'
           ? 'Đang tạm dừng.'
-          : (g.bao?.chu ?? `Viên viền cam đang đố — bấm đủ các nốt ${laThay ? 'chính của thầy' : 'khung'} của nó.`)}
+          : (g.bao?.chu ??
+            (laSsa
+              ? `Viên viền cam đang đố — chồng bass + thế ở trên, rồi chạy ${SO_NOT_CHAY} nốt trên đỉnh.`
+              : `Viên viền cam đang đố — bấm đủ các nốt ${laThay ? 'chính của thầy' : 'khung'} của nó.`))}
       </p>
 
       {cachNhap === 'chon' && dich && (
@@ -376,17 +449,26 @@ export function GameKhungRoi() {
         </div>
       )}
       <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} />
+      {ssa && dich && !thi && (
+        <p className="text-xs text-cream/85">
+          Thế {ssa.tenChong} khắp đàn — chọn chỗ nào cũng được:{' '}
+          <span className="font-mono">{ssa.the.map((t) => t.map((m) => tenPhim(dich.k, m)).join('–')).join(' · ')}</span>. Bass:{' '}
+          {ssa.lo.filter((m) => pc(m) === dich.g).map((m) => tenPhim(dich.k, m)).join(' hay ')}, thấp hơn thế chồng.
+        </p>
+      )}
       <p className="text-xs text-dim">
-        {laThay
+        {laSsa
+          ? `Chồng: bass rồi ${ssa?.tenChong ?? 'thế chồng'} ở trên (cùng lúc hay rải từng nốt). Chạy: ${SO_NOT_CHAY} nốt trên đỉnh — nốt hợp âm hay nốt anh SSA hay đặt; nốt tránh / ngoài khung là sai.`
+          : laThay
           ? 'Bấm từng nốt chính của thầy (đàn MIDI, phím máy tính hay chạm phím) — đủ là ăn; nốt thầy không đánh là sai, nốt mờ không tính.'
           : cachNhap === 'chay'
             ? 'Bấm từng nốt của khung (đàn MIDI, phím máy tính hay chạm phím) — đủ mọi nốt là ăn; bấm nốt ngoài khung là sai.'
             : 'Chọn tên khung ở bốn nút trên — bấm nút là nghe và thấy khung ấy trên đàn.'}
-        {!thi && ` Viền cam trên phím là ${laThay ? 'nốt chính' : 'khung'} đang hiện dần.`}
+        {!thi && ` Viền cam trên phím là ${laSsa ? 'bass và thế chồng' : laThay ? 'nốt chính' : 'khung'} đang hiện dần.`}
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>
-          <summary className="cursor-pointer text-teal-key">{laThay ? 'Thầy chọn nốt thế nào' : 'Quy tắc của màn này'}</summary>
+          <summary className="cursor-pointer text-teal-key">{laSsa ? 'Lối SSA của màn này' : laThay ? 'Thầy chọn nốt thế nào' : 'Quy tắc của màn này'}</summary>
           <ul className="mt-1 ml-4 flex list-disc flex-col gap-0.5">
             {DS[man]!.quyTac.map((m) => (
               <li key={m}>{m}</li>

@@ -20,7 +20,9 @@ import { gamTrenHop } from './sinhSolo'
 
   SỐ ĐO SSA (ba clip "Rải Ngón" của SSA, D:\PianoBrain\video\Rai ngon SSA; chép nốt piano_transcription_inference; hợp âm đọc từ nhãn
   màn hình 2 khung/giây; KeyTrain/tools/do_rai_ssa.py, 15/10/2026): 111 đoạn hợp âm; 98,7 % nốt chép nằm trong nhãn (1087/1101).
-  - Tay trái chỉ giữ bass: trung vị 1 nốt mỗi đoạn; ≥ 3 nốt (rải tay trái) 29/111 đoạn.
+  - Tay trái: bass rồi rải 5 – 8 – 10, ít khi bấm khối — đo bằng HÌNH (tools/do_tay_ssa.py): 271 cú gõ tay trái, 1 nốt 219 · 2 nốt 47
+    (phần lớn quãng 8 / 5) · 3+ nốt 5; trung vị 3 nốt mỗi hợp âm. Bản trước ghi "tay trái chỉ giữ bass, trung vị 1 nốt" — tách tay theo
+    khoảng trống cao độ, lệch hình ở 203/1 101 nốt (sai, sửa 15/10/2026).
   - Tay phải mỗi họ đuôi là một hợp âm ba quen dựng trên một bậc của hợp âm (bảng `SSA` dưới).
   - Nốt giai điệu (nốt tay phải cao nhất đang vang, bỏ nốt giữa chuỗi rải lên): nốt hợp âm 175/241, nốt căng có trong tên 63/241, ngoài
     3/241. Đổi bass mà giữ ≥ 2 nốt tay phải: 32/94 chỗ đổi bass.
@@ -392,8 +394,8 @@ export function chongDuoi(k: Khung, dinh: number): number[] {
 }
 
 /**
- * Nền cho kiểu solo: tay trái mỗi hợp âm — bass ngân cả ô, rải 5 · 8 · 5 nhẹ ở các phách sau (SSA: tay trái trung vị 1 nốt, rải
- * 1 – 5 – 8 ở 29/111 đoạn). `day` thêm tay phải đệm (nốt hợp âm trừ gốc, quãng tám 4, nhẹ) cho ai chỉ muốn đánh giai điệu.
+ * Nền cho kiểu solo: tay trái mỗi hợp âm — bass ngân cả ô, rải 5 · 8 · 5 nhẹ ở các phách sau (SSA, đo bằng hình: bass rồi rải
+ * 5 – 8 – 10 — trong 101 hợp âm có tay trái: hai cú gõ bass rồi 8 / 5 ở 40, rải ≥ 3 nốt đơn ở 34, một cú gõ ở 23). `day` thêm tay phải đệm (nốt hợp âm trừ gốc, quãng tám 4, nhẹ) cho ai chỉ muốn đánh giai điệu.
  */
 export function nenVong(ks: readonly Khung[], nhip: number, day = false): ScheduledHit[] {
   const hits: ScheduledHit[] = []

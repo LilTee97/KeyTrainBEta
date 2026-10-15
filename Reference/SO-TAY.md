@@ -7162,3 +7162,58 @@ Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`, `Nguon.json` không đ�
 **Kiểm:** `tsc -b` sạch · eslint 0 lỗi · `thayNhac` 4 (+1 bỏ qua) · `chayNgonRoi` 13 · toàn suite (giới hạn 20 s mỗi test): 2 794 qua / 5 đỏ (5 đỏ
 cũ) / 1 bỏ qua · `vite build` qua · chạy thử headless ba nút thầy 39/39, hai lượt (thêm: lượt bạn đếm được đúng 1 phím xanh) · Game chạy ngón
 phần 1–2 40/40 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Anh SSA solo thế nào (đo hai tay bằng HÌNH) và Mưa khung nốt · "Lối SSA (thử)": chồng hợp âm màu rồi chạy, gợi ý khắp đàn (15/10/2026)
+
+**Người dùng** (kèm ảnh Game nốt rơi · màn quy tắc 1): *"trong game nốt rơi, ở mục mưa khung nốt để học chạy ngón theo các nhóm đuôi ý tôi
+muốn làm giống như cách mà SSA đã solo trong các clip của anh ta — Hãy phân tích kỹ xem anh SSA đã solo theo cách nào, có phải là tay trái
+đánh hợp âm (2 hoặc 3 nốt) rồi tay phải chồng hợp âm khác để tạo nên hợp âm màu và trong lúc chồng hợp âm đó thì đồng thời anh ta cũng chạy
+nốt ở những phách thích hợp. — Có lúc tôi thấy tay trái cũng tham gia chạy ngón chứ ko chỉ đứng dặm hợp âm — Hai tay anh ta di chuyển lên
+xuống khắp đàn chứ ko ở một nơi cố định nên tôi muốn bạn đưa ra gợi ý khắp đàn chứ ko phải 1 vị trí."*
+
+- **Cách đo — mới: tay nào đánh nốt nào, đo bằng hình** (`tools/do_tay_ssa.py`; `do_rai_ssa.py` bọc phần đo vào `main()` để dùng chung bảng
+  hợp âm, đầu ra giữ nguyên từng dòng). Camera trên cao của ba clip thấy cả hai tay: dò da tay 10 khung/giây trên dải phím; quy x ra phím bằng
+  vạch đỏ sáng phím (lớp tô của video) khớp với nốt chép (clip 3: 121 khớp / 19 lệch); gán mỗi nốt cho tay đang nằm trên phím ấy. Thấy hai tay
+  ở 2 247/2 320 khung. 1 101 nốt: trong khối da 898 · sát mép 58 · ngoài cả hai (gán tay gần hơn, thường là ngón cái) 135 · khác 10. Soát bằng
+  mắt 36 khung — khớp, trừ nốt nằm đúng giữa hai tay. Hai chỗ phải sửa khi soát: mép phải bàn phím clip 3 bị nhận là da ở ~100 % khung, và
+  mép hồng của vạch đỏ — đã loại.
+- **Sửa số SAI của tôi:** "tay trái chỉ giữ bass, trung vị 1 nốt" (tách tay theo khoảng trống cao độ) lệch hình ở 203/1 101 nốt. Đã sửa ở
+  md SSA, chú thích `khungNot.ts` và chữ "Bí quyết rải ngón" của Game chạy ngón phần 2.
+- **Kết quả (số đo; md `ssa-rai-ngon.md` mục "Hai tay"):**
+  1. Tay trái gõ bass rồi rải 5 – 8 – 10, ít khi bấm khối: 271 cú gõ — 1 nốt 219 · 2 nốt 47 (quãng 8: 22, quãng 5: 11) · 3–4 nốt 5. Giả
+     thuyết "tay trái đánh hợp âm 2–3 nốt" không khớp.
+  2. Tay trái có chạy, ít: 13 chuỗi ≥ 3 nốt đơn (phần lớn là rải); Rai 1 · 0:35 tay trái lên La4 – Si4 – Đô5, soát bằng hình.
+  3. Tay phải chồng hợp âm ba trên một bậc của bass: m7 → trưởng trên ♭3 17/29 · maj7 → thứ trên 3 8/18 · treo → trưởng trên ♭7 3/10 ·
+     m7♭5 → thứ trên ♭3 2/2. Thế ngồi quanh Đô giữa (nốt thấp nhất ở quãng tám 3–4: 76/78).
+  4. Vừa giữ vừa chạy: nốt đơn tay phải gõ khi còn giữ ≥ 2 nốt tay phải 176/314. Chạy phần lớn là rải: bước ≥ 3 nửa cung 153, liền bậc 50.
+  5. Phách: Rai 2 — nửa phách đầu ô 45/96 · phách cuối trước khi đổi hợp âm 42/96 · giữa ô 9/96 (librosa).
+  6. Khắp đàn: không — khoảng 4 quãng tám giữa đàn (Rê♭1 – Rê♭6). Tay phải dời ≥ quãng 5 ở 20/108 chỗ đổi hợp âm; cùng hợp âm chồng ở
+     nhiều chỗ (Fm7 4 chỗ).
+- **Nút "Lối SSA (thử)"** cạnh "Màn quy tắc nhóm đuôi" (`hocSolo/loiSsa.ts` · `GameKhungRoi.tsx`). Màn quy tắc cũ giữ nguyên.
+  - Bốn họ anh chơi đủ nhiều thì mỗi họ một màn: maj7 · maj9 / m7 · m9 / 9sus4 · 13sus / m7♭5. Thêm một màn trộn.
+  - Mỗi viên ghi tên hợp âm và thế chồng, ví dụ "Cmaj9 · C + Em7". Viên có hai việc:
+    1. CHỒNG: bass rồi thế chồng ở trên. Bấm cùng lúc hay rải đều được, thế nào, chỗ nào cũng được — miễn thế nằm trên bass.
+    2. CHẠY: 4 nốt anh đặt trên đỉnh ≥ 2 lần ở họ ấy, cộng nốt hợp âm. Nốt khung khác không tính; nốt tránh hay ngoài khung là sai.
+  - Gợi ý (bên luyện, sáng dần sau 60 % quãng rơi): bass Đô 2 · Đô 3 rồi nốt thế chồng khắp tầm tay phải của anh (thế thấp nhất Mi3 –
+    Si4). Một dòng dưới bàn phím liệt kê mọi chỗ đặt thế.
+  - Bên thi: chỉ tên hợp âm. Đúng thì nghe mẫu: bass + thế, rồi 4 nốt đỉnh anh hay đặt.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Số nốt chạy 4 lấy theo trung vị độ dài chuỗi chạy của anh (20 chuỗi). Tầm Mi3 – Si4 cho thế chồng, và thứ tự "chồng → chạy" thay cho
+  phách, là của Claude.
+- Game rơi chưa có phách — muốn tập chạy đúng phách thì phải có nền (như Game chạy ngón phần 2), chưa làm.
+- Họ khác anh chơi ít quá: 7 có nốt căng 4–5 hợp âm, m6 3, add9, dim. Chưa đưa vào.
+- Nốt đỉnh từng họ đếm theo cách tách tay cũ (nốt cao nhất ít bị ảnh hưởng). Lúc nhả phím là ước lượng của bộ chép. Phách dò bằng librosa,
+  chưa soát tay.
+- Người dùng chưa chơi thử.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint các file của lần này 0 lỗi.
+- `loiSsa.test.ts` 7 test mới: thế chồng đúng họ · mọi loại × 12 gốc có ≥ 4 chỗ đặt thế trải hơn một quãng tám · chồng rải / lộn thứ tự ·
+  thế phải trên bass · nốt tránh sai · nốt ít không tính · mẫu nghe.
+- Toàn suite (giới hạn 20 s mỗi test): 2 801 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua. Một lượt chạy song song với Chrome thì `twistSolo` quá giờ
+  36 s; chạy riêng 5/5 qua.
+- `vite build` qua.
+- Chạy thử headless lối SSA 24/24. Kịch bản cũ: Mưa khung nốt 16/16 · nút thầy 39/39 · Game chạy ngón 40/40.
+- Chạy thử bắt hai lỗi, đã sửa: nhãn tay phải dài đè nhãn bass trên điện thoại; dòng nhắc mặc định còn ghi "bấm đủ các nốt khung".
+- `LuyenTap.json`, `Nguon.json` không đổi.

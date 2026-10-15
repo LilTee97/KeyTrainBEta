@@ -162,133 +162,138 @@ def ten_chum(notes):
     return 'chùm ' + ' '.join(TEN[p] for p in pcs)
 
 
-tong_dinh = defaultdict(Counter)       # nhóm đuôi → bậc của nốt đỉnh chồng
-tong_gd = defaultdict(Counter)         # nhóm đuôi → bậc của nốt giai điệu
-vai_gd = Counter()
-vai_dinh = Counter()
-khop_nhan = Counter()
-cong_thuc = defaultdict(Counter)       # nhóm đuôi → "tay trái + tay phải"
-so_doan = Counter()
-tay_trai_dang = Counter()
+def main():
+    tong_dinh = defaultdict(Counter)       # nhóm đuôi → bậc của nốt đỉnh chồng
+    tong_gd = defaultdict(Counter)         # nhóm đuôi → bậc của nốt giai điệu
+    vai_gd = Counter()
+    vai_dinh = Counter()
+    khop_nhan = Counter()
+    cong_thuc = defaultdict(Counter)       # nhóm đuôi → "tay trái + tay phải"
+    so_doan = Counter()
+    tay_trai_dang = Counter()
 
-trai_bac = defaultdict(Counter)        # nhóm đuôi → bậc tay trái gõ
-phai_bac = defaultdict(Counter)        # nhóm đuôi → bậc mọi nốt tay phải (khung tay phải)
-so_go_trai = []
-giu_chung = []                         # tỉ lệ nốt tay phải (cao độ) giữ nguyên qua chỗ đổi hợp âm
-doi_bass_giu_khung = Counter()
-ket_cau = Counter()
-ioi = defaultdict(list)
-seg_all = json.load(open(DOAN, encoding='utf-8'))
-for clip in ['rai1', 'rai2', 'rai3']:
-    notes = sorted(doc_not(clip), key=lambda n: (n['on'], n['m']))
-    doan = seg_all[clip]['doan']
-    if IN_TUNG_DOAN:
-        print(f'\n===== {clip} =====')
-    # Gán nốt: ứng viên là đoạn có [s − 0,5, e) chứa lúc gõ; ưu tiên đoạn có nốt ấy trong nhãn, rồi đoạn bắt đầu muộn hơn.
-    gan = defaultdict(list)
-    for n in notes:
-        ung = [i for i, d in enumerate(doan) if d[0] - 0.5 <= n['on'] < d[1]]
-        if not ung:
-            continue
-        def co(i):
-            d = doan[i]
-            g = PC[d[2]]
-            pcs = {(g + x) % 12 for x in LOAI[d[3]]} | ({PC[d[4]]} if d[4] else set())
-            return n['m'] % 12 in pcs
-        tot = [i for i in ung if co(i)] or ung
-        gan[max(tot, key=lambda i: doan[i][0])].append(n)
-    truoc_phai = None
-    truoc_bass = None
-    for k in range(len(notes) - 1):
-        ioi[clip].append(notes[k + 1]['on'] - notes[k]['on'])
-    for i, d in enumerate(doan):
-        s, e, goc, loai, bass = d
-        ns = sorted(gan[i], key=lambda n: (n['on'], n['m']))
-        if not ns:
-            continue
-        g = PC[goc]
-        quang = LOAI[loai]
-        pcs_nhan = {(g + x) % 12 for x in quang} | ({PC[bass]} if bass else set())
-        for n in ns:
-            khop_nhan['trong nhãn' if n['m'] % 12 in pcs_nhan else 'ngoài nhãn'] += 1
-        cao = sorted({n['m'] for n in ns})
-        khe = [(cao[k + 1] - cao[k], cao[k]) for k in range(len(cao) - 1) if 40 <= cao[k] and cao[k + 1] <= 76]
-        tach = max(khe)[1] if khe and max(khe)[0] >= 3 else 59
-        trai = [n for n in ns if n['m'] <= tach]
-        phai = [n for n in ns if n['m'] > tach]
-        nhom = nhom_duoi(loai)
-        so_doan[nhom] += 1
-        so_go_trai.append(len(trai))
-        for n in trai:
-            trai_bac[nhom]['bass' if (bass and n['m'] % 12 == PC[bass]) else ten_bac((n['m'] - g) % 12, quang)] += 1
-        for n in phai:
-            phai_bac[nhom][ten_bac((n['m'] - g) % 12, quang)] += 1
-        cao_phai = {n['m'] for n in phai}
-        bass_nay = min(n['m'] for n in ns) % 12
-        if truoc_phai is not None and cao_phai:
-            giu_chung.append(len(cao_phai & truoc_phai) / len(cao_phai))
-            if bass_nay != truoc_bass and len(cao_phai & truoc_phai) >= 2:
-                doi_bass_giu_khung['doi bass, giu >= 2 not tay phai'] += 1
-            elif bass_nay != truoc_bass:
-                doi_bass_giu_khung['doi bass, doi ca tay phai'] += 1
-        truoc_phai, truoc_bass = cao_phai, bass_nay
-        cum = defaultdict(list)
-        for n in phai:
-            cum[round(n['on'] / 0.06)].append(n)
-        khoi = sum(1 for v in cum.values() if len(v) >= 3)
-        ket_cau['khoi' if khoi >= max(1, len(phai) // 6) else 'rai'] += 1
-        # Nốt đỉnh chồng: nốt tay phải cao nhất của cụm gõ đầu (0,8 s từ nốt đầu đoạn).
-        dau = ns[0]['on']
-        cum = [n for n in phai if n['on'] <= dau + 0.8]
-        dinh = max(cum, key=lambda n: n['m']) if cum else (max(phai, key=lambda n: n['m']) if phai else None)
-        if dinh:
-            iv = (dinh['m'] - g) % 12
-            tong_dinh[nhom][ten_bac(iv, quang)] += 1
-            vai_dinh[vai(iv, quang)] += 1
-        # Nốt giai điệu.
-        gd = []
-        for n in phai:
-            dang = [x for x in phai if x is not n and x['on'] <= n['on'] + 0.03 and x['off'] > n['on'] + 0.03]
-            if any(x['m'] > n['m'] for x in dang):
-                continue
-            if any(x['m'] > n['m'] and n['on'] < x['on'] <= n['on'] + 0.25 for x in phai):
-                continue
-            gd.append(n)
-        for n in gd:
-            iv = (n['m'] - g) % 12
-            tong_gd[nhom][ten_bac(iv, quang)] += 1
-            vai_gd[vai(iv, quang)] += 1
-        # Công thức chồng ở lúc đầy nhất: nốt tay trái · tay phải đang giữ 0,8 s sau nốt đầu.
-        t = dau + 0.8
-        giu_trai = sorted({n['m'] for n in trai if n['on'] <= t + 0.2})
-        giu_phai = sorted({n['m'] for n in phai if n['on'] <= t + 0.2})
-        if giu_trai:
-            b = giu_trai[0]
-            dang_trai = '+'.join(ten_bac((m - g) % 12, quang) if (m - b) % 12 else ('1' if (b - g) % 12 == 0 else f'bass {TEN[b % 12]}')
-                                 for m in giu_trai)
-            tay_trai_dang[dang_trai] += 1
-        if giu_trai and giu_phai:
-            cong_thuc[nhom][f'tay trái {"–".join(ten_not(m) for m in giu_trai)} + tay phải {ten_chum(giu_phai)}'] += 1
+    trai_bac = defaultdict(Counter)        # nhóm đuôi → bậc tay trái gõ
+    phai_bac = defaultdict(Counter)        # nhóm đuôi → bậc mọi nốt tay phải (khung tay phải)
+    so_go_trai = []
+    giu_chung = []                         # tỉ lệ nốt tay phải (cao độ) giữ nguyên qua chỗ đổi hợp âm
+    doi_bass_giu_khung = Counter()
+    ket_cau = Counter()
+    ioi = defaultdict(list)
+    seg_all = json.load(open(DOAN, encoding='utf-8'))
+    for clip in ['rai1', 'rai2', 'rai3']:
+        notes = sorted(doc_not(clip), key=lambda n: (n['on'], n['m']))
+        doan = seg_all[clip]['doan']
         if IN_TUNG_DOAN:
-            nhan = f'{goc}{loai}' + (f'/{bass}' if bass else '')
-            print(f'{s:5.1f} {nhan:16} trái {" ".join(ten_not(n["m"]) for n in sorted(trai, key=lambda n: n["m"]))[:40]:40} | '
-                  f'phải {" ".join(ten_not(n["m"]) for n in sorted(phai, key=lambda n: n["on"]))[:60]:60} | '
-                  f'đỉnh {ten_not(dinh["m"]) + "=" + ten_bac((dinh["m"] - g) % 12, quang) if dinh else "-":10} | '
-                  f'giai điệu {" ".join(ten_not(n["m"]) + "=" + ten_bac((n["m"] - g) % 12, quang) for n in gd)[:70]}')
+            print(f'\n===== {clip} =====')
+        # Gán nốt: ứng viên là đoạn có [s − 0,5, e) chứa lúc gõ; ưu tiên đoạn có nốt ấy trong nhãn, rồi đoạn bắt đầu muộn hơn.
+        gan = defaultdict(list)
+        for n in notes:
+            ung = [i for i, d in enumerate(doan) if d[0] - 0.5 <= n['on'] < d[1]]
+            if not ung:
+                continue
+            def co(i):
+                d = doan[i]
+                g = PC[d[2]]
+                pcs = {(g + x) % 12 for x in LOAI[d[3]]} | ({PC[d[4]]} if d[4] else set())
+                return n['m'] % 12 in pcs
+            tot = [i for i in ung if co(i)] or ung
+            gan[max(tot, key=lambda i: doan[i][0])].append(n)
+        truoc_phai = None
+        truoc_bass = None
+        for k in range(len(notes) - 1):
+            ioi[clip].append(notes[k + 1]['on'] - notes[k]['on'])
+        for i, d in enumerate(doan):
+            s, e, goc, loai, bass = d
+            ns = sorted(gan[i], key=lambda n: (n['on'], n['m']))
+            if not ns:
+                continue
+            g = PC[goc]
+            quang = LOAI[loai]
+            pcs_nhan = {(g + x) % 12 for x in quang} | ({PC[bass]} if bass else set())
+            for n in ns:
+                khop_nhan['trong nhãn' if n['m'] % 12 in pcs_nhan else 'ngoài nhãn'] += 1
+            cao = sorted({n['m'] for n in ns})
+            khe = [(cao[k + 1] - cao[k], cao[k]) for k in range(len(cao) - 1) if 40 <= cao[k] and cao[k + 1] <= 76]
+            tach = max(khe)[1] if khe and max(khe)[0] >= 3 else 59
+            trai = [n for n in ns if n['m'] <= tach]
+            phai = [n for n in ns if n['m'] > tach]
+            nhom = nhom_duoi(loai)
+            so_doan[nhom] += 1
+            so_go_trai.append(len(trai))
+            for n in trai:
+                trai_bac[nhom]['bass' if (bass and n['m'] % 12 == PC[bass]) else ten_bac((n['m'] - g) % 12, quang)] += 1
+            for n in phai:
+                phai_bac[nhom][ten_bac((n['m'] - g) % 12, quang)] += 1
+            cao_phai = {n['m'] for n in phai}
+            bass_nay = min(n['m'] for n in ns) % 12
+            if truoc_phai is not None and cao_phai:
+                giu_chung.append(len(cao_phai & truoc_phai) / len(cao_phai))
+                if bass_nay != truoc_bass and len(cao_phai & truoc_phai) >= 2:
+                    doi_bass_giu_khung['doi bass, giu >= 2 not tay phai'] += 1
+                elif bass_nay != truoc_bass:
+                    doi_bass_giu_khung['doi bass, doi ca tay phai'] += 1
+            truoc_phai, truoc_bass = cao_phai, bass_nay
+            cum = defaultdict(list)
+            for n in phai:
+                cum[round(n['on'] / 0.06)].append(n)
+            khoi = sum(1 for v in cum.values() if len(v) >= 3)
+            ket_cau['khoi' if khoi >= max(1, len(phai) // 6) else 'rai'] += 1
+            # Nốt đỉnh chồng: nốt tay phải cao nhất của cụm gõ đầu (0,8 s từ nốt đầu đoạn).
+            dau = ns[0]['on']
+            cum = [n for n in phai if n['on'] <= dau + 0.8]
+            dinh = max(cum, key=lambda n: n['m']) if cum else (max(phai, key=lambda n: n['m']) if phai else None)
+            if dinh:
+                iv = (dinh['m'] - g) % 12
+                tong_dinh[nhom][ten_bac(iv, quang)] += 1
+                vai_dinh[vai(iv, quang)] += 1
+            # Nốt giai điệu.
+            gd = []
+            for n in phai:
+                dang = [x for x in phai if x is not n and x['on'] <= n['on'] + 0.03 and x['off'] > n['on'] + 0.03]
+                if any(x['m'] > n['m'] for x in dang):
+                    continue
+                if any(x['m'] > n['m'] and n['on'] < x['on'] <= n['on'] + 0.25 for x in phai):
+                    continue
+                gd.append(n)
+            for n in gd:
+                iv = (n['m'] - g) % 12
+                tong_gd[nhom][ten_bac(iv, quang)] += 1
+                vai_gd[vai(iv, quang)] += 1
+            # Công thức chồng ở lúc đầy nhất: nốt tay trái · tay phải đang giữ 0,8 s sau nốt đầu.
+            t = dau + 0.8
+            giu_trai = sorted({n['m'] for n in trai if n['on'] <= t + 0.2})
+            giu_phai = sorted({n['m'] for n in phai if n['on'] <= t + 0.2})
+            if giu_trai:
+                b = giu_trai[0]
+                dang_trai = '+'.join(ten_bac((m - g) % 12, quang) if (m - b) % 12 else ('1' if (b - g) % 12 == 0 else f'bass {TEN[b % 12]}')
+                                     for m in giu_trai)
+                tay_trai_dang[dang_trai] += 1
+            if giu_trai and giu_phai:
+                cong_thuc[nhom][f'tay trái {"–".join(ten_not(m) for m in giu_trai)} + tay phải {ten_chum(giu_phai)}'] += 1
+            if IN_TUNG_DOAN:
+                nhan = f'{goc}{loai}' + (f'/{bass}' if bass else '')
+                print(f'{s:5.1f} {nhan:16} trái {" ".join(ten_not(n["m"]) for n in sorted(trai, key=lambda n: n["m"]))[:40]:40} | '
+                      f'phải {" ".join(ten_not(n["m"]) for n in sorted(phai, key=lambda n: n["on"]))[:60]:60} | '
+                      f'đỉnh {ten_not(dinh["m"]) + "=" + ten_bac((dinh["m"] - g) % 12, quang) if dinh else "-":10} | '
+                      f'giai điệu {" ".join(ten_not(n["m"]) + "=" + ten_bac((n["m"] - g) % 12, quang) for n in gd)[:70]}')
 
-print('\n--- KIỂM nhãn: nốt chép nằm trong nhãn', dict(khop_nhan))
-import statistics
-print('--- IOI trung vi (s):', {c: round(statistics.median([x for x in v if x > 0.04]), 3) for c, v in ioi.items()})
-print('--- so not tay trai moi doan: trung vi', statistics.median(so_go_trai), '; >= 3 not:', sum(1 for x in so_go_trai if x >= 3), '/', len(so_go_trai))
-print('--- tay phai giu nguyen cao do qua cho doi hop am: trung vi', round(statistics.median(giu_chung), 2), 'n =', len(giu_chung), dict(doi_bass_giu_khung))
-print('--- ket cau tay phai:', dict(ket_cau))
-for nhom in sorted(phai_bac, key=lambda k: -so_doan[k]):
-    print(f'  [{nhom}] khung tay phai: {dict(phai_bac[nhom].most_common(8))} | tay trai: {dict(trai_bac[nhom].most_common(6))}')
-print('--- vai nốt ĐỈNH chồng (một nốt mỗi đoạn):', dict(vai_dinh), '/', sum(vai_dinh.values()))
-print('--- vai nốt GIAI ĐIỆU:', dict(vai_gd), '/', sum(vai_gd.values()))
-print('--- số đoạn theo nhóm đuôi:', dict(so_doan))
-for nhom in sorted(tong_dinh, key=lambda k: -so_doan[k]):
-    print(f'  [{nhom}] đỉnh chồng: {dict(tong_dinh[nhom].most_common())} · giai điệu: {dict(tong_gd[nhom].most_common())}')
-print('--- dạng tay trái:', dict(tay_trai_dang.most_common(12)))
-for nhom in sorted(cong_thuc, key=lambda k: -so_doan[k]):
-    print(f'  [{nhom}] công thức (3 hay gặp):', cong_thuc[nhom].most_common(3))
+    print('\n--- KIỂM nhãn: nốt chép nằm trong nhãn', dict(khop_nhan))
+    import statistics
+    print('--- IOI trung vi (s):', {c: round(statistics.median([x for x in v if x > 0.04]), 3) for c, v in ioi.items()})
+    print('--- so not tay trai moi doan: trung vi', statistics.median(so_go_trai), '; >= 3 not:', sum(1 for x in so_go_trai if x >= 3), '/', len(so_go_trai))
+    print('--- tay phai giu nguyen cao do qua cho doi hop am: trung vi', round(statistics.median(giu_chung), 2), 'n =', len(giu_chung), dict(doi_bass_giu_khung))
+    print('--- ket cau tay phai:', dict(ket_cau))
+    for nhom in sorted(phai_bac, key=lambda k: -so_doan[k]):
+        print(f'  [{nhom}] khung tay phai: {dict(phai_bac[nhom].most_common(8))} | tay trai: {dict(trai_bac[nhom].most_common(6))}')
+    print('--- vai nốt ĐỈNH chồng (một nốt mỗi đoạn):', dict(vai_dinh), '/', sum(vai_dinh.values()))
+    print('--- vai nốt GIAI ĐIỆU:', dict(vai_gd), '/', sum(vai_gd.values()))
+    print('--- số đoạn theo nhóm đuôi:', dict(so_doan))
+    for nhom in sorted(tong_dinh, key=lambda k: -so_doan[k]):
+        print(f'  [{nhom}] đỉnh chồng: {dict(tong_dinh[nhom].most_common())} · giai điệu: {dict(tong_gd[nhom].most_common())}')
+    print('--- dạng tay trái:', dict(tay_trai_dang.most_common(12)))
+    for nhom in sorted(cong_thuc, key=lambda k: -so_doan[k]):
+        print(f'  [{nhom}] công thức (3 hay gặp):', cong_thuc[nhom].most_common(3))
+
+
+if __name__ == '__main__':
+    main()

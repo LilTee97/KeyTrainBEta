@@ -221,7 +221,8 @@ function BiQuyetSsa() {
       <summary className="cursor-pointer font-semibold text-amber-key">Bí quyết rải ngón của anh SSA — vừa giai điệu vừa hợp âm màu</summary>
       <ul className="mt-1 ml-4 list-disc">
         <li>
-          Tay trái chỉ giữ <b>bass</b> (thường một nốt, đôi khi rải 1 – 5 – 8). Màu của hợp âm do <b>bass</b> quyết định.
+          Tay trái gõ <b>bass</b> ở đầu ô rồi rải 5 – 8 – 10 — ít khi bấm khối (khối hai nốt là quãng 8 hay quãng 5 của bass). Màu của hợp âm
+          do <b>bass</b> quyết định.
         </li>
         <li>
           Tay phải là một <b>hợp âm ba quen</b> dựng trên một bậc của hợp âm: maj7 → hợp âm thứ trên bậc 3 (D♭ + Fm = D♭maj7) · m7 →
@@ -233,10 +234,15 @@ function BiQuyetSsa() {
           bậc 7, cùng nốt Si trên Am là bậc 9. Nên cùng một câu hát, đổi bass là đổi màu ("giai điệu vẫn là E D F E").
         </li>
         <li>Đổi nốt đỉnh = xoay thế tay phải; đổi hợp âm = giữ nốt chung trên tay phải, đổi bass, rồi bước liền sang nốt đỉnh mới.</li>
+        <li>
+          Ngón dưới giữ thế, ngón trên chạy nốt của hợp âm màu — chạy ngay sau cú chồng và ở phách cuối trước khi đổi hợp âm (câu dẫn).
+        </li>
       </ul>
       <p className="mt-1 text-dim">
-        Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip): tay trái trung vị 1 nốt mỗi hợp âm; nốt giai
-        điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
+        Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip; tay nào đánh đo bằng hình camera trên cao):
+        tay trái 271 cú gõ — 1 nốt 219 · 2 nốt 47 · 3+ nốt 5; nốt giai điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; nốt đơn tay
+        phải gõ khi còn giữ ≥ 2 nốt tay phải 176/314; chạy ở nửa phách đầu ô 45/96 · phách cuối trước khi đổi 42/96 · giữa ô 9/96 (Rai 2);
+        đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
       </p>
     </details>
   )
