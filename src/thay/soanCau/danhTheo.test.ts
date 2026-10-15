@@ -71,3 +71,10 @@ describe('mỗi tay tối đa 4 nốt (người dùng 9/10/2026)', () => {
   })
 })
 
+describe('thế đánh theo vòng — m11♭5 (loại anh SSA dùng, thêm 15/10/2026)', () => {
+  it('bỏ gốc rồi bỏ bậc 9 — giữ ♭5 là nốt định chất nửa giảm; tay phải đúng 4 nốt', () => {
+    const [t] = theBamVong(0, [{ goc: 0, chat: 'm11b5' }])
+    expect(t!.phai).toHaveLength(4)
+    expect(new Set(t!.phai.map((m) => m % 12))).toEqual(new Set([3, 6, 10, 5])) // Mi♭ Sol♭ Si♭ Fa
+  })
+})

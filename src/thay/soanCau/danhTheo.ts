@@ -39,6 +39,9 @@ export function theBamVong(tonic: number, ds: readonly Hop[]): TheBam[] {
     let tren = du
     if (tren.length >= 5) tren = tren.filter((p) => p !== g)
     if (tren.length >= 5) tren = tren.filter((p) => p !== pc(g + 7))
+    // Còn ≥ 5 nốt khi bậc 5 bị biến (m11♭5 — loại anh SSA dùng, thêm 15/10/2026: ♭5 là nốt định chất nửa giảm, không bỏ được) thì bỏ
+    // bậc 9: Cm11♭5 = Đô + Mi♭ Sol♭ Si♭ Fa. Loại cũ không tới bước này (bỏ gốc và bậc 5 đã ≤ 4 nốt).
+    if (tren.length >= 5) tren = tren.filter((p) => p !== pc(g + 2))
     const ung = tren.map((_, r) => xep([...tren.slice(r), ...tren.slice(0, r)]))
     const cach = (t: number[]) => (truoc ? Math.abs(t[0]! - truoc[0]!) + Math.abs(t[t.length - 1]! - truoc[truoc.length - 1]!) : 0)
     const phai = truoc ? ung.reduce((a, b) => (cach(b) < cach(a) ? b : a)) : ung[0]!

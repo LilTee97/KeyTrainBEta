@@ -281,3 +281,13 @@ describe('nhận diện ổn định khi dịch giọng', () => {
     }
   })
 })
+
+describe('loại thêm từ anh SSA (15/10/2026)', () => {
+  it('A♭7(13 no5) anh bấm — A♭ Đô G♭ Fa — đọc ra A♭7add13 (thiếu bậc 5)', () => {
+    expect(topSymbol('Ab2', 'C4', 'Gb4', 'F5')).toBe('G#7add13')
+  })
+
+  it('Đô Fa Sol Si Rê đọc ra Cmaj9sus4', () => {
+    expect(topSymbol('C3', 'F4', 'G4', 'B4', 'D5')).toBe('Cmaj9sus4')
+  })
+})

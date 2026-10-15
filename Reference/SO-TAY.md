@@ -7283,3 +7283,39 @@ Toàn suite (giới hạn 20 s mỗi test): 2 806 qua / 5 đỏ (5 đỏ cũ) / 
 
 Chạy thử headless lối SSA 37/37 (+11: 4 màn Như anh, lời pedal, ba viên đầu Rai 3 đúng thứ tự và bấm đúng phím anh là Đúng, màn màu lạ ra hợp
 âm màu). Kịch bản cũ: Mưa khung nốt 16/16 · nút thầy 39/39 · Game chạy ngón 40/40. `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Thêm 4 loại hợp âm anh SSA dùng mà app chưa có (15/10/2026)
+
+**Người dùng:** *"thêm 7 hợp âm app chưa có và sau đó commit SSA"*. "7 hợp âm" là 7 lần trong 111 đoạn, thuộc **4 loại**:
+- **5** — hợp âm quãng 5, A♭5 mở đầu Rai 2;
+- **maj9sus4** — anh dùng 4 lần;
+- **m11♭5** — anh ghi B♭m7♭5(9,11)/E;
+- **7(13)** — anh ghi A♭7(13 no5).
+
+- **Thêm vào `chordDefinitions.ts`:**
+  - `5` = 1 – 5 – 8 (từ vựng cần ≥ 3 nốt; tay vẫn bấm như vậy);
+  - `maj9sus4` — tên khác `M9sus4` · `Δ9sus4`;
+  - `m11b5` — tên khác `m7b5(9,11)` · `ø11`;
+  - `7add13` — tên khác `7(13)`.
+
+  Ghi trong mã: nguồn ở clip nào, và lý do bộ đoán hợp âm không đổi với hợp âm cũ. Bộ đoán cần ≥ 3 lớp cao độ, nên cặp Đô – Sol không bị
+  gọi C5; với 3 nốt trở lên, hợp âm ba khớp nhiều nốt hơn nên vẫn thắng.
+- **Thế đánh theo vòng (`danhTheo.ts · theBamVong`):** m11♭5 có ♭5 chứ không có bậc 5 đúng, nên bỏ gốc rồi bỏ bậc 5 vẫn còn 5 nốt tay phải —
+  test "mỗi tay tối đa 4 nốt" đỏ. Sửa ở hàm dùng chung: còn ≥ 5 nốt thì bỏ bậc 9. Cm11♭5 = Đô + Mi♭ Sol♭ Si♭ Fa, giữ ♭5 là nốt định chất
+  nửa giảm. Loại cũ không tới bước này.
+- **4 loại mới hiện ở:**
+  - bảng chọn hợp âm tự do trang Soạn câu (`LOAI_TU_DO` — có thế hai tay tự dựng);
+  - ô gõ vòng hợp âm;
+  - nhận tên hợp âm từ phím bấm;
+  - màn "Như anh" gọi tên nốt theo đúng loại.
+- **Kiểm kê lại:** trước có 86/111 đoạn app có đúng loại, 7/111 app không có. Nay 93/111 (195/226 s) app có — tính cả A♭7(13 no5) = 7(13) bỏ
+  bậc 5, đúng như anh bấm. 18/111 vẫn khác loại app một nốt: 13sus(♭9) · m7(11) · m7♭5(11) · 9sus4(add3) … — người dùng chưa yêu cầu thêm.
+
+**Kiểm:** `tsc -b` sạch · eslint 0 lỗi · test thêm:
+- đọc tên chuẩn và tên anh ghi;
+- đúng nốt A♭5 · A♭maj9sus4 · B♭m11♭5 · A♭7(13);
+- bộ đoán đọc thế anh A♭7(13 no5) ra 7add13, Đô Fa Sol Si Rê ra Cmaj9sus4;
+- thế theo vòng m11♭5 giữ ♭5, tay phải 4 nốt.
+
+Toàn suite (giới hạn 20 s mỗi test): 2 811 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua. Test "mỗi tay tối đa 4 nốt" phủ thế tự dựng
+và thế theo vòng của cả 4 loại mới ở 12 gốc.

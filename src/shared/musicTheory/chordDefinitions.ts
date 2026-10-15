@@ -46,6 +46,16 @@ export const CHORD_QUALITIES: readonly ChordQuality[] = [
     label: 'Tăng',
     family: 'triad',
   },
+  // Hợp âm quãng 5 (không bậc 3) — anh SSA mở Rai 2 bằng A♭5 (0:00). Người dùng 15/10/2026: "thêm 7 hợp âm app chưa có". Ghi 1 – 5 – 8
+  // như tay vẫn bấm (từ vựng cần ≥ 3 nốt); bộ đoán hợp âm cần ≥ 3 lớp cao độ nên cặp Đô – Sol vẫn không bị gọi "C5".
+  {
+    id: '5',
+    symbol: '5',
+    aliases: ['no3', '(no3)'],
+    intervals: [0, 7, 12],
+    label: 'Quãng năm (không bậc 3)',
+    family: 'triad',
+  },
 
   // ── Hợp âm treo ────────────────────────────────────────────────────────
   // Thay nốt bậc 3 bằng bậc 2 hoặc bậc 4, tạo màu lơ lửng chưa giải quyết.
@@ -95,6 +105,15 @@ export const CHORD_QUALITIES: readonly ChordQuality[] = [
     aliases: ['7b9sus'],
     intervals: [0, 5, 7, 10, 13],
     label: 'Bảy giáng chín treo quãng 4',
+    family: 'suspended',
+  },
+  // maj9 treo 4 — anh SSA dùng 4 lần (Rai 2 A♭maj9sus4/D♭ · Rai 3 D♭maj9sus4, B♭maj9sus4/A). Người dùng 15/10/2026.
+  {
+    id: 'maj9sus4',
+    symbol: 'maj9sus4',
+    aliases: ['M9sus4', 'Δ9sus4', 'maj9sus'],
+    intervals: [0, 5, 7, 11, 14],
+    label: 'Chín trưởng treo quãng 4',
     family: 'suspended',
   },
 
@@ -271,6 +290,24 @@ export const CHORD_QUALITIES: readonly ChordQuality[] = [
     aliases: ['min13', '-13'],
     intervals: [0, 3, 7, 10, 14, 21],
     label: 'Mười ba thứ',
+    family: 'extended',
+  },
+  // Hai loại anh SSA dùng mà app chưa có (người dùng 15/10/2026): Rai 2 · 0:21 B♭m7♭5(9,11)/E = m11♭5, và Rai 2 · 1:00 A♭7(13 no5) =
+  // 7(13) — bảy át thêm 13 không thêm 9 (anh bỏ bậc 5 khi bấm; bộ đoán hợp âm nhận được vì nốt 5 thiếu chỉ bị phạt nhẹ).
+  {
+    id: 'm11b5',
+    symbol: 'm11b5',
+    aliases: ['m7b5(9,11)', 'min11b5', 'ø11'],
+    intervals: [0, 3, 6, 10, 14, 17],
+    label: 'Mười một nửa giảm',
+    family: 'extended',
+  },
+  {
+    id: '7add13',
+    symbol: '7add13',
+    aliases: ['7(13)', '7(add13)'],
+    intervals: [0, 4, 7, 10, 21],
+    label: 'Bảy át thêm mười ba',
     family: 'extended',
   },
 

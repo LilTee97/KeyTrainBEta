@@ -203,7 +203,10 @@ export const MAN_SSA: readonly ManSsa[] = [
       ten: 'Như anh · chỉ hợp âm màu lạ',
       goiY: `${doan.length} hợp âm — 13sus(♭9) · maj9(13) · m7♭5(9,11) · 7(♭9♯5) …`,
       doan,
-      quyTac: [...NHU_ANH_LUAT, 'Chỉ các hợp âm màu (bỏ maj7 · maj9 · m7 · m9 · 7 · hợp âm ba) — trong 111 hợp âm của anh: 86 loại app đã có đúng nốt, 18 khác app một nốt, 7 app chưa có.'],
+      quyTac: [
+        ...NHU_ANH_LUAT,
+        'Chỉ các hợp âm màu (bỏ maj7 · maj9 · m7 · m9 · 7 · hợp âm ba). Trong 111 hợp âm của anh: 93 là loại app có (gồm 4 loại thêm 15/10/2026 từ chính anh — 5 · maj9sus4 · m11♭5 · 7(13)), 18 khác loại app một nốt.',
+      ],
     }
   })(),
 ]

@@ -224,3 +224,23 @@ describe('chordNotes giữ nguyên vị trí tương đối khi đổi nốt g�
     expect(fromD).toEqual(fromC.map((note) => note + 2))
   })
 })
+
+describe('bốn loại anh SSA dùng mà app chưa có (người dùng 15/10/2026: "thêm 7 hợp âm app chưa có")', () => {
+  const lop = (goc: number, id: string) => [...chordPitchClasses(goc, getChordQuality(id)!)].sort((a, b) => a - b)
+
+  it('đọc được tên chuẩn và cách anh ghi trên màn hình', () => {
+    expect(findQualityBySymbol('5')?.id).toBe('5')
+    expect(findQualityBySymbol('maj9sus4')?.id).toBe('maj9sus4')
+    expect(findQualityBySymbol('m11b5')?.id).toBe('m11b5')
+    expect(findQualityBySymbol('m7b5(9,11)')?.id).toBe('m11b5')
+    expect(findQualityBySymbol('7add13')?.id).toBe('7add13')
+    expect(findQualityBySymbol('7(13)')?.id).toBe('7add13')
+  })
+
+  it('đúng nốt: A♭5 · A♭maj9sus4 · B♭m11♭5 · A♭7(13)', () => {
+    expect(lop(8, '5')).toEqual([3, 8]) // A♭ – E♭
+    expect(lop(8, 'maj9sus4')).toEqual([1, 3, 7, 8, 10]) // A♭ D♭ E♭ G B♭
+    expect(lop(10, 'm11b5')).toEqual([0, 1, 3, 4, 8, 10]) // B♭ D♭ F♭ A♭ C E♭
+    expect(lop(8, '7add13')).toEqual([0, 3, 5, 6, 8]) // A♭ C E♭ G♭ F
+  })
+})
