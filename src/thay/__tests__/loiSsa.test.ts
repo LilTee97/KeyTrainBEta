@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { LOAI_KHUNG } from '../hocSolo/khungNot'
-import { chamSsa, CHIA_TAY, CHONG, chonCauSsa, DINH, MAN_SSA, mauSsa, SO_NOT_CHAY, taoCauSsa, xongChong, type KetQuaSsa } from '../hocSolo/loiSsa'
+import {
+  chamSsa,
+  CHIA_TAY,
+  CHONG,
+  chonCauSsa,
+  DINH,
+  MAN_SSA,
+  mauSsa,
+  SO_NOT_CHAY,
+  taoCauNhuAnh,
+  taoCauSsa,
+  tenNhuAnh,
+  xongChong,
+  type KetQuaSsa,
+} from '../hocSolo/loiSsa'
+import duNhuAnh from '../hocSolo/ssaNhuAnh.json'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
@@ -89,7 +104,7 @@ describe('Mưa khung nốt · lối SSA', () => {
 
   it('màn: mỗi loại có thế chồng, có trong bảng loại của app; câu chọn đúng màn', () => {
     for (const m of MAN_SSA)
-      for (const id of m.loai) {
+      for (const id of m.loai ?? []) {
         expect(CHONG[id]).toBeDefined()
         expect(LOAI_KHUNG.some((l) => l.id === id)).toBe(true)
       }
@@ -108,5 +123,58 @@ describe('Mưa khung nốt · lối SSA', () => {
     expect(chay).toHaveLength(SO_NOT_CHAY)
     expect(chay.map((m) => pc(m - 2))).toEqual(DINH.thu.slice(0, SO_NOT_CHAY))
     expect(chay.every((m, i) => i === 0 || m > chay[i - 1]!)).toBe(true)
+  })
+})
+
+const DOAN = (duNhuAnh as unknown as { doan: { clip: string; t: number; loai: string; the: number[] }[] }).doan
+const tim = (clip: string, t: number) => DOAN.findIndex((d) => d.clip === clip && d.t === t)
+
+describe('Mưa khung nốt · lối SSA — như anh (đúng hợp âm, đúng phím anh bấm)', () => {
+  it('tên anh ghi trên màn hình, viết dấu ♭ ♯', () => {
+    expect(tenNhuAnh('Gb', 'Maj9(13)', null)).toBe('G♭maj9(13)')
+    expect(tenNhuAnh('Bb', 'min7b5(9,11)', 'E')).toBe('B♭m7♭5(9,11)/E')
+    expect(tenNhuAnh('Eb', '13sus(b9)', null)).toBe('E♭13sus(♭9)')
+    expect(tenNhuAnh('G', '7(b9#5)', null)).toBe('G7(♭9♯5)')
+    expect(tenNhuAnh('Ab', 'Maj(add2)', 'C')).toBe('A♭(add2)/C')
+    expect(tenNhuAnh('F', 'minMaj7(13)', null)).toBe('Fm(maj7)(13)')
+  })
+
+  it('mọi hợp âm anh chơi có thế tay phải ≥ 2 nốt tạo được viên; tay trái, thế, nốt chạy của anh đều là nốt chính', () => {
+    let n = 0
+    DOAN.forEach((d, i) => {
+      if (d.the.length < 2) return
+      n++
+      const c = taoCauNhuAnh(i)
+      expect(c.ssa.ho).toBeNull()
+      expect([...c.ssa.loTrai, ...c.ssa.the[0]!, ...c.ssa.chay].every((m) => c.ssa.dinh.includes(pc(m)))).toBe(true)
+      expect(c.ssa.soChay).toBeLessThanOrEqual(SO_NOT_CHAY)
+      expect(c.ssa.lo.slice(0, c.ssa.loTrai.length)).toEqual(c.ssa.loTrai)
+    })
+    expect(n).toBe(110)
+  })
+
+  it('bấm đúng phím anh: G♭maj9 (Rai 3 · 0:15) chồng xong là đúng; D♭maj9 (0:36) phải chạy thêm 4 nốt anh chạy', () => {
+    expect(taoCauNhuAnh(tim('rai3', 1.5)).khungTen).toBe('G♭ + B♭m11') // G♭maj9(13) = G♭ + B♭m11 — lối chồng của anh
+    expect(taoCauNhuAnh(tim('rai3', 3.5)).khungTen).toBe('G♭ + G♭m6') // tên thế tay phải theo dấu giáng của giọng (không phải F♯m6)
+    const gb = taoCauNhuAnh(tim('rai3', 15.5))
+    expect(gb.ten).toBe('G♭maj9')
+    expect(gb.ssa.soChay).toBe(0)
+    expect(bam(gb, [42, ...gb.ssa.the[0]!]).r).toEqual({ kq: 'dung' })
+    expect(chamSsa(gb, [], 43).kq).toBe('sai') // Sol: anh không đánh, không có trong G♭maj9
+    const db = taoCauNhuAnh(tim('rai3', 36.5))
+    expect(db.ssa.soChay).toBe(4)
+    expect(bam(db, [37, ...db.ssa.the[0]!]).r.kq).toBe('tiep')
+    expect(bam(db, [37, ...db.ssa.the[0]!, ...db.ssa.chay.slice(0, 4)]).r).toEqual({ kq: 'dung' })
+  })
+
+  it('màn theo thứ tự clip: viên sau là hợp âm kế tiếp; màn hợp âm lạ bỏ loại quen', () => {
+    const mi = MAN_SSA.findIndex((m) => m.ten.startsWith('Như anh · Rai 3'))
+    const a = chonCauSsa(mi, [0], new Map(), null)
+    const sau = chonCauSsa(mi, [0], new Map(), a.id)
+    expect(MAN_SSA[mi]!.doan!.indexOf(Number(a.id.slice(4)))).toBe(0)
+    expect(MAN_SSA[mi]!.doan!.indexOf(Number(sau.id.slice(4)))).toBe(1)
+    const la = MAN_SSA.find((m) => m.ten === 'Như anh · chỉ hợp âm màu lạ')!
+    expect(la.doan!.every((i) => !['Maj7', 'Maj9', 'min7', 'min9', '7', '', 'min', '5'].includes(DOAN[i]!.loai))).toBe(true)
+    expect(la.doan!.length).toBeGreaterThan(30)
   })
 })

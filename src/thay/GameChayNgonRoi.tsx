@@ -235,14 +235,15 @@ function BiQuyetSsa() {
         </li>
         <li>Đổi nốt đỉnh = xoay thế tay phải; đổi hợp âm = giữ nốt chung trên tay phải, đổi bass, rồi bước liền sang nốt đỉnh mới.</li>
         <li>
-          Ngón dưới giữ thế, ngón trên chạy nốt của hợp âm màu — chạy ngay sau cú chồng và ở phách cuối trước khi đổi hợp âm (câu dẫn).
+          Chạy nốt của hợp âm màu trên nền thế còn vang (anh giữ tiếng bằng pedal) — chạy ngay sau cú chồng và ở phách cuối trước khi đổi
+          hợp âm (câu dẫn).
         </li>
       </ul>
       <p className="mt-1 text-dim">
         Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip; tay nào đánh đo bằng hình camera trên cao):
         tay trái 271 cú gõ — 1 nốt 219 · 2 nốt 47 · 3+ nốt 5; nốt giai điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; nốt đơn tay
-        phải gõ khi còn giữ ≥ 2 nốt tay phải 176/314; chạy ở nửa phách đầu ô 45/96 · phách cuối trước khi đổi 42/96 · giữa ô 9/96 (Rai 2);
-        đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
+        phải gõ khi ≥ 2 nốt tay phải khác còn vang 176/314 (phần lớn nhờ pedal — lúc tắt nốt trùng lúc nhả pedal 55–78 %); chạy ở nửa phách
+        đầu ô 45/96 · phách cuối trước khi đổi 42/96 · giữa ô 9/96 (Rai 2); đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
       </p>
     </details>
   )

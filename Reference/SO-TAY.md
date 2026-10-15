@@ -7240,3 +7240,46 @@ xuống khắp đàn chứ ko ở một nơi cố định nên tôi muốn bạn
 **Kiểm:** `tsc` sạch · eslint 0 lỗi · `loiSsa.test.ts` 8 (+1: hai phần gợi ý không lẫn; Đô → Đô2 Sol2 Đô3; Si → chỉ Si2) · chạy thử headless
 lối SSA 27/27 (+3: viền xanh Đô2 Sol2 Đô3, viền cam từ Mi3, nhãn hai tay) · kịch bản cũ dùng chung bàn phím: Mưa khung nốt 16/16 · nút thầy
 39/39 · Game chạy ngón 40/40 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Hợp âm màu lạ của SSA có trong app không · bốn màn "Như anh" (đúng hợp âm, đúng phím anh bấm) · sửa câu "ngón dưới giữ thế" (15/10/2026)
+
+**Người dùng** (kèm ảnh vòng "SSA · Rai 3 — 4536251 làm đẹp"): *"SSA chơi nhiều hợp âm màu lạ, liệu trong app có những hợp âm này ko. Nếu có
+tôi muốn học chơi như anh"*.
+
+- **Kiểm kê** (111 đoạn hợp âm, nhãn màn hình, so tập nốt với 37 loại của `chordDefinitions.ts`): anh dùng 40 loại. 86/111 đoạn (188/226 s)
+  là loại app có đúng nốt — maj9 · m7 · maj7 · m11 = min9(11) · 7 · m9 · add9 · 13sus · m6 · 9sus4 · maj13 = Maj9(13) · 7♯11 · 7♭9 · m13 ·
+  13 = 9(13) · maj7♯11 … 18/111 khác app một nốt: 13sus(♭9) · m7(11) · m7♭5(11) · 9sus4(add3) · 7(♭9♯5) · 13♯11 · maj7sus2 · 6/9(♯11) …
+  7/111 app không có: Maj9sus4 (4 đoạn) · m7♭5(9,11) · 7(13 no5) · A♭5. Phần lớn loại lạ anh dùng 1–2 lần, mỗi lần 0,5–2 s.
+- **Bốn màn "Như anh"** trong Lối SSA (thử): Rai 1 (25 hợp âm) · Rai 2 (49) · Rai 3 (36), theo đúng thứ tự anh chơi; thêm "chỉ hợp âm màu
+  lạ" (55 hợp âm, bỏ maj7 · maj9 · m7 · m9 · 7 · hợp âm ba).
+  - Mỗi viên là một hợp âm anh chơi, đúng tên anh ghi (G♭maj9(13), E♭13sus(♭9), B♭m7♭5(9,11)/E …), ở giọng của clip.
+  - Gợi ý là đúng phím anh bấm, đo bằng hình (`tools/do_tay_ssa.py --xuat` → `src/thay/hocSolo/ssaNhuAnh.json`):
+    - tay trái anh gõ — viền xanh;
+    - tay phải lúc đầy nhất — viền cam, là các nốt cùng vang (anh rải rồi giữ pedal);
+    - nốt anh chạy riêng.
+  - Viên ghi lối chồng của anh, ví dụ "G♭ + B♭m11" (G♭maj9(13) ở Rai 3 · 0:01). Phím đen ghi dấu giáng như chữ dưới bàn phím.
+  - Đạt khi chồng đủ nốt tay phải của anh trên bass (quãng tám nào cũng được), rồi chạy đủ số nốt khác nhau anh chạy (anh không chạy thì
+    chồng xong là đúng). Nốt ngoài hợp âm và ngoài các nốt anh đánh là sai.
+- **Sửa câu SAI của tôi — "ngón dưới giữ thế, ngón trên chạy (176/314)":** lúc tắt nốt của bộ chép trùng lúc nhả pedal (±80 ms) ở Rai 1 62 % ·
+  Rai 2 78 % · Rai 3 55 % (dời giờ ngẫu nhiên: 8 · 4 · 6 %); nốt gõ khi pedal đang đạp 88 · 72 · 93 %. Vậy 176/314 là "≥ 2 nốt tay phải
+  khác còn vang", phần lớn nhờ pedal; ngón có giữ phím hay không chưa đo được. Đã sửa ở luật Lối SSA, lời mô tả Mưa khung nốt, "Bí quyết rải
+  ngón" của Game chạy ngón, md SSA; công cụ đo in thêm mục PEDAL.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- "Thế tay phải lúc đầy nhất" lấy các nốt cùng vang (pedal), nên có đoạn ra 5 nốt gồm cả nốt giai điệu. Ví dụ Rai 1 · Cmaj9 = Mi4 Sol4 Si4 Đô5
+  Rê5: anh giữ Mi – Sol và đổi nốt đỉnh từng móc kép, chỗ ấy chưa tách được.
+- Tay trái lấy theo hình. Có nốt tay trái lên tới G♭4 (Rai 3 · 0:01) — như anh rải, chưa soát từng đoạn.
+- 23/111 đoạn có nốt chạy riêng; còn lại chỉ có thế.
+- Người dùng chưa chơi thử.
+
+**Kiểm:** `tsc -b` sạch · eslint 0 lỗi · `loiSsa.test.ts` 12:
+- tên anh ghi viết dấu ♭ ♯;
+- mọi đoạn có thế (110) tạo được viên;
+- bấm đúng phím anh G♭maj9 (chồng xong là đúng) và D♭maj9 (thêm 4 nốt chạy);
+- màn theo thứ tự clip; màn lạ bỏ loại quen;
+- tên thế "G♭ + B♭m11" · "G♭ + G♭m6".
+
+Toàn suite (giới hạn 20 s mỗi test): 2 806 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+
+Chạy thử headless lối SSA 37/37 (+11: 4 màn Như anh, lời pedal, ba viên đầu Rai 3 đúng thứ tự và bấm đúng phím anh là Đúng, màn màu lạ ra hợp
+âm màu). Kịch bản cũ: Mưa khung nốt 16/16 · nút thầy 39/39 · Game chạy ngón 40/40. `LuyenTap.json`, `Nguon.json` không đổi.

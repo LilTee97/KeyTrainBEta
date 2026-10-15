@@ -18,7 +18,8 @@ const kep = (x: number) => Math.min(0.9, Math.max(0.1, x))
  * Game Mưa hợp âm (9/10/2026): `lo` là đáp án đang hé lộ (viền cam) — tên tay phải đặt trên đó khi tay phải chưa bấm gì; tên một tay để
  * trống thì không hiện tay ấy; `tong` trống thì bỏ dòng hợp âm tổng.
  * `loTrai` (15/10/2026, Mưa khung nốt lối SSA — người dùng: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): phần đáp án của
- * tay trái, viền xanh; tên tay trái đặt trên đó khi tay trái chưa bấm gì.
+ * tay trái, viền xanh; tên tay trái đặt trên đó khi tay trái chưa bấm gì. `giang`: phím đen ghi dấu giáng (D♭2 thay C#2) — lối SSA
+ * "như anh", ba clip ở giọng dấu giáng, chữ dưới bàn phím ghi D♭2.
  */
 export function BanPhimHaiTay({
   trai,
@@ -28,6 +29,7 @@ export function BanPhimHaiTay({
   highNote = 84,
   lo = [],
   loTrai = [],
+  giang = false,
 }: {
   trai: readonly number[]
   phai: readonly number[]
@@ -36,6 +38,7 @@ export function BanPhimHaiTay({
   highNote?: number
   lo?: readonly number[]
   loTrai?: readonly number[]
+  giang?: boolean
 }) {
   const { whiteKeys, blackKeys } = buildKeyboardLayout(lowNote, highNote)
   const viTri = (n: number) => {
@@ -73,7 +76,7 @@ export function BanPhimHaiTay({
           </div>
         )}
       </div>
-      <OnScreenPiano lowNote={lowNote} highNote={highNote} leftHandNotes={trai} rightHandNotes={phai} revealNotes={lo} revealLeftNotes={loTrai} />
+      <OnScreenPiano lowNote={lowNote} highNote={highNote} leftHandNotes={trai} rightHandNotes={phai} revealNotes={lo} revealLeftNotes={loTrai} accidentalStyle={giang ? 'flat' : 'sharp'} />
       {(!nhan || nhan.tong) && (
         <div className="mt-2 mb-3 min-h-16 text-center">
           {nhan && (

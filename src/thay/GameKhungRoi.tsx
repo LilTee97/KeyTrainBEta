@@ -103,7 +103,7 @@ export function GameKhungRoi() {
     soLo: (v) => (v.ssa ? v.ssa.lo.length : v.chinh ? v.chinh.length : v.k.not.length),
     choChu: (d) =>
       d.ssa
-        ? `Viên ${d.ten} đang chờ — chồng ${d.khungTen} rồi chạy ${SO_NOT_CHAY} nốt trên đỉnh để mưa rơi tiếp.`
+        ? `Viên ${d.ten} đang chờ — chồng ${d.khungTen}${d.ssa.soChay ? ` rồi chạy ${d.ssa.soChay} nốt trên đỉnh` : ''} để mưa rơi tiếp.`
         : d.chinh
         ? `Viên ${d.ten} đang chờ — bấm đủ ${d.chinh.length} nốt chính của thầy để mưa rơi tiếp.`
         : `Viên ${d.ten} đang chờ — chạy đủ khung (${d.goiY.replace(/^khung /, '')}) để mưa rơi tiếp.`,
@@ -155,7 +155,7 @@ export function GameKhungRoi() {
     const v = may.dangDich()
     if (cachNhap !== 'chay' || g.pha !== 'choi' || !v) return
     if (v.ssa) {
-      const r = chamSsa({ g: v.g, k: v.k, ssa: v.ssa }, g.daChay, note)
+      const r = chamSsa({ ten: v.ten, g: v.g, k: v.k, ssa: v.ssa }, g.daChay, note)
       if (r.kq === 'dung') return may.giai(v)
       if (r.kq === 'sai') return may.saiLan(v, `Chưa đúng — ${r.chu}`)
       if (r.kq === 'bo') g.bao = { loai: 'sai', chu: r.chu }
@@ -241,10 +241,11 @@ export function GameKhungRoi() {
         {laSsa ? (
           <p className="text-xs text-dim">
             Lối chơi đo bằng hình trong ba clip "Rải Ngón" của anh SSA: tay trái gõ bass (rải thêm 5 – 8 nếu muốn), tay phải CHỒNG một hợp âm
-            ba quen lên trên bass thành hợp âm màu (Cmaj7 = Đô + Em), rồi CHẠY {SO_NOT_CHAY} nốt trên đỉnh trong lúc ngón dưới còn giữ thế. Viên
-            viền cam là viên đang đố: chồng trước (bấm cùng lúc hay rải từng nốt đều được), chạy sau. Thế chồng đặt ở đâu cũng được — rơi quá
-            60 % thì phím gợi ý sáng dần khắp đàn, từ bass lên mọi chỗ đặt thế. Nốt tránh / ngoài khung là sai; nốt khung anh ít đặt trên đỉnh
-            không tính.
+            ba quen lên trên bass thành hợp âm màu (Cmaj7 = Đô + Em), rồi CHẠY {SO_NOT_CHAY} nốt trên đỉnh trong lúc thế còn vang (anh giữ
+            tiếng bằng pedal). Viên viền cam là viên đang đố: chồng trước (bấm cùng lúc hay rải từng nốt đều được), chạy sau. Thế chồng đặt ở
+            đâu cũng được — rơi quá 60 % thì phím gợi ý sáng dần: viền xanh tay trái, viền cam tay phải. Nốt tránh / ngoài khung là sai; nốt
+            khung anh ít đặt trên đỉnh không tính. Bốn màn "Như anh" là đúng hợp âm và đúng phím anh bấm trong từng clip — cả các hợp âm màu
+            lạ (13sus(♭9) · maj9(13) · m7♭5(9,11) …).
           </p>
         ) : laThay ? (
           <p className="text-xs text-dim">
@@ -353,9 +354,9 @@ export function GameKhungRoi() {
      viền xanh (bass rồi 5 – 8), tay phải viền cam (thế chồng khắp tầm tay phải của anh), sáng dần từ thấp lên; khi gợi ý đã hiện mà tay
      chưa bấm thì tên hai tay đứng trên phần gợi ý của tay ấy. */
   const ssa = dich?.ssa ?? null
-  const goc8 = ssa && dich ? g.daChay.filter((m) => pc(m) === dich.g) : []
+  const goc8 = ssa && ssa.bass !== null ? g.daChay.filter((m) => pc(m) === ssa.bass) : []
   const bassM = goc8.length ? Math.min(...goc8) : null
-  const xong = ssa && dich ? xongChong({ g: dich.g, ssa }, g.daChay) : -1
+  const xong = ssa ? xongChong({ ssa }, g.daChay) : -1
   const tenN = (m: number) => (dich ? tenPhim(dich.k, m).replace(/-?\d+$/, '') : '')
   const laTrai = (m: number) => m === bassM || m < CHIA_TAY
   const ssaTrai = ssa ? g.daChay.filter(laTrai) : []
@@ -372,16 +373,25 @@ export function GameKhungRoi() {
   const banLoTrai = ssa ? vua(loSsa.filter((m) => ssa.loTrai.includes(m))).filter((m) => !banLo.includes(m)) : []
   const nhanSsa = ssa &&
     dich && {
-      trai: bassM !== null ? tenN(bassM) : banLoTrai.length ? tenN(dich.g) : '',
-      traiPhu: bassM !== null ? (ssaTrai.length > 1 ? ssaTrai.map(tenN).join(' ') : 'bass') : 'bass · rải 5 – 8',
+      trai: bassM !== null ? tenN(bassM) : banLoTrai.length ? (ssa.bass !== null ? tenN(ssa.bass) : tenN(banLoTrai[0]!)) : '',
+      traiPhu:
+        bassM !== null
+          ? ssaTrai.length > 1
+            ? ssaTrai.map(tenN).join(' ')
+            : 'bass'
+          : ssa.ho
+            ? 'bass · rải 5 – 8'
+            : `anh gõ ${ssa.loTrai.map(tenN).join(' ')}`,
       // Dòng to ngắn (tên thế / số nốt chạy) — điện thoại: nhãn dài "Em7 2/4" đè lên nhãn bass (chạy thử 15/10/2026).
-      phai: xong >= 0 ? `${g.daChay.length - xong - 1}/${SO_NOT_CHAY}` : ssaPhai.length || banLo.length ? ssa.tenChong : '',
+      phai: xong >= 0 ? `${g.daChay.length - xong - 1}/${ssa.soChay}` : ssaPhai.length || banLo.length ? ssa.tenChong : '',
       phaiPhu:
         xong >= 0
           ? `chạy · ${g.daChay.slice(xong + 1).map(tenN).join(' ')}`
           : ssaPhai.length
             ? `${ssa.chong.filter((p) => ssaPhai.some((m) => pc(m) === p)).length}/${ssa.chong.length} · ${ssaPhai.map(tenN).join(' ')}`
-            : 'thế chồng · chỗ nào cũng được',
+            : ssa.ho
+              ? 'thế chồng · chỗ nào cũng được'
+              : 'thế anh bấm',
       tong: '',
     }
   const nhan = nhanSsa || {
@@ -440,7 +450,7 @@ export function GameKhungRoi() {
           ? 'Đang tạm dừng.'
           : (g.bao?.chu ??
             (laSsa
-              ? `Viên viền cam đang đố — chồng bass + thế ở trên, rồi chạy ${SO_NOT_CHAY} nốt trên đỉnh.`
+              ? `Viên viền cam đang đố — chồng bass + thế ở trên, rồi chạy nốt trên đỉnh.`
               : `Viên viền cam đang đố — bấm đủ các nốt ${laThay ? 'chính của thầy' : 'khung'} của nó.`))}
       </p>
 
@@ -458,8 +468,32 @@ export function GameKhungRoi() {
           ))}
         </div>
       )}
-      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} loTrai={banLoTrai} nhan={nhan} lowNote={thap} highNote={cao} />
-      {ssa && dich && !thi && (
+      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} loTrai={banLoTrai} nhan={nhan} lowNote={thap} highNote={cao} giang={!!ssa && !ssa.ho} />
+      {ssa && dich && !thi && !ssa.ho && (
+        <div className="flex flex-col gap-0.5 text-xs text-cream/85">
+          <p>
+            <b className="text-cream">{dich.ten}</b> · {ssa.nguon} — đúng phím anh bấm (đo bằng hình), quãng tám nào cũng được:
+          </p>
+          <p>
+            <b className="text-teal-key">Tay trái</b> (viền xanh):{' '}
+            {ssa.loTrai.length ? <span className="font-mono">{ssa.loTrai.map((m) => tenPhim(dich.k, m)).join(' – ')}</span> : 'anh không đánh ở hợp âm này'}
+            {ssa.bass !== null ? ` — bass ${tenN(60 + ssa.bass)} thấp nhất.` : '.'}
+          </p>
+          <p>
+            <b className="text-amber-key">Tay phải</b> (viền cam): <span className="font-mono">{ssa.the[0]!.map((m) => tenPhim(dich.k, m)).join('–')}</span>{' '}
+            ({ssa.tenChong} — các nốt cùng vang, anh rải rồi giữ pedal)
+            {ssa.chay.length ? (
+              <>
+                {' '}
+                rồi chạy <span className="font-mono">{ssa.chay.map((m) => tenPhim(dich.k, m)).join(' ')}</span> — đủ {ssa.soChay} nốt khác nhau.
+              </>
+            ) : (
+              ' — anh không chạy thêm, chồng xong là đúng.'
+            )}
+          </p>
+        </div>
+      )}
+      {ssa && dich && !thi && ssa.ho && (
         <div className="flex flex-col gap-0.5 text-xs text-cream/85">
           <p>
             <b className="text-teal-key">Tay trái</b> (viền xanh): bass <span className="font-mono">{tenPhim(dich.k, 36 + dich.g)}</span> —
@@ -475,7 +509,9 @@ export function GameKhungRoi() {
       )}
       <p className="text-xs text-dim">
         {laSsa
-          ? `Chồng: bass rồi ${ssa?.tenChong ?? 'thế chồng'} ở trên (cùng lúc hay rải từng nốt). Chạy: ${SO_NOT_CHAY} nốt trên đỉnh — nốt hợp âm hay nốt anh SSA hay đặt; nốt tránh / ngoài khung là sai.`
+          ? ssa && !ssa.ho
+            ? `Chồng: ${ssa.bass !== null ? 'bass rồi ' : ''}các nốt tay phải của anh (cùng lúc hay rải từng nốt).${ssa.soChay ? ` Chạy: ${ssa.soChay} nốt anh chạy.` : ''} Nốt ngoài hợp âm, ngoài các nốt anh đánh là sai.`
+            : `Chồng: bass rồi ${ssa?.tenChong ?? 'thế chồng'} ở trên (cùng lúc hay rải từng nốt). Chạy: ${SO_NOT_CHAY} nốt trên đỉnh — nốt hợp âm hay nốt anh SSA hay đặt; nốt tránh / ngoài khung là sai.`
           : laThay
           ? 'Bấm từng nốt chính của thầy (đàn MIDI, phím máy tính hay chạm phím) — đủ là ăn; nốt thầy không đánh là sai, nốt mờ không tính.'
           : cachNhap === 'chay'

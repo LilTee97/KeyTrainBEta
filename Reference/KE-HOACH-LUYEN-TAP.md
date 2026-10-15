@@ -540,6 +540,8 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 15/10 (người dùng: Mưa khung nốt "làm giống như cách mà SSA đã solo … gợi ý khắp đàn"): đo hai tay SSA bằng hình
   (`tools/do_tay_ssa.py`) — tay trái bass rồi rải, tay phải chồng hợp âm ba trên một bậc rồi chạy nốt trên đỉnh; nút "Lối SSA (thử)" ở
   Game nốt rơi: mỗi viên chồng rồi chạy 4 nốt, gợi ý thế chồng khắp tầm tay phải của anh. Duyệt đạt thì bỏ "(thử)".
+  Cập nhật 15/10 (người dùng: "SSA chơi nhiều hợp âm màu lạ … tôi muốn học chơi như anh"): gợi ý hai tay hai màu; bốn màn "Như anh" — đúng
+  hợp âm (40 loại anh ghi, cả loại app chưa có) và đúng phím anh bấm trong từng clip, theo thứ tự anh chơi, thêm màn chỉ hợp âm màu lạ.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

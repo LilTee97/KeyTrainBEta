@@ -1,7 +1,9 @@
 """Đo HAI TAY của SSA trong ba clip "Rải Ngón" bằng HÌNH — camera trên cao thấy cả hai tay, nên biết mỗi nốt chép do tay nào đánh.
 
 Dùng cho Mưa khung nốt · lối SSA (KeyTrain `src/thay/hocSolo/loiSsa.ts`) và md `knowledge/teachers/ssa-rai-ngon.md` (PianoBrain).
-Chạy: `python tools/do_tay_ssa.py [--bang] [--canh] [--ve <clip> <giây> …]` — cần ffmpeg, numpy, librosa; `--ve` cần Pillow.
+Chạy: `python tools/do_tay_ssa.py [--bang] [--canh] [--ve <clip> <giây> …] [--xuat]` — cần ffmpeg, numpy, librosa; `--ve` cần Pillow.
+`--xuat` ghi thế anh bấm từng hợp âm (tay trái · thế tay phải lúc đầy nhất · nốt đơn tay phải) ra `src/thay/hocSolo/ssaNhuAnh.json` cho
+Mưa khung nốt · lối SSA, các màn "Như anh" (người dùng 15/10/2026: "SSA chơi nhiều hợp âm màu lạ … tôi muốn học chơi như anh").
 Nốt chép và đoạn hợp âm lấy như `do_rai_ssa.py`. Người dùng 15/10/2026: "Hãy phân tích kỹ xem anh SSA đã solo theo cách nào …".
 
 Cách đo (15/10/2026):
@@ -358,7 +360,7 @@ def main():
             t = x[0]['on']
             if len(x) == 1:
                 giu = [n for n in d['phai'] if n['on'] < t - 0.03 and n['off'] > t + 0.03]
-                tren['≥ 2 nốt đang giữ' if len(giu) >= 2 else '1 nốt đang giữ' if giu else 'không giữ'] += 1
+                tren['≥ 2 nốt khác còn vang' if len(giu) >= 2 else '1 nốt còn vang' if giu else 'không nốt nào'] += 1
             vang = {n['m'] for n in d['phai'] if n['on'] <= t + 0.03 and n['off'] > t + 0.03}
             if len(vang) >= 3 and not da_ba:
                 tb = tim_ba([m % 12 for m in vang], d['bass_pc'])
@@ -367,11 +369,21 @@ def main():
                     quang8[ten(min(vang))[-1]] += 1
                     da_ba = True
     print('  cỡ cú gõ:', dict(sorted(co.items())))
-    print('  nốt đơn gõ khi tay phải đang giữ:', dict(tren), '/', sum(tren.values()))
+    print('  nốt đơn gõ khi nốt tay phải khác còn vang (lúc tắt nốt ≈ lúc nhả pedal — xem PEDAL):', dict(tren), '/', sum(tren.values()))
     print('  hợp âm ba tay phải đầu tiên mỗi đoạn (≥ 3 nốt đang vang), gốc tính từ bass:')
     for nh in sorted(ba, key=lambda k: -sum(ba[k].values()))[:6]:
         print(f'    [{nh}] {dict(ba[nh].most_common(4))} / {sum(ba[nh].values())}')
     print('  quãng tám của nốt thấp nhất trong chồng:', dict(sorted(quang8.items())))
+
+    print('\n=== PEDAL — lúc tắt nốt của bộ chép là nhả phím hay nhả pedal? ===')
+    for clip in CLIP:
+        du = json.load(open(os.path.join(THU_MUC_VIDEO, f'{CLIP[clip]}.json'), encoding='utf-8'))
+        nha = np.array(sorted(p['off'] for p in du['pedal']))
+        tat = np.array([n['off'] for n in du['not']])
+        trung = lambda x: float((np.min(np.abs(nha[None, :] - x[:, None]), axis=1) <= 0.08).mean())  # noqa: E731
+        ngau = np.mean([trung(tat + s) for s in (-0.7, -0.4, 0.4, 0.7)])
+        dap = np.mean([any(p['on'] <= n['on'] < p['off'] for p in du['pedal']) for n in du['not']])
+        print(f'  {clip}: nốt tắt trùng lúc nhả pedal (±80 ms) {trung(tat):.0%} (dời giờ ngẫu nhiên {ngau:.0%}) · nốt gõ khi pedal đang đạp {dap:.0%}')
 
     print('\n=== CHẠY (≥ 3 nốt đơn liền, cùng tay, cách ≤ 0,45 s) ===')
     for t_ in 'LR':
@@ -441,8 +453,62 @@ def main():
                 print(f"{d['s']:5.1f} {d['nhan']:15} trái [{chuoi(d['gt'])}]\n{'':21} phải [{chuoi(d['gp'])}]")
 
 
+def the_luc_day(phai):
+    """Thế tay phải lúc ĐẦY NHẤT: ở mỗi cú gõ, các nốt đang giữ hay vừa gõ trong 0,12 s trước — lấy lúc nhiều lớp cao độ nhất; một bàn
+    tay: trải quá 15 nửa cung thì bỏ dần nốt thấp. Dưới 2 nốt → []. Cửa sổ 0,38 s (bản đầu) gom cả nốt giai điệu Rai 1 (móc kép ~0,21 s)
+    vào thế: Cmaj9 ra Mi4 Sol4 Si4 Đô5 Rê5 trong khi anh giữ Mi – Sol, đổi nốt đỉnh."""
+    tot = []
+    for n in phai:
+        t = n['on'] + 0.03
+        vang = sorted({x['m'] for x in phai if (t - 0.12 <= x['on'] <= t) or (x['on'] < t and x['off'] > t)})
+        while len(vang) > 1 and vang[-1] - vang[0] > 15:
+            vang = vang[1:]
+        if len({m % 12 for m in vang}) > len({m % 12 for m in tot}):
+            tot = vang
+    return tot if len(tot) >= 2 else []
+
+
+def xuat():
+    """Thế anh bấm từng đoạn hợp âm → src/thay/hocSolo/ssaNhuAnh.json."""
+    giong = {'rai1': ('Rai 1', 0), 'rai2': ('Rai 2', 8), 'rai3': ('Rai 3', 1)}
+    ra = []
+    for clip in CLIP:
+        notes = sorted(doc_not(clip), key=lambda n: (n['on'], n['m']))
+        gan_tay(clip, notes, tay_moi_khung(theo_dau(clip, notes)))
+        gan = gan_doan(clip, notes)
+        for i, (s, e, goc, loai, bass) in enumerate(DOAN[clip]['doan']):
+            ns = sorted(gan[i], key=lambda n: (n['on'], n['m']))
+            trai = [n for n in ns if n['tay'] == 'L']
+            phai = [n for n in ns if n['tay'] == 'R']
+            the = the_luc_day(phai)
+            chay, truoc = [], None
+            for x in nhom_go(phai):
+                m = x[0]['m']
+                if len(x) == 1 and m != truoc and m not in the:
+                    chay.append(m)
+                truoc = m if len(x) == 1 else None
+            tr = []
+            for n in trai:
+                if n['m'] not in tr:
+                    tr.append(n['m'])
+            ra.append({'clip': clip, 't': s, 'goc': goc, 'loai': loai, 'bass': bass, 'iv': sorted({x % 12 for x in LOAI[loai]}),
+                       'trai': tr[:4], 'the': the, 'chay': chay[:8]})
+    duong = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'src', 'thay', 'hocSolo', 'ssaNhuAnh.json')
+    du = {'_ghi_chu': 'Thế anh SSA bấm từng hợp âm, ba clip "Rải Ngón" — tools/do_tay_ssa.py --xuat (tay nào đánh đo bằng hình). '
+                      'trai: nốt tay trái theo lúc gõ; the: thế tay phải lúc đầy nhất; chay: nốt đơn tay phải theo lúc gõ (MIDI). '
+                      'iv: nốt của nhãn hợp âm trên màn hình, quãng so gốc.',
+          'clip': {k: {'ten': v[0], 'tonic': v[1]} for k, v in giong.items()}, 'doan': ra}
+    with open(duong, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(json.dumps(du, ensure_ascii=False, separators=(',', ':')).replace('{"clip":"', '\n{"clip":"') + '\n')
+    co = [d for d in ra if d['the']]
+    print(f'ghi {duong}: {len(ra)} đoạn · có thế tay phải ≥ 2 nốt {len(co)} · có tay trái {sum(1 for d in ra if d["trai"])} · '
+          f'có nốt chạy {sum(1 for d in ra if d["chay"])}')
+
+
 if __name__ == '__main__':
-    if '--canh' in sys.argv:
+    if '--xuat' in sys.argv:
+        xuat()
+    elif '--canh' in sys.argv:
         canh()
     elif '--ve' in sys.argv:
         i = sys.argv.index('--ve')
