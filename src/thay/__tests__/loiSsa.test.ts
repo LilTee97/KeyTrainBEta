@@ -19,7 +19,7 @@ import duNhuAnh from '../hocSolo/ssaNhuAnh.json'
 import { THAY_CHAY } from '../hocSolo/cauThay'
 import { MAN_KHUNG } from '../hocSolo/mauKhung'
 import { manThay } from '../hocSolo/thayNhac'
-import { chonCauQuyTacChong, taoCauChong, taoCauThayChong, vongNhuAnh, vongThay, type CauSsa } from '../hocSolo/loiSsa'
+import { cauVongSsa, chonCauQuyTacChong, taoCauChong, taoCauThayChong, VONG_SSA, vongThay, type CauSsa } from '../hocSolo/loiSsa'
 import { DOAN as DOAN_THAY } from '../hocSolo/thayNhac'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -247,24 +247,60 @@ describe('lối chồng + chạy cho màn quy tắc và ba thầy (người dùn
 })
 
 describe('backing track — vòng nền (người dùng 15/10/2026: "có nhạc backing track để solo trên đó")', () => {
-  it('Lối SSA: vòng đúng clip — mỗi hợp âm ≥ 2 phách, nền bass mỗi đầu ô đúng bass của viên, rải 5 – 8 sau đó', () => {
-    const ds = MAN_SSA.flatMap((m, mi) => (m.clip ? [mi] : []))
-    expect(ds).toHaveLength(3)
-    for (const mi of ds) {
-      const v = vongNhuAnh(mi)!
-      expect(v.cau.length).toBe(MAN_SSA[mi]!.doan!.length)
-      expect(v.nhip.every((x) => x >= 2)).toBe(true)
-      let t = 0
-      v.cau.forEach((c, i) => {
-        const bass = v.nen.find((h) => h.startBeat === t && h.durationBeats === v.nhip[i])!
-        expect(pc(bass.notes[0]!)).toBe(pc(c.ssa.bass ?? c.g))
-        t += v.nhip[i]!
-      })
-      expect(Math.max(...v.nen.map((h) => h.startBeat + h.durationBeats))).toBeLessThanOrEqual(t)
+  it('Lối SSA trên backing (người dùng: "chọn vòng hợp âm trong các clip SSA"): mỗi vòng đọc đủ hợp âm, mỗi viên bấm gợi ý + chạy là đúng', () => {
+    for (const v of VONG_SSA) {
+      const cau = cauVongSsa(v)
+      expect(cau.length, v.id).toBe(v.o.length)
+      for (const c of cau) {
+        expect(c.ssa.loai).toBe('vong')
+        kiemVien(c)
+      }
     }
-    // Rai 3 — mỗi ô một hợp âm, ~3,5 s ở phách 0,86 s → 4 phách
-    const rai3 = vongNhuAnh(ds[2]!)!
-    expect(rai3.nhip.filter((x) => x === 4).length).toBeGreaterThan(rai3.nhip.length / 3)
+    // Gạch chéo: bass là nốt sau gạch, tay phải chồng chính hợp âm — như anh: A♭7/G♭ = G♭ + A♭–C–E♭ (Rai 3 · 0:19).
+    const ab = cauVongSsa(VONG_SSA[0]!)[1]!
+    expect(ab.ten).toBe('A♭7/G♭')
+    expect(ab.ssa.bass).toBe(6)
+    expect(new Set(ab.ssa.chong)).toEqual(new Set([8, 0, 3]))
+    // Giọng dấu giáng gọi thế công thức bằng dấu giáng: G♭m6 = G♭ + E♭dim (không phải D♯dim).
+    expect(cauVongSsa(VONG_SSA[1]!)[1]!.khungTen).toBe('G♭ + E♭dim')
+  })
+
+  it('nốt nên chơi: mỗi hợp âm một nốt màu + một nốt nối, đều là nốt hợp âm và được tính khi chạy, không trùng bass gạch chéo', () => {
+    let lien = 0
+    let n = 0
+    for (const v of VONG_SSA) {
+      const cau = cauVongSsa(v)
+      cau.forEach((c, i) => {
+        const sao = c.ssa.nen!
+        expect(sao.map((x) => x.vai), `${v.id} ${c.ten}`).toEqual(['mau', 'noi'])
+        expect(new Set(sao.map((x) => x.p)).size).toBe(2)
+        for (const x of sao) {
+          expect(c.ssa.vai(60 + x.p), `${v.id} ${c.ten} ${x.ten}`).toBe('chinh')
+          expect(c.k.not.find((y) => y.p === x.p)?.muc, `${v.id} ${c.ten} ${x.ten}`).toBe('chinh')
+          if (c.k.bass !== null) expect(x.p).not.toBe(c.k.bass)
+        }
+        const truoc = cau[(i + cau.length - 1) % cau.length]!.ssa.nen!.map((x) => x.p)
+        const noi = sao[1]!.p
+        n += 1
+        if (truoc.some((p) => Math.min(pc(noi - p), pc(p - noi)) <= 2)) lien += 1
+      })
+    }
+    // Nốt nối đi liền bậc (≤ 1 cung) hay giữ nguyên từ một nốt ★ của hợp âm trước: 39/40 hợp âm của năm vòng (Fm(maj7) sau F♯m7♭5 phải
+    // lên quãng 3 — không nốt nào của nó gần C · E). Lùi khi luật chấm đổi mà đường nối gãy.
+    expect(n).toBe(40)
+    expect(lien).toBeGreaterThanOrEqual(38)
+  })
+
+  it('nốt nên chơi nghe như nhạc sĩ: V – I là ♭7 xuống 3 (G♭ → F); 4 – 4 thứ – 3 là đường nửa cung đi xuống (B♭♭ → A♭); màu của tên đứng trước', () => {
+    const ten = (c: CauSsa) => c.ssa.nen!.map((x) => x.ten)
+    const v1 = cauVongSsa(VONG_SSA[0]!)
+    expect(ten(v1[0]!)).toEqual(['A♭', 'F']) // G♭maj9: màu 9, nối 7
+    expect(ten(v1[5]!)).toEqual(['F', 'G♭']) // A♭13sus4: màu 13, nối ♭7
+    expect(ten(v1[6]!)).toEqual(['E♭', 'F']) // D♭maj9: màu 9, nối 3
+    expect(v1[6]!.ssa.nen![1]!.ly).toContain('xuống nửa cung từ G♭')
+    const v2 = cauVongSsa(VONG_SSA[1]!)
+    expect(ten(v2[2]!)).toEqual(['E♭', 'A♭']) // Fm7 sau G♭m6
+    expect(v2[2]!.ssa.nen![1]!.ly).toContain('xuống nửa cung từ B♭♭')
   })
 
   it('ba thầy × ba đoạn × hai giọng: bộ soạn ra vòng, mỗi viên bấm phím gợi ý + chạy là đúng; nền là tay trái + thế màu của thầy', () => {

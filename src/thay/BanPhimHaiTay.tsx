@@ -29,6 +29,9 @@ export function BanPhimHaiTay({
   highNote = 84,
   lo = [],
   loTrai = [],
+  sao = [],
+  mo = [],
+  nhanPhim,
   giang = false,
 }: {
   trai: readonly number[]
@@ -38,6 +41,10 @@ export function BanPhimHaiTay({
   highNote?: number
   lo?: readonly number[]
   loTrai?: readonly number[]
+  /** Nốt nên chơi (vàng) · nốt khung còn lại (xanh nhạt) · chữ nhỏ trên đầu phím (★9) — `OnScreenPiano` starNotes · dimNotes · fingerLabels. */
+  sao?: readonly number[]
+  mo?: readonly number[]
+  nhanPhim?: Readonly<Partial<Record<number, string>>>
   giang?: boolean
 }) {
   const { whiteKeys, blackKeys } = buildKeyboardLayout(lowNote, highNote)
@@ -76,7 +83,18 @@ export function BanPhimHaiTay({
           </div>
         )}
       </div>
-      <OnScreenPiano lowNote={lowNote} highNote={highNote} leftHandNotes={trai} rightHandNotes={phai} revealNotes={lo} revealLeftNotes={loTrai} accidentalStyle={giang ? 'flat' : 'sharp'} />
+      <OnScreenPiano
+        lowNote={lowNote}
+        highNote={highNote}
+        leftHandNotes={trai}
+        rightHandNotes={phai}
+        revealNotes={lo}
+        revealLeftNotes={loTrai}
+        starNotes={sao}
+        dimNotes={mo}
+        fingerLabels={nhanPhim}
+        accidentalStyle={giang ? 'flat' : 'sharp'}
+      />
       {(!nhan || nhan.tong) && (
         <div className="mt-2 mb-3 min-h-16 text-center">
           {nhan && (

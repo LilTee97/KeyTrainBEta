@@ -7448,3 +7448,119 @@ Chạy thử headless:
   trong ô là Đúng; Dừng tắt nền);
 - Mưa khung nốt màn quy tắc cũ 16/16 · Game chạy ngón 40/40 (sau khi tách `BanPhimChong`);
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Backing Lối SSA làm lại: vòng của anh SSA, đệm điệu Cà Pháo, ★ nốt nên chơi (15/10/2026)
+
+**Người dùng** (kèm ảnh màn Lối SSA đang chơi): *"bạn làm phần backing track của SSA dở quá, dở cả về nhạc backing track lẫn tính năng ·
+Sao bạn không thêm tính năng backing track trong mục Lối SSA như hình. Hãy chọn vòng hợp âm trong các clip SSA rồi làm backing track theo
+các điệu ballad hoặc bossa của Cà Pháo · Trong vai nhạc sĩ bạn hãy thử đánh giá xem những nốt nào sẽ nên chơi khi đến hợp âm tương ứng thì
+hãy làm nổi bật nó lên so với các nốt còn lại trong khung. Bạn có thể tận dụng các bộ soạn nốt để lấy kinh nghiệm quyết định"*.
+
+**Bỏ:** backing "đúng vòng anh chơi" của bước trước — `vongNhuAnh`, `nenBass`, `PHACH_CLIP`, trường `ManSsa.clip`, khung dưới đáy màn chọn.
+Backing ba thầy giữ nguyên, vì người dùng chưa nói tới.
+
+**Khung mới "Solo trên backing track (thử)" — đứng đầu mục Lối SSA**, trên hai cột màn Luyện / Thi:
+- Vòng (`VONG_SSA`): 5 vòng chọn từ ba clip, mỗi hợp âm một ô 4 phách (bảng dưới).
+- Điệu: bốn điệu Cà Pháo đã duyệt (nút trang Cà Pháo) — Ballad cứ đi · Ballad Để em · Ballad Có Em Chờ · Bossa CP cải tiến. Dựng bằng
+  `dungVong`, đường mà Tập solo đang dùng: nguyên hai tay, chỉ hạ lực × 0,8.
+- ♩ 50 – 110, mặc định 60; bên cạnh ghi ♩ gốc của điệu.
+- Bấm Luyện / Thi: dựng nền (đo khi dựng thử: ~1,3 s mỗi vòng) rồi vào thẳng màn chơi (`MuaKhungNen` `ngay`), không qua màn chuẩn bị. Dừng
+  là về lại mục Lối SSA kèm tổng kết (điểm, hợp âm cần ôn).
+
+| Vòng | Hợp âm (mỗi ô 4 phách) | Lấy từ |
+|---|---|---|
+| Rai 3 · 4536251 (Rê♭) | G♭maj9 · A♭7/G♭ · Fm7 · B♭m9 · E♭m9 · A♭13sus4 · D♭maj9 · D♭maj9 | 0:15 – 0:43; bỏ hai hợp âm lướt D♭maj9sus4 (0,5 s), B♭7sus2 (1,5 s) |
+| Rai 3 · 4 – 4 thứ – 3 – 6 – 2 – 5 (Rê♭) | G♭maj9 · G♭m6 · Fm7 · B♭m9 · E♭m11 · E♭m11 · A♭13sus4 · A♭13sus4 | 0:01 – 0:15; hai hợp âm cuối anh giữ dài gấp đôi |
+| Rai 2 · ballad Hồng Kông (La♭) | D♭maj9 · A♭maj9/C · B♭m11 · E♭13sus4 · D♭maj7 · E♭7/D♭ · Cm7 · Fm11 | 0:11 – 0:17 và 0:33 – 0:38 |
+| Rai 1 · giữ giai điệu, đổi hợp âm (Đô) | Cmaj9 · Am11 · Dm9 · D♭aug · Dm9/C · Bm7♭5 · E7♭9 · Am11 | 0:00 – 0:16; D♭aug thay Dm(maj7)/D♭ |
+| Rai 1 · mượn hợp âm về trưởng (Đô) | Am11 · F♯m7♭5 · Fm(maj7) · F/G · B♭7♯11 · B♭7♯11 · Cmaj7 · Cmaj7 | 0:30 – 0:49 |
+
+**Viên** — lối chồng + chạy của màn Lối SSA:
+- loại anh có đo thì thế anh (`CHONG`);
+- gạch chéo thì chồng chính hợp âm trên bass sau gạch, như anh: A♭7/G♭ = G♭ + A♭–C–E♭ (Rai 3 · 0:19);
+- còn lại công thức chồng của app. Giọng dấu giáng ghi tên thế bằng dấu giáng: G♭m6 = G♭ + E♭dim, không phải D♯dim.
+
+**Nốt nên chơi (★) — `nenChoiVong`.** Đo "nốt vào hợp âm" của ba bộ soạn (nốt tay phải cao nhất ở phách đầu mỗi hợp âm; 24 lượt × 3 đoạn
+× Đô trưởng · La thứ) và của anh SSA (nốt trên cùng thế anh mỗi hợp âm):
+
+| | n | vào bằng nốt hợp âm | nốt màu trong tên trên đỉnh | đi liền bậc (≤ 1 cung) | giữ nguyên nốt trước |
+|---|---|---|---|---|---|
+| Bộ soạn Cà Pháo | 750 | 734 | 90 | 218 | 84 |
+| Bộ soạn Linh Nhi | 1 187 | 1 147 | 2 | 545 | 284 |
+| Bộ soạn Blues | 1 312 | 1 114 | 189 | 438 | 106 |
+| Anh SSA | 110 | 106 | 40 | 42 | 14 |
+
+Hợp âm thứ: bộ soạn Cà Pháo vào bằng ♭3 · ♭7 ở 151/282 lần.
+
+Luật (Claude, trong vai nhạc sĩ): mỗi hợp âm hai nốt ★.
+- **★ màu**: nốt đuôi mang lại, theo thứ tự `Khung.dinh` (số đo SSA nếu loại ấy anh có đo).
+- **★ nối**: nốt hợp âm đi tới được từ một nốt ★ của hợp âm trước bằng đường đẹp nhất.
+  - Đường: nửa cung 3,2 · một cung 3 · giữ nguyên 2,5 · quãng 3 1 · xa hơn 0.
+  - Cộng 1 nếu là nốt mới (không có trong hợp âm trước).
+  - Cộng theo vai: bậc 3 1,2 · bậc 7 / 4 treo / nốt màu khác 1 · bậc 5 0,5 · gốc −1,5.
+- Bass gạch chéo không làm ★.
+
+Ví dụ vòng 4536251:
+
+| Hợp âm | ★ | Ghi chú |
+|---|---|---|
+| G♭maj9 | A♭ (9) · F (7) | |
+| A♭7/G♭ | C (3) · E♭ (5) | |
+| Fm7 | E♭ · C | |
+| B♭m9 | C · D♭ | |
+| E♭m9 | F · D♭ | |
+| A♭13sus4 | F (13) · G♭ (♭7) | |
+| D♭maj9 | E♭ (9) · F (3) | G♭ → F, ♭7 xuống 3 |
+
+Vòng 4 – 4 thứ – 3 ra B♭♭ → A♭ — đường nửa cung đi xuống B♭ – A – A♭.
+
+Kết quả đo trên năm vòng:
+- nốt nối liền bậc hay giữ nguyên từ ★ trước: 39/40 hợp âm;
+- so với nốt anh đặt ở cùng hợp âm trong clip: ★ trùng nốt đỉnh anh 27/33 hợp âm (khác tên), cả hai ★ nằm trong tay phải anh (thế + chạy)
+  28/33.
+
+Hiển thị (bên luyện):
+- trước khi chồng xong: phím ★ trong tầm tay phải ghi "★ bậc" trên đầu phím — chồng sao cho nốt trên cùng là một nốt ★;
+- chồng xong: vùng chạy ngay trên thế (tới quãng 9) sáng — vàng là nốt nên chơi, xanh nhạt là các nốt còn lại của khung (nốt chạy được
+  tính); viền cam các chỗ đặt thế tắt;
+- dòng "★ Nên chơi khi vào X: … — lý do";
+- viên ghi "★ A♭ · F" để đọc trước viên kế.
+
+Bên thi không hiện ★.
+
+`OnScreenPiano` thêm `starNotes` (vàng) · `dimNotes` (xanh nhạt), khác màu hai tay. Lần chụp đầu phím đen xanh nhạt ra xanh đậm (sky-700),
+đã đổi sang sky-300.
+
+**Đệm điệu Cà Pháo trên vòng SSA** — dựng thử 4 điệu × 4 vòng, đọc nốt hai tay:
+- Ballad cứ đi: nốt thấp nhất mỗi ô đúng bass gốc / bass gạch chéo; 20 tiếng mỗi ô; tay phải chủ yếu hợp âm ba — màu của vòng nằm ở thế bạn
+  chồng.
+- Ballad Để em: ô thứ hai của khuôn 8 phách có lúc nốt thấp nhất không phải bass (dựng thử với A♭/C: thấp nhất A♭2).
+- Bossa: bass dẫn nửa cung theo khuôn đã duyệt; 8 tiếng mỗi ô.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Người dùng chưa nghe backing mới.
+- Chọn vòng, gọn tên hợp âm, luật ★ và các điểm là của Claude. Độ khớp 27/33 với nốt anh không độc lập: tôi chỉnh điểm sau khi đã xem nốt
+  anh đặt.
+- Lực nền × 0,8 và ♩ mặc định 60 là của Claude. Lùi: nền nhỏ quá thì về 1.
+- Đệm theo điệu chưa đo theo luật "mỗi tay tối đa 4 nốt" (memory) — dùng nguyên điệu đã duyệt, không sửa.
+- Chưa chấm phách trong ô.
+- Backing ba thầy vẫn là màn riêng kiểu cũ — hỏi người dùng có làm theo lối mới không.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi.
+- `loiSsa.test.ts` 20 (bỏ 1 test backing cũ, thêm 3):
+  - mọi viên của năm vòng bấm gợi ý + chạy là Đúng; A♭7/G♭ = G♭ + A♭–C–E♭; G♭m6 = G♭ + E♭dim;
+  - ★ là nốt hợp âm, được tính khi chạy, không trùng bass gạch chéo; nối liền bậc ≥ 38/40;
+  - G♭ → F ở V – I, B♭♭ → A♭ ở 4 – 4 thứ – 3.
+- Toàn suite (giới hạn 20 s mỗi test): 2 819 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+
+Chạy thử headless:
+- lối SSA 58/58 (bỏ 9 kiểm backing cũ, thêm 16):
+  - khung backing đứng đầu mục Lối SSA, có 5 vòng · 4 điệu; khung cũ đã bỏ;
+  - dựng xong vào thẳng màn chơi, đầu màn ghi vòng · điệu · ♩;
+  - lúc đếm vào: phím F ghi ★7, phím A♭ ghi ★9; có dòng nên chơi; nền lặp;
+  - chồng xong A♭7/G♭: vùng chạy vàng C5 · E♭5, xanh nhạt F4 · G♭4 · A♭4 · B♭4 · F5; chồng + chạy là Đúng;
+  - Dừng: về mục Lối SSA kèm tổng kết, nền tắt;
+  - thi với Bossa: vào THI, không có ★; Dừng tắt nền;
+- nút thầy 45/45 · Mưa khung nốt 16/16 · Game chạy ngón 40/40;
+- `LuyenTap.json`, `Nguon.json` không đổi.

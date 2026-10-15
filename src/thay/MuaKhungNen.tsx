@@ -18,6 +18,16 @@ import { useNotXuong } from './useMuaRoi'
   ponytail: máy rơi theo nền chép từ DapThayRoi (Game chạy ngón, ô dài ngắn theo vòng) — duyệt đạt thì gộp thành một hook chung.
 */
 
+/** Kết quả một lượt chơi thẳng (`ngay`) — trả về màn gọi để hiện tổng kết. */
+export interface KetQuaNen {
+  thi: boolean
+  dung: number
+  sai: number
+  diem: number
+  bpm: number
+  saiO: { ten: string; meo: string }[]
+}
+
 interface VienNen extends VienRoi {
   i: number
   c: CauSsa
@@ -38,6 +48,7 @@ export function MuaKhungNen({
   coDoiCau = false,
   bpmMacDinh = 50,
   tenThay = '',
+  ngay,
   onThoat,
 }: {
   tieuDe: string
@@ -48,7 +59,10 @@ export function MuaKhungNen({
   coDoiCau?: boolean
   bpmMacDinh?: number
   tenThay?: string
-  onThoat: () => void
+  /** Chơi thẳng bên này (bỏ màn chuẩn bị — màn gọi đã chọn nhịp, bên luyện / thi); Dừng thì trả kết quả qua `onThoat`. Lối SSA trên
+   *  backing track (người dùng 15/10/2026: "thêm tính năng backing track trong mục Lối SSA"). */
+  ngay?: Ben
+  onThoat: (kq?: KetQuaNen) => void
 }) {
   const [ben, setBen] = useState<Ben>('meo')
   const [bpm, setBpm] = useState(bpmMacDinh)
@@ -121,6 +135,7 @@ export function MuaKhungNen({
     if (s.pha !== 'choi') return
     s.pha = 'het'
     stopTimelineLoop()
+    if (ngay) return onThoat({ thi, dung: s.dung, sai: s.sai, diem: s.diem, bpm, saiO: s.saiO })
     ve()
   }
   function doiCau() {
@@ -205,6 +220,16 @@ export function MuaKhungNen({
     }
     ve()
   })
+  /* Chơi thẳng: vào lượt ngay khi mở (màn gọi đã dựng xong nền). */
+  const ngayRef = useRef(ngay)
+  useEffect(() => {
+    const b = ngayRef.current
+    if (!b) return
+    // Một lần: StrictMode gọi hiệu ứng hai lần lúc mở.
+    ngayRef.current = undefined
+    void batDau(b)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ khi mở
+  }, [])
   /* Ẩn trang thì dừng lượt (nền không tạm dừng giữa chừng được mà vẫn khớp ô); rời trang thì tắt nền. */
   const ketRef = useRef(ketThuc)
   ketRef.current = ketThuc
@@ -268,7 +293,7 @@ export function MuaKhungNen({
           <button type="button" onClick={() => void batDau('thi')} className={nut(false)}>
             Thi không mẹo — {SO_CAU_THI} hợp âm
           </button>
-          <button type="button" onClick={onThoat} className={nut(false)}>
+          <button type="button" onClick={() => onThoat()} className={nut(false)}>
             ← Quay lại
           </button>
         </div>

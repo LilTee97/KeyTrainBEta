@@ -550,6 +550,10 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 15/10 (người dùng: "Cho Mục lối SSA và các thầy khác có nhạc backing track để solo trên đó"): Mưa khung nốt có backing track —
   viên rơi khớp nhịp nền, chồng + chạy trong ô của hợp âm. Lối SSA: đúng vòng anh chơi trong clip Rai 1 · 2 · 3, nền bass rồi rải 5 – 8.
   Thầy: vòng bộ soạn của thầy (đoạn · giọng chọn được, "Đổi câu"), nền tay trái thầy + thế màu.
+  Cập nhật 15/10 (người dùng: "backing track của SSA dở quá … thêm tính năng backing track trong mục Lối SSA … chọn vòng hợp âm trong các
+  clip SSA rồi làm backing track theo các điệu ballad hoặc bossa của Cà Pháo … những nốt nào sẽ nên chơi … làm nổi bật"): bỏ backing "đúng
+  vòng anh chơi"; khung "Solo trên backing track (thử)" đứng đầu mục Lối SSA — 5 vòng chọn từ clip SSA, đệm bốn điệu Cà Pháo đã duyệt, chơi
+  thẳng; nốt nên chơi khi vào hợp âm tô ★ (nốt màu + nốt nối), chồng xong vùng chạy vàng / xanh nhạt.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

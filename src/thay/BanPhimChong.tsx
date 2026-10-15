@@ -8,6 +8,10 @@ import { CHIA_TAY, xongChong, type CauSsa } from './hocSolo/loiSsa'
   Hai tay hai màu (người dùng 15/10/2026: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): phím bấm — tay trái là nốt bass thấp
   nhất bạn đã bấm và mọi nốt dưới Mi3 (`CHIA_TAY`, chỗ rải 5 – 8), tay phải là các nốt còn lại; gợi ý — tay trái viền xanh, tay phải viền
   cam, sáng theo thứ tự `lo` (`loN` phím đầu); khi gợi ý đã hiện mà tay chưa bấm thì tên hai tay đứng trên phần gợi ý của tay ấy.
+  Nốt NÊN CHƠI (viên của vòng backing — `ssa.nen`; người dùng 15/10/2026: "làm nổi bật nó lên so với các nốt còn lại trong khung"): trước
+  khi chồng xong, phím của nốt ★ trong tầm tay phải ghi "★ bậc" trên đầu phím (chồng sao cho nốt trên cùng là một nốt ★); chồng xong thì
+  vùng chạy ngay trên thế (tới quãng 9 trên nốt cao nhất) sáng: vàng là nốt nên chơi, xanh nhạt là các nốt còn lại của khung (nốt chạy
+  được tính); viền cam các chỗ đặt thế tắt đi.
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -47,7 +51,17 @@ export function BanPhimChong({
   const ssaPhai = daChay.filter((m) => !laTrai(m))
   const loSsa = loN > 0 ? ssa.lo.slice(0, loN) : []
   const nhuAnh = ssa.loai === 'nhu-anh'
-  const banLo = vua(loSsa.filter((m) => !ssa.loTrai.includes(m)))
+  const sao = thi ? [] : (ssa.nen ?? [])
+  const saoP = sao.map((x) => x.p)
+  const tren = sao.length && xong >= 0 ? Math.max(...daChay.slice(0, xong + 1)) : null
+  // Vùng chạy: ngay trên nốt cao nhất của thế, tới quãng 9; thế đã sát đầu bàn phím thì lùi xuống cho đủ một quãng tám.
+  const den = tren === null ? cao : Math.min(cao, tren + 14)
+  const tu = tren === null ? CHIA_TAY : den - tren >= 7 ? tren + 1 : Math.max(CHIA_TAY, den - 14)
+  const vung = Array.from({ length: Math.max(0, den - tu + 1) }, (_, i) => tu + i)
+  const saoPhim = vung.filter((m) => saoP.includes(pc(m)))
+  const moPhim = tren === null ? [] : vung.filter((m) => !saoP.includes(pc(m)) && ssa.dinh.includes(pc(m)))
+  const nhanPhim = Object.fromEntries(saoPhim.map((m) => [m, `★${sao.find((x) => x.p === pc(m))!.bac}`]))
+  const banLo = tren === null ? vua(loSsa.filter((m) => !ssa.loTrai.includes(m))) : []
   // Điện thoại (Đô3 – Đô5): phím tay trái gập lên trùng thế tay phải (Sol2 → Sol3) thì để cho tay phải — chỗ ấy là vùng tay phải.
   const banLoTrai = vua(loSsa.filter((m) => ssa.loTrai.includes(m))).filter((m) => !banLo.includes(m))
   const nhan = {
@@ -79,7 +93,19 @@ export function BanPhimChong({
 
   return (
     <>
-      <BanPhimHaiTay trai={vua(ssaTrai)} phai={vua(ssaPhai)} lo={banLo} loTrai={banLoTrai} nhan={nhan} lowNote={thap} highNote={cao} giang={nhuAnh} />
+      <BanPhimHaiTay
+        trai={vua(ssaTrai)}
+        phai={vua(ssaPhai)}
+        lo={banLo}
+        loTrai={banLoTrai}
+        sao={tren === null ? [] : saoPhim}
+        mo={moPhim}
+        nhanPhim={nhanPhim}
+        nhan={nhan}
+        lowNote={thap}
+        highNote={cao}
+        giang={nhuAnh || (ssa.loai === 'vong' && [1, 3, 5, 6, 8, 10].includes(c.k.tonic))}
+      />
       {!thi && nhuAnh && (
         <div className="flex flex-col gap-0.5 text-xs text-cream/85">
           <p>
@@ -117,6 +143,21 @@ export function BanPhimChong({
             {ssa.soChay} nốt trên đỉnh{tenThay ? ` — nốt chính của ${tenThay}` : ''}:{' '}
             <span className="font-mono">{ssa.dinh.slice(0, 6).map((p) => tenN(60 + p)).join(' ')}</span>.
           </p>
+          {sao.length > 0 && (
+            <p>
+              <b className="text-yellow-300">★ Nên chơi khi vào {c.ten}</b>:{' '}
+              {sao.map((x, i) => (
+                <span key={x.p}>
+                  {i ? ' · ' : ''}
+                  <b className="font-mono text-yellow-300">{x.ten}</b> ({x.bac}) — {x.ly}
+                </span>
+              ))}
+              .{' '}
+              {tren === null
+                ? 'Chồng sao cho nốt trên cùng của thế là một nốt ★ — nốt trên cùng là giai điệu, như anh SSA; chồng xong thì vùng chạy sáng lên.'
+                : 'Vùng chạy ngay trên thế: phím vàng ★ là nốt nên chơi, phím xanh nhạt là các nốt còn lại của khung.'}
+            </p>
+          )}
         </div>
       )}
     </>

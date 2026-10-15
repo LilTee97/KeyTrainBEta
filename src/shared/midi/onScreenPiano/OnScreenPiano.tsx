@@ -23,6 +23,8 @@ const WHITE_KEY_STYLES = {
   rightHand: 'bg-right-hand/70 text-ink/70',
   reveal: 'bg-amber-key/30 ring-2 ring-inset ring-amber-key text-ink/70',
   revealLeft: 'bg-left-hand/25 ring-2 ring-inset ring-left-hand text-ink/70',
+  star: 'bg-yellow-300 ring-2 ring-inset ring-yellow-500 text-ink/80',
+  dim: 'bg-sky-200 text-ink/60',
   // Cũ: text-ink/35 — lúc chỉ phím Đô có tên. Nay mọi phím có tên (2/10/2026) nên đậm hơn cho đọc được.
   idle: 'bg-cream text-ink/55 hover:bg-white',
 } as const
@@ -33,6 +35,8 @@ const BLACK_KEY_STYLES = {
   rightHand: 'bg-right-hand text-ink/80',
   reveal: 'bg-amber-key/70 ring-2 ring-inset ring-amber-key text-ink/80',
   revealLeft: 'bg-left-hand/60 ring-2 ring-inset ring-left-hand text-ink/80',
+  star: 'bg-yellow-400 ring-2 ring-inset ring-yellow-200 text-ink/80',
+  dim: 'bg-sky-300 text-ink/80',
   idle: 'bg-neutral-900 text-cream/70 hover:bg-neutral-800',
 } as const
 
@@ -128,6 +132,13 @@ export interface OnScreenPianoProps {
    * SSA: "tôi muốn bạn phân biệt cho tôi đâu là tay trái đâu là tay phải chơi".
    */
   revealLeftNotes?: readonly MidiNote[]
+  /**
+   * Nốt NÊN CHƠI (vàng) và các nốt còn lại của khung (xanh nhạt) — người dùng 15/10/2026, Lối SSA trên backing track: "những nốt nào sẽ
+   * nên chơi khi đến hợp âm tương ứng thì hãy làm nổi bật nó lên so với các nốt còn lại trong khung". Hai màu khác hẳn nhau và khác màu
+   * hai tay (xanh ngọc · cam) để không lẫn với gợi ý tay trái / tay phải.
+   */
+  starNotes?: readonly MidiNote[]
+  dimNotes?: readonly MidiNote[]
   /** Số ngón ghi trên phím (game chạy ngón, trang Học Solo) — theo nốt tuyệt đối, như `highlightNotes`. */
   fingerLabels?: Readonly<Partial<Record<MidiNote, number | string>>>
   /**
@@ -155,6 +166,8 @@ export function OnScreenPiano({
   rightHandNotes,
   revealNotes,
   revealLeftNotes,
+  starNotes,
+  dimNotes,
   fingerLabels,
   height,
 }: OnScreenPianoProps) {
@@ -269,6 +282,8 @@ export function OnScreenPiano({
   const rightHand = new Set(rightHandNotes ?? [])
   const reveal = new Set(revealNotes ?? [])
   const revealLeft = new Set(revealLeftNotes ?? [])
+  const star = new Set(starNotes ?? [])
+  const dim = new Set(dimNotes ?? [])
 
   /** Nốt thuộc hợp âm — so lớp cao độ, dùng để xác nhận bấm đúng. */
   const chordToneClasses = new Set(chordTones ?? [])
@@ -287,6 +302,8 @@ export function OnScreenPiano({
     if (rightHand.has(note)) return 'rightHand'
     if (revealLeft.has(note)) return 'revealLeft'
     if (reveal.has(note)) return 'reveal'
+    if (star.has(note)) return 'star'
+    if (dim.has(note)) return 'dim'
     if (suggested.has(note)) return 'suggested'
     return 'idle'
   }
