@@ -7217,3 +7217,26 @@ xuống khắp đàn chứ ko ở một nơi cố định nên tôi muốn bạn
 - Chạy thử headless lối SSA 24/24. Kịch bản cũ: Mưa khung nốt 16/16 · nút thầy 39/39 · Game chạy ngón 40/40.
 - Chạy thử bắt hai lỗi, đã sửa: nhãn tay phải dài đè nhãn bass trên điện thoại; dòng nhắc mặc định còn ghi "bấm đủ các nốt khung".
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Lối SSA: gợi ý hai tay hai màu (15/10/2026)
+
+**Người dùng** (kèm ảnh viên Cmaj7 · gợi ý mọi phím cùng viền cam): *"tôi muốn bạn phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"*.
+
+- Gợi ý (bên luyện) tách hai phần:
+  - **Tay trái — viền xanh** (màu tay trái): bass rồi 5 – 8 dưới Mi3, ví dụ Đô2 – Sol2 – Đô3. Lấy theo số đo: anh gõ bass rồi rải 5 – 8 –
+    10; khối hai nốt là quãng 8 / quãng 5.
+  - **Tay phải — viền cam**: thế chồng khắp tầm tay phải của anh, từ Mi3 lên.
+  - Mã: `OnScreenPiano` thêm `revealLeftNotes` (kiểu `revealLeft`); `BanPhimHaiTay` thêm `loTrai`; `loiSsa.ts` thêm `loTrai` và `CHIA_TAY`
+    = Mi3. Các game khác không đổi.
+- Nhãn trên bàn phím lúc gợi ý đã hiện mà tay chưa bấm: "TAY TRÁI · C · bass · rải 5 – 8" đứng trên phần tay trái, "TAY PHẢI · Em7 · thế
+  chồng · chỗ nào cũng được" đứng trên phần tay phải. Dưới bàn phím có hai dòng chữ: "Tay trái (viền xanh) …" và "Tay phải (viền cam) …".
+- Phím bạn bấm: bass và mọi nốt dưới Mi3 tính cho tay trái (sáng xanh); còn lại là tay phải (sáng hồng). Trước, chỉ bass là tay trái —
+  rải 5 – 8 bằng tay trái thì hiện nhầm sang tay phải.
+- Điện thoại (bàn phím Đô3 – Đô5): phím tay trái gập lên trùng thế tay phải (Sol2 → Sol3) thì để cho tay phải.
+
+**Cơ sở:** ranh Mi3 là ranh của gợi ý (thế chồng thấp nhất bắt đầu từ Mi3), không phải số đo. Đo bằng hình: tay trái anh SSA lên tới Sol3 – Mi♭4
+(đỉnh chuỗi rải) ở Rai 1 39/81 · Rai 2 50/122 nốt tay trái. Nốt tay trái bấm từ Mi3 trở lên sẽ hiện màu tay phải.
+
+**Kiểm:** `tsc` sạch · eslint 0 lỗi · `loiSsa.test.ts` 8 (+1: hai phần gợi ý không lẫn; Đô → Đô2 Sol2 Đô3; Si → chỉ Si2) · chạy thử headless
+lối SSA 27/27 (+3: viền xanh Đô2 Sol2 Đô3, viền cam từ Mi3, nhãn hai tay) · kịch bản cũ dùng chung bàn phím: Mưa khung nốt 16/16 · nút thầy
+39/39 · Game chạy ngón 40/40 · `LuyenTap.json`, `Nguon.json` không đổi.

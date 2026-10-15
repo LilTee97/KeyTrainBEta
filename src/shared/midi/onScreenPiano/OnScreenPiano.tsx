@@ -22,6 +22,7 @@ const WHITE_KEY_STYLES = {
   leftHand: 'bg-left-hand/70 text-ink/70',
   rightHand: 'bg-right-hand/70 text-ink/70',
   reveal: 'bg-amber-key/30 ring-2 ring-inset ring-amber-key text-ink/70',
+  revealLeft: 'bg-left-hand/25 ring-2 ring-inset ring-left-hand text-ink/70',
   // Cũ: text-ink/35 — lúc chỉ phím Đô có tên. Nay mọi phím có tên (2/10/2026) nên đậm hơn cho đọc được.
   idle: 'bg-cream text-ink/55 hover:bg-white',
 } as const
@@ -31,6 +32,7 @@ const BLACK_KEY_STYLES = {
   leftHand: 'bg-left-hand text-ink/80',
   rightHand: 'bg-right-hand text-ink/80',
   reveal: 'bg-amber-key/70 ring-2 ring-inset ring-amber-key text-ink/80',
+  revealLeft: 'bg-left-hand/60 ring-2 ring-inset ring-left-hand text-ink/80',
   idle: 'bg-neutral-900 text-cream/70 hover:bg-neutral-800',
 } as const
 
@@ -121,6 +123,11 @@ export interface OnScreenPianoProps {
   rightHandNotes?: readonly MidiNote[]
   /** Đáp án đang hé lộ (game Mưa hợp âm) — viền cam như viên đang đố, khác màu hai tay và khác lớp phủ phím đang bấm. */
   revealNotes?: readonly MidiNote[]
+  /**
+   * Phần đáp án TAY TRÁI — viền xanh màu tay trái (viền cam của `revealNotes` là tay phải). Người dùng 15/10/2026, Mưa khung nốt lối
+   * SSA: "tôi muốn bạn phân biệt cho tôi đâu là tay trái đâu là tay phải chơi".
+   */
+  revealLeftNotes?: readonly MidiNote[]
   /** Số ngón ghi trên phím (game chạy ngón, trang Học Solo) — theo nốt tuyệt đối, như `highlightNotes`. */
   fingerLabels?: Readonly<Partial<Record<MidiNote, number | string>>>
   /**
@@ -147,6 +154,7 @@ export function OnScreenPiano({
   leftHandNotes,
   rightHandNotes,
   revealNotes,
+  revealLeftNotes,
   fingerLabels,
   height,
 }: OnScreenPianoProps) {
@@ -260,6 +268,7 @@ export function OnScreenPiano({
   const leftHand = new Set(leftHandNotes ?? [])
   const rightHand = new Set(rightHandNotes ?? [])
   const reveal = new Set(revealNotes ?? [])
+  const revealLeft = new Set(revealLeftNotes ?? [])
 
   /** Nốt thuộc hợp âm — so lớp cao độ, dùng để xác nhận bấm đúng. */
   const chordToneClasses = new Set(chordTones ?? [])
@@ -276,6 +285,7 @@ export function OnScreenPiano({
     // Chỉ rõ tay nào bấm nốt nào, ưu tiên hơn cách tô một màu chung.
     if (leftHand.has(note)) return 'leftHand'
     if (rightHand.has(note)) return 'rightHand'
+    if (revealLeft.has(note)) return 'revealLeft'
     if (reveal.has(note)) return 'reveal'
     if (suggested.has(note)) return 'suggested'
     return 'idle'

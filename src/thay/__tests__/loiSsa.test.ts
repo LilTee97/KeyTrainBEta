@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { LOAI_KHUNG } from '../hocSolo/khungNot'
-import { chamSsa, CHONG, chonCauSsa, DINH, MAN_SSA, mauSsa, SO_NOT_CHAY, taoCauSsa, xongChong, type KetQuaSsa } from '../hocSolo/loiSsa'
+import { chamSsa, CHIA_TAY, CHONG, chonCauSsa, DINH, MAN_SSA, mauSsa, SO_NOT_CHAY, taoCauSsa, xongChong, type KetQuaSsa } from '../hocSolo/loiSsa'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
@@ -43,6 +43,19 @@ describe('Mưa khung nốt · lối SSA', () => {
         expect(lo[0]).toBe(36 + g)
         expect(lo.filter((m) => pc(m) === g && m < 52).every((m) => m < the[0]![0]!)).toBe(true)
       }
+  })
+
+  it('gợi ý hai tay: tay trái bass rồi 5 – 8 dưới Mi3, tay phải thế chồng từ Mi3 — hai phần không lẫn', () => {
+    for (const id of Object.keys(CHONG))
+      for (let g = 0; g < 12; g++) {
+        const { loTrai, lo, the } = taoCauSsa(id, g).ssa
+        expect(loTrai[0]).toBe(36 + g)
+        expect(loTrai.every((m) => m < CHIA_TAY && [0, 7].includes(pc(m - g)))).toBe(true)
+        expect(lo.slice(0, loTrai.length)).toEqual(loTrai)
+        expect(lo.slice(loTrai.length).every((m) => m >= CHIA_TAY && the.some((t) => t.includes(m)))).toBe(true)
+      }
+    expect(taoCauSsa('maj7', 0).ssa.loTrai).toEqual([36, 43, 48]) // Đô2 – Sol2 – Đô3
+    expect(taoCauSsa('maj7', 11).ssa.loTrai).toEqual([47]) // gốc Si: chỉ còn Si2
   })
 
   it('chồng rồi chạy: bass trước, thế ở trên (cùng lúc hay rải), rồi đủ nốt chạy là đúng', () => {

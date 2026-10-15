@@ -8,7 +8,7 @@ import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi } from './GameChong'
 import { chonCauKhung, duKhung, MAN_KHUNG, ngoaiKhung, type CauKhung, type LuaChonKhung } from './hocSolo/mauKhung'
 import { tenPhim } from './hocSolo/khungNot'
-import { chamSsa, chonCauSsa, MAN_SSA, mauSsa, SO_NOT_CHAY, xongChong, type PhanSsa } from './hocSolo/loiSsa'
+import { chamSsa, CHIA_TAY, chonCauSsa, MAN_SSA, mauSsa, SO_NOT_CHAY, xongChong, type PhanSsa } from './hocSolo/loiSsa'
 import { THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
 import { chamThay, chonCauThay, manThay, tenThayCua } from './hocSolo/thayNhac'
 import { DAT_THI, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
@@ -348,30 +348,40 @@ export function GameKhungRoi() {
     })
   const daBam = phu.daBam && performance.now() < phu.daBam.het ? phu.daBam.lc : null
   const loN = may.loCua(dich)
-  /* Lối SSA: tay trái = nốt gốc thấp nhất bạn đã bấm (bass), tay phải = các nốt còn lại (thế chồng rồi nốt chạy); gợi ý = bass + thế
-     chồng khắp tầm tay phải của anh, sáng dần từ thấp lên. */
+  /* Lối SSA — hai tay hai màu (người dùng 15/10/2026: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): phím bấm — tay trái
+     là nốt gốc thấp nhất bạn đã bấm (bass) và mọi nốt dưới Mi3 (`CHIA_TAY`, chỗ rải 5 – 8), tay phải là các nốt còn lại; gợi ý — tay trái
+     viền xanh (bass rồi 5 – 8), tay phải viền cam (thế chồng khắp tầm tay phải của anh), sáng dần từ thấp lên; khi gợi ý đã hiện mà tay
+     chưa bấm thì tên hai tay đứng trên phần gợi ý của tay ấy. */
   const ssa = dich?.ssa ?? null
   const goc8 = ssa && dich ? g.daChay.filter((m) => pc(m) === dich.g) : []
   const bassM = goc8.length ? Math.min(...goc8) : null
   const xong = ssa && dich ? xongChong({ g: dich.g, ssa }, g.daChay) : -1
   const tenN = (m: number) => (dich ? tenPhim(dich.k, m).replace(/-?\d+$/, '') : '')
-  const banTrai = ssa ? (bassM !== null ? vua([bassM]) : []) : dich ? vua([48 + dich.g]) : []
-  const banPhai = ssa ? vua(g.daChay.filter((m) => m !== bassM)) : daBam && dich ? vua(khungLen(dich.g, daBam.pcs)) : vua(g.daChay)
-  const banLo =
-    dich && loN > 0 && !daBam ? vua(ssa ? ssa.lo.slice(0, loN) : khungLen(dich.g, dich.chinh ?? dich.k.not.map((n) => n.p)).slice(0, loN)) : []
+  const laTrai = (m: number) => m === bassM || m < CHIA_TAY
+  const ssaTrai = ssa ? g.daChay.filter(laTrai) : []
+  const ssaPhai = ssa ? g.daChay.filter((m) => !laTrai(m)) : []
+  const loSsa = ssa && dich && loN > 0 ? ssa.lo.slice(0, loN) : []
+  const banTrai = ssa ? vua(ssaTrai) : dich ? vua([48 + dich.g]) : []
+  const banPhai = ssa ? vua(ssaPhai) : daBam && dich ? vua(khungLen(dich.g, daBam.pcs)) : vua(g.daChay)
+  const banLo = ssa
+    ? vua(loSsa.filter((m) => !ssa.loTrai.includes(m)))
+    : dich && loN > 0 && !daBam
+      ? vua(khungLen(dich.g, dich.chinh ?? dich.k.not.map((n) => n.p)).slice(0, loN))
+      : []
+  // Điện thoại (Đô3 – Đô5): phím tay trái gập lên trùng thế tay phải (Sol2 → Sol3) thì để cho tay phải — chỗ ấy là vùng tay phải.
+  const banLoTrai = ssa ? vua(loSsa.filter((m) => ssa.loTrai.includes(m))).filter((m) => !banLo.includes(m)) : []
   const nhanSsa = ssa &&
     dich && {
-      trai: bassM !== null ? tenN(bassM) : '',
-      traiPhu: bassM !== null ? 'bass' : '',
+      trai: bassM !== null ? tenN(bassM) : banLoTrai.length ? tenN(dich.g) : '',
+      traiPhu: bassM !== null ? (ssaTrai.length > 1 ? ssaTrai.map(tenN).join(' ') : 'bass') : 'bass · rải 5 – 8',
       // Dòng to ngắn (tên thế / số nốt chạy) — điện thoại: nhãn dài "Em7 2/4" đè lên nhãn bass (chạy thử 15/10/2026).
-      phai: xong >= 0 ? `${g.daChay.length - xong - 1}/${SO_NOT_CHAY}` : g.daChay.some((m) => m !== bassM) ? ssa.tenChong : '',
+      phai: xong >= 0 ? `${g.daChay.length - xong - 1}/${SO_NOT_CHAY}` : ssaPhai.length || banLo.length ? ssa.tenChong : '',
       phaiPhu:
         xong >= 0
           ? `chạy · ${g.daChay.slice(xong + 1).map(tenN).join(' ')}`
-          : `${ssa.chong.filter((p) => g.daChay.some((m) => m !== bassM && pc(m) === p)).length}/${ssa.chong.length} · ${g.daChay
-              .filter((m) => m !== bassM)
-              .map(tenN)
-              .join(' ')}`,
+          : ssaPhai.length
+            ? `${ssa.chong.filter((p) => ssaPhai.some((m) => pc(m) === p)).length}/${ssa.chong.length} · ${ssaPhai.map(tenN).join(' ')}`
+            : 'thế chồng · chỗ nào cũng được',
       tong: '',
     }
   const nhan = nhanSsa || {
@@ -448,13 +458,20 @@ export function GameKhungRoi() {
           ))}
         </div>
       )}
-      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} />
+      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} loTrai={banLoTrai} nhan={nhan} lowNote={thap} highNote={cao} />
       {ssa && dich && !thi && (
-        <p className="text-xs text-cream/85">
-          Thế {ssa.tenChong} khắp đàn — chọn chỗ nào cũng được:{' '}
-          <span className="font-mono">{ssa.the.map((t) => t.map((m) => tenPhim(dich.k, m)).join('–')).join(' · ')}</span>. Bass:{' '}
-          {ssa.lo.filter((m) => pc(m) === dich.g).map((m) => tenPhim(dich.k, m)).join(' hay ')}, thấp hơn thế chồng.
-        </p>
+        <div className="flex flex-col gap-0.5 text-xs text-cream/85">
+          <p>
+            <b className="text-teal-key">Tay trái</b> (viền xanh): bass <span className="font-mono">{tenPhim(dich.k, 36 + dich.g)}</span> —
+            rải thêm 5 – 8 nếu muốn (<span className="font-mono">{ssa.loTrai.map((m) => tenPhim(dich.k, m)).join(' – ')}</span>), ít nhất
+            là bass.
+          </p>
+          <p>
+            <b className="text-amber-key">Tay phải</b> (viền cam): thế {ssa.tenChong} ở chỗ nào cũng được, trên bass —{' '}
+            <span className="font-mono">{ssa.the.map((t) => t.map((m) => tenPhim(dich.k, m)).join('–')).join(' · ')}</span> — rồi chạy{' '}
+            {SO_NOT_CHAY} nốt trên đỉnh.
+          </p>
+        </div>
       )}
       <p className="text-xs text-dim">
         {laSsa
@@ -464,7 +481,10 @@ export function GameKhungRoi() {
           : cachNhap === 'chay'
             ? 'Bấm từng nốt của khung (đàn MIDI, phím máy tính hay chạm phím) — đủ mọi nốt là ăn; bấm nốt ngoài khung là sai.'
             : 'Chọn tên khung ở bốn nút trên — bấm nút là nghe và thấy khung ấy trên đàn.'}
-        {!thi && ` Viền cam trên phím là ${laSsa ? 'bass và thế chồng' : laThay ? 'nốt chính' : 'khung'} đang hiện dần.`}
+        {!thi &&
+          (laSsa
+            ? ' Gợi ý hiện dần: viền xanh là phím tay trái, viền cam là phím tay phải; phím bạn bấm sáng xanh (tay trái) hay hồng (tay phải).'
+            : ` Viền cam trên phím là ${laThay ? 'nốt chính' : 'khung'} đang hiện dần.`)}
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>

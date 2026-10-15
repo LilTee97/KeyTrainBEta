@@ -17,6 +17,8 @@ const kep = (x: number) => Math.min(0.9, Math.max(0.1, x))
  * (tính từ bố cục phím `buildKeyboardLayout`); hai tên gần nhau quá thì đẩy ra hai bên. `nhan` null (đang đố) thì không hiện tên.
  * Game Mưa hợp âm (9/10/2026): `lo` là đáp án đang hé lộ (viền cam) — tên tay phải đặt trên đó khi tay phải chưa bấm gì; tên một tay để
  * trống thì không hiện tay ấy; `tong` trống thì bỏ dòng hợp âm tổng.
+ * `loTrai` (15/10/2026, Mưa khung nốt lối SSA — người dùng: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): phần đáp án của
+ * tay trái, viền xanh; tên tay trái đặt trên đó khi tay trái chưa bấm gì.
  */
 export function BanPhimHaiTay({
   trai,
@@ -25,6 +27,7 @@ export function BanPhimHaiTay({
   lowNote = 36,
   highNote = 84,
   lo = [],
+  loTrai = [],
 }: {
   trai: readonly number[]
   phai: readonly number[]
@@ -32,6 +35,7 @@ export function BanPhimHaiTay({
   lowNote?: number
   highNote?: number
   lo?: readonly number[]
+  loTrai?: readonly number[]
 }) {
   const { whiteKeys, blackKeys } = buildKeyboardLayout(lowNote, highNote)
   const viTri = (n: number) => {
@@ -40,7 +44,7 @@ export function BanPhimHaiTay({
     return blackKeys.find((k) => k.note === n)?.position ?? 0.5
   }
   const giua = (ds: readonly number[]) => (ds.length ? ds.reduce((s, n) => s + viTri(n), 0) / ds.length : null)
-  let xT = giua(trai)
+  let xT = giua(trai.length ? trai : loTrai)
   let xP = giua(phai.length ? phai : lo)
   if (xT !== null && xP !== null && xP - xT < 0.3) {
     const m = (xT + xP) / 2
@@ -69,7 +73,7 @@ export function BanPhimHaiTay({
           </div>
         )}
       </div>
-      <OnScreenPiano lowNote={lowNote} highNote={highNote} leftHandNotes={trai} rightHandNotes={phai} revealNotes={lo} />
+      <OnScreenPiano lowNote={lowNote} highNote={highNote} leftHandNotes={trai} rightHandNotes={phai} revealNotes={lo} revealLeftNotes={loTrai} />
       {(!nhan || nhan.tong) && (
         <div className="mt-2 mb-3 min-h-16 text-center">
           {nhan && (

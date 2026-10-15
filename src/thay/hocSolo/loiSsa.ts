@@ -13,8 +13,9 @@ import { chonNang, type CauKhung } from './mauKhung'
     liền bậc 50), chuỗi trung vị 4 nốt; chạy ngay sau cú chồng và ở phách cuối trước khi đổi hợp âm (Rai 2: 45/96 · 42/96; giữa ô 9/96);
   - tay đổi chỗ theo hợp âm: tay phải dời ≥ quãng 5 ở 20/108 chỗ đổi; cùng một hợp âm chồng ở nhiều chỗ (Fm7 4 chỗ).
   Việc mỗi viên: (1) CHỒNG — bass (gốc) rồi thế chồng nằm trên nó: bấm cùng lúc hay rải từng nốt, thế nào, chỗ nào cũng được; (2) CHẠY —
-  `SO_NOT_CHAY` nốt anh đặt trên đỉnh (bảng `DINH`); nốt khung khác không tính, nốt khung tránh / ngoài khung là sai. Gợi ý bên luyện: bass
-  hai quãng tám + nốt của thế chồng khắp tầm tay phải của anh (Mi3 – Đô6), sáng dần từ thấp lên.
+  `SO_NOT_CHAY` nốt anh đặt trên đỉnh (bảng `DINH`); nốt khung khác không tính, nốt khung tránh / ngoài khung là sai. Gợi ý bên luyện,
+  hai tay hai màu (người dùng 15/10/2026: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): tay trái viền xanh — bass rồi 5 – 8
+  dưới Mi3 (anh: bass rồi rải 5 – 8 – 10); tay phải viền cam — thế chồng khắp tầm tay phải của anh (Mi3 – Đô6); sáng dần từ thấp lên.
   Game rơi không theo nhạc nền nên chưa có phách: thứ tự chồng → chạy thay cho "phách đầu ô → các phách sau" (suy luận của Claude).
 */
 
@@ -56,6 +57,8 @@ export const SO_NOT_CHAY = 4
 /** Tầm thế chồng tay phải: nốt thấp nhất Mi3 – Si4 (anh: quãng tám 3–4 ở 76/78 thế), nốt cao nhất tới Rê6 (nốt cao nhất của anh Rê♭6). */
 const THE_TU = 52
 const THE_DEN = 71
+/** Ranh hai tay của gợi ý và của màu phím đang bấm: tay trái dưới Mi3, tay phải từ Mi3 (= nốt thấp nhất của thế chồng thấp nhất). */
+export const CHIA_TAY = THE_TU
 const DINH_CAO = 86
 
 const CHUNG = [
@@ -119,7 +122,9 @@ export interface PhanSsa {
   tenChong: string
   /** Mọi chỗ đặt thế chồng trong tầm tay phải của anh — nốt thật, thấp → cao. */
   the: number[][]
-  /** Gợi ý khắp đàn (bên luyện): bass hai quãng tám rồi nốt các thế, thấp → cao — sáng dần theo thứ tự này. */
+  /** Gợi ý tay trái: bass rồi 5 – 8, dưới `CHIA_TAY` (anh rải tay trái 1 – 5 – 8 – 10; khối hai nốt là quãng 8 / quãng 5). */
+  loTrai: number[]
+  /** Gợi ý khắp đàn (bên luyện): tay trái (`loTrai`) rồi nốt các thế tay phải, thấp → cao — sáng dần theo thứ tự này. */
   lo: number[]
 }
 export type CauSsa = CauKhung & { khungTen: string; ssa: PhanSsa }
@@ -159,9 +164,9 @@ export function taoCauSsa(id: string, g: number): CauSsa {
   const goc = pc(g + c.iv[0]!)
   const tenChong = `${bo8(tenPhim(k, 60 + goc))}${HAU[c.iv.map((x) => x - c.iv[0]!).join(',')] ?? ''}`
   const the = theChong(g, c.iv)
-  // Bass quãng tám 3 chỉ gợi ý khi còn thấp hơn thế chồng thấp nhất (gốc Si: Si3 nằm trên thế Mi3 – Sol3 – Si3).
-  const bass = [36 + g, ...(48 + g < the[0]![0]! ? [48 + g] : [])]
-  const lo = [...new Set([...bass, ...the.flat().sort((a, b) => a - b)])]
+  // Tay trái 1 – 5 – 8 chỉ lấy phím dưới Mi3 — trên đó là chỗ của thế tay phải (gốc Si: chỉ còn Si2).
+  const loTrai = [36 + g, 43 + g, 48 + g].filter((m) => m < CHIA_TAY)
+  const lo = [...new Set([...loTrai, ...the.flat().sort((a, b) => a - b)])]
   const tenGoc = bo8(tenPhim(k, 60 + g))
   const ten = (m: number) => bo8(tenPhim(k, m))
   const dinh = DINH[c.ho].map((iv) => `${ten(60 + g + iv)} (${tenBacKhung(iv, k.quang)})`).join(' · ')
@@ -179,10 +184,10 @@ export function taoCauSsa(id: string, g: number): CauSsa {
     quyTac: `bass ${tenGoc} + ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')})`,
     goiY: `chồng · chạy ${SO_NOT_CHAY} nốt`,
     loi: `${k.ten} = ${tenGoc} + ${tenChong}. Đỉnh anh hay đặt: ${dinh}.`,
-    meo: `${k.ten}: tay trái ${tenGoc}, tay phải ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')}) ở chỗ nào cũng được — ${vd} … Rồi chạy ${SO_NOT_CHAY} nốt: ${dinh}.`,
+    meo: `${k.ten}: tay trái ${tenGoc} (rải 5 – 8 nếu muốn), tay phải ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')}) ở chỗ nào cũng được — ${vd} … Rồi chạy ${SO_NOT_CHAY} nốt: ${dinh}.`,
     dapAnTen: '',
     luaChon: [],
-    ssa: { ho: c.ho, chong, tenChong, the, lo },
+    ssa: { ho: c.ho, chong, tenChong, the, loTrai, lo },
   }
 }
 
