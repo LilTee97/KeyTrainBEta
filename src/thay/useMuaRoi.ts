@@ -6,7 +6,7 @@ import { diemCau, DONG_CHO, SO_CAU_THI, soNotLo, thoiGianRoi } from './soanCau/g
 /*
   MÁY MƯA — phần chung của các game rơi KHÔNG theo nhạc nền: đồng hồ có tạm dừng, sinh viên (tối đa 3, viên sau cách 60 % quãng rơi),
   trượt đáy, chờ đúng nốt (bên luyện), đúng / sai / combo, 20 viên bên thi, rời trang thì tự tạm dừng. Tách nguyên từ Mưa khung nốt
-  (GameKhungRoi) 15/10/2026 khi Game chạy ngón (thử) phần 1 cần đúng máy ấy. Mưa hợp âm (GameChong) còn bản riêng (hai tay, thế bấm),
+  (GameKhungRoi) 15/10/2026 khi Game chạy ngón phần 1 cần đúng máy ấy. Mưa hợp âm (GameChong) còn bản riêng (hai tay, thế bấm),
   chưa gộp. Trạng thái nằm trong ref — vòng khung hình của `VungRoi` đọc bản mới nhất.
 */
 

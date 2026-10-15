@@ -6994,3 +6994,21 @@ daoTruongLinhNhi · sietHopAm · tuyenSolo ×2) · `vite build` qua · chạy th
 ăn, nốt không màu chạy lại; chồng hai tay bass Mi chưa ăn, bass Đô đủ nốt ăn, bàn phím ghi hợp âm tổng; thi sai lần đầu tính sai; phần 2:
 nền chạy, 4 ô vào bằng nốt gốc đạt cả 4, Mi trên Dm7 báo nốt phụ ở phách 1, im → trượt G7, Fa trên Cmaj7 báo ngay không màu; thi 1/20; rời
 tab tắt nền; điện thoại không cuộn ngang) + kịch bản cũ của Mưa khung nốt 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Duyệt: Game chạy ngón rơi và Game nốt rơi giữ lại, bỏ Game chạy ngón cũ (15/10/2026)
+
+**Người dùng:** *"game chạy ngón thử và game nốt rơi đã đạt hãy giữ chúng lại. Bỏ các game chạy ngón cũ. Bạn có đưa 3 thầy vào game nốt
+rơi và game chạy ngón mới để tôi học chưa"*.
+
+- Nút thử thành tab chính **Game chạy ngón** (id `game-ngon`), tựa bỏ chữ "bản thử". Bản 15/10 không rơi (`GameKhungNot.tsx`) **xoá**; ba
+  khối hiển thị còn dùng (`DongKhung` · `XemKhung` · `BiQuyetSsa`, lời các thầy `THAY_NHOM`) chuyển nguyên văn sang `GameChayNgonRoi.tsx`.
+- Tab **Nốt rơi cũ (câu thầy)** — lối cũ hơn của Game chạy ngón, câu do bộ soạn của Cà Pháo · Linh Nhi · Blues soạn trên vòng người dùng —
+  **chưa xoá**: là game duy nhất đang có câu của 3 thầy, mà hai game mới chưa có thầy (chỉ một dòng chữ "Các thầy trong app" ở mục Xem kỹ;
+  chấm theo khung lý thuyết). Đã hỏi người dùng: xoá ngay hay giữ tới khi 3 thầy vào game mới.
+- Sửa lời trỏ ở trang Chọn nốt theo thầy: "Tập ngay: tab Game chạy ngón → nút {thầy}" trỏ sai từ 15/10 (câu thầy đã dời) → "tab Nốt rơi cũ
+  (câu thầy)".
+
+**Kiểm:** `tsc -b` sạch · eslint các file của lần này 0 lỗi · `chayNgonRoi.test.ts` 9 · `mauKhung.test.ts` 6 · `khungNot.test.ts` 7 ·
+`hocSolo.test.ts` 29 · toàn suite (giới hạn 20 s mỗi test): 2 786 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless trên tab
+chính 40/40, hai lượt (chỉ còn một tab "Game chạy ngón", không còn nút thử; màn chọn phần 2 có "Bí quyết rải ngón của anh SSA"; 39 mục còn
+lại như lần thử) · `LuyenTap.json`, `Nguon.json` không đổi.

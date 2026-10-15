@@ -529,6 +529,8 @@ Các hợp âm phải được chọn tự do …"*
   có loại cha, đổi một nốt / thêm một nốt; bảy khung mỗi bước hạ một nốt).
   Cập nhật 15/10 (người dùng): nút thử "Game chạy ngón (thử)" — hai phần Game chạy ngón rơi như Game công thức (phần 1: nốt chính · chạy
   câu · chồng hai tay theo nhóm đuôi; phần 2: viên rơi khớp nền, phách 1 mỗi hợp âm đặt nốt chính). Duyệt đạt thì thay hẳn tab cũ.
+  Cập nhật 15/10 (người dùng duyệt đạt): Game chạy ngón rơi thành tab chính, bỏ bản không rơi; tab Nốt rơi cũ (câu thầy) — game duy nhất
+  có câu 3 thầy — chờ người dùng quyết xoá hay giữ tới khi 3 thầy vào hai game mới.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

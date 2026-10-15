@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { GameChayNgonRoi } from './GameChayNgonRoi'
-import { GameChayNgon } from './GameKhungNot'
 import { GameKhungRoi } from './GameKhungRoi'
 import { GameNotRoi, GameScale } from './GameSolo'
 import { BanPhimMau } from './hocSolo/BanPhimMau'
@@ -23,9 +22,8 @@ const TAB = [
   { id: 'chon-not', ten: 'Chọn nốt theo thầy' },
   { id: 'scale', ten: 'Scale & Arpeggio' },
   { id: 'meo', ten: 'Mẹo & quy tắc' },
+  // Game chạy ngón rơi như Game công thức — người dùng duyệt đạt 15/10/2026, thay hẳn bản không rơi (đã xoá).
   { id: 'game-ngon', ten: 'Game chạy ngón' },
-  // Nút thử (15/10/2026): hai phần Game chạy ngón rơi như Game công thức — duyệt đạt thì cho thay hẳn rồi xoá nút cũ 'game-ngon'.
-  { id: 'game-ngon-thu', ten: 'Game chạy ngón (thử)' },
   { id: 'mua-khung', ten: 'Game nốt rơi' },
   { id: 'game-scale', ten: 'Game Scale' },
   { id: 'not-roi', ten: 'Nốt rơi cũ (câu thầy)' },
@@ -377,7 +375,7 @@ function MeoMotThay({ t }: { t: PhanTichThay }) {
         <h3 className="mb-2 font-semibold text-cream">Mẹo riêng — soạn nốt như {t.ten}</h3>
         <DanhSachMuc ds={t.meo} />
         <p className="mt-3 text-xs text-dim">
-          Tập ngay: tab Game chạy ngón → nút {t.ten} → bộ soạn của {goiThay} soạn câu trên hợp âm hay vòng của bạn để bạn bấm theo.
+          Tập ngay: tab Nốt rơi cũ (câu thầy) → nút {t.ten} → bộ soạn của {goiThay} soạn câu trên hợp âm hay vòng của bạn để bạn bấm theo.
         </p>
       </div>
     </>
@@ -441,8 +439,7 @@ export function HocSoloPage() {
       {tab === 'chon-not' && <ChonNotTab />}
       {tab === 'scale' && <ScaleTab />}
       {tab === 'meo' && <MeoTab />}
-      {tab === 'game-ngon' && <GameChayNgon />}
-      {tab === 'game-ngon-thu' && <GameChayNgonRoi />}
+      {tab === 'game-ngon' && <GameChayNgonRoi />}
       {tab === 'mua-khung' && <GameKhungRoi />}
       {tab === 'not-roi' && <GameNotRoi />}
       {tab === 'game-scale' && <GameScale />}

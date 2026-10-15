@@ -4,7 +4,7 @@ import { khungLoai, LOAI_KHUNG, mucCua, VONG_KHUNG } from '../hocSolo/khungNot'
 
 const loai = (id: string) => LOAI_KHUNG.find((l) => l.id === id)!
 
-describe('Game chạy ngón (thử) — phần 1 làm quen loại hợp âm', () => {
+describe('Game chạy ngón rơi — phần 1 làm quen loại hợp âm', () => {
   it('màn: mỗi nhóm đuôi một màn, mỗi loại đúng một màn nhóm; màn trộn đủ 28 loại', () => {
     expect(MAN_NGON.at(-1)!.loai.length).toBe(LOAI_KHUNG.length)
     for (const l of LOAI_KHUNG) expect(MAN_NGON.slice(0, -1).filter((m) => m.loai.includes(l.id)).length, l.id).toBe(1)
@@ -71,7 +71,7 @@ describe('Game chạy ngón (thử) — phần 1 làm quen loại hợp âm', ()
   })
 })
 
-describe('Game chạy ngón (thử) — phần 2 solo trên vòng', () => {
+describe('Game chạy ngón rơi — phần 2 solo trên vòng', () => {
   it('mọi vòng có sẵn đọc được, mỗi hợp âm một khung có nốt chính', () => {
     for (const v of VONG_KHUNG) {
       const ks = khungVong(v.chu, v.tonic, v.thu)

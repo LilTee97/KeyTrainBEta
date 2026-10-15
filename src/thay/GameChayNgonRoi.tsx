@@ -7,9 +7,8 @@ import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKey
 import type { MidiNote } from '../shared/musicTheory/types'
 import { BanPhimHaiTay, type NhanHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi, type VienRoi } from './GameChong'
-import { BiQuyetSsa, DongKhung, XemKhung } from './GameKhungNot'
 import { chamNot, chamO, chonCauNgon, khungVong, MAN_NGON, notVaoO, SO_NOT_CAU, type CachChay, type CauNgon } from './hocSolo/chayNgonRoi'
-import { chongDuoi, goiYDinh, LOAI_KHUNG, mucCua, nenVong, tenPhim, VONG_KHUNG, type Khung, type MucKhung } from './hocSolo/khungNot'
+import { chongDuoi, goiYDinh, LOAI_KHUNG, mucCua, nenVong, SSA, tenPhim, VONG_KHUNG, type Khung, type MucKhung, type NhomKhung } from './hocSolo/khungNot'
 import { tenBam } from './soanCau/chongHopAm'
 import { doanGiong } from './soanCau/doTaiHoaAm'
 import { DAT_THI, diemCau, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
@@ -18,9 +17,10 @@ import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRo
 import { GOC } from './vongThay'
 
 /*
-  GAME CHẠY NGÓN (THỬ) — người dùng 15/10/2026: "sao game chạy ngón ko làm giống game nốt rơi luôn. Hãy thiết kế cả 2 phần của game chạy
-  ngón giống kiểu game nốt rơi. Hãy làm thử thành nút để tới khi nào tôi duyệt đạt rồi mới xóa nút cũ". Nút riêng "Game chạy ngón (thử)"
-  cạnh tab cũ — duyệt đạt thì cho thay hẳn rồi xoá nút cũ (`GameChayNgon` trong GameKhungNot.tsx; giữ DongKhung · XemKhung · BiQuyetSsa).
+  GAME CHẠY NGÓN — người dùng 15/10/2026: "sao game chạy ngón ko làm giống game nốt rơi luôn. Hãy thiết kế cả 2 phần của game chạy ngón
+  giống kiểu game nốt rơi. Hãy làm thử thành nút để tới khi nào tôi duyệt đạt rồi mới xóa nút cũ". Làm thành nút thử; người dùng duyệt đạt
+  cùng ngày ("game chạy ngón thử và game nốt rơi đã đạt hãy giữ chúng lại. Bỏ các game chạy ngón cũ") — thay hẳn bản 15/10 không rơi
+  (GameKhungNot.tsx, đã xoá; ba khối hiển thị DongKhung · XemKhung · BiQuyetSsa chuyển sang đây).
   Khuôn như Mưa khung nốt: màn chọn hai bên (luyện có mẹo · thi 20 viên, đúng từ 16 là Đạt), bấm màn là mở hẳn màn chơi, vùng mưa, bàn
   phím dài. Phần 1 dùng máy rơi chung (`useMuaRoi`); phần 2 rơi theo ĐỒNG HỒ NỀN (`getPlaybackBeats` — chỗ tai đang nghe): viên chạm đáy
   đúng lúc hết hợp âm. Logic, luật chấm và cơ sở: `hocSolo/chayNgonRoi.ts`.
@@ -98,11 +98,118 @@ interface VienO extends VienRoi {
   xong: boolean
 }
 
+/* Các thầy trong app nói gì về mỗi nhóm — số lấy từ md đã chốt (Học Solo · Chọn nốt theo thầy). */
+const THAY_NHOM: Readonly<Partial<Record<NhomKhung, string>>> = {
+  'Trưởng màu': 'Cà Pháo: trên hợp âm trưởng, 9 và 13 chiếm một phần tư số nốt (828 nốt). Linh Nhi: bài trưởng bám chặt ba nốt trụ (70,2 % nốt hợp âm, n=406).',
+  'Thứ màu': 'Cà Pháo đánh thẳng ♭7 và 11 trên hợp âm thứ. Linh Nhi: bài thứ rải rộng sang 9 · ♭7 · 11 (59,9 % nốt hợp âm, n=601).',
+  Át: 'Blues: phách 1 · 4 là nốt hợp âm 69–77 % (3 sheet) — nốt khung đứng ở phách mạnh.',
+  'Át có nốt căng': 'Cà Pháo: trên V7 có thêm ♭13 (9 % số nốt, n=66) — nốt căng đi qua rồi rơi về nốt hợp âm sau.',
+}
+
+/** Ba dòng nốt chính · phụ · không màu của khung. */
+function DongKhung({ k }: { k: Khung }) {
+  const theo = (muc: MucKhung) => k.not.filter((n) => n.muc === muc)
+  const tranh = theo('khong')
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <p>
+        <b className="text-teal-key">Nốt chính (xanh)</b> — nốt của hợp âm, đứng ở phách mạnh, nốt ngân, nốt đỉnh:{' '}
+        {theo('chinh').map((n) => (
+          <span key={n.p} className="mr-1.5 font-mono">
+            {n.ten}
+            <sub>{n.bac}</sub>
+            {n.dau ? '*' : ''}
+          </span>
+        ))}
+        <span className="text-dim">(* nốt đuôi mang lại màu)</span>
+      </p>
+      <p>
+        <b className="text-amber-key">Nốt phụ (cam)</b> — đi qua ở phách nhẹ, nối hai nốt chính:{' '}
+        {theo('phu').map((n) => (
+          <span key={n.p} className="mr-1.5 font-mono">
+            {n.ten}
+            <sub>{n.bac}</sub>
+          </span>
+        ))}
+      </p>
+      {tranh.length > 0 && (
+        <p className="text-dim">
+          <b>Đừng ngân (không màu)</b> —{' '}
+          {tranh.map((n) => {
+            const duoi = k.not.find((x) => x.muc === 'chinh' && pc(n.p - x.p) === 1)
+            return (
+              <span key={n.p} className="mr-2 font-mono">
+                {n.ten}
+                <sub>{n.bac}</sub>
+                {duoi ? ` (sát trên ${duoi.ten} nửa cung)` : ' (chỏi nốt treo)'}
+              </span>
+            )
+          })}
+          — chỉ lướt qua rồi đi tiếp.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Khung của một hợp âm xem kỹ — nốt chính · phụ · không màu, nốt đỉnh nên chọn, số đo SSA, lời các thầy. */
+function XemKhung({ k }: { k: Khung }) {
+  const ho = k.loai?.ssa ? SSA[k.loai.ssa] : null
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <p className="text-cream">
+        <b className="font-mono text-base text-amber-key">{k.ten}</b> — khung <b>{k.gam}</b>. <span className="text-cream/80">{k.loai?.nghe}</span>
+      </p>
+      <DongKhung k={k} />
+      <p className="text-cream/80">
+        Nốt đỉnh nên chọn:{' '}
+        {k.dinh
+          .slice(0, 4)
+          .map((iv) => k.not.find((x) => x.iv === iv)!)
+          .map((n) => `${n.ten} (${n.bac})`)
+          .join(' · ')}
+        .{' '}
+        {ho
+          ? `Anh SSA trên ${ho.ten} (${ho.n} nốt giai điệu, 3 clip): ${ho.giaiDieu.map(([b, d]) => `${b} ${d}`).join(' · ')}. Tay phải: ${ho.khungPhai}.`
+          : 'Chưa có số đo SSA cho loại này — thứ tự trên là lý thuyết của Claude.'}
+      </p>
+      {k.loai && THAY_NHOM[k.loai.nhom] && <p className="text-dim">Các thầy trong app: {THAY_NHOM[k.loai.nhom]}</p>}
+    </div>
+  )
+}
+
+/** Bí quyết rải ngón của anh SSA — màn chọn phần 2. */
+function BiQuyetSsa() {
+  return (
+    <details className="mt-2 text-xs text-cream/85">
+      <summary className="cursor-pointer font-semibold text-amber-key">Bí quyết rải ngón của anh SSA — vừa giai điệu vừa hợp âm màu</summary>
+      <ul className="mt-1 ml-4 list-disc">
+        <li>
+          Tay trái chỉ giữ <b>bass</b> (thường một nốt, đôi khi rải 1 – 5 – 8). Màu của hợp âm do <b>bass</b> quyết định.
+        </li>
+        <li>
+          Tay phải là một <b>hợp âm ba quen</b> dựng trên một bậc của hợp âm: maj7 → hợp âm thứ trên bậc 3 (D♭ + Fm = D♭maj7) · m7 →
+          hợp âm trưởng trên ♭3 (C + E♭ = Cm7) · 9sus4 / 13sus → hợp âm trưởng trên ♭7 ("Cb/Db thực ra là Db9sus4") · m7♭5 → hợp âm
+          thứ trên ♭3 (B + Dm = Bm7♭5).
+        </li>
+        <li>
+          <b>Giai điệu là nốt trên cùng của tay phải.</b> Nốt ấy vừa thuộc hợp âm ba dễ bấm, vừa là nốt màu so với bass — Si trên Cmaj7 là
+          bậc 7, cùng nốt Si trên Am là bậc 9. Nên cùng một câu hát, đổi bass là đổi màu ("giai điệu vẫn là E D F E").
+        </li>
+        <li>Đổi nốt đỉnh = xoay thế tay phải; đổi hợp âm = giữ nốt chung trên tay phải, đổi bass, rồi bước liền sang nốt đỉnh mới.</li>
+      </ul>
+      <p className="mt-1 text-dim">
+        Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip): tay trái trung vị 1 nốt mỗi hợp âm; nốt giai
+        điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
+      </p>
+    </details>
+  )
+}
+
 function DauTrang({ phan, doi }: { phan: Phan; doi: (p: Phan) => void }) {
   return (
     <>
-      <h4 className="text-lg font-semibold text-cream">Game chạy ngón — bản thử rơi như Game công thức</h4>
-      <p className="text-xs text-dim">Bản thử: tab "Game chạy ngón" cũ vẫn giữ — bạn duyệt đạt thì bản này thay hẳn rồi xoá tab cũ.</p>
+      <h4 className="text-lg font-semibold text-cream">Game chạy ngón — rơi như Game công thức</h4>
       <div className="grid gap-2 sm:grid-cols-2">
         {PHAN.map((p) => (
           <button

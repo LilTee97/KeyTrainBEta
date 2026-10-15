@@ -7,9 +7,9 @@ import { chongDuoi, congThucCua, khungCua, khungLoai, LOAI_KHUNG, mucCua, NHOM_K
 import { chonNang } from './mauKhung'
 
 /*
-  GAME CHẠY NGÓN (THỬ) — hai phần của Game chạy ngón làm thành game rơi như Game công thức. Người dùng 15/10/2026: "sao game chạy ngón
-  ko làm giống game nốt rơi luôn. Hãy thiết kế cả 2 phần của game chạy ngón giống kiểu game nốt rơi. Hãy làm thử thành nút để tới khi
-  nào tôi duyệt đạt rồi mới xóa nút cũ". Nút cũ là tab "Game chạy ngón" (`GameKhungNot.tsx`) — duyệt đạt thì cho thay hẳn rồi xoá nút cũ.
+  GAME CHẠY NGÓN — hai phần làm thành game rơi như Game công thức. Người dùng 15/10/2026: "sao game chạy ngón ko làm giống game nốt rơi
+  luôn. Hãy thiết kế cả 2 phần của game chạy ngón giống kiểu game nốt rơi. Hãy làm thử thành nút để tới khi nào tôi duyệt đạt rồi mới xóa
+  nút cũ". Duyệt đạt cùng ngày — thay hẳn bản không rơi (GameKhungNot.tsx, đã xoá).
 
   Phần 1 · làm quen loại hợp âm — tên hợp âm rơi; ba cách chơi lấy từ ba việc "Tự đánh" của bản cũ:
   - Nốt chính: bấm đủ nốt CHÍNH của khung (nốt hợp âm, kể cả nốt màu có trong tên). Ở cách này nốt phụ là sai — đi qua được khi chạy
