@@ -44,7 +44,11 @@ export const DOAN: readonly Doan[] = ['intro', 'interlude', 'outro']
 export interface CauTuDo {
   chords: string[]
   beatsEach: number[]
+  /** Nốt hai tay của bộ soạn — vẽ lên bàn phím (tay trái thầy · tay phải thầy). */
   events: TimelineEvent[]
+  /** Thế tay phải có màu làm nền (`nenMau`) — chỉ phát, không vẽ: vẽ ra thì phím sáng suốt ô như đang có người bấm (người dùng 15/10/2026:
+   *  "tại sao tay trái luôn có phím hiện xanh lên như đang được đánh vậy"). */
+  nen: TimelineEvent[]
 }
 
 /** Màu Blues theo chức năng (md Blues 7e) — gốc so chủ âm, giọng; null = giữ hợp âm bộ soạn đặt. */
@@ -163,8 +167,12 @@ export function soanTuDo(thay: ThayChay, tonic: number, thu: boolean, kind: Doan
         return m ? ten.replace(/(m7|7)$/, m) : ten
       })
   }
-  const nen = thay === 'linh-nhi' ? [] : nenMau(thay, chords, r.beatsEach)
-  return { chords, beatsEach: [...r.beatsEach], events: [...r.events, ...nen].sort((a, b) => a.startBeat - b.startBeat) }
+  return {
+    chords,
+    beatsEach: [...r.beatsEach],
+    events: [...r.events].sort((a, b) => a.startBeat - b.startBeat),
+    nen: thay === 'linh-nhi' ? [] : nenMau(thay, chords, r.beatsEach),
+  }
 }
 
 /** Một chỗ đứng của hợp âm trong phong cách thầy: loại (ký hiệu app), gốc so chủ âm, giọng. */

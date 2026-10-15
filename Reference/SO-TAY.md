@@ -7146,3 +7146,19 @@ nghe bản có màu.
 test): 2 794 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua · chạy thử headless ba nút thầy 38/38, hai lượt (thêm: nhãn "Cà Pháo đã
 đánh" + dòng chú thích màu phím; vòng Cà Pháo có hợp âm màu "Cadd9 · G13 · Cadd9 · Dm7 · G9") · kịch bản cũ: Game chạy ngón phần 1–2 40/40,
 Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Phím xanh luôn sáng ở nghe – đáp: lượt bạn chỉ sáng bass, thế tay phải của nền chỉ phát không vẽ (15/10/2026)
+
+**Người dùng** (kèm ảnh lượt bạn, Cà Pháo, Cadd9): *"tại sao tay trái luôn có phím hiện xanh lên như đang được đánh vậy"*.
+
+- **Vì sao:** phím xanh là nền máy đánh, vẽ bằng màu tay trái — gồm tay trái của bộ soạn (bass C2 · G2) VÀ thế tay phải có màu tôi thêm ở
+  bước trước (Cadd9 = G3 · D4 · E4), thế này giữ suốt ô nên lúc nào cũng có phím xanh, lại chen vào vùng D4–E4 của tay phải người chơi. Vẽ thế
+  tay phải bằng màu tay trái là lỗi của Claude.
+- **Sửa** (`GameChayNgonRoi.tsx` · `hocSolo/thayNhac.ts`): câu bộ soạn tách `events` (nốt hai tay của bộ soạn — vẽ) và `nen` (thế tay phải có
+  màu — chỉ phát, không vẽ). Lượt bạn: chỉ sáng MỘT phím bass của hợp âm đang vang (như phần 2 đã duyệt), nhãn "Cadd9 · bass nền"; lượt thầy:
+  sáng đúng hai tay thầy (tay trái thật của bộ soạn + tay phải). Dòng chú thích: "bass của hợp âm đang vang (máy đánh — bạn không cần bấm)";
+  dòng dưới bàn phím nói nền còn một thế tay phải có màu, nghe được mà không tô.
+
+**Kiểm:** `tsc -b` sạch · eslint 0 lỗi · `thayNhac` 4 (+1 bỏ qua) · `chayNgonRoi` 13 · toàn suite (giới hạn 20 s mỗi test): 2 794 qua / 5 đỏ (5 đỏ
+cũ) / 1 bỏ qua · `vite build` qua · chạy thử headless ba nút thầy 39/39, hai lượt (thêm: lượt bạn đếm được đúng 1 phím xanh) · Game chạy ngón
+phần 1–2 40/40 · `LuyenTap.json`, `Nguon.json` không đổi.

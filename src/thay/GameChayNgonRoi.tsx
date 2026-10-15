@@ -1095,7 +1095,8 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
   /** Nguồn nền từng lượt (gọi một lần ở đầu lượt): lượt chẵn cả câu thầy, lượt lẻ chỉ tay trái. */
   function nguon(luot: number) {
     const su = s.cau?.events ?? []
-    return luot % 2 === 0 ? su : su.filter((e) => e.hand === 'left')
+    const nen = s.cau?.nen ?? []
+    return luot % 2 === 0 ? [...su, ...nen] : [...su.filter((e) => e.hand === 'left'), ...nen]
   }
   async function batDau(b: Ben) {
     const c = timCau(0)
@@ -1365,13 +1366,18 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
         ]
       : []
   const phai = ban ? giu : s.vangPhai
-  const ca = [...s.vangTrai, ...phai]
+  /* Phím xanh: lượt bạn chỉ sáng MỘT phím bass của hợp âm đang vang (như phần 2) — trước sáng cả tay trái nền lẫn thế tay phải có màu, giữ
+     suốt ô, chen vào vùng tay phải (người dùng 15/10/2026: "tại sao tay trái luôn có phím hiện xanh lên như đang được đánh vậy"). Lượt thầy:
+     tay trái thật của thầy. Thế tay phải của nền vẫn vang, không vẽ. */
+  const bass = 36 + pc(s.ks[j]!.bass ?? s.ks[j]!.goc)
+  const trai = ban ? [bass] : s.vangTrai
+  const ca = [...trai, ...phai]
   /* Lượt bạn, chưa bấm gì: nhãn tay phải đặt trên các phím viền cam — "Cà Pháo đã đánh: C D E G" (người dùng 15/10 hỏi "mấy phím màu
      vàng nâu đó là gì"). */
   const goiYThay = ban && !phai.length && loThay.length > 0
   const nhan: NhanHaiTay = {
-    trai: s.vangTrai.length ? tenBam(s.vangTrai).ten : '',
-    traiPhu: s.vangTrai.length ? 'nền' : '',
+    trai: ban ? s.ks[j]!.ten : s.vangTrai.length ? tenBam(s.vangTrai).ten : '',
+    traiPhu: ban ? 'bass nền' : s.vangTrai.length ? `tay trái ${tenThay}` : '',
     phai: phai.length ? tenBam(phai, false).ten : goiYThay ? `${tenThay} đã đánh` : '',
     phaiPhu: phai.length
       ? ban
@@ -1435,7 +1441,8 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
       </p>
       <p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-cream/85">
         <span>
-          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" /> nền (máy đánh: bass + thế tay phải có màu)
+          <span className="mr-1 inline-block h-2.5 w-2.5 rounded-sm bg-left-hand" />{' '}
+          {ban ? 'bass của hợp âm đang vang (máy đánh — bạn không cần bấm)' : `tay trái ${tenThay} đang đánh`}
         </span>
         {ban ? (
           !thi && (
@@ -1450,9 +1457,10 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
           </span>
         )}
       </p>
-      <BanPhimHaiTay trai={vua(s.vangTrai, thap, cao)} phai={vua(phai, thap, cao)} lo={vua(loThay, thap, cao)} nhan={nhan} lowNote={thap} highNote={cao} />
+      <BanPhimHaiTay trai={vua(trai, thap, cao)} phai={vua(phai, thap, cao)} lo={vua(loThay, thap, cao)} nhan={nhan} lowNote={thap} highNote={cao} />
       <p className="text-xs text-dim">
-        Lượt thầy: phím tay phải là câu thầy đang đánh, phím tay trái là nền. Lượt bạn:{' '}
+        Nền máy còn một thế tay phải có màu (vd Cadd9 = Sol – Rê – Mi) — nghe được, không tô lên phím. Lượt thầy: phím sáng là hai tay thầy đang
+        đánh. Lượt bạn:{' '}
         {thi ? '' : 'viền cam là các nốt thầy đã đánh trên hợp âm này; '}nốt từ lúc chạy — chính {s.dem.chinh} · phụ {s.dem.phu} · không
         đánh {s.dem.khong}.
       </p>
