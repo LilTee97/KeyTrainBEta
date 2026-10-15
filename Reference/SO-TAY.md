@@ -7319,3 +7319,62 @@ Chạy thử headless lối SSA 37/37 (+11: 4 màn Như anh, lời pedal, ba vi�
 
 Toàn suite (giới hạn 20 s mỗi test): 2 811 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua. Test "mỗi tay tối đa 4 nốt" phủ thế tự dựng
 và thế theo vòng của cả 4 loại mới ở 12 gốc.
+
+## Bước — Lối SSA duyệt; ba thầy và màn quy tắc chơi lối chồng + chạy (15/10/2026)
+
+**Người dùng** (kèm ảnh màn chọn Lối SSA): *"game nốt rơi làm theo lối SSA tôi thấy rất ổn · Sao 3 thầy còn lại ko làm theo lối SSA. Chồng
+hợp âm rồi chạy ngón theo nhóm đuôi · Cho mục quy tắc nhóm đuôi học theo kiểu chồng hợp âm và chạy nốt giống SSA · Cho Mục lối SSA và các
+thầy khác có nhạc backing track để solo trên đó"*.
+
+Bước này làm ba ý đầu; backing track làm ở bước sau.
+
+**Lối SSA — duyệt.** Bỏ chữ "(thử)"; giữ nguyên lối chơi.
+
+**Ba nút thầy (chưa duyệt) đổi hẳn sang chồng + chạy** — `loiSsa.ts · taoCauThayChong`. Lối cũ "bấm đủ nốt chính" bỏ, vì chưa được duyệt.
+- **Hợp âm:** loại + bậc bộ soạn của thầy hay đặt, theo nhóm đuôi của thầy (`manThay`).
+- **Chồng:** bass + thế tay phải của thầy:
+  - Cà Pháo — `CA_PHAO_VOICINGS`, rút từ sheet của anh (maj9 = 7 · 9 · 3 "Có Em Chờ" …);
+  - Blues — `THE_BLUES`, vỏ 3 – ♭7 – màu (md Blues; chọn thế là của Claude);
+  - Linh Nhi — hợp âm của chính nó (md: ~79 % hợp âm ba trơn);
+  - loại thầy chưa có thế → công thức chồng của app.
+
+  Thế Cà Pháo · Blues giữ đúng cách xếp, dời theo quãng tám. Thế trải quá một quãng tám (Blues 13 = Mi3 – Si♭3 – La4) thì gợi ý thế đảo gọn.
+  Linh Nhi gợi ý mọi thế đảo.
+- **Chạy:** 4 nốt chính của thầy (đo trên bộ soạn — nốt hợp âm và nốt thầy đánh ≥ 10 %). Nốt thầy không đánh là sai. Nốt của thế luôn tính —
+  thế Blues m6 có bậc 9.
+- **Kỷ lục:** ghi khóa mới `<thầy>-chong|`, không lẫn kỷ lục lối cũ.
+
+**Nút thử "Quy tắc · chồng + chạy"** cạnh "Màn quy tắc nhóm đuôi". Màn quy tắc đã duyệt giữ nguyên.
+- Chín màn quy tắc như cũ. Viên ghi quy tắc ("từ Cmaj7: B → B♭"), thế chồng, "chồng · chạy 4".
+- Thế lấy theo thứ tự: thế anh SSA nếu loại ấy anh có đo; không thì công thức chồng của app (`chongSsa`). Ví dụ C7 = Đô + Edim (Mi–Sol–Si♭) —
+  thay đổi nhỏ của quy tắc nằm ngay trong thế chồng.
+- Chạy: nốt hợp âm + nốt đỉnh nên chọn của loại (`LoaiKhung.dinh`).
+
+**Sửa khi test bắt được:**
+- Công thức đặt tay trái ở quãng tám 3 (F♯9: Fa♯3 La♯3), nên thế thấp nhất Mi3 chui xuống dưới bass — 60 viên chồng không bao giờ xong. Nay
+  chỉ gợi ý chỗ đặt thế nằm trên phím cao nhất của tay trái.
+- Nhãn tay trái ghi "bass · rải 5 – 8" khi tay trái là 1 – 5 – 8; tay trái công thức thì ghi nốt.
+
+**Mã:** `PhanSsa` có `loai` ('ho' · 'nhu-anh' · 'quy-tac' · 'thay'), `vai`, `nguonThe`; game nhận viên "như anh" bằng `loai` thay cho `ho`.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Thế Blues và chọn thế cho từng loại là của Claude.
+- Thế Linh Nhi là hợp âm ba trơn theo md, không đo thế tay phải từ sheet: sheet trong `theBamThay.json` chỉ 3 hợp âm.
+- Thế công thức dùng cho loại thầy chưa có thế là thế chung của app, không phải của thầy.
+- Người dùng chưa chơi thử ba thầy và màn quy tắc mới.
+
+**Kiểm:** `tsc -b` sạch · eslint 0 lỗi · `loiSsa.test.ts` 16. Bốn test mới:
+- mọi màn quy tắc × bước × 12 gốc và mọi chỗ đứng ba thầy × 3 giọng: nốt thế đều là nốt chính, chỗ đặt thế chỉ gồm nốt thế và gốc, bấm phím
+  gợi ý + 4 nốt chạy là Đúng;
+- C7 = Đô + Edim;
+- Cà Pháo maj9 = 7 · 9 · 3;
+- Blues 13 gợi ý thế gọn.
+
+Toàn suite (giới hạn 20 s mỗi test): 2 815 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+
+Chạy thử headless:
+- lối SSA 42/42 (+5: nút Lối SSA không còn "(thử)", màn quy tắc chồng + chạy: 9 màn, viên C7 · Cm7 ghi quy tắc + thế, chồng + chạy là Đúng);
+- nút thầy 40/40 — phần Game nốt rơi viết lại theo lối mới: 6 nút, tựa "chồng hợp âm rồi chạy ngón", viên Cà Pháo ghi thế, nốt thầy không
+  đánh là sai, chồng thế + chạy 4 nốt là Đúng, dòng "thế Cà Pháo (rút từ sheet của anh)";
+- Mưa khung nốt màn quy tắc cũ 16/16 · Game chạy ngón 40/40;
+- `LuyenTap.json`, `Nguon.json` không đổi.

@@ -92,7 +92,7 @@ function mauCaPhao(goc: number, thu: boolean, duoi: string, lan: number): string
   anh nằm trong tay phải", vd Dm9 = D2 | C4 E4 F4 A4); Blues: thế vỏ 3 – ♭7 – màu (md Blues "Thế bấm tay phải": thế bậc 9 2 + 3 + 5 + ♭7,
   9/187 cụm); loại chưa có thế thì lấy nốt hợp âm trừ gốc. Chọn thế, giữ suốt ô và lực 46 là biên soạn của Claude.
 */
-const THE_BLUES: Readonly<Record<string, readonly number[]>> = {
+export const THE_BLUES: Readonly<Record<string, readonly number[]>> = {
   '13': [4, 10, 21],
   '9': [4, 10, 14],
   '7#9': [4, 10, 15],

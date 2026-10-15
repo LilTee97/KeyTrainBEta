@@ -1,13 +1,18 @@
-import { CHORD_QUALITIES } from '../../shared/musicTheory/chordDefinitions'
+import { CA_PHAO_VOICINGS } from '../../reharm/reharmEngine/caPhaoHarmony'
+import { CHORD_QUALITIES, findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { tenBam } from '../soanCau/chongHopAm'
-import { khungCua, khungLoai, LOAI_KHUNG, mucCua, tenBacKhung, tenPhim, type Khung, type MucKhung } from './khungNot'
-import { chonNang, type CauKhung } from './mauKhung'
+import type { ThayChay } from './cauThay'
+import { chongSsa } from './chayNgonRoi'
+import { khungCua, khungLoai, LOAI_KHUNG, mucCua, tenBacKhung, tenPhim, type Khung, type LoaiKhung, type MucKhung } from './khungNot'
+import { chonCauKhung, chonNang, MAN_KHUNG, type CauKhung } from './mauKhung'
 import duNhuAnh from './ssaNhuAnh.json'
+import { khungCho, manThay, tenCho, tenThayCua, THE_BLUES, type ChoThay } from './thayNhac'
 
 /*
-  MƯA KHUNG NỐT · LỐI SSA (thử) — người dùng 15/10/2026: "trong game nốt rơi, ở mục mưa khung nốt để học chạy ngón theo các nhóm đuôi ý
-  tôi muốn làm giống như cách mà SSA đã solo trong các clip của anh ta … Hai tay anh ta di chuyển lên xuống khắp đàn chứ ko ở một nơi cố
-  định nên tôi muốn bạn đưa ra gợi ý khắp đàn chứ ko phải 1 vị trí". Duyệt đạt thì bỏ chữ "(thử)".
+  LỐI CHỒNG + CHẠY (Mưa khung nốt) — mở đầu là Lối SSA, người dùng 15/10/2026: "trong game nốt rơi, ở mục mưa khung nốt để học chạy ngón
+  theo các nhóm đuôi ý tôi muốn làm giống như cách mà SSA đã solo trong các clip của anh ta … tôi muốn bạn đưa ra gợi ý khắp đàn chứ ko
+  phải 1 vị trí". Duyệt cùng ngày: "game nốt rơi làm theo lối SSA tôi thấy rất ổn" — rồi xin: "Sao 3 thầy còn lại ko làm theo lối SSA.
+  Chồng hợp âm rồi chạy ngón theo nhóm đuôi · Cho mục quy tắc nhóm đuôi học theo kiểu chồng hợp âm và chạy nốt giống SSA".
 
   Số đo bằng HÌNH (camera trên cao, KeyTrain/tools/do_tay_ssa.py; md ssa-rai-ngon.md mục "Hai tay"), 3 clip, 111 hợp âm, 1 101 nốt:
   - tay trái gõ bass rồi rải 5 – 8 – 10: 271 cú gõ, 1 nốt 219 · 2 nốt 47 (phần lớn quãng 8 / 5) · 3+ nốt 5 — không phải hợp âm 2–3 nốt;
@@ -18,22 +23,21 @@ import duNhuAnh from './ssaNhuAnh.json'
     liền bậc 50), chuỗi trung vị 4 nốt; chạy ngay sau cú chồng và ở phách cuối trước khi đổi hợp âm (Rai 2: 45/96 · 42/96; giữa ô 9/96);
   - tay đổi chỗ theo hợp âm: tay phải dời ≥ quãng 5 ở 20/108 chỗ đổi; cùng một hợp âm chồng ở nhiều chỗ (Fm7 4 chỗ).
   Việc mỗi viên: (1) CHỒNG — bass rồi thế chồng nằm trên nó: bấm cùng lúc hay rải từng nốt, thế nào, chỗ nào cũng được; (2) CHẠY — nốt
-  trên đỉnh (`soChay` nốt); nốt khung khác không tính, nốt khung tránh / ngoài khung là sai. Gợi ý bên luyện, hai tay hai màu (người dùng
-  15/10/2026: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): tay trái viền xanh, tay phải viền cam; sáng dần từ thấp lên.
-  Hai loại viên:
-  - THEO HỌ ĐUÔI: hợp âm lấy từ bảng loại của app, thế chồng theo luật đo được (`CHONG`), gợi ý mọi chỗ đặt thế trong tầm tay phải của
-    anh (Mi3 – Đô6), chạy `SO_NOT_CHAY` nốt anh đặt trên đỉnh (`DINH`).
-  - NHƯ ANH (người dùng 15/10/2026: "SSA chơi nhiều hợp âm màu lạ, liệu trong app có những hợp âm này ko. Nếu có tôi muốn học chơi như
-    anh"): mỗi viên là một hợp âm anh chơi trong clip — đúng tên anh ghi trên màn hình (40 loại, cả loại app chưa có), ở giọng của clip,
-    gợi ý là đúng phím anh bấm (`ssaNhuAnh.json`, `tools/do_tay_ssa.py --xuat`): tay trái anh gõ, tay phải lúc đầy nhất (các nốt cùng
-    vang — anh rải rồi giữ pedal), nốt anh chạy riêng. Chồng đủ các nốt tay phải ấy trên bass (quãng tám nào cũng được), rồi chạy đủ số nốt
-    khác nhau anh chạy (tối đa `SO_NOT_CHAY`; anh không chạy thì chồng xong là đúng). Nốt ngoài hợp âm và ngoài các nốt anh đánh là sai.
+  trên đỉnh (`soChay` nốt); nốt khung khác không tính, nốt tránh / ngoài khung là sai. Gợi ý bên luyện hai tay hai màu: tay trái viền
+  xanh, tay phải viền cam; sáng dần từ thấp lên. Bốn loại viên (`PhanSsa.loai`):
+  - 'ho' — họ đuôi anh SSA chơi đủ nhiều: thế anh (`CHONG`), chạy nốt anh đặt trên đỉnh (`DINH`), gợi ý mọi chỗ đặt thế (Mi3 – Đô6);
+  - 'nhu-anh' — đúng hợp âm, đúng phím anh bấm trong clip (`ssaNhuAnh.json`, `tools/do_tay_ssa.py --xuat`);
+  - 'quy-tac' — màn quy tắc nhóm đuôi theo lối chồng + chạy (28 loại): thế anh SSA nếu loại ấy anh có đo, không thì công thức chồng của
+    app (`chongSsa` — thế "Chồng hai tay" của Game chạy ngón), chạy nốt hợp âm + nốt đỉnh nên chọn của loại (`LoaiKhung.dinh`);
+  - 'thay' — ba thầy: hợp âm loại + bậc bộ soạn của thầy hay đặt (`manThay`), thế tay phải của thầy (`theThay`), chạy nốt chính của thầy
+    (đo trên bộ soạn — `khungCho`).
   Game rơi không theo nhạc nền nên chưa có phách: thứ tự chồng → chạy thay cho "phách đầu ô → các phách sau" (suy luận của Claude).
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
 export type HoSsa = 'maj' | 'thu' | 'treo' | 'm7b5'
+export type LoaiVien = 'ho' | 'nhu-anh' | 'quy-tac' | 'thay'
 
 /**
  * Thế chồng tay phải (quãng so gốc): hợp âm ba anh dựng trên một bậc của bass — hợp âm ba đầu tiên của tay phải mỗi hợp âm, đo bằng hình:
@@ -140,6 +144,8 @@ export interface ManSsa {
   doan?: readonly number[]
   /** Màn "Như anh" theo thứ tự clip — viên sau là hợp âm kế tiếp anh chơi. */
   thuTu?: boolean
+  /** Clip của màn "Như anh" theo thứ tự (để dựng backing track). */
+  clip?: string
   quyTac: readonly string[]
 }
 const HO: readonly ManSsa[] = [
@@ -195,7 +201,7 @@ export const MAN_SSA: readonly ManSsa[] = [
     ] as const
   ).map(([clip, ten]) => {
     const doan = lay((d) => d.clip === clip)
-    return { ten, goiY: `${doan.length} hợp âm theo thứ tự anh chơi`, doan, thuTu: true, quyTac: [...NHU_ANH_LUAT, 'Viên sau là hợp âm kế tiếp anh chơi trong clip — học cả vòng như anh.'] }
+    return { ten, goiY: `${doan.length} hợp âm theo thứ tự anh chơi`, doan, thuTu: true, clip, quyTac: [...NHU_ANH_LUAT, 'Viên sau là hợp âm kế tiếp anh chơi trong clip — học cả vòng như anh.'] }
   }),
   (() => {
     const doan = lay((d) => !QUEN.has(d.loai))
@@ -212,26 +218,31 @@ export const MAN_SSA: readonly ManSsa[] = [
 ]
 
 export interface PhanSsa {
-  /** Họ đuôi — null: viên "như anh". */
-  ho: HoSsa | null
-  /** Lớp cao độ bass phải bấm (thấp hơn thế chồng); null — anh không đánh tay trái ở hợp âm này. */
+  loai: LoaiVien
+  /** Họ đuôi SSA (viên 'ho', và viên 'quy-tac' của loại anh có đo). */
+  ho?: HoSsa
+  /** Lớp cao độ bass phải bấm (thấp hơn thế chồng); null — anh không đánh tay trái ở hợp âm này (như anh). */
   bass: number | null
-  /** Thế chồng tay phải: lớp cao độ. */
+  /** Thế chồng: lớp cao độ phải có trên bass. */
   chong: number[]
-  /** "Em", "Fmaj7" … */
+  /** "Em", "Fmaj7", "B–D–E" … */
   tenChong: string
-  /** Chỗ đặt thế chồng — nốt thật, thấp → cao (theo họ: mọi chỗ trong tầm tay phải của anh; như anh: đúng chỗ anh bấm). */
+  /** Chỗ đặt thế chồng — nốt thật, thấp → cao (khắp tầm tay phải; như anh: đúng chỗ anh bấm). */
   the: number[][]
-  /** Gợi ý tay trái (theo họ: bass rồi 5 – 8 dưới `CHIA_TAY`; như anh: đúng nốt anh gõ). */
+  /** Gợi ý tay trái (bass rồi 5 – 8 dưới `CHIA_TAY`; công thức chồng: tay trái của công thức; như anh: đúng nốt anh gõ). */
   loTrai: number[]
   /** Gợi ý (bên luyện): tay trái (`loTrai`) rồi tay phải, thấp → cao — sáng dần theo thứ tự này. */
   lo: number[]
-  /** Lớp cao độ tính là nốt chính: nốt hợp âm + nốt anh đặt trên đỉnh (theo họ) · nốt nhãn + nốt anh đánh (như anh). */
+  /** Lớp cao độ tính là nốt chính khi chạy, theo thứ tự nên chọn trước. */
   dinh: number[]
+  /** Vai một phím: chính (tính) · phụ (không tính) · không (sai). */
+  vai: (m: number) => MucKhung
   /** Số nốt chạy phải đủ sau khi chồng (0 = chồng xong là đúng). */
   soChay: number
   /** Nốt anh chạy, theo lúc gõ (như anh). */
   chay: number[]
+  /** Thế chồng lấy từ đâu — "thế anh SSA" · "công thức chồng của app" · "thế Cà Pháo (rút từ sheet)" … */
+  nguonThe: string
   /** Nguồn (như anh): "Rai 3 · 0:01". */
   nguon?: string
 }
@@ -242,7 +253,7 @@ const bo8 = (ten: string) => ten.replace(/-?\d+$/, '')
 
 /** Mọi thế (đảo) của thế chồng `iv` trên gốc `g`, xếp sát trong một quãng tám, nốt thấp nhất trong [THE_TU, THE_DEN]. */
 export function theChong(g: number, iv: readonly number[]): number[][] {
-  const lop = [...iv].map((x) => pc(x)).sort((a, b) => a - b)
+  const lop = [...new Set([...iv].map((x) => pc(x)))].sort((a, b) => a - b)
   const ra: number[][] = []
   lop.forEach((_, r) => {
     const xoay = [...lop.slice(r), ...lop.slice(0, r).map((x) => x + 12)]
@@ -255,18 +266,33 @@ export function theChong(g: number, iv: readonly number[]): number[][] {
   return ra.sort((a, b) => a[0]! - b[0]!)
 }
 
-/**
- * Vai một phím: nốt trong `dinh` là chính. Theo họ: nốt khung khác là phụ (không tính), nốt tránh / ngoài khung là sai. Như anh: nốt
- * ngoài hợp âm và ngoài các nốt anh đánh là sai.
- */
-export const vaiSsa =
-  (k: Khung, ssa: Pick<PhanSsa, 'ho' | 'dinh'>) =>
-  (m: number): MucKhung => {
-    if (ssa.dinh.includes(pc(m))) return 'chinh'
-    if (!ssa.ho) return 'khong'
-    const muc = mucCua(k, m)
-    return muc === 'chinh' ? 'phu' : muc
+/** Đúng thế `iv` (giữ thứ tự xếp, kể cả quãng > 12) dời lên từng quãng tám trong tầm tay phải — thế của thầy ở nhiều chỗ. */
+function theDoi(g: number, iv: readonly number[]): number[][] {
+  const ra: number[][] = []
+  for (let o = 2; o <= 6; o++) {
+    const the = iv.map((x) => 12 * o + pc(g) + x).sort((a, b) => a - b)
+    if (the[0]! >= THE_TU && the[0]! <= THE_DEN + 5 && the[the.length - 1]! <= DINH_CAO) ra.push(the)
   }
+  return ra.length ? ra : theChong(g, iv)
+}
+
+/**
+ * Chỉ giữ chỗ đặt thế nằm TRÊN phím cao nhất của tay trái — công thức chồng đặt tay trái ở quãng tám 3 (F♯9: Fa♯3 La♯3) nên thế thấp
+ * nhất Mi3 chui xuống dưới bass, chồng không bao giờ xong (test bấm đủ bắt được 60 viên kẹt, 15/10/2026). Không còn chỗ nào thì giữ nguyên.
+ */
+const trenTrai = (the: number[][], trai: readonly number[]) => {
+  const tren = the.filter((t) => t[0]! > Math.max(...trai))
+  return tren.length ? tren : the
+}
+
+/** Tay trái 1 – 5 – 8 dưới Mi3 — trên đó là chỗ của thế tay phải (gốc Si: chỉ còn Si2). */
+const traiHo = (g: number) => [36 + g, 43 + g, 48 + g].filter((m) => m < CHIA_TAY)
+/** Vai theo khung: nốt trong `dinh` là chính; nốt chính khác của khung thành phụ (không tính); còn lại giữ vai của khung. */
+const vaiKhung = (k: Khung, dinh: readonly number[]) => (m: number): MucKhung => {
+  if (dinh.includes(pc(m))) return 'chinh'
+  const muc = mucCua(k, m)
+  return muc === 'chinh' ? 'phu' : muc
+}
 
 export function taoCauSsa(id: string, g: number): CauSsa {
   const c = CHONG[id]!
@@ -275,17 +301,17 @@ export function taoCauSsa(id: string, g: number): CauSsa {
   const goc = pc(g + c.iv[0]!)
   const tenChong = `${bo8(tenPhim(k, 60 + goc))}${HAU[c.iv.map((x) => x - c.iv[0]!).join(',')] ?? ''}`
   const the = theChong(g, c.iv)
-  // Tay trái 1 – 5 – 8 chỉ lấy phím dưới Mi3 — trên đó là chỗ của thế tay phải (gốc Si: chỉ còn Si2).
-  const loTrai = [36 + g, 43 + g, 48 + g].filter((m) => m < CHIA_TAY)
+  const loTrai = traiHo(g)
   const lo = [...new Set([...loTrai, ...the.flat().sort((a, b) => a - b)])]
   const tenGoc = bo8(tenPhim(k, 60 + g))
   const ten = (m: number) => bo8(tenPhim(k, m))
-  const dinh = DINH[c.ho].map((iv) => `${ten(60 + g + iv)} (${tenBacKhung(iv, k.quang)})`).join(' · ')
+  const dinhChu = DINH[c.ho].map((iv) => `${ten(60 + g + iv)} (${tenBacKhung(iv, k.quang)})`).join(' · ')
   const vd = the
     .filter((_, i) => i % 2 === 0)
     .slice(0, 4)
     .map((t) => t.map((m) => tenPhim(k, m)).join('–'))
     .join(' · ')
+  const dinh = [...new Set([...DINH[c.ho], ...k.quang].map((iv) => pc(g + iv)))]
   return {
     id: `ssa:${id}`,
     ten: k.ten,
@@ -294,22 +320,11 @@ export function taoCauSsa(id: string, g: number): CauSsa {
     khungTen: `${tenGoc} + ${tenChong}`,
     quyTac: `bass ${tenGoc} + ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')})`,
     goiY: `chồng · chạy ${SO_NOT_CHAY} nốt`,
-    loi: `${k.ten} = ${tenGoc} + ${tenChong}. Đỉnh anh hay đặt: ${dinh}.`,
-    meo: `${k.ten}: tay trái ${tenGoc} (rải 5 – 8 nếu muốn), tay phải ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')}) ở chỗ nào cũng được — ${vd} … Rồi chạy ${SO_NOT_CHAY} nốt: ${dinh}.`,
+    loi: `${k.ten} = ${tenGoc} + ${tenChong}. Đỉnh anh hay đặt: ${dinhChu}.`,
+    meo: `${k.ten}: tay trái ${tenGoc} (rải 5 – 8 nếu muốn), tay phải ${tenChong} (${chong.map((p) => ten(60 + p)).join(' – ')}) ở chỗ nào cũng được — ${vd} … Rồi chạy ${SO_NOT_CHAY} nốt: ${dinhChu}.`,
     dapAnTen: '',
     luaChon: [],
-    ssa: {
-      ho: c.ho,
-      bass: g,
-      chong,
-      tenChong,
-      the,
-      loTrai,
-      lo,
-      dinh: [...new Set([...k.quang, ...DINH[c.ho]].map((iv) => pc(g + iv)))],
-      soChay: SO_NOT_CHAY,
-      chay: [],
-    },
+    ssa: { loai: 'ho', ho: c.ho, bass: g, chong, tenChong, the, loTrai, lo, dinh, vai: vaiKhung(k, dinh), soChay: SO_NOT_CHAY, chay: [], nguonThe: 'thế anh SSA (đo bằng hình)' },
   }
 }
 
@@ -330,6 +345,7 @@ export function taoCauNhuAnh(i: number): CauSsa {
   const nguon = `${clip.ten} · ${Math.floor(d.t / 60)}:${String(Math.floor(d.t % 60)).padStart(2, '0')}`
   const tenBass = bass === null ? '' : bo8(tenPhim(k, 60 + bass))
   const loi = `${ten} (${nguon}) — anh bấm: tay trái ${d.trai.length ? ds(d.trai) : '(không đánh)'} · tay phải ${ds(d.the)}${d.chay.length ? ` · chạy ${ds(d.chay)}` : ''}.`
+  const dinh = [...new Set([...[...d.chay, ...d.the, ...d.trai].map(pc), ...d.iv.map((iv) => pc(g + iv))])]
   return {
     id: `nhu:${i}`,
     ten,
@@ -343,20 +359,175 @@ export function taoCauNhuAnh(i: number): CauSsa {
     dapAnTen: '',
     luaChon: [],
     ssa: {
-      ho: null,
+      loai: 'nhu-anh',
       bass,
       chong: [...new Set(d.the.map(pc))],
       tenChong,
       the: [[...d.the]],
       loTrai: [...d.trai],
       lo: [...new Set([...d.trai, ...d.the, ...d.chay])],
-      dinh: [...new Set([...d.iv.map((iv) => pc(g + iv)), ...[...d.trai, ...d.the, ...d.chay].map(pc)])],
+      dinh,
+      // Như anh: nốt ngoài hợp âm và ngoài các nốt anh đánh là sai.
+      vai: (m) => (dinh.includes(pc(m)) ? 'chinh' : 'khong'),
       soChay,
       chay: [...d.chay],
+      nguonThe: 'đúng phím anh bấm (đo bằng hình)',
       nguon,
     },
   }
 }
+
+/** Đoạn "như anh" của màn `mi` (theo thứ tự clip) — để dựng backing track. */
+export const doanCuaMan = (mi: number): readonly number[] => MAN_SSA[mi]?.doan ?? []
+/** Giây bắt đầu và loại nhãn của đoạn `i` — để chia phách backing track. */
+export const doanNhuAnh = (i: number) => NHU_ANH.doan[i]!
+
+/* ---------------- Màn quy tắc nhóm đuôi theo lối chồng + chạy (thử) ---------------- */
+
+/**
+ * Viên chồng + chạy cho một loại của app ở gốc `g`: loại anh SSA có đo thì lấy thế anh (`taoCauSsa`); không thì công thức chồng của app
+ * (`chongSsa` — tay trái và tay phải của công thức, loại chưa có công thức thì gốc + 2–3 nốt hợp âm dưới nốt đỉnh nên chọn). Chạy: nốt hợp
+ * âm + nốt đỉnh nên chọn của loại (`LoaiKhung.dinh` — số đo SSA nếu có, không thì lý thuyết của Claude).
+ */
+export function taoCauChong(loai: LoaiKhung, g: number, nha: LoaiKhung['nha'] = loai.nha): CauSsa {
+  if (CHONG[loai.id] && nha === loai.nha) {
+    const c = taoCauSsa(loai.id, g)
+    return { ...c, ssa: { ...c.ssa, loai: 'quy-tac' } }
+  }
+  const k = khungLoai(loai, g, nha)
+  const s = chongSsa(k)
+  const phai = [...s.phai].sort((a, b) => a - b)
+  const chong = [...new Set([...s.trai, ...phai].map(pc))].filter((p) => p !== pc(g))
+  const loTrai = [...new Set(s.trai)].sort((a, b) => a - b)
+  const the = trenTrai(theChong(g, phai.map((m) => m - (60 + pc(g)))), loTrai)
+  const lo = [...new Set([...loTrai, ...the.flat().sort((a, b) => a - b)])]
+  // Nốt của chính thế chồng luôn tính (công thức có thể thêm nốt màu ngoài tên — vd 13 bỏ 9 vẫn có 13).
+  const dinh = [...new Set([...[...k.dinh, ...k.quang].map((iv) => pc(g + iv)), ...chong])]
+  const ten = (m: number) => bo8(tenPhim(k, m))
+  const tenChong = s.ten.includes(' + ') ? s.ten.slice(s.ten.indexOf(' + ') + 3) : phai.map(ten).join('–')
+  const dinhChu = k.dinh
+    .slice(0, 4)
+    .map((iv) => `${ten(60 + g + iv)} (${tenBacKhung(iv, k.quang)})`)
+    .join(' · ')
+  return {
+    id: `chong:${loai.id}`,
+    ten: k.ten,
+    g,
+    k,
+    khungTen: s.ten,
+    quyTac: `${s.ten} (${chong.map((p) => ten(60 + p)).join(' – ')})`,
+    goiY: `chồng · chạy ${SO_NOT_CHAY} nốt`,
+    loi: `${k.ten} = ${s.ten}. Đỉnh nên chọn: ${dinhChu}.`,
+    meo: `${k.ten}: tay trái ${loTrai.map((m) => tenPhim(k, m)).join(' – ')}, tay phải ${tenChong} ở chỗ nào cũng được. Rồi chạy ${SO_NOT_CHAY} nốt: ${dinhChu}.`,
+    dapAnTen: '',
+    luaChon: [],
+    ssa: { loai: 'quy-tac', bass: pc(g), chong, tenChong, the, loTrai, lo, dinh, vai: vaiKhung(k, dinh), soChay: SO_NOT_CHAY, chay: [], nguonThe: 'công thức chồng của app' },
+  }
+}
+
+/** Câu kế của màn quy tắc `mi` theo lối chồng + chạy: quy tắc của màn (`chonCauKhung` — "từ Cmaj7: B → B♭") + thế chồng của loại. */
+export function chonCauQuyTacChong(mi: number, goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauSsa {
+  const kh = chonCauKhung(mi, goc, sai, truoc, rand)
+  const buoc = MAN_KHUNG[mi]!.buoc[Number(kh.id.split(':')[1])]!
+  const loai = LOAI_KHUNG.find((l) => l.id === buoc.id)!
+  const c = taoCauChong(loai, kh.g, buoc.nha)
+  return {
+    ...c,
+    id: kh.id,
+    ten: kh.ten,
+    khungTen: kh.quyTac,
+    goiY: `${c.khungTen} · chồng · chạy ${SO_NOT_CHAY}`,
+    loi: `${c.loi} Quy tắc: ${kh.quyTac}.`,
+    meo: `${c.meo} Quy tắc: ${kh.quyTac}. ${kh.meo}`,
+  }
+}
+
+/* ---------------- Ba thầy theo lối chồng + chạy ---------------- */
+
+/**
+ * Thế tay phải của thầy (quãng so gốc, giữ thứ tự xếp). Cà Pháo: `CA_PHAO_VOICINGS` — rút từ sheet của anh (m9 "Người hãy quên" ô 9 · m11
+ * ô 43 · maj9 "Có Em Chờ" · maj7 "Hongkong" · 7 / 9 / 7♭13 "Người hãy quên" ô 97 · m7♭5 ô 48); Blues: `THE_BLUES` — vỏ 3 – ♭7 – màu (md
+ * Blues "Thế bấm tay phải": thế bậc 9 9/187 cụm — chọn thế là của Claude); Linh Nhi: hợp âm ba / bảy của chính hợp âm (md: ~79 % hợp âm ba
+ * trơn). Loại thầy chưa có thế thì null (dùng thế chồng chung).
+ */
+export function theThay(thay: ThayChay, duoi: string): { iv: number[]; nguon: string; doi: boolean } | null {
+  const q = findQualityBySymbol(duoi)
+  if (!q) return null
+  if (thay === 'ca-phao') {
+    const iv = CA_PHAO_VOICINGS[q.id]
+    return iv ? { iv: [...iv], nguon: 'thế Cà Pháo (rút từ sheet của anh)', doi: true } : null
+  }
+  if (thay === 'blues') {
+    const iv = THE_BLUES[duoi]
+    return iv ? { iv: [...iv], nguon: 'thế Blues (vỏ 3 – ♭7 – màu, md Blues)', doi: true } : null
+  }
+  // Linh Nhi: thế là chính hợp âm — gợi ý mọi thế đảo (như SSA); Cà Pháo · Blues: giữ đúng cách xếp, dời theo quãng tám.
+  return { iv: q.intervals.filter((x) => x < 12), nguon: 'thế Linh Nhi (hợp âm của chính nó — md: ~79 % hợp âm ba trơn)', doi: false }
+}
+
+/** Viên thầy theo lối chồng + chạy: hợp âm ở chỗ đứng `c` (giọng `tonic`), thế tay phải của thầy, chạy nốt chính của thầy. */
+export function taoCauThayChong(thay: ThayChay, c: ChoThay, tonic: number, id = `${thay}:${c.duoi}|${c.goc}|${c.thu}`): CauSsa {
+  const k = khungCua(tonic, c.thu, { goc: c.goc, chat: c.duoi })
+  const g = k.goc
+  const tenT = tenThayCua(thay)
+  const kh = khungCho(c)
+  const chinh = [...kh.chinh].sort((a, b) => c.dem[b]! - c.dem[a]!)
+  const ten = (m: number) => bo8(tenPhim(k, m))
+  const tt = theThay(thay, c.duoi)
+  let chong: number[]
+  let the: number[][]
+  let tenChong: string
+  let nguonThe: string
+  let loTrai = traiHo(g)
+  if (tt) {
+    chong = [...new Set(tt.iv.map((x) => pc(g + x)))]
+    // Thế trải quá một quãng tám (Blues 13 = 3 · ♭7 · 13 → Mi3 – Si♭3 – La4, 17 nửa cung) một tay không với tới: gợi ý thế đảo gọn.
+    const rong = Math.max(...tt.iv) - Math.min(...tt.iv)
+    the = tt.doi && rong <= 12 ? theDoi(g, tt.iv) : theChong(g, tt.iv)
+    tenChong = the[0]!.map(ten).join('–')
+    nguonThe = tt.nguon
+  } else {
+    const s = chongSsa(k)
+    const phai = [...s.phai].sort((a, b) => a - b)
+    chong = [...new Set([...s.trai, ...phai].map(pc))].filter((p) => p !== g)
+    the = trenTrai(theChong(g, phai.map((m) => m - (60 + g))), s.trai)
+    tenChong = s.ten.includes(' + ') ? s.ten.slice(s.ten.indexOf(' + ') + 3) : phai.map(ten).join('–')
+    nguonThe = `công thức chồng của app (${tenT} chưa có thế riêng cho loại này)`
+    loTrai = [...new Set(s.trai)].sort((a, b) => a - b)
+  }
+  const lo = [...new Set([...loTrai, ...the.flat().sort((a, b) => a - b)])]
+  // Nốt của thế chồng là nốt thầy bấm — luôn tính, kể cả khi bộ soạn ít đặt nó trên đỉnh (thế Blues m6 = ♭3 – 6 – 9).
+  const vai = (m: number): MucKhung => {
+    const b = pc(m - g)
+    return kh.chinh.includes(b) || chong.includes(pc(m)) ? 'chinh' : kh.phu.includes(b) ? 'phu' : 'khong'
+  }
+  const tenGoc = bo8(tenPhim(k, 60 + g))
+  const pt = (b: number) => Math.round((100 * c.dem[b]!) / Math.max(1, c.n))
+  const chinhChu = chinh.map((b) => `${ten(60 + g + b)} ${pt(b)} %`).join(' · ')
+  return {
+    id,
+    ten: k.ten,
+    g,
+    k,
+    khungTen: `${tenCho(c)} · ${tenGoc} + ${tenChong}`,
+    quyTac: `${tenT} trên ${k.ten}: chính ${chinhChu}`,
+    goiY: `chồng · chạy ${SO_NOT_CHAY} nốt của ${tenT}`,
+    loi: `${k.ten} (${tenCho(c)}) = ${tenGoc} + ${tenChong} · ${nguonThe}. ${tenT} chạy: ${chinhChu}.`,
+    meo: `${k.ten}: tay trái ${tenGoc}, tay phải ${tenChong} (${nguonThe}). Rồi chạy ${SO_NOT_CHAY} nốt chính của ${tenT}: ${chinhChu} — bộ soạn đặt ${c.soLan} lần, n=${c.n} nốt.`,
+    dapAnTen: '',
+    luaChon: [],
+    ssa: { loai: 'thay', bass: g, chong, tenChong, the, loTrai, lo, dinh: chinh.map((b) => pc(g + b)), vai, soChay: SO_NOT_CHAY, chay: [], nguonThe },
+  }
+}
+
+/** Câu kế của màn thầy `mi` (chỗ đứng vừa sai quay lại nhiều hơn), chủ âm ngẫu nhiên trong `goc`. */
+export function chonCauThayChong(thay: ThayChay, mi: number, goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauSsa {
+  const cho = manThay(thay)[mi]!.cho
+  const id = chonNang(cho.map((_, j) => `${thay}${mi}:${j}`), sai, truoc, rand)
+  return taoCauThayChong(thay, cho[Number(id.split(':')[1])]!, goc[Math.floor(rand() * goc.length)]!, id)
+}
+
+/* ---------------- Chọn câu · chấm · mẫu nghe ---------------- */
 
 /** Câu kế của màn `mi`: màn theo họ — loại vừa sai quay lại nhiều hơn, gốc ngẫu nhiên trong `goc`; màn "như anh" — theo thứ tự clip hay ngẫu nhiên có trọng số. */
 export function chonCauSsa(mi: number, goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauSsa {
@@ -390,20 +561,24 @@ export function xongChong(c: Pick<CauSsa, 'ssa'>, ds: readonly number[]): number
 export type KetQuaSsa = { kq: 'dung' } | { kq: 'tiep'; daChay: number[]; chu?: string } | { kq: 'bo'; chu: string } | { kq: 'sai'; chu: string }
 
 /**
- * Chấm một cú bấm: `daChay` là các nốt đã nhận của viên (chồng rồi chạy). Nốt sai → `sai`; nốt khung khác → `bo` (báo, không tính); lúc
- * chạy, gõ lại đúng nốt vừa rồi → `bo`. Chồng xong và đủ `ssa.soChay` nốt chạy → `dung`.
+ * Chấm một cú bấm: `daChay` là các nốt đã nhận của viên (chồng rồi chạy). Nốt sai → `sai`; nốt phụ → `bo` (báo, không tính); lúc chạy, gõ
+ * lại đúng nốt vừa rồi → `bo`. Chồng xong và đủ `ssa.soChay` nốt chạy → `dung`.
  */
 export function chamSsa(c: Pick<CauSsa, 'ten' | 'g' | 'k' | 'ssa'>, daChay: readonly number[], note: number): KetQuaSsa {
-  const muc = vaiSsa(c.k, c.ssa)(note)
+  const muc = c.ssa.vai(note)
   const ten = `${bo8(tenPhim(c.k, note))} (${tenBacKhung(pc(note - c.k.goc), c.k.quang)})`
   const tenBass = c.ssa.bass === null ? '' : bo8(tenPhim(c.k, 60 + c.ssa.bass))
   const can = `${tenBass ? `bass ${tenBass} rồi ` : ''}${c.ssa.tenChong}${tenBass ? ' ở trên' : ''}`
+  const ai = c.ssa.loai === 'thay' ? 'thầy' : 'anh SSA'
   if (muc === 'khong')
     return {
       kq: 'sai',
-      chu: c.ssa.ho
-        ? `${ten} — nốt tránh / ngoài khung của ${c.ten}, anh SSA không đặt nốt này.`
-        : `${ten} — anh không đánh nốt này trên ${c.ten}, cũng không có trong tên hợp âm.`,
+      chu:
+        c.ssa.loai === 'nhu-anh'
+          ? `${ten} — anh không đánh nốt này trên ${c.ten}, cũng không có trong tên hợp âm.`
+          : c.ssa.loai === 'thay'
+            ? `${ten} — thầy không đánh nốt này trên ${c.ten}.`
+            : `${ten} — nốt tránh / ngoài khung của ${c.ten}.`,
     }
   const i = xongChong(c, daChay)
   if (i < 0) {
@@ -413,22 +588,22 @@ export function chamSsa(c: Pick<CauSsa, 'ten' | 'g' | 'k' | 'ssa'>, daChay: read
     if (c.ssa.soChay === 0) return { kq: 'dung' }
     return { kq: 'tiep', daChay: moi, chu: `Chồng đủ ${tenBass ? `${tenBass} + ` : ''}${c.ssa.tenChong} — giờ chạy ${c.ssa.soChay} nốt trên đỉnh.` }
   }
-  if (muc !== 'chinh') return { kq: 'bo', chu: `${ten} có trong khung nhưng anh SSA ít đặt trên đỉnh ${c.ten} — chưa tính.` }
+  if (muc !== 'chinh') return { kq: 'bo', chu: `${ten} có trong khung nhưng ${ai} ít đặt nốt này trên ${c.ten} — chưa tính.` }
   if (daChay.length > i + 1 && daChay[daChay.length - 1] === note) return { kq: 'bo', chu: 'Gõ lại đúng phím vừa rồi không tính — đổi nốt.' }
   const moi = [...daChay, note]
   return moi.length - i - 1 >= c.ssa.soChay ? { kq: 'dung' } : { kq: 'tiep', daChay: moi }
 }
 
-/** Mẫu nghe khi đúng — theo họ: bass + thế gần Đô giữa, rồi bốn nốt đỉnh anh hay đặt, đi lên; như anh: tay trái + thế anh bấm, rồi nốt anh chạy. */
+/** Mẫu nghe khi đúng — bass + thế gần Đô giữa, rồi bốn nốt chạy nên chọn, đi lên; như anh: tay trái + thế anh bấm, rồi nốt anh chạy. */
 export function mauSsa(c: Pick<CauSsa, 'g' | 'ssa'>): number[][] {
-  if (!c.ssa.ho) return [[...c.ssa.loTrai, ...c.ssa.the[0]!], ...c.ssa.chay.slice(0, SO_NOT_CHAY).map((m) => [m])]
+  if (c.ssa.loai === 'nhu-anh') return [[...c.ssa.loTrai, ...c.ssa.the[0]!], ...c.ssa.chay.slice(0, SO_NOT_CHAY).map((m) => [m])]
   const the = c.ssa.the.find((t) => t[0]! >= 55) ?? c.ssa.the[0]!
   let tren = the[the.length - 1]!
-  const chay = DINH[c.ssa.ho].slice(0, SO_NOT_CHAY).map((iv) => {
+  const chay = c.ssa.dinh.slice(0, SO_NOT_CHAY).map((p) => {
     let m = tren + 1
-    while (pc(m) !== pc(c.g + iv)) m++
+    while (pc(m) !== p) m++
     tren = m
     return [m]
   })
-  return [[36 + c.g, ...the], ...chay]
+  return [[c.ssa.loTrai[0] ?? 36 + pc(c.g), ...the], ...chay]
 }

@@ -16,6 +16,10 @@ import {
   type KetQuaSsa,
 } from '../hocSolo/loiSsa'
 import duNhuAnh from '../hocSolo/ssaNhuAnh.json'
+import { THAY_CHAY } from '../hocSolo/cauThay'
+import { MAN_KHUNG } from '../hocSolo/mauKhung'
+import { manThay } from '../hocSolo/thayNhac'
+import { chonCauQuyTacChong, taoCauChong, taoCauThayChong, type CauSsa } from '../hocSolo/loiSsa'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 
@@ -145,7 +149,7 @@ describe('Mưa khung nốt · lối SSA — như anh (đúng hợp âm, đúng p
       if (d.the.length < 2) return
       n++
       const c = taoCauNhuAnh(i)
-      expect(c.ssa.ho).toBeNull()
+      expect(c.ssa.loai).toBe('nhu-anh')
       expect([...c.ssa.loTrai, ...c.ssa.the[0]!, ...c.ssa.chay].every((m) => c.ssa.dinh.includes(pc(m)))).toBe(true)
       expect(c.ssa.soChay).toBeLessThanOrEqual(SO_NOT_CHAY)
       expect(c.ssa.lo.slice(0, c.ssa.loTrai.length)).toEqual(c.ssa.loTrai)
@@ -176,5 +180,67 @@ describe('Mưa khung nốt · lối SSA — như anh (đúng hợp âm, đúng p
     const la = MAN_SSA.find((m) => m.ten === 'Như anh · chỉ hợp âm màu lạ')!
     expect(la.doan!.every((i) => !['Maj7', 'Maj9', 'min7', 'min9', '7', '', 'min', '5'].includes(DOAN[i]!.loai))).toBe(true)
     expect(la.doan!.length).toBeGreaterThan(30)
+  })
+})
+
+/** Bấm để đúng như người chơi thấy gợi ý: phím tay trái (bass trước — công thức có thể thêm 3 · 7 như C9 = Đô – Mi + Gm), thế đầu, rồi đủ
+ *  nốt chạy (lớp cao độ `dinh`, đi lên trên thế, không lặp nốt liền). */
+function bamDu(c: CauSsa) {
+  const the = c.ssa.the[0]!
+  let tren = Math.max(...the)
+  // Nốt chính có thể ít hơn số nốt chạy (Linh Nhi Cm: Sol – Mi♭ – Đô) — đi vòng lên quãng tám như người chơi: Sol4 Đô5 Mi♭5 Sol5.
+  const chay = Array.from({ length: c.ssa.soChay }, (_, i) => {
+    const p = c.ssa.dinh[i % c.ssa.dinh.length]!
+    let m = tren + 1
+    while (pc(m) !== p) m++
+    tren = m
+    return m
+  })
+  const trai = c.ssa.loTrai.length ? c.ssa.loTrai : c.ssa.bass === null ? [] : [36 + c.ssa.bass]
+  return bam(c, [...trai, ...the, ...chay])
+}
+/** Mọi nốt của thế chồng đều là nốt chính (không thì chồng không bao giờ xong); chỗ đặt thế chỉ gồm nốt thế và nốt gốc; bấm đủ là đúng. */
+function kiemVien(c: CauSsa) {
+  expect(c.ssa.the.length).toBeGreaterThan(0)
+  expect(c.ssa.chong.every((p) => c.ssa.vai(60 + p) === 'chinh')).toBe(true)
+  expect(c.ssa.the.every((t) => t.every((m) => c.ssa.chong.includes(pc(m)) || pc(m) === c.g))).toBe(true)
+  expect(c.ssa.loTrai.length).toBeGreaterThan(0)
+  expect(bamDu(c).r).toEqual({ kq: 'dung' })
+}
+
+describe('lối chồng + chạy cho màn quy tắc và ba thầy (người dùng 15/10/2026: "Sao 3 thầy còn lại ko làm theo lối SSA")', () => {
+  it('màn quy tắc: mọi màn × bước × 12 gốc — thế chồng đủ nốt chính, bấm bass + thế + 4 nốt chạy là đúng', () => {
+    for (const m of MAN_KHUNG)
+      for (const buoc of m.buoc)
+        for (let g = 0; g < 12; g++) kiemVien(taoCauChong(LOAI_KHUNG.find((l) => l.id === buoc.id)!, g, buoc.nha))
+  })
+
+  it('màn quy tắc giữ lời quy tắc của màn; loại anh SSA có đo dùng thế anh, loại khác dùng công thức chồng (C7 = Đô + Mi–Sol–Si♭)', () => {
+    const c7 = taoCauChong(LOAI_KHUNG.find((l) => l.id === '7')!, 0)
+    expect(new Set(c7.ssa.chong)).toEqual(new Set([4, 7, 10]))
+    expect(c7.ssa.nguonThe).toBe('công thức chồng của app')
+    expect(taoCauChong(LOAI_KHUNG.find((l) => l.id === 'maj7')!, 0).ssa.nguonThe).toBe('thế anh SSA (đo bằng hình)')
+    for (let i = 0; i < 20; i++) {
+      const c = chonCauQuyTacChong(0, [0], new Map(), null)
+      expect(c.khungTen === 'khung gốc — thuộc khung này trước' || c.khungTen.startsWith('từ C')).toBe(true)
+      expect(c.ssa.loai).toBe('quy-tac')
+    }
+  })
+
+  it('ba thầy: mọi màn × chỗ đứng × ba giọng — thế của thầy đủ nốt chính, bấm đủ là đúng', () => {
+    for (const t of THAY_CHAY)
+      for (const m of manThay(t.id))
+        for (const c of m.cho) for (const tonic of [0, 5, 10]) kiemVien(taoCauThayChong(t.id, c, tonic))
+  })
+
+  it('thế thầy: Cà Pháo maj9 = 7 · 9 · 3 (sheet "Có Em Chờ"); Linh Nhi hợp âm ba; Blues 13 trải rộng thì gợi ý thế đảo gọn', () => {
+    const cho = (t: (typeof THAY_CHAY)[number]['id'], duoi: string) => manThay(t).flatMap((m) => m.cho).find((c) => c.duoi === duoi)!
+    const cp = taoCauThayChong('ca-phao', cho('ca-phao', 'maj9'), 0)
+    expect(new Set(cp.ssa.chong.map((p) => pc(p - cp.g)))).toEqual(new Set([11, 2, 4]))
+    expect(cp.ssa.nguonThe).toContain('Cà Pháo')
+    const ln = taoCauThayChong('linh-nhi', cho('linh-nhi', ''), 0)
+    expect(new Set(ln.ssa.chong.map((p) => pc(p - ln.g)))).toEqual(new Set([0, 4, 7]))
+    const bl = taoCauThayChong('blues', cho('blues', '13'), 0)
+    expect(bl.ssa.the.every((t) => t[t.length - 1]! - t[0]! <= 12)).toBe(true)
   })
 })

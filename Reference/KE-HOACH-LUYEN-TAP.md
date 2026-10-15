@@ -544,6 +544,9 @@ Các hợp âm phải được chọn tự do …"*
   hợp âm (40 loại anh ghi, cả loại app chưa có) và đúng phím anh bấm trong từng clip, theo thứ tự anh chơi, thêm màn chỉ hợp âm màu lạ.
   Cập nhật 15/10 (người dùng: "thêm 7 hợp âm app chưa có"): thư viện hợp âm thêm 4 loại anh dùng — 5 · maj9sus4 · m11♭5 · 7(13); 93/111
   hợp âm của anh nay là loại app có.
+  Cập nhật 15/10 (người dùng: "game nốt rơi làm theo lối SSA tôi thấy rất ổn · Sao 3 thầy còn lại ko làm theo lối SSA · Cho mục quy tắc nhóm
+  đuôi học theo kiểu chồng hợp âm và chạy nốt giống SSA"): Lối SSA duyệt; ba nút thầy chơi chồng + chạy (thế tay phải của thầy, chạy nốt
+  chính của thầy); nút thử "Quy tắc · chồng + chạy" cạnh màn quy tắc cũ.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
