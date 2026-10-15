@@ -617,6 +617,10 @@ export interface VongNen {
   nhip: number[]
   /** Nền một lượt (máy đánh), phát lặp theo vòng. */
   nen: readonly ScheduledHit[]
+  /** Nền là trống (`beatNen.ts`) — gõ một ô hi-hat đếm vào trước khi nền vào. */
+  demTrong?: boolean
+  /** Chu kỳ lặp của nền (phách), khác độ dài cả vòng viên: nền beat lặp từng ô. */
+  chuKyNen?: number
 }
 
 /* ---------------- Lối SSA trên backing track (thử) — vòng của anh SSA, đệm điệu Cà Pháo ---------------- */

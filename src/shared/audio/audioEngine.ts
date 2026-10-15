@@ -219,6 +219,99 @@ function getSynth(): Voice {
   return voice
 }
 
+/*
+  BỘ TRỐNG — nền beat (người dùng 15/10/2026: "backing track ko cần chơi giai điệu nhiều mà chỉ có beat … tạo ra dạng backing track bằng beat
+  tương tự vậy"). Mẫu trống của Tone.js (cùng nơi app tải mẫu piano), chọn theo số đo trên bè trống của video D:\PianoBrain\video\Beat (tách
+  bằng demucs; 5 kick · 9 snare · 15 hi-hat của video so với 10 bộ — `tools/do_beat_video.py`): tỉ lệ năng lượng 4 dải 0 – 100 ms sau
+  tiếng (dưới 120 · 150 – 400 · 400 – 5 k · trên 5 kHz, lệch tính tổng trị tuyệt đối), độ tắt −20 dB phân xử khi gần nhau:
+  - kick CR78 — mọi bộ gần như cùng dải (lệch 0,01 – 0,09); tắt 67 ms, video 64 ms;
+  - snare Kit8 — lệch dải 0,41, tắt 84 ms; snare video mỏng (thân 150 – 400 Hz 11 %, tắt 38 ms). Cũ (bản đầu cùng ngày): Kit3 — chọn theo
+    hình phổ mel, nhưng thân 150 – 400 Hz tới 56 % (lệch dải 0,91). Stark lệch dải ít nhất (0,29) mà tắt 168 ms, dài hơn một móc kép ở ♩ 100.
+    Lùi về Kit3 nếu người dùng thấy snare mỏng, rè quá;
+  - hi-hat acoustic-kit — lệch dải 0,10, ít nhất trong 10 bộ; tắt 171 ms (video 75 ms).
+  Nốt trống theo số GM: 36 kick · 38 snare · 42 hi-hat. Mất mạng thì trống tổng hợp (MembraneSynth · NoiseSynth) để nền không câm.
+*/
+const TRONG_MAU: Readonly<Record<number, string>> = { 36: 'CR78/kick.mp3', 38: 'Kit8/snare.mp3', 42: 'acoustic-kit/hihat.mp3' }
+/** Trống nhỏ hơn piano 3 dB — tiếng bạn đánh nổi trên nền (Claude chọn, chưa nghe thử; nền nhỏ quá thì lùi về 0). */
+const TRONG_DB = -3
+
+interface BoTrong {
+  loai: 'mau' | 'tong-hop'
+  danh: (midi: number, time: number, velocity: number) => void
+  amLuong: (db: number) => void
+  dispose: () => void
+}
+let boTrong: BoTrong | null = null
+let napTrong: Promise<void> | null = null
+
+function trongMau(): Promise<BoTrong> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error('timeout')), 15000)
+    const s = new Tone.Sampler({
+      urls: Object.fromEntries(Object.entries(TRONG_MAU).map(([m, tep]) => [Tone.Frequency(Number(m), 'midi').toNote(), tep])),
+      baseUrl: 'https://tonejs.github.io/audio/drum-samples/',
+      onload: () => {
+        window.clearTimeout(timer)
+        resolve({
+          loai: 'mau',
+          // Không nhả: mẫu trống tự tắt hết đuôi.
+          danh: (m, t, v) => s.triggerAttack(toFrequency(m), t, v),
+          amLuong: (db) => {
+            s.volume.value = db
+          },
+          dispose: () => s.dispose(),
+        })
+      },
+      onerror: (error) => {
+        window.clearTimeout(timer)
+        s.dispose()
+        reject(error)
+      },
+    }).toDestination()
+  })
+}
+
+function trongTongHop(): BoTrong {
+  const kick = new Tone.MembraneSynth({ pitchDecay: 0.04, octaves: 6, envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.05 } }).toDestination()
+  const locSnare = new Tone.Filter(1500, 'highpass').toDestination()
+  const snare = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.09, sustain: 0 } }).connect(locSnare)
+  const locHat = new Tone.Filter(8000, 'highpass').toDestination()
+  const hat = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0 } }).connect(locHat)
+  return {
+    loai: 'tong-hop',
+    danh: (m, t, v) => {
+      if (m === 36) kick.triggerAttackRelease('C1', 0.2, t, v)
+      else if (m === 38) snare.triggerAttackRelease(0.1, t, v)
+      else hat.triggerAttackRelease(0.05, t, v)
+    },
+    amLuong: (db) => {
+      kick.volume.value = db
+      snare.volume.value = db
+      hat.volume.value = db
+    },
+    dispose: () => [kick, snare, hat, locSnare, locHat].forEach((x) => x.dispose()),
+  }
+}
+
+/** Nạp bộ trống — gọi sau `startAudio`, trước khi phát nền có tiếng trống (`ScheduledHit.trong`). */
+export function chuanBiTrong(): Promise<void> {
+  napTrong ??= (async () => {
+    let b: BoTrong
+    try {
+      b = await trongMau()
+    } catch {
+      b = trongTongHop()
+    }
+    b.amLuong(useAudioStore.getState().volumeDb + TRONG_DB)
+    boTrong = b
+  })()
+  return napTrong
+}
+
+/** Bộ trống đang dùng: mẫu thu sẵn, trống tổng hợp (mất mạng), hay chưa nạp. */
+export const loaiTrong = (): BoTrong['loai'] | null => boTrong?.loai ?? null
+
+
 let boot: Promise<void> | null = null
 
 /** Đổi nốt MIDI sang tần số để đưa vào Tone.js. */
@@ -364,6 +457,8 @@ export interface ScheduledHit {
   startBeat: number
   durationBeats: number
   velocity: number
+  /** Gõ bằng bộ trống (`chuanBiTrong`) — nốt là số GM: 36 kick · 38 snare · 42 hi-hat. */
+  trong?: boolean
 }
 
 /**
@@ -550,6 +645,8 @@ interface LoopEvent {
   notes: number[]
   duration: Tone.Unit.Time
   velocity: number
+  /** Số GM của tiếng trống (bộ trống thay cho đàn). */
+  trong?: number[]
 }
 
 let loopPart: Tone.Part<LoopEvent> | null = null
@@ -619,6 +716,10 @@ export function startTimelineLoop(
   )
 
   const fire = (time: number, value: LoopEvent) => {
+    if (value.trong) {
+      for (const m of value.trong) boTrong?.danh(m, time, value.velocity)
+      return
+    }
     fireNotes(synthInstance, value.notes, value.duration, time, value.velocity)
   }
 
@@ -631,6 +732,7 @@ export function startTimelineLoop(
         notes: hit.notes.map(toFrequency),
         duration: { '4n': Math.max(0.05, hit.durationBeats) },
         velocity: hit.velocity / 127,
+        ...(hit.trong ? { trong: [...hit.notes] } : {}),
       }
       // Transport đang duyệt tick đầu của lượt mới: Part thêm trong callback
       // không nhận lại tick đó. Phát onset 0 bằng giờ AudioContext callback;
@@ -724,12 +826,16 @@ export function setVolumeDb(volumeDb: number): void {
   useAudioStore.getState().setVolumeDb(volumeDb)
   writeSetting('volumeDb', volumeDb)
   if (voice) voice.volume.value = volumeDb
+  boTrong?.amLuong(volumeDb + TRONG_DB)
 }
 
 /** Dọn dẹp khi thoát. */
 export function disposeAudio(): void {
   voice?.dispose()
   voice = null
+  boTrong?.dispose()
+  boTrong = null
+  napTrong = null
   boot = null
   useAudioStore.getState().setReady(false)
 }

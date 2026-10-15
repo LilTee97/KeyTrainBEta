@@ -7564,3 +7564,93 @@ Chạy thử headless:
   - thi với Bossa: vào THI, không có ★; Dừng tắt nền;
 - nút thầy 45/45 · Mưa khung nốt 16/16 · Game chạy ngón 40/40;
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Nền beat cho "Quy tắc · chồng + chạy (thử)": khuôn trống đo từ video "Lick Em/Am" (15/10/2026)
+
+**Người dùng:** *"Có một kiểu backing track ko cần chơi giai điệu nhiều mà chỉ có beat chơi theo các loại nhịp (ví dụ 2/4, 4/4, 6/8...) và
+theo các điệu. Tôi có một video trong D:\PianoBrain\video\Beat … Tôi muốn bạn nghe video và tạo ra dạng backing track bằng beat tương tự vậy
+để làm thành backing track cho mục Quy tắc chồng + Chạy thử"*.
+
+**Nguồn** — video 24 s, khung dọc, âm thanh HE-AAC 42 kb/s; bài tập "EXERCÍCIO · LICK Em/Am", Em7(9) – Am7(9). Tách bằng demucs (htdemucs):
+- trống và bass tắt ở giây 12, piano chơi tiếp tới 24 s → nền là trống + bass;
+- chỉ lấy trống: người dùng xin beat, và lối chồng + chạy thì tay trái đã đánh bass.
+
+Đo lại bằng `python -I tools/do_beat_video.py <thư mục làm việc>`.
+
+**Khuôn đo được** — ♩ 100,8 (phách 0,595 s); hi-hat thẳng từng móc đơn (0,297 s), không swing. Gộp 5 ô 4/4, độ vọt mỗi móc kép (0–9):
+
+| dải | 1 | e | & | a | 2 | e | & | a | 3 | e | & | a | 4 | e | & | a |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| kick 30 – 120 Hz | 6 | 1 | 0 | 0 | 3 | 0 | 0 | 9 | 4 | 0 | 1 | 1 | 2 | 0 | 2 | 0 |
+| rè 1,5 – 5 kHz | 7 | 0 | 2 | 0 | 9 | 1 | 1 | 4 | 6 | 0 | 3 | 0 | 7 | 1 | 2 | 1 |
+| hi-hat 7 – 16 kHz | 8 | 1 | 7 | 1 | 8 | 1 | 5 | 2 | 7 | 1 | 9 | 2 | 7 | 2 | 5 | 1 |
+
+Phân loại theo phổ từng tiếng:
+- phách 2 · 4 không có năng lượng dưới 120 Hz (0,00 – 0,01), trọng tâm phổ 4,3 – 5,5 kHz → snare;
+- phách 1 · 3 có (0,30 – 0,40) → kick (kèm hi-hat);
+- móc kép cuối phách 2 là kick sạch (dưới 120 Hz 0,52 – 0,70).
+
+Khung tiếng chính (bùm – chát):
+
+| Tiếng | Vị trí trong ô | Trống |
+|---|---|---|
+| 1 — Bùm | phách 1 | kick + hi-hat |
+| 2 — chát | phách 2 | snare + hi-hat |
+| 3 — bum | phách 2a (móc kép cuối phách 2) | kick, mạnh nhất dải kick |
+| 4 — Bùm | phách 3 | kick nhẹ + hi-hat |
+| 5 — chát | phách 4 | snare + hi-hat |
+
+Hi-hat gõ đều cả 8 móc đơn.
+
+**Bộ trống** — mẫu Tone.js (cùng nơi app tải mẫu piano). Chọn theo tỉ lệ năng lượng 4 dải 0 – 100 ms sau tiếng (dưới 120 · 150 – 400 ·
+400 – 5 k · trên 5 kHz) và độ tắt −20 dB, so 10 bộ với 5 kick · 9 snare · 15 hi-hat của video:
+- kick CR78 — mọi bộ gần như cùng dải (lệch 0,01 – 0,09); tắt 67 ms, video 64 ms;
+- snare Kit8 — lệch dải 0,41, tắt 84 ms. Snare video mỏng hơn mọi mẫu (thân 150 – 400 Hz 11 %, tắt 38 ms).
+  - Bản đầu cùng ngày chọn Kit3 theo hình phổ mel. Kit3 có thân tới 56 % (lệch dải 0,91), làm dải trầm ở phách 2 · 4 của tiếng app 8 · 7,
+    trong khi video là 3 · 2. Kit8 hạ xuống 5 · 5.
+  - Lùi về Kit3 nếu người dùng thấy snare mỏng, rè.
+- hi-hat acoustic-kit — lệch dải 0,10, ít nhất trong 10 bộ; tắt 171 ms (video 75 ms).
+
+Mất mạng thì trống tổng hợp (MembraneSynth · NoiseSynth). Trống nhỏ hơn piano 3 dB.
+
+**Màn** — khung "Chơi trên nền beat (thử)" đứng đầu màn Quy tắc · chồng + chạy:
+- Nền: Tắt (rơi tự do như cũ) · Lo-fi 4/4 — như video;
+- ♩ 70 – 110, mặc định 100; mỗi hợp âm 1 hay 2 ô, mặc định 2;
+- chọn nền rồi bấm một màn ở hai cột: chuỗi hợp âm của màn (32 bên luyện, 20 bên thi, không lặp hợp âm vừa rồi) rơi khớp nhịp;
+- trước khi trống vào có một ô hi-hat gõ đếm vào; Dừng là về lại màn kèm tổng kết.
+
+**Mã:**
+- `audioEngine.ts`: `ScheduledHit.trong` — nốt là số GM 36 kick · 38 snare · 42 hi-hat, phát bằng bộ trống; `chuanBiTrong`, `loaiTrong`.
+- `beatNen.ts`: `BEAT_NEN`, `nenBeat`, `vongQuyTacBeat`.
+- `MuaKhungNen`: tiếng đếm vào nằm luôn trong lượt đầu của nền (chung đồng hồ vận chuyển); nền lặp theo `chuKyNen` (một ô, 13 tiếng mỗi
+  lượt thay vì ≈ 840 tiếng của cả vòng).
+
+**Kiểm tiếng app phát (đo, không nghe):**
+- giờ hẹn thật (chặn `triggerAttack` của bộ trống): 4 tiếng đếm vào cách nhau đúng 0,600 s ở ♩ 100; phách 1 tới sau tiếng đếm cuối 0,600 s;
+  mọi tiếng hẹn trước giờ phát 0,04 – 0,10 s;
+- thu mẫu âm thẳng từ đồ thị (AudioWorklet, ghi cả khung im lặng):
+  - đếm vào cách nhau 0,601 · 0,601 · 0,601 s;
+  - kick lệch lưới móc kép trung vị 1,1 ms (n = 11);
+  - gộp 3 ô so với video: tương quan kick r = 0,82 · rè r = 0,86 · hi-hat r = 0,96.
+- **Sửa sai của chính tôi:** lần đo đầu ra "ô đầu vào sớm 80 ms" (bản thu MediaRecorder) rồi "đếm vào trễ dần 337 · 228 · 95 ms" (bộ thu
+  AudioWorklet). Cả hai là lỗi của cách thu: bộ thu bỏ các khung im lặng giữa các tiếng đếm. Giờ hẹn thật đúng như trên; đã ghi lại chú thích
+  trong mã.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Người dùng chưa nghe. Tôi không nghe được — mọi so sánh là đo phổ và thời gian.
+- Snare video gọn hơn mọi mẫu (tắt 38 ms; Kit8 84 ms).
+- Âm thanh video nén nặng (HE-AAC 42 kb/s: dải cao được tái tạo) và tách bè bằng máy → số đo hi-hat kém tin cậy hơn kick · snare.
+- Bè bass của video có chạy nốt (E1 … G – G♯ – A …) — không làm.
+- Mới có một nền 4/4. Nền 2/4 · 6/8 và nền theo điệu chưa làm — chưa có nguồn đo.
+- Lực từng tiếng, ♩ mặc định 100, 2 ô mỗi hợp âm, trống −3 dB là của Claude.
+- Kỷ lục thi trên nền beat chưa ghi.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi · `beatNen.test.ts` 3 (khuôn đúng số đo; nền trải đủ phách; vòng màn đủ hợp âm, không lặp, nền một ô có đếm vào).
+- Toàn suite (giới hạn 20 s mỗi test): 2 822 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless:
+  - Lối SSA + nền beat 68/68 (thêm 10): khung nền beat chỉ ở Quy tắc · chồng + chạy, mặc định Tắt; chọn Lo-fi hiện khung bùm – chát · ♩ · số
+    ô; bấm màn vào màn chơi khớp nhịp, không có Tạm dừng / Rơi trong; trống nạp bằng mẫu thu sẵn; nền lặp; chồng + chạy trong ô là Đúng;
+    Dừng về màn kèm tổng kết, nền tắt; Tắt nền thì rơi tự do như cũ;
+  - nút thầy 45/45 · Mưa khung nốt 16/16 · Game chạy ngón 40/40;
+  - `LuyenTap.json`, `Nguon.json` không đổi.

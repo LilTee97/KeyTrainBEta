@@ -554,6 +554,9 @@ Các hợp âm phải được chọn tự do …"*
   clip SSA rồi làm backing track theo các điệu ballad hoặc bossa của Cà Pháo … những nốt nào sẽ nên chơi … làm nổi bật"): bỏ backing "đúng
   vòng anh chơi"; khung "Solo trên backing track (thử)" đứng đầu mục Lối SSA — 5 vòng chọn từ clip SSA, đệm bốn điệu Cà Pháo đã duyệt, chơi
   thẳng; nốt nên chơi khi vào hợp âm tô ★ (nốt màu + nốt nối), chồng xong vùng chạy vàng / xanh nhạt.
+  Cập nhật 15/10 (người dùng: "backing track … chỉ có beat … tạo ra dạng backing track bằng beat tương tự vậy để làm thành backing track cho
+  mục Quy tắc chồng + Chạy thử"): màn Quy tắc · chồng + chạy có khung "Chơi trên nền beat (thử)" — khuôn trống Lo-fi 4/4 đo từ video
+  "Lick Em/Am" (kick 1 · 2a · 3, snare 2 · 4, hi-hat 8 móc đơn, ♩ ≈ 101), mẫu trống chọn theo số đo; hợp âm của màn rơi khớp nhịp, có đếm vào.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

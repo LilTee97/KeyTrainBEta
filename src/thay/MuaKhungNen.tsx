@@ -105,9 +105,11 @@ export function MuaKhungNen({
     while (j + 1 < nC() && s.moc[j + 1]! <= x) j += 1
     return p * nC() + j
   }
-  /** Phách đang nghe: trước khi nền vào là đồng hồ đếm vào (âm), sau đó là đồng hồ nền đã bù lệch hình – tiếng. */
+  /** Phách đang nghe: trước khi nền vào là đồng hồ đếm vào (âm), sau đó là đồng hồ nền đã bù lệch hình – tiếng. Nền beat chạy từ lúc đếm
+   *  vào (đếm vào nằm trong nền) nên lùi đi số phách đếm vào. */
   function bayGio() {
-    return s.nen ? getPlaybackBeats() : (performance.now() - s.t0) / (60000 / bpm) - s.demVao
+    if (s.nen) return getPlaybackBeats() - (s.vong?.demTrong ? s.demVao : 0)
+    return (performance.now() - s.t0) / (60000 / bpm) - s.demVao
   }
   /** Nạp vòng từ lượt `tu` (bỏ lượt không soạn được); về đếm vào, giữ điểm. */
   function napVong(tu: number) {
@@ -116,7 +118,9 @@ export function MuaKhungNen({
       if (!v || !v.cau.length) continue
       const moc = [0]
       for (const x of v.nhip) moc.push(moc[moc.length - 1]! + x)
-      Object.assign(s, { vong: v, take: t, moc, demVao: Math.min(4, v.nhip[0] ?? 4), t0: performance.now(), nen: false, vien: [], sinhToi: -1, dang: -1 })
+      // Nền beat đếm vào đúng một ô (khớp vạch ô của trống); nền khác 4 phách hay ít hơn nếu hợp âm đầu ngắn.
+      const demVao = v.demTrong && v.chuKyNen ? v.chuKyNen : Math.min(4, v.nhip[0] ?? 4)
+      Object.assign(s, { vong: v, take: t, moc, demVao, t0: performance.now(), nen: false, vien: [], sinhToi: -1, dang: -1 })
       return true
     }
     return false
@@ -129,6 +133,22 @@ export function MuaKhungNen({
     setBen(b)
     await startAudio()
     Object.assign(s, { pha: 'choi', t0: performance.now(), diem: 0, combo: 0, dung: 0, sai: 0, saiO: [], bao: null, loi: '' })
+    /*
+      Nền beat: tiếng hi-hat đếm vào nằm luôn trong lượt đầu của nền rồi trống vào — chung một đồng hồ (đồng hồ vận chuyển), khớp bằng cấu
+      trúc. Bản đầu hẹn giờ đếm vào riêng (đồng hồ âm thanh lúc bấm) rồi mới khởi nền khi đồng hồ hình tới phách 0 — hai đường hẹn giờ, không
+      bảo đảm khớp. Đo bản này (15/10/2026, chặn `triggerAttack` của bộ trống): giờ hẹn 4 tiếng đếm vào cách nhau đúng 0,600 s ở ♩ 100, phách 1
+      tới sau tiếng đếm cuối 0,600 s; thu mẫu âm (AudioWorklet, ghi cả khung im lặng) ra 0,601 · 0,598 · 0,601 s. Các con số "vào sớm 80 ms"
+      · "đếm vào nén lại" đo lúc đầu là lỗi của cách thu (bộ thu bỏ khung im lặng), không phải lỗi app.
+      Nền lặp theo `chuKyNen` (một ô): lượt đầu là ô đếm vào, các lượt sau là ô trống.
+    */
+    const v = s.vong
+    if (v?.demTrong) {
+      const d = s.demVao
+      const L = v.chuKyNen ?? dai()
+      const dem = Array.from({ length: d }, (_, k) => ({ notes: [42], startBeat: k, durationBeats: 0.25, velocity: k === 0 ? 110 : 90, trong: true }))
+      startTimelineLoop((luot) => (luot === 0 ? [...dem, ...v.nen.map((h) => ({ ...h, startBeat: h.startBeat + d })).filter((h) => h.startBeat < L)] : v.nen), bpm, L)
+      s.nen = true
+    }
     ve()
   }
   function ketThuc() {

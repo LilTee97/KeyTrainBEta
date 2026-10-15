@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { getStyle } from '../reharm/style/styleLibrary'
-import { playChordSequence, startAudio } from '../shared/audio/audioEngine'
+import { chuanBiTrong, playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
@@ -9,6 +9,7 @@ import { BanPhimChong } from './BanPhimChong'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi } from './GameChong'
 import { chonCauKhung, duKhung, MAN_KHUNG, ngoaiKhung, type CauKhung, type LuaChonKhung } from './hocSolo/mauKhung'
+import { BEAT_NEN, vongQuyTacBeat } from './hocSolo/beatNen'
 import { tenPhim } from './hocSolo/khungNot'
 import { cauVongSsa, chamSsa, chonCauQuyTacChong, chonCauSsa, chonCauThayChong, MAN_SSA, mauSsa, SO_NOT_CHAY, VONG_SSA, vongThay, type PhanSsa, type VongNen } from './hocSolo/loiSsa'
 import { THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
@@ -43,6 +44,10 @@ import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRo
   backing track (thử)" đứng đầu màn Lối SSA: chọn vòng (`VONG_SSA`), điệu Cà Pháo (bốn nút trang Cà Pháo, dựng bằng `dungVong` như Tập solo),
   nhịp — rồi chơi thẳng (`MuaKhungNen` `ngay`), Dừng là về lại đây kèm tổng kết; nốt nên chơi khi vào hợp âm tô ★ (`nenChoiVong`). Duyệt
   đạt thì bỏ chữ "(thử)".
+  Nền beat (15/10/2026 — người dùng: "backing track ko cần chơi giai điệu nhiều mà chỉ có beat … tạo ra dạng backing track bằng beat tương tự
+  vậy để làm thành backing track cho mục Quy tắc chồng + Chạy thử"): màn "Quy tắc · chồng + chạy (thử)" có khung "Chơi trên nền beat (thử)" —
+  chọn nền (khuôn trống đo từ video, `beatNen.ts`), nhịp, số ô mỗi hợp âm; rồi bấm một màn ở hai cột: hợp âm của màn rơi khớp nhịp
+  (`vongQuyTacBeat` + `MuaKhungNen` `ngay`). "Tắt" là rơi tự do như cũ.
 */
 
 type Vien = CauKhung & { khungTen: string; ssa?: PhanSsa }
@@ -72,6 +77,7 @@ const TEN_DOAN: Readonly<Record<Doan, string>> = { intro: 'Dạo', interlude: 'G
 /** Điệu đệm cho backing Lối SSA: bốn điệu Cà Pháo đã duyệt (nút trang Cà Pháo — `TEACHERS`). */
 const DIEU_SSA = TEACHERS.find((t) => t.id === 'ca-phao')!.styleIds.map((id) => ({ id, ten: getStyle(id)?.familyName ?? id, bpm: getStyle(id)?.bpm ?? 0 }))
 const NHIP_SSA = [50, 60, 70, 80, 90, 100, 110] as const
+const NHIP_BEAT = [70, 80, 90, 100, 110] as const
 /** Tên hợp âm gõ bằng chữ (Gbmaj9 · F#m7b5) viết lại bằng dấu ♭ ♯ để đọc. */
 const dauHop = (s: string) => s.replace(/(^|\/)([A-G])b/g, '$1$2♭').replace(/b(?=\d)/g, '♭').replace(/#/g, '♯')
 /** Lực nền so với điệu gốc — tiếng bạn đánh nổi hơn nền (Claude chọn, chưa nghe thử; nền nhỏ quá thì lùi về 1). */
@@ -120,7 +126,11 @@ export function GameKhungRoi() {
   const [bpmSsa, setBpmSsa] = useState(60)
   const [dungNen, setDungNen] = useState(false)
   const [loiNen, setLoiNen] = useState('')
-  const [kqNen, setKqNen] = useState<null | (KetQuaNen & { ten: string })>(null)
+  const [kqNen, setKqNen] = useState<null | (KetQuaNen & { ten: string; bo: Bo })>(null)
+  /** Nền beat của màn quy tắc · chồng + chạy: null = tắt (rơi tự do như cũ). */
+  const [beatId, setBeatId] = useState<string | null>(null)
+  const [bpmBeat, setBpmBeat] = useState(100)
+  const [oBeat, setOBeat] = useState(2)
   const thi = ben === 'thi'
   const thay: ThayChay | null = bo === 'quy-tac' || bo === 'quy-tac-chong' || bo === 'ssa' ? null : bo
   const laThay = thay !== null
@@ -168,10 +178,28 @@ export function GameKhungRoi() {
   const phu = useRef({ daBam: null as null | { lc: LuaChonKhung; het: number } }).current
 
   async function batDau(b: Ben, k: number) {
+    if (bo === 'quy-tac-chong' && beatId) return moBeat(b, k)
     setBen(b)
     setMan(k)
     phu.daBam = null
     await may.batDau()
+  }
+  /* Màn quy tắc · chồng + chạy trên nền beat: nạp trống, dựng chuỗi hợp âm của màn khớp nhịp, rồi chơi thẳng. */
+  async function moBeat(b: Ben, mi: number) {
+    const beat = BEAT_NEN.find((x) => x.id === beatId)!
+    setLoiNen('')
+    setDungNen(true)
+    try {
+      await startAudio()
+      await chuanBiTrong()
+      const vong = vongQuyTacBeat(mi, GOC_CHOI[gocChoi], beat, oBeat, b === 'thi' ? SO_CAU_THI : 32)
+      setKqNen(null)
+      setNen({ tieuDe: `Quy tắc · chồng + chạy · ${vong.ten}`, moTa: '', nap: () => vong, coDoiCau: false, bpm: bpmBeat, ngay: b })
+    } catch (e) {
+      setLoiNen(e instanceof Error ? e.message : String(e))
+    } finally {
+      setDungNen(false)
+    }
   }
   function doiMoc(s: number) {
     may.doiRoi(s)
@@ -260,11 +288,39 @@ export function GameKhungRoi() {
         tenThay={tenThay}
         ngay={nen.ngay}
         onThoat={(kq) => {
-          if (kq && nen.ngay) setKqNen({ ...kq, ten: nen.tieuDe })
+          if (kq && nen.ngay) setKqNen({ ...kq, ten: nen.tieuDe, bo })
           setNen(null)
         }}
       />
     )
+
+  /** Tổng kết lượt chơi thẳng vừa rồi (backing Lối SSA · nền beat) — hiện trong khung của bộ đã mở nó. */
+  const tongKetNen =
+    kqNen && kqNen.bo === bo ? (
+      <div className="mb-2 rounded border border-amber-key/50 bg-amber-key/10 p-2 text-xs text-cream">
+        <p className="text-sm">
+          {kqNen.ten}:{' '}
+          {kqNen.thi && kqNen.dung + kqNen.sai >= SO_CAU_THI ? (
+            <b className={kqNen.dung >= DAT_THI ? 'text-teal-key' : 'text-rose-300'}>
+              {kqNen.dung >= DAT_THI ? `ĐẠT ✓ ${kqNen.dung}/${SO_CAU_THI}` : `Chưa đạt ${kqNen.dung}/${SO_CAU_THI} — cần ${DAT_THI}`}
+            </b>
+          ) : (
+            'Dừng'
+          )}{' '}
+          — <b className="text-amber-key">{kqNen.diem} điểm</b> · đúng {kqNen.dung} · sai / trượt {kqNen.sai} · ♩ = {kqNen.bpm}
+        </p>
+        {kqNen.saiO.length > 0 && (
+          <ul className="mt-1 flex flex-col gap-1">
+            {[...new Map(kqNen.saiO.map((x) => [x.ten, x])).values()].map((x) => (
+              <li key={x.ten}>
+                <b className="font-mono">{x.ten}</b>
+                <span className="block text-dim">{x.meo}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    ) : null
 
   if (g.pha === 'chuan-bi' || g.pha === 'het')
     return (
@@ -355,6 +411,52 @@ export function GameKhungRoi() {
             đổi nhỏ. Khung nốt từng loại xem kỹ ở tab Game chạy ngón.
           </p>
         )}
+        {bo === 'quy-tac-chong' && (
+          <div className="rounded-lg border border-yellow-300/50 bg-yellow-300/5 p-3">
+            <p className="font-semibold text-cream">Chơi trên nền beat (thử) — nền chỉ có trống</p>
+            <p className="mb-2 text-xs text-dim">
+              Chọn nền rồi bấm một màn ở hai cột dưới: hợp âm của màn rơi khớp nhịp, mỗi hợp âm {oBeat} ô — chồng rồi chạy {SO_NOT_CHAY} nốt
+              trước khi viên chạm đáy. Nền không có hoà âm nên hợp âm nào đặt lên cũng khớp; có 4 tiếng hi-hat gõ đếm vào trước khi nền vào.
+              Khi đã chọn nền, "Rơi trong" và "Chờ đúng nốt" không dùng — viên rơi theo nhịp. "Tắt" là rơi tự do như cũ.
+            </p>
+            {tongKetNen}
+            <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-dim">Nền</span>
+              <button type="button" onClick={() => setBeatId(null)} className={nut(beatId === null)} aria-pressed={beatId === null}>
+                Tắt — rơi tự do
+              </button>
+              {BEAT_NEN.map((x) => (
+                <button key={x.id} type="button" onClick={() => setBeatId(x.id)} className={nut(beatId === x.id)} aria-pressed={beatId === x.id} title={x.nguon}>
+                  {x.ten}
+                </button>
+              ))}
+            </div>
+            {beatId && (
+              <>
+                <p className="mb-2 text-[11px] text-dim">
+                  {BEAT_NEN.find((x) => x.id === beatId)!.nhip} · {BEAT_NEN.find((x) => x.id === beatId)!.khung} — {BEAT_NEN.find((x) => x.id === beatId)!.nguon}
+                </p>
+                <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-dim">♩ =</span>
+                  {NHIP_BEAT.map((x) => (
+                    <button key={x} type="button" onClick={() => setBpmBeat(x)} className={nut(bpmBeat === x)} aria-pressed={bpmBeat === x}>
+                      {x}
+                    </button>
+                  ))}
+                  <span className="text-dim">· video ♩ ≈ {BEAT_NEN.find((x) => x.id === beatId)!.bpm}</span>
+                  <span className="ml-2 text-dim">Mỗi hợp âm</span>
+                  {[1, 2].map((x) => (
+                    <button key={x} type="button" onClick={() => setOBeat(x)} className={nut(oBeat === x)} aria-pressed={oBeat === x}>
+                      {x} ô
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {dungNen && <p className="mt-1 text-xs text-dim">Đang nạp trống…</p>}
+            {loiNen && <p className="mt-1 text-xs text-rose-300">{loiNen}</p>}
+          </div>
+        )}
         {laSsa && (
           <div className="rounded-lg border border-yellow-300/50 bg-yellow-300/5 p-3">
             <p className="font-semibold text-cream">Solo trên backing track (thử) — vòng của anh SSA, đệm điệu Cà Pháo</p>
@@ -364,31 +466,7 @@ export function GameKhungRoi() {
               CHƠI khi vào hợp âm — nốt màu của hợp âm và nốt nối êm từ hợp âm trước; chồng xong thì vùng chạy ngay trên thế sáng lên: vàng là nốt
               nên chơi, xanh nhạt là các nốt còn lại của khung.
             </p>
-            {kqNen && (
-              <div className="mb-2 rounded border border-amber-key/50 bg-amber-key/10 p-2 text-xs text-cream">
-                <p className="text-sm">
-                  {kqNen.ten}:{' '}
-                  {kqNen.thi && kqNen.dung + kqNen.sai >= SO_CAU_THI ? (
-                    <b className={kqNen.dung >= DAT_THI ? 'text-teal-key' : 'text-rose-300'}>
-                      {kqNen.dung >= DAT_THI ? `ĐẠT ✓ ${kqNen.dung}/${SO_CAU_THI}` : `Chưa đạt ${kqNen.dung}/${SO_CAU_THI} — cần ${DAT_THI}`}
-                    </b>
-                  ) : (
-                    'Dừng'
-                  )}{' '}
-                  — <b className="text-amber-key">{kqNen.diem} điểm</b> · đúng {kqNen.dung} · sai / trượt {kqNen.sai} · ♩ = {kqNen.bpm}
-                </p>
-                {kqNen.saiO.length > 0 && (
-                  <ul className="mt-1 flex flex-col gap-1">
-                    {[...new Map(kqNen.saiO.map((x) => [x.ten, x])).values()].map((x) => (
-                      <li key={x.ten}>
-                        <b className="font-mono">{x.ten}</b>
-                        <span className="block text-dim">{x.meo}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
+            {tongKetNen}
             <p className="mb-1 text-xs text-dim">Vòng</p>
             <div className="mb-1 flex flex-col gap-1.5">
               {VONG_SSA.map((v) => (
