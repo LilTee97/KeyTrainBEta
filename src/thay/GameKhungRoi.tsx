@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
@@ -8,7 +8,8 @@ import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi } from './GameChong'
 import { chonCauKhung, duKhung, MAN_KHUNG, ngoaiKhung, type CauKhung, type LuaChonKhung } from './hocSolo/mauKhung'
 import { tenPhim } from './hocSolo/khungNot'
-import { chamThay, chonCauThay, MAN_THAY } from './hocSolo/mauThay'
+import { THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
+import { chamThay, chonCauThay, manThay, tenThayCua } from './hocSolo/thayNhac'
 import { DAT_THI, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
 import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRoi'
 
@@ -18,12 +19,14 @@ import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRo
   Cmaj7: B → B♭") và tên khung, quá 60 % quãng rơi thì phím khung sáng dần; bên thi chỉ tên hợp âm, 20 viên, đúng từ 16 là Đạt. Khung
   dài 6–8 nốt nên rơi lâu hơn Mưa hợp âm: mặc định bên luyện 20 s, bên thi 14 s (Claude chọn, chưa đo — lùi nếu người dùng thấy chậm).
   Người dùng 15/10/2026: "thiết kế rơi như game công thức … khi nhấn vào thì mở hẳn ra một phần game và có bàn phím dài".
-  Màn thầy (nút thử, 15/10/2026 — người dùng chọn "Game nốt rơi màn thầy"): hợp âm của giọng rơi, bấm đủ nốt CHÍNH của thầy trên hợp âm ấy
-  (`hocSolo/mauThay.ts`, ba mức như tab Chọn nốt theo thầy); nốt thầy không đánh là sai, nốt mờ không tính. Duyệt đạt thì bỏ chữ "(thử)".
+  Nút thầy (thử, 15/10/2026 — người dùng: "hình thành 3 nút riêng mang phong cách của từng thầy (từ hợp âm cho đến nốt solo) … học solo
+  theo từng nhóm đuôi … Bộ soạn nốt … biết khung nốt solo của từng thầy"): mỗi thầy một nút; màn là các nhóm đuôi của thầy, hợp âm đúng
+  loại và bậc bộ soạn của thầy hay đặt, bấm đủ nốt CHÍNH của thầy (`hocSolo/thayNhac.ts` — đo trên bộ soạn); nốt thầy không đánh là sai,
+  nốt thầy đánh ít không tính. Duyệt đạt thì bỏ chữ "(thử)". (Bản gộp ba thầy một nút trước đó — người dùng bác, đã bỏ.)
 */
 
 type Vien = CauKhung & { khungTen: string; chinh?: number[]; tranh?: number[] }
-type Bo = 'quy-tac' | 'thay'
+type Bo = 'quy-tac' | ThayChay
 type CachNhap = 'chay' | 'chon'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -64,18 +67,19 @@ export function GameKhungRoi() {
   const [choNot, setChoNot] = useState(false)
   const [bo, setBo] = useState<Bo>('quy-tac')
   const thi = ben === 'thi'
-  const laThay = bo === 'thay'
-  const DS: readonly { ten: string; goiY: string; quyTac: readonly string[] }[] = laThay ? MAN_THAY : MAN_KHUNG
+  const laThay = bo !== 'quy-tac'
+  const tenThay = laThay ? tenThayCua(bo) : ''
+  const DS: readonly { ten: string; goiY: string; quyTac: readonly string[] }[] = useMemo(() => (bo === 'quy-tac' ? MAN_KHUNG : manThay(bo)), [bo])
   /** Màn thầy chỉ chạy nốt (chưa có bốn nút chọn). */
   const cachNhap: CachNhap = laThay ? 'chay' : nhap
-  const khoaKyLuc = (k: number) => `${laThay ? 'thay|' : ''}${k}${moc.thi !== MOC_MAC_DINH.thi ? `|${moc.thi}s` : ''}`
+  const khoaKyLuc = (k: number) => `${laThay ? `${bo}|` : ''}${k}${moc.thi !== MOC_MAC_DINH.thi ? `|${moc.thi}s` : ''}`
   /* Máy rơi chung (`useMuaRoi`) — đồng hồ, sinh viên, trượt, chờ, chấm; tách từ file này 15/10/2026, hành vi giữ nguyên. */
   const may = useMuaRoi<Vien>({
     thi,
     choNot,
     giay: moc[ben],
     tao: (sai, truoc) => {
-      if (laThay) return chonCauThay(man, GOC_CHOI[gocChoi], sai, truoc)
+      if (bo !== 'quy-tac') return chonCauThay(bo, man, GOC_CHOI[gocChoi], sai, truoc)
       const cau = chonCauKhung(man, GOC_CHOI[gocChoi], sai, truoc)
       return { ...cau, khungTen: cau.quyTac }
     },
@@ -154,16 +158,18 @@ export function GameKhungRoi() {
     return (
       <div className="flex flex-col gap-3 rounded-xl border border-line bg-black/25 p-4 text-sm">
         <h4 className="text-lg font-semibold text-cream">
-          {laThay ? 'Mưa nốt thầy — nốt chính của từng thầy trên hợp âm của giọng' : 'Mưa khung nốt — học khung theo quy tắc nối các nhóm đuôi'}
+          {laThay ? `Mưa nốt ${tenThay} — học theo nhóm đuôi của ${tenThay}` : 'Mưa khung nốt — học khung theo quy tắc nối các nhóm đuôi'}
         </h4>
-        {/* Nút thử (15/10/2026): màn thầy — duyệt đạt thì bỏ chữ "(thử)". */}
+        {/* Nút thầy (thử, 15/10/2026): mỗi thầy một nút — duyệt đạt thì bỏ chữ "(thử)". */}
         <div className="flex flex-wrap gap-1.5">
           <button type="button" onClick={() => setBo('quy-tac')} className={nut(!laThay)} aria-pressed={!laThay}>
             Màn quy tắc nhóm đuôi
           </button>
-          <button type="button" onClick={() => setBo('thay')} className={nut(laThay)} aria-pressed={laThay}>
-            Màn thầy (thử) — Cà Pháo · Linh Nhi · Blues
-          </button>
+          {THAY_CHAY.map((t) => (
+            <button key={t.id} type="button" onClick={() => setBo(t.id)} className={nut(bo === t.id)} aria-pressed={bo === t.id}>
+              {t.ten} (thử)
+            </button>
+          ))}
         </div>
         {g.pha === 'het' && (
           <div className="rounded-lg border border-amber-key/50 bg-amber-key/10 p-3">
@@ -197,9 +203,10 @@ export function GameKhungRoi() {
         )}
         {laThay ? (
           <p className="text-xs text-dim">
-            Hợp âm của giọng rơi xuống. Viên viền cam là viên đang đố: bấm đủ các nốt CHÍNH của thầy trên hợp âm ấy — nốt hợp âm và nốt thầy dùng
-            từ 10 % (thứ tự nào, quãng tám nào cũng được). Nốt thầy không đánh là sai; nốt mờ (dùng được) không tính. Số đo như tab Chọn nốt theo
-            thầy — mỗi màn một thầy, một giọng.
+            Hợp âm rơi theo đúng LOẠI và BẬC mà bộ soạn của {tenThay} hay đặt — mỗi màn một nhóm đuôi của {tenThay}. Viên viền cam là viên
+            đang đố: bấm đủ các nốt CHÍNH của {tenThay} trên hợp âm ấy — nốt hợp âm và nốt bộ soạn của thầy đánh từ 10 % (thứ tự nào, quãng tám
+            nào cũng được). Nốt thầy không đánh lần nào là sai; nốt thầy đánh ít không tính. Số đo trên bộ soạn (kèm số trên sheet để so) ở
+            bảng "Thầy chọn nốt thế nào".
           </p>
         ) : (
           <p className="text-xs text-dim">

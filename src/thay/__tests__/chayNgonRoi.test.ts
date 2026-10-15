@@ -1,9 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import type { TimelineEvent } from '../../reharm/style/types'
-import { baiCauThay, THAY_CHAY } from '../hocSolo/cauThay'
-import { chamNot, chamO, chonCauNgon, chongSsa, duChong, khungVong, MAN_NGON, notThayVao, notVaoO, SO_NOT_CAU, taoCauNgon, vaiThay } from '../hocSolo/chayNgonRoi'
+import { THAY_CHAY } from '../hocSolo/cauThay'
+import {
+  chamNot,
+  chamO,
+  chonCauNgon,
+  chonCauNgonThay,
+  chongSsa,
+  duChong,
+  khungVong,
+  MAN_NGON,
+  notThayVao,
+  notVaoO,
+  SO_NOT_CAU,
+  taoCauNgon,
+  taoCauNgonThay,
+} from '../hocSolo/chayNgonRoi'
 import { khungLoai, LOAI_KHUNG, mucCua, VONG_KHUNG } from '../hocSolo/khungNot'
-import { vongLyThuyetHop } from '../soanCau/thayTrongVong'
+import { DOAN, manThay, soanTuDo } from '../hocSolo/thayNhac'
 
 const loai = (id: string) => LOAI_KHUNG.find((l) => l.id === id)!
 
@@ -99,38 +113,58 @@ describe('Game chạy ngón rơi — phần 2 solo trên vòng', () => {
   })
 })
 
-describe('Game chạy ngón rơi — phần 3 nghe – đáp thầy', () => {
-  it('vai theo thầy: Cà Pháo trên Đô (I, Đô trưởng) — Rê (9, 15 %) và La (13, 10 %) thành chính; Fa (5 %) phụ; Đô♯ không màu', () => {
-    const [c] = khungVong('C', 0, false)
-    const vai = vaiThay(c!, 'ca-phao', 0, false)
-    expect([vai(62), vai(69), vai(65), vai(61)]).toEqual(['chinh', 'chinh', 'phu', 'khong'])
-    expect(chamO(c!, 62).dat).toBe(false) // theo khung, Rê là nốt phụ của hợp âm ba Đô
-    expect(chamO(c!, 62, false, vai).dat).toBe(true)
-    expect(chamO(c!, 62, false, vai).chu).toContain('nốt thầy hay đánh')
+describe('Game chạy ngón rơi — nút thầy (hợp âm và khung đo trên bộ soạn của thầy)', () => {
+  it('học theo nhóm đuôi của thầy: mọi màn × chỗ đứng × 3 cách tạo được câu; nốt hợp âm luôn chính theo khung thầy', () => {
+    for (const t of THAY_CHAY)
+      manThay(t.id).forEach((m, mi) =>
+        m.cho.forEach((_, j) => {
+          for (const cach of ['chinh', 'cau', 'chong'] as const) {
+            const c = taoCauNgonThay(t.id, mi, j, 0, cach)
+            expect(c.lo.length, `${t.ten} ${c.ten}`).toBeGreaterThan(0)
+            expect(c.thay).toBe(t.ten)
+            for (const iv of c.k.quang) expect(c.vai!(60 + c.k.goc + iv), `${t.ten} ${c.ten}`).toBe('chinh')
+          }
+        }),
+      )
   })
-  it('vai theo thầy Blues: nốt blue E♭ trên C7 (I7, Đô trưởng) là phụ (mờ) chứ không phải không màu như theo khung', () => {
-    const [c7] = khungVong('C7', 0, false)
-    expect(mucCua(c7!, 63)).toBe('khong')
-    expect(vaiThay(c7!, 'blues', 0, false)(63)).toBe('phu')
+  it('chấm theo khung thầy: nốt thầy không đánh là sai (lời nói tên thầy); đủ nốt chính của thầy là đúng', () => {
+    const c = taoCauNgonThay('ca-phao', 0, 0, 0, 'chinh')
+    const pcs = [...Array(12).keys()]
+    const khong = pcs.find((p) => c.vai!(60 + p) === 'khong')
+    if (khong !== undefined) {
+      const r = chamNot('chinh', c.k, [], 60 + khong, [], c.vai, c.thay)
+      expect(r.kq).toBe('sai')
+      expect(r.kq === 'sai' && r.chu).toContain('Cà Pháo không đánh')
+    }
+    const chinh = pcs.filter((p) => c.vai!(60 + p) === 'chinh').map((p) => 60 + p)
+    expect(chamNot('chinh', c.k, chinh.slice(0, -1), chinh.at(-1)!, [], c.vai, c.thay).kq).toBe('dung')
+    let r = 9
+    const rand = () => ((r = (r * 16807) % 2147483647) - 1) / 2147483646
+    let truoc: string | null = null
+    for (let k = 0; k < 60; k++) {
+      const x = chonCauNgonThay('blues', 0, [0, 5], new Map(), truoc, 'chinh', rand)
+      expect(x.id).not.toBe(truoc)
+      truoc = x.id
+    }
   })
-  it('nốt thầy vào ô: nốt cao nhất của cú tay phải đầu tiên trong ô, bỏ nốt láy, cho sớm 0,25 phách', () => {
+  it('nốt thầy vào ô [tu, den): nốt cao nhất của cú tay phải đầu tiên trong ô, bỏ nốt láy, cho sớm 0,25 phách', () => {
     const su = [
       { notes: [48], startBeat: 0, durationBeats: 4, hand: 'left', velocity: 60 },
       { notes: [71], startBeat: 3.8, durationBeats: 0.1, hand: 'right', velocity: 60, grace: true },
       { notes: [64, 72], startBeat: 3.9, durationBeats: 1, hand: 'right', velocity: 60 },
       { notes: [74], startBeat: 5, durationBeats: 1, hand: 'right', velocity: 60 },
     ] as TimelineEvent[]
-    expect(notThayVao(su, 1, 4)).toBe(72)
+    expect(notThayVao(su, 4, 6)).toBe(72)
     expect(notThayVao(su, 0, 4)).toBe(null)
   })
-  it('bộ soạn của 3 thầy soạn được câu trên vòng có sẵn đầu tiên (Đô trưởng · La thứ); khung đọc đủ mọi ô của lượt', () => {
+  it('bộ soạn của 3 thầy tự chọn vòng ở mọi đoạn · trưởng / thứ: câu có hợp âm, ô dài ngắn khớp số hợp âm, khung đọc đủ', () => {
     for (const t of THAY_CHAY)
-      for (const [tonic, thu] of [[0, false], [9, true]] as const) {
-        const v = vongLyThuyetHop(tonic, thu)[0]!
-        const bai = baiCauThay(t.id, v.hop, tonic, thu, 0, v.id)
-        expect(bai, `${t.ten} ${v.ten}`).not.toBeNull()
-        const ks = khungVong(bai!.perBeat.filter((_, x) => x % bai!.beatsPerChord === 0).join(' '), tonic, thu)
-        expect(ks.length * bai!.beatsPerChord, `${t.ten} ${v.ten}`).toBe(bai!.perBeat.length)
-      }
-  }, 30000)
+      for (const [tonic, thu] of [[0, false], [9, true], [7, false]] as const)
+        for (const doan of DOAN) {
+          const c = soanTuDo(t.id, tonic, thu, doan, 0)
+          expect(c, `${t.ten} ${doan} ${tonic}`).not.toBeNull()
+          expect(c!.beatsEach.length).toBe(c!.chords.length)
+          expect(khungVong(c!.chords.join(' '), tonic, thu).length, `${t.ten} ${c!.chords.join(' ')}`).toBe(c!.chords.length)
+        }
+  }, 60000)
 })

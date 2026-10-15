@@ -7052,3 +7052,60 @@ thầy không đánh báo sai; đủ nốt chính Cà Pháo → Đúng +10; bả
 PHÁO", phím tay phải sáng câu thầy, lượt bạn viên ghi ★ nốt thầy, vào ô bằng nốt gốc Đạt 2/2, im → Trượt; Đổi câu; Linh Nhi · Blues soạn
 được câu và chạy; thi "Ô bạn 1/20"; rời tab tắt nền; điện thoại không cuộn ngang) · kịch bản cũ: Game chạy ngón phần 1–2 40/40 (hai lượt),
 Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Ba nút thầy RIÊNG (Cà Pháo · Linh Nhi · Blues) ở Game nốt rơi và Game chạy ngón: hợp âm và khung nốt đo trên bộ soạn của thầy (15/10/2026)
+
+**Người dùng:** *"Mỗi thầy có đều có phong cách đặt hợp âm và chọn nốt solo riêng nên ý tôi khi nói đưa 3 thầy vào các game để học solo là
+hình thành 3 nút riêng mang phong cách của từng thầy (từ hợp âm cho đến nốt solo) chứ ko phải gộp 3 thầy lại thành 1 nút. Mỗi thầy có kiểu
+hợp âm của họ nên tôi cũng muốn học solo theo từng nhóm đuôi. Keytrain đã có Bộ soạn nốt cho câu solo của từng thầy nên chắc chắn biết khung
+nốt solo của từng thầy, hãy đưa vào các game học solo"*. Bản trước (commit `9f304ce`) gộp ba thầy một nút — "Màn thầy (thử)" chia màn theo
+thầy × giọng, "3 · Nghe – đáp thầy (thử)" chọn thầy bên trong, vòng lý thuyết — đã bỏ (`mauThay.ts` xoá).
+
+- **Đo phong cách trên bộ soạn** (`src/thay/hocSolo/thayNhac.ts`, số ghi sẵn `thayNhac.json`): không cho vòng sẵn thì bộ soạn của thầy TỰ
+  CHỌN hợp âm (`soanTuDo`) — Cà Pháo bộ soạn ballad đã duyệt, Linh Nhi bộ soạn slow rock đã duyệt, Blues Bộ Soạn Blues lượt 6 trên khung 12 ô
+  Ray / Rising Sun (màu hợp âm theo số đo nốt vang md Blues 7e: I13 · IV9 · V9 · i m9 · V7♯9 · III13 · ♭VI9 — áp màu là biên soạn của
+  Claude). Soạn 144 câu mỗi thầy (dạo · giang · kết × trưởng · thứ × 24 lượt), đếm hợp âm nào ở bậc nào (= nhóm đuôi của thầy) và nốt
+  giai điệu (nốt cao nhất mỗi cú tay phải, bỏ nốt láy — như md đo "nốt đỉnh") rơi vào bậc nào so với gốc hợp âm (= khung nốt solo của
+  thầy). Số đo: Cà Pháo 37 chỗ đứng · 901 hợp âm · 7 619 nốt; Linh Nhi 27 · 1 187 · 7 121; Blues 11 · 1 312 · 11 361. Đo chậm (1,4 · 2,7 ·
+  3,4 s mỗi thầy) nên ghi sẵn JSON; test `thayNhac.test.ts` đo lại và so — bộ soạn đổi thì `TAO_THAY_NHAC=1 npx vitest run
+  src/thay/__tests__/thayNhac.test.ts`.
+- **Khung ba mức** như tab Chọn nốt theo thầy: chính = nốt hợp âm + nốt bộ soạn của thầy đánh từ 10 % trên hợp âm ấy; phụ = có đánh mà dưới
+  10 %; không = bộ soạn chưa đánh lần nào. Chỗ đứng đủ mẫu để học: đặt ≥ 3 lần và ≥ 20 nốt (Cà Pháo 32 · Linh Nhi 26 · Blues 11).
+- **Game nốt rơi** — nút "Màn quy tắc nhóm đuôi" (đã duyệt, giữ nguyên) + **Cà Pháo (thử) · Linh Nhi (thử) · Blues (thử)**. Màn = nhóm đuôi
+  của chính thầy (nhóm nhiều hợp âm trước) + Trộn: Cà Pháo 8 màn (Thứ màu Vm7 · IIm7 · IVm7 · Im7 · Im9 · VIm7 · IIIm7 · Hợp âm ba · Át V7 ·
+  V13 · ♭VII13 · Trưởng màu IVmaj7 · ♭VImaj7 · Imaj9 · Imaj7 · Iadd9 · Treo V9sus4 · V7sus4 · Vsus4 · ♭VIIsus4 · Giảm IIm7♭5 · I+); Linh Nhi
+  7 màn (Hợp âm ba 14 chỗ đứng đứng đầu · V7 · sus4 · II° / IIm7♭5 · m7 · ♭VImaj7); Blues 4 màn (Át I13 · IV9 · V9 · ♭VI9 · ♭II7 · ♭III13 ·
+  Thứ màu Im9 · Im6 · V7♯9). Viên: hợp âm đúng loại và bậc thầy hay đặt (vd "Gm7 · Vm7 · giọng C thứ"); bấm đủ nốt chính của thầy; nốt thầy
+  không đánh là sai; nốt thầy đánh ít không tính. Bảng "Thầy chọn nốt thế nào": số đo bộ soạn từng chỗ đứng + số trên sheet (md) để so.
+- **Game chạy ngón** — hai phần đã duyệt + **3 · Cà Pháo (thử) · 4 · Linh Nhi (thử) · 5 · Blues (thử)**. Mỗi nút hai cách học:
+  - *Học theo nhóm đuôi của thầy* — như phần 1 (Nốt chính · Chạy câu · Chồng hai tay), màn = nhóm đuôi của thầy, chấm theo khung thầy (lời
+    báo "Cà Pháo không đánh nốt này"); mục Xem kỹ ghi số đo bộ soạn + số trên sheet.
+  - *Nghe – đáp trên vòng thầy chọn* — bộ soạn tự chọn vòng và soạn câu (vd Cà Pháo "C · Fmaj7 · G · G · G · Dm7 · G9sus4 · G7", Linh Nhi
+    "C · Am · Dm · Em · Dsus4 · C · G", Blues 12 ô "C13 C13 C13 C13 · F9 F9 C13 C13 · G9 F9 C13 G9"); lượt thầy máy đánh hai tay (phím tay phải
+    sáng câu thầy), lượt bạn đáp trên tay trái; ô dài ngắn theo vòng thầy (máy rơi theo nền nay nhận ô không đều); chấm phách 1 theo khung
+    thầy ở chỗ đứng ấy (`vaiThayTrenKhung`; chưa đo thì khung lý thuyết); ★ nốt thầy vào ô; Đổi câu = vòng mới, đếm vào lại, giữ điểm; chọn
+    Dạo / Giang tấu / Kết, giọng, ♩; bên thi 20 ô lượt bạn.
+- **Sửa trong lúc làm:** câu kết Blues giọng thứ có hợp âm chót "Am6/9" mà bộ đọc hợp âm của app không đọc → 24/24 câu kết thứ bị bỏ khi đo
+  và không chạy được; nay đọc m6/9 thành m6 (giữ bậc 6; md Blues ghi hợp âm chót im6/9 là Claude suy). Lần đo tạm đầu đặt hợp âm "dẫn về"
+  của Cà Pháo ở giọng thứ sai gốc (F♯m thay Am) — sửa trước khi ghi JSON.
+- Tab **Nốt rơi cũ (câu thầy)** vẫn giữ — người dùng: xoá khi bản có thầy được duyệt.
+
+**Cơ sở / chưa đo — lỗ còn lại:** khung đo trên BỘ SOẠN, không đo lại sheet — bộ soạn Cà Pháo lượt 4 dùng màu 9 · 11 · 13 ở phách ít hơn
+sheet (md: bậc 9 đúng phách sheet 16 %, lượt 4 3–11 %), nên khung Cà Pháo nghiêng về nốt hợp âm hơn sheet; Bộ Soạn Blues lượt 6 người dùng
+chấm giai điệu 6/10; màu hợp âm Blues là biên soạn trên số đo 7e; mốc 10 % và ≥ 3 lần / ≥ 20 nốt là Claude chọn. Chồng hai tay ở nút thầy
+vẫn dùng công thức chồng chung (chưa phải thế bấm riêng từng thầy — md có số đo thế bấm, chưa đưa vào). Phần nghe – đáp chép máy rơi theo nền
+của phần 2 (`ponytail:` trong mã). Người dùng chưa chơi.
+
+**Kiểm:** `tsc -b` sạch · eslint các file của lần này 0 lỗi · `thayNhac.test.ts` 4 (+1 bước ghi dữ liệu, bỏ qua khi chạy thường): JSON khớp bộ soạn
+hiện tại (đo lại cả ba thầy, 7,7 s); vốn hợp âm riêng — Cà Pháo có m7 · maj7 · 9sus4 · m7♭5, Linh Nhi hợp âm ba > 60 % số hợp âm, Blues có
+I13 · IV9 · V9; mọi màn × chỗ đứng × chủ âm tạo được câu, nốt hợp âm luôn chính, ba mức tách rời; chấm sai / ít / đúng, chọn câu không lặp ·
+`chayNgonRoi.test.ts` 13 (thêm: nút thầy mọi màn × chỗ đứng × 3 cách; chấm theo khung thầy, lời nói tên thầy; nốt thầy vào ô [tu, đến);
+bộ soạn 3 thầy tự chọn vòng ở mọi đoạn × Đô trưởng · La thứ · Sol trưởng, khung đọc đủ — test này bắt được lỗi Am6/9) · `mauKhung` 6 ·
+`khungNot` 7 · `hocSolo` 29 · toàn suite (giới hạn 20 s mỗi test): 2 794 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua · chạy thử
+headless 36/36 (Game nốt rơi: 4 nút, không còn nút gộp; màn từng thầy là nhóm đuôi của thầy; viên "Gm7 · Vm7 · giọng C thứ · 4 nốt chính
+của Cà Pháo"; nốt thầy không đánh báo sai; đủ nốt chính → Đúng +10; bảng số đo bộ soạn; Blues thi; trở về màn quy tắc · Game chạy ngón: 2
+phần + 3 nút thầy, không còn nút gộp; học nhóm đuôi Cà Pháo — nốt không đánh báo "Cà Pháo không đánh nốt này", đủ nốt chính Đúng +10; nghe –
+đáp: vòng hiện ra đúng vòng bộ soạn tự chọn, lượt đầu LƯỢT CÀ PHÁO, phím tay phải sáng câu thầy, vào ô bằng nốt gốc Đạt 2/2 trên ô 8 phách,
+im → Trượt; Đổi câu ra vòng mới; Linh Nhi · Blues tự chọn vòng và chạy; Blues Kết giọng thứ chạy được; thi "Ô bạn 1/20"; rời tab tắt nền;
+điện thoại không cuộn ngang) · kịch bản cũ: Game chạy ngón phần 1–2 40/40 (hai lượt), Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`,
+`Nguon.json` không đổi.

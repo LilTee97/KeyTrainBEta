@@ -5,7 +5,6 @@ import { docHop } from '../soanCau/thayTrongVong'
 import type { CauRoi } from '../useMuaRoi'
 import { GOC } from '../vongThay'
 import type { ThayChay } from './cauThay'
-import { mucThay, notTrenHop, type HopHoc, type LoaiHop } from './chonNot'
 import {
   chongDuoi,
   congThucCua,
@@ -22,6 +21,7 @@ import {
   type NotKhung,
 } from './khungNot'
 import { chonNang } from './mauKhung'
+import { khungCho, loiCho, loiSheet, manThay, tenCho, tenThayCua } from './thayNhac'
 
 /*
   GAME CHẠY NGÓN — hai phần làm thành game rơi như Game công thức. Người dùng 15/10/2026: "sao game chạy ngón ko làm giống game nốt rơi
@@ -34,6 +34,8 @@ import { chonNang } from './mauKhung'
   - Chạy câu: chạy liền từ 5 nốt trong khung, không đụng nốt không màu, dừng ở nốt chính (nốt ngân).
   - Chồng hai tay: giữ cùng lúc bass gốc thấp nhất + đủ nốt hợp âm (bỏ được 5; hợp âm 13 bỏ được 9), không nốt không màu.
   Phần 2 · solo trên vòng — nền chạy, tên hợp âm rơi khớp lúc đổi hợp âm; chấm phách 1 của mỗi ô: nốt giai điệu vào ô phải là nốt chính.
+  Nút thầy (thử, 15/10/2026 — người dùng: "3 nút riêng mang phong cách của từng thầy (từ hợp âm cho đến nốt solo)"): hợp âm và khung nốt
+  đo trên bộ soạn của thầy (`thayNhac.ts`); học theo nhóm đuôi của thầy, và nghe – đáp trên vòng bộ soạn của thầy tự chọn.
   Cơ sở: nốt giai điệu của SSA là nốt hợp âm hay nốt căng có trong tên ở 238/241 nốt (3 clip; nhãn do chính SSA ghi nên khớp sẵn phần
   nào). Luật "phách 1 là nốt chính", 5 nốt một câu, cụm 0,15 phách là của Claude — chưa đo trên tay người dùng.
 */
@@ -54,6 +56,10 @@ export interface CauNgon extends CauRoi {
   k: Khung
   /** Phím hé lộ dần bên luyện: nốt chính từ gốc đi lên, hay thế chồng hai tay. */
   lo: number[]
+  /** Vai từng phím theo khung của THẦY (nút thầy, đo trên bộ soạn) — không có thì theo khung lý thuyết. */
+  vai?: (m: number) => MucKhung
+  /** Tên thầy — lời báo nói "thầy không đánh" thay cho "không màu". */
+  thay?: string
 }
 
 const ngan = (gam: string) => gam.replace(/ \(.*\)$/, '')
@@ -125,8 +131,8 @@ export function chonCauNgon(
  * Chồng đủ: bass là gốc (nốt thấp nhất), đủ nốt hợp âm — bỏ được bậc 5, và bậc 9 của hợp âm 13 (như công thức C13 = 1 – 3 – ♭7 + Am) —
  * và không giữ nốt không màu nào.
  */
-export function duChong(giu: readonly number[], k: Khung): boolean {
-  if (giu.length < 3 || giu.some((m) => mucCua(k, m) === 'khong')) return false
+export function duChong(giu: readonly number[], k: Khung, vai: (m: number) => MucKhung = (x) => mucCua(k, x)): boolean {
+  if (giu.length < 3 || giu.some((m) => vai(m) === 'khong')) return false
   const lop = new Set(giu.map(pc))
   const can = k.quang.filter((iv) => iv !== 7 && !(iv === 2 && k.quang.includes(9) && k.quang.includes(10))).map((iv) => pc(k.goc + iv))
   return pc(Math.min(...giu)) === k.goc && can.every((p) => lop.has(p))
@@ -134,25 +140,94 @@ export function duChong(giu: readonly number[], k: Khung): boolean {
 
 export type KetQuaNot = { kq: 'dung' } | { kq: 'tiep'; daChay: number[] } | { kq: 'sai'; chu: string; daChay: number[] }
 
-/** Chấm một cú bấm của phần 1: `daChay` là nốt đã bấm đúng của viên, `giu` là nốt đang giữ (cách chồng hai tay). */
-export function chamNot(cach: CachChay, k: Khung, daChay: readonly number[], note: number, giu: readonly number[]): KetQuaNot {
+/**
+ * Chấm một cú bấm của phần 1: `daChay` là nốt đã bấm đúng của viên, `giu` là nốt đang giữ (cách chồng hai tay). `vai` mặc định là ba mức
+ * của khung lý thuyết; nút thầy truyền khung của thầy (`thay` = tên thầy, cho lời báo).
+ */
+export function chamNot(
+  cach: CachChay,
+  k: Khung,
+  daChay: readonly number[],
+  note: number,
+  giu: readonly number[],
+  vai: (m: number) => MucKhung = (x) => mucCua(k, x),
+  thay?: string,
+): KetQuaNot {
   const n = notCua(k, note)
   const ten = bo8(tenPhim(k, note))
-  if (!n || n.muc === 'khong')
+  const bac = n?.bac ?? tenBacKhung(pc(note - k.goc), k.quang)
+  const muc = vai(note)
+  if (muc === 'khong')
     return {
       kq: 'sai',
-      chu: `${ten} ${n ? `(${n.bac}) là nốt không màu` : 'nằm ngoài khung'} của ${k.ten} — đừng ngân.${cach === 'cau' ? ' Câu chạy lại từ đầu.' : ''}`,
+      chu: `${ten} (${bac}) ${thay ? `— ${thay} không đánh nốt này trên ${k.ten}` : `${n ? 'là nốt không màu' : 'nằm ngoài khung'} của ${k.ten} — đừng ngân`}.${cach === 'cau' ? ' Câu chạy lại từ đầu.' : ''}`,
       daChay: cach === 'cau' ? [] : [...daChay],
     }
-  if (cach === 'chong') return duChong(giu, k) ? { kq: 'dung' } : { kq: 'tiep', daChay: [...daChay] }
+  if (cach === 'chong') return duChong(giu, k, vai) ? { kq: 'dung' } : { kq: 'tiep', daChay: [...daChay] }
   if (cach === 'cau') {
     const moi = [...daChay, note]
-    return moi.length >= SO_NOT_CAU && n.muc === 'chinh' ? { kq: 'dung' } : { kq: 'tiep', daChay: moi }
+    return moi.length >= SO_NOT_CAU && muc === 'chinh' ? { kq: 'dung' } : { kq: 'tiep', daChay: moi }
   }
-  if (n.muc === 'phu')
-    return { kq: 'sai', chu: `${ten} (${n.bac}) là nốt phụ của ${k.ten} — đi qua được khi chạy câu, nhưng chưa phải nốt chính.`, daChay: [...daChay] }
-  const moi = daChay.some((m) => pc(m) === n.p) ? [...daChay] : [...daChay, note]
-  return k.not.every((x) => x.muc !== 'chinh' || moi.some((m) => pc(m) === x.p)) ? { kq: 'dung' } : { kq: 'tiep', daChay: moi }
+  if (muc === 'phu')
+    return {
+      kq: 'sai',
+      chu: thay
+        ? `${ten} (${bac}) — ${thay} có đánh nhưng ít (dưới 10 %), chưa phải nốt chính trên ${k.ten}.`
+        : `${ten} (${bac}) là nốt phụ của ${k.ten} — đi qua được khi chạy câu, nhưng chưa phải nốt chính.`,
+      daChay: [...daChay],
+    }
+  const moi = daChay.some((m) => pc(m) === pc(note)) ? [...daChay] : [...daChay, note]
+  const chinh = Array.from({ length: 12 }, (_, p) => p).filter((p) => vai(60 + p) === 'chinh')
+  return chinh.every((p) => moi.some((m) => pc(m) === p)) ? { kq: 'dung' } : { kq: 'tiep', daChay: moi }
+}
+
+/* ---------------- Nút thầy — học theo nhóm đuôi của thầy (thử) ---------------- */
+
+/** Câu nút thầy: hợp âm ở đúng chỗ đứng bộ soạn của thầy hay đặt; khung chính / phụ / không là của thầy (`thayNhac.ts`). */
+export function taoCauNgonThay(thay: ThayChay, mi: number, j: number, tonic: number, cach: CachChay): CauNgon {
+  const c = manThay(thay)[mi]!.cho[j]!
+  const k = khungCua(tonic, c.thu, { goc: c.goc, chat: c.duoi })
+  const kh = khungCho(c)
+  const vai = (m: number): MucKhung => {
+    const b = pc(m - k.goc)
+    return kh.chinh.includes(b) ? 'chinh' : kh.phu.includes(b) ? 'phu' : 'khong'
+  }
+  const ten = (b: number) => bo8(tenPhim(k, 60 + pc(k.goc + b)))
+  const tenT = tenThayCua(thay)
+  const chinh = [...kh.chinh].sort((a, b) => c.dem[b]! - c.dem[a]!)
+  const vaiChu = `${tenT} trên ${k.ten} (${tenCho(c)}): chính ${chinh.map(ten).join(' ')}${kh.phu.length ? ` · ít ${kh.phu.map(ten).join(' ')}` : ''}`
+  const lenChinh = kh.chinh.map((b) => 60 + k.goc + b).sort((a, b) => a - b)
+  const sheet = loiSheet(thay, c)
+  const chung = {
+    id: `${thay}${mi}:${j}`,
+    ten: k.ten,
+    g: k.goc,
+    k,
+    vai,
+    thay: tenT,
+    khungTen: `${tenCho(c)} · ${c.thu ? 'giọng thứ' : 'giọng trưởng'}`,
+    meo: `${loiCho(c)}.${sheet ? ` ${sheet}.` : ''}`,
+  }
+  if (cach === 'chong') {
+    const s = chongSsa(k)
+    return { ...chung, khungTen: s.ten, goiY: `đỉnh ${ten(chinh.find((b) => b !== 0) ?? 0)}`, lo: [...s.trai, ...s.phai], loi: `${k.ten} = ${s.ten}. ${vaiChu}.` }
+  }
+  if (cach === 'cau') return { ...chung, goiY: `dừng ở nốt chính của ${tenT}`, lo: lenChinh, loi: `${vaiChu}.` }
+  return { ...chung, goiY: `${kh.chinh.length} nốt chính của ${tenT}`, lo: lenChinh, loi: `${vaiChu}.` }
+}
+
+/** Câu kế của màn thầy `mi` (chỗ đứng vừa sai quay lại nhiều hơn), chủ âm ngẫu nhiên trong `goc`. */
+export function chonCauNgonThay(
+  thay: ThayChay,
+  mi: number,
+  goc: readonly number[],
+  sai: ReadonlyMap<string, number>,
+  truoc: string | null,
+  cach: CachChay,
+  rand: () => number = Math.random,
+): CauNgon {
+  const id = chonNang(manThay(thay)[mi]!.cho.map((_, j) => `${thay}${mi}:${j}`), sai, truoc, rand)
+  return taoCauNgonThay(thay, mi, Number(id.split(':')[1]), goc[Math.floor(rand() * goc.length)]!, cach)
 }
 
 /* ---------------- Phần 2 — solo trên vòng ---------------- */
@@ -200,31 +275,10 @@ export function chamO(k: Khung, m: number | null, giu = false, vai: (m: number) 
   return { dat: false, chu: `${ten} ${n ? `(${bac}) không màu` : 'ngoài khung'} trên ${k.ten} — phách mạnh đặt nốt chính: ${chinh}.` }
 }
 
-/* ---------------- Phần 3 — nghe – đáp thầy (thử) ---------------- */
+/* ---------------- Nút thầy — nghe – đáp trên vòng thầy chọn (thử) ---------------- */
 
-/** Hợp âm của khung đổi sang hợp âm của tab Chọn nốt theo thầy: loại theo bậc 3 · 7 (treo có ♭7 tính át), gốc tính từ chủ âm. */
-function hopHocCua(k: Khung, tonic: number): HopHoc {
-  const q = k.quang
-  const loai: LoaiHop = q.includes(4) ? (q.includes(10) ? 'at' : 'truong') : q.includes(3) ? (q.includes(6) && !q.includes(7) ? 'giam' : 'thu') : q.includes(10) ? 'at' : 'truong'
-  return { goc: pc(k.goc - tonic), chat: '', loai, laMa: '' }
-}
-
-/**
- * Vai một nốt theo thầy trên khung `k`: chính = nốt chính của khung (nốt hợp âm, kể cả nốt màu trong tên) hay nốt đậm của thầy (`mucThay`:
- * nốt hợp âm hay thầy dùng từ 10 %); còn lại theo ba mức của thầy — mờ là phụ, không màu là không màu. Blues: nốt blue là mờ chứ không
- * phải không màu, như tab Chọn nốt theo thầy.
- */
-export function vaiThay(k: Khung, thay: ThayChay, tonic: number, thu: boolean): (m: number) => MucKhung {
-  const nots = notTrenHop(thay, hopHocCua(k, tonic), thu)
-  return (m) => {
-    if (mucCua(k, m) === 'chinh') return 'chinh'
-    const muc = mucThay(nots[pc(m - k.goc)]!)
-    return muc === 'dam' ? 'chinh' : muc === 'mo' ? 'phu' : 'khong'
-  }
-}
-
-/** Nốt thầy vào ô `j` (ô `o` phách) của câu `su`: nốt cao nhất của cú tay phải đầu tiên trong ô (cho sớm `som` phách), bỏ nốt láy. */
-export function notThayVao(su: readonly TimelineEvent[], j: number, o: number, som = 0.25): number | null {
-  const e = su.find((x) => x.hand === 'right' && !x.grace && x.notes.length > 0 && x.startBeat >= j * o - som && x.startBeat < (j + 1) * o - som)
+/** Nốt thầy vào ô [`tu`, `den`) phách của câu `su`: nốt cao nhất của cú tay phải đầu tiên trong ô (cho sớm `som` phách), bỏ nốt láy. */
+export function notThayVao(su: readonly TimelineEvent[], tu: number, den: number, som = 0.25): number | null {
+  const e = su.find((x) => x.hand === 'right' && !x.grace && x.notes.length > 0 && x.startBeat >= tu - som && x.startBeat < den - som)
   return e ? Math.max(...e.notes) : null
 }

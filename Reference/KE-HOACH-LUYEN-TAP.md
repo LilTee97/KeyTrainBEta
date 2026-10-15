@@ -533,6 +533,8 @@ Các hợp âm phải được chọn tự do …"*
   có câu 3 thầy — người dùng: giữ tới khi duyệt bản có thầy.
   Cập nhật 15/10 (người dùng): hai nút thử đưa 3 thầy vào game — Game nốt rơi "Màn thầy (thử)" (bấm đủ nốt chính của thầy trên hợp âm
   của giọng, số đo tab Chọn nốt theo thầy) · Game chạy ngón "3 · Nghe – đáp thầy (thử)" (lượt thầy đánh câu của bộ soạn, lượt bạn đáp).
+  Cập nhật 15/10 (người dùng bác bản gộp): MỖI THẦY MỘT NÚT RIÊNG ở cả hai game — hợp âm (loại + bậc) và khung nốt đo trên bộ soạn của thầy
+  (`thayNhac.ts`); học theo nhóm đuôi của thầy; Game chạy ngón thêm nghe – đáp trên vòng bộ soạn của thầy tự chọn.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
