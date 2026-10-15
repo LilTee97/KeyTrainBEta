@@ -4,8 +4,8 @@ import { GameChayNgonRoi } from './GameChayNgonRoi'
 import { GameKhungRoi } from './GameKhungRoi'
 import { GameNotRoi, GameScale } from './GameSolo'
 import { BanPhimMau } from './hocSolo/BanPhimMau'
-import { NEN, type Muc } from './hocSolo/mauPhim'
-import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, notTrenHop, phanBo, tenChu, THAY_HOC, VAI, type NotHoc, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
+import { NEN } from './hocSolo/mauPhim'
+import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, mucThay, notTrenHop, phanBo, tenChu, THAY_HOC, VAI, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
 import { PHAN_TICH_THAY, type MucThay, type PhanTichThay } from './hocSolo/meoThay'
 import { ARP, GAM, ngonArp, ngonGam, tenNot, type LoaiArp, type LoaiGam, type Tay } from './hocSolo/gamNgon'
 import { nguCanh } from './soanCau/giaiThich'
@@ -40,8 +40,7 @@ const nut = (on: boolean) =>
 const the = 'rounded-xl border border-line bg-black/25 p-4 text-sm'
 const pc = (x: number) => ((x % 12) + 12) % 12
 
-const mucCua = (x: NotHoc): Muc =>
-  x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
+const mucCua = mucThay
 
 const ngheNot = async (ds: readonly number[], giay = 0.32) => {
   await startAudio()

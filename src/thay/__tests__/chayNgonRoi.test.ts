@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { chamNot, chamO, chonCauNgon, chongSsa, duChong, khungVong, MAN_NGON, notVaoO, SO_NOT_CAU, taoCauNgon } from '../hocSolo/chayNgonRoi'
+import type { TimelineEvent } from '../../reharm/style/types'
+import { baiCauThay, THAY_CHAY } from '../hocSolo/cauThay'
+import { chamNot, chamO, chonCauNgon, chongSsa, duChong, khungVong, MAN_NGON, notThayVao, notVaoO, SO_NOT_CAU, taoCauNgon, vaiThay } from '../hocSolo/chayNgonRoi'
 import { khungLoai, LOAI_KHUNG, mucCua, VONG_KHUNG } from '../hocSolo/khungNot'
+import { vongLyThuyetHop } from '../soanCau/thayTrongVong'
 
 const loai = (id: string) => LOAI_KHUNG.find((l) => l.id === id)!
 
@@ -94,4 +97,40 @@ describe('Game chạy ngón rơi — phần 2 solo trên vòng', () => {
     expect(chamO(cmaj9!, null).dat).toBe(false)
     expect(chamO(cmaj9!, 67, true).chu).toContain('nốt chung')
   })
+})
+
+describe('Game chạy ngón rơi — phần 3 nghe – đáp thầy', () => {
+  it('vai theo thầy: Cà Pháo trên Đô (I, Đô trưởng) — Rê (9, 15 %) và La (13, 10 %) thành chính; Fa (5 %) phụ; Đô♯ không màu', () => {
+    const [c] = khungVong('C', 0, false)
+    const vai = vaiThay(c!, 'ca-phao', 0, false)
+    expect([vai(62), vai(69), vai(65), vai(61)]).toEqual(['chinh', 'chinh', 'phu', 'khong'])
+    expect(chamO(c!, 62).dat).toBe(false) // theo khung, Rê là nốt phụ của hợp âm ba Đô
+    expect(chamO(c!, 62, false, vai).dat).toBe(true)
+    expect(chamO(c!, 62, false, vai).chu).toContain('nốt thầy hay đánh')
+  })
+  it('vai theo thầy Blues: nốt blue E♭ trên C7 (I7, Đô trưởng) là phụ (mờ) chứ không phải không màu như theo khung', () => {
+    const [c7] = khungVong('C7', 0, false)
+    expect(mucCua(c7!, 63)).toBe('khong')
+    expect(vaiThay(c7!, 'blues', 0, false)(63)).toBe('phu')
+  })
+  it('nốt thầy vào ô: nốt cao nhất của cú tay phải đầu tiên trong ô, bỏ nốt láy, cho sớm 0,25 phách', () => {
+    const su = [
+      { notes: [48], startBeat: 0, durationBeats: 4, hand: 'left', velocity: 60 },
+      { notes: [71], startBeat: 3.8, durationBeats: 0.1, hand: 'right', velocity: 60, grace: true },
+      { notes: [64, 72], startBeat: 3.9, durationBeats: 1, hand: 'right', velocity: 60 },
+      { notes: [74], startBeat: 5, durationBeats: 1, hand: 'right', velocity: 60 },
+    ] as TimelineEvent[]
+    expect(notThayVao(su, 1, 4)).toBe(72)
+    expect(notThayVao(su, 0, 4)).toBe(null)
+  })
+  it('bộ soạn của 3 thầy soạn được câu trên vòng có sẵn đầu tiên (Đô trưởng · La thứ); khung đọc đủ mọi ô của lượt', () => {
+    for (const t of THAY_CHAY)
+      for (const [tonic, thu] of [[0, false], [9, true]] as const) {
+        const v = vongLyThuyetHop(tonic, thu)[0]!
+        const bai = baiCauThay(t.id, v.hop, tonic, thu, 0, v.id)
+        expect(bai, `${t.ten} ${v.ten}`).not.toBeNull()
+        const ks = khungVong(bai!.perBeat.filter((_, x) => x % bai!.beatsPerChord === 0).join(' '), tonic, thu)
+        expect(ks.length * bai!.beatsPerChord, `${t.ten} ${v.ten}`).toBe(bai!.perBeat.length)
+      }
+  }, 30000)
 })

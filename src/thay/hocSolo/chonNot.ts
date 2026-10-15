@@ -1,4 +1,5 @@
 import { nguCanh } from '../soanCau/giaiThich'
+import type { Muc } from './mauPhim'
 
 /*
   CHỌN NỐT TRÊN TỪNG HỢP ÂM — trang Học Solo. Người dùng 11/10/2026: "Bạn trong vai gia sư piano dạy cho tôi cách chọn nốt từ mỗi hợp âm
@@ -163,6 +164,11 @@ export function notTrenHop(thay: ThayHoc, hop: HopHoc, thu: boolean): NotHoc[] {
     pct: p?.pct[iv] ?? null,
   }))
 }
+
+/** Ba mức của một nốt theo thầy (`mauPhim.ts`): đậm = nốt hợp âm hay thầy dùng từ 10 %; không màu = tránh / ngoài gam mà thầy không có số
+ *  đo đánh; còn lại mờ. Tab Chọn nốt theo thầy tô theo đây; màn thầy của Game nốt rơi chấm theo đây. */
+export const mucThay = (x: NotHoc): Muc =>
+  x.vai === 'khung' || (x.pct ?? 0) >= 10 ? 'dam' : (x.vai === 'tranh' || x.vai === 'ngoai') && !x.pct ? 'khong' : 'mo'
 
 /** Cảm giác nghe của từng nốt màu — lời gia sư. */
 const CAM_GIAC: Readonly<Record<string, string>> = {

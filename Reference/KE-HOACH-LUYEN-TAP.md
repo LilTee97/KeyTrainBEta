@@ -530,7 +530,9 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 15/10 (người dùng): nút thử "Game chạy ngón (thử)" — hai phần Game chạy ngón rơi như Game công thức (phần 1: nốt chính · chạy
   câu · chồng hai tay theo nhóm đuôi; phần 2: viên rơi khớp nền, phách 1 mỗi hợp âm đặt nốt chính). Duyệt đạt thì thay hẳn tab cũ.
   Cập nhật 15/10 (người dùng duyệt đạt): Game chạy ngón rơi thành tab chính, bỏ bản không rơi; tab Nốt rơi cũ (câu thầy) — game duy nhất
-  có câu 3 thầy — chờ người dùng quyết xoá hay giữ tới khi 3 thầy vào hai game mới.
+  có câu 3 thầy — người dùng: giữ tới khi duyệt bản có thầy.
+  Cập nhật 15/10 (người dùng): hai nút thử đưa 3 thầy vào game — Game nốt rơi "Màn thầy (thử)" (bấm đủ nốt chính của thầy trên hợp âm
+  của giọng, số đo tab Chọn nốt theo thầy) · Game chạy ngón "3 · Nghe – đáp thầy (thử)" (lượt thầy đánh câu của bộ soạn, lượt bạn đáp).
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác

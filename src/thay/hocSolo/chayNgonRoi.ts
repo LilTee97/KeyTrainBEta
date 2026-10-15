@@ -1,9 +1,26 @@
+import type { TimelineEvent } from '../../reharm/style/types'
 import { chongCongThuc, gocDep } from '../soanCau/chongHopAm'
 import { kieuGoc } from '../soanCau/meoChong'
 import { docHop } from '../soanCau/thayTrongVong'
 import type { CauRoi } from '../useMuaRoi'
 import { GOC } from '../vongThay'
-import { chongDuoi, congThucCua, khungCua, khungLoai, LOAI_KHUNG, mucCua, NHOM_KHUNG, notCua, tenPhim, type Khung, type NotKhung } from './khungNot'
+import type { ThayChay } from './cauThay'
+import { mucThay, notTrenHop, type HopHoc, type LoaiHop } from './chonNot'
+import {
+  chongDuoi,
+  congThucCua,
+  khungCua,
+  khungLoai,
+  LOAI_KHUNG,
+  mucCua,
+  NHOM_KHUNG,
+  notCua,
+  tenBacKhung,
+  tenPhim,
+  type Khung,
+  type MucKhung,
+  type NotKhung,
+} from './khungNot'
 import { chonNang } from './mauKhung'
 
 /*
@@ -163,13 +180,51 @@ export function notVaoO(bam: readonly { m: number; b: number }[], giu: readonly 
   return giu.length ? { m: Math.max(...giu), giu: true } : { m: null, giu: false }
 }
 
-/** Chấm phách 1 của một ô: đạt khi nốt giai điệu vào ô là nốt chính của hợp âm đang vang. */
-export function chamO(k: Khung, m: number | null, giu = false): { dat: boolean; chu: string } {
-  const chinh = tenDs(k.not.filter((n) => n.muc === 'chinh'))
+/**
+ * Chấm phách 1 của một ô: đạt khi nốt giai điệu vào ô là nốt chính của hợp âm đang vang. `vai` mặc định là ba mức của khung; phần nghe –
+ * đáp thầy truyền `vaiThay` (tính thêm nốt thầy hay đánh).
+ */
+export function chamO(k: Khung, m: number | null, giu = false, vai: (m: number) => MucKhung = (x) => mucCua(k, x)): { dat: boolean; chu: string } {
+  const chinh = Array.from({ length: 12 }, (_, iv) => 60 + pc(k.goc + iv))
+    .filter((x) => vai(x) === 'chinh')
+    .map((x) => bo8(tenPhim(k, x)))
+    .join(' ')
   if (m === null) return { dat: false, chu: `Trượt ${k.ten} — phách 1 chưa có nốt. Vào ô bằng một nốt chính: ${chinh}.` }
   const n = notCua(k, m)
   const ten = bo8(tenPhim(k, m))
-  if (n?.muc === 'chinh') return { dat: true, chu: `${ten} (${n.bac}) — nốt chính vào ${k.ten}${giu ? ', giữ từ hợp âm trước (nốt chung)' : ''}.` }
-  if (n?.muc === 'phu') return { dat: false, chu: `${ten} (${n.bac}) là nốt phụ ở phách 1 của ${k.ten} — phách mạnh đặt nốt chính: ${chinh}.` }
-  return { dat: false, chu: `${ten} ${n ? `(${n.bac}) không màu` : 'ngoài khung'} trên ${k.ten} — phách mạnh đặt nốt chính: ${chinh}.` }
+  const bac = n?.bac ?? tenBacKhung(pc(m - k.goc), k.quang)
+  const v = vai(m)
+  if (v === 'chinh')
+    return { dat: true, chu: `${ten} (${bac}) — ${n?.muc === 'chinh' ? 'nốt chính' : 'nốt thầy hay đánh'} vào ${k.ten}${giu ? ', giữ từ hợp âm trước (nốt chung)' : ''}.` }
+  if (v === 'phu') return { dat: false, chu: `${ten} (${bac}) là nốt phụ ở phách 1 của ${k.ten} — phách mạnh đặt nốt chính: ${chinh}.` }
+  return { dat: false, chu: `${ten} ${n ? `(${bac}) không màu` : 'ngoài khung'} trên ${k.ten} — phách mạnh đặt nốt chính: ${chinh}.` }
+}
+
+/* ---------------- Phần 3 — nghe – đáp thầy (thử) ---------------- */
+
+/** Hợp âm của khung đổi sang hợp âm của tab Chọn nốt theo thầy: loại theo bậc 3 · 7 (treo có ♭7 tính át), gốc tính từ chủ âm. */
+function hopHocCua(k: Khung, tonic: number): HopHoc {
+  const q = k.quang
+  const loai: LoaiHop = q.includes(4) ? (q.includes(10) ? 'at' : 'truong') : q.includes(3) ? (q.includes(6) && !q.includes(7) ? 'giam' : 'thu') : q.includes(10) ? 'at' : 'truong'
+  return { goc: pc(k.goc - tonic), chat: '', loai, laMa: '' }
+}
+
+/**
+ * Vai một nốt theo thầy trên khung `k`: chính = nốt chính của khung (nốt hợp âm, kể cả nốt màu trong tên) hay nốt đậm của thầy (`mucThay`:
+ * nốt hợp âm hay thầy dùng từ 10 %); còn lại theo ba mức của thầy — mờ là phụ, không màu là không màu. Blues: nốt blue là mờ chứ không
+ * phải không màu, như tab Chọn nốt theo thầy.
+ */
+export function vaiThay(k: Khung, thay: ThayChay, tonic: number, thu: boolean): (m: number) => MucKhung {
+  const nots = notTrenHop(thay, hopHocCua(k, tonic), thu)
+  return (m) => {
+    if (mucCua(k, m) === 'chinh') return 'chinh'
+    const muc = mucThay(nots[pc(m - k.goc)]!)
+    return muc === 'dam' ? 'chinh' : muc === 'mo' ? 'phu' : 'khong'
+  }
+}
+
+/** Nốt thầy vào ô `j` (ô `o` phách) của câu `su`: nốt cao nhất của cú tay phải đầu tiên trong ô (cho sớm `som` phách), bỏ nốt láy. */
+export function notThayVao(su: readonly TimelineEvent[], j: number, o: number, som = 0.25): number | null {
+  const e = su.find((x) => x.hand === 'right' && !x.grace && x.notes.length > 0 && x.startBeat >= j * o - som && x.startBeat < (j + 1) * o - som)
+  return e ? Math.max(...e.notes) : null
 }

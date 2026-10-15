@@ -7012,3 +7012,43 @@ rơi và game chạy ngón mới để tôi học chưa"*.
 `hocSolo.test.ts` 29 · toàn suite (giới hạn 20 s mỗi test): 2 786 qua / 5 đỏ (5 đỏ cũ) · `vite build` qua · chạy thử headless trên tab
 chính 40/40, hai lượt (chỉ còn một tab "Game chạy ngón", không còn nút thử; màn chọn phần 2 có "Bí quyết rải ngón của anh SSA"; 39 mục còn
 lại như lần thử) · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Đưa 3 thầy vào hai game mới: Game nốt rơi "Màn thầy (thử)" · Game chạy ngón "3 · Nghe – đáp thầy (thử)" (15/10/2026)
+
+**Người dùng:** *"Bạn có đưa 3 thầy vào game nốt rơi và game chạy ngón mới để tôi học chưa"* — Claude trả lời chưa (hai game chấm theo
+khung lý thuyết; chỉ một dòng "Các thầy trong app" ở mục Xem kỹ), nêu giới hạn số đo thầy (chia theo loại hợp âm của giọng, không theo
+từng loại màu; át Cà Pháo n=66, Linh Nhi n=93; Blues thứ n=49 / 35) rồi hỏi. Người dùng chọn: **giữ tab Nốt rơi cũ (câu thầy) tới khi có
+thầy**; đưa thầy vào **Chạy ngón phần nghe – đáp** và **Game nốt rơi màn thầy**, mỗi chỗ một nút thử riêng.
+
+- **Game nốt rơi → nút "Màn thầy (thử) — Cà Pháo · Linh Nhi · Blues"** (cạnh "Màn quy tắc nhóm đuôi", màn quy tắc giữ nguyên; logic
+  `src/thay/hocSolo/mauThay.ts`). 6 màn: mỗi thầy × giọng trưởng / thứ; hợp âm của giọng rơi (I ii iii IV V7 vi · i ♭III iv V7 ♭VI ♭VII;
+  Blues I7 IV7 V7 · i V7 — hợp âm chưa có số đo của thầy bỏ khỏi màn). Việc: bấm đủ nốt CHÍNH của thầy trên hợp âm ấy — đúng ba mức của
+  tab Chọn nốt theo thầy (`mucThay`, dời từ `HocSoloPage.tsx` sang `chonNot.ts` để dùng chung): chính = nốt hợp âm hay nốt thầy dùng từ
+  10 %; nốt không màu (thầy không đánh) là sai; nốt mờ (dùng được) không tính, không sai. Ví dụ Cà Pháo trên Đô (I): chính Đô Rê Mi Sol
+  La Si (3 · 5 · 9 · 7 · 1 · 13, từ 10 %), Fa 5 % chỉ mờ. Viên bên luyện ghi bậc · giọng · số nốt chính; phím nốt chính sáng dần quá 60 %;
+  bảng "Thầy chọn nốt thế nào" (lời và cơ sở của thầy). Màn thầy chỉ chạy nốt (chưa có bốn nút chọn). Kỷ lục riêng (`thay|…`).
+- **Game chạy ngón → nút "3 · Nghe – đáp thầy (thử)"** (cạnh hai phần đã duyệt). Chọn thầy · giọng · ♩ · vòng (vòng lý thuyết như game
+  câu thầy cũ, hay tự điền). Nền chạy theo vòng; **lượt thầy** máy đánh cả câu — câu do ĐÚNG bộ soạn của game câu thầy soạn trên vòng
+  (`baiCauThay`: Cà Pháo ballad, Linh Nhi slow rock, Blues lượt 6 — bộ người dùng đã duyệt câu) — phím tay phải sáng câu thầy, tay trái
+  sáng nền; **lượt bạn** chỉ nền, bạn đáp. Viên rơi khớp nhịp như phần 2 (ghi "Cà Pháo đánh · vào ô: A (5)" / "Bạn đáp · ★ A (5) như
+  thầy"). Chấm ô lượt bạn: phách 1 đặt nốt chính — tính cả nốt thầy hay đánh (`vaiThay`: nốt chính của khung ∪ nốt đậm của thầy; Blues:
+  nốt blue là phụ chứ không phải không màu); trùng nốt thầy vào ô thì ghi thêm. Bên luyện: viền cam là các nốt thầy đã đánh trên hợp âm
+  ấy ở lượt trước. "Đổi câu" lấy câu mới cho lượt thầy kế. Bên thi: 20 ô lượt bạn, đạt từ 16.
+- Phần chấm phách 1 (`chamO`) nhận thêm hàm vai — phần 2 vẫn chấm theo khung như cũ.
+- **Tab Nốt rơi cũ (câu thầy) chưa xoá** — người dùng: giữ tới khi duyệt bản có thầy.
+
+**Cơ sở / chưa đo — lỗ còn lại:** số đo thầy chia theo LOẠI hợp âm (trưởng · thứ · át), không theo bậc — nốt ≥ 10 % mà ra ngoài gam ở bậc
+ấy (vd maj7 của ♭VII giọng thứ) vẫn tính chính như tab Chọn nốt; Linh Nhi giọng trưởng chỉ ghi ba bậc đầu (md không ghi các bậc còn lại)
+→ chính chỉ là ba nốt trụ. Phần nghe – đáp: máy rơi theo nền chép từ phần 2 (`ponytail:` ghi trong mã — duyệt đạt thì gộp một hook);
+luật phách 1 và mốc 0,25 / 0,15 phách như phần 2 (Claude chọn, chưa đo trên tay người dùng). Người dùng chưa chơi.
+
+**Kiểm:** `tsc -b` sạch · eslint các file của lần này 0 lỗi · `mauThay.test.ts` 5 (6 màn, mỗi màn ≥ 2 hợp âm có số đo; mọi hợp âm × 12 chủ âm: ≥ 3
+nốt chính có gốc, chính và tránh không chung nốt; Cà Pháo trên Đô: chính Đô Rê Mi Sol La Si, Fa chỉ mờ; Linh Nhi trên Đô: chính ba nốt
+trụ, Fa không màu; chấm sai / mờ / đúng; chọn câu không lặp) · `chayNgonRoi.test.ts` 13 (thêm 4: vai theo thầy Cà Pháo — Rê, La thành
+chính, khung thì Rê là phụ; Blues — nốt blue E♭ trên C7 là phụ; nốt thầy vào ô bỏ nốt láy, cho sớm 0,25 phách; bộ soạn 3 thầy soạn được
+câu trên vòng có sẵn Đô trưởng · La thứ, khung đọc đủ ô) · toàn suite (giới hạn 20 s mỗi test): 2 795 qua / 5 đỏ (5 đỏ cũ) · `vite build`
+qua · chạy thử headless 29/29 (màn quy tắc vẫn mặc định; màn thầy 6 màn, viên ghi bậc · giọng · số nốt chính; nốt mờ "chưa tính", nốt
+thầy không đánh báo sai; đủ nốt chính Cà Pháo → Đúng +10; bảng lời thầy; thi tính sai lần đầu; nghe – đáp: nền chạy, lượt đầu "LƯỢT CÀ
+PHÁO", phím tay phải sáng câu thầy, lượt bạn viên ghi ★ nốt thầy, vào ô bằng nốt gốc Đạt 2/2, im → Trượt; Đổi câu; Linh Nhi · Blues soạn
+được câu và chạy; thi "Ô bạn 1/20"; rời tab tắt nền; điện thoại không cuộn ngang) · kịch bản cũ: Game chạy ngón phần 1–2 40/40 (hai lượt),
+Game nốt rơi màn quy tắc 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.

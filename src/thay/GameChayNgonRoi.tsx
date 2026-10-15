@@ -7,12 +7,29 @@ import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKey
 import type { MidiNote } from '../shared/musicTheory/types'
 import { BanPhimHaiTay, type NhanHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi, type VienRoi } from './GameChong'
-import { chamNot, chamO, chonCauNgon, khungVong, MAN_NGON, notVaoO, SO_NOT_CAU, type CachChay, type CauNgon } from './hocSolo/chayNgonRoi'
-import { chongDuoi, goiYDinh, LOAI_KHUNG, mucCua, nenVong, SSA, tenPhim, VONG_KHUNG, type Khung, type MucKhung, type NhomKhung } from './hocSolo/khungNot'
-import { tenBam } from './soanCau/chongHopAm'
+import { baiCauThay, loiBoSoan, THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
+import { chamNot, chamO, chonCauNgon, khungVong, MAN_NGON, notThayVao, notVaoO, SO_NOT_CAU, vaiThay, type CachChay, type CauNgon } from './hocSolo/chayNgonRoi'
+import type { BaiChay } from './hocSolo/gamNgon'
+import {
+  chongDuoi,
+  goiYDinh,
+  LOAI_KHUNG,
+  mucCua,
+  nenVong,
+  notCua,
+  SSA,
+  tenBacKhung,
+  tenPhim,
+  VONG_KHUNG,
+  type Khung,
+  type MucKhung,
+  type NhomKhung,
+} from './hocSolo/khungNot'
+import { gocDep, tenBam } from './soanCau/chongHopAm'
 import { doanGiong } from './soanCau/doTaiHoaAm'
 import { DAT_THI, diemCau, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
-import { docHop } from './soanCau/thayTrongVong'
+import { nguCanh, type Hop } from './soanCau/giaiThich'
+import { docHop, docVong, vongLyThuyetHop } from './soanCau/thayTrongVong'
 import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRoi'
 import { GOC } from './vongThay'
 
@@ -48,10 +65,12 @@ const ngheHop = async (ds: readonly number[]) => {
 const kyLucChu = (r: { tot: number } | undefined) =>
   r ? (r.tot >= DAT_THI ? `Đạt ✓ ${r.tot}/${SO_CAU_THI}` : `chưa đạt · tốt nhất ${r.tot}/${SO_CAU_THI}`) : 'chưa thi'
 
-type Phan = 'lam-quen' | 'solo'
+type Phan = 'lam-quen' | 'solo' | 'dap-thay'
 const PHAN: readonly { id: Phan; ten: string; mo: string }[] = [
   { id: 'lam-quen', ten: '1 · Làm quen loại hợp âm', mo: 'tên hợp âm rơi — bấm nốt chính, chạy câu trong khung, hay chồng hai tay như anh SSA' },
   { id: 'solo', ten: '2 · Solo trên vòng kiểu SSA', mo: 'nền chạy theo vòng, hợp âm rơi khớp nhịp — phách 1 mỗi hợp âm đặt một nốt chính' },
+  // Nút thử (15/10/2026): nghe – đáp thầy — duyệt đạt thì bỏ chữ "(thử)".
+  { id: 'dap-thay', ten: '3 · Nghe – đáp thầy (thử)', mo: 'thầy đánh một lượt trên nền, bạn đáp lượt sau — câu do bộ soạn của Cà Pháo · Linh Nhi · Blues soạn' },
 ]
 const MOC_MAC_DINH: Readonly<Record<Ben, number>> = { meo: 20, thi: 14 }
 const GOC_TEN: readonly { id: GocChoi; ten: string }[] = [
@@ -210,7 +229,7 @@ function DauTrang({ phan, doi }: { phan: Phan; doi: (p: Phan) => void }) {
   return (
     <>
       <h4 className="text-lg font-semibold text-cream">Game chạy ngón — rơi như Game công thức</h4>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-3">
         {PHAN.map((p) => (
           <button
             key={p.id}
@@ -895,10 +914,527 @@ function SoloRoi({ dau }: { dau: ReactNode }) {
   )
 }
 
+/* ---------------- Phần 3 — nghe – đáp thầy (thử) ---------------- */
+
+interface VienDap extends VienRoi {
+  i: number
+  k: Khung
+  xong: boolean
+  /** Ô của lượt bạn (lượt lẻ) — chỉ ô này được chấm. */
+  ban: boolean
+}
+interface VongDap {
+  id: string
+  ten: string
+  hop: Hop[]
+}
+/** Dấu vân tay tay phải — "Đổi câu" bỏ qua lượt ra đúng câu cũ (như game câu thầy cũ). */
+const vanTay = (bai: BaiChay | null) =>
+  bai
+    ? bai.timeline
+        .filter((e) => e.hand === 'right')
+        .map((e) => `${e.startBeat}:${e.notes.join('.')}`)
+        .join(' ')
+    : ''
+
+/*
+  NGHE – ĐÁP THẦY (nút thử, 15/10/2026 — người dùng chọn "Chạy ngón 2: nghe-đáp thầy"): nền + câu của thầy do bộ soạn của thầy soạn trên
+  vòng (`baiCauThay` — đúng bộ của game câu thầy, người dùng đã duyệt câu); lượt chẵn máy đánh cả câu, lượt lẻ chỉ nền để bạn đáp. Viên
+  rơi khớp nhịp như phần 2; chỉ ô lượt bạn được chấm: phách 1 đặt nốt chính — tính thêm nốt thầy hay đánh (`vaiThay`). ★ là nốt thầy vào
+  ô ở lượt trước. Duyệt đạt thì bỏ chữ "(thử)"; khi ấy mới xoá tab Nốt rơi cũ (câu thầy) — người dùng 15/10: giữ tới khi có thầy.
+  ponytail: máy rơi theo nền chép từ SoloRoi (đếm vào, sinh / chấm / bỏ viên) — duyệt đạt thì gộp hai bản thành một hook chung.
+*/
+function DapThayRoi({ dau }: { dau: ReactNode }) {
+  const [kyLuc, setKyLuc] = useState(() => docKyLuc(KHO))
+  const [ben, setBen] = useState<Ben>('meo')
+  const [thay, setThay] = useState<ThayChay>('ca-phao')
+  const [tonic, setTonic] = useState(0)
+  const [thu, setThu] = useState(false)
+  const [bpm, setBpm] = useState<number>(60)
+  const [go, setGo] = useState('')
+  const [baoGo, setBaoGo] = useState('')
+  /** Vòng tự điền — giữ chữ, đọc lại theo chủ âm đang chọn (hợp âm giữ nguyên khi đổi giọng). */
+  const [tu, setTu] = useState<string | null>(null)
+  const [, setVe] = useState(0)
+  const giu = useMidiStore((s) => s.heldNotes)
+  const thi = ben === 'thi'
+  const tenThay = THAY_CHAY.find((x) => x.id === thay)!.ten
+  const hopTu = tu ? docVong(tu, tonic) : null
+  const vongs: VongDap[] = [...vongLyThuyetHop(tonic, thu), ...(tu && hopTu ? [{ id: 'tu-nhap', ten: `Vòng tự điền · ${tu}`, hop: hopTu }] : [])]
+  const khoaKyLuc = (id: string) => `dap|${thay}|${tonic}|${thu ? 'thu' : 'truong'}|${id}|${bpm}`
+  const tenVong = (v: VongDap) => v.hop.map((x) => nguCanh(tonic, thu).h(x.goc, x.chat, x.bass)).join(' ')
+  /* Trạng thái lượt chơi trong ref — vòng khung hình của vùng mưa đọc bản mới nhất. */
+  const s = useRef({
+    pha: 'chuan-bi' as 'chuan-bi' | 'choi' | 'het',
+    vongTen: '',
+    hop: [] as Hop[],
+    id: '',
+    /** Câu cho lượt thầy kế — "Đổi câu" thay ở đây. */
+    bai: null as BaiChay | null,
+    take: 0,
+    /** Câu thầy đã dựng cho từng lượt — vẽ và chấm theo đúng câu đã phát. */
+    baiLuot: new Map<number, BaiChay>(),
+    ks: [] as Khung[],
+    vai: [] as ((m: number) => MucKhung)[],
+    /** Phách mỗi hợp âm (Cà Pháo 4; Linh Nhi · Blues 3 = một ô 6/8) và phách một lượt. */
+    o: 4,
+    dai: 4,
+    t0: 0,
+    nen: false,
+    vien: [] as VienDap[],
+    sinhToi: -1,
+    dang: -1,
+    luot: -1,
+    bam: new Map<number, { m: number; b: number }[]>(),
+    diem: 0,
+    combo: 0,
+    dung: 0,
+    sai: 0,
+    trung: 0,
+    dem: { chinh: 0, phu: 0, khong: 0 } as Record<MucKhung, number>,
+    saiO: [] as { ten: string; meo: string }[],
+    bao: null as null | { loai: 'dung' | 'sai' | 'truot'; chu: string },
+    /** Nốt đang vang: tay trái nền mọi lượt, tay phải thầy ở lượt thầy — để sáng phím. */
+    vangTrai: [] as number[],
+    vangPhai: [] as number[],
+    loi: '',
+  }).current
+  const ve = () => setVe((k) => k + 1)
+  const hep = hepManHinh()
+  const thap = hep ? 48 : 36
+  const cao = hep ? 72 : 84
+  const tenBac = (k: Khung, m: number) => `${bo8(tenPhim(k, m))} (${notCua(k, m)?.bac ?? tenBacKhung(pc(m - k.goc), k.quang)})`
+  const nO = () => s.ks.length || 1
+  const baiCua = (luot: number) => s.baiLuot.get(luot) ?? s.bai
+
+  /** Phách đang nghe: trước khi nền vào là đồng hồ đếm vào (âm), sau đó là đồng hồ nền đã bù lệch hình – tiếng. */
+  function bayGio() {
+    return s.nen ? getPlaybackBeats() : (performance.now() - s.t0) / (60000 / bpm) - s.o
+  }
+  /** Nguồn nền từng lượt (gọi một lần ở đầu lượt): lượt chẵn cả câu thầy, lượt lẻ chỉ tay trái. */
+  function nguon(luot: number) {
+    const bai = s.bai!
+    s.baiLuot.set(luot, bai)
+    for (const x of [...s.baiLuot.keys()]) if (x < luot - 2) s.baiLuot.delete(x)
+    return luot % 2 === 0 ? bai.timeline : bai.timeline.filter((e) => e.hand === 'left')
+  }
+  async function batDau(b: Ben, v: VongDap) {
+    const bai = baiCauThay(thay, v.hop, tonic, thu, 0, v.id)
+    const ks = bai ? khungVong(bai.perBeat.filter((_, x) => x % bai.beatsPerChord === 0).join(' '), tonic, thu) : []
+    if (!bai || !ks.length) {
+      s.loi = `Bộ soạn của ${tenThay} chưa soạn được câu trên ${v.ten} — chọn vòng khác.`
+      return ve()
+    }
+    setBen(b)
+    await startAudio()
+    Object.assign(s, {
+      pha: 'choi',
+      vongTen: v.ten,
+      hop: v.hop,
+      id: v.id,
+      bai,
+      take: 0,
+      baiLuot: new Map(),
+      ks,
+      vai: ks.map((k) => vaiThay(k, thay, tonic, thu)),
+      o: bai.beatsPerChord,
+      dai: bai.perBeat.length,
+      t0: performance.now(),
+      nen: false,
+      vien: [],
+      sinhToi: -1,
+      dang: -1,
+      luot: -1,
+      bam: new Map(),
+      diem: 0,
+      combo: 0,
+      dung: 0,
+      sai: 0,
+      trung: 0,
+      dem: { chinh: 0, phu: 0, khong: 0 },
+      saiO: [],
+      bao: null,
+      vangTrai: [],
+      vangPhai: [],
+      loi: '',
+    })
+    ve()
+  }
+  function ketThuc() {
+    if (s.pha !== 'choi') return
+    s.pha = 'het'
+    stopTimelineLoop()
+    if (thi && s.dung + s.sai >= SO_CAU_THI)
+      setKyLuc((cu) => {
+        const moi = capKyLuc(cu, khoaKyLuc(s.id), s.dung, s.diem)
+        ghiKyLuc(KHO, moi)
+        return moi
+      })
+    ve()
+  }
+  function sinh(i: number) {
+    const j = i % nO()
+    const luot = Math.floor(i / nO())
+    const ban = luot % 2 === 1
+    const k = s.ks[j]!
+    const mau = baiCua(ban ? luot - 1 : luot)
+    const vao = mau ? notThayVao(mau.timeline, j, s.o, SOM) : null
+    s.vien = [
+      ...s.vien,
+      {
+        khoa: i,
+        i,
+        k,
+        xong: false,
+        ban,
+        sinh: (i - 1) * s.o,
+        roi: 2 * s.o,
+        lan: i % 4,
+        ten: k.ten,
+        khungTen: ban ? 'Bạn đáp' : `${tenThay} đánh`,
+        goiY: vao === null ? (ban ? '★ một nốt chính' : 'thầy nghỉ') : ban ? `★ ${tenBac(k, vao)} như thầy` : `vào ô: ${tenBac(k, vao)}`,
+      },
+    ]
+    s.sinhToi = i
+  }
+  function cham(v: VienDap) {
+    v.xong = true
+    const j = v.i % nO()
+    const vai = s.vai[j]!
+    const vao = notVaoO(s.bam.get(v.i) ?? [], useMidiStore.getState().heldNotes)
+    const r = chamO(v.k, vao.m, vao.giu, vai)
+    const mau = baiCua(Math.floor(v.i / nO()) - 1)
+    const thayVao = mau ? notThayVao(mau.timeline, j, s.o, SOM) : null
+    const trung = r.dat && vao.m !== null && thayVao !== null && pc(vao.m) === pc(thayVao)
+    if (r.dat) {
+      const cong = diemCau(s.combo)
+      s.diem += cong
+      s.combo += 1
+      s.dung += 1
+      if (trung) s.trung += 1
+      s.bao = { loai: 'dung', chu: `Đạt +${cong} — ${r.chu}${trung ? ' Trùng nốt thầy vào ô.' : ''}` }
+    } else {
+      s.combo = 0
+      s.sai += 1
+      const chinh = Array.from({ length: 12 }, (_, iv) => 60 + pc(v.k.goc + iv)).filter((x) => vai(x) === 'chinh')
+      s.saiO.push({
+        ten: v.k.ten,
+        meo: `Nốt chính (tính cả nốt ${tenThay} hay đánh): ${chinh.map((x) => bo8(tenPhim(v.k, x))).join(' ')}${thayVao !== null ? ` · thầy vào ô bằng ${tenBac(v.k, thayVao)}` : ''}.`,
+      })
+      s.bao = { loai: vao.m === null ? 'truot' : 'sai', chu: r.chu }
+    }
+    v.khungTen = vao.m === null ? '✗ trượt' : `${r.dat ? '✓' : '✗'} ${bo8(tenPhim(v.k, vao.m))}`
+    ve()
+  }
+  /** Cập nhật nốt đang vang ở phách `b`; true nếu đổi (cần vẽ lại bàn phím). */
+  function capVang(b: number) {
+    const luot = Math.floor(b / s.dai)
+    const bai = b < 0 ? null : baiCua(luot)
+    const x = b - luot * s.dai
+    const dang = bai ? bai.timeline.filter((e) => e.startBeat <= x && x < e.startBeat + e.durationBeats) : []
+    const trai = dang.filter((e) => e.hand === 'left').flatMap((e) => e.notes)
+    const phai = luot % 2 === 0 ? dang.filter((e) => e.hand === 'right').flatMap((e) => e.notes) : []
+    if (trai.join() === s.vangTrai.join() && phai.join() === s.vangPhai.join()) return false
+    s.vangTrai = trai
+    s.vangPhai = phai
+    return true
+  }
+  function tick() {
+    if (s.pha !== 'choi') return
+    let b = bayGio()
+    if (!s.nen && b >= 0) {
+      startTimelineLoop(nguon, bpm, s.dai)
+      s.nen = true
+      b = bayGio()
+    }
+    for (const v of s.vien) if (!v.xong && v.ban && b >= v.i * s.o + 1) cham(v)
+    if (s.vien.some((v) => b >= (v.i + 1) * s.o)) s.vien = s.vien.filter((v) => b < (v.i + 1) * s.o)
+    const dang = Math.floor(b / s.o)
+    for (const i of [dang, dang + 1]) if (i >= 0 && i > s.sinhToi && (!thi || s.dung + s.sai < SO_CAU_THI)) sinh(i)
+    const luot = dang < 0 ? -1 : Math.floor(dang / nO())
+    let doi = capVang(b)
+    if (luot !== s.luot) {
+      s.luot = luot
+      s.bao = null
+      doi = true
+    }
+    if (dang !== s.dang) {
+      s.dang = dang
+      doi = true
+    }
+    if (doi) ve()
+    if (thi && s.dung + s.sai >= SO_CAU_THI) ketThuc()
+  }
+  useNotXuong((note) => {
+    if (s.pha !== 'choi') return
+    const b = bayGio()
+    const i = Math.floor((b + SOM) / s.o)
+    // Đếm vào và lượt thầy: bấm theo thoải mái, không chấm.
+    if (i < 0 || Math.floor(i / nO()) % 2 === 0) return
+    s.bam.set(i, [...(s.bam.get(i) ?? []), { m: note, b }])
+    for (const x of [...s.bam.keys()]) if (x < i - 1) s.bam.delete(x)
+    const j = i % nO()
+    const k = s.ks[j]!
+    const muc = s.vai[j]!(note)
+    s.dem[muc] += 1
+    if (muc === 'khong') {
+      s.combo = 0
+      s.bao = { loai: 'sai', chu: `${bo8(tenPhim(k, note))} không màu trên ${k.ten} — ${tenThay} không đánh nốt này; chỉ lướt qua (combo về 0).` }
+    }
+    ve()
+  })
+  function doiCau() {
+    const cu = vanTay(s.bai)
+    for (let t = s.take + 1; t <= s.take + 12; t += 1) {
+      const moi = baiCauThay(thay, s.hop, tonic, thu, t, s.id)
+      if (moi && vanTay(moi) !== cu && moi.perBeat.length === s.dai) {
+        s.bai = moi
+        s.take = t
+        s.bao = { loai: 'dung', chu: `Câu mới của ${tenThay} — vào ở lượt thầy kế.` }
+        return ve()
+      }
+    }
+    s.bao = { loai: 'sai', chu: 'Bộ soạn chưa ra câu khác trên vòng này.' }
+    ve()
+  }
+  /* Ẩn trang thì dừng lượt (nền không tạm dừng giữa chừng được mà vẫn khớp ô); rời tab thì tắt nền. */
+  const ketRef = useRef(ketThuc)
+  ketRef.current = ketThuc
+  useEffect(() => {
+    const f = () => {
+      if (document.hidden) ketRef.current()
+    }
+    document.addEventListener('visibilitychange', f)
+    return () => {
+      document.removeEventListener('visibilitychange', f)
+      if (s.pha === 'choi') stopTimelineLoop()
+    }
+  }, [s])
+
+  const dungVong = () => {
+    const ds = docHop(go)
+    if (!ds?.length) {
+      setBaoGo('Không đọc được — gõ tên hợp âm cách nhau bằng dấu cách, vd "Am F C G" hay "Dm7 G7 Cmaj7".')
+      return
+    }
+    const gi = doanGiong(ds)[0]
+    const t = gi?.tonic ?? ds[0]!.root
+    setTonic(t)
+    setThu(gi?.thu ?? false)
+    setTu(go.trim())
+    setBaoGo(`App đoán giọng ${GOC[t]} ${gi?.thu ? 'thứ' : 'trưởng'} — vòng đã thêm vào cuối hai danh sách.`)
+  }
+
+  if (s.pha !== 'choi')
+    return (
+      <div className="flex flex-col gap-3 rounded-xl border border-line bg-black/25 p-4 text-sm">
+        {dau}
+        {s.pha === 'het' && (
+          <TongKet
+            thi={thi}
+            nhan={`${tenThay} · ${s.vongTen} · ♩ = ${bpm}`}
+            dung={s.dung}
+            sai={s.sai}
+            diem={s.diem}
+            on={s.saiO}
+            them={`Ô lượt bạn đạt ${s.dung}/${s.dung + s.sai} · trùng nốt thầy vào ô ${s.trung} · nốt: chính ${s.dem.chinh} · phụ ${s.dem.phu} · không màu ${s.dem.khong}.`}
+          />
+        )}
+        <p className="text-xs text-dim">
+          Nền chạy theo vòng; một lượt <b className="text-amber-key">thầy đánh</b> — câu do bộ soạn của thầy soạn trên vòng (đúng bộ của game
+          câu thầy, bạn đã duyệt câu) — rồi một lượt <b className="text-teal-key">bạn đáp</b> trên nền. Viên rơi khớp nhịp như phần 2. Lượt
+          bạn: phách 1 mỗi hợp âm đặt một nốt chính — tính cả nốt thầy hay đánh (từ 10 %, như tab Chọn nốt theo thầy); ★ là nốt thầy vào ô ở
+          lượt trước. Lượt thầy: phím sáng là tay phải thầy đang đánh. Có một ô đếm vào.
+        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {THAY_CHAY.map((x) => (
+            <button key={x.id} type="button" onClick={() => setThay(x.id)} className={nut(thay === x.id)} aria-pressed={thay === x.id}>
+              {x.ten}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-dim">{loiBoSoan(thay, thu)}</p>
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-dim">Giọng</span>
+          <select
+            value={tonic}
+            onChange={(e) => setTonic(Number(e.target.value))}
+            aria-label="Chủ âm"
+            className="rounded border border-line bg-white/6 px-1.5 py-1 text-cream"
+          >
+            {GOC.map((ten, g) => (
+              <option key={ten} value={g}>
+                {gocDep(ten)}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={() => setThu(false)} className={nut(!thu)}>
+            trưởng
+          </button>
+          <button type="button" onClick={() => setThu(true)} className={nut(thu)}>
+            thứ
+          </button>
+          <span className="ml-2 text-dim">♩ =</span>
+          {NHIP_DO.map((x) => (
+            <button key={x} type="button" onClick={() => setBpm(x)} className={nut(bpm === x)}>
+              {x}
+            </button>
+          ))}
+        </div>
+        {s.loi && <p className="text-sm text-rose-300">{s.loi}</p>}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-teal-key/40 p-3">
+            <p className="font-semibold text-teal-key">Luyện có mẹo</p>
+            <p className="mb-2 text-xs text-dim">
+              Viên lượt bạn ghi ★ nốt thầy vào ô; phím viền cam là các nốt thầy đã đánh trên hợp âm ấy. Chạy tới khi bấm Dừng; "Đổi câu" lấy
+              câu mới của thầy.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {vongs.map((v) => (
+                <button key={v.id} type="button" onClick={() => void batDau('meo', v)} className={`${nut(false)} text-left`}>
+                  {v.ten}
+                  <span className="block font-mono text-[11px] text-dim">{tenVong(v)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-lg border border-amber-key/40 p-3">
+            <p className="font-semibold text-amber-key">Thi không mẹo — chấm đạt</p>
+            <p className="mb-2 text-xs text-dim">
+              Không ★, không viền. {SO_CAU_THI} ô lượt bạn một lượt thi, đạt từ {DAT_THI}. Kỷ lục ghi riêng theo thầy, giọng, vòng và ♩.
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {vongs.map((v) => {
+                const r = kyLuc[khoaKyLuc(v.id)]
+                return (
+                  <button key={v.id} type="button" onClick={() => void batDau('thi', v)} className={`${nut(false)} text-left`}>
+                    {v.ten} <span className={`text-[11px] ${r && r.tot >= DAT_THI ? 'text-teal-key' : 'text-dim'}`}>· {kyLucChu(r)}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+        <form
+          className="flex flex-wrap items-center gap-1.5 text-xs"
+          onSubmit={(e) => {
+            e.preventDefault()
+            dungVong()
+          }}
+        >
+          <span className="text-dim">Tự điền vòng</span>
+          <input
+            value={go}
+            onChange={(e) => setGo(e.target.value)}
+            placeholder="vd Am F C G"
+            aria-label="Nhập vòng hợp âm"
+            className="min-w-0 flex-1 rounded border border-line bg-white/6 px-2 py-1 font-mono text-cream"
+          />
+          <button type="submit" className={nut(!!tu)}>
+            Thêm vòng này
+          </button>
+          {baoGo && <span className="w-full text-dim">{baoGo}</span>}
+        </form>
+        <MidiConnect />
+      </div>
+    )
+
+  /* Màn chơi: hợp âm đang vang (trong ô đếm vào thì hợp âm đầu); lượt chẵn thầy, lượt lẻ bạn. */
+  const n = nO()
+  const dang = Math.max(0, s.dang)
+  const j = dang % n
+  const luot = Math.floor(dang / n)
+  const ban = s.dang >= 0 && luot % 2 === 1
+  const k = s.ks[j]!
+  const dich = s.vien.find((v) => v.i === s.dang) ?? null
+  const mau = ban ? baiCua(luot - 1) : null
+  const loThay =
+    !thi && ban && mau
+      ? [
+          ...new Set(
+            mau.timeline
+              .filter((e) => e.hand === 'right' && !e.grace && e.startBeat >= j * s.o - SOM && e.startBeat < (j + 1) * s.o - SOM)
+              .flatMap((e) => e.notes),
+          ),
+        ]
+      : []
+  const phai = ban ? giu : s.vangPhai
+  const ca = [...s.vangTrai, ...phai]
+  const nhan: NhanHaiTay = {
+    trai: s.vangTrai.length ? tenBam(s.vangTrai).ten : '',
+    traiPhu: s.vangTrai.length ? 'nền' : '',
+    phai: phai.length ? tenBam(phai, false).ten : '',
+    phaiPhu: phai.length ? (ban ? 'bạn' : tenThay) : '',
+    tong: ca.length >= 3 ? tenBam(ca).ten : '…',
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-line bg-black/25 p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span className={`text-xs font-semibold ${thi ? 'text-amber-key' : 'text-teal-key'}`}>{thi ? 'THI' : 'LUYỆN CÓ MẸO'}</span>
+        <span
+          className={`rounded px-2 py-0.5 text-xs font-semibold ${s.dang < 0 ? 'bg-white/10 text-dim' : ban ? 'bg-teal-key/20 text-teal-key' : 'bg-amber-key/20 text-amber-key'}`}
+        >
+          {s.dang < 0 ? 'ĐẾM VÀO' : ban ? 'LƯỢT BẠN' : `LƯỢT ${tenThay.toUpperCase()}`}
+        </span>
+        <span className="text-cream">
+          Điểm <b className="font-mono text-lg text-amber-key">{s.diem}</b>
+        </span>
+        <span className="text-cream">
+          Combo <b className="font-mono text-lg text-teal-key">×{s.combo}</b>
+        </span>
+        {thi && (
+          <span className="text-cream">
+            Ô bạn <b className="font-mono">{Math.min(SO_CAU_THI, s.dung + s.sai + 1)}/{SO_CAU_THI}</b> · đạt{' '}
+            <b className="font-mono text-teal-key">{s.dung}</b>
+          </span>
+        )}
+        <span className="text-xs text-dim">
+          {tenThay} · {s.vongTen} · ♩ = {bpm}
+        </span>
+        <span className="ml-auto flex gap-1.5">
+          <button type="button" onClick={doiCau} className={nut(false)}>
+            Đổi câu
+          </button>
+          <button type="button" onClick={ketThuc} className={nut(false)}>
+            Dừng
+          </button>
+        </span>
+      </div>
+
+      <VungRoi vien={s.vien} dich={dich} bayGio={bayGio} tick={tick} chay meo={!thi} />
+
+      <p
+        className={`min-h-10 text-sm ${s.bao?.loai === 'dung' ? 'text-teal-key' : s.bao?.loai === 'truot' ? 'text-rose-300' : 'text-amber-key'}`}
+        aria-live="polite"
+      >
+        {s.bao?.chu ??
+          (s.dang < 0
+            ? `Đếm vào — ${tenThay} đánh trước, bạn đáp lượt sau.`
+            : ban
+              ? 'Tới bạn — phách 1 mỗi hợp âm đặt một nốt chính (★ là nốt thầy vào ô).'
+              : `${tenThay} đánh — nghe và nhìn tay phải; lượt sau tới bạn.`)}
+      </p>
+      <BanPhimHaiTay trai={vua(s.vangTrai, thap, cao)} phai={vua(phai, thap, cao)} lo={vua(loThay, thap, cao)} nhan={nhan} lowNote={thap} highNote={cao} />
+      <p className="text-xs text-dim">
+        Lượt thầy: phím tay phải là câu thầy đang đánh, phím tay trái là nền. Lượt bạn:{' '}
+        {thi ? '' : 'viền cam là các nốt thầy đã đánh trên hợp âm này; '}nốt từ lúc chạy — chính {s.dem.chinh} · phụ {s.dem.phu} · không
+        màu {s.dem.khong}.
+      </p>
+      {!thi && (
+        <div className="rounded-lg border border-teal-key/30 p-2">
+          <DongKhung k={k} />
+        </div>
+      )}
+      <MidiConnect />
+    </div>
+  )
+}
+
 export function GameChayNgonRoi() {
   useLiveSound()
   useComputerKeyboard(60)
   const [phan, setPhan] = useState<Phan>('lam-quen')
   const dau = <DauTrang phan={phan} doi={setPhan} />
-  return phan === 'lam-quen' ? <LamQuenRoi dau={dau} /> : <SoloRoi dau={dau} />
+  return phan === 'lam-quen' ? <LamQuenRoi dau={dau} /> : phan === 'solo' ? <SoloRoi dau={dau} /> : <DapThayRoi dau={dau} />
 }
