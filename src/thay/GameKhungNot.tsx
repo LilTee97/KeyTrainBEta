@@ -158,7 +158,7 @@ function VaiDangBam({ k, giu }: { k: Khung; giu: readonly number[] }) {
 }
 
 /** Ba dòng nốt chính · phụ · không màu của khung. */
-function DongKhung({ k }: { k: Khung }) {
+export function DongKhung({ k }: { k: Khung }) {
   const theo = (muc: MucKhung) => k.not.filter((n) => n.muc === muc)
   const tranh = theo('khong')
   return (
@@ -199,6 +199,32 @@ function DongKhung({ k }: { k: Khung }) {
           — chỉ lướt qua rồi đi tiếp.
         </p>
       )}
+    </div>
+  )
+}
+
+/** Khung của một hợp âm xem kỹ — nốt chính · phụ · không màu, nốt đỉnh nên chọn, số đo SSA, lời các thầy. Game chạy ngón (thử). */
+export function XemKhung({ k }: { k: Khung }) {
+  const ho = k.loai?.ssa ? SSA[k.loai.ssa] : null
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      <p className="text-cream">
+        <b className="font-mono text-base text-amber-key">{k.ten}</b> — khung <b>{k.gam}</b>. <span className="text-cream/80">{k.loai?.nghe}</span>
+      </p>
+      <DongKhung k={k} />
+      <p className="text-cream/80">
+        Nốt đỉnh nên chọn:{' '}
+        {k.dinh
+          .slice(0, 4)
+          .map((iv) => k.not.find((x) => x.iv === iv)!)
+          .map((n) => `${n.ten} (${n.bac})`)
+          .join(' · ')}
+        .{' '}
+        {ho
+          ? `Anh SSA trên ${ho.ten} (${ho.n} nốt giai điệu, 3 clip): ${ho.giaiDieu.map(([b, d]) => `${b} ${d}`).join(' · ')}. Tay phải: ${ho.khungPhai}.`
+          : 'Chưa có số đo SSA cho loại này — thứ tự trên là lý thuyết của Claude.'}
+      </p>
+      {k.loai && THAY_NHOM[k.loai.nhom] && <p className="text-dim">Các thầy trong app: {THAY_NHOM[k.loai.nhom]}</p>}
     </div>
   )
 }
@@ -597,6 +623,34 @@ function SoloVong() {
   )
 }
 
+/** Bí quyết rải ngón của anh SSA — đầu trang Game chạy ngón (cũ và bản thử). */
+export function BiQuyetSsa() {
+  return (
+    <details className="mt-2 text-xs text-cream/85">
+      <summary className="cursor-pointer font-semibold text-amber-key">Bí quyết rải ngón của anh SSA — vừa giai điệu vừa hợp âm màu</summary>
+      <ul className="mt-1 ml-4 list-disc">
+        <li>
+          Tay trái chỉ giữ <b>bass</b> (thường một nốt, đôi khi rải 1 – 5 – 8). Màu của hợp âm do <b>bass</b> quyết định.
+        </li>
+        <li>
+          Tay phải là một <b>hợp âm ba quen</b> dựng trên một bậc của hợp âm: maj7 → hợp âm thứ trên bậc 3 (D♭ + Fm = D♭maj7) · m7 →
+          hợp âm trưởng trên ♭3 (C + E♭ = Cm7) · 9sus4 / 13sus → hợp âm trưởng trên ♭7 ("Cb/Db thực ra là Db9sus4") · m7♭5 → hợp âm
+          thứ trên ♭3 (B + Dm = Bm7♭5).
+        </li>
+        <li>
+          <b>Giai điệu là nốt trên cùng của tay phải.</b> Nốt ấy vừa thuộc hợp âm ba dễ bấm, vừa là nốt màu so với bass — Si trên Cmaj7 là
+          bậc 7, cùng nốt Si trên Am là bậc 9. Nên cùng một câu hát, đổi bass là đổi màu ("giai điệu vẫn là E D F E").
+        </li>
+        <li>Đổi nốt đỉnh = xoay thế tay phải; đổi hợp âm = giữ nốt chung trên tay phải, đổi bass, rồi bước liền sang nốt đỉnh mới.</li>
+      </ul>
+      <p className="mt-1 text-dim">
+        Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip): tay trái trung vị 1 nốt mỗi hợp âm; nốt giai
+        điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
+      </p>
+    </details>
+  )
+}
+
 export function GameChayNgon() {
   const [kieu, setKieu] = useState<'lam-quen' | 'solo'>('lam-quen')
   useLiveSound()
@@ -610,28 +664,7 @@ export function GameChayNgon() {
           ở phách mạnh, nốt ngân, nốt đỉnh), <b className="text-amber-key">cam</b> là nốt phụ (đi qua), không màu thì đừng ngân. Nhận ra khung là
           tự chọn được nốt — không cần nốt rơi sẵn.
         </p>
-        <details className="mt-2 text-xs text-cream/85">
-          <summary className="cursor-pointer font-semibold text-amber-key">Bí quyết rải ngón của anh SSA — vừa giai điệu vừa hợp âm màu</summary>
-          <ul className="mt-1 ml-4 list-disc">
-            <li>
-              Tay trái chỉ giữ <b>bass</b> (thường một nốt, đôi khi rải 1 – 5 – 8). Màu của hợp âm do <b>bass</b> quyết định.
-            </li>
-            <li>
-              Tay phải là một <b>hợp âm ba quen</b> dựng trên một bậc của hợp âm: maj7 → hợp âm thứ trên bậc 3 (D♭ + Fm = D♭maj7) · m7 →
-              hợp âm trưởng trên ♭3 (C + E♭ = Cm7) · 9sus4 / 13sus → hợp âm trưởng trên ♭7 ("Cb/Db thực ra là Db9sus4") · m7♭5 → hợp âm
-              thứ trên ♭3 (B + Dm = Bm7♭5).
-            </li>
-            <li>
-              <b>Giai điệu là nốt trên cùng của tay phải.</b> Nốt ấy vừa thuộc hợp âm ba dễ bấm, vừa là nốt màu so với bass — Si trên Cmaj7 là
-              bậc 7, cùng nốt Si trên Am là bậc 9. Nên cùng một câu hát, đổi bass là đổi màu ("giai điệu vẫn là E D F E").
-            </li>
-            <li>Đổi nốt đỉnh = xoay thế tay phải; đổi hợp âm = giữ nốt chung trên tay phải, đổi bass, rồi bước liền sang nốt đỉnh mới.</li>
-          </ul>
-          <p className="mt-1 text-dim">
-            Cơ sở (3 clip, 111 đoạn hợp âm, nốt chép máy, 98,7 % nằm trong nhãn hợp âm của clip): tay trái trung vị 1 nốt mỗi hợp âm; nốt giai
-            điệu là nốt hợp âm 175/241, nốt căng có trong tên 63/241; đổi bass giữ ≥ 2 nốt tay phải 32/94. Lời giải thích là của Claude.
-          </p>
-        </details>
+        <BiQuyetSsa />
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <button type="button" onClick={() => setKieu('lam-quen')} className={nut(kieu === 'lam-quen')}>

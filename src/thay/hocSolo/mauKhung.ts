@@ -270,18 +270,23 @@ export function taoCauKhung(mi: number, b: number, g: number, rand: () => number
   }
 }
 
-/** Chọn câu kế trong màn: bước vừa sai nặng thêm (1 + 2 × số lần sai), không lặp đúng bước vừa rồi — như Mưa hợp âm. */
-export function chonCauKhung(mi: number, goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauKhung {
-  const man = MAN_KHUNG[mi]!
-  const ung = man.buoc.map((_, b) => b).filter((b) => man.buoc.length < 2 || `${mi}:${b}` !== truoc)
-  const nang = ung.map((b) => 1 + 2 * (sai.get(`${mi}:${b}`) ?? 0))
+/** Chọn một khóa: khóa vừa sai nặng thêm (1 + 2 × số lần sai), không lặp đúng khóa vừa rồi — như Mưa hợp âm. */
+export function chonNang(ids: readonly string[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): string {
+  const ung = ids.filter((id) => ids.length < 2 || id !== truoc)
+  const nang = ung.map((id) => 1 + 2 * (sai.get(id) ?? 0))
   let r = rand() * nang.reduce((s, x) => s + x, 0)
   let i = 0
   for (; i < ung.length - 1; i++) {
     r -= nang[i]!
     if (r < 0) break
   }
-  return taoCauKhung(mi, ung[i]!, goc[Math.floor(rand() * goc.length)]!, rand)
+  return ung[i]!
+}
+
+/** Câu kế trong màn (`chonNang` theo bước `màn:bước`), gốc ngẫu nhiên trong `goc`. */
+export function chonCauKhung(mi: number, goc: readonly number[], sai: ReadonlyMap<string, number>, truoc: string | null, rand: () => number = Math.random): CauKhung {
+  const id = chonNang(MAN_KHUNG[mi]!.buoc.map((_, b) => `${mi}:${b}`), sai, truoc, rand)
+  return taoCauKhung(mi, Number(id.split(':')[1]), goc[Math.floor(rand() * goc.length)]!, rand)
 }
 
 /** Đã bấm đủ khung: mọi lớp cao độ của khung có trong các nốt đã bấm. */

@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { playChordSequence, startAudio } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
-import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { ChonMoc, VungRoi } from './GameChong'
 import { chonCauKhung, duKhung, MAN_KHUNG, ngoaiKhung, type CauKhung, type LuaChonKhung } from './hocSolo/mauKhung'
 import { tenPhim } from './hocSolo/khungNot'
-import { DAT_THI, diemCau, DONG_CHO, GOC_CHOI, SO_CAU_THI, soNotLo, thoiGianRoi, type Ben, type GocChoi } from './soanCau/gameChong'
+import { DAT_THI, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
+import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRoi'
 
 /*
   MƯA KHUNG NỐT — game rơi kiểu Game công thức (Mưa hợp âm) cho khung nốt: tên hợp âm rơi, bấm đủ các nốt khung của nó (hay chọn đúng tên
@@ -19,36 +19,12 @@ import { DAT_THI, diemCau, DONG_CHO, GOC_CHOI, SO_CAU_THI, soNotLo, thoiGianRoi,
   Người dùng 15/10/2026: "thiết kế rơi như game công thức … khi nhấn vào thì mở hẳn ra một phần game và có bàn phím dài".
 */
 
-interface Vien extends CauKhung {
-  khoa: number
-  sinh: number
-  roi: number
-  lan: number
-  khungTen: string
-}
-type Pha = 'chuan-bi' | 'choi' | 'dung' | 'het'
+type Vien = CauKhung & { khungTen: string }
 type CachNhap = 'chay' | 'chon'
 
 const pc = (x: number) => ((x % 12) + 12) % 12
 const KHO = 'keytrain.mua-khung.v1'
 const MOC_MAC_DINH: Readonly<Record<Ben, number>> = { meo: 20, thi: 14 }
-type KyLuc = Record<string, { tot: number; diem: number }>
-const docKyLuc = (): KyLuc => {
-  try {
-    const x = JSON.parse(localStorage.getItem(KHO) ?? 'null') as KyLuc | null
-    if (x && typeof x === 'object') return x
-  } catch {
-    /* không có bộ nhớ trình duyệt */
-  }
-  return {}
-}
-const ghiKyLuc = (x: KyLuc) => {
-  try {
-    localStorage.setItem(KHO, JSON.stringify(x))
-  } catch {
-    /* bỏ qua */
-  }
-}
 const nut = (on: boolean) =>
   `rounded-lg border px-3 py-2 text-sm disabled:opacity-40 ${on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-cream/80 hover:bg-white/8'}`
 const GOC_TEN: readonly { id: GocChoi; ten: string }[] = [
@@ -75,233 +51,78 @@ const ngheKhung = async (g: number, pcs: readonly number[]) => {
 export function GameKhungRoi() {
   useLiveSound()
   useComputerKeyboard(60)
-  const [kyLuc, setKyLuc] = useState(docKyLuc)
+  const [kyLuc, setKyLuc] = useState(() => docKyLuc(KHO))
   const [ben, setBen] = useState<Ben>('meo')
   const [man, setMan] = useState(0)
   const [gocChoi, setGocChoi] = useState<GocChoi>('do')
   const [nhap, setNhap] = useState<CachNhap>('chay')
   const [moc, setMoc] = useState<Record<Ben, number>>({ ...MOC_MAC_DINH })
   const [choNot, setChoNot] = useState(false)
-  const [, setVe] = useState(0)
-  const ve = () => setVe((k) => k + 1)
-  /* Trạng thái game trong ref — vòng khung hình đọc bản mới nhất (như Mưa hợp âm). */
-  const g = useRef({
-    pha: 'chuan-bi' as Pha,
-    vien: [] as Vien[],
-    diem: 0,
-    combo: 0,
-    dung: 0,
-    sai: 0,
-    soSinh: 0,
-    khoa: 0,
-    sinhCuoi: -1e9,
-    truoc: null as string | null,
-    saiDem: new Map<string, number>(),
-    saiCau: [] as CauKhung[],
-    /** Nốt đã chạy đúng của viên đích (cao độ thật, để sáng phím). */
-    daChay: [] as number[],
-    bao: null as null | { loai: 'dung' | 'sai' | 'truot'; chu: string },
-    dongHo: { goc: 0, dung: 0, dungLuc: null as number | null },
-    cho: false,
-    lo: 0,
-    /** Nút tên khung vừa bấm: hiện khung ấy trên đàn một lúc. */
-    daBam: null as null | { lc: LuaChonKhung; het: number },
-  }).current
   const thi = ben === 'thi'
-  const dich = g.vien.reduce<Vien | null>((a, v) => (!a || v.sinh < a.sinh ? v : a), null)
-
-  function bayGio() {
-    return (g.dongHo.dungLuc ?? performance.now()) - g.dongHo.goc - g.dongHo.dung
-  }
-  function dangDich() {
-    return g.vien.reduce<Vien | null>((a, v) => (!a || v.sinh < a.sinh ? v : a), null)
-  }
   const khoaKyLuc = (k: number) => `${k}${moc.thi !== MOC_MAC_DINH.thi ? `|${moc.thi}s` : ''}`
-  function capDongHo() {
-    const dung = g.pha === 'dung' || g.cho
-    const now = performance.now()
-    if (dung && g.dongHo.dungLuc === null) g.dongHo.dungLuc = now
-    if (!dung && g.dongHo.dungLuc !== null) {
-      g.dongHo.dung += now - g.dongHo.dungLuc
-      g.dongHo.dungLuc = null
-    }
-  }
-  function loCua(v: Vien | null) {
-    return thi || !v ? 0 : soNotLo(Math.min(1, (bayGio() - v.sinh) / v.roi), v.k.not.length)
-  }
+  /* Máy rơi chung (`useMuaRoi`) — đồng hồ, sinh viên, trượt, chờ, chấm; tách từ file này 15/10/2026, hành vi giữ nguyên. */
+  const may = useMuaRoi<Vien>({
+    thi,
+    choNot,
+    giay: moc[ben],
+    tao: (sai, truoc) => {
+      const cau = chonCauKhung(man, GOC_CHOI[gocChoi], sai, truoc)
+      return { ...cau, khungTen: cau.quyTac }
+    },
+    soLo: (v) => v.k.not.length,
+    choChu: (d) => `Viên ${d.ten} đang chờ — chạy đủ khung (${d.goiY.replace(/^khung /, '')}) để mưa rơi tiếp.`,
+    khiXong: (v, dung) => {
+      if (dung) void ngheKhung(v.g, v.k.not.map((n) => n.p))
+    },
+    khiXongThi: (dung, diem) =>
+      setKyLuc((cu) => {
+        const moi = capKyLuc(cu, khoaKyLuc(man), dung, diem)
+        ghiKyLuc(KHO, moi)
+        return moi
+      }),
+  })
+  const { g, dich } = may
+  /** Nút tên khung vừa bấm: hiện khung ấy trên đàn một lúc. */
+  const phu = useRef({ daBam: null as null | { lc: LuaChonKhung; het: number } }).current
+
   async function batDau(b: Ben, k: number) {
     setBen(b)
     setMan(k)
-    await startAudio()
-    Object.assign(g, {
-      pha: 'choi',
-      vien: [],
-      diem: 0,
-      combo: 0,
-      dung: 0,
-      sai: 0,
-      soSinh: 0,
-      sinhCuoi: -1e9,
-      truoc: null,
-      saiDem: new Map(),
-      saiCau: [],
-      daChay: [],
-      bao: null,
-      dongHo: { goc: performance.now(), dung: 0, dungLuc: null },
-      cho: false,
-      lo: 0,
-      daBam: null,
-    })
-    ve()
-  }
-  function sinh() {
-    const t = bayGio()
-    const cau = chonCauKhung(man, GOC_CHOI[gocChoi], g.saiDem, g.truoc)
-    const dangDung = new Set(g.vien.map((v) => v.lan))
-    const trong = [0, 1, 2, 3].filter((l) => !dangDung.has(l))
-    const lan = trong[Math.floor(Math.random() * trong.length)] ?? 0
-    g.vien = [...g.vien, { ...cau, khungTen: cau.quyTac, khoa: ++g.khoa, sinh: t, roi: thoiGianRoi(moc[ben]), lan }]
-    g.soSinh += 1
-    g.truoc = cau.id
-    g.sinhCuoi = t
-    ve()
-  }
-  function ketThuc() {
-    g.pha = 'het'
-    if (thi && g.dung + g.sai >= SO_CAU_THI)
-      setKyLuc((cu) => {
-        const k = khoaKyLuc(man)
-        const moi = { ...cu, [k]: { tot: Math.max(cu[k]?.tot ?? 0, g.dung), diem: Math.max(cu[k]?.diem ?? 0, g.diem) } }
-        ghiKyLuc(moi)
-        return moi
-      })
-    ve()
-  }
-  function xongThi() {
-    if (thi && g.dung + g.sai >= SO_CAU_THI) ketThuc()
-  }
-  function boCho() {
-    if (!g.cho) return
-    g.cho = false
-    capDongHo()
-  }
-  function giai(v: Vien) {
-    g.vien = g.vien.filter((x) => x.khoa !== v.khoa)
-    const cong = diemCau(g.combo)
-    g.diem += cong
-    g.combo += 1
-    g.dung += 1
-    g.daChay = []
-    g.bao = { loai: 'dung', chu: `Đúng +${cong} — ${v.loi}` }
-    void ngheKhung(v.g, v.k.not.map((n) => n.p))
-    boCho()
-    xongThi()
-    ve()
-  }
-  function tinhSai(v: Vien, loai: 'truot' | 'sai') {
-    g.vien = g.vien.filter((x) => x.khoa !== v.khoa)
-    g.combo = 0
-    g.sai += 1
-    g.daChay = []
-    g.saiDem.set(v.id, (g.saiDem.get(v.id) ?? 0) + 1)
-    g.saiCau.push(v)
-    g.bao = { loai: 'truot', chu: `${loai === 'truot' ? 'Trượt' : 'Sai'} — ${v.ten}. ${v.meo}` }
-    xongThi()
-    ve()
-  }
-  function saiLan(v: Vien, chu: string) {
-    if (thi) return tinhSai(v, 'sai')
-    g.combo = 0
-    g.bao = { loai: 'sai', chu }
-    ve()
-  }
-  function tick() {
-    if (g.pha !== 'choi' || g.cho) return
-    const t = bayGio()
-    const d = dangDich()
-    if (!thi && choNot && d && (t - d.sinh) / d.roi >= DONG_CHO) {
-      g.cho = true
-      capDongHo()
-      g.bao = { loai: 'sai', chu: `Viên ${d.ten} đang chờ — chạy đủ khung (${d.goiY.replace(/^khung /, '')}) để mưa rơi tiếp.` }
-      ve()
-      return
-    }
-    for (const v of [...g.vien]) {
-      if (t - v.sinh >= v.roi) tinhSai(v, 'truot')
-      if (g.pha !== 'choi') return
-    }
-    const conSinh = !thi || g.soSinh < SO_CAU_THI
-    if (conSinh && g.vien.length < 3 && (g.vien.length === 0 || t - g.sinhCuoi >= thoiGianRoi(moc[ben]) * 0.6)) sinh()
-    const lo = loCua(dangDich())
-    if (lo !== g.lo) {
-      g.lo = lo
-      ve()
-    }
-  }
-  function tamDung() {
-    if (g.pha === 'choi') g.pha = 'dung'
-    else if (g.pha === 'dung') g.pha = 'choi'
-    capDongHo()
-    ve()
+    phu.daBam = null
+    await may.batDau()
   }
   function doiMoc(s: number) {
-    const t = bayGio()
-    if (g.pha === 'choi' || g.pha === 'dung')
-      for (const v of g.vien) {
-        const p = (t - v.sinh) / v.roi
-        v.roi = thoiGianRoi(s)
-        v.sinh = t - p * v.roi
-      }
+    may.doiRoi(s)
     setMoc((m) => ({ ...m, [ben]: s }))
   }
   function doiCho() {
-    if (choNot) boCho()
+    if (choNot) may.boCho()
     setChoNot((x) => !x)
   }
   function chonTen(lc: LuaChonKhung) {
-    const v = dangDich()
+    const v = may.dangDich()
     if (g.pha !== 'choi' || !v) return
     const daBam = { lc, het: performance.now() + 1800 }
-    g.daBam = daBam
+    phu.daBam = daBam
     setTimeout(() => {
-      if (g.daBam !== daBam) return
-      g.daBam = null
-      ve()
+      if (phu.daBam !== daBam) return
+      phu.daBam = null
+      may.ve()
     }, 1800)
-    if (lc.ten === v.dapAnTen) return giai(v)
+    if (lc.ten === v.dapAnTen) return may.giai(v)
     void ngheKhung(v.g, lc.pcs)
-    saiLan(v, `Chưa đúng — ${lc.ten} không phải khung của ${v.ten}. ${v.quyTac}.`)
+    may.saiLan(v, `Chưa đúng — ${lc.ten} không phải khung của ${v.ten}. ${v.quyTac}.`)
   }
-
-  /* Rời tab / ẩn trang thì tự tạm dừng. */
-  const tamDungRef = useRef(tamDung)
-  tamDungRef.current = tamDung
-  useEffect(() => {
-    const f = () => {
-      if (document.hidden && g.pha === 'choi') tamDungRef.current()
-    }
-    document.addEventListener('visibilitychange', f)
-    return () => document.removeEventListener('visibilitychange', f)
-  }, [g])
 
   /* Chạy nốt: mỗi cú bấm xuống (mọi nguồn) — nghe thẳng kho MIDI, mỗi cú một lần (bấm nhiều nốt cùng lúc vẫn đếm đủ). */
-  const xuLyNot = useRef<(note: number) => void>(() => {})
-  xuLyNot.current = (note) => {
-    const v = dangDich()
+  useNotXuong((note) => {
+    const v = may.dangDich()
     if (nhap !== 'chay' || g.pha !== 'choi' || !v) return
-    if (ngoaiKhung(note, v)) return saiLan(v, `Chưa đúng — ${tenPhim(v.k, note)} không thuộc khung ${v.goiY.replace(/^khung /, '')} của ${v.ten}. ${v.quyTac}.`)
+    if (ngoaiKhung(note, v)) return may.saiLan(v, `Chưa đúng — ${tenPhim(v.k, note)} không thuộc khung ${v.goiY.replace(/^khung /, '')} của ${v.ten}. ${v.quyTac}.`)
     if (!g.daChay.some((m) => pc(m) === pc(note))) g.daChay = [...g.daChay, note]
-    if (duKhung(new Set(g.daChay.map(pc)), v)) giai(v)
-    else ve()
-  }
-  useEffect(
-    () =>
-      useMidiStore.subscribe((s, truoc) => {
-        const ev = s.lastEvent
-        if (ev && ev !== truoc.lastEvent && ev.velocity > 0) xuLyNot.current(ev.note)
-      }),
-    [],
-  )
+    if (duKhung(new Set(g.daChay.map(pc)), v)) may.giai(v)
+    else may.ve()
+  })
 
   const hep = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches
   const thap = hep ? 48 : 36
@@ -427,8 +248,8 @@ export function GameKhungRoi() {
       while (x > cao) x -= 12
       return x
     })
-  const daBam = g.daBam && performance.now() < g.daBam.het ? g.daBam.lc : null
-  const loN = loCua(dich)
+  const daBam = phu.daBam && performance.now() < phu.daBam.het ? phu.daBam.lc : null
+  const loN = may.loCua(dich)
   const banTrai = dich ? vua([48 + dich.g]) : []
   const banPhai = daBam && dich ? vua(khungLen(dich.g, daBam.pcs)) : vua(g.daChay)
   const banLo = dich && loN > 0 && !daBam ? vua(khungLen(dich.g, dich.k.not.map((n) => n.p)).slice(0, loN)) : []
@@ -460,10 +281,10 @@ export function GameKhungRoi() {
           {thi ? ` · rơi ${moc.thi} s` : ''}
         </span>
         <span className="ml-auto flex gap-1.5">
-          <button type="button" onClick={tamDung} className={nut(false)}>
+          <button type="button" onClick={may.tamDung} className={nut(false)}>
             {g.pha === 'dung' ? 'Tiếp tục' : 'Tạm dừng'}
           </button>
-          <button type="button" onClick={ketThuc} className={nut(false)}>
+          <button type="button" onClick={may.ketThuc} className={nut(false)}>
             Dừng
           </button>
         </span>
@@ -478,7 +299,7 @@ export function GameKhungRoi() {
         </div>
       )}
 
-      <VungRoi vien={g.vien} dich={dich} bayGio={bayGio} tick={tick} chay={g.pha === 'choi'} meo={!thi} />
+      <VungRoi vien={g.vien} dich={dich} bayGio={may.bayGio} tick={may.tick} chay={g.pha === 'choi'} meo={!thi} />
 
       <p
         className={`min-h-10 text-sm ${g.bao?.loai === 'dung' ? 'text-teal-key' : g.bao?.loai === 'truot' ? 'text-rose-300' : 'text-amber-key'}`}

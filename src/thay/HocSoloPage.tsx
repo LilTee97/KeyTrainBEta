@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { playChord, playChordSequence, startAudio } from '../shared/audio/audioEngine'
+import { GameChayNgonRoi } from './GameChayNgonRoi'
 import { GameChayNgon } from './GameKhungNot'
 import { GameKhungRoi } from './GameKhungRoi'
 import { GameNotRoi, GameScale } from './GameSolo'
@@ -23,6 +24,8 @@ const TAB = [
   { id: 'scale', ten: 'Scale & Arpeggio' },
   { id: 'meo', ten: 'Mẹo & quy tắc' },
   { id: 'game-ngon', ten: 'Game chạy ngón' },
+  // Nút thử (15/10/2026): hai phần Game chạy ngón rơi như Game công thức — duyệt đạt thì cho thay hẳn rồi xoá nút cũ 'game-ngon'.
+  { id: 'game-ngon-thu', ten: 'Game chạy ngón (thử)' },
   { id: 'mua-khung', ten: 'Game nốt rơi' },
   { id: 'game-scale', ten: 'Game Scale' },
   { id: 'not-roi', ten: 'Nốt rơi cũ (câu thầy)' },
@@ -439,6 +442,7 @@ export function HocSoloPage() {
       {tab === 'scale' && <ScaleTab />}
       {tab === 'meo' && <MeoTab />}
       {tab === 'game-ngon' && <GameChayNgon />}
+      {tab === 'game-ngon-thu' && <GameChayNgonRoi />}
       {tab === 'mua-khung' && <GameKhungRoi />}
       {tab === 'not-roi' && <GameNotRoi />}
       {tab === 'game-scale' && <GameScale />}

@@ -6945,3 +6945,52 @@ cha; bảy khung mỗi bước đúng một nốt ở 12 gốc, lời quy tắc 
 9 màn; bấm màn mở màn chơi; Đô♯ ngoài khung báo chưa đúng; chạy đủ khung Cmaj7 → Đúng +10; viên C7 ghi "từ Cmaj7: B → B♭"; bảng quy tắc;
 chọn tên khung đúng ở màn bảy khung; bên thi viên chỉ có tên, sai lần đầu tính sai; điện thoại không cuộn ngang) · `LuyenTap.json`,
 `Nguon.json` không đổi.
+
+## Bước — Game chạy ngón (thử): hai phần làm thành game rơi như Game công thức, nút riêng chờ duyệt (15/10/2026)
+
+**Người dùng** (kèm ảnh kiểu 1 của Game chạy ngón): *"sao game chạy ngón ko làm giống game nốt rơi luôn. Hãy thiết kế cả 2 phần của game
+chạy ngón giống kiểu game nốt rơi. Hãy làm thử thành nút để tới khi nào tôi duyệt đạt rồi mới xóa nút cũ"*.
+
+**Nút riêng** tab Học Solo → **Game chạy ngón (thử)** (`src/thay/GameChayNgonRoi.tsx`, logic `src/thay/hocSolo/chayNgonRoi.ts`), đứng ngay
+sau tab cũ "Game chạy ngón" — tab cũ giữ nguyên. Duyệt đạt thì cho thay hẳn rồi xoá nút cũ (`GameChayNgon` trong `GameKhungNot.tsx`; giữ
+`DongKhung` · `XemKhung` · `BiQuyetSsa` mà bản thử dùng). Khuôn như Mưa khung nốt: đầu trang hai nút phần; mỗi phần một màn chọn hai bên
+(Luyện có mẹo · Thi 20 viên, đúng từ 16 là Đạt, kỷ lục `keytrain.chay-ngon-roi.v1`), bấm màn là mở hẳn màn chơi — vùng mưa `VungRoi`, bàn
+phím dài `BanPhimHaiTay` C2–C6 (điện thoại C3–C5).
+- **Phần 1 · Làm quen loại hợp âm** — 7 màn: mỗi nhóm đuôi một màn (Trưởng màu · Thứ màu · Át · Át treo · Át có nốt căng · Giảm) + trộn
+  28 loại; gốc Đô / phím trắng / 12 gốc. Ba cách chơi lấy từ ba việc "Tự đánh" của bản cũ:
+  - *Nốt chính* — bấm đủ nốt chính của khung (nốt hợp âm, kể cả nốt màu trong tên); bấm nốt phụ hay không màu là sai, lời báo nói vai nốt.
+  - *Chạy câu* — chạy liền từ 5 nốt trong khung, không đụng nốt không màu, dừng ở nốt chính (nốt phụ để đi qua); nốt không màu → câu
+    chạy lại.
+  - *Chồng hai tay* — giữ cùng lúc bass gốc thấp nhất + đủ nốt hợp âm (bỏ được 5; hợp âm 13 bỏ được 9), không nốt không màu. Viên bên
+    luyện ghi thế chồng theo công thức chồng của app (Cmaj7 = C + Em; loại chưa có công thức: gốc + nốt chính dưới nốt đỉnh); bàn phím ghi
+    tên hợp âm từng tay và hợp âm tổng như nhãn clip SSA.
+  Bên luyện: viên ghi khung + gợi ý, rơi quá 60 % thì phím đáp án sáng dần, có "Chờ đúng nốt"; xong mỗi viên, mục "Xem kỹ viên vừa xong"
+  hiện khung ba vai nốt, nốt đỉnh nên chọn, số đo SSA, lời các thầy (nội dung thẻ của bản cũ). Rơi mặc định 20 s / 14 s như Mưa khung nốt.
+- **Phần 2 · Solo trên vòng kiểu SSA** — 7 vòng (4 trích clip SSA, 3 cơ bản) + ô tự điền vòng (app đoán giọng); ♩ 50–80, 2 hay 4 phách mỗi
+  hợp âm, nền chỉ bass / bass + hợp âm. Viên rơi theo ĐỒNG HỒ NỀN (`getPlaybackBeats`, đã bù lệch hình – tiếng): mỗi viên rơi hai ô — nửa
+  trên là hợp âm kế, nửa dưới là hợp âm đang vang, chạm đáy đúng lúc hết hợp âm; một ô đếm vào trước khi nền vào. Chấm phách 1 mỗi ô:
+  nốt giai điệu vào ô (nốt cao nhất của cụm bấm đầu — các nốt cách nhau ≤ 0,15 phách; không bấm thì nốt còn giữ từ ô trước = giữ nốt chung)
+  phải là nốt chính mới Đạt; nốt phụ / không màu / im là chưa. Bấm sớm tới 0,25 phách trước lúc đổi vẫn tính cho hợp âm mới. Nốt không màu
+  bấm lúc nào cũng báo ngay và mất combo. Bên luyện: viên ghi khung + ★ nốt đỉnh; dòng "Đang vang … nốt chung với hợp âm sau"; phím viền cam
+  là thế chồng tay phải dưới nốt ★ (`chongDuoi`); ba dòng vai nốt của hợp âm đang vang. Bên thi: 20 ô, không mẹo. Không tạm dừng được (nền
+  chạy theo đồng hồ âm thanh) — ẩn trang / rời tab thì dừng lượt, tắt nền.
+- **Máy rơi chung** `src/thay/useMuaRoi.ts` — tách nguyên từ Mưa khung nốt (đồng hồ có tạm dừng, sinh viên, trượt, chờ, chấm, kỷ lục, nghe
+  cú bấm); Mưa khung nốt và phần 1 dùng chung. Mưa hợp âm (`GameChong`) chưa gộp. `chonNang` (chọn câu nặng theo số lần sai) tách khỏi
+  `chonCauKhung` để dùng chung.
+- Sửa trong lúc làm: thế chồng dự phòng đặt bass quãng tám 3 thì Bmaj13 chồng xuống A♯3 nằm dưới bass Si 3 → bass xuống quãng tám 2 (test
+  bắt được: mọi loại × 12 gốc, thế chồng tự nó phải chấm đủ).
+
+**Cơ sở / chưa đo — lỗ còn lại:** luật "phách 1 là nốt chính" là của Claude, dựa số đo SSA: nốt giai điệu là nốt hợp âm hay nốt căng có
+trong tên ở 238/241 nốt (3 clip; nhãn do SSA ghi nên khớp sẵn phần nào) — chưa đo trên tay người dùng. Các mốc 5 nốt một câu, cụm 0,15
+phách, bấm sớm 0,25 phách, rơi 20 / 14 s là Claude chọn. Người dùng chưa chơi. Phần 1 cách "nốt chính" coi nốt phụ là sai — đúng cho việc
+"tìm nốt chính", nhưng khi chạy câu thật nốt phụ là dùng được (cách "chạy câu" cho đi qua).
+
+**Kiểm:** `tsc -b` sạch · eslint các file của lần này 0 lỗi (cả repo còn 30 lỗi cũ ở 10 file reharm, không file nào của lần này) ·
+`chayNgonRoi.test.ts` 9 (màn đủ 28 loại; mọi loại × 12 gốc × 3 cách tạo được câu, thế chồng hai tay tự nó chấm đủ; nốt chính / chạy câu /
+chồng hai tay chấm đúng; chọn câu không lặp, câu sai quay lại nhiều hơn; 7 vòng có sẵn đọc được; nốt vào ô; chấm phách 1) · `mauKhung.test.ts`
+6 · `khungNot.test.ts` 7 · `hocSolo.test.ts` 29 · toàn suite (giới hạn 20 s mỗi test): 2 786 qua / 5 đỏ (5 đỏ cũ: phraseAcrossBar ·
+daoTruongLinhNhi · sietHopAm · tuyenSolo ×2) · `vite build` qua · chạy thử headless bản thử 39/39 (nút riêng cạnh tab cũ; màn chọn hai phần,
+7 màn, ba cách chơi; nốt phụ / ngoài khung báo đúng vai; đủ nốt chính → Đúng +10; Xem kỹ; chạy câu dừng ở nốt phụ chưa ăn, dừng ở nốt chính
+ăn, nốt không màu chạy lại; chồng hai tay bass Mi chưa ăn, bass Đô đủ nốt ăn, bàn phím ghi hợp âm tổng; thi sai lần đầu tính sai; phần 2:
+nền chạy, 4 ô vào bằng nốt gốc đạt cả 4, Mi trên Dm7 báo nốt phụ ở phách 1, im → trượt G7, Fa trên Cmaj7 báo ngay không màu; thi 1/20; rời
+tab tắt nền; điện thoại không cuộn ngang) + kịch bản cũ của Mưa khung nốt 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.
