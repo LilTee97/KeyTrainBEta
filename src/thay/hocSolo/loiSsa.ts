@@ -619,8 +619,12 @@ export interface VongNen {
   nen: readonly ScheduledHit[]
   /** Nền là trống (`beatNen.ts`) — gõ một ô hi-hat đếm vào trước khi nền vào. */
   demTrong?: boolean
-  /** Chu kỳ lặp của nền (phách), khác độ dài cả vòng viên: nền beat lặp từng ô. */
+  /** Chu kỳ lặp của nền (phách), khác độ dài cả vòng viên: nền beat lặp từng chu kỳ trống (một hay hai ô). */
   chuKyNen?: number
+  /** Số phách đếm vào (nền beat: đúng một ô). */
+  demVao?: number
+  /** Ký hiệu nhịp độ trên màn chơi: '♩' (mặc định) · '♪' (6/8 của app đếm móc đơn). */
+  kyHieuNhip?: string
 }
 
 /* ---------------- Lối SSA trên backing track (thử) — vòng của anh SSA, đệm điệu Cà Pháo ---------------- */

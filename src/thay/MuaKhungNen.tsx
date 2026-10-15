@@ -3,6 +3,7 @@ import { getPlaybackBeats, startAudio, startTimelineLoop, stopTimelineLoop } fro
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { BanPhimChong } from './BanPhimChong'
 import { VungRoi, type VienRoi } from './GameChong'
+import { nguonNenBeat } from './hocSolo/beatNen'
 import { chamSsa, type CauSsa, type VongNen } from './hocSolo/loiSsa'
 import { DAT_THI, diemCau, SO_CAU_THI, type Ben } from './soanCau/gameChong'
 import { useNotXuong } from './useMuaRoi'
@@ -25,6 +26,8 @@ export interface KetQuaNen {
   sai: number
   diem: number
   bpm: number
+  /** '♩' · '♪' (6/8 đếm móc đơn). */
+  kyHieu: string
   saiO: { ten: string; meo: string }[]
 }
 
@@ -119,7 +122,7 @@ export function MuaKhungNen({
       const moc = [0]
       for (const x of v.nhip) moc.push(moc[moc.length - 1]! + x)
       // Nền beat đếm vào đúng một ô (khớp vạch ô của trống); nền khác 4 phách hay ít hơn nếu hợp âm đầu ngắn.
-      const demVao = v.demTrong && v.chuKyNen ? v.chuKyNen : Math.min(4, v.nhip[0] ?? 4)
+      const demVao = v.demTrong ? (v.demVao ?? v.chuKyNen ?? 4) : Math.min(4, v.nhip[0] ?? 4)
       Object.assign(s, { vong: v, take: t, moc, demVao, t0: performance.now(), nen: false, vien: [], sinhToi: -1, dang: -1 })
       return true
     }
@@ -139,14 +142,12 @@ export function MuaKhungNen({
       bảo đảm khớp. Đo bản này (15/10/2026, chặn `triggerAttack` của bộ trống): giờ hẹn 4 tiếng đếm vào cách nhau đúng 0,600 s ở ♩ 100, phách 1
       tới sau tiếng đếm cuối 0,600 s; thu mẫu âm (AudioWorklet, ghi cả khung im lặng) ra 0,601 · 0,598 · 0,601 s. Các con số "vào sớm 80 ms"
       · "đếm vào nén lại" đo lúc đầu là lỗi của cách thu (bộ thu bỏ khung im lặng), không phải lỗi app.
-      Nền lặp theo `chuKyNen` (một ô): lượt đầu là ô đếm vào, các lượt sau là ô trống.
+      Nền lặp theo `chuKyNen` (chu kỳ trống, một hay hai ô): lượt đầu là ô đếm vào, các lượt sau là trống xoay vòng (`nguonNenBeat`).
     */
     const v = s.vong
     if (v?.demTrong) {
-      const d = s.demVao
       const L = v.chuKyNen ?? dai()
-      const dem = Array.from({ length: d }, (_, k) => ({ notes: [42], startBeat: k, durationBeats: 0.25, velocity: k === 0 ? 110 : 90, trong: true }))
-      startTimelineLoop((luot) => (luot === 0 ? [...dem, ...v.nen.map((h) => ({ ...h, startBeat: h.startBeat + d })).filter((h) => h.startBeat < L)] : v.nen), bpm, L)
+      startTimelineLoop(nguonNenBeat(v.nen, s.demVao, L), bpm, L)
       s.nen = true
     }
     ve()
@@ -155,7 +156,7 @@ export function MuaKhungNen({
     if (s.pha !== 'choi') return
     s.pha = 'het'
     stopTimelineLoop()
-    if (ngay) return onThoat({ thi, dung: s.dung, sai: s.sai, diem: s.diem, bpm, saiO: s.saiO })
+    if (ngay) return onThoat({ thi, dung: s.dung, sai: s.sai, diem: s.diem, bpm, kyHieu: s.vong?.kyHieuNhip ?? '♩', saiO: s.saiO })
     ve()
   }
   function doiCau() {
@@ -340,7 +341,7 @@ export function MuaKhungNen({
           </span>
         )}
         <span className="text-xs text-dim">
-          {s.vong?.ten} · ♩ = {bpm} · backing track
+          {s.vong?.ten} · {s.vong?.kyHieuNhip ?? '♩'} = {bpm} · backing track
         </span>
         <span className="ml-auto flex gap-1.5">
           {coDoiCau && (

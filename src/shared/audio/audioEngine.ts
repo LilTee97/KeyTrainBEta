@@ -228,10 +228,12 @@ function getSynth(): Voice {
   - snare Kit8 — lệch dải 0,41, tắt 84 ms; snare video mỏng (thân 150 – 400 Hz 11 %, tắt 38 ms). Cũ (bản đầu cùng ngày): Kit3 — chọn theo
     hình phổ mel, nhưng thân 150 – 400 Hz tới 56 % (lệch dải 0,91). Stark lệch dải ít nhất (0,29) mà tắt 168 ms, dài hơn một móc kép ở ♩ 100.
     Lùi về Kit3 nếu người dùng thấy snare mỏng, rè quá;
-  - hi-hat acoustic-kit — lệch dải 0,10, ít nhất trong 10 bộ; tắt 171 ms (video 75 ms).
-  Nốt trống theo số GM: 36 kick · 38 snare · 42 hi-hat. Mất mạng thì trống tổng hợp (MembraneSynth · NoiseSynth) để nền không câm.
+  - hi-hat acoustic-kit — lệch dải 0,10, ít nhất trong 10 bộ; tắt 171 ms (video 75 ms);
+  - gõ vành (GM 37 — cross-stick của Bossa, nền theo điệu 16/10/2026): mẫu snare CR78 — giòn, ngắn (tắt 46 ms, gần như không có thân
+    150 – 400 Hz), khác hẳn snare Kit8. Chọn là của Claude; Tone.js không có mẫu gõ vành riêng.
+  Nốt trống theo số GM: 36 kick · 37 gõ vành · 38 snare · 42 hi-hat. Mất mạng thì trống tổng hợp (MembraneSynth · NoiseSynth) để nền không câm.
 */
-const TRONG_MAU: Readonly<Record<number, string>> = { 36: 'CR78/kick.mp3', 38: 'Kit8/snare.mp3', 42: 'acoustic-kit/hihat.mp3' }
+const TRONG_MAU: Readonly<Record<number, string>> = { 36: 'CR78/kick.mp3', 37: 'CR78/snare.mp3', 38: 'Kit8/snare.mp3', 42: 'acoustic-kit/hihat.mp3' }
 /** Trống nhỏ hơn piano 3 dB — tiếng bạn đánh nổi trên nền (Claude chọn, chưa nghe thử; nền nhỏ quá thì lùi về 0). */
 const TRONG_DB = -3
 
@@ -281,7 +283,7 @@ function trongTongHop(): BoTrong {
     loai: 'tong-hop',
     danh: (m, t, v) => {
       if (m === 36) kick.triggerAttackRelease('C1', 0.2, t, v)
-      else if (m === 38) snare.triggerAttackRelease(0.1, t, v)
+      else if (m === 38 || m === 37) snare.triggerAttackRelease(m === 37 ? 0.04 : 0.1, t, v)
       else hat.triggerAttackRelease(0.05, t, v)
     },
     amLuong: (db) => {
@@ -457,7 +459,7 @@ export interface ScheduledHit {
   startBeat: number
   durationBeats: number
   velocity: number
-  /** Gõ bằng bộ trống (`chuanBiTrong`) — nốt là số GM: 36 kick · 38 snare · 42 hi-hat. */
+  /** Gõ bằng bộ trống (`chuanBiTrong`) — nốt là số GM: 36 kick · 37 gõ vành · 38 snare · 42 hi-hat. */
   trong?: boolean
 }
 

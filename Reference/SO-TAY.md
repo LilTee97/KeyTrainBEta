@@ -7654,3 +7654,82 @@ Mất mạng thì trống tổng hợp (MembraneSynth · NoiseSynth). Trống nh
     Dừng về màn kèm tổng kết, nền tắt; Tắt nền thì rơi tự do như cũ;
   - nút thầy 45/45 · Mưa khung nốt 16/16 · Game chạy ngón 40/40;
   - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Nền beat theo điệu cho 4 tab thầy của Game nốt rơi (16/10/2026)
+
+**Người dùng:** *"beat backing track của mục Quy luật chồng+chạy đã ổn · Dựa trên các điệu hiện có của KT bạn hãy tạo ra các loại backing
+track dạng beat cho từng điệu để đưa vào làm backing cho 4 tab của các thầy trong Game nốt rơi"*.
+
+**Đọc yêu cầu:**
+- 4 tab là Lối SSA · Cà Pháo · Linh Nhi · Blues. Tuấn chưa có tab trong Game nốt rơi.
+- Nền Lo-fi của Quy tắc · chồng + chạy đã duyệt — giữ nguyên.
+
+**Cách dựng:** mỗi nền dịch KHUNG BÙM – CHÁT của chính điệu ấy trong app (cell của điệu + chú thích khung người dùng đã duyệt) sang trống:
+- bùm → kick;
+- chát → snare (Bossa → gõ vành, cross-stick của bossa);
+- hi-hat theo nhịp chia của điệu.
+
+| Nền | Tab | Nhịp · gốc | Kick | Snare · gõ vành | Hi-hat |
+|---|---|---|---|---|---|
+| Ballad cứ đi | Lối SSA · Cà Pháo | 4/4 ♩ 63 | 1 · 3 | snare 2 · 4 | 16 móc kép (như rải), nhấn tiếng 8 mỗi nửa ô |
+| Ballad Để em | Lối SSA · Cà Pháo | 4/4 ♩ 85, chu kỳ 2 ô | ô 1: 1 · 2a · 4 — ô 2: 1 · 1e · 1a | snare 2 · 4 | móc đơn + móc kép nửa sau ô |
+| Ballad Có Em Chờ | Lối SSA · Cà Pháo | 4/4 ♩ 75, chu kỳ 2 ô | ô 1: 1 · 2a · 3e — ô 2: 1 · 2a · 3& | snare 2 · 4 | móc đơn + móc kép cuối câu |
+| Bossa | Lối SSA · Cà Pháo | 4/4 ♩ 110, chu kỳ 2 ô | ô 1: 1 · 2& · 3 nhẹ — ô 2: 1 · 2& | gõ vành ô 1: 2 · 3& · 4& — ô 2: 1& · 3 · 4 | móc đơn |
+| Slow Rock Lá thư | Linh Nhi | 6/8 ♪ 86 | tiếng 1 | snare tiếng 4 | 6 móc đơn, nhấn 1 · 4 |
+| Twist | Blues | 4/4 ♩ 140, swing 2:1 | 1 · 3 | snare 2 · 2& · 4 | móc đơn swing |
+| Slow Blues | Blues | 6/8 ♪ 92 | tiếng 1 · bum tiếng 6 | snare tiếng 4 | 6 móc đơn |
+
+Lối SSA có Lo-fi + bốn nền Cà Pháo (bản backing piano của tab ấy cũng dùng điệu Cà Pháo).
+
+Nguồn khung từng nền:
+- Ballad cứ đi: rải 8 móc kép mỗi nửa ô, nhấn tiếng 1 · 5 · 8.
+- Để em: "Bùm chát bùm → chát bum chát BÙM chát bum chát" — cú hai tay ở phách 1 · 4 (23/30 · 24/30 ô sheet).
+- Có Em Chờ: bass ngân 1 · 2a · 3, tay phải ba nốt 2 · 4, móc kép cuối câu.
+- Bossa: 11 tiếng đã duyệt 13/9/2026.
+- Slow Rock: sóng rải 6 móc đơn, nhấn 1 · 4.
+- Twist: đo từ nền trống video PianoStyles 30/9/2026.
+- Slow Blues: bass phách 1, hợp âm phách 4, bass dẫn phách 6.
+
+**Màn** — khung "Chơi trên nền beat (thử)" như ở Quy tắc · chồng + chạy, nay ở cả 4 tab:
+- nút nền ghi tên · nhịp; ♩ chọn 60 · 70 · 80 · 90 % nhịp gốc và nhịp gốc;
+- 6/8 ghi ♪ (app đếm móc đơn ở 6/8);
+- mỗi hợp âm mặc định 2 ô (4/4) · 1 ô (6/8);
+- bấm một màn của tab là hợp âm của màn ấy rơi khớp nhịp — Lối SSA dùng hợp âm màn Lối SSA, thầy dùng hợp âm bộ soạn của thầy;
+- đếm vào đúng một ô (6/8: 6 tiếng).
+
+**Mã:**
+- `beatNen.ts`: `BEAT_NEN` (8 nền, `bo` = tab có nền), `vongBeat` (dùng chung cho mọi tab), `nguonNenBeat` (đếm vào + xoay lượt),
+  `kyHieuNhip`.
+- `audioEngine.ts`: GM 37 gõ vành — mẫu snare CR78 (giòn, tắt 46 ms; Tone.js không có mẫu gõ vành).
+- `MuaKhungNen`: đếm vào = `VongNen.demVao`; ký hiệu ♩ / ♪.
+- `GameKhungRoi`: khung beat cho 4 tab; tổng kết backing piano và nền beat tách riêng.
+
+**Sửa khi làm** — nền hai ô (Để em · Có Em Chờ · Bossa):
+- Nếu lượt sau lặp nguyên chu kỳ thì sau ô đếm vào, ô 1 sẽ lặp hai lần. Nay lượt sau xoay vòng (`nguonNenBeat`).
+- Kiểm bằng giờ hẹn thật (chặn `triggerAttack` của bộ trống, Để em ♩ 85): kick ở phách 4 · 5,75 · 7 → 8 · 8,25 · 8,75 → 12 · 13,75 · 15 →
+  16 · 16,25 · 16,75, đúng ô 1 → ô 2 → ô 1 → ô 2.
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Người dùng chưa nghe 7 nền mới.
+- Cách dịch điệu sang trống, chỗ giữ backbeat, lực từng tiếng, lớp hi-hat là của Claude. Chưa có video trống của các điệu ấy để đo, trừ
+  Twist.
+- Để em: walking bass (bum) không dịch hết sang kick — dày quá; chỉ lấy bùm chính.
+- Có Em Chờ ô 2: tay phải chạy giai điệu, không có chát ở phách 2 · 4 — nền vẫn giữ snare 2 · 4 cho đều nhịp.
+- Gõ vành dùng mẫu snare CR78, không phải tiếng gõ vành thật.
+- Tuấn (Bolero · Tango) chưa có tab trong Game nốt rơi — chưa làm nền.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi.
+- `beatNen.test.ts` 6:
+  - mọi nền: tiếng trong chu kỳ, lực 1–127, chu kỳ là bội của ô, kick phách 1;
+  - mỗi điệu của ba thầy có nền ở đúng tab, nhịp · số phách · nhịp độ gốc khớp điệu của app;
+  - khung Bossa · 6/8 · Twist;
+  - xoay lượt hai ô;
+  - vòng quy tắc · Lối SSA · ba thầy.
+- Toàn suite (giới hạn 20 s mỗi test): 2 825 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless:
+  - nút thầy 57/57 (thêm 12): mỗi tab đúng danh sách nền; Linh Nhi Slow Rock ghi "♪ = 86", chồng + chạy trong ô là Đúng, Dừng có tổng
+    kết; kick Để em đúng thứ tự ô; Twist bên thi;
+  - Lối SSA 71/71 (thêm 3): danh sách nền của tab; nền Bossa phát, chồng + chạy là Đúng; tổng kết chỉ ở khung beat;
+  - Mưa khung nốt 16/16 · Game chạy ngón 40/40;
+  - `LuyenTap.json`, `Nguon.json` không đổi.

@@ -557,6 +557,9 @@ Các hợp âm phải được chọn tự do …"*
   Cập nhật 15/10 (người dùng: "backing track … chỉ có beat … tạo ra dạng backing track bằng beat tương tự vậy để làm thành backing track cho
   mục Quy tắc chồng + Chạy thử"): màn Quy tắc · chồng + chạy có khung "Chơi trên nền beat (thử)" — khuôn trống Lo-fi 4/4 đo từ video
   "Lick Em/Am" (kick 1 · 2a · 3, snare 2 · 4, hi-hat 8 móc đơn, ♩ ≈ 101), mẫu trống chọn theo số đo; hợp âm của màn rơi khớp nhịp, có đếm vào.
+  Cập nhật 16/10 (người dùng: nền beat quy tắc "đã ổn" · "Dựa trên các điệu hiện có của KT … tạo ra các loại backing track dạng beat cho
+  từng điệu … cho 4 tab của các thầy trong Game nốt rơi"): khung "Chơi trên nền beat (thử)" ở Lối SSA · Cà Pháo · Linh Nhi · Blues — 7 nền
+  dịch khung bùm – chát của điệu (Ballad cứ đi · Để em · Có Em Chờ · Bossa · Slow Rock 6/8 · Twist · Slow Blues 6/8) sang trống.
 
 #### Lo ngại của Claude — nói trước khi dựng
 1. Cột thầy không ra một đáp án duy nhất cho "hợp âm bậc 1 → các bậc còn lại" (mỗi bậc là phân bố; chuyện bậc 1 kéo theo bậc khác
