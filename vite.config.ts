@@ -47,9 +47,10 @@ export default defineConfig({
       icon ngoài màn hình chính, chạy toàn màn hình không thanh địa chỉ, và
       **dùng được khi mất mạng** vì toàn bộ mã đã nằm sẵn trong máy.
 
-      Đóng gói được trọn vẹn vì app không phụ thuộc gì bên ngoài: tiếng đàn do
-      Tone.js tự tổng hợp chứ không tải mẫu tiếng về, và bài hát lưu ở
-      IndexedDB ngay trong máy.
+      Bài hát lưu ở IndexedDB ngay trong máy. Chỉ MẪU TIẾNG (piano · guitar · trống) tải từ máy chủ mẫu của
+      Tone.js — giữ ở bộ nhớ đệm `mau-tieng` sau lần tải đầu (xem `runtimeCaching`). Cũ (tới 16/10/2026): câu này
+      ghi app "không phụ thuộc gì bên ngoài, tiếng đàn do Tone.js tự tổng hợp" — sai từ khi có mẫu piano; mất mạng
+      thì piano tụt về tiếng tổng hợp, trống về trống tổng hợp.
     */
     VitePWA({
       registerType: 'autoUpdate',
@@ -92,6 +93,22 @@ export default defineConfig({
           hỏi được, nên không thể để nó ngoài bộ nhớ đệm.
         */
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        /*
+          Mẫu tiếng (mp3) ở nbrosowsky.github.io · tonejs.github.io: máy chủ chỉ cho giữ 10 phút (max-age=600), nên
+          mỗi buổi tập trên điện thoại lại tải ~1 MB mẫu piano (6 tệp, A4 = 159 kB — đo 16/10/2026), và mất mạng thì
+          mất tiếng piano. Tải một lần rồi lấy từ máy; mẫu không đổi theo phiên bản app nên không đặt hạn.
+        */
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/(nbrosowsky|tonejs)\.github\.io\/.*\.mp3$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mau-tieng',
+              expiration: { maxEntries: 80 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],

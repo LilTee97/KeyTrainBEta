@@ -15,7 +15,7 @@ vi.mock('tone', () => {
     }, clear: vi.fn(),
   }
   return {
-    start: async () => {}, now: () => 0, getTransport: () => transport,
+    start: async () => {}, getContext: () => ({ state: 'running' }), now: () => 0, getTransport: () => transport,
     Frequency: (note: number) => ({ toFrequency: () => note }),
     Synth: class {},
     PolySynth: class {

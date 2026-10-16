@@ -314,7 +314,18 @@ export function chuanBiTrong(): Promise<void> {
 export const loaiTrong = (): BoTrong['loai'] | null => boTrong?.loai ?? null
 
 
+/** Lời hứa TẠO GIỌNG ĐÀN — giữ một lần. Việc mở ngữ cảnh tiếng (resume) không nằm trong này: mỗi lần `startAudio` đều thử lại. */
 let boot: Promise<void> | null = null
+/**
+ * Chờ lời mở tiếng bao lâu thì thôi. Trình duyệt chặn lời mở (chưa có thao tác hợp lệ) thì lời hứa của nó treo mãi — người chơi vẫn phải
+ * vào được game, tiếng mở ở thao tác kế tiếp. Claude chọn, chưa đo; trong thao tác hợp lệ lời mở xong sau vài mili giây.
+ */
+const RESUME_CHO_MS = 300
+/**
+ * Sự kiện có quyền mở tiếng (HTML: "activation-triggering input events"). Chạm cảm ứng chỉ có quyền lúc NHẤC ngón (pointerup · touchend),
+ * chuột thì lúc nhấn xuống (mousedown), bàn phím lúc keydown.
+ */
+const SU_KIEN_MO_TIENG = ['pointerup', 'touchend', 'mousedown', 'keydown'] as const
 
 /** Đổi nốt MIDI sang tần số để đưa vào Tone.js. */
 function toFrequency(note: MidiNote): number {
@@ -324,17 +335,25 @@ function toFrequency(note: MidiNote): number {
 /**
  * Mở khoá âm thanh. Bắt buộc gọi từ một thao tác thật của người dùng
  * (bấm chuột, chạm màn hình) — trình duyệt chặn phát tiếng tự động.
+ *
+ * Android (16/10/2026, chạy thử giả lập máy Android trước khi đưa lên điện thoại): với chạm cảm ứng, quyền phát tiếng chỉ có lúc NHẤC
+ * ngón. Bản cũ gọi `Tone.start()` ngay ở cú chạm XUỐNG đầu tiên (`pointerdown`) — trình duyệt chặn, lời hứa treo mãi, mà lời hứa ấy được
+ * giữ lại (`boot`) nên mọi lần gọi sau cùng chờ nó: không có tiếng cả buổi, và game nào `await startAudio()` trước khi vào cũng kẹt ở màn
+ * chọn (12/75 bước hỏng). Nay mỗi lần gọi đều thử mở lại ngữ cảnh (gọi đồng bộ, trước mọi await); chỉ việc tạo giọng đàn được giữ một lần;
+ * lời mở bị chặn thì chờ tối đa `RESUME_CHO_MS` rồi cho đi tiếp.
  */
 export function startAudio(): Promise<void> {
-  if (voice && useAudioStore.getState().ready) return Promise.resolve()
+  const chay = Tone.getContext().state === 'running'
+  if (voice && useAudioStore.getState().ready && chay) return Promise.resolve()
+  const mo = chay ? Promise.resolve() : Tone.start().catch(() => undefined)
   boot ??= (async () => {
-    await Tone.start()
     if (!voice) {
       voice = await createVoice(useAudioStore.getState().instrument)
     }
     useAudioStore.getState().setReady(true)
   })()
-  return boot
+  const cho = new Promise<void>((xong) => setTimeout(xong, RESUME_CHO_MS))
+  return Promise.all([boot, Promise.race([mo, cho])]).then(() => undefined)
 }
 
 export async function setInstrument(id: InstrumentId): Promise<void> {
@@ -358,20 +377,18 @@ export async function setInstrument(id: InstrumentId): Promise<void> {
  * Trả về hàm gỡ, để React dọn được khi rời trang.
  */
 export function armAudioOnFirstGesture(): () => void {
-  if (useAudioStore.getState().ready) return () => {}
-
+  /* Nghe mọi thao tác có quyền mở tiếng, và KHÔNG gỡ sau lần đầu: ngữ cảnh tiếng có thể bị treo lại (điện thoại có cuộc gọi, app chạy nền) —
+     thao tác kế tiếp mở lại. Ngữ cảnh đang chạy thì `open` không làm gì. Cũ (tới 16/10/2026): nghe `pointerdown` một lần rồi gỡ — trên
+     điện thoại cú chạm xuống chưa có quyền nên tiếng không bao giờ mở (xem `startAudio`). */
   function open() {
-    void startAudio()
-    remove()
+    if (Tone.getContext().state !== 'running' || !useAudioStore.getState().ready) void startAudio()
   }
 
   function remove() {
-    window.removeEventListener('pointerdown', open)
-    window.removeEventListener('keydown', open)
+    for (const loai of SU_KIEN_MO_TIENG) window.removeEventListener(loai, open, true)
   }
 
-  window.addEventListener('pointerdown', open)
-  window.addEventListener('keydown', open)
+  for (const loai of SU_KIEN_MO_TIENG) window.addEventListener(loai, open, true)
 
   return remove
 }

@@ -7968,3 +7968,58 @@ mờ và khi càng gần phím đàn càng rõ"*. Ảnh: viên Gmaj9 ghi "từ G
   - Mưa khung nốt và Lối SSA 0,48; Game chạy ngón 0,45 → 0,53 sau 3 giây; nền beat 0,45 → 0,73.
 - Ảnh soát mắt: lúc vừa rơi đã thấy rõ chỗ đặt tay, gần đáy đậm hẳn.
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Chạy trên Android: tiếng mở được ở cú chạm đầu · giữ mẫu tiếng trong máy (16/10/2026)
+
+**Người dùng:** *"commit và push lên github để tôi tải app về điện thoại android / Nhớ là phải tối ưu tốt cho android và kiểm tra
+kỹ ko để bị lỗi gì khi chạy trên android"*.
+
+**Cách kiểm** (Claude dựng, chạy trên máy tính này — **chưa thử trên điện thoại thật**):
+- bản dựng y như GitHub Pages (`BASE_PATH=/KeyTrainBEta/`, `vite preview`);
+- Chrome headless KHÔNG có cờ tự phát tiếng (như Android: tiếng chỉ mở sau một thao tác), giả lập máy Android 360 × 780 (UA Android
+  14), chạm thật bằng touch events; CPU chậm 4 lần lúc mở app và lúc mưa rơi;
+- đi qua 8 trang · mọi tab · 11 game, chạm phím đàn ảo; ghi lỗi trang (onerror · unhandledrejection · console.error) và cuộn ngang
+  từng bước; tắt mạng rồi mở lại.
+- Git Bash: phải `export MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL='BASE_PATH'` trước khi dựng, không thì MSYS đổi `/KeyTrainBEta/`
+  thành `/Program Files/Git/KeyTrainBEta/` (bản dựng hỏng đường dẫn, mở app 32 giây không lên).
+
+**Lỗi tìm ra** (lần chạy đầu 63/75 bước đạt): cú chạm đầu không mở được tiếng (AudioContext vẫn `suspended`), và cả 11 game kẹt ở
+màn chọn — 12 bước hỏng, chung một gốc:
+- `armAudioOnFirstGesture` gọi `Tone.start()` ở `pointerdown`. Với chạm cảm ứng, trình duyệt chỉ cho quyền phát tiếng lúc NHẤC ngón
+  (`pointerup` · `touchend`), nên lời mở treo mãi.
+- Lời hứa ấy được giữ (`boot`): mọi lần `startAudio` sau — kể cả ở nút vào game — cùng chờ nó → game không vào được, cả buổi không
+  tiếng. Trên máy tính không lộ vì chuột có quyền ngay ở `mousedown`.
+
+**Sửa:**
+- `startAudio`: mỗi lần gọi đều thử mở lại ngữ cảnh tiếng (gọi đồng bộ, trước mọi await); chỉ việc tạo giọng đàn giữ một lần; lời mở
+  bị chặn thì chờ tối đa `RESUME_CHO_MS` = 300 ms rồi cho vào game. 300 ms là Claude chọn, chưa đo; lùi khi vào game mà nốt đầu câm
+  → tăng lên.
+- `armAudioOnFirstGesture`: nghe `pointerup` · `touchend` · `mousedown` · `keydown` và không gỡ sau lần đầu (ngữ cảnh tiếng bị treo
+  lại khi có cuộc gọi, app chạy nền → chạm kế tiếp mở lại). Cũ: `pointerdown`, gỡ sau lần đầu.
+- Mẫu tiếng (piano · guitar · trống, mp3 ở nbrosowsky.github.io · tonejs.github.io): service worker giữ ở bộ nhớ đệm `mau-tieng`
+  (CacheFirst, `vite.config.ts`). Máy chủ chỉ cho giữ 10 phút (`max-age=600`) nên mỗi buổi lại tải ~1 MB mẫu piano (6 tệp, A4 =
+  159 kB), và mất mạng thì piano tụt về tiếng tổng hợp. Chú thích cũ trong `vite.config.ts` và `CHAY-TREN-ANDROID.md` ghi "tiếng đàn
+  do Tone.js tự tổng hợp, không tải mẫu" — sai từ khi có mẫu piano, đã sửa.
+- Test `startAudio.test.ts`: lời mở treo mãi thì `startAudio` vẫn xong sau 300 ms, lần gọi sau thử mở lại, tiếng đã chạy thì không
+  gọi nữa — đỏ trên bản cũ, qua trên bản mới. Mock `tone` của `timelineLoop.test.ts` thêm `getContext`.
+
+**Kiểm sau sửa — 80/80 bước đạt** (75 bước cũ + 5 bước mẫu tiếng · mất mạng):
+- Mở app lần đầu (CPU ×4): có hàng trang sau 1 138 ms, DOMContentLoaded 798 ms. Lần chạy trước 1 402 ms — n = 1 mỗi lần, chênh là
+  nhiễu, không phải tối ưu.
+- Chạm đầu: AudioContext `suspended` → `running`.
+- 8 trang · tab thầy · Tái Hòa Âm 6 tab · Hợp âm 3 tab · Học Solo 7 tab: không lỗi, cuộn ngang 0 px.
+- 5 mục Game công thức · 6 bộ Game nốt rơi · nền beat Lo-fi · Game chạy ngón: vào được game, chạm phím được ghi nhận.
+- Mưa rơi ở CPU ×4: 144 khung/giây, 0 khung trễ quá 50 ms trong 4 giây.
+- Bộ nhớ đệm `mau-tieng` sau một lượt: 6 mẫu piano + 4 mẫu trống.
+- Mất mạng, mở lại: app mở từ bộ nhớ đệm; tiếng chạy; 6 mẫu piano lấy từ service worker (200), không tệp nào hỏng; vào game, chạm
+  phím được.
+- Toàn suite 2 844 qua / 5 đỏ cũ / 1 bỏ qua. 5 test đỏ (phraseAcrossBar · daoTruongLinhNhi · sietHopAm · tuyenSolo ×2) đỏ y hệt,
+  cùng số, trên mã trước phiên này (`9b780f5^`, chạy trong worktree tạm) — không do bước này. Lint các tệp sửa 0 lỗi (lint cả repo
+  còn 30 lỗi cũ, đều ở `src/reharm`). `tsc -b` · `vite build` qua.
+- `LuyenTap.json`, `Nguon.json` không đổi.
+
+**Chưa đo — lỗ còn lại:**
+- Điện thoại thật: độ trễ tiếng của loa Android, cắm đàn MIDI qua OTG, đa điểm chạm thật trên phím ảo.
+- Lần dùng đầu tiên (chưa có mẫu trong máy) trên mạng chậm: vào game đầu phải chờ tải 6 mẫu piano (~1 MB; quá 15 giây thì đổi
+  nguồn mẫu, rồi tiếng tổng hợp).
+- Gói mã chính 5,26 MB (972 kB nén) chưa tách nhỏ — mở app ở CPU ×4 hiện 1,1 – 1,4 giây nên chưa cần.

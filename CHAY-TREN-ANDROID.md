@@ -4,9 +4,9 @@ App đã đóng gói thành **PWA** — một trang web cài được ra màn h�
 toàn màn hình và **dùng được khi mất mạng**, vì toàn bộ mã nằm sẵn trong máy sau
 lần mở đầu tiên.
 
-Đóng gói được trọn vẹn vì app không phụ thuộc gì bên ngoài: tiếng đàn do Tone.js
-tự tổng hợp chứ không tải mẫu tiếng về, và bài hát lưu ở IndexedDB ngay trong
-máy.
+Bài hát lưu ở IndexedDB ngay trong máy. Riêng **mẫu tiếng** (piano, guitar,
+trống) tải từ mạng ở lần đầu nghe, rồi được giữ lại trong máy — nên lần đầu mở
+một game nên có mạng; sau đó mất mạng vẫn đủ tiếng piano.
 
 ## Vì sao không đóng thành file APK
 
@@ -53,6 +53,10 @@ chỉ, và không cần mạng nữa.
 
 Cắm đàn: nối cáp OTG rồi bấm nút **Cắm đàn MIDI** trong app — Chrome sẽ hỏi
 quyền một lần.
+
+Tiếng: Android chỉ cho trang phát tiếng sau **một cú chạm** — chạm bất kỳ đâu
+trong app là có tiếng. Không nghe gì thì tăng **âm lượng phương tiện** (media)
+của máy, không phải âm lượng chuông.
 
 ## Trên máy tính
 
