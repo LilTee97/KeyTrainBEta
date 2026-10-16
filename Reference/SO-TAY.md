@@ -7908,3 +7908,43 @@ Ghi vào md SSA (PianoBrain `knowledge/teachers/ssa-rai-ngon.md`, mục "Hai tay
   - thi đổi bass 12 gốc 20/20 (kỷ lục "ssa:2"); thi màn 1 hai tay 20/20 ("ssa:0|2");
   - điện thoại không cuộn ngang.
 - Game công thức cũ 39/39 · Mưa khung nốt 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Gợi ý hiện ngay từ đầu, mờ rồi rõ dần · viên Hợp âm SSA ghi hai tay (16/10/2026)
+
+**Người dùng:** *"hợp âm SSA hãy giải thích theo kiểu tay trái hợp âm gì và tay phải hợp âm gì chứ như trong hình ghi từ Sol +Bm mà phía
+dưới lại ghi rõ ra. Hãy ghi trên hợp âm lúc trôi xuống luôn · Trong tất cả game hợp âm hay chạy nốt thì hãy đều hiện gợi ý ngay từ đầu nhưng
+mờ và khi càng gần phím đàn càng rõ"*. Ảnh: viên Gmaj9 ghi "từ Gmaj7: Sol + Bm · thêm La trên đỉnh tay phải", trong khi đáp án là Sol + Bm7.
+
+**Làm:**
+1. **Viên mục Hợp âm SSA** (bên luyện) ghi thẳng hai tay của chính hợp âm đang rơi:
+   - dòng 2: "tay trái Sol · tay phải Bm7";
+   - dòng 3: quy tắc — "Gmaj7 thêm La trên đỉnh" · "trưởng trên ♭3 (♭3 = Fa)" · "9sus4 = trưởng trên ♭7".
+   Lời giải và mẹo cũng nói theo hai tay. Bên thi vẫn chỉ có tên.
+2. **Gợi ý bên luyện ở mọi game rơi:** Mưa hợp âm (năm mục), Mưa khung nốt (mọi tab, cả chơi trên backing / nền beat), Game chạy ngón
+   phần 1.
+   - Mọi phím gợi ý hiện ngay khi viên sinh ra. Cũ: từ 60 % quãng rơi mới sáng dần từng nốt (`LO_TU` 0,6, `soNotLo`).
+   - Độ rõ 0,2 → 1, tăng đều theo quãng rơi, rõ hẳn ở vạch chờ 90 % (`doRoGoiY`; `DO_RO_DAU` 0,2 — Claude chọn, chưa đo).
+   - Tên tay đứng trên phần gợi ý mờ / rõ cùng phím. Bàn phím vẽ lại theo 20 bậc độ rõ.
+   - Game chạy ngón phần 2 và câu thầy: gợi ý gắn với hợp âm đang vang (đã ở phím đàn) — giữ rõ như cũ.
+   - Bên thi vẫn không có gợi ý.
+   - Lùi khi: gợi ý từ đầu làm người chơi chỉ nhìn phím mà không tự nghĩ → trả mốc 60 %; mờ quá không thấy → nâng `DO_RO_DAU`.
+
+**Mã:**
+- `OnScreenPiano`: `revealOpacity` — có giá trị thì phím gợi ý vẽ bằng lớp phủ theo độ rõ, phím giữ màu thường.
+- `BanPhimHaiTay` · `BanPhimChong`: `doRo`.
+- `gameChong.ts`: `doRoGoiY` · `bacDoRo` · `DO_RO_DAU` thay cho `soNotLo` · `LO_TU`.
+- `useMuaRoi`: `doRoCua`; `loCua` trả đủ số phím gợi ý.
+- `GameChong` · `GameKhungRoi` · `GameChayNgonRoi` · `MuaKhungNen`: truyền độ rõ; sửa các dòng "rơi quá 60 %".
+- `hopAmSsa.ts`: chữ trên viên và lời giải theo hai tay.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi · toàn suite 2 843 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Test: `doRoGoiY` (0 % → 0,2 · 45 % → 0,6 · 90 % → 1, tăng dần); viên SSA theo hai tay.
+- Chạy thử headless — gợi ý 8/8:
+  - Mưa hợp âm maj7 rơi 5 s: vừa rơi 3 phím + nhãn ở 0,23; ở 86 % lên 0,93. Bên thi không gợi ý. Passing chord: 4 phím mờ.
+  - Mưa khung nốt quy tắc: 7 phím 0,23 → 0,93. Lối SSA: 11 phím (3 tay trái) + nhãn tay trái 0,23.
+  - Game chạy ngón: 0,2 → 0,33 sau 3 giây. Nền beat Lo-fi: 0,2 → 0,63 sau 3,5 giây.
+- Mục SSA 17/17 (viên "tay trái Đô · tay phải Em7").
+- E2e cũ: Game công thức 39/39 · Mưa khung nốt 16/16 · Game chạy ngón 40/40 · nút thầy 57/57 · Lối SSA 71/71 — trong script Lối SSA sửa hàm
+  đọc phím gợi ý, vì gợi ý nay là lớp phủ trong phím.
+- `LuyenTap.json`, `Nguon.json` không đổi.

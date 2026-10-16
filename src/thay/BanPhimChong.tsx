@@ -24,6 +24,7 @@ export function BanPhimChong({
   thap,
   cao,
   tenThay = '',
+  doRo,
 }: {
   c: CauSsa
   daChay: readonly number[]
@@ -33,6 +34,8 @@ export function BanPhimChong({
   thap: number
   cao: number
   tenThay?: string
+  /** Độ rõ của gợi ý (0–1) — hiện ngay từ đầu, rõ dần khi viên gần phím đàn. */
+  doRo?: number
 }) {
   const ssa = c.ssa
   const vua = (ns: readonly number[]) =>
@@ -105,6 +108,7 @@ export function BanPhimChong({
         lowNote={thap}
         highNote={cao}
         giang={nhuAnh || (ssa.loai === 'vong' && [1, 3, 5, 6, 8, 10].includes(c.k.tonic))}
+        doRo={doRo}
       />
       {!thi && nhuAnh && (
         <div className="flex flex-col gap-0.5 text-xs text-cream/85">

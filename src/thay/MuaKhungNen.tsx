@@ -5,7 +5,7 @@ import { BanPhimChong } from './BanPhimChong'
 import { VungRoi, type VienRoi } from './GameChong'
 import { nguonNenBeat } from './hocSolo/beatNen'
 import { chamSsa, type CauSsa, type VongNen } from './hocSolo/loiSsa'
-import { DAT_THI, diemCau, SO_CAU_THI, type Ben } from './soanCau/gameChong'
+import { bacDoRo, DAT_THI, diemCau, doRoGoiY, SO_CAU_THI, type Ben } from './soanCau/gameChong'
 import { useNotXuong } from './useMuaRoi'
 
 /*
@@ -83,6 +83,8 @@ export function MuaKhungNen({
     nen: false,
     vien: [] as VienNen[],
     sinhToi: -1,
+    /** Bậc độ rõ gợi ý của viên đích lần vẽ trước — đổi thì vẽ lại bàn phím. */
+    ro: -1,
     dang: -1,
     diem: 0,
     combo: 0,
@@ -168,6 +170,10 @@ export function MuaKhungNen({
     }
     ve()
   }
+  /** Viên đang đố: viên của ô đang nghe (lúc đếm vào: viên đầu). */
+  function dichCua() {
+    return s.vien.find((v) => v.i === s.dang) ?? s.vien.find((v) => v.i === 0) ?? null
+  }
   function sinh(i: number) {
     const c = s.vong!.cau[i % nC()]!
     const tu = i === 0 ? -s.demVao : dauO(i - 1)
@@ -206,6 +212,13 @@ export function MuaKhungNen({
       }
     if (dang !== s.dang) {
       s.dang = dang
+      doi = true
+    }
+    // Gợi ý mờ rồi rõ dần theo quãng rơi của viên đích (20 bậc) — như Mưa khung nốt rơi tự do.
+    const vd = dichCua()
+    const ro = thi || !vd ? -1 : vd.i * 100 + bacDoRo((b - vd.sinh) / vd.roi)
+    if (ro !== s.ro) {
+      s.ro = ro
       doi = true
     }
     if (doi) ve()
@@ -323,7 +336,7 @@ export function MuaKhungNen({
       </div>
     )
 
-  const dich = s.vien.find((v) => v.i === s.dang) ?? s.vien.find((v) => v.i === 0) ?? null
+  const dich = dichCua()
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-line bg-black/25 p-3 text-sm">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -363,7 +376,18 @@ export function MuaKhungNen({
       >
         {s.bao?.chu ?? (s.dang < 0 ? `Đếm vào — nền vào ở ${s.vong?.cau[0]?.ten ?? ''}: chồng rồi chạy trong ô ấy.` : 'Trong ô của hợp âm: chồng bass + thế rồi chạy nốt trên đỉnh.')}
       </p>
-      {dich && <BanPhimChong c={dich.c} daChay={dich.daChay} loN={thi ? 0 : dich.c.ssa.lo.length} thi={thi} thap={thap} cao={cao} tenThay={tenThay} />}
+      {dich && (
+        <BanPhimChong
+          c={dich.c}
+          daChay={dich.daChay}
+          loN={thi ? 0 : dich.c.ssa.lo.length}
+          thi={thi}
+          thap={thap}
+          cao={cao}
+          tenThay={tenThay}
+          doRo={thi ? undefined : doRoGoiY((bayGio() - dich.sinh) / dich.roi)}
+        />
+      )}
       <MidiConnect />
     </div>
   )

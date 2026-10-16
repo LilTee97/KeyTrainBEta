@@ -20,6 +20,8 @@ const kep = (x: number) => Math.min(0.9, Math.max(0.1, x))
  * `loTrai` (15/10/2026, Mưa khung nốt lối SSA — người dùng: "phân biệt cho tôi đâu là tay trái đâu là tay phải chơi"): phần đáp án của
  * tay trái, viền xanh; tên tay trái đặt trên đó khi tay trái chưa bấm gì. `giang`: phím đen ghi dấu giáng (D♭2 thay C#2) — lối SSA
  * "như anh", ba clip ở giọng dấu giáng, chữ dưới bàn phím ghi D♭2.
+ * `doRo` (16/10/2026 — người dùng: "hiện gợi ý ngay từ đầu nhưng mờ và khi càng gần phím đàn càng rõ"): độ rõ 0–1 của gợi ý — phím `lo` ·
+ * `loTrai` và tên tay đang đứng trên phần gợi ý (tay ấy chưa bấm gì). Bỏ trống là rõ hẳn như cũ.
  */
 export function BanPhimHaiTay({
   trai,
@@ -33,6 +35,7 @@ export function BanPhimHaiTay({
   mo = [],
   nhanPhim,
   giang = false,
+  doRo,
 }: {
   trai: readonly number[]
   phai: readonly number[]
@@ -46,6 +49,7 @@ export function BanPhimHaiTay({
   mo?: readonly number[]
   nhanPhim?: Readonly<Partial<Record<number, string>>>
   giang?: boolean
+  doRo?: number
 }) {
   const { whiteKeys, blackKeys } = buildKeyboardLayout(lowNote, highNote)
   const viTri = (n: number) => {
@@ -56,6 +60,9 @@ export function BanPhimHaiTay({
   const giua = (ds: readonly number[]) => (ds.length ? ds.reduce((s, n) => s + viTri(n), 0) / ds.length : null)
   let xT = giua(trai.length ? trai : loTrai)
   let xP = giua(phai.length ? phai : lo)
+  /* Tên tay đứng trên phần gợi ý (tay ấy chưa bấm gì) thì mờ / rõ theo gợi ý. */
+  const moT = doRo !== undefined && !trai.length && loTrai.length ? doRo : 1
+  const moP = doRo !== undefined && !phai.length && lo.length ? doRo : 1
   if (xT !== null && xP !== null && xP - xT < 0.3) {
     const m = (xT + xP) / 2
     xT = m - 0.15
@@ -65,7 +72,7 @@ export function BanPhimHaiTay({
     <div>
       <div className="relative mb-1 h-20">
         {nhan?.trai && xT !== null && (
-          <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${kep(xT) * 100}%` }}>
+          <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${kep(xT) * 100}%`, opacity: moT }}>
             <p className="text-[10px] tracking-wide text-teal-key uppercase">Tay trái</p>
             <p className="rounded-lg border border-teal-key/60 bg-teal-key/20 px-3 py-0.5 font-mono text-2xl font-bold whitespace-nowrap text-teal-key">
               {nhan.trai}
@@ -74,7 +81,7 @@ export function BanPhimHaiTay({
           </div>
         )}
         {nhan?.phai && xP !== null && (
-          <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${kep(xP) * 100}%` }}>
+          <div className="absolute top-0 -translate-x-1/2 text-center" style={{ left: `${kep(xP) * 100}%`, opacity: moP }}>
             <p className="text-[10px] tracking-wide text-amber-key uppercase">Tay phải</p>
             <p className="rounded-lg border border-amber-key/60 bg-amber-key/20 px-3 py-0.5 font-mono text-2xl font-bold whitespace-nowrap text-amber-key">
               {nhan.phai}
@@ -90,6 +97,7 @@ export function BanPhimHaiTay({
         rightHandNotes={phai}
         revealNotes={lo}
         revealLeftNotes={loTrai}
+        revealOpacity={doRo}
         starNotes={sao}
         dimNotes={mo}
         fingerLabels={nhanPhim}

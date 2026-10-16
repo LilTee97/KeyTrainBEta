@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { CONG_THUC } from './chongHopAm'
 import { NHOM_DUOI, QUY_TAC_DUOI } from './meoChong'
-import { CHA_CHONG, chonCau, diemCau, DONG_CHO, dungHaiTay, dungTayPhai, LO_TU, MAN, MAN_QUY_TAC, MAU_SLASH, MOC_MAC_DINH, MOC_ROI, soCanCham, soNotLo, taoCau, taoCauQuyTac, taoCauSlash, thoiGianRoi } from './gameChong'
+import { bacDoRo, CHA_CHONG, chonCau, diemCau, DO_RO_DAU, DONG_CHO, doRoGoiY, dungHaiTay, dungTayPhai, MAN, MAN_QUY_TAC, MAU_SLASH, MOC_MAC_DINH, MOC_ROI, soCanCham, taoCau, taoCauQuyTac, taoCauSlash, thoiGianRoi } from './gameChong'
 import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
 import { pcsTong } from './chongHopAm'
 import { lopHop } from './slashChong'
@@ -148,14 +148,16 @@ describe('game Mưa hợp âm — logic', () => {
     expect(chonCau(['slash:9sus4'], [7], new Map(), null, () => 0.2).ten).toBe('F/G')
   })
 
-  it('điểm, mốc tốc độ, đáp án hiện dần', () => {
+  it('điểm, mốc tốc độ, gợi ý hiện ngay từ đầu — mờ rồi rõ dần tới vạch chờ', () => {
     expect([diemCau(0), diemCau(4), diemCau(5), diemCau(12)]).toEqual([10, 10, 20, 30])
     expect(MOC_ROI).toContain(MOC_MAC_DINH.meo)
     expect(MOC_ROI).toContain(MOC_MAC_DINH.thi)
     expect([thoiGianRoi(14), thoiGianRoi(10, true), thoiGianRoi(30)]).toEqual([14000, 12000, 30000])
-    expect([LO_TU, DONG_CHO]).toEqual([0.6, 0.9])
-    expect([0.59, 0.6, 0.75, 0.85, 0.95].map((p) => soNotLo(p, 3))).toEqual([0, 1, 2, 3, 3])
-    expect([0.65, 0.89, 1].map((p) => soNotLo(p, 4))).toEqual([1, 4, 4])
+    expect([DO_RO_DAU, DONG_CHO]).toEqual([0.2, 0.9])
+    expect([0, 0.45, 0.9, 1].map((p) => Math.round(doRoGoiY(p) * 100) / 100)).toEqual([0.2, 0.6, 1, 1]) // hiện ngay khi viên sinh ra, rõ hẳn ở vạch chờ
+    const tang = Array.from({ length: 10 }, (_, i) => doRoGoiY(i / 10))
+    expect(tang.every((x, i) => i === 0 || x >= tang[i - 1]!)).toBe(true)
+    expect([bacDoRo(0), bacDoRo(0.9)]).toEqual([4, 20])
   })
 })
 

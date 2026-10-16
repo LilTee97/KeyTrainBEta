@@ -23,7 +23,8 @@ import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRo
 /*
   MƯA KHUNG NỐT — game rơi kiểu Game công thức (Mưa hợp âm) cho khung nốt: tên hợp âm rơi, bấm đủ các nốt khung của nó (hay chọn đúng tên
   khung) trước khi chạm đáy. Màn theo QUY TẮC nối các nhóm đuôi (`hocSolo/mauKhung.ts`): bên luyện, viên ghi quy tắc so với loại cha ("từ
-  Cmaj7: B → B♭") và tên khung, quá 60 % quãng rơi thì phím khung sáng dần; bên thi chỉ tên hợp âm, 20 viên, đúng từ 16 là Đạt. Khung
+  Cmaj7: B → B♭") và tên khung, phím khung hiện ngay từ đầu — mờ, rõ dần khi viên gần phím đàn (16/10/2026; cũ: từ 60 % quãng rơi mới sáng
+  dần); bên thi chỉ tên hợp âm, 20 viên, đúng từ 16 là Đạt. Khung
   dài 6–8 nốt nên rơi lâu hơn Mưa hợp âm: mặc định bên luyện 20 s, bên thi 14 s (Claude chọn, chưa đo — lùi nếu người dùng thấy chậm).
   Người dùng 15/10/2026: "thiết kế rơi như game công thức … khi nhấn vào thì mở hẳn ra một phần game và có bàn phím dài".
   Nút thầy (thử, 15/10/2026 — người dùng: "hình thành 3 nút riêng mang phong cách của từng thầy (từ hợp âm cho đến nốt solo) … học solo
@@ -398,7 +399,7 @@ export function GameKhungRoi() {
             Lối chơi đo bằng hình trong ba clip "Rải Ngón" của anh SSA: tay trái gõ bass (rải thêm 5 – 8 nếu muốn), tay phải CHỒNG một hợp âm
             ba quen lên trên bass thành hợp âm màu (Cmaj7 = Đô + Em), rồi CHẠY {SO_NOT_CHAY} nốt trên đỉnh trong lúc thế còn vang (anh giữ
             tiếng bằng pedal). Viên viền cam là viên đang đố: chồng trước (bấm cùng lúc hay rải từng nốt đều được), chạy sau. Thế chồng đặt ở
-            đâu cũng được — rơi quá 60 % thì phím gợi ý sáng dần: viền xanh tay trái, viền cam tay phải. Nốt tránh / ngoài khung là sai; nốt
+            đâu cũng được — phím gợi ý hiện ngay từ đầu, mờ rồi rõ dần: viền xanh tay trái, viền cam tay phải. Nốt tránh / ngoài khung là sai; nốt
             khung anh ít đặt trên đỉnh không tính. Bốn màn "Như anh" là đúng hợp âm và đúng phím anh bấm trong từng clip — cả các hợp âm màu
             lạ (13sus(♭9) · maj9(13) · m7♭5(9,11) …).
           </p>
@@ -407,7 +408,7 @@ export function GameKhungRoi() {
             Lối chồng + chạy như anh SSA, mà là của {tenThay}: hợp âm rơi theo đúng LOẠI và BẬC bộ soạn của {tenThay} hay đặt — mỗi màn một
             nhóm đuôi của {tenThay}. Viên viền cam là viên đang đố: CHỒNG bass + thế tay phải của {tenThay} (bấm cùng lúc hay rải, chỗ nào cũng
             được), rồi CHẠY {SO_NOT_CHAY} nốt CHÍNH của {tenThay} trên đỉnh — nốt hợp âm và nốt bộ soạn của thầy đánh từ 10 %. Nốt thầy không
-            đánh lần nào là sai; nốt thầy đánh ít không tính. Rơi quá 60 % thì gợi ý sáng dần: viền xanh tay trái, viền cam tay phải.
+            đánh lần nào là sai; nốt thầy đánh ít không tính. Gợi ý hiện ngay từ đầu, mờ rồi rõ dần: viền xanh tay trái, viền cam tay phải.
           </p>
         ) : bo === 'quy-tac-chong' ? (
           <p className="text-xs text-dim">
@@ -547,12 +548,12 @@ export function GameKhungRoi() {
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
               {laSsa
-                ? 'Viên ghi thế chồng ("Đô + Em"). Rơi quá 60 % thì phím bass và thế chồng sáng dần khắp đàn. Không mất mạng.'
+                ? 'Viên ghi thế chồng ("Đô + Em"). Phím bass và thế chồng hiện khắp đàn ngay từ đầu — mờ, rõ dần khi viên gần phím. Không mất mạng.'
                 : laThay
-                  ? 'Viên ghi bậc và thế chồng của thầy. Rơi quá 60 % thì phím bass và thế chồng sáng dần. Không mất mạng.'
+                  ? 'Viên ghi bậc và thế chồng của thầy. Phím bass và thế chồng hiện ngay từ đầu — mờ, rõ dần khi viên gần phím. Không mất mạng.'
                   : bo === 'quy-tac-chong'
-                    ? 'Viên ghi quy tắc so với loại cha và thế chồng. Rơi quá 60 % thì phím bass và thế chồng sáng dần. Không mất mạng.'
-                    : 'Viên ghi quy tắc so với loại cha ("từ Cmaj7: B → B♭") và tên khung. Rơi quá 60 % thì phím khung sáng dần. Không mất mạng.'}
+                    ? 'Viên ghi quy tắc so với loại cha và thế chồng. Phím bass và thế chồng hiện ngay từ đầu — mờ, rõ dần khi viên gần phím. Không mất mạng.'
+                    : 'Viên ghi quy tắc so với loại cha ("từ Cmaj7: B → B♭") và tên khung. Phím khung hiện ngay từ đầu — mờ, rõ dần khi viên gần phím. Không mất mạng.'}
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
               <ChonMoc giay={moc.meo} doi={(s) => setMoc((m) => ({ ...m, meo: s }))} />
@@ -753,9 +754,9 @@ export function GameKhungRoi() {
         </div>
       )}
       {ssa && dich ? (
-        <BanPhimChong c={{ ...dich, ssa }} daChay={g.daChay} loN={loN} thi={thi} thap={thap} cao={cao} tenThay={tenThay} />
+        <BanPhimChong c={{ ...dich, ssa }} daChay={g.daChay} loN={loN} thi={thi} thap={thap} cao={cao} tenThay={tenThay} doRo={may.doRoCua(dich)} />
       ) : (
-        <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} />
+        <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} doRo={daBam ? undefined : may.doRoCua(dich)} />
       )}
       <p className="text-xs text-dim">
         {laChong

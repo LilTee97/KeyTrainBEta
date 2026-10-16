@@ -75,18 +75,20 @@ describe('Hợp âm SSA — mục của Game công thức', () => {
 
   it('thế bốn nốt của anh: Cmaj9 = Đô + Em7, C13sus4 = Đô + B♭maj7 — đủ nốt định chất, tay trái chỉ gốc', () => {
     const maj9 = taoCauHopSsa('ssa:maj9', 0, () => 0.37)
-    expect([maj9.ten, maj9.dapAnTen, maj9.khungTen, maj9.goiY, lop(maj9.trai), lop(maj9.phai)]).toEqual(['Cmaj9', 'Em7', 'từ Cmaj7: Đô + Em', 'thêm Rê trên đỉnh tay phải', [0], [2, 4, 7, 11]])
+    expect([maj9.ten, maj9.dapAnTen, maj9.khungTen, maj9.goiY, lop(maj9.trai), lop(maj9.phai)]).toEqual(['Cmaj9', 'Em7', 'tay trái Đô · tay phải Em7', 'Cmaj7 thêm Rê trên đỉnh', [0], [2, 4, 7, 11]])
+    // viên và lời giải nói thẳng hai tay của chính hợp âm đang rơi, không ghi thế của hợp âm cha lên dòng chính (người dùng 16/10/2026)
+    expect(maj9.loi.startsWith('Cmaj9: tay trái Đô · tay phải Em7 (Mi – Sol – Si – Rê)')).toBe(true)
     expect(maj9.luaChon.map((l) => l.ten)).toContain('Em') // tay phải của cha — lỗi quên thêm nốt
     const sus = taoCauHopSsa('ssa:13sus', 0, () => 0.37)
     expect([sus.ten, sus.dapAnTen, lop([...sus.trai, ...sus.phai])]).toEqual(['C13sus4', 'B♭maj7', [0, 2, 5, 9, 10]])
     const m7 = taoCauHopSsa('ssa:m7', 2, () => 0.37)
-    expect([m7.ten, m7.khungTen, m7.goiY, m7.dapAnTen]).toEqual(['Dm7', 'bass + trưởng trên ♭3', '♭3 của Rê = Fa', 'F'])
+    expect([m7.ten, m7.khungTen, m7.goiY, m7.dapAnTen]).toEqual(['Dm7', 'tay trái Rê · tay phải F', 'trưởng trên ♭3 (♭3 = Fa)', 'F'])
     expect(dungTayPhai([65, 69, 72], m7)).toBe(true) // tay phải F, quãng tám nào cũng được
   })
 
   it('đổi bass: tay phải giữ nguyên, bass phải là nốt thấp nhất; nghe hợp âm cũ rồi mới', () => {
     const c = taoCauHopSsa('ssa:doi:m7>9sus4', 7, () => 0.37) // Dm7 → G9sus4 giữ F
-    expect([c.ten, c.the, c.khungTen, c.goiY, c.dapAnTen, c.hoi]).toEqual(['Dm7 → G9sus4', 'giữ tay phải F', '9sus4: bass + trưởng trên ♭7', 'Fa là ♭7 của bass', 'bass Sol', 'bass mới dưới tay phải F'])
+    expect([c.ten, c.the, c.khungTen, c.goiY, c.dapAnTen, c.hoi]).toEqual(['Dm7 → G9sus4', 'giữ tay phải F', 'tay trái Sol · tay phải F', '9sus4 = trưởng trên ♭7', 'bass Sol', 'bass mới dưới tay phải F'])
     expect(dungTayPhai([43, 65, 69, 72], c)).toBe(true) // Sol2 + Fa – La – Đô
     expect(dungTayPhai([65, 69, 72, 79], c)).toBe(false) // có Sol mà Sol không ở dưới
     expect(dungTayPhai([38, 65, 69, 72], c)).toBe(false) // vẫn bass Rê — chưa đổi
@@ -97,7 +99,7 @@ describe('Hợp âm SSA — mục của Game công thức', () => {
     ])
     // Fm7 → D♭maj9 giữ Fm7: đúng thế anh bấm ở Rai 3
     const d = taoCauHopSsa('ssa:doi:m7>maj9', 1, () => 0.37)
-    expect([d.ten, d.loi.includes('giữ tay phải Fm7 (Fa – La♭ – Đô – Mi♭)')]).toEqual(['Fm7 → C♯maj9', true])
+    expect([d.ten, d.loi.includes('tay phải giữ Fm7 (Fa – La♭ – Đô – Mi♭)')]).toEqual(['Fm7 → C♯maj9', true])
     // D♭maj9 → Fm7: chỉ bỏ bass Rê♭ — tay phải một mình (Fa thấp nhất) là đúng, thêm bass La♭ là sai
     const e = taoCauHopSsa('ssa:doi:maj9>m7', 5, () => 0.37)
     expect([e.ten, dungTayPhai([53, 56, 60, 63], e), dungTayPhai([44, 53, 56, 60, 63], e)]).toEqual(['D♭maj9 → Fm7', true, false])

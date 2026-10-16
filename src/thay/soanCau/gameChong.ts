@@ -573,13 +573,19 @@ export const MOC_MAC_DINH: Readonly<Record<Ben, number>> = { meo: 14, thi: 10 }
 export const thoiGianRoi = (giay: number, haiTay = false) => giay * 1000 * (haiTay ? 1.2 : 1)
 
 /**
- * Đáp án hiện dần (bên mẹo) — người dùng 9/10/2026: "Khi hợp âm rơi hơn 60% quãng đường thì đáp án sẽ dần hiện ra". Từ 60% sáng dần
- * từng nốt tay phải (thấp lên cao), tên hiện rõ dần tới DONG_CHO (90%) — cũng là vạch viên dừng lại khi bật "chờ đúng nốt".
+ * Gợi ý bên mẹo — người dùng 16/10/2026: "Trong tất cả game hợp âm hay chạy nốt thì hãy đều hiện gợi ý ngay từ đầu nhưng mờ và khi càng
+ * gần phím đàn càng rõ". Mọi phím gợi ý (và tên tay đứng trên gợi ý) hiện ngay khi viên sinh ra; độ rõ tăng đều theo quãng rơi, rõ hẳn ở
+ * DONG_CHO (90 % — vạch viên dừng khi bật "chờ đúng nốt"). Dùng chung cho Mưa hợp âm, Mưa khung nốt (cả chơi trên nền), Game chạy ngón.
+ * Độ rõ đầu 0,2 là Claude chọn, chưa đo. Cũ (9/10/2026 — "Khi hợp âm rơi hơn 60% quãng đường thì đáp án sẽ dần hiện ra"): trước 60 % không
+ * hiện gì, từ 60 % sáng dần từng nốt thấp lên cao (`LO_TU` 0,6, `soNotLo`). Lùi khi: gợi ý ngay từ đầu làm người chơi chỉ nhìn phím mà
+ * không tự nghĩ → trả lại mốc 60 %; mờ quá không thấy → nâng DO_RO_DAU.
  */
-export const LO_TU = 0.6
+export const DO_RO_DAU = 0.2
 export const DONG_CHO = 0.9
-/** Số nốt tay phải đã hiện ở quãng rơi `p` (0–1) của hợp âm `n` nốt. */
-export const soNotLo = (p: number, n: number) => (p < LO_TU ? 0 : Math.min(n, Math.floor(((p - LO_TU) / (DONG_CHO - LO_TU)) * n) + 1))
+/** Độ rõ (0–1) của gợi ý ở quãng rơi `p` (0–1). */
+export const doRoGoiY = (p: number) => DO_RO_DAU + (1 - DO_RO_DAU) * Math.min(1, Math.max(0, p) / DONG_CHO)
+/** Bậc độ rõ (20 bậc) — vẽ lại bàn phím khi bậc đổi, không phải mỗi khung hình. */
+export const bacDoRo = (p: number) => Math.round(doRoGoiY(p) * 20)
 
 /** Bên thi: mỗi lượt 20 viên; đúng từ 16 (80%) là Đạt màn. */
 export const SO_CAU_THI = 20

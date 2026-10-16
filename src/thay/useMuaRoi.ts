@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { startAudio } from '../shared/audio/audioEngine'
 import { useMidiStore } from '../shared/midi/midiStore'
-import { diemCau, DONG_CHO, SO_CAU_THI, soNotLo, thoiGianRoi } from './soanCau/gameChong'
+import { bacDoRo, diemCau, DONG_CHO, doRoGoiY, SO_CAU_THI, thoiGianRoi } from './soanCau/gameChong'
 
 /*
   MÁY MƯA — phần chung của các game rơi KHÔNG theo nhạc nền: đồng hồ có tạm dừng, sinh viên (tối đa 3, viên sau cách 60 % quãng rơi),
@@ -70,7 +70,7 @@ export function useMuaRoi<C extends CauRoi>(o: {
   /** Giây rơi đang chọn. */
   giay: number
   tao: (sai: ReadonlyMap<string, number>, truoc: string | null) => C
-  /** Số phím hé lộ dần (bên luyện) — lộ hết khi viên rơi tới mốc chờ. */
+  /** Số phím gợi ý (bên luyện) — hiện đủ ngay từ đầu, độ rõ theo quãng rơi (`doRoCua`). */
   soLo: (c: C) => number
   /** Lời khi viên dừng chờ đúng nốt. */
   choChu: (c: C) => string
@@ -119,7 +119,11 @@ export function useMuaRoi<C extends CauRoi>(o: {
     }
   }
   function loCua(v: VienMua<C> | null) {
-    return thi || !v ? 0 : soNotLo(Math.min(1, (bayGio() - v.sinh) / v.roi), o.soLo(v))
+    return thi || !v ? 0 : o.soLo(v)
+  }
+  /** Độ rõ của gợi ý viên `v` — mờ lúc mới rơi, rõ hẳn khi tới vạch chờ (90 %). */
+  function doRoCua(v: VienMua<C> | null) {
+    return thi || !v ? undefined : doRoGoiY((bayGio() - v.sinh) / v.roi)
   }
   async function batDau() {
     await startAudio()
@@ -217,7 +221,9 @@ export function useMuaRoi<C extends CauRoi>(o: {
     }
     const conSinh = !thi || g.soSinh < SO_CAU_THI
     if (conSinh && g.vien.length < 3 && (g.vien.length === 0 || t - g.sinhCuoi >= thoiGianRoi(o.giay) * 0.6)) sinh()
-    const lo = loCua(dangDich())
+    // Vẽ lại bàn phím khi độ rõ gợi ý của viên đích lên một bậc (20 bậc), hay đổi viên.
+    const d2 = dangDich()
+    const lo = thi || !d2 ? -1 : d2.khoa * 100 + bacDoRo((t - d2.sinh) / d2.roi)
     if (lo !== g.lo) {
       g.lo = lo
       ve()
@@ -251,5 +257,5 @@ export function useMuaRoi<C extends CauRoi>(o: {
     return () => document.removeEventListener('visibilitychange', f)
   }, [g])
 
-  return { g, ve, dich: dangDich(), dangDich, bayGio, tick, batDau, ketThuc, tamDung, doiRoi, giai, saiLan, boCho, loCua }
+  return { g, ve, dich: dangDich(), dangDich, bayGio, tick, batDau, ketThuc, tamDung, doiRoi, giai, saiLan, boCho, loCua, doRoCua }
 }

@@ -10,10 +10,12 @@ import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { tenMotTay, vn } from './soanCau/chongHopAm'
 import { GOC, kieuDau } from './vongThay'
 import {
+  bacDoRo,
   chonCau,
   DAT_THI,
   diemCau,
   DONG_CHO,
+  doRoGoiY,
   dungHaiTay,
   dungTayPhai,
   GOC_CHOI,
@@ -23,7 +25,6 @@ import {
   MOC_ROI,
   SO_CAU_THI,
   soCanCham,
-  soNotLo,
   thoiGianRoi,
   type Ben,
   type CachNhap,
@@ -158,8 +159,9 @@ function BaiHoc({ bai }: { bai: readonly DoanBai[] }) {
  * GAME "MƯA HỢP ÂM" — học thuộc 26 công thức chồng và hợp âm slash bằng tay (người dùng 9/10/2026: "hãy phá lệ làm game cho phần học
  * thuộc công thức chồng hợp âm này"; rồi "mở khóa các level hợp âm nhưng chia làm hai bên. Một bên có các gợi ý và các mẹo để tôi dựa vào
  * đó và suy ra các hợp âm cần tìm để chồng lên. Một bên là chơi ko mẹo nhưng có chấm điểm đạt cho từng level").
- * Bên MẸO: viên rơi ghi tên hai tay và phép cộng loại ("A + G♯m · trưởng + thứ" — người dùng chọn 10/10/2026); quá 60% quãng rơi thì
- * phím đáp án sáng dần (viền cam); bật "chờ đúng nốt" thì viên dừng ở vạch 90% đợi bấm đúng; không mất mạng; đổi mốc tốc độ ngay khi chơi.
+ * Bên MẸO: viên rơi ghi tên hai tay và phép cộng loại ("A + G♯m · trưởng + thứ" — người dùng chọn 10/10/2026); phím đáp án (viền cam)
+ * hiện ngay từ đầu, mờ rồi rõ dần khi viên gần phím đàn (người dùng 16/10/2026 — `doRoGoiY`; cũ: từ 60 % quãng rơi mới sáng dần từng nốt);
+ * bật "chờ đúng nốt" thì viên dừng ở vạch 90% đợi bấm đúng; không mất mạng; đổi mốc tốc độ ngay khi chơi.
  * Bên THI: chỉ tên hợp âm, 20 viên một lượt, sai lần đầu là tính sai, đúng từ 16 là Đạt; kỷ lục từng màn theo mốc tốc độ. Không hiện
  * đáp án, không chờ — Claude quyết (9/10/2026): bên thi mà hiện đáp án hay chờ thì "Đạt" không còn đo gì.
  * Bàn phím: tay nào đang sáng phím thì ghi tên hợp âm của tay ấy (người dùng 9/10/2026). Chọn tên: bấm nút là bấm hợp âm ấy và nghe.
@@ -239,9 +241,13 @@ export function GameChong() {
       g.dongHo.dungLuc = null
     }
   }
-  /** Số nốt đáp án đã hé lộ của viên `v` — chỉ bên mẹo. */
+  /** Số nốt đáp án đang gợi ý của viên `v` — chỉ bên mẹo, hiện đủ ngay từ đầu. */
   function loCua(v: Vien | null) {
-    return thi || !v ? 0 : soNotLo(Math.min(1, (bayGio() - v.sinh) / v.roi), buocCua(v).phai.length)
+    return thi || !v ? 0 : buocCua(v).phai.length
+  }
+  /** Độ rõ của gợi ý: mờ lúc viên mới rơi, rõ hẳn ở vạch chờ (90 %). */
+  function doRoCua(v: Vien | null) {
+    return thi || !v ? undefined : doRoGoiY((bayGio() - v.sinh) / v.roi)
   }
   async function batDau(b: Ben, k: number) {
     setBen(b)
@@ -364,7 +370,9 @@ export function GameChong() {
     }
     const conSinh = !thi || g.soSinh < SO_CAU_THI
     if (conSinh && g.vien.length < 4 && (g.vien.length === 0 || t - g.sinhCuoi >= thoiGianRoi(moc[ben]) * 0.6 * g.heSoCuoi)) sinh()
-    const lo = loCua(dangDich())
+    // Vẽ lại bàn phím khi độ rõ gợi ý của viên đích lên một bậc (20 bậc), hay đổi viên / đổi bước.
+    const d2 = dangDich()
+    const lo = thi || !d2 ? -1 : d2.khoa * 1000 + d2.da * 100 + bacDoRo((t - d2.sinh) / d2.roi)
     if (lo !== g.lo) {
       g.lo = lo
       ve()
@@ -541,16 +549,17 @@ export function GameChong() {
             {bo === 'luot'
               ? 'Viên rơi ghi hai hợp âm chính và chỗ trống — "Cmaj7 → ? → Dm7" — bấm hợp âm chen giữa (gốc + các nốt, thế đảo nào cũng được; thêm nốt màu 9 · 13 cũng tính) hay chọn tên ở bốn nút. Nhãn trên viên cho biết loại: át phụ · giảm lướt · ♭II7. Xong viên là nghe cả ba hợp âm.'
               : 'Viên rơi ghi hợp âm đích — "? → ? → Cmaj7": bấm bậc 2 rồi bậc 5 (đúng bước 1 thì viên đợi bước 2), hay chọn tên ở bốn nút. Xong viên là nghe cả vòng. Giọng lấy theo hàng "Giọng" bên dưới.'}{' '}
-            Không sáng tay trái — gốc chính là điều phải tìm. Bên luyện, rơi quá 60 % thì phím đáp án sáng dần.
+            Không sáng tay trái — gốc chính là điều phải tìm. Bên luyện, phím đáp án hiện ngay từ đầu — mờ, rõ dần khi viên gần phím đàn.
           </p>
         )}
         {bo === 'ssa' && (
           <p className="text-xs text-dim">
             Thế chồng đo bằng hình trong ba clip "Rải Ngón" của anh SSA (111 hợp âm, một người chơi): ba thế gốc trùng công thức của bảng; maj9 ·
-            13sus4 là tay phải bốn nốt — thế 7 thêm một nốt trên đỉnh; rồi giữ tay phải, đổi bass. Viên rơi ghi quy tắc của anh và bậc cần tìm (
-            <b className="text-cream">Cmaj7 · bass + thứ trên bậc 3 · bậc 3 của Đô = Mi</b>); câu đổi bass ghi tay phải giữ nguyên (
-            <b className="text-cream">giữ tay phải F · Dm7 → G9sus4</b>) — bấm bass mới ở dưới tay phải ấy, bass là nốt thấp nhất. Chơi bằng đàn
-            hay chọn tên ở bốn nút. Hợp âm chưa đủ số đo (m6 · m9 · bốn loại mới của thư viện) chỉ có trong bài học.
+            13sus4 là tay phải bốn nốt — thế 7 thêm một nốt trên đỉnh; rồi giữ tay phải, đổi bass. Bên luyện, viên rơi ghi thẳng tay trái · tay
+            phải của hợp âm đang rơi và quy tắc của anh (<b className="text-cream">Cmaj9 · tay trái Đô · tay phải Em7 · Cmaj7 thêm Rê trên đỉnh</b>);
+            câu đổi bass ghi tay phải giữ nguyên (<b className="text-cream">giữ tay phải F · Dm7 → G9sus4</b>) — bấm bass mới ở dưới tay phải
+            ấy, bass là nốt thấp nhất. Bên thi chỉ còn tên. Chơi bằng đàn hay chọn tên ở bốn nút. Hợp âm chưa đủ số đo (m6 · m9 · bốn loại mới
+            của thư viện) chỉ có trong bài học.
           </p>
         )}
         {bo === 'ssa' && <BaiHoc bai={BAI_SSA} />}
@@ -560,8 +569,8 @@ export function GameChong() {
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
             <p className="mb-2 text-xs text-dim">
-              Viên rơi ghi tên hai tay và đuôi mang lại nốt nào (vd Amaj7: "La + C♯m · maj7 → Sol♯"). Rơi quá 60% thì phím đáp án sáng dần chỉ chỗ
-              đặt tay. Không mất mạng — dừng lúc nào cũng được.
+              Viên rơi ghi tên hai tay và đuôi mang lại nốt nào (vd Amaj7: "La + C♯m · maj7 → Sol♯"). Phím đáp án hiện ngay từ đầu — mờ, càng gần
+              phím đàn càng rõ — chỉ chỗ đặt tay. Không mất mạng — dừng lúc nào cũng được.
             </p>
             <div className="mb-2 flex flex-col gap-1.5">
               <ChonMoc giay={moc.meo} doi={(s) => setMoc((m) => ({ ...m, meo: s }))} />
@@ -753,7 +762,7 @@ export function GameChong() {
           ))}
         </div>
       )}
-      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} />
+      <BanPhimHaiTay trai={banTrai} phai={banPhai} lo={banLo} nhan={nhan} lowNote={thap} highNote={cao} doRo={daBam ? undefined : doRoCua(dich)} />
       <p className="text-xs text-dim">
         {nhap === 'giu'
           ? cd && caHop(cd)
@@ -767,7 +776,7 @@ export function GameChong() {
                 ? 'Chọn tên hợp âm ở bốn nút trên — bấm nút là bấm hợp âm ấy lên đàn và nghe.'
                 : 'Chọn tên hợp âm tay phải ở bốn nút trên — bấm nút là bấm hợp âm ấy lên đàn và nghe.'}
         {cd?.haiTayBuoc ? nhap !== 'chon' && ' Slash: bass là nốt thấp nhất.' : haiTayThi && !(cd && caHop(cd)) && ' Bấm cả hai tay, nốt thấp nhất là gốc.'}
-        {!thi && ' Viền cam trên phím là đáp án đang hiện dần.'}
+        {!thi && ' Viền cam trên phím là đáp án — mờ lúc viên mới rơi, rõ dần khi gần phím đàn.'}
       </p>
       {!thi && (
         <details className="rounded-lg border border-teal-key/30 p-2 text-xs text-cream/85" open={!hep}>

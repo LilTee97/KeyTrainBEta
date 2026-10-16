@@ -134,11 +134,11 @@ function taoCauThe(x: TheSsa, g: number, rand: () => number): CauGame {
     const notBac = vn(tenTheoChu(gocTen, x.bac[0], x.bac[1], st))
     return {
       ...chung,
-      khungTen: `bass + ${x.quy}`,
-      goiY: `${x.tenBac} của ${vg} = ${notBac}`,
-      loi: `${ten} = ${vg} + ${phai} — ${x.quy} (anh SSA: ${x.so})`,
+      khungTen: `tay trái ${vg} · tay phải ${phai}`,
+      goiY: `${x.quy} (${x.tenBac} = ${notBac})`,
+      loi: `${ten}: tay trái ${vg} · tay phải ${phai} (${dung.nhan.phaiPhu}) — ${x.quy} (anh SSA: ${x.so})`,
       nho: x.quy,
-      meo: `${x.ten} của anh SSA = bass + hợp âm ${x.quy}: ${x.tenBac} của ${vg} là ${notBac} → ${phai} (${dung.nhan.phaiPhu}). ${ten} = ${vg} + ${phai}.`,
+      meo: `${ten}: tay trái ${vg} (bass) · tay phải ${phai} (${dung.nhan.phaiPhu}) — hợp âm ${x.quy}: ${x.tenBac} của ${vg} là ${notBac}.`,
     }
   }
   const cha = THE_SSA.find((y) => y.id === x.cha)!
@@ -148,11 +148,11 @@ function taoCauThe(x: TheSsa, g: number, rand: () => number): CauGame {
   const sosanh = x.id === 'maj9' ? ` Bảng công thức dạy ${ten} = ${gocDep(gocTen)} + ${gocDep(tenTheoChu(gocTen, 7, 4, st))} (thế của Jeff) — cả hai đúng.` : ''
   return {
     ...chung,
-    khungTen: `từ ${chaTen}: ${vg} + ${chaPhai}`,
-    goiY: `thêm ${them} trên đỉnh tay phải`,
-    loi: `${ten} = ${vg} + ${phai} — từ ${chaTen} thêm ${them} trên đỉnh (anh SSA: ${x.so})`,
+    khungTen: `tay trái ${vg} · tay phải ${phai}`,
+    goiY: `${chaTen} thêm ${them} trên đỉnh`,
+    loi: `${ten}: tay trái ${vg} · tay phải ${phai} (${dung.nhan.phaiPhu}) — ${chaTen} thêm ${them} trên đỉnh (anh SSA: ${x.so})`,
     nho: `${chaPhai} + ${them} = ${phai}`,
-    meo: `${x.ten} của anh SSA = thế ${cha.ten} thêm một nốt trên đỉnh tay phải: ${chaPhai} + ${them} = ${phai} (${dung.nhan.phaiPhu}) → ${ten} = ${vg} + ${phai}.${sosanh}`,
+    meo: `${ten}: tay trái ${vg} · tay phải ${phai} (${dung.nhan.phaiPhu}). ${chaTen} là tay trái ${vg} · tay phải ${chaPhai}; thêm ${them} trên đỉnh tay phải thì ${chaPhai} thành ${phai}.${sosanh}`,
   }
 }
 
@@ -247,16 +247,16 @@ function taoCauDoi(d: DoiSsa, g: number, rand: () => number): CauGame {
     ten: `${tuTen} → ${denTen}`,
     g,
     the: `giữ tay phải ${giuTen}`,
-    khungTen: `${hauDep(d.den.hau)}: bass + ${d.den.quy}`,
-    goiY: `${vn(giuGoc)} là ${d.den.tenBac} của bass`,
+    khungTen: `tay trái ${vn(gocTen)} · tay phải ${giuTen}`,
+    goiY: `${hauDep(d.den.hau)} = ${d.den.quy}`,
     hoi: `bass mới dưới tay phải ${giuTen}`,
     trai: [],
     phai: den,
     nhan: { trai: '', traiPhu: '', phai: denTen, phaiPhu: notHop(gocTen) },
     dapAnTen: `bass ${vn(gocTen)}`,
-    loi: `${tuTen} → ${denTen}: giữ tay phải ${giuTen} (${giuNot}), bass ${vn(tuGoc)} → ${vn(gocTen)}. ${d.anh}`,
-    nho: `bass ${vn(gocTen)}`,
-    meo: `${denTen} = bass + ${d.den.quy}: ${vn(giuGoc)} là ${d.den.tenBac} của bass → bass ${vn(gocTen)}. Giữ nguyên ${giuTen} (${giuNot}), chỉ đổi bass — bass là nốt thấp nhất.`,
+    loi: `${tuTen} → ${denTen}: tay phải giữ ${giuTen} (${giuNot}), tay trái ${vn(tuGoc)} → ${vn(gocTen)}. ${d.anh}`,
+    nho: `tay trái ${vn(gocTen)}`,
+    meo: `${denTen}: tay trái ${vn(gocTen)} · tay phải ${giuTen} — ${vn(giuGoc)} là ${d.den.tenBac} của ${vn(gocTen)} (${hauDep(d.den.hau)} = ${d.den.quy}). Giữ nguyên tay phải ${giuTen} (${giuNot}), chỉ đổi tay trái — bass là nốt thấp nhất.`,
     luaChon,
     haiTayBuoc: false,
     nghe: [hop(bTu), den],
@@ -277,7 +277,10 @@ export function taoCauHopSsa(id: string, g: number, rand: () => number = Math.ra
 const idThe = (...ids: string[]) => ids.map((x) => `ssa:${x}`)
 const ID_DOI = DOI_SSA.map((d) => `ssa:doi:${d.id}`)
 /** "Cmaj9 = Đô + Em7" — ví dụ của màn viết từ chính câu ở gốc `g`. */
-const viDu = (id: string, g: number) => taoCauHopSsa(id, g, () => 0.5).loi.split(' — ')[0]!
+const viDu = (id: string, g: number) => {
+  const c = taoCauHopSsa(id, g, () => 0.5)
+  return `${c.ten} = ${vn(GOC[g]!)} + ${c.dapAnTen}`
+}
 const LUAT_GOC = [
   'Anh SSA dựng hợp âm màu = bass + một hợp âm ba quen trên một bậc — đúng lối chồng của bảng công thức.',
   'maj7 = bass + thứ trên bậc 3 (6/7 hợp âm maj7 của anh) · m7 = bass + trưởng trên ♭3 (13/15) · 9sus4 = bass + trưởng trên ♭7 (3/3 — lời anh: "Cb/Db thực ra là Db9sus4").',

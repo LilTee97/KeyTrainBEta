@@ -54,6 +54,13 @@ const BLACK_KEY_STYLES = {
   sang tông sẫm (cam → nâu cam, xanh ngọc → xanh rêu), sẫm nhất 55 % ở velocity ≥ 120; đặc hẳn từ velocity 80. Cũ (lần
   2): đặc từ 96, không sẫm. Lùi khi: lực vừa đã sẫm quá → nâng `DEEP_FROM_VELOCITY`.
 */
+/** Lớp phủ phím gợi ý khi có độ rõ (`revealOpacity`): phím giữ màu thường, lớp phủ mờ / rõ theo độ rõ — đậm hơn kiểu cũ một chút để rõ hẳn
+ *  ở 1 vẫn nổi như cũ trên nền phím. */
+const REVEAL_LAYER = {
+  trang: { phai: 'bg-amber-key/45 ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand/40 ring-2 ring-inset ring-left-hand' },
+  den: { phai: 'bg-amber-key/85 ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand/80 ring-2 ring-inset ring-left-hand' },
+} as const
+
 const PRESS_MIN_OPACITY = 0.45
 const PRESS_FULL_VELOCITY = 80
 const DEEP_FROM_VELOCITY = 64
@@ -133,6 +140,12 @@ export interface OnScreenPianoProps {
    */
   revealLeftNotes?: readonly MidiNote[]
   /**
+   * Độ rõ của phím gợi ý (`revealNotes` · `revealLeftNotes`), 0–1 — người dùng 16/10/2026: "Trong tất cả game hợp âm hay chạy nốt thì hãy
+   * đều hiện gợi ý ngay từ đầu nhưng mờ và khi càng gần phím đàn càng rõ". Có giá trị thì phím gợi ý vẽ bằng lớp phủ theo độ rõ ấy; bỏ
+   * trống là kiểu cũ (rõ hẳn, tô thẳng màu phím).
+   */
+  revealOpacity?: number
+  /**
    * Nốt NÊN CHƠI (vàng) và các nốt còn lại của khung (xanh nhạt) — người dùng 15/10/2026, Lối SSA trên backing track: "những nốt nào sẽ
    * nên chơi khi đến hợp âm tương ứng thì hãy làm nổi bật nó lên so với các nốt còn lại trong khung". Hai màu khác hẳn nhau và khác màu
    * hai tay (xanh ngọc · cam) để không lẫn với gợi ý tay trái / tay phải.
@@ -166,6 +179,7 @@ export function OnScreenPiano({
   rightHandNotes,
   revealNotes,
   revealLeftNotes,
+  revealOpacity,
   starNotes,
   dimNotes,
   fingerLabels,
@@ -300,8 +314,9 @@ export function OnScreenPiano({
     // Chỉ rõ tay nào bấm nốt nào, ưu tiên hơn cách tô một màu chung.
     if (leftHand.has(note)) return 'leftHand'
     if (rightHand.has(note)) return 'rightHand'
-    if (revealLeft.has(note)) return 'revealLeft'
-    if (reveal.has(note)) return 'reveal'
+    // Có độ rõ thì phím gợi ý giữ màu thường, gợi ý vẽ bằng lớp phủ (`revealLayer`).
+    if (revealLeft.has(note)) return revealOpacity === undefined ? 'revealLeft' : 'idle'
+    if (reveal.has(note)) return revealOpacity === undefined ? 'reveal' : 'idle'
     if (star.has(note)) return 'star'
     if (dim.has(note)) return 'dim'
     if (suggested.has(note)) return 'suggested'
@@ -325,6 +340,20 @@ export function OnScreenPiano({
           opacity: pressOpacity(velocity),
           backgroundColor: `color-mix(in srgb, ${base} ${100 - deep}%, ${dark} ${deep}%)`,
         }}
+      />
+    )
+  }
+
+  /** Lớp phủ phím gợi ý theo độ rõ — dưới lớp phím đang bấm và dưới chữ. */
+  const revealLayer = (note: MidiNote, den: boolean) => {
+    if (revealOpacity === undefined || leftHand.has(note) || rightHand.has(note)) return null
+    const tay = revealLeft.has(note) ? 'trai' : reveal.has(note) ? 'phai' : null
+    if (!tay) return null
+    return (
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 rounded-b-md ${REVEAL_LAYER[den ? 'den' : 'trang'][tay]}`}
+        style={{ opacity: revealOpacity }}
       />
     )
   }
@@ -364,6 +393,7 @@ export function OnScreenPiano({
               WHITE_KEY_STYLES[keyStateOf(note)]
             }`}
           >
+            {revealLayer(note, false)}
             {pressLayer(note)}
             {finger(note)}
             {showNoteNames ? label(note, whiteWidth >= whiteFontPx * 1.5 + 8, whiteFontPx) : null}
@@ -386,6 +416,7 @@ export function OnScreenPiano({
             BLACK_KEY_STYLES[keyStateOf(note)]
           }`}
         >
+          {revealLayer(note, true)}
           {pressLayer(note)}
           {finger(note)}
           {blackNamed ? label(note, false, blackFontPx) : null}

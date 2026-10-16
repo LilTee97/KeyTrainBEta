@@ -436,7 +436,7 @@ function LamQuenRoi({ dau, thay }: { dau: ReactNode; thay?: ThayChay }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-teal-key/40 p-3">
             <p className="font-semibold text-teal-key">Luyện có mẹo</p>
-            <p className="mb-2 text-xs text-dim">Viên ghi khung và gợi ý; rơi quá 60 % thì phím đáp án sáng dần. Không mất mạng.</p>
+            <p className="mb-2 text-xs text-dim">Viên ghi khung và gợi ý; phím đáp án hiện ngay từ đầu — mờ, rõ dần khi viên gần phím đàn. Không mất mạng.</p>
             <div className="mb-2 flex flex-col gap-1.5">
               <ChonMoc giay={moc.meo} doi={(s) => setMoc((m) => ({ ...m, meo: s }))} />
               <label className="flex items-center gap-2 text-xs text-cream/85">
@@ -583,7 +583,7 @@ function LamQuenRoi({ dau, thay }: { dau: ReactNode; thay?: ThayChay }) {
       >
         {g.pha === 'dung' ? 'Đang tạm dừng.' : (g.bao?.chu ?? `Viên viền cam đang đố — ${viec.viec}.`)}
       </p>
-      <BanPhimHaiTay trai={ban.trai} phai={ban.phai} lo={lo} nhan={ban.nhan} lowNote={thap} highNote={cao} />
+      <BanPhimHaiTay trai={ban.trai} phai={ban.phai} lo={lo} nhan={ban.nhan} lowNote={thap} highNote={cao} doRo={may.doRoCua(dich)} />
       <p className="text-xs text-dim">
         {viec.mo}.{!thi && ' Viền cam trên phím là đáp án đang hiện dần.'}
       </p>
