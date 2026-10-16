@@ -32,6 +32,7 @@ import { QUY_LUAT_SLASH, theSlash } from './slashChong'
   16/10/2026 người dùng: "hãy làm theo lối của Quy tắc nhóm đuôi … Trong game công thức hãy làm thêm mục dạy tôi về các Passing Chord và dạy
   tôi tìm hợp âm cho vòng 2-5-1. Có thể đánh bằng đàn hoặc chọn đáp án" — thêm ba mục (thử) cạnh 18 màn đã duyệt (giữ nguyên): màn quy tắc
   nhóm đuôi (`MAN_QUY_TAC` — viên ghi hợp âm cha và thay đổi), Passing chord và vòng 2-5-1 (`hopAmLuot.ts`). Câu id `qt:` · `luot:` · `v251:`.
+  Duyệt cùng ngày ("Quy tắc nhóm đuôi, passing chord và 2-5-1 đã đạt") — bỏ chữ "(thử)".
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12

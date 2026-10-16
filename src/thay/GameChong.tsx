@@ -8,6 +8,7 @@ import { pitchClassName } from '../shared/musicTheory/pitch'
 import { TheNhomDuoi } from './BangCongThuc'
 import { BanPhimHaiTay } from './BanPhimHaiTay'
 import { tenMotTay, vn } from './soanCau/chongHopAm'
+import { GOC, kieuDau } from './vongThay'
 import {
   chonCau,
   DAT_THI,
@@ -48,14 +49,15 @@ type Pha = 'chuan-bi' | 'choi' | 'dung' | 'het'
 const pc = (x: number) => ((x % 12) + 12) % 12
 /**
  * Bốn mục (người dùng 16/10/2026: "hãy làm theo lối của Quy tắc nhóm đuôi … làm thêm mục dạy tôi về các Passing Chord và dạy tôi tìm hợp âm
- * cho vòng 2-5-1"): 18 màn nhóm đuôi đã duyệt giữ nguyên; ba mục mới là thử — duyệt đạt thì bỏ chữ "(thử)".
+ * cho vòng 2-5-1"): 18 màn nhóm đuôi đã duyệt giữ nguyên; ba mục mới duyệt cùng ngày ("Quy tắc nhóm đuôi, passing chord và 2-5-1 đã
+ * đạt") — bỏ chữ "(thử)".
  */
 type Bo = 'nhom' | 'quy-tac' | 'luot' | '251'
 const BO: readonly { id: Bo; ten: string; tieuDe: string; man: readonly Man[] }[] = [
   { id: 'nhom', ten: 'Màn nhóm đuôi', tieuDe: 'Mưa hợp âm — game học thuộc công thức chồng', man: MAN },
-  { id: 'quy-tac', ten: 'Quy tắc nhóm đuôi (thử)', tieuDe: 'Mưa hợp âm · quy tắc nhóm đuôi — học hợp âm cha rồi suy ra con', man: MAN_QUY_TAC },
-  { id: 'luot', ten: 'Passing chord (thử)', tieuDe: 'Passing chord — hợp âm lướt nối hai hợp âm', man: MAN_LUOT },
-  { id: '251', ten: 'Vòng 2-5-1 (thử)', tieuDe: 'Vòng 2-5-1 — tìm bậc 2 và bậc 5 của hợp âm đích', man: MAN_251 },
+  { id: 'quy-tac', ten: 'Quy tắc nhóm đuôi', tieuDe: 'Mưa hợp âm · quy tắc nhóm đuôi — học hợp âm cha rồi suy ra con', man: MAN_QUY_TAC },
+  { id: 'luot', ten: 'Passing chord', tieuDe: 'Passing chord — hợp âm lướt nối hai hợp âm', man: MAN_LUOT },
+  { id: '251', ten: 'Vòng 2-5-1', tieuDe: 'Vòng 2-5-1 — tìm bậc 2 và bậc 5 của hợp âm đích', man: MAN_251 },
 ]
 /** Mục mà câu là cả hợp âm (không tay trái) — không có lựa chọn "hai tay". */
 const laNoi = (bo: Bo) => bo === 'luot' || bo === '251'
@@ -91,11 +93,16 @@ const nut = (on: boolean) =>
   `rounded-lg border px-3 py-2 text-sm disabled:opacity-40 ${on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-cream/80 hover:bg-white/8'}`
 const nutNho = (on: boolean) =>
   `rounded border px-1.5 py-0.5 font-mono text-[11px] ${on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-cream/75 hover:bg-white/8'}`
-const GOC_TEN: readonly { id: GocChoi; ten: string }[] = [
-  { id: 'do', ten: 'Chỉ gốc Đô' },
+/**
+ * Gốc (giọng) của câu: một nhóm gốc, hay MỘT gốc bất kỳ (số 0–11) — người dùng 16/10/2026: "trong ảnh có mục chỉ nhóm C nhưng tôi muốn tập
+ * cho từng nhóm khác nên hãy thêm các lựa chọn nhóm khác". Nút "Chỉ gốc Đô" cũ nay là nút Đô trong hàng 12 gốc.
+ */
+type ChonGoc = Exclude<GocChoi, 'do'> | number
+const GOC_TEN: readonly { id: ChonGoc; ten: string }[] = [
   { id: 'trang', ten: 'Gốc phím trắng' },
   { id: 'tat', ten: 'Cả 12 gốc' },
 ]
+const dsGoc = (x: ChonGoc) => (typeof x === 'number' ? [x] : GOC_CHOI[x])
 const NHAP: readonly { id: CachNhap; ten: string; mo: string }[] = [
   { id: 'giu', ten: 'Giữ hợp âm', mo: 'đàn MIDI · phím máy tính · nhiều ngón cùng lúc' },
   { id: 'cham', ten: 'Chạm từng nốt', mo: 'chuột · cảm ứng — chạm đủ nốt là chấm' },
@@ -165,7 +172,7 @@ export function GameChong() {
   const [ben, setBen] = useState<Ben>('meo')
   const [man, setMan] = useState(0)
   const [haiTay, setHaiTay] = useState(false)
-  const [gocChoi, setGocChoi] = useState<GocChoi>('trang')
+  const [gocChoi, setGocChoi] = useState<ChonGoc>('trang')
   const [nhap, setNhap] = useState<CachNhap>(() => (useMidiStore.getState().devices.length > 0 ? 'giu' : 'cham'))
   const [moc, setMoc] = useState<Record<Ben, number>>({ ...MOC_MAC_DINH })
   const [choNot, setChoNot] = useState(false)
@@ -261,7 +268,7 @@ export function GameChong() {
   }
   function sinh() {
     const t = bayGio()
-    const cau = chonCau(DS[man]!.ids, GOC_CHOI[gocChoi], g.saiDem, g.truoc)
+    const cau = chonCau(DS[man]!.ids, dsGoc(gocChoi), g.saiDem, g.truoc)
     const dangDung = new Set(g.vien.map((v) => v.lan))
     const trong = [0, 1, 2, 3].filter((l) => !dangDung.has(l))
     const lan = trong[Math.floor(Math.random() * trong.length)] ?? 0
@@ -443,7 +450,6 @@ export function GameChong() {
       <div className="flex flex-col gap-3 rounded-xl border border-line bg-black/25 p-4 text-sm">
         <h4 className="text-lg font-semibold text-cream">
           {BO.find((x) => x.id === bo)!.tieuDe}
-          {bo !== 'nhom' ? ' (thử)' : ''}
         </h4>
         <div className="flex flex-wrap gap-1.5">
           {BO.map((x) => (
@@ -596,6 +602,15 @@ export function GameChong() {
               {GOC_TEN.map((x) => (
                 <button key={x.id} type="button" onClick={() => setGocChoi(x.id)} className={nut(gocChoi === x.id)}>
                   {x.ten}
+                </button>
+              ))}
+            </div>
+            {/* Một gốc: tên theo cách ghi của mục — gốc hợp âm như GOC (Đô♯), giọng trưởng như hóa biểu (Rê♭). */}
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              <span className="text-xs text-dim">Chỉ một {laNoi(bo) ? 'giọng' : 'gốc'}:</span>
+              {GOC.map((ten, k) => (
+                <button key={ten} type="button" onClick={() => setGocChoi(k)} className={nut(gocChoi === k)} aria-pressed={gocChoi === k}>
+                  {vn(laNoi(bo) ? pitchClassName(k, kieuDau(k, false)) : ten)}
                 </button>
               ))}
             </div>

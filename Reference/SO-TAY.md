@@ -7817,3 +7817,37 @@ Chung cho hai mục mới:
   - màn nhóm đuôi cũ vẫn chơi; điện thoại không cuộn ngang; viên dừng ở vạch 90 % còn trọn trong khung (3 mục).
 - Mưa khung nốt 16/16. Script cũ của màn nhóm đuôi (11/10) 10/12 — 2 chỗ hỏng là chữ đã đổi từ commit ac2ffdc, không do lần này.
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game công thức: ba mục mới duyệt · chọn một gốc bất kỳ (16/10/2026)
+
+**Người dùng:** *"Quy tắc nhóm đuôi, passing chord và 2-5-1 đã đạt · trong ảnh có mục chỉ nhóm C nhưng tôi muốn tập cho từng nhóm khác nên
+hãy thêm các lựa chọn nhóm khác"* (ảnh: hàng "Gốc" — Chỉ gốc Đô · Gốc phím trắng · Cả 12 gốc).
+
+**Làm:**
+- Ba mục Quy tắc nhóm đuôi · Passing chord · Vòng 2-5-1 bỏ chữ "(thử)" — nút mục và tiêu đề. Mục Màn nhóm đuôi vẫn giữ nguyên.
+- Hàng gốc: nút "Chỉ gốc Đô" thay bằng hàng **"Chỉ một gốc:"** 12 nút Đô … Si; bấm nút nào thì mọi viên ở gốc ấy. Hai nút nhóm gốc
+  (Gốc phím trắng · Cả 12 gốc) giữ nguyên; mặc định vẫn là Gốc phím trắng.
+- Cách ghi tên nút theo mục:
+  - mục công thức (Màn nhóm đuôi · Quy tắc nhóm đuôi): ghi như gốc hợp âm của app (`GOC`: Đô♯, Fa♯, còn lại giáng);
+  - mục giọng (Passing chord · 2-5-1): hàng ghi "Chỉ một giọng:", tên theo hóa biểu giọng trưởng (`kieuDau`: Rê♭ chứ không Đô♯).
+- Nút cỡ thường (như Gốc phím trắng) để dễ chạm trên điện thoại.
+
+**Mã:** `GameChong.tsx` — `ChonGoc` = nhóm gốc ('trang' · 'tat') hay số 0–11; `dsGoc`. `GOC_CHOI` · `GocChoi` của `gameChong.ts` không đổi
+(Mưa khung nốt ở Game nốt rơi vẫn dùng ba nút cũ).
+
+**Chưa làm — lỗ còn lại:**
+- Game nốt rơi (Mưa khung nốt) có cùng hàng "Gốc" ba nút — chưa thêm 12 gốc vì người dùng chỉ hỏi Game công thức.
+- Chỉ chọn MỘT gốc; chưa chọn được vài gốc cùng lúc.
+- Kỷ lục bên thi vẫn tính theo màn, không tách theo gốc đã chọn (như cũ).
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi · toàn suite 2 837 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless 39/39: 30 kiểm cũ (đổi nhãn bỏ "(thử)", nút Đô thay "Chỉ gốc Đô") và 9 kiểm mới:
+  - hàng 12 gốc; bấm Rê thì nút Rê sáng, hai nút nhóm tắt;
+  - màn maj7 chỉ gốc Rê → viên Dmaj7 / Dm(maj7);
+  - quy tắc chỉ gốc Mi♭ → viên E♭…;
+  - Passing chord ghi "Rê♭"; chỉ giọng La → mọi viên ở La trưởng;
+  - 2-5-1 chỉ giọng Si♭ → "? → ? → B♭maj7";
+  - bấm Cả 12 gốc thì hàng một giọng tắt;
+  - điện thoại không cuộn ngang.
+- `LuyenTap.json`, `Nguon.json` không đổi.
