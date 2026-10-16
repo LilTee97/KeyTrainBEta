@@ -7733,3 +7733,87 @@ Nguồn khung từng nền:
   - Lối SSA 71/71 (thêm 3): danh sách nền của tab; nền Bossa phát, chồng + chạy là Đúng; tổng kết chỉ ở khung beat;
   - Mưa khung nốt 16/16 · Game chạy ngón 40/40;
   - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game công thức: quy tắc nhóm đuôi · Passing chord · vòng 2-5-1 (thử) (16/10/2026)
+
+**Người dùng:** *"Bên Game Công thức của phần học hợp âm hãy làm theo lối của Quy tắc nhóm đuôi, hãy để tôi học theo các nhóm đuôi hợp âm.
+Chúng có mối liên hệ với nhau và khi nắm được một nhóm đuôi thì sẽ học các nhóm liên quan dễ hơn. -Trong game công thức hãy làm thêm mục dạy
+tôi về các Passing Chord và dạy tôi tìm hợp âm cho vòng 2-5-1. Có thể đánh bằng đàn hoặc chọn đáp án"*.
+
+**Đọc yêu cầu:**
+- "Lối của Quy tắc nhóm đuôi" = lối màn quy tắc của Mưa khung nốt (đã duyệt): mỗi loại có một loại cha, viên ghi thay đổi so với cha
+  ("từ Cmaj7: B → B♭").
+- 18 màn nhóm đuôi của Game công thức đã duyệt → giữ nguyên. Ba mục mới là nút riêng có chữ "(thử)".
+- "Đánh bằng đàn hoặc chọn đáp án" = ba cách nhập sẵn có: giữ hợp âm · chạm từng nốt · chọn tên.
+
+**Màn:** hàng nút mục ở đầu Game công thức — Màn nhóm đuôi (cũ) · Quy tắc nhóm đuôi (thử) · Passing chord (thử) · Vòng 2-5-1 (thử).
+
+1. **Quy tắc nhóm đuôi (thử)** — 7 màn:
+   - cây cha – con của 32 hợp âm (26 công thức + 6 hợp âm ba), `CHA_CHONG`; gốc cây là hợp âm trưởng;
+   - màn: hợp âm ba (đổi một nốt) → ba hợp âm bảy gốc (maj7 · 7 · m7 · m(maj7)) → giảm → 6 · add9 → cầu thang 9 · 11 · 13 → át có nốt
+     căng → trộn;
+   - viên bên luyện: tên + "từ <cha>: <thế chồng của cha>" + thay đổi nốt — "C7 · từ Cmaj7: Đô + Em · Si → Si♭";
+   - mẹo khi sai nói tay nào đổi: "tay trái giữ Đô, tay phải Em → Edim";
+   - bốn nút luôn có tay phải của cha (lỗi quên đổi nốt);
+   - "Cây cha – con (gốc Đô)" ở màn chọn, cây của màn ở khung mẹo khi chơi — sinh từ chính câu đố, không gõ tay.
+2. **Passing chord (thử)** — bài học + 4 màn:
+   - bài học: Passing chord là gì · át phụ · giảm lướt · ♭II7; mỗi đoạn có nút ▶ nghe ví dụ ở Đô;
+   - 17 chỗ chen trong giọng trưởng: át phụ 6 · giảm lướt 7 (chỉ chỗ bass đi một cung) · ♭II7 4; màn trộn cả 17;
+   - viên: nhãn loại (hiện cả bên thi) + "Cmaj7 → ? → Dm7" — tìm hợp âm chen giữa; xong viên nghe cả ba hợp âm.
+3. **Vòng 2-5-1 (thử)** — bài học + 4 màn: giọng trưởng · giọng thứ · 2-5 lướt (đích ii · iii · IV · V · vi của giọng trưởng) · trộn:
+   - viên hai bước: "? → ? → Cmaj7" → bấm bậc 2 → viên đổi thành "Dm7 → ? → Cmaj7" → bấm bậc 5 → nghe cả vòng.
+
+Chung cho hai mục mới:
+- Chấm theo chức năng: đủ gốc + 3 + 7 (m7♭5 · dim7 đủ 4 nốt); nốt thêm chỉ được là nốt màu hợp loại — bấm G13 hay A7♭9 cũng đúng; thế đảo
+  nào cũng được. Không sáng tay trái — gốc là điều phải tìm.
+- Viên hai bước rơi lâu gấp 1,5; khoảng sinh viên giãn theo.
+- Kỷ lục thi tách theo mục (khóa "quy-tac:0", "luot:3" …); mục nhóm đuôi giữ khóa cũ.
+
+**Nguồn luật:**
+- Át phụ · giảm lướt · 2-5 lướt: tài liệu anh Khá trong Tái hòa âm (`passingChordRules.ts`). Giảm lướt: bass đi lên → dim7 nửa cung dưới
+  đích; đi xuống → nửa cung trên. Đích thứ → bậc 2 là m7♭5.
+- ♭II7: luật Claude rút từ 11 chỗ soi tận nốt của Cà Pháo (khớp 10/11).
+- 2-5-1: mẫu `ii-v-i` · `ii-v-i-thu` của `nhanVong.ts`.
+- Số đo dẫn trong bài học:
+  - Cà Pháo: 19 + 16 / 288 chỗ đổi hợp âm (phần hát 5 bài); đoạn đàn 1/141; giọng thứ 0/6 đoạn dạo · giang dùng ii–V;
+  - Tôn Hùng: 0 chỗ hợp âm lướt (2 bài);
+  - Robert: "quay đầu" I–♭iii°–ii–V 3 lần;
+  - Linh Nhi: vòng 1–6–2–5 ở 8/35 đoạn.
+
+**Mã:**
+- `gameChong.ts`:
+  - `CauGame` thêm `the` · `buoc` · `nghe` · `chuc` · `kieu`;
+  - `CHA_CHONG`, `taoCauQuyTac`, `MAN_QUY_TAC`;
+  - `dungTayPhai` chấm theo `chuc`; `chonCau` nhận id `qt:` · `luot:` · `v251:`.
+- `hopAmLuot.ts` (mới): chỗ chen, câu, màn, bài học.
+- `GameChong.tsx`: hàng nút mục; bài học có ▶; viên nhiều bước (`dung` → sang bước sau); nhãn loại trên viên. Trong `VungRoi`, viên có nhãn
+  dời theo chiều cao thật của nó; viên cũ giữ cách cũ.
+- `chongHopAm.ts`: `tenBac` nhận cả hợp âm ba giả (chỉ đọc `kyHieu` · `nhom`).
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Người dùng chưa chơi ba mục.
+- Của Claude, chưa đo: cây cha – con (cha nào cho con nào), thứ tự màn, chỗ chen (bậc nào dẫn vào bậc nào), nút nhiễu, bảng nốt màu được
+  thêm, hệ số rơi 1,5.
+- Tên nốt theo lệ của app: Mi♯ · Si♯ · Fa𝄪 ghi Fa · Đô · Sol (vd "cảm âm Fa sát dưới Fa♯" ở 2-5 về F♯m7).
+- 2-5-1 thứ: bậc 1 ghi m7 (mẫu `ii-v-i-thu` ghi i trơn). Chưa đo thầy dùng loại nào ở i.
+- Giảm lướt chỉ đặt ở chỗ bass đi một cung. "Quay đầu" (Cmaj7 → E♭dim7 → Dm7) chỉ có trong bài học; ở màn chơi nó là nút nhiễu (ngược chiều).
+- Át phụ bass cảm âm của Cà Pháo (F7/A) chỉ có trong bài học. Câu đố chấm thế đảo nào cũng được nên bấm F7/A vẫn đúng.
+- Chưa có câu "quay đầu", "♭II7 hàng xóm", câu nối chuỗi giảm.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi.
+- `gameChong.test.ts` thêm 3: cây (cha trước con, con khác cha 1–3 nốt, đủ 32); lời viên ở gốc Đô và La; bốn nút ở 32 hợp âm × 12 gốc.
+- `hopAmLuot.test.ts` 9:
+  - 17 chỗ × 12 giọng: bốn nút đúng / sai theo nốt, đúng luật nhạc từng loại;
+  - lời ở Đô và Fa; chấm theo chức năng;
+  - 7 mẫu 2-5-1 × 12 giọng: hai bước, gốc nhảy quãng 4;
+  - ví dụ bài học.
+- Toàn suite: 2 837 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless 30/30:
+  - bốn nút mục;
+  - Quy tắc: 7 màn, cây, viên, chọn sai / đúng, giữ hợp âm, thi 20/20 → Đạt (khóa riêng);
+  - Passing chord: bài học, ▶ phát 3 hợp âm cách 1 giây, chọn sai / đúng + nghe lại, dim7 thế đảo, A7♭9 có màu, thi trộn 12 giọng 20/20;
+  - 2-5-1: viên hai bước, sai bước 1, đúng thì sang bước 2, nghe cả vòng, giọng thứ giữ hợp âm, thi 2-5 lướt 40 bước → Đạt;
+  - màn nhóm đuôi cũ vẫn chơi; điện thoại không cuộn ngang; viên dừng ở vạch 90 % còn trọn trong khung (3 mục).
+- Mưa khung nốt 16/16. Script cũ của màn nhóm đuôi (11/10) 10/12 — 2 chỗ hỏng là chữ đã đổi từ commit ac2ffdc, không do lần này.
+- `LuyenTap.json`, `Nguon.json` không đổi.

@@ -503,6 +503,10 @@ Các hợp âm phải được chọn tự do …"*
   tay phải = loại tổng), viên rơi ghi luôn tên hai tay.
   Cập nhật 11/10 (người dùng): bảng chia theo 16 nhóm đuôi; màn game cũng theo nhóm đuôi (18 màn, có hợp âm ba cơ bản), mẹo trên viên
   = đuôi mang lại nốt nào ở chính gốc đang đố.
+  Cập nhật 16/10 (người dùng: "hãy làm theo lối của Quy tắc nhóm đuôi … làm thêm mục dạy tôi về các Passing Chord và dạy tôi tìm hợp âm
+  cho vòng 2-5-1. Có thể đánh bằng đàn hoặc chọn đáp án"): ba mục thử cạnh 18 màn đã duyệt — Quy tắc nhóm đuôi (cây cha – con 32 hợp
+  âm, viên ghi cha + thay đổi), Passing chord (bài học + át phụ · giảm lướt · ♭II7), Vòng 2-5-1 (bài học + trưởng · thứ · 2-5 lướt, viên
+  hai bước). **Chờ người dùng** chơi và duyệt.
 - **Đố tái hòa âm theo bốn phong cách — xong 11/10/2026** (thẻ đầu tab Tái hòa âm vòng): nhập vòng → app đoán chủ âm (đổi được) → ô
   chủ âm tái hòa âm sẵn → mỗi ô khác trắc nghiệm bốn phương án, gợi ý bật khi cần, chọn xong có lời giải thích và nghe trong vòng.
   Cà Pháo · Linh Nhi · Blues theo lời "bài ghi X → thầy bấm Y" đã duyệt; phong cách thứ tư "Nhạc sĩ (Claude)" là tư duy của Claude.

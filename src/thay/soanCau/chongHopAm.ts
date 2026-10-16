@@ -551,7 +551,7 @@ export const LOAI_TU_DO = CHORD_QUALITIES.map((q) => ({ id: q.id, kyHieu: q.symb
    sinh từ CONG_THUC (đố và bảng không lệch nhau); câu quy luật là Claude rút từ chính 26 công thức, có test đối chiếu. ---------------- */
 
 /** Tên bậc của một nốt (nửa cung so với gốc) trong hợp âm `ct`: ♭3 hay ♯9, ♭5 hay ♯11, 6 hay 13 — tùy hợp âm. */
-export function tenBac(iv: number, ct: CongThuc): string {
+export function tenBac(iv: number, ct: Pick<CongThuc, 'kyHieu' | 'nhom'>): string {
   const k = ct.kyHieu
   switch (pc(iv)) {
     case 0:

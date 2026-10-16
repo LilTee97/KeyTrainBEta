@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { findQualityBySymbol } from '../../shared/musicTheory/chordDefinitions'
 import { CONG_THUC } from './chongHopAm'
 import { NHOM_DUOI, QUY_TAC_DUOI } from './meoChong'
-import { chonCau, diemCau, DONG_CHO, dungHaiTay, dungTayPhai, LO_TU, MAN, MAU_SLASH, MOC_MAC_DINH, MOC_ROI, soCanCham, soNotLo, taoCau, taoCauSlash, thoiGianRoi } from './gameChong'
+import { CHA_CHONG, chonCau, diemCau, DONG_CHO, dungHaiTay, dungTayPhai, LO_TU, MAN, MAN_QUY_TAC, MAU_SLASH, MOC_MAC_DINH, MOC_ROI, soCanCham, soNotLo, taoCau, taoCauQuyTac, taoCauSlash, thoiGianRoi } from './gameChong'
+import { chordPitchClasses, getChordQuality } from '../../shared/musicTheory/chordDefinitions'
+import { pcsTong } from './chongHopAm'
 import { lopHop } from './slashChong'
 
 const ct = (id: string) => CONG_THUC.find((c) => c.id === id)!
@@ -154,5 +156,53 @@ describe('game Mưa hợp âm — logic', () => {
     expect([LO_TU, DONG_CHO]).toEqual([0.6, 0.9])
     expect([0.59, 0.6, 0.75, 0.85, 0.95].map((p) => soNotLo(p, 3))).toEqual([0, 1, 2, 3, 3])
     expect([0.65, 0.89, 1].map((p) => soNotLo(p, 4))).toEqual([1, 4, 4])
+  })
+})
+
+describe('màn quy tắc nhóm đuôi (thử) — học hợp âm cha rồi suy ra con', () => {
+  const lopId = (id: string, g = 0) => (id.startsWith('q:') ? chordPitchClasses(g, getChordQuality(id.slice(2))!) : pcsTong(ct(id), g)).map(pc)
+  const ids = MAN_QUY_TAC.flatMap((m) => m.ids.map((x) => x.slice(3))).slice(0, 32)
+
+  it('7 màn, đủ 32 hợp âm như màn trộn cũ; cha luôn học trước con; con khác cha 1–3 nốt', () => {
+    expect(MAN_QUY_TAC).toHaveLength(7)
+    expect([...ids].sort()).toEqual([...MAN[17]!.ids].sort())
+    expect(MAN_QUY_TAC[6]!.ids.map((x) => x.slice(3))).toEqual(ids)
+    expect(ids.filter((id) => !CHA_CHONG[id])).toEqual(['q:maj'])
+    for (const id of ids.filter((x) => CHA_CHONG[x])) {
+      expect([id, ids.indexOf(CHA_CHONG[id]!) < ids.indexOf(id)]).toEqual([id, true])
+      const a = new Set(lopId(CHA_CHONG[id]!))
+      const c = new Set(lopId(id))
+      const khac = [...a].filter((x) => !c.has(x)).length + [...c].filter((x) => !a.has(x)).length
+      expect([id, khac >= 1 && khac <= 3]).toEqual([id, true])
+    }
+  })
+
+  it('viên ghi cha + thế chồng của cha + thay đổi; mẹo nói tay nào đổi — ở gốc Đô và gốc La', () => {
+    const c7 = taoCauQuyTac('7', 0, () => 0.3)
+    expect([c7.id, c7.ten, c7.khungTen, c7.goiY, c7.dapAnTen]).toEqual(['qt:7', 'C7', 'từ Cmaj7: Đô + Em', 'Si → Si♭', 'Edim'])
+    expect(c7.meo).toBe('C7 = Đô + Edim. Từ Cmaj7 (Đô + Em): Si → Si♭ — tay trái giữ Đô, tay phải Em → Edim.')
+    expect(c7.loi).toBe('C7 = Đô + Edim — từ Cmaj7: Si → Si♭')
+    expect(taoCauQuyTac('maj7', 9).goiY).toBe('thêm Sol♯')
+    expect(taoCauQuyTac('7', 9).goiY).toBe('Sol♯ → Sol')
+    expect(taoCauQuyTac('q:sus4', 0).goiY).toBe('Mi → Fa')
+    expect(taoCauQuyTac('dim7', 0).goiY).toBe('Si♭ → La')
+    expect(taoCauQuyTac('9sus4', 0).meo).toBe('C9sus4 = Đô + B♭. Từ C9 (Đô – Mi + Gm): bỏ Mi · bỏ Sol · thêm Fa — tay trái Đô – Mi → Đô, tay phải Gm → B♭.')
+    expect(taoCauQuyTac('13', 0).meo).toContain('tay phải giữ Am')
+    const goc = taoCauQuyTac('q:maj', 0)
+    expect([goc.goiY, goc.loi]).toEqual(['gốc của cây — thuộc trước', 'C = Đô + C — gốc của cây'])
+    expect(chonCau(['qt:m7'], [0], new Map(), null, () => 0.4).khungTen).toBe('từ C7: Đô + Edim')
+  })
+
+  it('bốn nút ở mọi gốc: đáp án như màn nhóm đuôi, luôn có tay phải của cha (khi khác đáp án); nút nhiễu sai', () => {
+    for (const id of ids)
+      for (let g = 0; g < 12; g++) {
+        const c = taoCauQuyTac(id, g, () => 0.45)
+        const ten = c.luaChon.map((l) => l.ten)
+        expect([id, g, ten.length, new Set(ten).size, ten.includes(c.dapAnTen)]).toEqual([id, g, 4, 4, true])
+        const cha = CHA_CHONG[id] ? taoCauQuyTac(CHA_CHONG[id]!, g, () => 0.45).dapAnTen : c.dapAnTen
+        expect([id, g, ten.includes(cha)]).toEqual([id, g, true])
+        for (const l of c.luaChon.filter((x) => x.ten !== c.dapAnTen)) expect([id, g, l.ten, dungTayPhai(l.phai, c)]).toEqual([id, g, l.ten, false])
+        expect([id, g, dungTayPhai(c.phai, c)]).toEqual([id, g, true])
+      }
   })
 })
