@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { startAudio } from '../shared/audio/audioEngine'
 import { useMidiStore } from '../shared/midi/midiStore'
+import { getKeyboardRange } from '../shared/midi/onScreenPiano/layout'
+import { readSetting } from '../shared/persistence/localSettings'
 import { bacDoRo, diemCau, DONG_CHO, doRoGoiY, SO_CAU_THI, thoiGianRoi } from './soanCau/gameChong'
 
 /*
@@ -62,6 +64,22 @@ export function useNotXuong(f: (note: number) => void) {
       }),
     [],
   )
+}
+
+/**
+ * Dải bàn phím của các game rơi (Mưa hợp âm · Mưa khung nốt · Game chạy ngón · nền beat). Cắm đàn MIDI thì đúng dải của đàn — số phím chọn
+ * hay tự đo ở tab Gỡ lỗi (người dùng 16/10/2026: "Hãy làm nút lựa chọn số phím đàn hoặc tự đo số phím đàn ở mục Gỡ Lỗi"), để phím gợi ý
+ * nằm đúng quãng tám như trên đàn thật. Không cắm đàn thì như cũ, theo màn: điện thoại (≤ 640 px) hai quãng tám Đô3 – Đô5 cho phím to dễ
+ * chạm, màn rộng Đô2 – Đô6. Cũ (tới 16/10/2026): luôn theo màn, mỗi game tự tính (6 chỗ giống hệt nhau).
+ */
+export function useDayPhim(): { thap: number; cao: number } {
+  const coDan = useMidiStore((s) => s.devices.length > 0)
+  if (coDan) {
+    const { low, high } = getKeyboardRange(readSetting('midiKeyboardKeys'))
+    return { thap: low, cao: high }
+  }
+  const hep = typeof window !== 'undefined' && !!window.matchMedia?.('(max-width: 640px)').matches
+  return hep ? { thap: 48, cao: 72 } : { thap: 36, cao: 84 }
 }
 
 export function useMuaRoi<C extends CauRoi>(o: {

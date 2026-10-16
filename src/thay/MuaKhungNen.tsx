@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { getPlaybackBeats, startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
+import { getPlaybackBeats, setTimelineBpm, startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { BanPhimChong } from './BanPhimChong'
-import { VungRoi, type VienRoi } from './GameChong'
+import { ChonNhip, VungRoi, type VienRoi } from './GameChong'
 import { nguonNenBeat } from './hocSolo/beatNen'
 import { chamSsa, type CauSsa, type VongNen } from './hocSolo/loiSsa'
 import { bacDoRo, DAT_THI, diemCau, doRoGoiY, SO_CAU_THI, type Ben } from './soanCau/gameChong'
-import { useNotXuong } from './useMuaRoi'
+import { useDayPhim, useNotXuong } from './useMuaRoi'
 
 /*
   MƯA KHUNG NỐT CÓ BACKING TRACK — người dùng 15/10/2026: "Cho Mục lối SSA và các thầy khác có nhạc backing track để solo trên đó". Nền phát
@@ -94,9 +94,7 @@ export function MuaKhungNen({
     bao: null as null | { loai: 'dung' | 'sai' | 'truot'; chu: string },
     loi: '',
   }).current
-  const hep = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
   const nC = () => Math.max(1, s.vong?.cau.length ?? 1)
   const dai = () => s.moc[s.moc.length - 1]!
   /** Ô thứ `i` kể từ lúc nền vào (lượt nối lượt): phách đầu, phách cuối. */
@@ -115,6 +113,17 @@ export function MuaKhungNen({
   function bayGio() {
     if (s.nen) return getPlaybackBeats() - (s.vong?.demTrong ? s.demVao : 0)
     return (performance.now() - s.t0) / (60000 / bpm) - s.demVao
+  }
+  /**
+   * Đổi tốc độ giữa chừng (bên luyện — người dùng 16/10/2026: "cho các game có thể chọn tốc độ phát"): nền đang chạy thì đổi luôn nhịp
+   * của nền (lịch ghi theo phách, nền co giãn theo); còn đang đếm vào (đồng hồ hình) thì neo lại đồng hồ cho phách đang ở giữ nguyên.
+   */
+  function doiNhip(x: number) {
+    if (s.pha === 'choi') {
+      if (s.nen) setTimelineBpm(x)
+      else s.t0 = performance.now() - (bayGio() + s.demVao) * (60000 / x)
+    }
+    setBpm(x)
   }
   /** Nạp vòng từ lượt `tu` (bỏ lượt không soạn được); về đếm vào, giữ điểm. */
   function napVong(tu: number) {
@@ -368,6 +377,7 @@ export function MuaKhungNen({
         </span>
       </div>
 
+      {!thi && <ChonNhip bpm={bpm} ds={NHIP_DO} doi={doiNhip} />}
       <VungRoi vien={s.vien} dich={dich} bayGio={bayGio} tick={tick} chay meo={!thi} />
 
       <p

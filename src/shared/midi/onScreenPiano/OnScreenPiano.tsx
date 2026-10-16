@@ -82,7 +82,14 @@ const pressDepth = (velocity: number) =>
   (ink 55 % · kem 70 %), phím trắng 0,3 × (8–14 px), phím đen 0,42 × (7–12 px), bấm mạnh thì chữ đổi sáng (`LIGHT_TEXT_DEPTH` 0,2).
   Lùi khi: thẻ che gần hết phím hay chữ tràn sang phím bên — hạ hai hệ số.
 */
-const TEN_NOT = 'rounded bg-ink px-[3px] py-[2px] font-sans font-bold leading-none text-yellow-300 shadow'
+const TEN_NOT = 'rounded bg-ink py-[2px] font-sans font-bold leading-none text-yellow-300 shadow'
+/*
+  Phím trắng hẹp hơn `PHIM_HEP_PX` thì thẻ tên bỏ lề ngang (còn 1 px) cho lọt phím — chữ 8 px rộng ~5 px. Đo 16/10/2026 (giả lập điện
+  thoại 360 px, bàn phím 61 phím của Nốt rơi cũ / Luyện đệm): 36 phím trắng trong 302 px = 8,4 px mỗi phím, thẻ lề 3 px rộng 11 px → phím
+  không co được (nội dung tối thiểu), bàn phím tràn ra 439 px, cả trang giãn 468 px — kéo ngang được, chạm lệch chỗ. Cũ: lề 3 px mọi cỡ.
+  Lùi về lề 3 px nếu chữ trên phím trông dính mép thẻ ở màn rộng (chỉ đổi khi phím < 12 px).
+*/
+const PHIM_HEP_PX = 12
 
 /*
   Tên nốt trên phím — người dùng 2/10/2026: "Các phím trên app cũng nên để tên nốt", rồi "các phím C đã có đánh số, hãy
@@ -216,14 +223,15 @@ export function OnScreenPiano({
   const whiteFontPx = Math.round(Math.min(18, Math.max(8, whiteWidth * 0.42)))
   const blackFontPx = Math.round(Math.min(15, Math.max(7, whiteWidth * 0.62 * 0.5)))
   /** Tên nốt kèm quãng tám trong thẻ: một dòng (D4) khi đủ rộng, không thì chữ trên số dưới. */
+  const le = whiteWidth < PHIM_HEP_PX ? 'px-px' : 'px-[3px]'
   const label = (note: MidiNote, oneLine: boolean, fontSize: number) => {
     const name = pitchClassName(pitchClassOf(note), accidentalStyle)
     return oneLine ? (
-      <span className={`relative ${TEN_NOT}`} style={{ fontSize }}>
+      <span className={`relative ${TEN_NOT} ${le}`} style={{ fontSize }}>
         {`${name}${octaveOf(note)}`}
       </span>
     ) : (
-      <span className={`relative flex flex-col items-center gap-px ${TEN_NOT}`} style={{ fontSize }}>
+      <span className={`relative flex flex-col items-center gap-px ${TEN_NOT} ${le}`} style={{ fontSize }}>
         <span>{name}</span>
         <span>{octaveOf(note)}</span>
       </span>
@@ -361,6 +369,25 @@ export function OnScreenPiano({
     )
   }
 
+  /**
+   * Viền gợi ý trên phím ĐÃ đánh hay đang giữ — người dùng 16/10/2026: "Các phím gợi ý sau khi được đánh rồi vẫn sẽ ko mất mà vẫn tiếp
+   * tục gợi ý". Cũ: màu tay của phím đã đánh (hay lớp phím đang bấm) đè mất gợi ý. Chỉ viền màu tay của gợi ý cộng nét tối bên trong —
+   * đọc được trên mọi nền, kể cả lớp cam của phím đang bấm; nằm trên lớp bấm, dưới chữ; mờ / rõ theo gợi ý như lớp phủ.
+   */
+  const vienGoiY = (note: MidiNote) => {
+    const tay = revealLeft.has(note) ? 'trai' : reveal.has(note) ? 'phai' : null
+    if (!tay || !(leftHand.has(note) || rightHand.has(note) || isHeld(note))) return null
+    return (
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 rounded-b-md ring-[3px] ring-inset ${tay === 'trai' ? 'ring-left-hand' : 'ring-amber-key'}`}
+        style={{ opacity: revealOpacity ?? 1 }}
+      >
+        <span className="absolute inset-[3px] rounded-b-md ring-1 ring-ink/70 ring-inset" />
+      </span>
+    )
+  }
+
   /** Số ngón trên đầu phím — vòng tròn nhỏ, đọc được cả khi phím đang sáng. */
   const finger = (note: MidiNote) =>
     fingerLabels?.[note] === undefined ? null : (
@@ -392,12 +419,13 @@ export function OnScreenPiano({
             type="button"
             aria-label={midiToName(note, accidentalStyle)}
             {...keyHandlers(note)}
-            className={`relative flex flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
+            className={`relative flex min-w-0 flex-1 items-end justify-center rounded-b-md pb-2 font-mono text-[9px] transition-colors ${
               WHITE_KEY_STYLES[keyStateOf(note)]
             }`}
           >
             {revealLayer(note, false)}
             {pressLayer(note)}
+            {vienGoiY(note)}
             {finger(note)}
             {showNoteNames ? label(note, whiteWidth >= whiteFontPx * 1.5 + 8, whiteFontPx) : null}
           </button>
@@ -421,6 +449,7 @@ export function OnScreenPiano({
         >
           {revealLayer(note, true)}
           {pressLayer(note)}
+          {vienGoiY(note)}
           {finger(note)}
           {blackNamed ? label(note, false, blackFontPx) : null}
         </button>

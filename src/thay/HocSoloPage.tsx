@@ -3,6 +3,7 @@ import { playChord, playChordSequence, startAudio } from '../shared/audio/audioE
 import { GameChayNgonRoi } from './GameChayNgonRoi'
 import { GameKhungRoi } from './GameKhungRoi'
 import { GameNotRoi, GameScale } from './GameSolo'
+import { KhungGame } from '../reharm/playback/PracticeStage'
 import { BanPhimMau } from './hocSolo/BanPhimMau'
 import { NEN } from './hocSolo/mauPhim'
 import { giangHop, HOI_DAP_SCALE, hopAmHoc, MEO_SOLO, mucThay, notTrenHop, phanBo, tenChu, THAY_HOC, VAI, type ThayHoc, type VaiNot } from './hocSolo/chonNot'
@@ -438,10 +439,23 @@ export function HocSoloPage() {
       {tab === 'chon-not' && <ChonNotTab />}
       {tab === 'scale' && <ScaleTab />}
       {tab === 'meo' && <MeoTab />}
-      {tab === 'game-ngon' && <GameChayNgonRoi />}
-      {tab === 'mua-khung' && <GameKhungRoi />}
+      {/* Toàn màn hình cho cả game (người dùng 16/10/2026). Nốt rơi cũ có sẵn nút toàn màn hình ở khung nốt rơi (`PracticeStage`). */}
+      {tab === 'game-ngon' && (
+        <KhungGame>
+          <GameChayNgonRoi />
+        </KhungGame>
+      )}
+      {tab === 'mua-khung' && (
+        <KhungGame>
+          <GameKhungRoi />
+        </KhungGame>
+      )}
       {tab === 'not-roi' && <GameNotRoi />}
-      {tab === 'game-scale' && <GameScale />}
+      {tab === 'game-scale' && (
+        <KhungGame>
+          <GameScale />
+        </KhungGame>
+      )}
     </section>
   )
 }

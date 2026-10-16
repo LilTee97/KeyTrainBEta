@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { NoteGatedPractice } from '../reharm/playback/NoteGatedPractice'
+import { ChonNhip } from './GameChong'
 import { TimedPractice } from '../reharm/playback/TimedPractice'
 import { playChordSequence, startAudio, stopTimelineLoop } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
@@ -117,6 +118,8 @@ export function GameNotRoi() {
   const [bpm, setBpm] = useState<number>(60)
   const [thay, setThay] = useState<ThayChay | null>(null)
   const [take, setTake] = useState(0)
+  /** Lần dựng lại khung tập: mọi thay đổi ở hàng chọn (`doi`) dựng lại; đổi ♩ trong thanh toàn màn hình thì không (giữ toàn màn hình). */
+  const [lamMoi, setLamMoi] = useState(0)
   const [hetCau, setHetCau] = useState(false)
   const [tay, setTay] = useState<Tay>('phai')
   const ds = useMemo(() => baiTapNgon(tay), [tay])
@@ -185,6 +188,7 @@ export function GameNotRoi() {
   /** Mọi thay đổi dừng phát trước; `moiCau` = đổi bài (thầy · hợp âm · vòng · giọng) thì câu thầy về lượt đầu — đổi nhịp, chế độ thì giữ câu. */
   const doi = (f: () => void, moiCau = false) => {
     stopTimelineLoop()
+    setLamMoi((k) => k + 1)
     if (moiCau) {
       setTake(0)
       setHetCau(false)
@@ -198,6 +202,18 @@ export function GameNotRoi() {
       : sinh
         ? (sinhSolo(hopVong, tonic, thu, t, idVong)?.bai ?? null)
         : null
+  /* Đổi ♩ từ thanh toàn màn hình (khung chưa chơi): không dựng lại khung — dựng lại là mất toàn màn hình (16/10/2026). Nốt rơi theo nhịp
+     chỉ hiện nút này lúc chưa chơi, nên không đổi nhịp giữa lượt đang chấm. */
+  const nhipToanMan = (
+    <ChonNhip
+      bpm={bpm}
+      ds={NHIP}
+      doi={(x) => {
+        stopTimelineLoop()
+        setBpm(x)
+      }}
+    />
+  )
   const doiCau = () => {
     if (!thay && !sinh) return
     const cu = vanTay(bai)
@@ -470,7 +486,7 @@ export function GameNotRoi() {
 
       {!bai ? null : cheDo === 'cho' ? (
         <NoteGatedPractice
-          key={`${khoa}|${bpm}|${take}`}
+          key={`${khoa}|${lamMoi}|${take}`}
           timeline={bai.timeline}
           voicings={bai.voicings}
           beatsPerChord={bai.beatsPerChord}
@@ -478,6 +494,7 @@ export function GameNotRoi() {
           vongBpm={bpm}
           nenTayKia
           onChang={setDangCho}
+          thanhNhip={nhipToanMan}
           bac={{
             tay: bai.tay,
             onXong: (k) => {
@@ -489,7 +506,7 @@ export function GameNotRoi() {
         />
       ) : (
         <TimedPractice
-          key={`${khoa}|${bpm}|${take}`}
+          key={`${khoa}|${lamMoi}|${take}`}
           title={`Chạy ngón · ${bai.ten}`}
           timeline={timelineNhip}
           voicings={bai.voicings}
@@ -498,6 +515,7 @@ export function GameNotRoi() {
           meter={bai.meter ?? 4}
           vongBpm={bpm}
           anTempo
+          thanhNhip={nhipToanMan}
           bac={{
             tay: bai.tay,
             tempo: 100,

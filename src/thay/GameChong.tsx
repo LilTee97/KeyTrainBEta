@@ -36,6 +36,7 @@ import {
 import { BAI_251, BAI_LUOT, MAN_251, MAN_LUOT, type DoanBai } from './soanCau/hopAmLuot'
 import { BAI_SSA, MAN_HOP_SSA } from './soanCau/hopAmSsa'
 import { bangTheoDuoi, kieuGoc } from './soanCau/meoChong'
+import { useDayPhim } from './useMuaRoi'
 
 interface Vien extends CauGame {
   khoa: number
@@ -121,6 +122,20 @@ export function ChonMoc({ giay, doi }: { giay: number; doi: (s: number) => void 
       {MOC_ROI.map((s) => (
         <button key={s} type="button" onClick={() => doi(s)} className={nutNho(giay === s)}>
           {s} s
+        </button>
+      ))}
+    </span>
+  )
+}
+
+/** Hàng nút tốc độ (♩) đổi được khi đang chơi — các game rơi theo nền: nền beat, Game chạy ngón phần 2 · 3 (16/10/2026). */
+export function ChonNhip({ bpm, ds, doi }: { bpm: number; ds: readonly number[]; doi: (x: number) => void }) {
+  return (
+    <span className="flex flex-wrap items-center gap-1 text-xs text-dim">
+      Tốc độ ♩ =
+      {ds.map((x) => (
+        <button key={x} type="button" onClick={() => doi(x)} className={nutNho(bpm === x)}>
+          {x}
         </button>
       ))}
     </span>
@@ -452,8 +467,7 @@ export function GameChong() {
   }, [suKien])
 
   const hep = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
   const kl = (k: number) => kyLuc[khoaKyLuc(k)]
 
   if (g.pha === 'chuan-bi' || g.pha === 'het')
@@ -843,7 +857,9 @@ export function VungRoi({
   }, [chay])
   const t = bayGio()
   return (
-    <div className="relative h-[42vh] min-h-64 overflow-hidden rounded-xl border border-line bg-black/40">
+    /* Trong khung toàn màn hình (`KhungGame`, 16/10/2026): cao 45 % màn, thấp nhất 9 rem — cầm dọc thì vùng mưa + bàn phím vừa một màn;
+       xoay ngang (màn thấp) thì cuộn. Lùi về h-[42vh] min-h-64 nếu vùng mưa toàn màn hình thấp quá, khó đọc tên viên. */
+    <div className="relative h-[42vh] min-h-64 overflow-hidden rounded-xl border border-line bg-black/40 [:fullscreen_&]:h-[45vh] [:fullscreen_&]:min-h-36">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-rose-500/25 to-transparent" />
       {vien.map((v) => {
         const p = Math.min(1, Math.max(0, (t - v.sinh) / v.roi))

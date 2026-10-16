@@ -11,7 +11,8 @@ import { CHIA_TAY, xongChong, type CauSsa } from './hocSolo/loiSsa'
   Nốt NÊN CHƠI (viên của vòng backing — `ssa.nen`; người dùng 15/10/2026: "làm nổi bật nó lên so với các nốt còn lại trong khung"): trước
   khi chồng xong, phím của nốt ★ trong tầm tay phải ghi "★ bậc" trên đầu phím (chồng sao cho nốt trên cùng là một nốt ★); chồng xong thì
   vùng chạy ngay trên thế (tới quãng 9 trên nốt cao nhất) sáng: vàng là nốt nên chơi, xanh nhạt là các nốt còn lại của khung (nốt chạy
-  được tính); viền cam các chỗ đặt thế tắt đi.
+  được tính); viền gợi ý các chỗ đặt thế VẪN GIỮ (người dùng 16/10/2026: "Các phím gợi ý sau khi được đánh rồi vẫn sẽ ko mất mà vẫn tiếp
+  tục gợi ý" — chồng lại thế giữa câu chạy vẫn thấy chỗ). Cũ (tới 16/10/2026): chồng xong thì viền các chỗ đặt thế tắt đi.
 */
 
 const pc = (x: number) => ((x % 12) + 12) % 12
@@ -64,7 +65,8 @@ export function BanPhimChong({
   const saoPhim = vung.filter((m) => saoP.includes(pc(m)))
   const moPhim = tren === null ? [] : vung.filter((m) => !saoP.includes(pc(m)) && ssa.dinh.includes(pc(m)))
   const nhanPhim = Object.fromEntries(saoPhim.map((m) => [m, `★${sao.find((x) => x.p === pc(m))!.bac}`]))
-  const banLo = tren === null ? vua(loSsa.filter((m) => !ssa.loTrai.includes(m))) : []
+  // Chồng xong: viền thế vẫn giữ, trừ phím nốt ★ của vùng chạy — vàng ★ là nốt nên chơi lúc chạy, không để viền thế đè mất.
+  const banLo = vua(loSsa.filter((m) => !ssa.loTrai.includes(m))).filter((m) => tren === null || !saoPhim.includes(m))
   // Điện thoại (Đô3 – Đô5): phím tay trái gập lên trùng thế tay phải (Sol2 → Sol3) thì để cho tay phải — chỗ ấy là vùng tay phải.
   const banLoTrai = vua(loSsa.filter((m) => ssa.loTrai.includes(m))).filter((m) => !banLo.includes(m))
   const nhan = {

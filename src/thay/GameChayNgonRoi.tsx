@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { getPlaybackBeats, playChord, startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
+import { getPlaybackBeats, playChord, setTimelineBpm, startAudio, startTimelineLoop, stopTimelineLoop } from '../shared/audio/audioEngine'
 import { useLiveSound } from '../shared/audio/useLiveSound'
 import { MidiConnect } from '../shared/midi/MidiConnect'
 import { useMidiStore } from '../shared/midi/midiStore'
 import { useComputerKeyboard } from '../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { MidiNote } from '../shared/musicTheory/types'
 import { BanPhimHaiTay, type NhanHaiTay } from './BanPhimHaiTay'
-import { ChonMoc, VungRoi, type VienRoi } from './GameChong'
+import { ChonMoc, ChonNhip, VungRoi, type VienRoi } from './GameChong'
 import { loiBoSoan, THAY_CHAY, type ThayChay } from './hocSolo/cauThay'
 import {
   chamNot,
@@ -41,7 +41,7 @@ import { doanGiong } from './soanCau/doTaiHoaAm'
 import { DAT_THI, diemCau, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
 import { docHop } from './soanCau/thayTrongVong'
 import { DOAN, manThay, soanTuDo, tenThayCua, vaiThayTrenKhung, type CauTuDo, type Doan } from './hocSolo/thayNhac'
-import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRoi'
+import { capKyLuc, docKyLuc, ghiKyLuc, useDayPhim, useMuaRoi, useNotXuong } from './useMuaRoi'
 import { GOC } from './vongThay'
 
 /*
@@ -378,9 +378,7 @@ function LamQuenRoi({ dau, thay }: { dau: ReactNode; thay?: ThayChay }) {
       }),
   })
   const { g, dich } = may
-  const hep = hepManHinh()
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
 
   async function batDau(b: Ben, k: number) {
     setBen(b)
@@ -588,7 +586,7 @@ function LamQuenRoi({ dau, thay }: { dau: ReactNode; thay?: ThayChay }) {
         {viec.mo}.{!thi && ' Viền cam trên phím là đáp án đang hiện dần.'}
       </p>
       {vuaXong && (
-        <details className="rounded-lg border border-teal-key/30 p-2" open={!hep}>
+        <details className="rounded-lg border border-teal-key/30 p-2" open={!hepManHinh()}>
           <summary className="cursor-pointer text-xs text-teal-key">Xem kỹ viên vừa xong — {vuaXong.ten}</summary>
           <div className="mt-1">
             {vuaXong.thay ? (
@@ -648,13 +646,22 @@ function SoloRoi({ dau }: { dau: ReactNode }) {
     truoc: null as number | null,
   }).current
   const ve = () => setVe((k) => k + 1)
-  const hep = hepManHinh()
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
 
   /** Phách đang nghe: trước khi nền vào là đồng hồ đếm vào (âm), sau đó là đồng hồ nền đã bù lệch hình – tiếng. */
   function bayGio() {
     return s.nen ? getPlaybackBeats() : (performance.now() - s.t0) / (60000 / bpm) - nhip
+  }
+  /**
+   * Đổi tốc độ giữa chừng (bên luyện — người dùng 16/10/2026: "cho các game có thể chọn tốc độ phát"): nền đang chạy thì đổi luôn nhịp
+   * của nền (lịch ghi theo phách, nền co giãn theo); còn đang đếm vào (đồng hồ hình) thì neo lại đồng hồ cho phách đang ở giữ nguyên.
+   */
+  function doiNhip(x: number) {
+    if (s.pha === 'choi') {
+      if (s.nen) setTimelineBpm(x)
+      else s.t0 = performance.now() - (bayGio() + nhip) * (60000 / x)
+    }
+    setBpm(x)
   }
   async function batDau(b: Ben, v: Vong) {
     const ks = khungVong(v.chu, v.tonic, v.thu)
@@ -945,6 +952,7 @@ function SoloRoi({ dau }: { dau: ReactNode }) {
         </span>
       </div>
 
+      {!thi && <ChonNhip bpm={bpm} ds={NHIP_DO} doi={doiNhip} />}
       <VungRoi vien={s.vien} dich={dich} bayGio={bayGio} tick={tick} chay meo={!thi} />
 
       <p
@@ -1044,9 +1052,7 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
     loi: '',
   }).current
   const ve = () => setVe((k) => k + 1)
-  const hep = hepManHinh()
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
   const tenBac = (k: Khung, m: number) => `${bo8(tenPhim(k, m))} (${notCua(k, m)?.bac ?? tenBacKhung(pc(m - k.goc), k.quang)})`
   const nC = () => Math.max(1, s.ks.length)
   const dai = () => s.moc[s.moc.length - 1]!
@@ -1065,6 +1071,17 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
   /** Phách đang nghe: trước khi nền vào là đồng hồ đếm vào (âm), sau đó là đồng hồ nền đã bù lệch hình – tiếng. */
   function bayGio() {
     return s.nen ? getPlaybackBeats() : (performance.now() - s.t0) / (60000 / bpm) - s.demVao
+  }
+  /**
+   * Đổi tốc độ giữa chừng (bên luyện — người dùng 16/10/2026: "cho các game có thể chọn tốc độ phát"): nền đang chạy thì đổi luôn nhịp
+   * của nền (lịch ghi theo phách, nền co giãn theo); còn đang đếm vào (đồng hồ hình) thì neo lại đồng hồ cho phách đang ở giữ nguyên.
+   */
+  function doiNhip(x: number) {
+    if (s.pha === 'choi') {
+      if (s.nen) setTimelineBpm(x)
+      else s.t0 = performance.now() - (bayGio() + s.demVao) * (60000 / x)
+    }
+    setBpm(x)
   }
   /** Câu bộ soạn soạn được, từ lượt `tu` trở đi (bỏ lượt bộ soạn không soạn được). */
   function timCau(tu: number) {
@@ -1433,6 +1450,7 @@ function DapThayRoi({ dau, thay }: { dau: ReactNode; thay: ThayChay }) {
         Vòng {tenThay} chọn: <span className="font-mono">{s.cau?.chords.join(' · ')}</span>
       </p>
 
+      {!thi && <ChonNhip bpm={bpm} ds={NHIP_DO} doi={doiNhip} />}
       <VungRoi vien={s.vien} dich={dich} bayGio={bayGio} tick={tick} chay meo={!thi} />
 
       <p

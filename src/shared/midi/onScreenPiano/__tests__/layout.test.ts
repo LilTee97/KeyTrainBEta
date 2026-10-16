@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isBlackKey } from '../../../musicTheory/pitch'
-import { buildKeyboardLayout, keyPlacement } from '../layout'
+import { buildKeyboardLayout, getKeyboardRange, KEYBOARD_SIZES, keyPlacement } from '../layout'
 
 describe('buildKeyboardLayout', () => {
   it('một quãng tám có 7 phím trắng và 5 phím đen', () => {
@@ -143,5 +143,16 @@ describe('keyPlacement', () => {
       expect(place.left).toBeGreaterThanOrEqual(0)
       expect(place.left + place.width).toBeLessThanOrEqual(100.001)
     }
+  })
+})
+
+describe('getKeyboardRange', () => {
+  it('mỗi cỡ đàn có sẵn ra đúng bấy nhiêu phím — 73 phím từng rơi vào dải 61 phím (16/10/2026)', () => {
+    for (const k of KEYBOARD_SIZES) {
+      const { low, high } = getKeyboardRange(k)
+      expect(high - low + 1, `${k} phím`).toBe(k)
+    }
+    expect(getKeyboardRange(61)).toEqual({ low: 36, high: 96 })
+    expect(getKeyboardRange(88)).toEqual({ low: 21, high: 108 })
   })
 })

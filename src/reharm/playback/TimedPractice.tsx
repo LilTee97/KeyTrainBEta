@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   beatAtPerformanceTime,
   getPlaybackBeats,
@@ -140,6 +140,11 @@ export interface TimedPracticeProps {
   chamLay?: boolean
   /** Bên gọi tự chọn BPM (`vongBpm` = nhịp tập): ẩn nút 60 · 80 · 100 %, chơi đúng `vongBpm`. */
   anTempo?: boolean
+  /**
+   * Nút tốc độ của bên gọi (nốt rơi cũ chọn ♩ bên ngoài khung) — hiện cả trong thanh toàn màn hình, để đổi tốc độ không phải thoát
+   * toàn màn hình (người dùng 16/10/2026: "Hãy làm nút fullscreen cho tất cả game và cho các game có thể chọn tốc độ phát").
+   */
+  thanhNhip?: ReactNode
 }
 
 /** Bậc 7 — chỉ tên hợp âm: hợp âm đang chơi và hợp âm kế (đọc trước, như đọc bảng hợp âm khi đệm hát). */
@@ -226,6 +231,7 @@ export function TimedPractice({
   chamNhac: chamNhacTuDo = false,
   chamLay: chamLayTuDo = false,
   anTempo = false,
+  thanhNhip,
 }: TimedPracticeProps) {
   const storeBpm = useMetronomeStore((state) => state.bpm)
   const bpm = vongBpm ?? storeBpm
@@ -576,6 +582,25 @@ export function TimedPractice({
           )}
         </span>
       )}
+      {/* Chọn tốc độ ngay trong toàn màn hình, lúc chưa chơi (16/10/2026): nút của bên gọi, không thì 60 · 80 · 100 % như ngoài khung. */}
+      {phase !== 'playing' &&
+        (thanhNhip ??
+          (!anTempo && !bac && (
+            <span className="flex gap-1">
+              {TEMPO_STEPS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setTempo(value)}
+                  className={button(tempo === value)}
+                  title={`${Math.round((bpm * value) / 100)} BPM`}
+                >
+                  {value}%
+                </button>
+              ))}
+            </span>
+          )))}
     </>
   )
 

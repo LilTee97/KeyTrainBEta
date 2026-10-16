@@ -8,11 +8,13 @@ import {
 import { useLiveSound } from '../../shared/audio/useLiveSound'
 import { initMidi, selectMidiDevice } from '../../shared/midi/midiInput'
 import { useMidiStore } from '../../shared/midi/midiStore'
+import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import type { MidiStatus } from '../../shared/midi/types'
 import { detectChords } from '../../shared/musicTheory/chordDetection'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 
 const STATUS_LABEL: Record<MidiStatus, string> = {
   idle: 'Chưa kết nối',
@@ -30,6 +32,92 @@ const STATUS_COLOR: Record<MidiStatus, string> = {
   unsupported: 'text-rose-400',
   denied: 'text-rose-400',
   error: 'text-rose-400',
+}
+
+const nutChon = (on: boolean) =>
+  `rounded-lg border px-2.5 py-1 text-xs ${on ? 'border-amber-key bg-amber-key/15 text-amber-key' : 'border-line bg-white/4 text-cream/85 hover:bg-white/10'}`
+
+/**
+ * SỐ PHÍM ĐÀN — người dùng 16/10/2026: "Hãy làm nút lựa chọn số phím đàn hoặc tự đo số phím đàn ở mục Gỡ Lỗi trong phần tái hòa âm".
+ * Chọn một cỡ có sẵn, hay TỰ ĐO: bấm phím thấp nhất và cao nhất trên đàn thật (chỉ nghe đàn MIDI, không nghe phím ảo) — số phím = cao −
+ * thấp + 1. Ghi vào cài đặt `midiKeyboardKeys` (trước chỉ chọn được trong Luyện đệm · chờ đúng nốt): Luyện đệm và các game rơi (khi cắm
+ * đàn — `useDayPhim`) hiện bàn phím đúng dải chuẩn của cỡ ấy (`getKeyboardRange`).
+ */
+function SoPhimDan() {
+  const [soPhim, setSoPhim] = useState(() => readSetting('midiKeyboardKeys'))
+  const [doPhim, setDoPhim] = useState<null | { thap: number | null; cao: number | null }>(null)
+  const coDan = useMidiStore((state) => state.devices.length > 0)
+  const dangDo = doPhim !== null
+
+  useEffect(() => {
+    if (!dangDo) return
+    return useMidiStore.subscribe((state, previous) => {
+      const ev = state.lastEvent
+      if (!ev || ev === previous.lastEvent || ev.velocity === 0 || ev.source !== 'hardware') return
+      setDoPhim((d) => d && { thap: Math.min(d.thap ?? ev.note, ev.note), cao: Math.max(d.cao ?? ev.note, ev.note) })
+    })
+  }, [dangDo])
+
+  const chon = (n: number) => {
+    setSoPhim(n)
+    writeSetting('midiKeyboardKeys', n)
+  }
+  const day = getKeyboardRange(soPhim)
+  const doDuoc = doPhim && doPhim.thap !== null && doPhim.cao !== null && doPhim.cao > doPhim.thap ? doPhim.cao - doPhim.thap + 1 : null
+  const chuan = doDuoc ? getKeyboardRange(doDuoc) : null
+
+  return (
+    <div>
+      <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">Số phím đàn</h3>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {KEYBOARD_SIZES.map((k) => (
+          <button key={k} type="button" onClick={() => chon(k)} className={nutChon(soPhim === k)} aria-pressed={soPhim === k}>
+            {k} phím
+          </button>
+        ))}
+        {!(KEYBOARD_SIZES as readonly number[]).includes(soPhim) && <span className={nutChon(true)}>{soPhim} phím (đo được)</span>}
+        <button type="button" onClick={() => setDoPhim(dangDo ? null : { thap: null, cao: null })} className={nutChon(dangDo)}>
+          {dangDo ? 'Hủy đo' : 'Tự đo số phím'}
+        </button>
+      </div>
+      <p className="mt-2 text-xs text-cream/85">
+        Đàn của bạn: <b className="text-amber-key">{soPhim} phím</b> · {midiToName(day.low)} – {midiToName(day.high)}
+      </p>
+      {dangDo && (
+        <div className="mt-2 rounded-lg border border-amber-key/50 bg-amber-key/10 p-3 text-xs text-cream">
+          <p>
+            Bấm phím <b>THẤP NHẤT</b> và phím <b>CAO NHẤT</b> trên đàn (thứ tự nào cũng được).
+            {!coDan && <span className="text-rose-300"> Chưa thấy đàn MIDI — cắm đàn rồi bấm “Quét lại thiết bị” ở trên.</span>}
+          </p>
+          <p className="mt-1 font-mono">
+            {doPhim.thap === null ? 'Chưa bấm phím nào.' : `Đã thấy: ${midiToName(doPhim.thap)} – ${midiToName(doPhim.cao!)}`}
+            {doDuoc ? ` → ${doDuoc} phím` : ''}
+          </p>
+          {chuan && doPhim.thap !== chuan.low && (
+            <p className="mt-1 text-rose-300">
+              Dải đo được lệch so với dải chuẩn của đàn {doDuoc} phím ({midiToName(chuan.low)} – {midiToName(chuan.high)}) — đàn có thể đang
+              bật dời quãng tám (Octave / Transpose). App dùng dải chuẩn.
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={!doDuoc}
+            onClick={() => {
+              chon(doDuoc!)
+              setDoPhim(null)
+            }}
+            className="mt-2 rounded-lg bg-amber-key px-3 py-1.5 font-semibold text-ink disabled:opacity-40"
+          >
+            {doDuoc ? `Lưu ${doDuoc} phím` : 'Lưu'}
+          </button>
+        </div>
+      )}
+      <p className="mt-2 text-xs text-dim">
+        Cắm đàn MIDI thì bàn phím trong các game rơi và Luyện đệm hiện đúng dải này, phím gợi ý nằm đúng quãng tám như trên đàn. Không cắm
+        đàn thì game giữ bàn phím to theo màn hình để chạm.
+      </p>
+    </div>
+  )
 }
 
 /**
@@ -129,6 +217,8 @@ export function MidiDebugPanel() {
           </div>
         )}
       </div>
+
+      <SoPhimDan />
 
       <div>
         <h3 className="mb-2 font-mono text-[11px] tracking-[0.08em] text-dim uppercase">

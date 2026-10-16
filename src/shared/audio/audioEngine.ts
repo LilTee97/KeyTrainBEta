@@ -27,6 +27,8 @@ export interface AudioState {
   /** Âm lượng tính bằng decibel; 0 là mức gốc. */
   volumeDb: number
   instrument: InstrumentId
+  /** Tắt tiếng phím bấm — `useLiveSound` không đánh nốt; đổi bằng `setTatTiengPhim`. */
+  tatTiengPhim: boolean
   setReady: (ready: boolean) => void
   setVolumeDb: (volumeDb: number) => void
   setInstrument: (instrument: InstrumentId) => void
@@ -43,6 +45,7 @@ export const useAudioStore = create<AudioState>((set) => ({
   ready: false,
   volumeDb: readSetting('volumeDb'),
   instrument: readInstrument(),
+  tatTiengPhim: readSetting('tatTiengPhim'),
   setReady: (ready) => set({ ready }),
   setVolumeDb: (volumeDb) => set({ volumeDb }),
   setInstrument: (instrument) => set({ instrument }),
@@ -410,8 +413,13 @@ export function isAudioReady(): boolean {
 */
 
 /** Bấm và giữ một nốt. `velocity` theo thang MIDI 0-127. */
+/**
+ * Đánh một nốt PHÍM BẤM (đàn MIDI · phím ảo · phím máy tính — chỉ `useLiveSound` gọi). Nút "Tiếng phím" tắt (`tatTiengPhim`, 16/10/2026)
+ * thì im: đánh trên đàn thật chỉ nghe tiếng đàn, app còn phát nền. Nhả (`releaseNote`) vẫn chạy — tắt giữa lúc giữ phím thì nốt đang
+ * kêu không bị treo.
+ */
 export function attackNote(note: MidiNote, velocity = 90): void {
-  if (!isAudioReady()) return
+  if (!isAudioReady() || useAudioStore.getState().tatTiengPhim) return
   getSynth().triggerAttack(toFrequency(note), Tone.immediate(), velocity / 127)
 }
 
@@ -846,6 +854,20 @@ export function setVolumeDb(volumeDb: number): void {
   writeSetting('volumeDb', volumeDb)
   if (voice) voice.volume.value = volumeDb
   boTrong?.amLuong(volumeDb + TRONG_DB)
+}
+
+/** Bật / tắt tiếng phím bấm (nhớ qua các lần mở app). Tắt giữa lúc đang giữ phím: nốt đang kêu vẫn nhả như thường. */
+export function setTatTiengPhim(tat: boolean): void {
+  useAudioStore.setState({ tatTiengPhim: tat })
+  writeSetting('tatTiengPhim', tat)
+}
+
+/**
+ * Đổi nhịp độ của vòng phát đang chạy (`startTimelineLoop`) — giữa chừng, không ngắt: lịch ghi theo phách nên nền co giãn theo, và
+ * `getPlaybackBeats` vẫn liền mạch. Game rơi đổi tốc độ khi đang chơi (người dùng 16/10/2026: "cho các game có thể chọn tốc độ phát").
+ */
+export function setTimelineBpm(bpm: number): void {
+  Tone.getTransport().bpm.value = Math.max(1, bpm)
 }
 
 /** Dọn dẹp khi thoát. */

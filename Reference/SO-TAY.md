@@ -8023,3 +8023,81 @@ màn chọn — 12 bước hỏng, chung một gốc:
 - Lần dùng đầu tiên (chưa có mẫu trong máy) trên mạng chậm: vào game đầu phải chờ tải 6 mẫu piano (~1 MB; quá 15 giây thì đổi
   nguồn mẫu, rồi tiếng tổng hợp).
 - Gói mã chính 5,26 MB (972 kB nén) chưa tách nhỏ — mở app ở CPU ×4 hiện 1,1 – 1,4 giây nên chưa cần.
+
+## Bước — Đánh đàn thật cạnh điện thoại: tắt tiếng phím · toàn màn hình mọi game · đổi tốc độ khi chơi · số phím đàn · gợi ý không mất (16/10/2026)
+
+**Người dùng:** *"hãy làm nút tắt tiếng đàn để thiết bị Android ko phát ra tiếng đàn khi bấm phím trên đàn, chỉ phát các backing
+track, hiện thị ở tất cả game / Hãy làm nút lựa chọn số phím đàn hoặc tự đo số phím đàn ở mục Gỡ Lỗi trong phần tái hòa âm / Hãy làm
+nút fullscreen cho tất cả game và cho các game có thể chọn tốc độ phát / Các phím gợi ý sau khi được đánh rồi vẫn sẽ ko mất mà vẫn tiếp
+tục gợi ý"*.
+
+**Hiểu yêu cầu** (chỗ Claude tự chọn ghi rõ):
+1. Tắt tiếng PHÍM BẤM (đàn MIDI · phím ảo · phím máy tính). Nền, backing track, nút ▶ nghe mẫu, hợp âm báo đúng khi xong viên vẫn phát.
+2. Cài đặt số phím (`midiKeyboardKeys`) đã có nhưng chỉ chọn được trong Luyện đệm · chờ đúng nốt — nay chọn hay tự đo ở Gỡ lỗi.
+   Claude thêm: cắm đàn MIDI thì game rơi hiện đúng dải đàn (trước luôn theo màn: điện thoại Đô3 – Đô5).
+3. Hiểu "cho các game có thể chọn tốc độ phát" là chọn được tốc độ ngay lúc chơi và trong toàn màn hình — trước chỉ chọn ở màn chọn,
+   toàn màn hình phải thoát ra mới đổi được.
+4. Hiểu câu 4 là yêu cầu (chữ "sẽ"): phím gợi ý đã đánh vẫn giữ dấu gợi ý.
+
+**Làm:**
+1. Tiếng phím: cài đặt `tatTiengPhim` (mặc định bật tiếng) → `attackNote` im khi tắt (chỉ `useLiveSound` gọi hàm này); nhả nốt vẫn
+   chạy, tắt giữa lúc giữ phím thì nốt không treo. Nút `NutTiengPhim` nằm trong `MidiConnect` (12 chỗ có bàn phím, mọi game) và trên
+   thanh toàn màn hình (`PracticeStage`, `KhungGame`).
+2. Toàn màn hình:
+   - `useToanManHinh` tách từ `PracticeStage`; `KhungGame` bọc CẢ game (màn chọn + màn chơi), không khoá xoay: Game công thức, Game chạy
+     ngón, Game nốt rơi (cả nền beat), Game Scale. Dừng rồi chơi lại vẫn ở toàn màn hình.
+   - Vùng mưa trong toàn màn hình: cao 45 % màn, thấp nhất 9 rem (CSS `:fullscreen`, không cần JS). Ngoài toàn màn hình giữ như cũ
+     (42 vh, thấp nhất 16 rem). Lùi về như cũ nếu vùng mưa toàn màn hình thấp quá, khó đọc tên viên.
+   - Nốt rơi cũ · Luyện đệm giữ `PracticeStage` (xoay ngang). Thanh toàn màn hình: nút tắt tiếng + nút thoát nay nằm cuối hàng. Cũ: nút
+     thoát đè góc phải, hàng chừa `pr-44` — máy không cho khoá xoay thì màn dọc 360 px gần như hết chỗ cho nút khác.
+3. Tốc độ:
+   - Hàng "Tốc độ ♩" lúc chơi (bên luyện): nền beat của Game nốt rơi, Game chạy ngón phần 2 · 3 — nền đổi nhịp ngay (`setTimelineBpm`:
+     lịch ghi theo phách nên nền co giãn liền mạch); đang đếm vào thì neo lại đồng hồ hình cho phách đang ở giữ nguyên.
+   - Game công thức · chạy ngón phần 1 · nốt rơi tự do đã có hàng "Rơi trong" lúc chơi.
+   - Trong toàn màn hình: Luyện đệm theo nhịp có 60 · 80 · 100 %; Nốt rơi cũ có hàng ♩ của game. Đổi ♩ ở đó không dựng lại khung (`key`
+     bỏ bpm, thay bằng `lamMoi` — đếm lần đổi ở hàng chọn), vì dựng lại là mất toàn màn hình. Theo nhịp chỉ hiện nút khi chưa chơi.
+   - Bên thi không đổi tốc độ được (kỷ lục ghi theo tốc độ).
+4. Số phím: Gỡ lỗi → "Số phím đàn": 9 cỡ (25 · 32 · 37 mới thêm) + "Tự đo" — chỉ nghe đàn MIDI (phím ảo không tính), số phím = cao −
+   thấp + 1; dải đo lệch dải chuẩn của cỡ ấy thì báo (đàn đang dời quãng tám). `useDayPhim` (`useMuaRoi.ts`) gom 6 chỗ tính dải bàn
+   phím giống hệt nhau của game rơi. `getKeyboardRange(73)` = E1 – E7; cũ rơi vào nhánh 61 phím (C2 – C7, thiếu 12 phím).
+5. Gợi ý: `OnScreenPiano.vienGoiY` — phím gợi ý đã đánh hay đang giữ có viền dày màu tay của gợi ý (thêm nét tối bên trong, đọc được cả
+   trên lớp cam của phím đang bấm), đè trên màu phím đã đánh. Cũ: màu tay của phím đã đánh đè mất gợi ý. Lối SSA (`BanPhimChong`): chồng
+   xong vẫn giữ viền các chỗ đặt thế (cũ: tắt đi), trừ phím ★ của vùng chạy để màu ★ không bị đè.
+
+**Lỗi tìm ra khi chạy thử, sửa luôn:**
+- **Bàn phím tràn trên điện thoại** (Nốt rơi cũ · Luyện đệm, cỡ mặc định 61 phím): 36 phím trắng trong 302 px = 8,4 px mỗi phím, thẻ tên
+  nốt lề 3 px rộng 11 px → phím không co dưới nội dung → bàn phím tràn ra 439 px, cả trang giãn 468 px trên máy 360 px (kéo ngang được,
+  chạm lệch chỗ). Có từ trước, và `useDayPhim` sẽ gây y vậy ở game khi cắm đàn 61 phím mà cầm dọc.
+  - Phép đo cuộn ngang cũ của lượt chạy thử Android (`scrollWidth − innerWidth`) ra 0 vì khung nhìn của Chrome giãn theo trang. Nay so
+    với bề rộng màn (`screen.width`).
+  - Sửa: phím trắng `min-w-0`; phím hẹp hơn 12 px (`PHIM_HEP_PX`) thì thẻ tên bỏ lề ngang. Sau sửa trang 360 = màn 360, mọi phím vẫn
+    ghi tên (người dùng 2/10 muốn tên ở mọi phím). Lùi về lề 3 px nếu chữ dính mép thẻ (chỉ áp khi phím < 12 px).
+- **Tên nốt tay phải sai dấu** ở Game công thức: Rê trưởng ghi "Rê – Sol♭ – La" (Mi, La, Si trưởng cũng sai). `chongTuDo` gọi tên theo
+  kiểu dấu của tên GỐC (`kieuGoc`: chỉ Đô♯ · Fa♯ ghi thăng). Sửa: theo chữ cái của quãng tính từ gốc mỗi tay (`tenTheoChu`, như
+  `tenHaiTay`) — Rê – Fa♯ – La.
+
+**Kiểm:**
+- Test mới: tắt tiếng phím (`attackNote` im khi tắt, kêu khi bật); mỗi cỡ đàn ra đúng số phím (đỏ trên bản cũ ở 73); tên nốt tay phải
+  của 5 hợp âm (đỏ trên bản cũ). Toàn suite 2 847 qua / 5 đỏ cũ / 1 bỏ qua · lint các tệp sửa 0 lỗi · `tsc -b` · `vite build` qua.
+- Chạy thử máy chủ dev, giả lập Android 360 × 780, chạm thật — 37/37:
+  - tắt tiếng: chạm phím ảo khi bật → 1 tiếng, khi tắt → 0 tiếng; nhớ cài đặt;
+  - toàn màn hình: 4 game vào được, kể cả màn chọn; dừng vẫn ở toàn màn hình; vùng mưa 351 px cầm dọc · 162 px xoay ngang;
+  - tốc độ: nền beat ♩ 100 → 70 ngay, phách chạy tiếp; chạy ngón phần 2 đổi lúc đếm vào → nền vào ở ♩ 80, đổi tiếp 50 khi nền chạy;
+    phần 3 → 70; Nốt rơi cũ đổi ♩ trong toàn màn hình vẫn ở toàn màn hình (chờ đúng nốt; theo nhịp ghi "Bắt đầu (100 BPM)");
+  - số phím: chọn 88 → A0 – C8; tự đo C2 + C7 → 61; C3 + C8 → báo lệch dải chuẩn; game không cắm đàn 25 phím, cắm đàn (giả) 61 phím,
+    không tràn;
+  - gợi ý: Game công thức chạm 1/3 phím gợi ý → vẫn đủ 3 phím gợi ý, phím đã chạm có viền; Lối SSA chồng xong (C + Em7) → 7/7 phím
+    gợi ý còn.
+- Giả lập Android trên bản dựng như GitHub Pages, phép đo tràn mới — 80/80: mở app (CPU ×4) 974 ms; tiếng mở ở chạm đầu; 58 bước
+  trang · tab · game không lỗi, không tràn; mưa 144 khung/giây; mất mạng vẫn có tiếng piano.
+  - Lần chạy trước đó 79/80: "Game nốt rơi · Linh Nhi: chạm phím ghi nhận" — viên ngẫu nhiên, hai nốt chạm thử đều "không thuộc thế
+    chồng", mà phép kiểm chỉ nhận "Đúng / Chưa đúng". Chạy riêng 4 lần (Gm · Gm · Em · C) app đều phản hồi; phép kiểm nay nhận cả lời
+    "không thuộc / không đánh".
+- `LuyenTap.json`, `Nguon.json` không đổi.
+
+**Chưa đo — lỗ còn lại:**
+- Điện thoại thật: toàn màn hình trên Chrome Android và app đã cài; khoá xoay ngang (giả lập không cho khoá); đàn thật qua OTG (cắm đàn
+  → game hiện dải đàn).
+- Game rơi xoay ngang trong toàn màn hình: màn cao 360 px không vừa vùng mưa + bàn phím, phải cuộn — cầm dọc thì vừa.
+- Cắm đàn 61 phím mà cầm dọc: phím trắng ~8 px, nhìn được, chạm khó (đánh trên đàn thật thì không cần chạm).
+- Đổi tốc độ giữa câu: nền co giãn liền mạch theo thiết kế — chưa nghe bằng tai.

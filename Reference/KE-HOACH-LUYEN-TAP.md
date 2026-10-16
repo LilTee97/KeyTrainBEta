@@ -138,6 +138,11 @@ còn là lượt nguội.
   ms); (2) **chấm tiếng nhấn** (mục 2: so tiếng nhấn với tiếng thường) — chưa làm; (3) chưa thử trên Android thật.
 - Không chặn GĐ 1: ngưỡng chỉ cần khi bật cửa đạt (GĐ 1 bước 5–6). Trong lúc dựng bước 1–4, người dùng tập vài lượt trên máy
   tính bằng tai nghe dây để có số.
+- **Tập trên điện thoại cạnh đàn thật — 16/10/2026.** Lên GitHub Pages bản sửa tiếng Android (chạm đầu mở tiếng, game không kẹt) và
+  giữ mẫu tiếng trong máy. Thêm theo yêu cầu người dùng: nút **Tiếng phím** (tắt tiếng phím bấm, còn nền — mọi chỗ có bàn phím và trong
+  toàn màn hình); **toàn màn hình** cho mọi game; **đổi tốc độ** lúc chơi và trong toàn màn hình; **số phím đàn** chọn / tự đo ở tab Gỡ
+  lỗi (cắm đàn thì game rơi hiện đúng dải đàn); **phím gợi ý không mất** sau khi đánh. Chi tiết: `SO-TAY.md` mục cùng ngày. Chưa thử
+  trên điện thoại thật.
 
 ### GĐ 1 — Mục Điệu: kế hoạch dựng (viết 2/10/2026 — chờ người dùng duyệt)
 

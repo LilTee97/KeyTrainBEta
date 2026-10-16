@@ -1,3 +1,4 @@
+import { NutTiengPhim } from '../audio/NutTiengPhim'
 import { initMidi, selectMidiDevice } from './midiInput'
 import { useMidiStore } from './midiStore'
 import type { MidiStatus } from './types'
@@ -82,6 +83,9 @@ export function MidiConnect() {
       {errorMessage && (
         <span className="text-[10px] text-rose-300">{errorMessage}</span>
       )}
+
+      {/* Tắt tiếng phím bấm — đặt ở đây để có ở mọi chỗ có bàn phím, cạnh chỗ cắm đàn (người dùng 16/10/2026). */}
+      <NutTiengPhim />
     </div>
   )
 }

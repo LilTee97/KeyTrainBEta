@@ -31,6 +31,11 @@ export interface Settings {
   volumeDb: number
   /** Tiếng phát: piano (sample), epiano, synth. */
   instrument: string
+  /**
+   * Tắt tiếng PHÍM BẤM (đàn MIDI · phím ảo · phím máy tính) — tiếng nền, backing track, nút nghe mẫu vẫn phát. Người dùng 16/10/2026:
+   * "làm nút tắt tiếng đàn để thiết bị Android ko phát ra tiếng đàn khi bấm phím trên đàn, chỉ phát các backing track".
+   */
+  tatTiengPhim: boolean
 
   /** Số phím của đàn MIDI đang dùng (44, 49, 61, 73, 76, 88...). Dùng để hiển thị bàn phím ảo đúng kích thước. */
   midiKeyboardKeys: number
@@ -70,6 +75,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
   volumeDb: -6,
   instrument: 'piano',
+  tatTiengPhim: false,
 
   midiKeyboardKeys: 61,
 

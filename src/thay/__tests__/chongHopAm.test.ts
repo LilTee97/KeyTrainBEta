@@ -142,6 +142,15 @@ describe('Chọn hợp âm tự do — thế chồng hai tay cho mọi hợp âm
     expect(chongTuDo(9, 'min', 'sharp')!.nhan).toMatchObject({ phai: 'Am', tong: 'Am' })
   })
 
+  it('tên nốt hai tay theo chữ cái của quãng, không theo kiểu dấu của tên gốc — Rê trưởng là Rê – Fa♯ – La (16/10/2026)', () => {
+    /* Lỗi cũ: Game công thức ghi tay phải Rê trưởng "Rê – Sol♭ – La" vì gọi nốt theo kiểu dấu của gốc (Rê ghi giáng). */
+    expect(chongTuDo(2, 'maj', 'flat')!.nhan.phaiPhu).toBe('Rê – Fa♯ – La')
+    expect(chongTuDo(4, 'maj', 'flat')!.nhan.phaiPhu).toBe('Mi – Sol♯ – Si')
+    expect(chongTuDo(9, 'maj', 'flat')!.nhan.phaiPhu).toBe('La – Đô♯ – Mi')
+    expect(chongTuDo(2, 'min', 'flat')!.nhan.phaiPhu).toBe('Rê – Fa – La')
+    expect(chongTuDo(3, 'maj', 'flat')!.nhan.phaiPhu).toBe('Mi♭ – Sol – Si♭')
+  })
+
   it('có công thức chồng thì theo công thức (Fm11 = Fm + E♭)', () => {
     expect(chongTuDo(5, 'm11', 'flat')!.nhan).toMatchObject({ trai: 'Fm', phai: 'E♭', tong: 'Fm11' })
   })

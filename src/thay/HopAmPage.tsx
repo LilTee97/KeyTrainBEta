@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { KhungGame } from '../reharm/playback/PracticeStage'
 import { GameChong } from './GameChong'
 import { HopAmMau } from './HopAmMau'
 import { ChongHopAm } from './SoanCau'
@@ -61,7 +62,11 @@ export function HopAmPage() {
       {tab === 'chong' && <ChongHopAm tonic={tonic} thu={thu} />}
       {tab === 'mau' && <HopAmMau tonic={tonic} thu={thu} />}
       {tab === 'vong' && <VongTab tonic={tonic} thu={thu} />}
-      {tab === 'game' && <GameChong />}
+      {tab === 'game' && (
+        <KhungGame>
+          <GameChong />
+        </KhungGame>
+      )}
     </section>
   )
 }

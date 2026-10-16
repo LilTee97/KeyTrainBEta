@@ -18,7 +18,7 @@ import { dungVong } from './dungVong'
 import { MuaKhungNen, type KetQuaNen } from './MuaKhungNen'
 import { DAT_THI, GOC_CHOI, SO_CAU_THI, type Ben, type GocChoi } from './soanCau/gameChong'
 import { TEACHERS } from './teachers'
-import { capKyLuc, docKyLuc, ghiKyLuc, useMuaRoi, useNotXuong } from './useMuaRoi'
+import { capKyLuc, docKyLuc, ghiKyLuc, useDayPhim, useMuaRoi, useNotXuong } from './useMuaRoi'
 
 /*
   MƯA KHUNG NỐT — game rơi kiểu Game công thức (Mưa hợp âm) cho khung nốt: tên hợp âm rơi, bấm đủ các nốt khung của nó (hay chọn đúng tên
@@ -285,8 +285,7 @@ export function GameKhungRoi() {
   })
 
   const hep = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches
-  const thap = hep ? 48 : 36
-  const cao = hep ? 72 : 84
+  const { thap, cao } = useDayPhim()
   const kl = (k: number) => kyLuc[khoaKyLuc(k)]
 
   if (nen && (g.pha === 'chuan-bi' || g.pha === 'het'))

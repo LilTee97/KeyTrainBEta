@@ -1,8 +1,8 @@
 import { isBlackKey } from '../../musicTheory/pitch'
 import type { MidiNote } from '../../musicTheory/types'
 
-/** Các kích thước bàn phím MIDI phổ biến. */
-export const KEYBOARD_SIZES = [44, 49, 61, 73, 76, 88] as const
+/** Các kích thước bàn phím MIDI phổ biến. 25 · 32 · 37 (đàn nhỏ cắm điện thoại) thêm 16/10/2026 cùng nút chọn ở tab Gỡ lỗi. */
+export const KEYBOARD_SIZES = [25, 32, 37, 44, 49, 61, 73, 76, 88] as const
 
 /**
  * Lấy dải nốt MIDI tương ứng với số phím.
@@ -11,6 +11,8 @@ export const KEYBOARD_SIZES = [44, 49, 61, 73, 76, 88] as const
 export function getKeyboardRange(keyCount: number): { low: MidiNote; high: MidiNote } {
   if (keyCount >= 88) return { low: 21, high: 108 } // A0 - C8
   if (keyCount >= 76) return { low: 28, high: 103 } // E1 - G7
+  // 73 phím: E1 – E7 (đàn 73 phím của Yamaha). Cũ (tới 16/10/2026): rơi vào nhánh 61 phím, ra C2 – C7 — thiếu 12 phím.
+  if (keyCount >= 73) return { low: 28, high: 100 } // E1 - E7
   if (keyCount >= 61) return { low: 36, high: 96 }  // C2 - C7
   if (keyCount >= 49) return { low: 36, high: 84 }  // C2 - C6
   if (keyCount >= 44) return { low: 41, high: 84 }  // F2 - C6

@@ -4,19 +4,23 @@ import { describe, expect, it, vi } from 'vitest'
 const tone = vi.hoisted(() => ({
   ctx: { state: 'suspended' },
   start: vi.fn(() => new Promise<void>(() => {})),
+  danh: vi.fn(),
 }))
 
 vi.mock('tone', () => ({
   getContext: () => tone.ctx,
   start: tone.start,
+  immediate: () => 0,
+  Frequency: (note: number) => ({ toFrequency: () => note }),
   Synth: class {},
   PolySynth: class {
     volume = { value: 0 }
+    triggerAttack = tone.danh
     toDestination() { return this }
   },
 }))
 
-import { startAudio, useAudioStore } from '../audioEngine'
+import { attackNote, setTatTiengPhim, startAudio, useAudioStore } from '../audioEngine'
 
 describe('mở tiếng trên điện thoại', () => {
   it('lời mở bị chặn thì vẫn vào được game; lần gọi sau thử mở lại; tiếng đã chạy thì không gọi mở nữa', async () => {
@@ -38,5 +42,21 @@ describe('mở tiếng trên điện thoại', () => {
     await startAudio()
     expect(tone.start).toHaveBeenCalledTimes(2)
     vi.useRealTimers()
+  })
+})
+
+describe('nút tắt tiếng phím bấm', () => {
+  it('tắt thì phím bấm không ra tiếng; bật lại thì kêu như cũ', async () => {
+    /* Người dùng 16/10/2026: "làm nút tắt tiếng đàn để thiết bị Android ko phát ra tiếng đàn khi bấm phím trên đàn, chỉ phát các backing track". */
+    tone.ctx.state = 'running'
+    useAudioStore.getState().setInstrument('synth')
+    await startAudio()
+    tone.danh.mockClear()
+    setTatTiengPhim(true)
+    attackNote(60)
+    expect(tone.danh).not.toHaveBeenCalled()
+    setTatTiengPhim(false)
+    attackNote(60)
+    expect(tone.danh).toHaveBeenCalledTimes(1)
   })
 })

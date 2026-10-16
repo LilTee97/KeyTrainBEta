@@ -524,17 +524,23 @@ export function chongTuDo(gocPc: number, qualityId: string, style: AccidentalSty
   while (r <= Math.max(...trai)) r += 12
   while (r - 12 > Math.max(...trai)) r -= 12
   const phai = (qTren ?? q).intervals.map((iv) => r + iv)
-  const tenNot = (m: number) => vn(pitchClassName(pc(m), style))
+  /* Tên nốt theo CHỮ CÁI của quãng tính từ gốc của chính tay ấy (như `tenHaiTay`): Rê trưởng là Rê – Fa♯ – La. Cũ (tới 16/10/2026):
+     gọi theo kiểu dấu của tên gốc (`kieuGoc`: chỉ Đô♯ · Fa♯ ghi thăng) nên Rê trưởng ra "Rê – Sol♭ – La", Mi trưởng "Mi – La♭ – Si"
+     (thấy khi chạy thử Game công thức trên giả lập điện thoại). */
+  const tenGocTren = pitchClassName(gocTren, style)
+  const tenNot = (goc: number, ten: string) => (m: number) => vn(tenTheoChu(ten, pc(m - goc), CHU_HOP[pc(m - goc)]!, style))
+  const tenTrai = tenNot(g, gocTen)
+  const tenPhai = tenNot(gocTren, tenGocTren)
   const tt = tenMotTay(trai, style, true)
   return {
     goc: g,
     trai,
     phai,
     nhan: {
-      trai: tt.laHop ? tt.ten : trai.map(tenNot).join(' – '),
-      traiPhu: tt.laHop ? `${trai.map(tenNot).join(' – ')} · gốc + nốt còn thiếu` : thieu.length ? 'gốc + nốt hợp âm còn thiếu' : 'gốc',
-      phai: `${gocDep(pitchClassName(gocTren, style))}${hauDep(tren && qTren ? qTren.symbol : q.symbol)}`,
-      phaiPhu: phai.map(tenNot).join(' – '),
+      trai: tt.laHop ? tt.ten : trai.map(tenTrai).join(' – '),
+      traiPhu: tt.laHop ? `${trai.map(tenTrai).join(' – ')} · gốc + nốt còn thiếu` : thieu.length ? 'gốc + nốt hợp âm còn thiếu' : 'gốc',
+      phai: `${gocDep(tenGocTren)}${hauDep(tren && qTren ? qTren.symbol : q.symbol)}`,
+      phaiPhu: phai.map(tenPhai).join(' – '),
       tong: `${gocDep(gocTen)}${hauDep(q.symbol)}`,
     },
   }

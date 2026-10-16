@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { readSetting, writeSetting } from '../../shared/persistence/localSettings'
 import {
   SYNC_LIMIT_MS,
@@ -70,6 +70,11 @@ export interface NoteGatedPracticeProps {
    * 11/10/2026: "phần giải thích và dạy cách chọn nốt đâu").
    */
   onChang?: (startBeat: number | null) => void
+  /**
+   * Nút tốc độ của bên gọi (nốt rơi cũ chọn ♩ bên ngoài khung) — hiện cả trong thanh toàn màn hình, để đổi tốc độ không phải thoát
+   * toàn màn hình (người dùng 16/10/2026: "Hãy làm nút fullscreen cho tất cả game và cho các game có thể chọn tốc độ phát").
+   */
+  thanhNhip?: ReactNode
 }
 
 const HAND_LABELS: Record<PracticeHand, string> = {
@@ -94,6 +99,7 @@ export function NoteGatedPractice({
   bac,
   nenTayKia = false,
   onChang,
+  thanhNhip,
 }: NoteGatedPracticeProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
@@ -371,6 +377,7 @@ export function NoteGatedPractice({
           </button>
         </>
       )}
+      {thanhNhip}
     </>
   )
 
