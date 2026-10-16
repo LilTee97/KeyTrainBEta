@@ -33,6 +33,7 @@ import {
   type Man,
 } from './soanCau/gameChong'
 import { BAI_251, BAI_LUOT, MAN_251, MAN_LUOT, type DoanBai } from './soanCau/hopAmLuot'
+import { BAI_SSA, MAN_HOP_SSA } from './soanCau/hopAmSsa'
 import { bangTheoDuoi, kieuGoc } from './soanCau/meoChong'
 
 interface Vien extends CauGame {
@@ -52,12 +53,14 @@ const pc = (x: number) => ((x % 12) + 12) % 12
  * cho vòng 2-5-1"): 18 màn nhóm đuôi đã duyệt giữ nguyên; ba mục mới duyệt cùng ngày ("Quy tắc nhóm đuôi, passing chord và 2-5-1 đã
  * đạt") — bỏ chữ "(thử)".
  */
-type Bo = 'nhom' | 'quy-tac' | 'luot' | '251'
+type Bo = 'nhom' | 'quy-tac' | 'luot' | '251' | 'ssa'
 const BO: readonly { id: Bo; ten: string; tieuDe: string; man: readonly Man[] }[] = [
   { id: 'nhom', ten: 'Màn nhóm đuôi', tieuDe: 'Mưa hợp âm — game học thuộc công thức chồng', man: MAN },
   { id: 'quy-tac', ten: 'Quy tắc nhóm đuôi', tieuDe: 'Mưa hợp âm · quy tắc nhóm đuôi — học hợp âm cha rồi suy ra con', man: MAN_QUY_TAC },
   { id: 'luot', ten: 'Passing chord', tieuDe: 'Passing chord — hợp âm lướt nối hai hợp âm', man: MAN_LUOT },
   { id: '251', ten: 'Vòng 2-5-1', tieuDe: 'Vòng 2-5-1 — tìm bậc 2 và bậc 5 của hợp âm đích', man: MAN_251 },
+  /* Người dùng 16/10/2026: "có đưa các hợp âm mới mà bạn học được từ các Video SSA vào KT để dạy tôi chưa" → "làm đi". Duyệt đạt thì bỏ "(thử)". */
+  { id: 'ssa', ten: 'Hợp âm SSA (thử)', tieuDe: 'Hợp âm SSA — thế chồng anh SSA bấm trong ba clip "Rải Ngón" (thử)', man: MAN_HOP_SSA },
 ]
 /** Mục mà câu là cả hợp âm (không tay trái) — không có lựa chọn "hai tay". */
 const laNoi = (bo: Bo) => bo === 'luot' || bo === '251'
@@ -67,7 +70,7 @@ const buocCua = (v: Vien): CauGame => v.buoc?.[v.da] ?? v
 const heSoRoi = (c: CauGame) => 1 + 0.5 * ((c.buoc?.length ?? 1) - 1)
 /** Câu là cả hợp âm, không sáng tay trái (hợp âm lướt, 2-5-1) — gốc là điều phải tìm. */
 const caHop = (c: CauGame) => !c.haiTayBuoc && c.trai.length === 0
-const canBam = (c: CauGame) => (c.haiTayBuoc ? 'bass + hợp âm' : caHop(c) ? 'hợp âm ở chỗ dấu ?' : 'tay phải')
+const canBam = (c: CauGame) => c.hoi ?? (c.haiTayBuoc ? 'bass + hợp âm' : caHop(c) ? 'hợp âm ở chỗ dấu ?' : 'tay phải')
 /* Kỷ lục bên thi theo màn — bộ nhớ trình duyệt, chỉ là tiện (không có thì vẫn chơi được). v1 (có khóa màn) bỏ 9/10/2026; v2 (màn theo
    họ, khóa là số thứ tự màn) bỏ 11/10/2026 khi màn chia theo nhóm đuôi — số thứ tự cũ không còn đúng màn. */
 const KHO = 'keytrain.mua-hop-am.v3'
@@ -220,7 +223,7 @@ export function GameChong() {
   }
   /** Màn không có lựa chọn "hai tay": màn slash (luôn hai tay), mục hợp âm lướt · 2-5-1 (cả hợp âm). */
   function khongHaiTay(k: number) {
-    return laNoi(bo) || DS[k]!.ids.every((id) => id.startsWith('slash:'))
+    return laNoi(bo) || DS[k]!.ids.every((id) => id.startsWith('slash:') || id.startsWith('ssa:doi:'))
   }
   /** Khóa kỷ lục: mục nhóm đuôi giữ khóa cũ (số màn), mục mới thêm tên mục. */
   function khoaKyLuc(k: number) {
@@ -541,6 +544,16 @@ export function GameChong() {
             Không sáng tay trái — gốc chính là điều phải tìm. Bên luyện, rơi quá 60 % thì phím đáp án sáng dần.
           </p>
         )}
+        {bo === 'ssa' && (
+          <p className="text-xs text-dim">
+            Thế chồng đo bằng hình trong ba clip "Rải Ngón" của anh SSA (111 hợp âm, một người chơi): ba thế gốc trùng công thức của bảng; maj9 ·
+            13sus4 là tay phải bốn nốt — thế 7 thêm một nốt trên đỉnh; rồi giữ tay phải, đổi bass. Viên rơi ghi quy tắc của anh và bậc cần tìm (
+            <b className="text-cream">Cmaj7 · bass + thứ trên bậc 3 · bậc 3 của Đô = Mi</b>); câu đổi bass ghi tay phải giữ nguyên (
+            <b className="text-cream">giữ tay phải F · Dm7 → G9sus4</b>) — bấm bass mới ở dưới tay phải ấy, bass là nốt thấp nhất. Chơi bằng đàn
+            hay chọn tên ở bốn nút. Hợp âm chưa đủ số đo (m6 · m9 · bốn loại mới của thư viện) chỉ có trong bài học.
+          </p>
+        )}
+        {bo === 'ssa' && <BaiHoc bai={BAI_SSA} />}
         {bo === 'luot' && <BaiHoc bai={BAI_LUOT} />}
         {bo === '251' && <BaiHoc bai={BAI_251} />}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -719,8 +732,10 @@ export function GameChong() {
           : (g.bao?.chu ??
             (cd?.haiTayBuoc
               ? 'Viên viền cam đang đố — bấm bass tay trái + hợp âm tay phải.'
-              : cd && caHop(cd)
-                ? `Viên viền cam đang đố — tìm hợp âm ở chỗ dấu ? (${cd.khungTen}).`
+              : cd?.hoi
+                ? `Viên viền cam đang đố — bấm ${cd.hoi}.`
+                : cd && caHop(cd)
+                  ? `Viên viền cam đang đố — tìm hợp âm ở chỗ dấu ? (${cd.khungTen}).`
                 : 'Viên viền cam đang đố — bấm tay phải của nó.'))}
       </p>
 
@@ -742,7 +757,7 @@ export function GameChong() {
       <p className="text-xs text-dim">
         {nhap === 'giu'
           ? cd && caHop(cd)
-            ? 'Giữ cả hợp âm cùng lúc — gốc + các nốt, quãng tám nào, thế đảo nào cũng được; thêm nốt màu (9 · 11 · 13) cũng tính.'
+            ? `Giữ cả hợp âm cùng lúc — ${cd.bass !== undefined ? 'bass mới là nốt thấp nhất, tay phải quãng tám nào cũng được' : 'gốc + các nốt, quãng tám nào, thế đảo nào cũng được'}${cd.chuc?.duoc.length ? '; thêm nốt màu (9 · 11 · 13) cũng tính' : ''}.`
             : 'Giữ cả hợp âm cùng lúc (đàn MIDI, phím máy tính) — quãng tám nào, thế đảo nào cũng được.'
           : nhap === 'cham'
             ? `Chạm từng nốt (sáng hồng là đã chọn, chạm lại để bỏ) — đủ ${cd ? soCanCham(cd, can(cd)) : 3} nốt là chấm.`

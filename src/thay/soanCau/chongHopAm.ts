@@ -16,7 +16,8 @@ import { kieuDau } from '../vongThay'
   7sus4 của Linh Nhi đọc từ nốt đệm thật (md Linh Nhi 13d và mục 13k), sheet không ghi ký hiệu ấy.
 */
 
-export type LoaiBa = 'M' | 'm' | 'dim' | 'aug' | 'sus2' | 'sus4' | 'dim7'
+/** Hợp âm của một tầng: hợp âm ba, bảy giảm; m7 · maj7 là tay phải bốn nốt của anh SSA (maj9 = bass + m7 trên bậc 3 — mục Hợp âm SSA). */
+export type LoaiBa = 'M' | 'm' | 'dim' | 'aug' | 'sus2' | 'sus4' | 'dim7' | 'm7' | 'maj7'
 export const BA: Record<LoaiBa, { iv: readonly number[]; hau: string; ten: string }> = {
   M: { iv: [0, 4, 7], hau: '', ten: 'trưởng' },
   m: { iv: [0, 3, 7], hau: 'm', ten: 'thứ' },
@@ -25,6 +26,8 @@ export const BA: Record<LoaiBa, { iv: readonly number[]; hau: string; ten: strin
   sus2: { iv: [0, 2, 7], hau: 'sus2', ten: 'treo 2' },
   sus4: { iv: [0, 5, 7], hau: 'sus4', ten: 'treo 4' },
   dim7: { iv: [0, 3, 6, 9], hau: 'dim7', ten: 'bảy giảm' },
+  m7: { iv: [0, 3, 7, 10], hau: 'm7', ten: 'bảy thứ' },
+  maj7: { iv: [0, 4, 7, 11], hau: 'maj7', ten: 'bảy trưởng' },
 }
 
 export interface CongThuc {
@@ -42,7 +45,7 @@ export interface CongThuc {
   viSao: string
   /** Gốc của ví dụ ở giọng đang chọn: nửa cung so với chủ âm. */
   viDu: { truong: number; thu: number }
-  nguon: 'jeff' | 'claude'
+  nguon: 'jeff' | 'claude' | 'ssa'
   thay: readonly string[]
 }
 
@@ -310,7 +313,7 @@ export function tenTren(ct: CongThuc, gocTen: string, style: AccidentalStyle): s
 /** Chữ cái của nốt hợp âm theo quãng: ♭5 là chữ thứ năm (Rê♭ trên Sol), không phải ♯4. */
 const CHU_HOP = [0, 1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6]
 const CHU_BA: Record<LoaiBa, readonly number[]> = {
-  M: [0, 2, 4], m: [0, 2, 4], dim: [0, 2, 4], aug: [0, 2, 4], sus2: [0, 1, 4], sus4: [0, 3, 4], dim7: [0, 2, 4, 6],
+  M: [0, 2, 4], m: [0, 2, 4], dim: [0, 2, 4], aug: [0, 2, 4], sus2: [0, 1, 4], sus4: [0, 3, 4], dim7: [0, 2, 4, 6], m7: [0, 2, 4, 6], maj7: [0, 2, 4, 6],
 }
 
 /** Tên Việt các nốt hai tay, đúng thứ tự của `theBamChong`. Tầng trên gọi theo chữ cái chồng quãng ba từ gốc của chính nó. */

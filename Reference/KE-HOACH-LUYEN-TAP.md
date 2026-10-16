@@ -508,6 +508,9 @@ Các hợp âm phải được chọn tự do …"*
   âm, viên ghi cha + thay đổi), Passing chord (bài học + át phụ · giảm lướt · ♭II7), Vòng 2-5-1 (bài học + trưởng · thứ · 2-5 lướt, viên
   hai bước). Duyệt cùng ngày ("Quy tắc nhóm đuôi, passing chord và 2-5-1 đã đạt") — bỏ chữ "(thử)"; hàng gốc thêm "Chỉ một gốc" 12 nút
   (người dùng: "tôi muốn tập cho từng nhóm khác") thay nút "Chỉ gốc Đô".
+  Cập nhật 16/10 (người dùng hỏi hợp âm học từ video SSA đã vào KT chưa → "làm đi"): mục thứ năm "Hợp âm SSA (thử)" — ba thế gốc · thêm
+  một nốt (maj9 = bass + m7 trên bậc 3, 13sus4 = bass + maj7 trên ♭7) · giữ tay phải đổi bass, bài học có ▶ đúng nốt anh bấm. **Chờ người
+  dùng** chơi và duyệt.
 - **Đố tái hòa âm theo bốn phong cách — xong 11/10/2026** (thẻ đầu tab Tái hòa âm vòng): nhập vòng → app đoán chủ âm (đổi được) → ô
   chủ âm tái hòa âm sẵn → mỗi ô khác trắc nghiệm bốn phương án, gợi ý bật khi cần, chọn xong có lời giải thích và nghe trong vòng.
   Cà Pháo · Linh Nhi · Blues theo lời "bài ghi X → thầy bấm Y" đã duyệt; phong cách thứ tư "Nhạc sĩ (Claude)" là tư duy của Claude.

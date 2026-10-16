@@ -7851,3 +7851,60 @@ hãy thêm các lựa chọn nhóm khác"* (ảnh: hàng "Gốc" — Chỉ gốc
   - bấm Cả 12 gốc thì hàng một giọng tắt;
   - điện thoại không cuộn ngang.
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Game công thức: mục "Hợp âm SSA (thử)" (16/10/2026)
+
+**Người dùng:** *"có đưa các hợp âm mới mà bạn học được từ các Video SSA vào KT để dạy tôi chưa · từ các hợp âm SSA đó bạn có học được quy
+luật gì mới để tạo hợp âm ko"* → Claude trả lời (mới có ở Game nốt rơi · Lối SSA, chưa vào trang Hợp âm) và đề xuất một mục mới → *"làm đi"*.
+
+**Sửa lời Claude trước khi làm:** đề xuất có "màn 4 loại mới (5 · maj9sus4 · m11♭5 · 7(13))". Soi thứ tự nhãn thì cả 4 lần maj9sus4 đều
+ngay trước hợp âm khác cùng giây — nhãn màn hình gọi tên nốt đang vang lúc anh chuyển thế (Rai 3 · 1:20 tay phải là F7 giữa F7/A và B♭m7);
+7(13) và m7♭5(9,11)/E cũng là chỗ chuyển / hợp âm lướt. Bốn loại ấy chỉ có trong bài học, không thành màn chấm điểm.
+
+**Màn** — nút thứ năm "Hợp âm SSA (thử)" ở hàng mục của Game công thức:
+1. **Ba thế chồng gốc của anh** — maj7 = bass + thứ trên bậc 3 · m7 = bass + trưởng trên ♭3 · 9sus4 = bass + trưởng trên ♭7. Viên ghi
+   quy tắc và bậc cần tìm ("Cmaj7 · bass + thứ trên bậc 3 · bậc 3 của Đô = Mi"). Bốn nút là tay phải của các thế khác cùng gốc.
+2. **Thêm một nốt trên đỉnh: maj9 · 13sus4** — maj9 = bass + m7 trên bậc 3 (Cmaj9 = Đô + Em7); 13sus4 = bass + maj7 trên ♭7
+   (G13sus4 = Sol + Fmaj7). Viên ghi cha ("từ Cmaj7: Đô + Em · thêm Rê trên đỉnh tay phải"); bốn nút luôn có tay phải của cha.
+3. **Giữ tay phải, đổi bass** — ba cặp: Dm7 → G9sus4 giữ F · Fm7 → D♭maj9 giữ Fm7 · D♭maj9 → Fm7 giữ Fm7. Nhãn "giữ tay phải …" hiện cả
+   bên thi. Bấm bass mới dưới tay phải ấy — bass phải là nốt thấp nhất (`CauGame.bass`); chọn tên là bốn nút "bass …"; xong viên nghe hợp
+   âm cũ rồi mới.
+4. **Trộn.**
+
+**Bài học** (nút ▶ phát đúng nốt anh bấm — tay phải lúc đầy nhất + gốc · bậc 5 · bass của nhãn ở tay trái; hai ví dụ "công thức" ghi rõ):
+dựng hợp âm thế nào · thêm một nốt trên đỉnh · giữ tay phải đổi bass · anh nối hợp âm thế nào (D♭maj7 → D♭9sus4 → G♭maj9 đúng lời "Cb/Db";
+Fm7 → F7/A → B♭m7; B♭m7 → B♭7 → E♭m9; B♭7(♯11) → C) · chỉ để biết (m6 · m9 · m7♭5 · bốn loại mới).
+
+**Số đo** (đếm 16/10/2026 trên `hocSolo/ssaNhuAnh.json`, hợp âm có tay phải ≥ 3 nốt; test đếm lại và khớp chữ trong mục):
+- maj7 6/7 · m7 13/15 · 9sus4 3/3 · maj9 8/9 · 13sus 4/4 · m6 3/3 (một hợp âm) · m9 3/6 · m7♭5 1/2;
+- giữ ≥ 2 lớp cao độ tay phải ở 46/91 chỗ đổi bass — số cũ 32/94 của md đếm theo cách tách tay cũ (sai 203/1 101 nốt).
+Ghi vào md SSA (PianoBrain `knowledge/teachers/ssa-rai-ngon.md`, mục "Hai tay" 7 – 9 — chưa commit, chờ người dùng).
+
+**Mã:**
+- `soanCau/hopAmSsa.ts` (mới): thế (`THE_SSA`), câu thế chồng · câu đổi bass, màn `MAN_HOP_SSA`, bài học `BAI_SSA`.
+- `chongHopAm.ts`: `LoaiBa` thêm `m7` · `maj7` (tay phải bốn nốt); `CongThuc.nguon` thêm `ssa`. Bảng 26 công thức không đổi.
+- `gameChong.ts`: `CauGame` thêm `bass` (chấm theo chức năng mà nốt thấp nhất phải là bass) · `hoi` (câu hỏi của viên); `chonCau` nhận `ssa:`.
+- `GameChong.tsx`: mục thứ năm, bài học, lời "bấm bass mới dưới tay phải …"; câu đổi bass không có lựa chọn "hai tay".
+
+**Cơ sở / chưa đo — lỗ còn lại:**
+- Một người, 3 clip, 111 hợp âm — thói quen của anh, chưa phải phong cách chung.
+- Ba cặp đổi bass là Claude dựng từ các thế đo được. Anh có dùng cùng thế cho từng cặp hợp âm ấy (Fm7 · D♭maj9; B♭m7 · E♭9sus4), nhưng chưa
+  đo anh chuyển thẳng giữa chúng.
+- Nút nhiễu, lời giảng, cách đọc nhãn "lúc chuyển hợp âm" là của Claude.
+- Thế maj9 của anh khác thế maj9 của bảng (Jeff: C + G) — mục này để cạnh, không thay.
+
+**Kiểm:**
+- `tsc -b` sạch · eslint 0 lỗi.
+- `hopAmSsa.test.ts` 6:
+  - đếm lại 9 số đo từ file và kiểm chữ trong mục trích đúng;
+  - màn; mọi câu × 12 gốc (bốn nút đúng / sai theo nốt);
+  - thế bốn nốt; đổi bass (bass phải thấp nhất);
+  - ví dụ ▶ bài học.
+- Toàn suite 2 843 qua / 5 đỏ (5 đỏ cũ) / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless 17/17:
+  - năm nút mục; 4 màn; bài học; ▶ D♭maj9 như anh (6 nốt), ▶ Fm7 → F7/A → B♭m7 (3 hợp âm, 1 giây);
+  - màn 2: chọn sai / đúng; màn 1 giữ hợp âm;
+  - đổi bass: bass nằm trên thì chưa tính, bass dưới thì Đúng và nghe 2 hợp âm; chọn "bass …";
+  - thi đổi bass 12 gốc 20/20 (kỷ lục "ssa:2"); thi màn 1 hai tay 20/20 ("ssa:0|2");
+  - điện thoại không cuộn ngang.
+- Game công thức cũ 39/39 · Mưa khung nốt 16/16 · `LuyenTap.json`, `Nguon.json` không đổi.

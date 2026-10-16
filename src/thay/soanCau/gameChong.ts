@@ -17,6 +17,7 @@ import {
   type CongThuc,
 } from './chongHopAm'
 import { taoCauNoi } from './hopAmLuot'
+import { taoCauHopSsa } from './hopAmSsa'
 import { dauDuoi, duoiNgan, kieuGoc, nhomCua, NHOM_DUOI, QUY_TAC_DUOI } from './meoChong'
 import { QUY_LUAT_SLASH, theSlash } from './slashChong'
 
@@ -96,6 +97,10 @@ export interface CauGame {
   chuc?: { can: readonly number[]; duoc: readonly number[] }
   /** Cách ghi dấu khi gọi tên nốt người chơi đang bấm (F♯m7 chứ không G♭m7). */
   kieu?: AccidentalStyle
+  /** Chấm theo chức năng mà nốt thấp nhất phải là lớp cao độ này (câu đổi bass — cùng tay phải, bass khác là hợp âm khác). */
+  bass?: number
+  /** Câu hỏi của viên khi đang đố, dạng "bấm …" ("bass mới dưới tay phải F") — không có thì lời mặc định theo kiểu câu. */
+  hoi?: string
 }
 
 const tron = <T,>(ds: readonly T[], rand: () => number) => {
@@ -522,6 +527,7 @@ export function chonCau(ids: readonly string[], goc: readonly number[], sai: Rea
   const g = goc[Math.floor(rand() * goc.length)]!
   if (id.startsWith('qt:')) return taoCauQuyTac(id.slice(3), g, rand)
   if (id.startsWith('luot:') || id.startsWith('v251:')) return taoCauNoi(id, g, rand)
+  if (id.startsWith('ssa:')) return taoCauHopSsa(id, g, rand)
   if (id.startsWith('q:')) return taoCauBa(id.slice(2), g, rand)
   const mau = MAU_SLASH.find((m) => `slash:${m.id}` === id)
   return mau ? taoCauSlash(mau, g, rand) : taoCau(CONG_THUC.find((c) => c.id === id)!, g, rand)
@@ -541,7 +547,10 @@ const dungChuc = (ns: readonly number[], ch: NonNullable<CauGame['chuc']>) => {
 /** Tay phải đúng: đúng các lớp cao độ của tay phải — quãng tám nào, thế đảo nào cũng được (bấm kèm cả tay trái cũng tính). Câu có `chuc`
  *  (cả hợp âm, không sáng tay trái) chấm theo chức năng. */
 export const dungTayPhai = (ns: readonly number[], c: CauGame) =>
-  ns.length > 0 && (c.chuc ? dungChuc(ns, c.chuc) : bang(tapLop(ns), tapLop(c.phai)) || bang(tapLop(ns), tapLop([...c.trai, ...c.phai])))
+  ns.length > 0 &&
+  (c.chuc
+    ? dungChuc(ns, c.chuc) && (c.bass === undefined || pc(Math.min(...ns)) === c.bass)
+    : bang(tapLop(ns), tapLop(c.phai)) || bang(tapLop(ns), tapLop([...c.trai, ...c.phai])))
 
 /** Hai tay đúng: đủ lớp cao độ của cả hai tay và nốt thấp nhất là nốt bass của đáp án (gốc, hay Y của slash). */
 export const dungHaiTay = (ns: readonly number[], c: CauGame) =>
