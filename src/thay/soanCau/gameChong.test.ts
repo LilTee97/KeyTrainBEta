@@ -153,11 +153,12 @@ describe('game Mưa hợp âm — logic', () => {
     expect(MOC_ROI).toContain(MOC_MAC_DINH.meo)
     expect(MOC_ROI).toContain(MOC_MAC_DINH.thi)
     expect([thoiGianRoi(14), thoiGianRoi(10, true), thoiGianRoi(30)]).toEqual([14000, 12000, 30000])
-    expect([DO_RO_DAU, DONG_CHO]).toEqual([0.2, 0.9])
-    expect([0, 0.45, 0.9, 1].map((p) => Math.round(doRoGoiY(p) * 100) / 100)).toEqual([0.2, 0.6, 1, 1]) // hiện ngay khi viên sinh ra, rõ hẳn ở vạch chờ
+    expect([DO_RO_DAU, DONG_CHO]).toEqual([0.45, 0.9])
+    expect([0, 0.9, 1].map(doRoGoiY)).toEqual([0.45, 1, 1]) // hiện ngay khi viên sinh ra, rõ hẳn ở vạch chờ
+    expect(doRoGoiY(0.45)).toBeCloseTo(0.725, 6)
     const tang = Array.from({ length: 10 }, (_, i) => doRoGoiY(i / 10))
     expect(tang.every((x, i) => i === 0 || x >= tang[i - 1]!)).toBe(true)
-    expect([bacDoRo(0), bacDoRo(0.9)]).toEqual([4, 20])
+    expect([bacDoRo(0), bacDoRo(0.9)]).toEqual([9, 20])
   })
 })
 

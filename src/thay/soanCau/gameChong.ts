@@ -576,11 +576,12 @@ export const thoiGianRoi = (giay: number, haiTay = false) => giay * 1000 * (haiT
  * Gợi ý bên mẹo — người dùng 16/10/2026: "Trong tất cả game hợp âm hay chạy nốt thì hãy đều hiện gợi ý ngay từ đầu nhưng mờ và khi càng
  * gần phím đàn càng rõ". Mọi phím gợi ý (và tên tay đứng trên gợi ý) hiện ngay khi viên sinh ra; độ rõ tăng đều theo quãng rơi, rõ hẳn ở
  * DONG_CHO (90 % — vạch viên dừng khi bật "chờ đúng nốt"). Dùng chung cho Mưa hợp âm, Mưa khung nốt (cả chơi trên nền), Game chạy ngón.
- * Độ rõ đầu 0,2 là Claude chọn, chưa đo. Cũ (9/10/2026 — "Khi hợp âm rơi hơn 60% quãng đường thì đáp án sẽ dần hiện ra"): trước 60 % không
+ * Độ rõ đầu 0,45 — người dùng 16/10/2026 "gợi ý tăng độ đậm lên đi"; cũ (cùng ngày, Claude chọn) 0,2. Lùi khi: gợi ý vừa rơi đã rõ quá,
+ * không còn "mờ rồi rõ dần" → hạ lại về 0,3. Cũ hơn (9/10/2026 — "Khi hợp âm rơi hơn 60% quãng đường thì đáp án sẽ dần hiện ra"): trước 60 % không
  * hiện gì, từ 60 % sáng dần từng nốt thấp lên cao (`LO_TU` 0,6, `soNotLo`). Lùi khi: gợi ý ngay từ đầu làm người chơi chỉ nhìn phím mà
  * không tự nghĩ → trả lại mốc 60 %; mờ quá không thấy → nâng DO_RO_DAU.
  */
-export const DO_RO_DAU = 0.2
+export const DO_RO_DAU = 0.45
 export const DONG_CHO = 0.9
 /** Độ rõ (0–1) của gợi ý ở quãng rơi `p` (0–1). */
 export const doRoGoiY = (p: number) => DO_RO_DAU + (1 - DO_RO_DAU) * Math.min(1, Math.max(0, p) / DONG_CHO)

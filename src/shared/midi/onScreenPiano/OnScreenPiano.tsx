@@ -54,11 +54,14 @@ const BLACK_KEY_STYLES = {
   sang tông sẫm (cam → nâu cam, xanh ngọc → xanh rêu), sẫm nhất 55 % ở velocity ≥ 120; đặc hẳn từ velocity 80. Cũ (lần
   2): đặc từ 96, không sẫm. Lùi khi: lực vừa đã sẫm quá → nâng `DEEP_FROM_VELOCITY`.
 */
-/** Lớp phủ phím gợi ý khi có độ rõ (`revealOpacity`): phím giữ màu thường, lớp phủ mờ / rõ theo độ rõ — đậm hơn kiểu cũ một chút để rõ hẳn
- *  ở 1 vẫn nổi như cũ trên nền phím. */
+/**
+ * Lớp phủ phím gợi ý khi có độ rõ (`revealOpacity`): phím giữ màu thường, lớp phủ mờ / rõ theo độ rõ. Người dùng 16/10/2026: "gợi ý tăng độ
+ * đậm lên đi" — phím trắng cam 70 % · xanh 65 %, phím đen đặc màu. Cũ (cùng ngày): trắng cam 45 % · xanh 40 %, đen cam 85 % · xanh 80 %.
+ * Lùi khi: phím gợi ý đậm tới mức lẫn với phím đang bấm (lớp phủ theo lực) → hạ về 55 % · 50 %.
+ */
 const REVEAL_LAYER = {
-  trang: { phai: 'bg-amber-key/45 ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand/40 ring-2 ring-inset ring-left-hand' },
-  den: { phai: 'bg-amber-key/85 ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand/80 ring-2 ring-inset ring-left-hand' },
+  trang: { phai: 'bg-amber-key/70 ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand/65 ring-2 ring-inset ring-left-hand' },
+  den: { phai: 'bg-amber-key ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand ring-2 ring-inset ring-left-hand' },
 } as const
 
 const PRESS_MIN_OPACITY = 0.45

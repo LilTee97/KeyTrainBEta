@@ -7948,3 +7948,23 @@ mờ và khi càng gần phím đàn càng rõ"*. Ảnh: viên Gmaj9 ghi "từ G
 - E2e cũ: Game công thức 39/39 · Mưa khung nốt 16/16 · Game chạy ngón 40/40 · nút thầy 57/57 · Lối SSA 71/71 — trong script Lối SSA sửa hàm
   đọc phím gợi ý, vì gợi ý nay là lớp phủ trong phím.
 - `LuyenTap.json`, `Nguon.json` không đổi.
+
+## Bước — Gợi ý đậm hơn (16/10/2026)
+
+**Người dùng:** *"gợi ý tăng độ đậm lên đi"*.
+
+**Làm** (giá trị cũ là của bước trước cùng ngày, Claude chọn):
+- Độ rõ lúc viên vừa rơi `DO_RO_DAU`: 0,2 → **0,45**; vẫn rõ hẳn ở vạch chờ 90 %. Lùi khi gợi ý vừa rơi đã rõ quá, không còn "mờ rồi rõ dần"
+  → hạ về 0,3.
+- Màu lớp phủ gợi ý (`OnScreenPiano` · `REVEAL_LAYER`):
+  - phím trắng: cam 45 % → **70 %**, xanh 40 % → **65 %**;
+  - phím đen: cam 85 % · xanh 80 % → **đặc màu**.
+  - Lùi khi phím gợi ý đậm tới mức lẫn với phím đang bấm → hạ về 55 % · 50 %.
+
+**Kiểm:**
+- Test `doRoGoiY` (0 % → 0,45 · 45 % → 0,725 · 90 % → 1) · lint 0 lỗi · toàn suite 2 843 qua / 5 đỏ cũ / 1 bỏ qua · `vite build` qua.
+- Chạy thử headless — gợi ý 8/8:
+  - Mưa hợp âm vừa rơi 0,48 → gần đáy 0,98; bên thi không gợi ý.
+  - Mưa khung nốt và Lối SSA 0,48; Game chạy ngón 0,45 → 0,53 sau 3 giây; nền beat 0,45 → 0,73.
+- Ảnh soát mắt: lúc vừa rơi đã thấy rõ chỗ đặt tay, gần đáy đậm hẳn.
+- `LuyenTap.json`, `Nguon.json` không đổi.
