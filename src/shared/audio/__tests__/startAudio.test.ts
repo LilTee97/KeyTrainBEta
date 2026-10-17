@@ -21,6 +21,7 @@ vi.mock('tone', () => ({
 }))
 
 import { attackNote, setTatTiengPhim, startAudio, useAudioStore } from '../audioEngine'
+import { useMidiStore } from '../../midi/midiStore'
 
 describe('mở tiếng trên điện thoại', () => {
   it('lời mở bị chặn thì vẫn vào được game; lần gọi sau thử mở lại; tiếng đã chạy thì không gọi mở nữa', async () => {
@@ -58,5 +59,22 @@ describe('nút tắt tiếng phím bấm', () => {
     setTatTiengPhim(false)
     attackNote(60)
     expect(tone.danh).toHaveBeenCalledTimes(1)
+    // Bỏ cảm ứng lực (17/10/2026): tiếng phím cùng một lực, 90 / 127.
+    expect(tone.danh).toHaveBeenCalledWith(60, 0, 90 / 127)
+  })
+
+  it('tiếng chưa chạy (cú chạm đầu, Android treo tiếng khi chạy nền): cú bấm mở tiếng rồi đánh chính nốt ấy, không theo lực', async () => {
+    /* Người dùng 17/10/2026: "Đảm bảo rằng app cho Android chỉ cần nhấn phím 1 lần là nhận". Cũ: cú bấm ấy câm, phải bấm lại. */
+    tone.ctx.state = 'suspended'
+    tone.start.mockImplementationOnce(async () => {
+      tone.ctx.state = 'running'
+    })
+    tone.danh.mockClear()
+    useMidiStore.getState().noteOn(64, 30, 'hardware')
+    attackNote(64)
+    expect(tone.danh).not.toHaveBeenCalled()
+    await new Promise((xong) => setTimeout(xong, 0))
+    expect(tone.danh).toHaveBeenCalledWith(64, 0, 90 / 127)
+    useMidiStore.getState().noteOff(64, 'hardware')
   })
 })

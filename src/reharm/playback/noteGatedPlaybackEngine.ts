@@ -242,6 +242,20 @@ export function missingNotes(
   return step.notes.filter((note) => !held.has(toKey(note)))
 }
 
+/**
+ * Chấm theo CÚ BẤM MỚI — người dùng 17/10/2026: "Đảm bảo rằng app cho Android chỉ cần nhấn phím 1 lần là nhận". `moi` là các phím bấm
+ * xuống từ khi chặng bắt đầu (đã nhả hay còn giữ đều tính — cú chạm nhanh vẫn nhận); phím giữ sót từ chặng trước không có trong đó nên
+ * đánh liền tay (legato, hai ngón chồng nhau) không làm hỏng chặng sau. 'dung' — đủ đúng nốt; 'sai' — bấm mới đủ số nốt mà không khớp;
+ * 'cho' — chưa đủ. Cũ (tới 17/10/2026): chấm mọi phím ĐANG GIỮ, chỉ sau khi đã nhả hết phím của chặng trước — nốt bấm trước khi nhả
+ * nốt cũ không được nhận, phải nhấn lại.
+ */
+export function chamBamMoi(moi: readonly MidiNote[], step: GatedStep, options: MatchOptions = {}): 'dung' | 'sai' | 'cho' {
+  if (moi.length === 0 || step.notes.length === 0) return 'cho'
+  if (isStepMatched(moi, step, options)) return 'dung'
+  const khoa = (note: MidiNote) => (boQuaQuangTam(step, options) ? pitchClassOf(note) : note)
+  return new Set(moi.map(khoa)).size >= new Set(step.notes.map(khoa)).size ? 'sai' : 'cho'
+}
+
 export interface GatedSession {
   steps: GatedStep[]
   currentIndex: number

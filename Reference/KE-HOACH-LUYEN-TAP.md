@@ -143,6 +143,9 @@ còn là lượt nguội.
   toàn màn hình); **toàn màn hình** cho mọi game; **đổi tốc độ** lúc chơi và trong toàn màn hình; **số phím đàn** chọn / tự đo ở tab Gỡ
   lỗi (cắm đàn thì game rơi hiện đúng dải đàn); **phím gợi ý không mất** sau khi đánh. Chi tiết: `SO-TAY.md` mục cùng ngày. Chưa thử
   trên điện thoại thật.
+- **Bỏ cảm ứng lực · nhấn một lần là nhận — 17/10/2026.** Người dùng: *"hãy bỏ phần cảm ứng lực khi nhấn phím đàn. Đảm bảo rằng app
+  cho Android chỉ cần nhấn phím 1 lần là nhận"*. Mọi cú bấm như nhau (màu phím, tiếng); chờ đúng nốt chấm theo cú bấm mới (đánh liền
+  tay được nhận); bàn phím ảo mỗi ngón một phím. Chi tiết: `SO-TAY.md` mục cùng ngày.
 
 ### GĐ 1 — Mục Điệu: kế hoạch dựng (viết 2/10/2026 — chờ người dùng duyệt)
 
@@ -734,7 +737,8 @@ theo ao `'ton-hung'`. Xoá hết là đổi tiếng đã nghe — chờ người
     nghị"*): 7 đoạn từ *Lá Thư Trần Thế*, 6 câu từ *Rockhouse*, khung chung `kyThuat/kyThuat.ts`. **Mục (b) xong 3/10/2026** (người dùng: *"tiếp tục
     đi"*): chấm nốt láy (`chamLay`) · láy quãng 3 ngũ cung (Linh Nhi, 8 đoạn *Biển Tình*) · láy nốt blue (Blues, 4 đoạn Boogie + 5 câu
     Rockhouse). **Tuấn:** không có sheet — ẩn tab. Còn của GĐ 2: chờ người dùng tập thử bằng đàn, chỉnh ngưỡng theo số đo thật.
-  - GĐ 0: nhận xét lực nhấn **xong 3/10/2026** (`chamLuc` — chỉ nhận xét, không chặn qua bậc). Còn: thử trên Android thật.
+  - GĐ 0: nhận xét lực nhấn **xong 3/10/2026** (`chamLuc` — chỉ nhận xét, không chặn qua bậc). Còn: thử trên Android thật. Dòng nhận xét bỏ
+    khỏi màn kết quả 17/10/2026 (người dùng bỏ cảm ứng lực); số đo lực vẫn ghi nhật ký.
 - Thêm ngoài kế hoạch (người dùng 2/10/2026): **Vòng tự tạo** ở tab Điệu — chọn từng hợp âm, hoặc tự soạn vòng 4 ô từ hợp âm chủ
   (trưởng / thứ) theo kho vòng của chính thầy; dựng bằng chính tab Tái hòa âm (`dungVong`), tập bằng Chờ đúng nốt / Theo nhịp.
   **Xong** (`SO-TAY.md` "Vòng tự tạo"). Tập tự do — chưa vào thang bậc, không lưu tiến độ.

@@ -1,5 +1,6 @@
 import * as Tone from 'tone'
 import { create } from 'zustand'
+import { useMidiStore } from '../midi/midiStore'
 import type { MidiNote } from '../musicTheory/types'
 import { readSetting, writeSetting } from '../persistence/localSettings'
 
@@ -413,14 +414,30 @@ export function isAudioReady(): boolean {
 */
 
 /** Bấm và giữ một nốt. `velocity` theo thang MIDI 0-127. */
+/** Lực của tiếng phím bấm — như nhau mọi cú bấm (bỏ cảm ứng lực 17/10/2026), bằng lực phím ảo. */
+const LUC_TIENG_PHIM = 90
+
 /**
  * Đánh một nốt PHÍM BẤM (đàn MIDI · phím ảo · phím máy tính — chỉ `useLiveSound` gọi). Nút "Tiếng phím" tắt (`tatTiengPhim`, 16/10/2026)
  * thì im: đánh trên đàn thật chỉ nghe tiếng đàn, app còn phát nền. Nhả (`releaseNote`) vẫn chạy — tắt giữa lúc giữ phím thì nốt đang
  * kêu không bị treo.
+ *
+ * Người dùng 17/10/2026: "hãy bỏ phần cảm ứng lực khi nhấn phím đàn. Đảm bảo rằng app cho Android chỉ cần nhấn phím 1 lần là nhận":
+ * - lực nhấn không đổi tiếng (`LUC_TIENG_PHIM`). Cũ: velocity / 127 — chạm nhẹ trên đàn thật kêu rất nhỏ, như chưa nhận;
+ * - tiếng chưa mở (cú chạm đầu sau khi mở app — Android chỉ cho mở lúc NHẤC ngón —, hay Android treo tiếng khi app chạy nền) thì mở
+ *   rồi đánh chính nốt ấy ngay khi mở xong: ngón còn giữ thì đánh tiếp, đã nhấc thì một tiếng ngắn. Cũ: cú bấm ấy câm, phải bấm lại.
  */
-export function attackNote(note: MidiNote, velocity = 90): void {
-  if (!isAudioReady() || useAudioStore.getState().tatTiengPhim) return
-  getSynth().triggerAttack(toFrequency(note), Tone.immediate(), velocity / 127)
+export function attackNote(note: MidiNote): void {
+  if (useAudioStore.getState().tatTiengPhim) return
+  if (isAudioReady() && Tone.getContext().state === 'running') {
+    getSynth().triggerAttack(toFrequency(note), Tone.immediate(), LUC_TIENG_PHIM / 127)
+    return
+  }
+  void startAudio().then(() => {
+    if (Tone.getContext().state !== 'running' || useAudioStore.getState().tatTiengPhim) return
+    if (useMidiStore.getState().heldNotes.includes(note)) getSynth().triggerAttack(toFrequency(note), Tone.immediate(), LUC_TIENG_PHIM / 127)
+    else playChord([note], '8n', LUC_TIENG_PHIM)
+  })
 }
 
 /** Nhả một nốt đang giữ. */

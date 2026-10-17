@@ -194,6 +194,12 @@ export function GameChong() {
   const [haiTay, setHaiTay] = useState(false)
   const [gocChoi, setGocChoi] = useState<ChonGoc>('trang')
   const [nhap, setNhap] = useState<CachNhap>(() => (useMidiStore.getState().devices.length > 0 ? 'giu' : 'cham'))
+  /* Cắm đàn MIDI giữa chừng (mở game trước, cắm sau — điện thoại hay vậy) thì đổi "Chạm từng nốt" sang "Giữ hợp âm": "Chạm từng nốt"
+     chỉ nghe phím ảo, bấm đàn thật không được nhận (người dùng 17/10/2026: "chỉ cần nhấn phím 1 lần là nhận"). */
+  const coDan = useMidiStore((state) => state.devices.length > 0)
+  useEffect(() => {
+    if (coDan) setNhap((x) => (x === 'cham' ? 'giu' : x))
+  }, [coDan])
   const [moc, setMoc] = useState<Record<Ben, number>>({ ...MOC_MAC_DINH })
   const [choNot, setChoNot] = useState(false)
   const [, setVe] = useState(0)

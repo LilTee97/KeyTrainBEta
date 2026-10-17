@@ -13,9 +13,8 @@ const POINTER_VELOCITY = 90
 
 /**
  * Màu nền phím theo trạng thái. Nốt gợi ý và nốt bấm trúng dùng **cùng một màu**
- * (xanh ngọc) — gợi ý là nền nhạt, bấm trúng là lớp phủ đậm theo lực nhấn
- * (`pressOpacity`) — để người học vừa thấy chỗ cần đặt tay vừa thấy mình đã bấm
- * được tới đâu, nhẹ hay mạnh.
+ * (xanh ngọc) — gợi ý là nền nhạt, bấm trúng là lớp phủ đặc — để người học vừa
+ * thấy chỗ cần đặt tay vừa thấy mình đã bấm được tới đâu.
  */
 const WHITE_KEY_STYLES = {
   suggested: 'bg-teal-key/45 text-ink/60',
@@ -41,10 +40,12 @@ const BLACK_KEY_STYLES = {
 } as const
 
 /*
-  Phím ĐANG BẤM phủ một lớp màu đậm theo LỰC NHẤN — người dùng 2/10/2026: đàn có cảm ứng lực, "khi chạm nhẹ thì phím
-  hiển thị mờ và rõ dần khi mạnh hơn". Tuyến tính theo velocity MIDI 1–127; chạm nhẹ nhất vẫn còn thấy. Màu lớp phủ
-  giữ nghĩa cũ: xanh ngọc = trúng nốt hợp âm, cam = không. Đàn tắt cảm ứng lực (Touch Response: Off) thì mọi cú bấm gửi
-  cùng một lực → đậm như nhau. Cũ (trước 2/10): phím đang bấm tô màu đặc, không theo lực.
+  Phím ĐANG BẤM tô màu ĐẶC, như nhau mọi lực — người dùng 17/10/2026: "hãy bỏ phần cảm ứng lực khi nhấn phím đàn"
+  (chạm nhẹ trông mờ như chưa nhận phím). Xanh ngọc = trúng nốt hợp âm, cam = không. Ba lần chỉnh theo lực dưới đây
+  (2/10/2026) đã bỏ — giữ lời để biết đường lùi:
+
+  Lần 1 (2/10/2026): phủ một lớp màu đậm theo LỰC NHẤN — người dùng: đàn có cảm ứng lực, "khi chạm nhẹ thì phím
+  hiển thị mờ và rõ dần khi mạnh hơn". Tuyến tính theo velocity MIDI 1–127. Cũ (trước 2/10): tô màu đặc, không theo lực.
 
   Lần 2 (2/10/2026): người dùng *"chạm nhẹ quá mờ, chạm mạnh cũng mờ"*. Cũ: sàn 0,15, đặc hẳn ở velocity 127. Nay sàn
   0,45, đặc hẳn từ velocity 96. ĐOÁN — chưa đo lực đàn người dùng gửi ra (cột `phim` của `LuyenTap.json` sẽ có). Lùi
@@ -52,7 +53,7 @@ const BLACK_KEY_STYLES = {
 
   Lần 3 (2/10/2026): *"hãy cho lực mạnh màu đậm hơn nữa"* — lực mạnh đã đặc rồi nên phải SẪM màu: từ velocity 64 pha dần
   sang tông sẫm (cam → nâu cam, xanh ngọc → xanh rêu), sẫm nhất 55 % ở velocity ≥ 120; đặc hẳn từ velocity 80. Cũ (lần
-  2): đặc từ 96, không sẫm. Lùi khi: lực vừa đã sẫm quá → nâng `DEEP_FROM_VELOCITY`.
+  2): đặc từ 96, không sẫm.
 */
 /**
  * Lớp phủ phím gợi ý khi có độ rõ (`revealOpacity`): phím giữ màu thường, lớp phủ mờ / rõ theo độ rõ. Người dùng 16/10/2026: "gợi ý tăng độ
@@ -64,17 +65,6 @@ const REVEAL_LAYER = {
   den: { phai: 'bg-amber-key ring-2 ring-inset ring-amber-key', trai: 'bg-left-hand ring-2 ring-inset ring-left-hand' },
 } as const
 
-const PRESS_MIN_OPACITY = 0.45
-const PRESS_FULL_VELOCITY = 80
-const DEEP_FROM_VELOCITY = 64
-const DEEP_FULL_VELOCITY = 120
-const DEEP_MAX = 0.55
-const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
-const pressOpacity = (velocity: number) =>
-  PRESS_MIN_OPACITY + (1 - PRESS_MIN_OPACITY) * clamp01(velocity / PRESS_FULL_VELOCITY)
-/** Phần tông sẫm pha vào màu phím đang bấm, 0 … DEEP_MAX. */
-const pressDepth = (velocity: number) =>
-  DEEP_MAX * clamp01((velocity - DEEP_FROM_VELOCITY) / (DEEP_FULL_VELOCITY - DEEP_FROM_VELOCITY))
 /*
   TÊN NỐT TO VÀ NỔI — người dùng 11/10/2026: "tất cả tên nốt ở mọi chỗ có phím đàn và nốt rơi phải được viết to hơn và màu nổi bật
   hơn". Thẻ nền tối chữ vàng đậm: đọc được trên phím trắng, phím đen, phím đang sáng màu tay lẫn phím đang bấm (khỏi đổi màu chữ theo
@@ -196,7 +186,6 @@ export function OnScreenPiano({
   height,
 }: OnScreenPianoProps) {
   const heldNotes = useMidiStore((state) => state.heldNotes)
-  const velocities = useMidiStore((state) => state.velocities)
   const noteOn = useMidiStore((state) => state.noteOn)
   const noteOff = useMidiStore((state) => state.noteOff)
 
@@ -239,65 +228,49 @@ export function OnScreenPiano({
   }
   const blackNamed = showNoteNames && whiteWidth * 0.62 >= BLACK_NAME_MIN_PX
 
-  /** Con trỏ đang được giữ — dùng để rê tay qua nhiều phím liền nhau. */
-  const pointerDown = useRef(false)
-  /** Các nốt bàn phím ảo đang giữ; không đụng tới nốt đến từ đàn thật. */
-  const pressedByPointer = useRef(new Set<MidiNote>())
+  /**
+   * Con trỏ (ngón tay, chuột) nào đang giữ phím nào — người dùng 17/10/2026: "Đảm bảo rằng app cho Android chỉ cần nhấn phím 1 lần là
+   * nhận". Mỗi ngón một phím: nhấc ngón nào chỉ nhả phím của ngón ấy. Chạm cảm ứng giữ nguyên phím đầu (trình duyệt tự bắt con trỏ cho
+   * ngón) — ngón trượt nhẹ không thành nốt bên cạnh; chuột vẫn rê qua nhiều phím. Cũ (tới 17/10/2026): một cờ chung cho mọi con trỏ, nhấc
+   * BẤT KỲ ngón nào là nhả MỌI phím (hai ngón chồng nhau thì nốt của ngón còn đặt bị tắt), và mọi con trỏ đều bỏ bắt để rê phím (ngón
+   * trượt nhẹ trên phím hẹp của điện thoại thành nốt bên cạnh).
+   */
+  const theoNgon = useRef(new Map<number, MidiNote>())
 
-  const releasePointerNotes = useCallback(() => {
-    for (const note of pressedByPointer.current) {
-      noteOff(note, 'onscreen')
-    }
-    pressedByPointer.current.clear()
-    pointerDown.current = false
-  }, [noteOff])
-
-  useEffect(() => {
-    // Nhả chuột ngoài vùng bàn phím thì vẫn phải tắt nốt, nếu không nốt kẹt.
-    window.addEventListener('pointerup', releasePointerNotes)
-    window.addEventListener('pointercancel', releasePointerNotes)
-    return () => {
-      window.removeEventListener('pointerup', releasePointerNotes)
-      window.removeEventListener('pointercancel', releasePointerNotes)
-      releasePointerNotes()
-    }
-  }, [releasePointerNotes])
-
-  const pressNote = useCallback(
-    (note: MidiNote) => {
-      if (pressedByPointer.current.has(note)) return
-      pressedByPointer.current.add(note)
-      noteOn(note, POINTER_VELOCITY, 'onscreen')
-    },
-    [noteOn],
-  )
-
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLButtonElement>, note: MidiNote) => {
-      // Nhả quyền bắt con trỏ để sự kiện pointerenter còn bắn sang phím khác,
-      // nhờ đó rê tay qua nhiều phím mới chạy được (nhất là trên cảm ứng).
-      event.currentTarget.releasePointerCapture(event.pointerId)
-      pointerDown.current = true
-      pressNote(note)
-    },
-    [pressNote],
-  )
-
-  const handlePointerEnter = useCallback(
-    (note: MidiNote) => {
-      if (pointerDown.current) pressNote(note)
-    },
-    [pressNote],
-  )
-
-  const handlePointerLeave = useCallback(
-    (note: MidiNote) => {
-      if (!pressedByPointer.current.has(note)) return
-      pressedByPointer.current.delete(note)
-      noteOff(note, 'onscreen')
+  const nhaNgon = useCallback(
+    (id: number) => {
+      const note = theoNgon.current.get(id)
+      if (note === undefined) return
+      theoNgon.current.delete(id)
+      if (![...theoNgon.current.values()].includes(note)) noteOff(note, 'onscreen')
     },
     [noteOff],
   )
+
+  const bamNgon = useCallback(
+    (id: number, note: MidiNote) => {
+      const cu = theoNgon.current.get(id)
+      if (cu === note) return
+      if (cu !== undefined) nhaNgon(id)
+      const dangGiu = [...theoNgon.current.values()].includes(note)
+      theoNgon.current.set(id, note)
+      if (!dangGiu) noteOn(note, POINTER_VELOCITY, 'onscreen')
+    },
+    [noteOn, nhaNgon],
+  )
+
+  useEffect(() => {
+    // Nhấc ngón / nhả chuột ở đâu cũng nhả đúng phím của con trỏ ấy, nếu không nốt kẹt.
+    const nha = (event: PointerEvent) => nhaNgon(event.pointerId)
+    window.addEventListener('pointerup', nha)
+    window.addEventListener('pointercancel', nha)
+    const ngon = theoNgon.current
+    return () => {
+      window.removeEventListener('pointerup', nha)
+      window.removeEventListener('pointercancel', nha)
+      for (const id of [...ngon.keys()]) nhaNgon(id)
+    }
+  }, [nhaNgon])
 
   const isHeld = (note: MidiNote) => heldNotes.includes(note)
 
@@ -334,26 +307,14 @@ export function OnScreenPiano({
     return 'idle'
   }
 
-  /** Lớp phủ phím đang bấm: xanh ngọc nếu trúng nốt hợp âm, cam nếu không; đậm theo lực nhấn. */
-  const velocityOf = (note: MidiNote) => velocities[note] ?? POINTER_VELOCITY
-  const pressLayer = (note: MidiNote) => {
-    if (!isHeld(note)) return null
-    const velocity = velocityOf(note)
-    const [base, dark] = isChordTone(note)
-      ? ['var(--color-teal-key)', '#134e4a']
-      : ['var(--color-amber-key)', '#7c2d12']
-    const deep = Math.round(pressDepth(velocity) * 100)
-    return (
+  /** Lớp phủ phím đang bấm: xanh ngọc nếu trúng nốt hợp âm, cam nếu không — đặc, như nhau mọi lực (17/10/2026). */
+  const pressLayer = (note: MidiNote) =>
+    isHeld(note) ? (
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-b-md"
-        style={{
-          opacity: pressOpacity(velocity),
-          backgroundColor: `color-mix(in srgb, ${base} ${100 - deep}%, ${dark} ${deep}%)`,
-        }}
+        className={`pointer-events-none absolute inset-0 rounded-b-md ${isChordTone(note) ? 'bg-teal-key' : 'bg-amber-key'}`}
       />
-    )
-  }
+    ) : null
 
   /** Lớp phủ phím gợi ý theo độ rõ — dưới lớp phím đang bấm và dưới chữ. */
   const revealLayer = (note: MidiNote, den: boolean) => {
@@ -397,10 +358,14 @@ export function OnScreenPiano({
     )
 
   const keyHandlers = (note: MidiNote) => ({
-    onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) =>
-      handlePointerDown(event, note),
-    onPointerEnter: () => handlePointerEnter(note),
-    onPointerLeave: () => handlePointerLeave(note),
+    onPointerDown: (event: React.PointerEvent<HTMLButtonElement>) => {
+      // Chuột: bỏ bắt con trỏ để pointerenter còn bắn sang phím khác — rê qua nhiều phím. Cảm ứng / bút: giữ phím đầu.
+      if (event.pointerType === 'mouse') event.currentTarget.releasePointerCapture(event.pointerId)
+      bamNgon(event.pointerId, note)
+    },
+    onPointerEnter: (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (theoNgon.current.has(event.pointerId)) bamNgon(event.pointerId, note)
+    },
   })
 
   return (

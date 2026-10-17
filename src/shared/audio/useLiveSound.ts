@@ -17,7 +17,7 @@ export function useLiveSound(enabled = true): void {
 
       for (const note of state.heldNotes) {
         if (!previous.heldNotes.includes(note)) {
-          attackNote(note, state.velocities[note] ?? 90)
+          attackNote(note)
         }
       }
 

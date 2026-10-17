@@ -9,6 +9,7 @@ import type { TimelineEvent } from '../../style/types'
 import {
   advance,
   buildGatedSteps,
+  chamBamMoi,
   currentStep,
   isStepMatched,
   missingNotes,
@@ -234,6 +235,30 @@ describe('isStepMatched', () => {
       symbol: '',
     }
     expect(isStepMatched([], empty)).toBe(false)
+  })
+})
+
+describe('chamBamMoi — chấm theo cú bấm mới (người dùng 17/10/2026: "chỉ cần nhấn phím 1 lần là nhận")', () => {
+  const mot: GatedStep = { startBeat: 1, durationBeats: 1, notes: [62], leftNotes: [], rightNotes: [62], symbol: 'C' }
+  const hop: GatedStep = { startBeat: 0, durationBeats: 1, notes: [40, 60, 64, 67], leftNotes: [40], rightNotes: [60, 64, 67], symbol: 'C' }
+
+  it('đánh liền tay: nốt mới qua ngay dù ngón của nốt trước còn giữ', () => {
+    // Đô (60) của chặng trước còn giữ, Rê (62) vừa bấm — chỉ Rê là cú bấm mới.
+    expect(chamBamMoi([62], mot)).toBe('dung')
+    // Cũ: chấm mọi phím đang giữ [60, 62] — thừa nốt, không qua, phải nhấn lại.
+    expect(isStepMatched([60, 62], mot)).toBe(false)
+  })
+
+  it('hợp âm bấm lần lượt từng nốt (đã nhả hay còn giữ) vẫn tính', () => {
+    expect(chamBamMoi([40], hop)).toBe('cho')
+    expect(chamBamMoi([40, 60, 64], hop)).toBe('cho')
+    expect(chamBamMoi([40, 60, 64, 67], hop)).toBe('dung')
+  })
+
+  it('bấm đủ số nốt mà không khớp là sai; chưa bấm gì là chờ', () => {
+    expect(chamBamMoi([61], mot)).toBe('sai')
+    expect(chamBamMoi([40, 60, 64, 66], hop)).toBe('sai')
+    expect(chamBamMoi([], mot)).toBe('cho')
   })
 })
 

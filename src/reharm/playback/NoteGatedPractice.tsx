@@ -24,6 +24,7 @@ import { OnScreenPiano } from '../../shared/midi/onScreenPiano/OnScreenPiano'
 import { getKeyboardRange, KEYBOARD_SIZES } from '../../shared/midi/onScreenPiano/layout'
 import { useComputerKeyboard } from '../../shared/midi/onScreenPiano/useComputerKeyboard'
 import { midiToName } from '../../shared/musicTheory/pitch'
+import type { MidiNote } from '../../shared/musicTheory/types'
 import { scaleLabelForSymbol } from '../brain/chordScale'
 import type { TimelineEvent } from '../style/types'
 import type { TwoHandVoicing } from '../voicingGenerator/handSplitVoicing'
@@ -31,8 +32,8 @@ import type { PracticeHand } from './noteGatedPlaybackEngine'
 import {
   advance,
   buildGatedSteps,
+  chamBamMoi,
   currentStep,
-  isStepMatched,
   missingNotes,
   notesSoundingAt,
   progressOf,
@@ -101,7 +102,6 @@ export function NoteGatedPractice({
   onChang,
   thanhNhip,
 }: NoteGatedPracticeProps) {
-  const heldNotes = useMidiStore((state) => state.heldNotes)
   const audioReady = useAudioStore((state) => state.ready)
   const bpm = useMetronomeStore((state) => state.bpm)
   const looping = usePlaybackStore((state) => state.looping)
@@ -237,42 +237,50 @@ export function NoteGatedPractice({
     return () => window.cancelAnimationFrame(frame)
   }, [looping, active, step, shown])
 
-  /**
-   * Chỉ chấm sau khi người học nhả hết phím của chặng trước, nếu không thì
-   * giữ nguyên tay ở một hợp âm lặp lại sẽ tự động qua nhiều chặng liền.
-   */
-  const armedRef = useRef(true)
-  useEffect(() => {
-    armedRef.current = false
-  }, [session.currentIndex])
-
-  useEffect(() => {
-    if (!active || !step) return
-
-    if (heldNotes.length === 0) {
-      armedRef.current = true
+  /*
+    CHẤM Ở TỪNG CÚ BẤM (người dùng 17/10/2026: "chỉ cần nhấn phím 1 lần là nhận") — nghe thẳng kho MIDI, không qua lần vẽ của React: cú
+    bấm và cú nhả đến cùng lúc (chạm rất nhanh, đàn gửi dồn) thì React chỉ thấy trạng thái cuối và mất cú bấm. Chỉ tính phím bấm từ khi
+    chặng bắt đầu (`chamBamMoi`) — giữ nguyên tay ở hợp âm lặp lại vẫn phải bấm lại mới qua, như luật cũ "nhả hết rồi mới chấm" muốn.
+  */
+  const moiRef = useRef<MidiNote[]>([])
+  const [, setVeMoi] = useState(0)
+  const phienRef = useRef(session)
+  phienRef.current = session
+  const chamRef = useRef<(note: MidiNote) => void>(() => {})
+  chamRef.current = (note) => {
+    const s = phienRef.current
+    const buoc = currentStep(s)
+    if (!active || !buoc || s.finished) return
+    if (!moiRef.current.includes(note)) moiRef.current = [...moiRef.current, note]
+    const kq = chamBamMoi(moiRef.current, buoc, { ignoreOctave })
+    if (kq === 'cho') {
+      setVeMoi((k) => k + 1)
       return
     }
-    if (!armedRef.current) return
-
-    if (isStepMatched(heldNotes, step, { ignoreOctave })) {
-      if (nenTayKia && hand !== 'both') {
-        const sau = session.steps[session.currentIndex + 1]?.startBeat ?? Infinity
-        const giay = 60 / (vongBpm ?? bpm)
-        for (const event of timeline)
-          if (event.hand !== hand && event.startBeat >= step.startBeat && event.startBeat < sau)
-            playChord(event.notes, event.durationBeats * giay, event.velocity)
-      }
-      setSession((current) => advance(current))
-      return
+    moiRef.current = []
+    if (kq === 'dung' && nenTayKia && hand !== 'both') {
+      const sau = s.steps[s.currentIndex + 1]?.startBeat ?? Infinity
+      const giay = 60 / (vongBpm ?? bpm)
+      for (const event of timeline)
+        if (event.hand !== hand && event.startBeat >= buoc.startBeat && event.startBeat < sau)
+          playChord(event.notes, event.durationBeats * giay, event.velocity)
     }
-
     // Bấm đủ số nốt mà vẫn không khớp nghĩa là bấm sai, không phải chưa xong.
-    if (heldNotes.length >= step.notes.length) {
-      armedRef.current = false
-      setSession((current) => registerMiss(current))
-    }
-  }, [heldNotes, step, active, ignoreOctave, nenTayKia, hand, session, timeline, vongBpm, bpm])
+    phienRef.current = kq === 'dung' ? advance(s) : registerMiss(s)
+    setSession(phienRef.current)
+  }
+  useEffect(
+    () =>
+      useMidiStore.subscribe((state, truoc) => {
+        const ev = state.lastEvent
+        if (ev && ev !== truoc.lastEvent && ev.velocity > 0) chamRef.current(ev.note)
+      }),
+    [],
+  )
+  /* Sang chặng khác, bắt đầu / luyện lại, dừng: bỏ các cú bấm đang dở. */
+  useEffect(() => {
+    moiRef.current = []
+  }, [session.currentIndex, session.steps, active])
 
   /* Lộ trình: hết lượt thì chấm một lần cho mỗi lượt (lượt = đối tượng `session`). */
   const bacRef = useRef(bac)
@@ -289,7 +297,7 @@ export function NoteGatedPractice({
   const boQua = () => setSession((current) => advance(registerMiss(current)))
 
   const progress = progressOf(session)
-  const missing = step ? missingNotes(heldNotes, step, { ignoreOctave }) : []
+  const missing = step ? missingNotes(moiRef.current, step, { ignoreOctave }) : []
 
   if (steps.length === 0) {
     return (

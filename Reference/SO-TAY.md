@@ -8101,3 +8101,46 @@ tục gợi ý"*.
 - Game rơi xoay ngang trong toàn màn hình: màn cao 360 px không vừa vùng mưa + bàn phím, phải cuộn — cầm dọc thì vừa.
 - Cắm đàn 61 phím mà cầm dọc: phím trắng ~8 px, nhìn được, chạm khó (đánh trên đàn thật thì không cần chạm).
 - Đổi tốc độ giữa câu: nền co giãn liền mạch theo thiết kế — chưa nghe bằng tai.
+
+## Bước — Bỏ cảm ứng lực · nhấn phím một lần là nhận (17/10/2026)
+
+**Người dùng:** *"hãy bỏ phần cảm ứng lực khi nhấn phím đàn. Đảm bảo rằng app cho Android chỉ cần nhấn phím 1 lần là nhận. Xong thì
+commit và đăng lên github để tôi tải về"*.
+
+**Bỏ cảm ứng lực — mọi cú bấm như nhau:**
+- Phím đang bấm tô màu đặc: xanh ngọc (trúng nốt hợp âm) hay cam. Cũ (2/10 – 17/10/2026, theo ý người dùng 2/10): lớp phủ mờ / rõ theo
+  lực (sàn 0,45, đặc từ velocity 80) và sẫm dần từ velocity 64 (sẫm nhất 55 % ở 120). Lùi: lấy lại từ git (commit trước bước này).
+- Tiếng phím bấm cùng một lực 90 (`LUC_TIENG_PHIM`). Cũ: velocity / 127 — chạm nhẹ trên đàn thật kêu rất nhỏ, như chưa nhận.
+- Luyện đệm theo nhịp: bỏ dòng "Lực nhấn: tiếng nhấn … tiếng thường …" ở kết quả. Số đo lực vẫn ghi nhật ký (`luc`), không hiện.
+
+**Nhấn một lần là nhận — năm chỗ phải nhấn lại, tìm ra khi đọc đường đi của cú bấm rồi chạy thử:**
+1. **Chờ đúng nốt** (`NoteGatedPractice`: Nốt rơi cũ, Luyện đệm · chờ, bậc chờ của lộ trình) chấm mọi phím ĐANG GIỮ, và chỉ chấm sau khi
+   NHẢ HẾT phím của chặng trước. Đánh liền tay — bấm nốt sau trước khi nhả nốt trước, lối chạy ngón bình thường trên đàn, hai ngón chồng
+   nhau trên cảm ứng — thì nốt sau không được nhận. Nay chấm theo cú bấm mới (`chamBamMoi`): chỉ tính phím bấm từ khi chặng bắt đầu, chấm
+   ngay ở từng cú bấm, nghe thẳng kho MIDI. Giữ nguyên tay ở hợp âm lặp lại vẫn phải bấm lại mới qua (điều luật cũ muốn giữ).
+2. **Bàn phím ảo:** nhấc BẤT KỲ ngón nào là nhả MỌI phím; mọi con trỏ bỏ bắt để rê phím nên ngón trượt nhẹ trên phím hẹp thành nốt bên
+   cạnh. Nay mỗi ngón một phím, nhấc ngón nào nhả phím ngón ấy; cảm ứng giữ phím đầu; chuột vẫn rê qua nhiều phím.
+3. **Cú bấm + cú nhả đến cùng lúc** (đàn gửi dồn, chạm rất nhanh): Game Scale đọc `lastEvent` qua lần vẽ của React nên chỉ thấy cú nhả.
+   Nay nghe thẳng kho MIDI (như `useNotXuong`).
+4. **Game công thức mở trước, cắm đàn sau** (điện thoại hay vậy): lối "Chạm từng nốt" chỉ nghe phím ảo, bấm đàn thật không được nhận.
+   Nay cắm đàn thì tự sang "Giữ hợp âm".
+5. **Tiếng chưa mở** — cú chạm đầu sau khi mở app (Android chỉ cho mở tiếng lúc NHẤC ngón), hay Android treo tiếng khi app chạy nền: cú
+   bấm ấy câm. Nay mở tiếng rồi đánh chính nốt ấy (ngón còn giữ thì đánh tiếp, đã nhấc thì một tiếng ngắn).
+
+**Kiểm:**
+- Test mới: `chamBamMoi` (đánh liền tay · hợp âm bấm lần lượt · bấm sai); tiếng phím cùng một lực; cú bấm lúc tiếng chưa chạy được đánh
+  sau khi mở (đỏ trên bản cũ). Toàn suite 2 851 qua / 5 đỏ cũ / 1 bỏ qua · lint các tệp sửa 0 lỗi · `tsc -b` · `vite build` qua.
+- Giả lập Android (máy chủ dev, chạm thật nhiều ngón) — 8/8, chạy 2 lần:
+  - hai ngón giữ C4 + E4, nhấc ngón E4 → còn C4 (cũ: nhả hết); chạm C4 rồi trượt sang D4 → vẫn C4;
+  - lực 12 và lực 127: cùng màu, đặc;
+  - Nốt rơi cũ · chờ đúng nốt: bấm 60 → 62 (60 còn giữ) → 64: 0/9 → 1/9 → 2/9 → 3/9 chặng; cú bấm + nhả dồn một lượt → 4/9;
+  - Game Scale: Đô bấm + nhả dồn một lượt → nhận; Game công thức: cắm đàn (giả) → tự sang "Giữ hợp âm"; không lỗi trang.
+- Kịch bản 37 bước của bước trước: 37/37 (thêm bước chọn lại "Chạm từng nốt" sau bước giả lập cắm đàn — game tự sang "Giữ hợp âm" là
+  đúng ý mới). Lượt Android đầy đủ trên bản dựng như GitHub Pages: 80/80.
+- `LuyenTap.json`, `Nguon.json` không đổi.
+
+**Chưa đo — lỗ còn lại:**
+- Điện thoại thật + đàn thật qua OTG: Android có gửi dồn cú bấm + nhả trong một lượt không — mới giả lập.
+- Trở lại app từ nền rồi chỉ bấm đàn (không chạm màn): mở lại tiếng dựa vào luật của Chrome "trang đã được chạm một lần thì được mở
+  tiếng lại" — Claude suy ra, chưa thử trên máy thật.
+- Rê ngón qua nhiều phím ảo trên cảm ứng không còn — người dùng cần lại thì bật riêng.

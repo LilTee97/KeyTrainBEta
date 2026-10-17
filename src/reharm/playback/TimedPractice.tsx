@@ -24,7 +24,6 @@ import { PracticeStage } from './PracticeStage'
 import { buildGatedSteps, notesSoundingAt, type PracticeHand } from './noteGatedPlaybackEngine'
 import { usePracticeStore } from './practiceStore'
 import {
-  LUC_RO,
   MIN_TAPS,
   chamHopAm,
   chamLay,
@@ -733,17 +732,8 @@ export function TimedPractice({
             )}
           </p>
           <p>Phím thừa hoặc sai: {score.extra.length}</p>
-          {result?.luc && (
-            <p>
-              Lực nhấn: tiếng nhấn <b>{result.luc.nhanTB}</b> · tiếng thường <b>{result.luc.thuongTB}</b> →{' '}
-              {result.luc.chenh >= LUC_RO
-                ? `nhấn rõ (+${result.luc.chenh})`
-                : result.luc.chenh > 0
-                  ? `nhấn chưa rõ (+${result.luc.chenh})`
-                  : `tiếng nhấn chưa mạnh hơn tiếng thường (${result.luc.chenh})`}{' '}
-              <span className="text-xs text-dim">— chỉ nhận xét, không tính vào đạt</span>
-            </p>
-          )}
+          {/* Dòng "Lực nhấn: tiếng nhấn … tiếng thường …" bỏ 17/10/2026 (người dùng: "hãy bỏ phần cảm ứng lực khi nhấn phím đàn");
+              số đo lực vẫn ghi vào nhật ký (`luc`), không hiện. */}
           {result?.lay && (
             <p>
               Láy đúng: <b>{result.lay.layDung}</b>/{result.lay.layTong}

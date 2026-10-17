@@ -50,12 +50,18 @@ const sao = (k: number, tren = 3) => '★'.repeat(k) + '☆'.repeat(Math.max(0, 
 
 /** Mỗi cú bấm xuống (đàn MIDI, phím máy tính, bàn phím trên màn hình) — kèm thời điểm của chính sự kiện. */
 function useNotBam(onNot: (note: number, time: number) => void) {
-  const ev = useMidiStore((state) => state.lastEvent)
+  /* Nghe thẳng kho MIDI, mỗi cú bấm một lần (như `useNotXuong`). Cũ (tới 17/10/2026): đọc `lastEvent` qua lần vẽ của React — cú bấm và
+     cú nhả đến cùng lúc (đàn gửi dồn, chạm rất nhanh) thì chỉ thấy cú nhả, cú bấm mất, phải bấm lại. */
   const goi = useRef(onNot)
   goi.current = onNot
-  useEffect(() => {
-    if (ev && ev.velocity > 0) goi.current(ev.note, ev.time)
-  }, [ev])
+  useEffect(
+    () =>
+      useMidiStore.subscribe((state, truoc) => {
+        const ev = state.lastEvent
+        if (ev && ev !== truoc.lastEvent && ev.velocity > 0) goi.current(ev.note, ev.time)
+      }),
+    [],
+  )
 }
 
 /** Bộ nhớ trình duyệt cho kỷ lục — chỉ là tiện, không có vẫn chơi được. */
